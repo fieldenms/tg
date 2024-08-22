@@ -1,36 +1,44 @@
 package ua.com.fielden.platform.test.mapping;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import org.hibernate.type.YesNoType;
 import org.junit.Test;
-
-import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
+import ua.com.fielden.platform.eql.meta.EqlTables;
+import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
+
 public class MappingGenerationTest {
 
     @Test
-    public void dump_mapping_for_type_wity_byte_array_property() {
-        final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
-        domainTypes.add(User.class);
-        domainTypes.add(MainMenuItem.class);
-        domainTypes.add(DashboardRefreshFrequency.class);
-        domainTypes.add(DashboardRefreshFrequencyUnit.class);
-        domainTypes.add(EntityCentreConfig.class);
-        final DomainMetadata mg = new DomainMetadata(null, null, domainTypes, DbVersion.H2);
+    public void hibernate_mappings_are_generated() {
+        final List<Class<? extends AbstractEntity<?>>> domainTypes = List.of(
+                User.class, MainMenuItem.class, DashboardRefreshFrequency.class,
+                DashboardRefreshFrequencyUnit.class, EntityCentreConfig.class);
+        final var dbVersionProvider = constantDbVersion(DbVersion.H2);
+        final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
+                HibernateTypeMappings.builder()
+                        .put(boolean.class, YesNoType.INSTANCE)
+                        .put(Boolean.class, YesNoType.INSTANCE)
+                        .build(),
+                domainTypes, dbVersionProvider)
+                .build();
 
-        final String tgModelMapping = HibernateMappingsGenerator.generateMappings(mg.eqlDomainMetadata);
-        final String expectedMapping = String.format("""
+        final String actualMappings = new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata))
+                .generateMappings();
+        final String expectedMappings = """
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC
 "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
@@ -110,8 +118,9 @@ public class MappingGenerationTest {
 \t<property name="ssoOnly" column="SSOONLY_" type="org.hibernate.type.YesNoType"/>
 </class>
 
-</hibernate-mapping>""", Integer.MAX_VALUE);
-        assertEquals("Incorrect mapping.", expectedMapping, tgModelMapping);
+</hibernate-mapping>""";
+
+        assertEquals("Incorrect mappings.", expectedMappings, actualMappings);
     }
 
 }

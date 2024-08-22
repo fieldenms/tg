@@ -6,10 +6,11 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhereWithoutNesting;
 
 abstract class WhereWithoutNesting<T1 extends IComparisonOperator<T2, ET>, T2 extends ILogicalOperator<? extends IWhereWithoutNesting<T1, T2, ET>>, ET extends AbstractEntity<?>> //
-		extends ConditionalOperand<T1, T2, ET> //
-		implements IWhereWithoutNesting<T1, T2, ET> {
+        extends ConditionalOperand<T1, T2, ET> //
+        implements IWhereWithoutNesting<T1, T2, ET> {
 
-    protected WhereWithoutNesting(final Tokens tokens) {
-        super(tokens);
+    protected WhereWithoutNesting(final EqlSentenceBuilder builder) {
+        super(builder);
     }
+
 }

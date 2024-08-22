@@ -1,24 +1,19 @@
 package ua.com.fielden.platform.ioc;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-
-import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
-
-import com.google.inject.Guice;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
+
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Properties;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * Hibernate configuration factory. All Hibernate specific properties should be passed as {@link Properties} values. The following list of properties is supported:
@@ -73,62 +68,33 @@ public class HibernateConfigurationFactory {
     private static final String CONNECTION_PASWD = "hibernate.connection.password";
 
     private final Properties props;
-    private final DomainMetadata domainMetadata;
-    private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
-
     private final Configuration cfg = new Configuration();
     private final Configuration cfgManaged = new Configuration();
 
-    public HibernateConfigurationFactory(//
-            final Properties props, //
-            final Map<Class, Class> defaultHibernateTypes, //
-            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
+    public HibernateConfigurationFactory(final Properties props, final HibernateMappingsGenerator generator) {
         this.props = props;
+        // TODO use declarative style
+        // Register our custom type mapping so that Hibernate uses it during the binding of query parameters.
+        cfg.registerTypeContributor((typeContributions, $) -> typeContributions.contributeType(DateTimeType.INSTANCE));
 
-        domainMetadata = new DomainMetadata(//
-                defaultHibernateTypes,//
-                Guice.createInjector(new HibernateUserTypesModule()), //
-                applicationEntityTypes, //
-                determineDbVersion(props),
-                determineEql2(props));
-
-        idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
-
-        final String generatedMappings = HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata);
-
+        final String generatedMappings = generator.generateMappings();
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
             cfgManaged.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
-
     }
 
     public static DbVersion determineDbVersion(final Properties props) {
         return determineDbVersion(props.getProperty(DIALECT));
     }
 
-    private static boolean determineEql2(final Properties props) {
-        final String prop = props.getProperty("eql2");
-        return (prop != null && prop.toLowerCase().equals("true"));
-    }
-
     public static DbVersion determineDbVersion(final String dialect) {
         if (isEmpty(dialect)) {
-            throw new IllegalStateException("Hibernate dialect was not provided, but is required");
+            throw new InvalidArgumentException("Hibernate dialect was not provided, but is required");
         }
-        if (dialect.equals("org.hibernate.dialect.H2Dialect")) {
-            return DbVersion.H2;
-        } else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
-            return DbVersion.POSTGRESQL;
-        } else if (dialect.contains("SQLServer")) {
-            return DbVersion.MSSQL;
-        } else if (dialect.equals("org.hibernate.dialect.OracleDialect")) {
-            return DbVersion.ORACLE;
-        }
-
-        throw new IllegalStateException("Could not determine DB version based on the provided Hibernate dialect \"" + dialect + "\".");
+        return HibernateHelpers.getDbVersion(HibernateHelpers.getDialect(dialect));
     }
 
     public Configuration build() {
@@ -163,14 +129,6 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, CONNECTION_PASWD, "");
 
         return cfg;
-    }
-
-    public DomainMetadata getDomainMetadata() {
-        return domainMetadata;
-    }
-
-    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
-        return idOnlyProxiedEntityTypeCache;
     }
 
     private Configuration setSafely(final Configuration cfg, final String propertyName, final String defaultValue) {

@@ -1,29 +1,33 @@
 package ua.com.fielden.platform.entity.query.model;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
+
+import java.util.Objects;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
-import java.util.List;
-import java.util.Objects;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.utils.Pair;
-
 public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractModel {
-    private Class<T> resultType;
+    private final Class<T> resultType;
     private boolean filterable = false;
-    private boolean yieldAll;
-    public boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
+    private final boolean yieldAll;
+    private boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
 
-    protected QueryModel() {
-    }
-
-    public QueryModel(final List<Pair<TokenCategory, Object>> tokens, final Class<T> resultType, final boolean yieldAll) {
+    public QueryModel(final ListTokenSource tokens, final Class<T> resultType, final boolean yieldAll) {
         super(tokens);
         this.resultType = resultType;
         this.yieldAll = yieldAll;
         this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = false;
+    }
+
+    public boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery() {
+        return shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
+    }
+
+    protected QueryModel<T> setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(final boolean value) {
+        this.shouldMaterialiseCalcPropsAsColumnsInSqlQuery = value;
+        return this;
     }
 
     public Class<T> getResultType() {

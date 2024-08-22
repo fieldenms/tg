@@ -1,17 +1,17 @@
 package ua.com.fielden.platform.utils;
 
-import static org.junit.Assert.*;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.*;
+import org.junit.Test;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.junit.Test;
-
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
 public class CollectionUtilTest {
 
@@ -29,7 +29,7 @@ public class CollectionUtilTest {
 
     @Test
     public void listOf_null_is_the_same_as_listOf_with_no_arguments() {
-        assertEquals(0, listOf(null).size());
+        assertEquals(0, listOf((Object[]) null).size());
     }
 
     @Test
@@ -167,6 +167,26 @@ public class CollectionUtilTest {
     }
 
     @Test
+    public void map_Map_disallows_duplicates_among_resulting_keys() {
+        final Map<String, Integer> inMap = Map.of("a", 1, "b", 2);
+        assertThrows(IllegalStateException.class, () -> map(inMap, (k, v) -> "x", (k, v) -> v));
+    }
+
+    @Test
+    public void map_Map_disallows_nulls_as_keys() {
+        final Map<String, Integer> inMap = Map.of("a", 1);
+        assertThrows(IllegalStateException.class, () -> map(inMap, (k, v) -> null, (k, v) -> v));
+    }
+
+    @Test
+    public void map_Map_returns_a_map_of_equal_size() {
+        final Map<String, Integer> inMap = Map.of("a", 1, "b", 2);
+        assertEquals(
+                Map.of("A", 10, "B", 20),
+                map(inMap, (k, v) -> k.toUpperCase(), (k, v) -> v * 10));
+    }
+
+    @Test
     public void merge_for_a_single_map_produces_a_new_map_of_the_same_type_with_elements_from_that_map() {
         final var map1 = new HashMap<Integer, String>();
         map1.put(1, "a");
@@ -251,6 +271,7 @@ public class CollectionUtilTest {
         assertEquals(expectedResult, result);
     }
 
+    @Test
     public void merge_supports_maps_with_keys_and_values_of_compatible_types() {
         final var map1 = new HashMap<Number, CharSequence>();
         map1.put(1, "a");
@@ -273,8 +294,33 @@ public class CollectionUtilTest {
         assertEquals(expectedResult.getClass(), result.getClass());
         assertEquals(expectedResult, result);
         assertEquals(5, result.size());
-        final String values = result.values().stream().sorted().collect(Collectors.joining(","));
-        assertEquals("b,c,d,e,f", values);
+        assertEqualByContents(List.of("b","c","d","e","f"), result.values().stream().map(Object::toString).toList());
+    }
+
+    @Test
+    public void first_returns_empty_optional_for_empty_collections() {
+        assertTrue(first(List.of()).isEmpty());
+        assertTrue(first(Set.of()).isEmpty());
+    }
+
+    @Test
+    public void first_returns_optional_of_the_first_element_for_nonempty_collections() {
+        assertOptEquals("a", first(List.of("a", "b")));
+        assertOptEquals("a", first(Set.of("a")));
+    }
+
+    @Test
+    public void first_throws_if_first_element_of_collection_is_null() {
+        final var list = new ArrayList<>();
+        list.add(null);
+        assertThrows(InvalidArgumentException.class, () -> first(list));
+    }
+
+    @Test
+    public void firstNullable_returns_an_empty_optional_if_first_element_of_collection_is_null() {
+        final var list = new ArrayList<>();
+        list.add(null);
+        assertEmpty(firstNullable(list));
     }
 
 }

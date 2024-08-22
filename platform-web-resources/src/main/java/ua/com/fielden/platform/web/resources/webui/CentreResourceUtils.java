@@ -348,23 +348,23 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         if (isRunning(customObject)) {
             final Either<IPage<T>, Pair<List<T>, T>> resultData = run(retrieveAll, updatedPreviouslyRunCriteriaEntity);
             if (resultData.isLeft()) {
-                page = resultData.asLeft().value;
+                page = resultData.asLeft().value();
                 resultantCustomObject.put("summary", page.summary());
                 data = page.data();
             } else {
-                final Pair<List<T>, T> runData = resultData.asRight().value;
+                final Pair<List<T>, T> runData = resultData.asRight().value();
                 data = runData.getKey();
                 resultantCustomObject.put("summary", runData.getValue());
             }
         } else if (isRefreshing(customObject)) {
             final Either<Pair<IPage<T>, T>, Pair<List<T>, T>> resultData = refresh(retrieveAll, pageNumber, updatedPreviouslyRunCriteriaEntity);
             if (resultData.isLeft()) {
-                final Pair<IPage<T>, T> refreshedData = resultData.asLeft().value;
+                final Pair<IPage<T>, T> refreshedData = resultData.asLeft().value();
                 page = refreshedData.getKey();
                 data = page.data();
                 resultantCustomObject.put("summary", refreshedData.getValue());
             } else {
-                final Pair<List<T>, T> refreshedData = resultData.asRight().value;
+                final Pair<List<T>, T> refreshedData = resultData.asRight().value();
                 data = refreshedData.getKey();
                 resultantCustomObject.put("summary", refreshedData.getValue());
             }
@@ -1208,7 +1208,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * This is only applicable iff there is {@link IGenerator} configuration assigned to Centre DSL configuration (see {@link ILayoutConfigWithResultsetSupport#withGenerator(Class, Class)}).
      * <p>
      * It is also important to use full fetch model to get proper entities' graph on running / exporting. This should include not only all Centre DSL columns,
-     * but also fetch parts from {@link IExtraFetchProviderSetter#setFetchProvider(ua.com.fielden.platform.entity.fetch.IFetchProvider)} and {@link IWithTooltip#withTooltip(String)} APIs.
+     * but also fetch parts from {@link IExtraFetchProviderSetter#setFetchProvider(ua.com.fielden.platform.entity.fetch.IFetchProvider)} and {@link IWithTooltip#withTooltip(CharSequence)} APIs.
      */
     public static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> complementCriteriaEntityBeforeRunning(
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> criteriaEntity,

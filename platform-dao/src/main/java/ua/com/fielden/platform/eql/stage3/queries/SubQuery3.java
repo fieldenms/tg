@@ -1,13 +1,20 @@
 package ua.com.fielden.platform.eql.stage3.queries;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.CollectionUtil;
+
+import java.util.List;
+import java.util.Objects;
+
+import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.NO_EXPECTED_TYPE;
 
 public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
+
     private final PropType type;
     
     public SubQuery3(final QueryComponents3 queryComponents, final PropType type) {
@@ -16,8 +23,15 @@ public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return "(" + super.sql(dbVersion) + ")";
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        if (yields.getYields().size() != 1) {
+            throw new EqlStage3ProcessingException(
+                    "Subquery must yield only 1 value but yields %s: [%s]".formatted(
+                            yields.getYields().size(), CollectionUtil.toString(yields.getYields(), ", ")));
+        }
+
+        final PropType expectedType = Objects.requireNonNullElse(type, NO_EXPECTED_TYPE);
+        return "(" + super.sql(metadata, dbVersion, List.of(expectedType)) + ")";
     }
     
     @Override

@@ -1,16 +1,9 @@
 package ua.com.fielden.platform.devdb_support;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -25,7 +18,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
@@ -48,7 +40,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
     protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
         this.config = config;
         provider = config.getInstance(ICompanionObjectFinder.class);
-        factory = config.getEntityFactory();
+        factory = config.getInstance(EntityFactory.class);
     }
 
     /**

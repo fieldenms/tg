@@ -7,10 +7,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
@@ -258,6 +261,22 @@ public class StreamUtilsTest {
     }
 
     @Test
+    public void foldLeft_returns_empty_optional_for_empty_stream() {
+        assertEmpty(foldLeft(IntStream.of(), Integer::sum));
+    }
+
+    @Test
+    public void foldLeft_returns_present_optional_for_non_empty_stream() {
+        assertOptEquals(1, foldLeft(IntStream.of(1), Integer::sum));
+        assertOptEquals(3, foldLeft(IntStream.of(1, 2), Integer::sum));
+    }
+
+    @Test
+    public void foldLeft_processes_stream_elements_sequentially_from_left_to_right() {
+        assertEquals("one-two-three", foldLeft(Stream.of("two-", "three"), "one-", String::concat));
+    }
+
+    @Test
     public void supplyIfEmpty_returns_equivalent_stream_if_original_is_not_empty() {
         final var xs = CollectionUtil.listOf(1, 2);
         final var xsEquivalent = StreamUtils.supplyIfEmpty(xs.stream(), () -> 0).toList();
@@ -268,6 +287,97 @@ public class StreamUtilsTest {
     public void supplyIfEmpty_returns_alternative_stream_if_original_is_empty() {
         final var xsAlternative = StreamUtils.supplyIfEmpty(Stream.empty(), () -> 0).limit(3).toList();
         assertEquals(CollectionUtil.listOf(0, 0, 0), xsAlternative);
+    }
+
+    @Test
+    public void transpose_returns_MxN_matrix_given_NxM_matrix() {
+        final var matrix = List.of(List.of(1, 2), List.of(3, 4), List.of(5, 6));
+        assertEquals(
+                List.of(List.of(1, 3, 5), List.of(2, 4, 6)),
+                transpose(matrix).toList());
+    }
+
+    @Test
+    public void tranpose_returns_as_many_lists_as_the_length_of_shortest_input_collection() {
+        final var matrix = List.of(List.of(1, 2, 3), List.of(4, 5), List.of(6, 7, 8));
+        assertEquals(
+                List.of(List.of(1, 4, 6), List.of(2, 5, 7)),
+                transpose(matrix).toList());
+
+        assertEquals(List.of(), transpose(List.of()).toList());
+    }
+
+    @Test
+    public void isSingleElementStream_returns_true_for_streams_with_one_element() {
+        assertTrue(isSingleElementStream(Stream.of("x")));
+        assertTrue(isSingleElementStream(IntStream.of(5)));
+    }
+
+    @Test
+    public void isSingleElementStream_returns_false_for_an_empty_stream() {
+        assertFalse(isSingleElementStream(Stream.of()));
+    }
+
+    @Test
+    public void isSingleElementStream_returns_false_for_a_stream_with_multiple_elements() {
+        assertFalse(isSingleElementStream(Stream.of("a", "b")));
+        assertFalse(isSingleElementStream(Stream.of("a", "b").parallel()));
+    }
+
+    @Test
+    public void isMultiElementStream_returns_false_for_streams_with_one_element() {
+        assertFalse(isMultiElementStream(Stream.of("x")));
+        assertFalse(isMultiElementStream(IntStream.of(5)));
+    }
+
+    @Test
+    public void isMultiElementStream_returns_false_for_an_empty_stream() {
+        assertFalse(isMultiElementStream(Stream.of()));
+    }
+
+    @Test
+    public void isMultiElementStream_returns_true_for_a_stream_with_multiple_elements() {
+        assertTrue(isMultiElementStream(Stream.of("a", "b")));
+        assertTrue(isMultiElementStream(Stream.of("a", "b").parallel()));
+    }
+
+    @Test
+    public void areAllEqual_returns_an_empty_optional_for_an_empty_stream() {
+        assertTrue(areAllEqual(IntStream.of()).isEmpty());
+    }
+
+    @Test
+    public void areAllEqual_returns_true_for_a_stream_of_the_same_integer() {
+        final int n = 764932;
+        assertOptEquals(true, areAllEqual(IntStream.of(n)));
+        assertOptEquals(true, areAllEqual(IntStream.of(n, n)));
+        assertOptEquals(true, areAllEqual(IntStream.of(n, n, n)));
+    }
+
+    @Test
+    public void areAllEqual_returns_false_for_a_stream_of_different_integers() {
+        final int n = 764932;
+        final int m = 43279;
+        assertOptEquals(false, areAllEqual(IntStream.of(n, m)));
+        assertOptEquals(false, areAllEqual(IntStream.of(m, n, m + 1)));
+        assertOptEquals(false, areAllEqual(IntStream.of(m, m, n)));
+    }
+
+    @Test
+    public void enumerated_constructs_a_stream_that_starts_from_the_given_number() {
+        List<String> result = enumerated(Stream.of("a", "b"), 97, (i, value) -> i + ":" + value).toList();
+        assertEquals(List.of("97:a", "98:b"), result);
+    }
+
+    @Test
+    public void enumerated_constructs_a_stream_that_starts_from_0_by_default() {
+        List<String> result = enumerated(Stream.of("a", "b"), (i, value) -> i + ":" + value).toList();
+        assertEquals(List.of("0:a", "1:b"), result);
+    }
+
+    @Test
+    public void enumerated_constructs_an_empty_stream_given_an_empty_stream() {
+        assertTrue(enumerated(Stream.of(), (i, v) -> "").toList().isEmpty());
     }
 
 }

@@ -1,12 +1,16 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
-import static java.lang.String.format;
-
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
+
+import java.util.Objects;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
 
 public class ComparisonPredicate3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
@@ -20,8 +24,26 @@ public class ComparisonPredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return format("%s %s %s", leftOperand.sql(dbVersion), operator, rightOperand.sql(dbVersion));
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        if (dbVersion == POSTGRESQL) {
+            return format("%s %s %s",
+                    operandToSqlWithCast(leftOperand, rightOperand, metadata, dbVersion),
+                    operator,
+                    operandToSqlWithCast(rightOperand, leftOperand, metadata, dbVersion));
+        } else {
+            return format("%s %s %s", leftOperand.sql(metadata, dbVersion), operator, rightOperand.sql(metadata, dbVersion));
+        }
+    }
+
+    private static String operandToSqlWithCast(final ISingleOperand3 operand, final ISingleOperand3 other,
+                                               final IDomainMetadata metadata, final DbVersion dbVersion)
+    {
+        if (operand.type().isNull() && other.type().isNotNull()) {
+            final var dialect = HibernateHelpers.getDialect(dbVersion);
+            return dbVersion.castSql(operand.sql(metadata, dbVersion), sqlCastTypeName(other.type().hibType(), dialect));
+        } else {
+            return operand.sql(metadata, dbVersion);
+        }
     }
 
     @Override
@@ -43,11 +65,12 @@ public class ComparisonPredicate3 implements ICondition3 {
         if (!(obj instanceof ComparisonPredicate3)) {
             return false;
         }
-        
+
         final ComparisonPredicate3 other = (ComparisonPredicate3) obj;
-        
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
                 Objects.equals(operator, other.operator);
-   }
+    }
+
 }

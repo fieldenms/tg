@@ -1,30 +1,20 @@
 package ua.com.fielden.platform.ioc;
 
-import java.util.List;
-import java.util.Map;
+import ua.com.fielden.platform.entity.query.EntityQueryModule;
+
 import java.util.Properties;
 
-import org.hibernate.SessionFactory;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-
-/**
- * Hibernate driven module required for correct instantiation of entities.
- *
- * @author TG Team
- *
- */
 public class CommonFactoryModule extends PropertyFactoryModule {
 
-    public CommonFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
-        super(props, defaultHibernateTypes, applicationEntityTypes);
+    public CommonFactoryModule(final Properties props) {
+        super(props);
     }
 
-    protected EntityFactory getEntityFactory() {
-        return entityFactory;
+    @Override
+    protected void configure() {
+        super.configure();
+
+        install(new EntityQueryModule());
     }
 
 }

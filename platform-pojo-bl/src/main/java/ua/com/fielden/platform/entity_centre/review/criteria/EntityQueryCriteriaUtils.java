@@ -189,8 +189,8 @@ public class EntityQueryCriteriaUtils {
      * @param propertyPath
      * @return
      */
-    public static QueryProperty createNotInitialisedQueryProperty(final Class<?> root, final IConvertableToPath propertyPath) {
-        return new QueryProperty(root, propertyPath.toPath());
+    public static QueryProperty createNotInitialisedQueryProperty(final Class<?> root, final CharSequence propertyPath) {
+        return new QueryProperty(root, propertyPath.toString());
     }
 
     /**

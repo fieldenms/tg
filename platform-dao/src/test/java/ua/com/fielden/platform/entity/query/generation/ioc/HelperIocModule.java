@@ -26,8 +26,8 @@ public class HelperIocModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named("dates.weekStart")).to(Integer.valueOf(1));
         bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.valueOf(1));
         bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.valueOf(7));
-        bind(IDates.class).to(DefaultDates.class).in(Scopes.SINGLETON);
-        bind(IUniversalConstants.class).to(DefaultUniversalConstants.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DefaultDates.class);
+        bind(IUniversalConstants.class).to(DefaultUniversalConstants.class);
     }
 
 }

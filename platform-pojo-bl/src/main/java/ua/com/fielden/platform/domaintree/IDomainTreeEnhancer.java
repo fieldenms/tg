@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.domaintree;
 
-import java.util.List;
-import java.util.Map;
-
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * This interface defines how domain can be enhanced via <b>calculated properties</b> management. <br>

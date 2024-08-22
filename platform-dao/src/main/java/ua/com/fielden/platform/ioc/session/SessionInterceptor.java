@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED
 
 import java.util.stream.Stream;
 
+import com.google.inject.Provider;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang3.StringUtils;
@@ -44,21 +45,21 @@ import ua.com.fielden.platform.security.user.User;
  *
  */
 public class SessionInterceptor implements MethodInterceptor {
-    private final SessionFactory sessionFactory;
+    private final Provider<? extends SessionFactory> sessionFactory;
 
     public static final String WARN_TRANSACTION_ROLLBACK = "[%s] Transaction completed (rolled back) with error.";
     private static final Logger LOGGER = getLogger(SessionInterceptor.class);
     
     private final ThreadLocal<String> transactionGuid = new ThreadLocal<>();
 
-    public SessionInterceptor(final SessionFactory sessionFactory) {
+    public SessionInterceptor(final Provider<? extends SessionFactory> sessionFactory) {
         this.sessionFactory = sessionFactory;
     }
 
     @Override
     public Object invoke(final MethodInvocation invocation) throws Throwable {
         final ISessionEnabled invocationOwner = (ISessionEnabled) invocation.getThis();
-        final Session session = sessionFactory.getCurrentSession();
+        final Session session = sessionFactory.get().getCurrentSession();
         final Transaction tr = session.getTransaction();
         final User user = invocationOwner.getUser();
 

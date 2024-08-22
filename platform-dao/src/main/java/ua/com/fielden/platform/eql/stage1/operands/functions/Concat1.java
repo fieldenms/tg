@@ -15,9 +15,9 @@ import ua.com.fielden.platform.eql.stage2.operands.functions.Concat2;
 
 public class Concat1 extends AbstractFunction1<Concat2> {
 
-    private final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands;
+    private final List<? extends ISingleOperand1<? extends ISingleOperand2<?>>> operands;
 
-    public Concat1(final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands) {
+    public Concat1(final List<? extends ISingleOperand1<? extends ISingleOperand2<?>>> operands) {
         this.operands = operands;
     }
 

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
@@ -40,6 +41,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.type.SimpleType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
+import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -127,9 +129,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JsonNode instrumentedJsonNode = node.get("@_i");
             final boolean uninstrumented = instrumentedJsonNode == null;
 
-            final String[] proxiedProps = properties.keySet().stream()
+            final Set<String> proxiedProps = properties.keySet().stream()
                     .filter(prop -> node.get(prop) == null)
-                    .toArray(String[]::new);
+                    .collect(toImmutableSet());
 
             final T entity;
             // Property Descriptor: key and desc properties of propDescriptor are set through setters, not through fields; avoid validators on these properties or otherwise isInitialising:=true would be needed here

@@ -1,10 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.queries;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
-import static ua.com.fielden.platform.eql.stage0.YieldBuilder.ABSENT_ALIAS;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
@@ -19,18 +14,33 @@ import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
+import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 /**
- * A structure used for representing queries in WHERE/ON conditions, yielding, grouping, and ordering.
+ * Represents a query used in the role of an operand.
+ * <p>
+ * Examples:
+ * {@snippet :
+ * prop("id").eq().allOfModels(subQuery1, subQuery2)
+ * val(1).in().model(subQuery)
+ * where().model(subQuery).isNotNull();
+ * }
+ * <p>
  * The only exception is the EXISTS statement, which is represented by {@link SubQueryForExists1}.
  * <p>
  * The specificity of this structure pertains to the processing of yields.
- * In case of no explicit yields, it is expected that query result is entity (i.e., contains ID), which can be auto-yielded.
- * Otherwise the exception is thrown.
+ * In case of no explicit yields, it is expected that the query result is an entity (i.e., contains ID), which can be auto-yielded.
+ * Otherwise, an exception is thrown.
  *
+ * @author TG Team
  */
 public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuery2> {
 
-    public static final String ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID = "Auto-yield is not possible when the main source of the query doesn't contain ID property.";
+    public static final String ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID = "Auto-yield is not possible when the main source of the query doesn't contain property [id].";
 
     public SubQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
         super(queryComponents, resultType);
@@ -51,7 +61,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     private static PropType enhance(final Class<?> resultType, final Yields2 yields) {
         return resultType == null
                ? yields.getYields().iterator().next().operand.type() // the case of modelAsPrimitive() no ResultType provided
-               : new PropType(resultType, H_ENTITY); // the case of modelAsEntity(..)
+               : propType(resultType, H_ENTITY); // the case of modelAsEntity(..)
     }
 
     private boolean isRefetchOnlyQuery() {

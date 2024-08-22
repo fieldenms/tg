@@ -41,11 +41,6 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
 
     /**
      * Recursively populates entity container with raw data for one entity instance.
-     * 
-     * @param data
-     * @param resultTree
-     * @param shouldBeFetched
-     * @return
      */
     private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTupleIntoEntityContainer(final Object[] data, final EntityTree<ET> resultTree) {
 

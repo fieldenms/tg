@@ -3,15 +3,17 @@ package ua.com.fielden.platform.eql.retrieval;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_BIGDECIMAL;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_BOOLEAN;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_DATETIME;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_INTEGER;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_LONG;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_STRING;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_BIGDECIMAL;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_DATETIME;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_INTEGER;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_LONG;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_STRING;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
+import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
 import ua.com.fielden.platform.eql.retrieval.records.QueryResultLeaf;
@@ -83,7 +86,7 @@ public final class EntityResultTreeBuilder {
                             valueTrees.put(currentGroup, valueTreeResult.tree());
                             localIndex = valueTreeResult.updatedIndex();
                         } else {
-                            throw new IllegalStateException("Incorrect state 1: " + yc.name());
+                            throw new EntityRetrievalException("Incorrect state 1: " + yc.name());
                         }
 
                         // "restart" current group
@@ -108,7 +111,7 @@ public final class EntityResultTreeBuilder {
                                 currentGroupDetails.add(new YieldedColumn(remainingProp, yc.propType(), yc.column()));
                             }
                         } else {
-                            throw new IllegalStateException("Can't find prop metadata: " + yc.name());
+                            throw new EntityRetrievalException("Can't find prop metadata: " + yc.name());
                         }
                     }
                 }
@@ -125,7 +128,7 @@ public final class EntityResultTreeBuilder {
                         valueTrees.put(currentGroup, t2.tree());
                         localIndex = t2.updatedIndex();
                     } else {
-                        throw new IllegalStateException("Incorrect state 2: " + yc.name());
+                        throw new EntityRetrievalException("Incorrect state 2: " + yc.name());
                     }
 
                     // "restart" current group
@@ -138,7 +141,7 @@ public final class EntityResultTreeBuilder {
                 currentGroup = yc.name();
 
                 // can be either ET prop, or primitive prop
-                if (yc.propType() != null && EntityUtils.isPersistedEntityType(yc.propType().javaType())) {
+                if (yc.propType().isNotNull() && isPersistedEntityType(yc.propType().javaType())) {
                     currentResultType = (Class<? extends AbstractEntity<?>>) yc.propType().javaType();
                     currentGroupDetails.add(new YieldedColumn(ID, LONG_PROP_TYPE, yc.column()));
                 } else {
@@ -146,7 +149,7 @@ public final class EntityResultTreeBuilder {
                     localIndex = localIndex + 1;
 
                     if (querySourceInfo == null) { // the case of EntityAggregates
-                        final Object derivedHibType = yc.propType() == null ? null : yc.propType().hibType(); // taking actual original prop hibType (if available)
+                        final Object derivedHibType = yc.propType().isNull() ? null : yc.propType().hibType(); // taking actual original prop hibType (if available)
                         leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(derivedHibType)), getHibTypeAsUserType(derivedHibType)));
                     } else {
                         final AbstractQuerySourceItem<?> propInfo = querySourceInfo.getProps().get(yc.name());
@@ -154,7 +157,7 @@ public final class EntityResultTreeBuilder {
                             final Object declaredHibType = propInfo.hibType;
                             leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(declaredHibType)), getHibTypeAsUserType(declaredHibType)));
                         } else {
-                            final Object deducedHibType = yc.propType() == null ? null : hibTypeFromJavaType(yc.propType().javaType());
+                            final Object deducedHibType = yc.propType().isNull() ? null : hibTypeFromJavaType(yc.propType().javaType());
                             leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(deducedHibType)), getHibTypeAsUserType(deducedHibType)));
                         }
                     }
@@ -173,7 +176,7 @@ public final class EntityResultTreeBuilder {
                 valueTrees.put(currentGroup, valueTreeResult.tree());
                 localIndex = valueTreeResult.updatedIndex();
             } else {
-                throw new IllegalStateException("Incorrect state 3: " + currentGroup);
+                throw new EntityRetrievalException("Incorrect state 3: " + currentGroup);
             }
         }
 

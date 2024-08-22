@@ -336,7 +336,7 @@ public class EntityUtilsTest {
 
     @Test(expected = NoSuchElementException.class)
     public void coalesce_throws_exception_if_all_values_are_null_and_gracefully_handles_null_for_array_argument() {
-        coalesce(null, null, null /*this is an array argument*/);
+        coalesce(null, null, (Object[]) null /* this is an array argument */);
     }
 
     @Test
@@ -642,6 +642,41 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void splitPropPath_fails_if_path_contains_empty_property_names() {
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath(".person"));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("..person"));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person..desc"));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person..desc."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.desc."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.desc.."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath(""));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath(".."));
+    }
+
+    @Test
+    public void splitPropPath_splits_a_dot_notated_path_into_a_list_of_simple_property_names() {
+        assertEquals(List.of("person", "desc"), splitPropPath("person.desc"));
+        assertEquals(List.of("person", "vehicle", "desc"), splitPropPath("person.vehicle.desc"));
+    }
+
+    @Test
+    public void splitPropPath_returns_a_single_element_list_given_a_simple_property_name() {
+        assertEquals(List.of("person"), splitPropPath("person"));
+    }
+
+    @Test
+    public void laxSplitPropPath_allows_empty_names_in_a_path() {
+        assertEquals(List.of(""), laxSplitPropPath(""));
+        assertEquals(List.of(), laxSplitPropPath("."));
+        assertEquals(List.of("", "person"), laxSplitPropPath(".person"));
+        assertEquals(List.of("person"), laxSplitPropPath("person."));
+        assertEquals(List.of("person", "", "desc"), laxSplitPropPath("person..desc"));
+    }
+
+    @Test
     public void findFirstPersistentTypeInHierarchyFor_a_persistent_type_returns_that_type() {
         final var maybePersistentType = EntityUtils.findFirstPersistentTypeInHierarchyFor(Attachment.class);
         assertTrue(maybePersistentType.isPresent());
@@ -659,6 +694,14 @@ public class EntityUtilsTest {
     public void findFirstPersistentTypeInHierarchyFor_an_entity_with_no_persistent_type_in_its_hierarhcy_returns_empty_result() {
         final var maybePersistentType = EntityUtils.findFirstPersistentTypeInHierarchyFor(Entity.class);
         assertFalse(maybePersistentType.isPresent());
+    }
+
+    @Test
+    public void entityTypeHierachy_includes_all_parent_entity_types_starting_from_the_most_specific() {
+        assertEquals(List.of(TgReVehicleModel.class, TgVehicleModel.class, AbstractEntity.class),
+                     entityTypeHierarchy(TgReVehicleModel.class, true).toList());
+        assertEquals(List.of(TgReVehicleModel.class, TgVehicleModel.class),
+                     entityTypeHierarchy(TgReVehicleModel.class, false).toList());
     }
 
     /**

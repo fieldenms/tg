@@ -33,7 +33,7 @@ public class IntRangePropertyValidatorTest {
         entity.setFromInt(12);
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
     }
 
     @Test
@@ -51,8 +51,8 @@ public class IntRangePropertyValidatorTest {
         entity.setToInt(16);
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
         assertTrue("Should not be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(16), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getToInt());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class IntRangePropertyValidatorTest {
         entity.setToInt(12);
 
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
-        assertEquals("Incorrect value", new Integer(16), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getFromInt());
         assertFalse("Should not be valid", entity.getProperty("toInt").isValid());
         assertNull("Incorrect value", entity.getToInt());
 
@@ -71,8 +71,8 @@ public class IntRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
         assertTrue("Should not be valid", entity.getProperty("toInt").isValid());
 
-        assertEquals("Incorrect value", new Integer(6), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(12), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(6), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getToInt());
     }
 
 }
