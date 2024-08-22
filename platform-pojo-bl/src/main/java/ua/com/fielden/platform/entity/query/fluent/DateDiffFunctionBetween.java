@@ -5,28 +5,29 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 
 abstract class DateDiffFunctionBetween<T, ET extends AbstractEntity<?>> //
-		extends AbstractQueryLink //
-		implements IDateDiffFunctionBetween<T, ET> {
+        extends AbstractQueryLink //
+        implements IDateDiffFunctionBetween<T, ET> {
 
-    protected DateDiffFunctionBetween(final Tokens tokens) {
-        super(tokens);
+    protected DateDiffFunctionBetween(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForDateDiffFunctionBetween(final Tokens tokens);
 
-	@Override
-	public IFunctionLastArgument<T, ET> and() {
-		return createFunctionLastArgument(getTokens());
-	}
+    protected abstract T nextForDateDiffFunctionBetween(final EqlSentenceBuilder builder);
 
-	private FunctionLastArgument<T, ET> createFunctionLastArgument(final Tokens tokens) {
-		return new FunctionLastArgument<T, ET>(tokens) {
+    @Override
+    public IFunctionLastArgument<T, ET> and() {
+        return createFunctionLastArgument(builder.and());
+    }
 
-			@Override
-			protected T nextForFunctionLastArgument(final Tokens tokens) {
-				return DateDiffFunctionBetween.this.nextForDateDiffFunctionBetween(tokens);
-			}
+    private FunctionLastArgument<T, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {
+        return new FunctionLastArgument<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForFunctionLastArgument(final EqlSentenceBuilder builder) {
+                return DateDiffFunctionBetween.this.nextForDateDiffFunctionBetween(builder);
+            }
+
+        };
+    }
+
 }

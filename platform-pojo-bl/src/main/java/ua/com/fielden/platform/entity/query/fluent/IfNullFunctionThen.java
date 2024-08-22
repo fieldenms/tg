@@ -5,28 +5,29 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IIfNullFunctionThen;
 
 abstract class IfNullFunctionThen<T, ET extends AbstractEntity<?>> //
-		extends AbstractQueryLink //
-		implements IIfNullFunctionThen<T, ET> {
+        extends AbstractQueryLink //
+        implements IIfNullFunctionThen<T, ET> {
 
-    protected IfNullFunctionThen(final Tokens tokens) {
-        super(tokens);
+    protected IfNullFunctionThen(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForIfNullFunctionThen(final Tokens tokens);
 
-	@Override
-	public IFunctionLastArgument<T, ET> then() {
-		return createFunctionLastArgument(getTokens());
-	}
+    protected abstract T nextForIfNullFunctionThen(final EqlSentenceBuilder builder);
 
-	private FunctionLastArgument<T, ET> createFunctionLastArgument(final Tokens tokens) {
-		return new FunctionLastArgument<T, ET>(tokens) {
+    @Override
+    public IFunctionLastArgument<T, ET> then() {
+        return createFunctionLastArgument(builder.then());
+    }
 
-			@Override
-			protected T nextForFunctionLastArgument(final Tokens tokens) {
-				return IfNullFunctionThen.this.nextForIfNullFunctionThen(tokens);
-			}
+    private FunctionLastArgument<T, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {
+        return new FunctionLastArgument<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForFunctionLastArgument(final EqlSentenceBuilder builder) {
+                return IfNullFunctionThen.this.nextForIfNullFunctionThen(builder);
+            }
+
+        };
+    }
+
 }

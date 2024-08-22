@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.joining;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 
 public class OperandsBasedSet3 implements ISetOperand3 {
     private final List<ISingleOperand3> operands;
@@ -16,8 +17,8 @@ public class OperandsBasedSet3 implements ISetOperand3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return format("(%s)", operands.stream().map(op -> op.sql(dbVersion)).collect(joining(", ")));
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return format("(%s)", operands.stream().map(op -> op.sql(metadata, dbVersion)).collect(joining(", ")));
     }
 
     @Override

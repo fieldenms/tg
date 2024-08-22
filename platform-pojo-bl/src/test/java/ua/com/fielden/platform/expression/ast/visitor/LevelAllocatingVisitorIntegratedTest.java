@@ -51,7 +51,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, new LevelAllocatingVisitor(EntityLevel1.class)).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, new LevelAllocatingVisitor(EntityLevel1.class)).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test
@@ -73,7 +73,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, new LevelAllocatingVisitor(EntityLevel1.class)).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test
@@ -85,7 +85,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test
@@ -97,7 +97,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test
@@ -109,7 +109,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(0), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(0), ast.getLevel());
     }
 
     @Test
@@ -122,7 +122,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(0), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(0), ast.getLevel());
     }
 
     @Test
@@ -134,7 +134,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test
@@ -146,7 +146,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test
@@ -158,7 +158,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test
@@ -170,7 +170,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(2), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(2), ast.getLevel());
     }
 
     @Test
@@ -180,7 +180,7 @@ public class LevelAllocatingVisitorIntegratedTest {
         final AstNode ast = parser.parse();
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToManyAssociation.class);
         new AstWalker(ast, visitor).walk();
-        assertEquals("Incorrect level for expression", new Integer(0), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(0), ast.getLevel());
     }
 
     @Test
@@ -190,7 +190,7 @@ public class LevelAllocatingVisitorIntegratedTest {
         final AstNode ast = parser.parse();
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToManyAssociation.class);
         new AstWalker(ast, visitor).walk();
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test
@@ -200,7 +200,7 @@ public class LevelAllocatingVisitorIntegratedTest {
         final AstNode ast = parser.parse();
         final LevelAllocatingVisitor visitor = new LevelAllocatingVisitor(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationCollectional");
         new AstWalker(ast, visitor).walk();
-        assertEquals("Incorrect level for expression", new Integer(2), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(2), ast.getLevel());
     }
 
     @Test
@@ -212,7 +212,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test
@@ -224,7 +224,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(0), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(0), ast.getLevel());
     }
 
     @Test
@@ -236,7 +236,7 @@ public class LevelAllocatingVisitorIntegratedTest {
 
         new AstWalker(ast, visitor).walk();
 
-        assertEquals("Incorrect level for expression", new Integer(1), ast.getLevel());
+        assertEquals("Incorrect level for expression", Integer.valueOf(1), ast.getLevel());
     }
 
     @Test

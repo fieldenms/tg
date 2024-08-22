@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import java.util.Objects;
 
 public class JoinLeafNode3 implements IJoinNode3 {
     public final ISource3 source;
@@ -12,8 +13,8 @@ public class JoinLeafNode3 implements IJoinNode3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return source.sql(dbVersion);
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return source.sql(metadata, dbVersion);
     }
     
     @Override

@@ -4,8 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
-import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
@@ -56,25 +55,25 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Determines a class of property/function defined by <code>dotNotationExp</code>.
-     * If argument <code>dotNotationExp</code> has value "this" then the first argument <code>type</code> is returned as result (stripped if needed).
+     * Determines the type of property / method defined by a dot-notation.
+     * <p>
+     * If dot-notation is {@code "this"}, {@code type} is returned (stripped if needed).
      *
-     * @param type
-     *            -- the class that should contain property/function defined by dot-notation expression. (e.g. "Vehicle" contains "status.isGeneratePmWo()")
-     * @param dotNotationExp
-     *            - a couple of functions/properties joined by ".". (e.g. "vehicle.getKey().getStatus().generatePmWo.getWorkOrder().key")
-     * @return -- property/function class
+     * @param type  type that should contain property/method defined by the dot-notation (e.g. {@code Vehicle} contains {@code "status.isGeneratePmWo()"})
+     * @param dotNotationExp methods / properties joined by {@code "."} (e.g. {@code "vehicle.getKey().getStatus().generatePmWo.getWorkOrder().key"})
+     *
+     * @return  property type / method return type
      */
-    public static Class<?> determinePropertyType(final Class<?> type, final String dotNotationExp) {
+    public static Class<?> determinePropertyType(final Class<?> type, final CharSequence dotNotationExp) {
         if (type == null || StringUtils.isEmpty(dotNotationExp)) {
             throw new ReflectionException(ERR_TYPE_AND_PROP_REQUIRED);
         }
         
-        if ("this".equals(dotNotationExp)) {
+        if ("this".contentEquals(dotNotationExp)) {
             return stripIfNeeded(type);
         }
 
-        final String[] propertiesOrFunctions = dotNotationExp.split(Reflector.DOT_SPLITTER);
+        final String[] propertiesOrFunctions = splitPropPathToArray(dotNotationExp);
         Class<?> result = type;
         for (final String propertyOrFunction : propertiesOrFunctions) {
             result = determineClass(result, propertyOrFunction, true, true);
@@ -135,9 +134,9 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * If method return type is collectional then it returns type of collection elements.
+     * If the {@code method} return type is collectional then it returns type of that collection elements.
      *
-     * @param field
+     * @param method
      * @return
      */
     private static Class<?> determineElementClassForMethod(final Method method) {
@@ -303,7 +302,7 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Returns <code>true</code> if the specified class is proxied, <code>false</code> otherwise.
+     * Returns {@code true} if the specified class is proxied, {@code false} otherwise.
      *
      * @param clazz
      * @return
@@ -317,10 +316,10 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Returns <code>true</code> if the specified class is instrumented by Guice, and thus instances of this type should be fully initialised
-     * from TG perspective (having meta-properties, fitted with ACE/BCE interceptors etc.).
+     * Returns {@code true} if the specified class is instrumented by Guice, and thus instances of this type should be fully initialised
+     * from TG perspective (having meta-properties, fitted with ACE/BCE interceptors, etc.).
      *
-     * @param klass
+     * @param clazz
      * @return
      */
     public static boolean isInstrumented(final Class<?> clazz) {
@@ -337,27 +336,29 @@ public class PropertyTypeDeterminator {
         return entityType.getName().endsWith(MockNotFoundEntityMaker.MOCK_TYPE_ENDING);
     }
 
-    public static boolean isDotNotation(final String exp) {
-        return exp.contains(PROPERTY_SPLITTER);
+    public static boolean isDotNotation(final CharSequence exp) {
+        return exp.toString().contains(PROPERTY_SPLITTER);
     }
 
-    public static Pair<String, String> penultAndLast(final String dotNotationExp) {
+    public static Pair<String, String> penultAndLast(final CharSequence dotNotationExp) {
         if (!isDotNotation(dotNotationExp)) {
             throw new ReflectionException("Should be dot-notation.");
         }
-        final int indexOfLastDot = dotNotationExp.lastIndexOf(PROPERTY_SPLITTER);
-        final String penultPart = dotNotationExp.substring(0, indexOfLastDot);
-        final String lastPart = dotNotationExp.substring(indexOfLastDot + 1);
+        final String dotNotationStr = dotNotationExp.toString();
+        final int indexOfLastDot = dotNotationStr.lastIndexOf(PROPERTY_SPLITTER);
+        final String penultPart = dotNotationStr.substring(0, indexOfLastDot);
+        final String lastPart = dotNotationStr.substring(indexOfLastDot + 1);
         return new Pair<>(penultPart, lastPart);
     }
 
-    public static Pair<String, String> firstAndRest(final String dotNotationExp) {
+    public static Pair<String, String> firstAndRest(final CharSequence dotNotationExp) {
         if (!isDotNotation(dotNotationExp)) {
             throw new ReflectionException("Should be dot-notation.");
         }
-        final int indexOfFirstDot = dotNotationExp.indexOf(PROPERTY_SPLITTER);
-        final String firstPart = dotNotationExp.substring(0, indexOfFirstDot);
-        final String restPart = dotNotationExp.substring(indexOfFirstDot + 1);
+        final String dotNotationStr = dotNotationExp.toString();
+        final int indexOfFirstDot = dotNotationStr.indexOf(PROPERTY_SPLITTER);
+        final String firstPart = dotNotationStr.substring(0, indexOfFirstDot);
+        final String restPart = dotNotationStr.substring(indexOfFirstDot + 1);
         return pair(firstPart, restPart);
     }
 
@@ -368,12 +369,12 @@ public class PropertyTypeDeterminator {
      * @param dotNotationExp
      * @return
      */
-    public static Pair<Class<?>, String> transform(final Class<?> type, final String dotNotationExp) {
+    public static Pair<Class<?>, String> transform(final Class<?> type, final CharSequence dotNotationExp) {
         if (isDotNotation(dotNotationExp)) { // dot-notation expression defines property/function.
             final Pair<String, String> pl = penultAndLast(dotNotationExp);
             return pair(determinePropertyType(type, pl.getKey()), pl.getValue());
         } else { // empty or first level property/function.
-            return pair(type, dotNotationExp);
+            return pair(type, dotNotationExp.toString());
         }
     }
 

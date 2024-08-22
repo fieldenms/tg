@@ -41,15 +41,18 @@ public class HibernateMappingsGenerator {
     private final EqlTables eqlTables;
     private final IDbVersionProvider dbVersionProvider;
     private final PropertyMetadataUtils pmUtils;
+    private final PropertyInliner propertyInliner;
 
     @Inject
     public HibernateMappingsGenerator(final IDomainMetadata domainMetadata,
                                       final IDbVersionProvider dbVersionProvider,
-                                      final EqlTables eqlTables) {
+                                      final EqlTables eqlTables,
+                                      final PropertyInliner propertyInliner) {
         this.eqlTables = eqlTables;
         this.domainMetadata = domainMetadata;
         this.pmUtils = domainMetadata.propertyMetadataUtils();
         this.dbVersionProvider = dbVersionProvider;
+        this.propertyInliner = propertyInliner;
     }
 
     public String generateMappings() {
@@ -76,9 +79,7 @@ public class HibernateMappingsGenerator {
                 });
         sb.append("</hibernate-mapping>");
 
-        final String result = sb.toString();
-        LOGGER.debug("\n\n" + result + "\n\n");
-        return result;
+        return sb.toString();
     }
 
     private String generateEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
@@ -145,7 +146,7 @@ public class HibernateMappingsGenerator {
         final String propNameClause = "\t<property name=\"" + propName + "\"";
         final String typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
         final String endClause = "/>\n";
-        return column.unfold(
+        return column.fold(
                 singleCol -> {
                     final String columnClause = " column=\"" + singleCol.name + "\"";
                     final String lengthClause = singleCol.length == null ? "" : " length=\"" + singleCol.length + "\"";
@@ -174,7 +175,7 @@ public class HibernateMappingsGenerator {
         final StringBuffer sb = new StringBuffer();
         sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + tableName + "\">\n");
 
-        sb.append(em.property(ID).flatMap(PropertyMetadata::asPersistent).map(pm -> {
+        sb.append(em.propertyOpt(ID).flatMap(PropertyMetadata::asPersistent).map(pm -> {
             if (isOneToOne(entityType)) {
                 return generateOneToOneEntityIdMapping(pm.name(), pm.data().column().name, pm.hibType().getClass().getName());
             } else {
@@ -182,13 +183,11 @@ public class HibernateMappingsGenerator {
             }
         }).orElseThrow(() -> unexpectedPropNature("%s.%s".formatted(entityType.getSimpleName(), ID), PropertyNature.PERSISTENT)));
 
-        sb.append(em.property(VERSION).flatMap(PropertyMetadata::asPersistent).map(pm -> {
+        sb.append(em.propertyOpt(VERSION).flatMap(PropertyMetadata::asPersistent).map(pm -> {
             return generateEntityVersionMapping(pm.name(), pm.data().column().name, pm.hibType().getClass().getName());
         }).orElseThrow(() -> unexpectedPropNature("%s.%s".formatted(entityType.getSimpleName(), VERSION), PropertyNature.PERSISTENT)));
 
-        em.property(KEY).orElseThrow(() -> new InvalidArgumentException("Missing property [%s] in [%s].".formatted(KEY, em)))
-                .asPersistent()
-                .ifPresent(pm -> sb.append(generatePropertyMappingFromPropertyMetadata(domainMetadata, pm)));
+        em.property(KEY).asPersistent().ifPresent(pm -> sb.append(generatePropertyMappingFromPropertyMetadata(domainMetadata, pm)));
 
         em.properties().stream()
                 // sort for testing purposes
@@ -214,29 +213,27 @@ public class HibernateMappingsGenerator {
         if (pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
             return generateUnionEntityPropertyMapping(prop);
         }
-        // potential multi-column mapping
-        else if (prop.type().isComposite() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
-            final List<PropColumn> subColumns = pmUtils.subProperties(prop).stream()
-                    .flatMap(subProp -> subProp.asPersistent().stream())
-                    .map(subProp -> subProp.data().column())
-                    .toList();
-
-            final Either<PropColumn, List<String>> column = subColumns.size() == 1
-                    ? left(subColumns.getFirst())
-                    : right(subColumns.stream().map(c -> c.name).toList());
-            return generatePlainPropertyMapping(prop.name(), column, prop.hibType().getClass().getName());
-        }
-        else if (pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent)) {
-            final var et = prop.type().asEntity().orElseThrow();
-            if (KEY.equals(prop.name())) {
-                return generateOneToOnePropertyMapping(prop.name(), et.javaType());
-            } else {
-                return generateManyToOnePropertyMapping(prop.name(), prop.data().column().name, et.javaType());
-            }
-        }
-        else {
-            return generatePlainPropertyMapping(prop.name(), left(prop.data().column()), prop.hibType().getClass().getName());
-        }
+        return propertyInliner.inline(prop)
+                .map(props -> props.stream().map(p -> p.data().column()).toList())
+                .map(columns -> {
+                    final Either<PropColumn, List<String>> column = columns.size() == 1
+                            ? left(columns.getFirst())
+                            : right(columns.stream().map(c -> c.name).toList());
+                    return generatePlainPropertyMapping(prop.name(), column, prop.hibType().getClass().getName());
+                })
+                .orElseGet(() -> {
+                    if (pmUtils.isPropEntityType(prop, EntityMetadata::isPersistent)) {
+                        final var et = prop.type().asEntity().orElseThrow();
+                        if (KEY.equals(prop.name())) {
+                            return generateOneToOnePropertyMapping(prop.name(), et.javaType());
+                        } else {
+                            return generateManyToOnePropertyMapping(prop.name(), prop.data().column().name, et.javaType());
+                        }
+                    }
+                    else {
+                        return generatePlainPropertyMapping(prop.name(), left(prop.data().column()), prop.hibType().getClass().getName());
+                    }
+                });
     }
 
     private static IllegalArgumentException unexpectedPropNature(Object prop, Object expectedNature) {

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity_centre.review;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -8,7 +9,6 @@ import java.lang.reflect.Field;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.Reflector;
 
 /**
  * This class provides convenient API to determine whether property is available to add to the criteria or fetch model.
@@ -60,7 +60,7 @@ public class DynamicCriteriaPropertyAnalyser {
             propertyTypes = new Class<?>[1];
             propertyTypes[0] = declaringType;
         } else {
-            propertyNames = dotNotationExp.split(Reflector.DOT_SPLITTER);
+            propertyNames = splitPropPathToArray(dotNotationExp);
             propertyFields = new Field[propertyNames.length];
             propertyTypes = new Class<?>[propertyNames.length + 1];
             propertyTypes[0] = declaringType;
