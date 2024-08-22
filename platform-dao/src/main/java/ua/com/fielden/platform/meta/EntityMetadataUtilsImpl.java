@@ -32,7 +32,7 @@ final class EntityMetadataUtilsImpl implements EntityMetadataUtils {
     public List<PropertyMetadata> keyMembers(final EntityMetadata entityMetadata) {
         final var compKeyMembers = compositeKeyMembers(entityMetadata);
         return compKeyMembers.isEmpty()
-                ? ImmutableList.of(entityMetadata.property("key").orElseThrow()) // TODO informative error message
+                ? ImmutableList.of(entityMetadata.property("key"))
                 : compKeyMembers;
     }
 

@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import static java.lang.String.format;
 
 public class YearOf3 extends SingleOperandFunction3 {
 
@@ -13,15 +14,15 @@ public class YearOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         switch (dbVersion) {
         case H2:
         case MSSQL:
-            return format("YEAR(%s)", operand.sql(dbVersion));
+            return format("YEAR(%s)", operand.sql(metadata, dbVersion));
         case POSTGRESQL:
-            return format("CAST(EXTRACT(YEAR FROM %s \\:\\:timestamp) AS INT)", operand.sql(dbVersion));
+            return format("CAST(EXTRACT(YEAR FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
         default:
-            return super.sql(dbVersion);
+            return super.sql(metadata, dbVersion);
         }
     }
 

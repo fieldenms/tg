@@ -1,18 +1,31 @@
 package fielden.platform.bnf;
 
+import ua.com.fielden.platform.types.tuples.T2;
+
 import java.util.*;
 
+import static fielden.platform.bnf.Sequence.seqOrTerm;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+
+/**
+ * Fluent API that can be used to define a {@link BNF} grammar.
+ * <p>
+ * To use the API, begin with {@link #start(Variable)}, then add arbitrary rules, and finally end with {@link IBnfBody#build()}.
+ */
 public final class FluentBNF {
 
     private FluentBNF() {}
 
-    public static IBnfBody start(Variable start) {
+    public static IBnfBody start(final Variable start) {
         return new BnfBodyImpl(start);
     }
 
     public interface IBnfBody {
         IDerivation derive(Variable v);
         ISpecialization specialize(Variable v);
+
+        /** Annotate a rule. */
+        <V> IBnfBody annotate(final Variable v, final Metadata.Annotation annotation);
         BNF build();
     }
 
@@ -30,7 +43,8 @@ public final class FluentBNF {
 
     private static class BnfBodyImpl implements FluentBNF.IBnfBody {
 
-        protected final Builder builder;
+        private final Builder builder;
+        private final List<T2<Variable, Metadata.Annotation>> annotations = new ArrayList<>();
 
         BnfBodyImpl(final Variable start) {
             this.builder = new Builder(start);
@@ -55,39 +69,70 @@ public final class FluentBNF {
         }
 
         @Override
+        public IBnfBody annotate(final Variable v, final Metadata.Annotation annotation) {
+            annotations.add(t2(v, annotation));
+            return this;
+        }
+
+        @Override
         public BNF build() {
             builder.add(finishRule());
+            annotateRules();
             return new BNF(builder.terminals, builder.variables, builder.start, builder.rules);
         }
 
+        /**
+         * If this fluent interface {@linkplain #buildsRule() builds a rule}, then builds a rule and returns it, otherwise fails.
+         */
         protected Rule finishRule() {
             throw new UnsupportedOperationException();
         }
 
+        /**
+         * Does this fluent interface build a rule? If so, then {@link #finishRule()} should be used during parsing.
+         */
         protected boolean buildsRule() {
             return false;
         }
 
+        private void annotateRules() {
+            annotations.forEach(t3 -> {
+                final var variable = t3._1;
+                final var rule = builder.rules.stream().filter(r -> r.lhs().name().equals(variable.name()))
+                        .findFirst()
+                        .orElseThrow(() -> new BnfException("Annotation specified for non-existent rule [%s]".formatted(variable)));
+                builder.rules.remove(rule);
+                builder.rules.add(rule.annotate(t3._2));
+            });
+        }
     }
 
     private static final class DerivationImpl extends BnfBodyImpl implements FluentBNF.IDerivation, FluentBNF.IDerivationTail {
         private final Variable lhs;
-        private final List<Sequence> bodies = new ArrayList<>();
+        private final List<Term> bodies = new ArrayList<>();
 
         DerivationImpl(final Builder builder, final Variable lhs) {
             super(builder);
             this.lhs = lhs;
         }
 
+        /**
+         * Specify a body for this derivation rule. Multiple bodies may be specified with {@link IDerivationTail#or(Term...)},
+         * which will result into an {@linkplain Alternation alternation} with bodies as choices.
+         */
         @Override
         public IDerivationTail to(final Term... terms) {
-            bodies.add(new Sequence(terms));
+            bodies.add(seqOrTerm(terms));
             return this;
         }
 
+        /**
+         * Specify a body for this derivation rule. Multiple bodies may be specified, which will result into an
+         * {@linkplain Alternation alternation} with bodies as choices.
+         */
         @Override
         public IDerivationTail or(final Term... terms) {
-            bodies.add(new Sequence(terms));
+            bodies.add(seqOrTerm(terms));
             return this;
         }
 
@@ -129,12 +174,12 @@ public final class FluentBNF {
     }
 
     private static final class Builder {
-        final Set<Terminal> terminals = new LinkedHashSet<>();
-        final Set<Variable> variables = new LinkedHashSet<>();
-        final Set<Rule> rules = new LinkedHashSet<>();
-        final Variable start;
+        private final Set<Terminal> terminals = new LinkedHashSet<>();
+        private final Set<Variable> variables = new LinkedHashSet<>();
+        private final Set<Rule> rules = new LinkedHashSet<>();
+        private final Variable start;
 
-        Builder(Variable start) {
+        Builder(final Variable start) {
             this.start = start;
             add(start);
         }
@@ -166,8 +211,8 @@ public final class FluentBNF {
 
         void add(final Symbol symbol) {
             switch (symbol) {
-            case Terminal x -> add(x);
-            case Variable x -> add(x);
+                case Terminal x -> add(x);
+                case Variable x -> add(x);
             }
         }
 

@@ -73,14 +73,14 @@ public class ChartDeckerMasterBuilder<T extends AbstractEntity<?>> implements IC
     }
 
     @Override
-    public IChartDeckerAddDeck<T> groupDescProp(final String descriptionProperty) {
-        this.groupDescProperty = descriptionProperty;
+    public IChartDeckerAddDeck<T> groupDescProp(final CharSequence descriptionProperty) {
+        this.groupDescProperty = descriptionProperty.toString();
         return this;
     }
 
     @Override
-    public IChartDeckerDesc<T> groupKeyProp(final String property) {
-        this.groupKeyProperty = property;
+    public IChartDeckerDesc<T> groupKeyProp(final CharSequence property) {
+        this.groupKeyProperty = property.toString();
         return this;
     }
 }

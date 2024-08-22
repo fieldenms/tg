@@ -41,6 +41,7 @@ public abstract class AbstractEqlBenchmark {
     // required for correct initialisation of Guice modules
     @Param("") String propertiesFile;
 
+    private Injector injector;
     private EqlRandomGenerator eqlGenerator;
 
     protected EqlRandomGenerator eqlRandomGenerator() {
@@ -311,15 +312,10 @@ public abstract class AbstractEqlBenchmark {
         blackhole.consume(finish(model));
     }
 
-    /**
-     * Performs the last action in a benchmark method.
-     */
-    protected abstract Object finish(final QueryModel<?> queryModel);
-
-    // -------------------- SUPPORTING CODE --------------------
-
     @Setup(Level.Trial)
     public void setup() throws IOException {
+        eqlGenerator = new EqlRandomGenerator(new Random(9375679861L));
+
         if (!Files.isReadable(Path.of(propertiesFile))) {
             throw new IllegalStateException("Can't read file: %s".formatted(propertiesFile));
         }
@@ -329,16 +325,23 @@ public abstract class AbstractEqlBenchmark {
             properties.load(in);
         }
 
-        final var injector = new ApplicationInjectorFactory(Workflows.development)
+        injector = new ApplicationInjectorFactory(Workflows.development)
                 .add(newBenchmarkModule(properties))
                 .add(new NewUserNotifierMockBindingModule())
                 .getInjector();
-
-        eqlGenerator = new EqlRandomGenerator(new Random(9375679861L));
 
         afterSetup(injector);
     }
 
     protected void afterSetup(final Injector injector) {}
+
+    private <T> T getInstance(final Class<T> type) {
+        return injector.getInstance(type);
+    }
+
+    /**
+     * Performs the last action in a benchmark method.
+     */
+    protected abstract Object finish(final QueryModel<?> queryModel);
 
 }

@@ -11,7 +11,9 @@ import static ua.com.fielden.platform.persistence.HibernateConstants.H_INTEGER;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_LONG;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_STRING;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -139,7 +141,7 @@ public final class EntityResultTreeBuilder {
                 currentGroup = yc.name();
 
                 // can be either ET prop, or primitive prop
-                if (yc.propType() != null && EntityUtils.isPersistedEntityType(yc.propType().javaType())) {
+                if (yc.propType().isNotNull() && isPersistedEntityType(yc.propType().javaType())) {
                     currentResultType = (Class<? extends AbstractEntity<?>>) yc.propType().javaType();
                     currentGroupDetails.add(new YieldedColumn(ID, LONG_PROP_TYPE, yc.column()));
                 } else {
@@ -147,7 +149,7 @@ public final class EntityResultTreeBuilder {
                     localIndex = localIndex + 1;
 
                     if (querySourceInfo == null) { // the case of EntityAggregates
-                        final Object derivedHibType = yc.propType() == null ? null : yc.propType().hibType(); // taking actual original prop hibType (if available)
+                        final Object derivedHibType = yc.propType().isNull() ? null : yc.propType().hibType(); // taking actual original prop hibType (if available)
                         leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(derivedHibType)), getHibTypeAsUserType(derivedHibType)));
                     } else {
                         final AbstractQuerySourceItem<?> propInfo = querySourceInfo.getProps().get(yc.name());
@@ -155,7 +157,7 @@ public final class EntityResultTreeBuilder {
                             final Object declaredHibType = propInfo.hibType;
                             leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(declaredHibType)), getHibTypeAsUserType(declaredHibType)));
                         } else {
-                            final Object deducedHibType = yc.propType() == null ? null : hibTypeFromJavaType(yc.propType().javaType());
+                            final Object deducedHibType = yc.propType().isNull() ? null : hibTypeFromJavaType(yc.propType().javaType());
                             leaves.add(new QueryResultLeaf(localIndex, yc.name(), new HibernateScalar(yc.column(), getHibTypeAsType(deducedHibType)), getHibTypeAsUserType(deducedHibType)));
                         }
                     }

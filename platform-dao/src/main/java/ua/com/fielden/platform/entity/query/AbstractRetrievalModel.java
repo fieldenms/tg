@@ -102,7 +102,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     }
 
     protected Optional<PropertyMetadata> getPropMetadata(final String propName) {
-        final var optPm = domainMetadata.forProperty(getEntityType(), propName);
+        final var optPm = domainMetadata.forPropertyOpt(getEntityType(), propName);
         if (optPm.isEmpty()) {
             // allow only IDs and VERSIONs to have missing PropertyMetadata; this is sometimes useful for pure synthetic entities that yield these props
             if (ID.equals(propName) || VERSION.equals(propName)) {

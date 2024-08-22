@@ -18,18 +18,18 @@ public sealed abstract class JoinToken extends AbstractParameterisedEqlToken {
         super(JOIN, "join");
     }
 
-    public static EntityType entityType(Class<? extends AbstractEntity<?>> entityType) {
+    public static EntityType entityType(final Class<? extends AbstractEntity<?>> entityType) {
         return new EntityType(entityType);
     }
 
-    public static Models models(List<? extends QueryModel<?>> models) {
+    public static Models models(final List<? extends QueryModel<?>> models) {
         return new Models(models);
     }
 
     public static final class EntityType extends JoinToken {
         public final Class<? extends AbstractEntity<?>> entityType;
 
-        public EntityType(Class<? extends AbstractEntity<?>> entityType) {
+        public EntityType(final Class<? extends AbstractEntity<?>> entityType) {
             this.entityType = requireNonNull(entityType);
         }
 
@@ -53,7 +53,7 @@ public sealed abstract class JoinToken extends AbstractParameterisedEqlToken {
     public static final class Models extends JoinToken {
         public final List<QueryModel<?>> models;
 
-        public Models(List<? extends QueryModel<?>> models) {
+        public Models(final List<? extends QueryModel<?>> models) {
             this.models = ImmutableList.copyOf(models);
         }
 

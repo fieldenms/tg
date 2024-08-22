@@ -3,7 +3,7 @@ package fielden.platform.bnf;
 import java.util.Objects;
 
 /**
- * A variable is a nonterminal symbol.
+ * A variable is a non-terminal symbol.
  */
 public non-sealed interface Variable extends Symbol {
 
@@ -13,8 +13,8 @@ public non-sealed interface Variable extends Symbol {
     }
 
     @Override
-    default <V> Variable annotate(TermMetadata.Key<V> key, V value) {
-        final var newMetadata = TermMetadata.merge(metadata(), key, value);
+    default Variable annotate(final Metadata.Annotation annotation) {
+        final var newMetadata = Metadata.merge(metadata(), annotation);
         final String name = name();
         final Variable normal = normalize();
 
@@ -30,7 +30,7 @@ public non-sealed interface Variable extends Symbol {
             }
 
             @Override
-            public TermMetadata metadata() {
+            public Metadata metadata() {
                 return newMetadata;
             }
 
@@ -40,8 +40,13 @@ public non-sealed interface Variable extends Symbol {
             }
 
             @Override
+            public boolean equals(final Object o) {
+                return this == o || o instanceof Variable that && name.equals(that.name());
+            }
+
+            @Override
             public int hashCode() {
-                return Objects.hash(name, newMetadata);
+                return Objects.hash(name);
             }
         };
     }

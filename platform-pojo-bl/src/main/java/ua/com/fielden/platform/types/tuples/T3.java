@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.types.tuples;
 
+import org.apache.commons.lang3.function.TriFunction;
+
+import java.util.function.Function;
+
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
@@ -35,7 +39,27 @@ public class T3<T_1, T_2, T_3> {
     public static <T_1, T_2, T_3> T3<T_1, T_2, T_3> t3(final T_1 _1, final T_2 _2, final T_3 _3) {
         return new T3<>(_1, _2, _3);
     }
-    
+
+    ////////////////////////////////////
+    //////// Mapping functions /////////
+    ////////////////////////////////////
+    public <R> T3<R, T_2, T_3> map1(final Function<? super T_1, R> mapper) {
+        return new T3<>(mapper.apply(_1), _2, _3);
+    }
+
+    public <R> T3<T_1, R, T_3> map2(final Function<? super T_2, R> mapper) {
+        return new T3<>(_1, mapper.apply(_2), _3);
+    }
+
+    public <R> T3<T_1, T_2, R> map3(final Function<? super T_3, R> mapper) {
+        return new T3<>(_1, _2, mapper.apply(_3));
+    }
+
+    public <R> R map(final TriFunction<? super T_1, ? super T_2, ? super T_3, R> mapper) {
+        return mapper.apply(this._1, this._2, this._3);
+    }
+    ////////////////////////////////////
+
     @Override
     public int hashCode() {
         int result = 29;

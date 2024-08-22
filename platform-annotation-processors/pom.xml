@@ -4,11 +4,10 @@
     <parent>
         <groupId>fielden</groupId>
         <artifactId>platform-parent</artifactId>
-        <version>1.4.6-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>platform-annotation-processors</artifactId>
-    <version>1.4.6.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Trident Genesis Platform Annotation Processors</name>
@@ -74,7 +73,7 @@
             </resource>
         </resources>
         <plugins>
-            <!-- Use Maven Shade Plugin to create 2 JARs: uber JAR for standalone use 
+            <!-- Use Maven Shade Plugin to create 2 JARs: uber JAR for standalone use
             and light-weight "lib" JAR for use as a dependency. The lib JAR should not
             include META-INF/services/javax.annotation.processing.Processor to prevent
             the compiler from discovering annotation processors (this is why it's a "lib"
@@ -163,6 +162,11 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+
             <!-- disable maven-enforcer-plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -172,7 +176,6 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 </project>

@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
@@ -51,10 +52,11 @@ import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.conditio
  * Base class for stage 1 data structures representing an EQL query, suitable for transformation into stage 2.
  * There are four kinds of structures for representing queries depending on its usage:
  * <ol>
- *  <li> Result query {@link ResultQuery1} - the most outer query that is used to actually execute to get some data out.
- *  <li> Source query (@link SourceQuery1} - a query that is a source for another query (i.e., select from (select ..)).
- *  <li> Sub query {@link SubQuery1} - queries that are not used as source queries, but are used in WHERE/ON conditions, yielding, grouping, and ordering.
- *  <li> Exists sub query {@link SubQueryForExists1} - is a kind of Sub queries that don't require the yield portion, which effectively means they are used for EXISTS predicate only.
+ *  <li> {@linkplain ResultQuery1 Result Query} - the most outer query that is used to actually execute to get some data out.
+ *  <li> {@linkplain SourceQuery1 Source Query} - a query that is a source for another query (i.e., {@code select from (select ..)}).
+ *  <li> {@linkplain SubQuery1 Subquery} - a query that is not used as a source query, but is used in WHERE/ON conditions, yielding, grouping, and ordering.
+ *  <li> {@linkplain SubQueryForExists1 Exists Subquery} - a special subquery that doesn't require the yield portion,
+ *       which effectively means they are used for EXISTS predicate only.
  * </ol>
  *
  */
@@ -68,7 +70,16 @@ public abstract class AbstractQuery1 {
     public final Yields1 yields;
     public final GroupBys1 groups;
     public final OrderBys1 orderings;
+
+    /** The result type of this query.
+     * <ul>
+     *   <li> For primitive results -- {@code null}.
+     *   <li> For entity results -- an entity type.
+     *   <li> For aggregated results -- {@link EntityAggregates}.
+     * </ul>
+     *  */
     public final Class<? extends AbstractEntity<?>> resultType;
+
     public final boolean yieldAll;
     public final boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
 

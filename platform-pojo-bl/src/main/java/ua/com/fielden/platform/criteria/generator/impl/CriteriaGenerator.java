@@ -181,7 +181,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param propertyName
      * @return
      */
-    private static List<NewProperty> generateCriteriaProperties(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    private static List<NewProperty> generateCriteriaProperties(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, propertyName);
         final CritOnly critOnlyAnnotation = isEntityItself ? null : getPropertyAnnotation(CritOnly.class, managedType, propertyName);
@@ -233,7 +233,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation, final List<Annotation> additionalAnnotations) {
+    private static NewProperty generateSingleCriteriaProperty(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation, final List<Annotation> additionalAnnotations) {
         final boolean isEntity = EntityUtils.isEntityType(propertyType);
         final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
         final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType);
@@ -267,7 +267,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param additionalAnnotations -- additional annotations to be generated in criteria properties
      * @return
      */
-    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation, final List<Annotation> additionalAnnotations) {
+    private static List<NewProperty> generateRangeCriteriaProperties(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation, final List<Annotation> additionalAnnotations) {
         final String firstPropertyName = CriteriaReflector.critName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
         final String secondPropertyName = CriteriaReflector.critName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
         final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType;

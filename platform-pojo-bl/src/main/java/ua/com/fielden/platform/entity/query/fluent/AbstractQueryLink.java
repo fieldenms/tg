@@ -1,23 +1,16 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-
 import java.util.Objects;
+
+import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
 
 abstract class AbstractQueryLink {
 
     public final EqlSentenceBuilder builder;
 
     protected AbstractQueryLink(final EqlSentenceBuilder builder) {
-        if (builder == null) {
-            throw new EqlException("Invalid argument -- tokens should not be null.");
-        }
-
+        requireNotNullArgument(builder, "builder");
         this.builder = builder;
-    }
-
-    public EqlSentenceBuilder getBuilder() {
-        return builder;
     }
 
     @Override

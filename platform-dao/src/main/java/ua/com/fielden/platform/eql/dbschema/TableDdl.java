@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ioc.HibernateConfigurationFactory;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 /**
@@ -134,7 +135,7 @@ public class TableDdl {
     }
 
     private List<String> createUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
-        final DbVersion dbVersion = HibernateConfigurationFactory.determineDbVersion(dialect.getClass().getName());
+        final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
         return cols.map(col -> {
             // for now we only know how to create unique indexes for nullable column in case of SQL Server
             if (col.nullable() && MSSQL != dbVersion && POSTGRESQL != dbVersion) {

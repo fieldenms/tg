@@ -14,41 +14,21 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> extends IResultSetBuilderDynamicProps<T>{
 
     /**
-     * Adds {@code propName} to an Entity Centre result set. Supports a dot-notation form (e.g., "zone.sector.division").
-     * <p>
-     * This method is deprecated, use {@link #addProp(IConvertableToPath)} instead.
+     * Adds a property to an Entity Centre result set. Supports dot-notation (e.g., {@code Station_.zone().sector().division()}).
      */
-    @Deprecated
-    IResultSetBuilder3Ordering<T> addProp(final String propName);
+    IResultSetBuilder3Ordering<T> addProp(final CharSequence propName);
 
     /**
-     * Adds {@code prop} to an Entity Centre result set. Supports a dot-notation form (e.g., Station_.zone().sector().division()).
-     */
-    default IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop) {
-        return addProp(prop, true);
-    }
-
-    /**
-     * Adds property {@code prop} to an Entity Centre result set.
+     * Adds a property to an Entity Centre result set.
      * 
      * @param presentByDefault -- indicates whether the property should be present in the result set by default; users can add/remove the property using AZ (Customise Columns) action
      */
-    IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop, final boolean presentByDefault);
+    IResultSetBuilder3Ordering<T> addProp(final CharSequence prop, final boolean presentByDefault);
 
     /**
-     * Adds editable result-set column for {@code propName}, possibly in "dot-notation" form (e.g. "zone.sector.division").
-     * <p>
-     * This method is deprecated, use {@link #addEditableProp(IConvertableToPath)} instead.
+     * Adds editable result-set column for a property, possibly in "dot-notation" form (e.g. "zone.sector.division").
      */
-    @Deprecated
-    IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName);
-
-    /**
-     * Adds editable result-set column for {@code propName}, possibly in "dot-notation" form (e.g. Station_.zone().sector().division()).
-     */
-    default IResultSetBuilderWidgetSelector<T> addEditableProp(final IConvertableToPath propName) {
-        return addEditableProp(propName.toPath());
-    }
+    IResultSetBuilderWidgetSelector<T> addEditableProp(final CharSequence propName);
 
     /**
      * Adds a custom column to an Entity Centre result set, using {@link PropDef} definition.

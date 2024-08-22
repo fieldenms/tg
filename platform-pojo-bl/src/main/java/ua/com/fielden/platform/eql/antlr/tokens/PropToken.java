@@ -9,7 +9,7 @@ public final class PropToken extends AbstractParameterisedEqlToken {
 
     public final String propPath;
 
-    public PropToken(String propPath) {
+    public PropToken(final String propPath) {
         super(PROP, "prop");
         this.propPath = requireNonNull(propPath);
     }

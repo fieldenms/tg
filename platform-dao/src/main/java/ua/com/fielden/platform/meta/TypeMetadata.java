@@ -36,7 +36,17 @@ public sealed interface TypeMetadata permits EntityMetadata, TypeMetadata.Compos
 
         Collection<? extends PropertyMetadata> properties();
 
-        Optional<PropertyMetadata> property(String name);
+        /**
+         * Retrieves metadata for a property if it exists in this type, otherwise throws an exception.
+         * </p>
+         * {@link #propertyOpt(String)} is a non-throwing alternative.
+         */
+        PropertyMetadata property(String name);
+
+        /**
+         * Non-throwing alternative to {@link #property(String)}.
+         */
+        Optional<PropertyMetadata> propertyOpt(String name);
 
     }
 

@@ -92,7 +92,7 @@ public class QueryModelToStage1Transformer {
         return new QueryComponents1(
                 result.joinRoot(), result.whereConditions(), udfModel, result.yields(), result.groups(),
                 orderModel == null ? EMPTY_ORDER_BYS : produceOrderBys(orderModel),
-                qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
+                qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery());
     }
 
     private Conditions1 generateUserDataFilteringCondition(final boolean filterable, final IFilter filter,

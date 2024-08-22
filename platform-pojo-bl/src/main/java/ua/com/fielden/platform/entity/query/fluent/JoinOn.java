@@ -5,16 +5,16 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoinWhere0;
 
 class JoinOn<ET extends AbstractEntity<?>> //
-		extends AbstractQueryLink //
-		implements IJoinCondition<ET> {
+        extends AbstractQueryLink //
+        implements IJoinCondition<ET> {
 
-	public JoinOn(final EqlSentenceBuilder builder) {
-		super(builder);
-	}
+    public JoinOn(final EqlSentenceBuilder builder) {
+        super(builder);
+    }
 
-	@Override
-	public IJoinWhere0<ET> on() {
-		return new JoinWhere0<ET>(builder.on());
-	}
+    @Override
+    public IJoinWhere0<ET> on() {
+        return new JoinWhere0<ET>(builder.on());
+    }
 
 }

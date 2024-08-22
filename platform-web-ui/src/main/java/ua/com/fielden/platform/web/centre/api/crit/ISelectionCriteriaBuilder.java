@@ -19,13 +19,6 @@ public interface ISelectionCriteriaBuilder<T extends AbstractEntity<?>> {
     /**
      * Adds criterion for {@code propName}, possibly in "dot-notation" form (e.g. "zone.sector.division").
      */
-    ISelectionCritKindSelector<T> addCrit(final String propName);
-
-    /**
-     * Adds criterion for {@code propName}, possibly in "dot-notation" form (e.g. Station_.zone().sector().division()).
-     */
-    default ISelectionCritKindSelector<T> addCrit(final IConvertableToPath propName) {
-        return addCrit(propName.toPath());
-    }
+    ISelectionCritKindSelector<T> addCrit(final CharSequence propName);
 
 }

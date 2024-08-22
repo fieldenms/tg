@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -10,10 +11,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.IntFunction;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -49,16 +47,29 @@ public final class CollectionUtil {
         return elements != null ? new ArrayList<>(asList(elements)) : emptyList();
     }
 
+    /**
+     * An efficient alternative to {@code Collections.unmodifiableList(Arrays.asList(array))}.
+     */
     @SafeVarargs
-    public static <T> List<T> unmodifiableListOf(final T ... elements) {
-        return unmodifiableList(asList(elements));
+    public static <T> List<T> unmodifiableListOf(final T... elements) {
+        return elements.length == 0 ? ImmutableList.of() : unmodifiableList(asList(elements));
     }
 
     /**
      * An alternative of {@link List#copyOf(Collection)} that allows the given collection to contain nulls.
      */
     public static <T> List<T> listCopy(final Collection<? extends T> collection) {
-        return collection.isEmpty() ? List.of() : unmodifiableList(new ArrayList<>(collection));
+        if (collection.isEmpty()) {
+            return ImmutableList.of();
+        }
+        else if (collection instanceof ImmutableCollection<? extends T> immCol) {
+            return ImmutableList.copyOf(immCol);
+        }
+        else {
+            final ArrayList<? extends T> list = new ArrayList<>(collection);
+            list.trimToSize();
+            return unmodifiableList(list);
+        }
     }
 
     /**
@@ -354,8 +365,50 @@ public final class CollectionUtil {
     }
 
     public static <X> ImmutableList<X> append1(final Iterable<? extends X> xs, final X x) {
-        final var builder = ImmutableList.<X>builderWithExpectedSize((xs instanceof Collection<?> c ? c.size() : 0) + 1);
+        final var builder = ImmutableList.<X> builderWithExpectedSize(
+                (xs instanceof Collection<?> c ? c.size() : 0) + 1);
         return builder.addAll(xs).add(x).build();
+    }
+
+    /**
+     * Transforms a map into another map by applying provided transformations to its entries.
+     * <p>
+     * Disallows duplicates among resulting keys.
+     * Disallows {@code null} as a resulting key.
+     *
+     * @param keyMapper  returns a key of the resulting map, accepts both key and value of the input's map entry
+     * @param valueMapper returns a value of the resulting map, accepts both key and value of the input's map entry
+     *
+     * @throws IllegalStateException  if there are duplicates among resulting keys or a key gets mapped to {@code null}
+     */
+    public static <K, V, RK, RV> Map<RK, RV> map(
+            final Map<K, V> map,
+            final BiFunction<? super K, ? super V, RK> keyMapper,
+            final BiFunction<? super K, ? super V, RV> valueMapper)
+    {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> {
+                            final RK newKey = keyMapper.apply(entry.getKey(), entry.getValue());
+                            if (newKey == null) {
+                                throw new IllegalStateException("Key was mapped to null. Entry: %s".formatted(entry));
+                            }
+                            return newKey;
+                        },
+                        entry -> valueMapper.apply(entry.getKey(), entry.getValue())));
+    }
+
+    /**
+     * Like {@link #map(Map, BiFunction, BiFunction)} but only the values of the input map undergo transformation.
+     */
+    public static <K, V, RV> Map<K, RV> mapValues(
+            final Map<K, V> map,
+            final BiFunction<? super K, ? super V, RV> valueMapper)
+    {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> valueMapper.apply(entry.getKey(), entry.getValue())));
     }
 
     public static final class CollectionBuilder<C extends Collection<E>, E> {

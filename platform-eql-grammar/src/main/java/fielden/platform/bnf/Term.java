@@ -5,6 +5,8 @@ import java.util.stream.Stream;
 
 /**
  * The most general grammar term.
+ * <p>
+ * Equality is defined only in terms of structure, excluding metadata.
  */
 public sealed interface Term permits Notation, Sequence, Symbol {
 
@@ -17,17 +19,32 @@ public sealed interface Term permits Notation, Sequence, Symbol {
         return this;
     }
 
-    default TermMetadata metadata() {
-        return TermMetadata.EMPTY_METADATA;
+    default Metadata metadata() {
+        return Metadata.EMPTY_METADATA;
     }
 
-    <V> Term annotate(TermMetadata.Key<V> key, V value);
+    /**
+     * Produces a new term that is equal to this term but with an additional annotation.
+     */
+    Term annotate(final Metadata.Annotation annotation);
 
+    /**
+     * Completely and recursively flattens this term's structure.
+     * If this term is a nested structure of other terms, returns all of them by recursively flattening them first.
+     * Otherwise, this term is an atom, and a single-element stream with this term is returned.
+     */
     Stream<Term> flatten();
 
     /**
      * Recursive map.
      */
-    Term recMap(Function<? super Term, ? extends Term> mapper);
+    Term recMap(final Function<? super Term, ? extends Term> mapper);
+
+    /**
+     * Map each term in this structure (non-recursively).
+     * If this term is a nested structure of other terms, map each term without recursing deeper.
+     * Otherwise, this term is an atom, and the function is applied directly to it.
+     */
+    Term map(final Function<? super Term, ? extends Term> mapper);
 
 }
