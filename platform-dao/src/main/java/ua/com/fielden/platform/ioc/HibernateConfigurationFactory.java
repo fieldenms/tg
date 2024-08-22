@@ -3,12 +3,17 @@ package ua.com.fielden.platform.ioc;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Properties;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * Hibernate configuration factory. All Hibernate specific properties should be passed as {@link Properties} values. The following list of properties is supported:
@@ -79,6 +84,17 @@ public class HibernateConfigurationFactory {
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
+    }
+
+    public static DbVersion determineDbVersion(final Properties props) {
+        return determineDbVersion(props.getProperty(DIALECT));
+    }
+
+    public static DbVersion determineDbVersion(final String dialect) {
+        if (isEmpty(dialect)) {
+            throw new InvalidArgumentException("Hibernate dialect was not provided, but is required");
+        }
+        return HibernateHelpers.getDbVersion(HibernateHelpers.getDialect(dialect));
     }
 
     public Configuration build() {
