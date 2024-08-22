@@ -52,16 +52,15 @@ public class HibernateMappingsGenerator {
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
         domainMetadata.allTypes(EntityMetadata.class).distinct()
-                // sort for testing purposes
-                .sorted(comparing(em -> em.javaType().getSimpleName()))
                 .filter(EntityMetadata::isPersistent)
+                .sorted(comparing(em -> em.javaType().getSimpleName())) // sort for testing purposes
                 .forEach(em -> {
                     try {
                         String tableName = domainMetadata.getTableForEntityType(em.javaType()).name();
                         sb.append(generateEntityClassMapping(domainMetadata, em, tableName, dbVersion));
-                    } catch (final Exception e) {
-                        LOGGER.error(e);
-                        throw new EqlMetadataGenerationException("Couldn't generate mapping for " + em, e);
+                    } catch (final Exception ex) {
+                        LOGGER.error(ex);
+                        throw new EqlMetadataGenerationException("Could not generate mapping for " + em, ex);
                     }
                     sb.append("\n");
                 });
