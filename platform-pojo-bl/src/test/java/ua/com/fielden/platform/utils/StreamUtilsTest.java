@@ -266,6 +266,11 @@ public class StreamUtilsTest {
     }
 
     @Test
+    public void reduceLeft_returns_optional_with_first_element_for_stream_with_one_element() {
+        assertOptEquals("one", reduceLeft(Stream.of("one"), String::concat));
+    }
+
+    @Test
     public void reduceLeft_processes_stream_elements_sequentially_from_left_to_right() {
         assertOptEquals(1, reduceLeft(IntStream.of(1), Integer::sum));
         assertOptEquals("one-two", reduceLeft(Stream.of("one-", "two"), String::concat));
