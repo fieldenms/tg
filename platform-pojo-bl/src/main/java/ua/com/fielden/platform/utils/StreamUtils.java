@@ -299,7 +299,7 @@ public class StreamUtils {
     }
 
     /**
-     * Sequential reduction of the stream from left to right.
+     * Applies a binary function to a start value and all elements of a stream, going left to right.
      *
      * @param stream the stream to be folded.
      * @param fn  the binary function that folds an element into the result
@@ -313,6 +313,14 @@ public class StreamUtils {
         return foldLeft_(stream.iterator(), z, fn);
     }
 
+    /**
+     * Helper function that actually performs folding.
+     *
+     * @param iter
+     * @param z
+     * @param fn
+     * @return
+     */
     private static <A, B> B foldLeft_(final Iterator<A> iter,
                                       final B z,
                                       final BiFunction<? super B, ? super A, B> fn) {
