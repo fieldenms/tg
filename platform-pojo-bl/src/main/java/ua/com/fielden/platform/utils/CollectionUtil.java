@@ -262,7 +262,6 @@ public final class CollectionUtil {
     }
 
     /**
-<<<<<<< HEAD
      * If a collection is not empty, returns its first element, which must not be null.
      *
      * @throws InvalidArgumentException  if the first element is null
@@ -302,7 +301,7 @@ public final class CollectionUtil {
      * Transforms a map into another map by applying provided transformations to its entries.
      * <p>
      * Disallows duplicates among resulting keys.
-     * Diallows {@code null} as a resulting key.
+     * Disallows {@code null} as a resulting key.
      *
      * @param keyMapper  returns a key of the resulting map, accepts both key and value of the input's map entry
      * @param valueMapper returns a value of the resulting map, accepts both key and value of the input's map entry
