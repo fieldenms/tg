@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
@@ -57,7 +58,17 @@ public final class CollectionUtil {
      * An alternative of {@link List#copyOf(Collection)} that allows the given collection to contain nulls.
      */
     public static <T> List<T> listCopy(final Collection<? extends T> collection) {
-        return collection.isEmpty() ? List.of() : unmodifiableList(new ArrayList<>(collection));
+        if (collection.isEmpty()) {
+            return ImmutableList.of();
+        }
+        else if (collection instanceof ImmutableCollection<? extends T> immCol) {
+            return ImmutableList.copyOf(immCol);
+        }
+        else {
+            final ArrayList<? extends T> list = new ArrayList<>(collection);
+            list.trimToSize();
+            return unmodifiableList(list);
+        }
     }
 
     /**
