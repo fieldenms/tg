@@ -17,7 +17,7 @@ public class TryTestCase {
         
         assertTrue(result instanceof Right);
         final Right<Exception, Integer> right = (Right<Exception, Integer>) result;
-        assertTrue(right.value == 6);
+        assertTrue(right.value() == 6);
     }
 
     @Test
@@ -26,7 +26,7 @@ public class TryTestCase {
         
         assertTrue(result instanceof Left);
         final Left<Exception, Integer> left = (Left<Exception, Integer>) result;
-        assertTrue(left.value instanceof IllegalArgumentException);
+        assertTrue(left.value() instanceof IllegalArgumentException);
     }
 
 }

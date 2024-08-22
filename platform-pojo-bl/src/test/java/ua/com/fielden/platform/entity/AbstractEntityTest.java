@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
+import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
@@ -28,7 +29,10 @@ import ua.com.fielden.platform.types.either.Left;
 
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import static java.lang.String.format;
 import static org.junit.Assert.*;
@@ -145,7 +149,7 @@ public class AbstractEntityTest {
     public void persistentOnly_final_property_for_non_persistent_entity_yields_invalid_definition() {
         final Either<Exception, EntityInvalidDefinition> result = Try(() -> factory.newEntity(EntityInvalidDefinition.class, "key", "desc"));
         assertTrue(result instanceof Left);
-        final Throwable rootCause = ExceptionUtils.getRootCause(((Left<Exception, EntityInvalidDefinition>) result).value);
+        final Throwable rootCause = ExceptionUtils.getRootCause(((Left<Exception, EntityInvalidDefinition>) result).value());
         assertTrue(rootCause instanceof EntityDefinitionException);
         assertEquals(format("Non-persistent entity [%s] has property [%s], which is incorrectly annotated with @Final(persistentOnly = true).", EntityInvalidDefinition.class.getSimpleName(), "firstProperty"),
                 rootCause.getMessage());
@@ -228,7 +232,7 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
+     * <li>validators are provided with correct values (this is actually done by {@link ObservableMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
     @Test
@@ -264,7 +268,7 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
+     * <li>validators are provided with correct values (this is actually done by {@link ObservableMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
     @Test
@@ -298,7 +302,7 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
+     * <li>validators are provided with correct values (this is actually done by {@link ObservableMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
     @Test
@@ -1086,7 +1090,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidMoneyPropWithPrecision> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithPrecision.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidMoneyPropWithPrecision> left = (Left<Exception, EntityWithInvalidMoneyPropWithPrecision>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithPrecision.class.getName()), ex.getMessage());
     }
@@ -1096,7 +1100,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidMoneyPropWithScale> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithScale.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidMoneyPropWithScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithScale>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithScale.class.getName()), ex.getMessage());
     }
@@ -1106,7 +1110,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale.class.getName()), ex.getMessage());
     }
@@ -1116,7 +1120,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale.class.getName()), ex.getMessage());
     }
@@ -1126,7 +1130,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidMoneyPropWithLength> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithLength.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidMoneyPropWithLength> left = (Left<Exception, EntityWithInvalidMoneyPropWithLength>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_OF_PARAM_LENGTH_MSG, "numericMoney", EntityWithInvalidMoneyPropWithLength.class.getName()), ex.getMessage());
     }
@@ -1136,7 +1140,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidIntegerProp> result = Try(() -> factory.newByKey(EntityWithInvalidIntegerProp.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidIntegerProp> left = (Left<Exception, EntityWithInvalidIntegerProp>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG, "numericInteger", EntityWithInvalidIntegerProp.class.getName()), ex.getMessage());
     }
@@ -1146,7 +1150,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidStringPropWithTrailingZeros> result = Try(() -> factory.newByKey(EntityWithInvalidStringPropWithTrailingZeros.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidStringPropWithTrailingZeros> left = (Left<Exception, EntityWithInvalidStringPropWithTrailingZeros>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithTrailingZeros.class.getName()), ex.getMessage());
     }
@@ -1156,7 +1160,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidStringPropWithPrecision> result = Try(() -> factory.newByKey(EntityWithInvalidStringPropWithPrecision.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidStringPropWithPrecision> left = (Left<Exception, EntityWithInvalidStringPropWithPrecision>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithPrecision.class.getName()), ex.getMessage());
     }
@@ -1166,7 +1170,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidStringPropWithScale> result = Try(() -> factory.newByKey(EntityWithInvalidStringPropWithScale.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidStringPropWithScale> left = (Left<Exception, EntityWithInvalidStringPropWithScale>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithScale.class.getName()), ex.getMessage());
     }

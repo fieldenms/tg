@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.dbschema;
 
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.PropColumn;
@@ -135,7 +134,7 @@ public class HibernateMappingsGenerator {
         final String propNameClause = "\t<property name=\"" + propName + "\"";
         final String typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
         final String endClause = "/>\n";
-        return column.unfold(
+        return column.fold(
                 singleCol -> {
                     final String columnClause = " column=\"" + singleCol.name + "\"";
                     final String lengthClause = singleCol.length == null ? "" : " length=\"" + singleCol.length + "\"";

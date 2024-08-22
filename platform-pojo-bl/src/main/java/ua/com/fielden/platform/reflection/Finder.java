@@ -430,7 +430,7 @@ public class Finder {
     public static Optional<Field> getFieldByNameOptionally(final Class<?> type, final String name) {
         final Either<Exception, Field> result = Try(() -> getFieldByName(type, name));
         if (result instanceof Right) {
-            return Optional.of(((Right<Exception, Field>) result).value);
+            return Optional.of(((Right<Exception, Field>) result).value());
         } else {
             return Optional.empty();
         }
@@ -483,7 +483,7 @@ public class Finder {
     public static Optional<Field> findFieldByNameOptionally(final Class<?> type, final String dotNotationExp) {
         final Either<Exception, Field> result = Try(() -> findFieldByName(type, dotNotationExp));
         if (result instanceof Right) {
-            return Optional.of(((Right<Exception, Field>) result).value);
+            return Optional.of(((Right<Exception, Field>) result).value());
         } else {
             return Optional.empty();
         }
