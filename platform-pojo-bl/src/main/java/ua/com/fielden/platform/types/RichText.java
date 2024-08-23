@@ -1,23 +1,25 @@
 package ua.com.fielden.platform.types;
 
-import org.commonmark.node.AbstractVisitor;
-import org.commonmark.node.HtmlBlock;
-import org.commonmark.node.HtmlInline;
-import org.commonmark.node.Node;
+import com.google.common.collect.ImmutableList;
+import org.commonmark.node.*;
+import org.commonmark.parser.IncludeSourceSpans;
 import org.commonmark.parser.Parser;
-import org.commonmark.renderer.markdown.MarkdownRenderer;
-import org.commonmark.renderer.text.TextContentRenderer;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
+import ua.com.fielden.platform.commonmark.CommonMark;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.owasp.html.SimpleHtmlChangeListener;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.IteratorUtils;
+import ua.com.fielden.platform.utils.StringRangeReplacement;
+import ua.com.fielden.platform.utils.StringRangeReplacement.Range;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
@@ -25,6 +27,7 @@ import static java.util.stream.Collectors.joining;
 import static org.owasp.html.Sanitizers.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
 
 /**
@@ -45,6 +48,7 @@ public sealed class RichText permits RichText.Persisted {
 
     public static final String _formattedText = "formattedText";
     public static final String _coreText = "coreText";
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile(Pattern.quote("\n"));
 
     @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
@@ -157,23 +161,29 @@ public sealed class RichText permits RichText.Persisted {
      * @return Result of RichText
      */
     static Result sanitizeMarkdown(final String input) {
+        final var lines = NEWLINE_PATTERN.splitAsStream(input).toList();
+
         // consider invalid if there are policy violations
         final var sanitizer = new Sanitizer();
-        final Node root = Parser.builder().build().parse(input);
+        final Node root = Parser.builder().includeSourceSpans(IncludeSourceSpans.BLOCKS_AND_INLINES).build().parse(input);
 
+        // 1. Collect sanitized parts of the input
+        // 1.1 Process HtmlInline nodes, which are particularly tricky
+        final var sanitizedAreas = new ArrayList<T2<Range, String>>();
+        HtmlInlineVisitor.forEachRange(root, range -> sanitizedAreas.add(t2(range, sanitizer.sanitize(range.apply(lines, "\n")))));
+
+        // 1.2 Process HtmlBlock nodes
         root.accept(new AbstractVisitor() {
             @Override
             public void visit(HtmlBlock htmlBlock) {
-                htmlBlock.setLiteral(sanitizer.sanitize(htmlBlock.getLiteral()));
+                if (htmlBlock.getSourceSpans().isEmpty() && !htmlBlock.getLiteral().isBlank()) {
+                    throw new RuntimeException("Missing source position info for HtmlBlock");
+                }
+                // HtmlBlock may span multiple lines, and its source spans always cover whole lines (from column 0 to the end of the line)
+                rangeFromSourceSpans(htmlBlock.getSourceSpans())
+                        .ifPresent(range -> sanitizedAreas.add(t2(range, sanitizer.sanitize(htmlBlock.getLiteral()))));
                 // this kind of node does not have children, so we need not process them, but let's do it just in case of parser bugs
                 visitChildren(htmlBlock);
-            }
-
-            @Override
-            public void visit(HtmlInline htmlInline) {
-                htmlInline.setLiteral(sanitizer.sanitize(htmlInline.getLiteral()));
-                // this kind of node does not have children, so we need not process them, but let's do it just in case of parser bugs
-                visitChildren(htmlInline);
             }
         });
 
@@ -184,14 +194,14 @@ public sealed class RichText permits RichText.Persisted {
                                           .collect(joining("\n")));
         }
 
-        // reconstruct from sanitized parse tree
-        // NOTE MarkdownRenderer is lossy, it is unable to reconstruct some nodes correctly (see its javadoc)
-        final String formattedText = MARKDOWN_RENDERER.render(root);
+        // Substitute all sanitized areas into the original document
+        final boolean lastLineTerminated = input.endsWith("\n");
+        final String formattedText = sanitizedAreas.isEmpty()
+                ? input
+                : new StringRangeReplacement(lastLineTerminated).replace(lines, sanitizedAreas);
         final String coreText = CoreTextRenderer.INSTANCE.render(root);
         return successful(new RichText(formattedText, coreText));
     }
-
-    private static final MarkdownRenderer MARKDOWN_RENDERER = MarkdownRenderer.builder().build();
 
     private static final class Sanitizer {
         private final List<String> violations = new ArrayList<>();
@@ -224,5 +234,75 @@ public sealed class RichText permits RichText.Persisted {
                 .allowElements("b", "i", "pre")
                 .toFactory());
     // @formatter:on
+
+    /**
+     * Creates a range that covers the same area of text as the given source spans, which <b>must be contigious</b>.
+     * If the list of source spans is empty, an empty optional is returned.
+     */
+    private static Optional<Range> rangeFromSourceSpans(final List<SourceSpan> sourceSpans) {
+        if (sourceSpans.isEmpty()) {
+            return Optional.empty();
+        } else {
+            final var first = sourceSpans.getFirst();
+            final var last = sourceSpans.getLast();
+            return Optional.of(new Range(first.getLineIndex(), first.getColumnIndex(),
+                                         last.getLineIndex(), last.getColumnIndex() + last.getLength()));
+        }
+    }
+
+    /**
+     * A visitor of {@link HtmlInline} nodes and any {@link Text} nodes following them. A visit of a document will produce
+     * a sequence of ranges coverings the area occupied by occurences of {@link HtmlInline} nodes followed by {@link Text} nodes.
+     * <p>
+     * The following examples illustrate the workings of this visitor. Each example consists of two lines: the first line
+     * contains markdown whose AST is traversed by the visitor, the second line shows which nodes are captured (delimited
+     * by square brackets).
+     * <p>
+     * {@snippet :
+one   <i>          two     </i>         three
+Text  [HtmlInline  Text]   [HtmlInline  Text]
+
+one   <i>           *italic*  <b>           [title](url)
+Text  [HtmlInline]  Emphasis  [HtmlInline]  Link
+     * }
+     * <p>
+     * This visitor can be used through {@link #forEachRange(Node, Consumer)}.
+     */
+    private static class HtmlInlineVisitor extends AbstractVisitor {
+
+        @Override
+        protected void visitChildren(final Node parent) {
+            final var iter = CommonMark.childrenIterator(parent);
+            while (iter.hasNext()) {
+                final var nodes = ImmutableList.<Node>builder();
+                IteratorUtils.find(iter, node -> node instanceof HtmlInline)
+                        .ifPresent(htmlInline -> {
+                            nodes.add(htmlInline);
+                            IteratorUtils.doWhile(iter,
+                                                  node -> node instanceof Text || node instanceof HtmlInline,
+                                                  nodes::add);
+                        });
+                rangeFromSourceSpans(nodes.build().stream().map(Node::getSourceSpans).flatMap(Collection::stream).toList())
+                        .ifPresent(this::acceptRange);
+            }
+
+            super.visitChildren(parent);
+        }
+
+        protected void acceptRange(final Range range) {}
+
+        /**
+         * Appplies the given action to each range discovered by traversing the document starting from the given node.
+         */
+        static void forEachRange(final Node node, final Consumer<? super Range> action) {
+            final var visitor = new HtmlInlineVisitor() {
+                @Override
+                protected void acceptRange(final Range range) {
+                    action.accept(range);
+                }
+            };
+            node.accept(visitor);
+        }
+    }
 
 }

@@ -113,6 +113,23 @@ public final class IteratorUtils {
     }
 
     /**
+     * Returns an optional containing the first element of an iterator that satisfies the given predicate, if such
+     * an element exists and is not {@code null}. Otherwise, an empty optional is returned and the iterator is left exhausted.
+     */
+    public static <X> Optional<X> find(final Iterator<X> iterator, final Predicate<? super X> predicate) {
+        requireNonNull(iterator, "iterator");
+        requireNonNull(predicate, "predicate");
+
+        while (iterator.hasNext()) {
+            final X x = iterator.next();
+            if (predicate.test(x)) {
+                return Optional.of(x);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Executes {@code action} for each element of an iterator until an element that doesn't satisfy a predicate is encountered,
      * at which point {@code lastAction} is executed for it.
      *
@@ -132,6 +149,17 @@ public final class IteratorUtils {
             }
         }
     }
+
+    /**
+     * The same as {@link #doWhile(Iterator, Predicate, Consumer, Consumer)} but without an action for the first element
+     * that doesn't satisfy the predicate.
+     */
+    public static <X> void doWhile(final Iterator<X> iterator, final Predicate<? super X> predicate,
+                                   final Consumer<? super X> action)
+    {
+        doWhile(iterator, predicate, action, $ -> {});
+    }
+
 
     private IteratorUtils() {}
 
