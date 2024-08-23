@@ -3,8 +3,13 @@ package ua.com.fielden.platform.utils;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
+
+import static java.util.Objects.requireNonNull;
 
 public final class IteratorUtils {
 
@@ -61,6 +66,71 @@ public final class IteratorUtils {
                 return theNext;
             }
         };
+    }
+
+    /**
+     * Executes an action for the next {@code n} elements of an iterator.
+     * If the iterator does not have enough elements, this method fails.
+     */
+    public static <X> void forNextN(final Iterator<X> iterator, final int n, final Consumer<? super X> action) {
+        for (int i = 0; i < n; i++) {
+            action.accept(iterator.next());
+        }
+    }
+
+    /**
+     * Skips the next {@code n} elements of an iterator.
+     * If the iterator does not have enough elements, this method fails.
+     */
+    public static <X> void skipN(final Iterator<X> iterator, final int n) {
+        for (int i = 0; i < n; i++) {
+            iterator.next();
+        }
+    }
+
+    /**
+     * Executes {@code butLastAction} for each remaining element of an iterator except for the last, for which {@code lastAction}
+     * is executed.
+     *
+     * @param butLastAction  action to execute for each remaining element except for the last
+     * @param lastAction  action to execute for the last element
+     */
+    public static <X> void forEachRemainingAndLast(final Iterator<X> iterator,
+                                                   final Consumer<? super X> butLastAction,
+                                                   final Consumer<? super X> lastAction)
+    {
+        if (!iterator.hasNext()) {
+            return;
+        }
+
+        var next = iterator.next();
+        while (iterator.hasNext()) {
+            butLastAction.accept(next);
+            next = iterator.next();
+        }
+
+        lastAction.accept(next);
+    }
+
+    /**
+     * Executes {@code action} for each element of an iterator until an element that doesn't satisfy a predicate is encountered,
+     * at which point {@code lastAction} is executed for it.
+     *
+     * @param action  action to execute for each element before the first one that doesn't satisfy the predicate
+     * @param lastAction  action to execute for the first element that doesn't satisfy the predicate
+     */
+    public static <X> void doWhile(final Iterator<X> iterator, final Predicate<? super X> predicate,
+                                   final Consumer<? super X> action, final Consumer<? super X> lastAction)
+    {
+        while (iterator.hasNext()) {
+            final var next = iterator.next();
+            if (predicate.test(next)) {
+                action.accept(next);
+            } else {
+                lastAction.accept(next);
+                break;
+            }
+        }
     }
 
     private IteratorUtils() {}
