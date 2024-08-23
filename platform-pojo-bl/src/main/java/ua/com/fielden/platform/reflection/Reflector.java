@@ -558,7 +558,7 @@ public final class Reflector {
      * @return
      */
     public static boolean isPropertyProxied(final AbstractEntity<?> entity, final CharSequence propPath) {
-        var props = splitPropPath(propPath).iterator();
+        final var props = splitPropPath(propPath).iterator();
         return isPropertyProxied_(entity, props.next(), props);
     }
     // a helper function to implement recursive processing of propPath
