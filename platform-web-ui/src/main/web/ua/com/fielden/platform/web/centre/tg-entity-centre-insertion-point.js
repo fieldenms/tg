@@ -148,8 +148,8 @@ const template = html`
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
     <div id="insertionPointContainer" class="relative layout vertical flex">
-        <div id="titleBar" draggable$="[[_titleBarDraggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog">
-            <span class="title-text truncate" tooltip-text$="[[_calcTitleTooltip(longDesc, saveAsName, saveAsDesc)]]">[[_calcTitle(shortDesc, saveAsName)]]</span>
+        <div id="titleBar" draggable$="[[_titleBarDraggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog" tooltip-text$="[[_calcTitleTooltip(longDesc, saveAsName, saveAsDesc)]]">
+            <span class="title-text truncate">[[shortDesc]]</span>
             <div class="layout horizontal centre">
                 <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detachedView)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detachedView)]]"></paper-icon-button>
                 <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(minimised)]]" disabled="[[maximised]]"></paper-icon-button>
