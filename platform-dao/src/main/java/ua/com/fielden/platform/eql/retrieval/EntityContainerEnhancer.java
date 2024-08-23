@@ -301,8 +301,6 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
         // this ceremony with spliterators is needed to accept any Collection
         return StreamSupport.stream(spliterator(partition(ids, BATCH_SIZE).iterator(), BATCH_SIZE, NONNULL), false)
-                // TODO remove once Collections are supported by EQL fluent API
-                .map(batch -> batch.toArray(Long[]::new))
                 .flatMap(batch -> {
                     final var model = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
                     final var qpm = new QueryProcessingModel<>(model, null, fetchModel, paramValues, false);
