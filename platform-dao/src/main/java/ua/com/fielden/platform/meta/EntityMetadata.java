@@ -19,7 +19,7 @@ import java.util.Optional;
  * <p>
  * No metadata exists for entity nature {@link EntityNature.Other}.
  */
-sealed public interface EntityMetadata extends TypeMetadata {
+public sealed interface EntityMetadata extends TypeMetadata {
 
     @Override
     Class<? extends AbstractEntity<?>> javaType();

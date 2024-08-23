@@ -6,12 +6,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
@@ -35,8 +30,9 @@ import ua.com.fielden.platform.types.either.Left;
 
 public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
-    private final ITgBogie coBogie = getInstance(ITgBogie.class);
-    private final ITgVehicle coVehicle = getInstance(ITgVehicle.class);
+    private final ITgBogie coBogie = co(TgBogie.class);
+    private final ITgVehicle coVehicle = co(TgVehicle.class);
+    private final ITgWagon coWagon = co(TgWagon.class);
 
     private static void shouldNotBeProxy(Class<? extends AbstractEntity<?>> entityClass) {
         assertFalse("Should not be proxy", isProxyClass(entityClass));
@@ -326,6 +322,17 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
                 assertNull(vm.getNoYieldIntProp());
             });
         }
+    }
+
+    @Test
+    public void non_fetched_collectional_properties_are_not_proxied_returning_an_empty_collection() {
+        final EntityResultQueryModel<TgWagon> qry = select(TgWagon.class).where().prop("key").eq().val("WAGON1").model();
+        final var wagonWithSlotsNotFetched = coWagon.getEntity(from(qry).with(fetch(TgWagon.class)).model());
+        assertNotNull(wagonWithSlotsNotFetched);
+        assertFalse(Reflector.isPropertyProxied(wagonWithSlotsNotFetched, "slots"));
+        assertTrue(wagonWithSlotsNotFetched.getSlots().isEmpty());
+        final var wagonWithSlotsFetched = coWagon.getEntity(from(qry).with(fetch(TgWagon.class).with("slots")).model());
+        assertTrue(wagonWithSlotsFetched.getSlots().size() > 0);
     }
 
     @Override
