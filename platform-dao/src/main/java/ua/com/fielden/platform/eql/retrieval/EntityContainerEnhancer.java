@@ -114,9 +114,9 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     }
 
     private <T extends AbstractEntity<?>> Class<? extends T> determineProxiedResultTypeFromFetchModel(final IRetrievalModel<T> fetchModel) {
-//        final DateTime st = new DateTime();
+        // final DateTime st = new DateTime();
         final Class<? extends T> proxiedType = EntityProxyContainer.proxy(fetchModel.getEntityType(), fetchModel.getProxiedProps());
-//        final Period pd = new Period(st, new DateTime());
+        // final Period pd = new Period(st, new DateTime());
         // logger.debug(format("Constructing proxy type [" + fetchModel.getEntityType().getSimpleName() + "] duration: %s m %s s %s ms.", pd.getMinutes(), pd.getSeconds(), pd.getMillis()));
         return proxiedType;
     }
@@ -124,13 +124,13 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private void assignProxiedResultTypeToContainers(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
         if (fetchModel.getEntityType() != EntityAggregates.class) {
             final Class<? extends E> proxiedResultType = determineProxiedResultTypeFromFetchModel(fetchModel);
-            entities.forEach(e -> e.setProxiedResultType(proxiedResultType));
+            entities.forEach(entity -> entity.setProxiedResultType(proxiedResultType));
         }
     }
 
-    private <T extends AbstractEntity<?>> void assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty
-            (final List<EntityContainer<E>> entities,
-             final String propName, final Class<T> propType)
+    private <T extends AbstractEntity<?>> void assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(
+            final List<EntityContainer<E>> entities,
+            final String propName, final Class<T> propType)
     {
         if (propType != EntityAggregates.class) {
             final Class<? extends T> proxiedPropType = idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(propType);
@@ -180,11 +180,12 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         if (!propertyValuesIds.isEmpty()) {
             // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
             final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
-            // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
+            // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once.
+            //            Such assumption relies on the fact that once a join to a property has been made, all its columns are yielded automatically.
             final List<EntityContainer<T>> enhancedPropInstances = retrievedPropertyInstances.isEmpty()
-                    ? getDataInBatches(propertyValuesIds.keySet(), ID, fetchModel, paramValues)
-                    :  new EntityContainerEnhancer<T>(fetcher, domainMetadata, idOnlyProxiedEntityTypeCache)
-                            .enhance(retrievedPropertyInstances, fetchModel, paramValues);
+                                                                   ? getDataInBatches(propertyValuesIds.keySet(), ID, fetchModel, paramValues)
+                                                                   :  new EntityContainerEnhancer<T>(fetcher, domainMetadata, idOnlyProxiedEntityTypeCache)
+                                                                          .enhance(retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
             for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
@@ -246,7 +247,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
      * <li> detail entity (<i>DE</i>) -- the type of the collectional property's elements;
      * </ol>
      *
-     * Both ME and DE containers are enhanced by populating the respective sides of their one-to-many relationhsip.
+     * Both ME and DE containers are enhanced by populating the respective sides of their one-2-many relationship.
      *
      * @param masterEntities  ME containers that will be enhanced
      * @param collPropName  name of the collectional property
@@ -255,15 +256,15 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
      * @param fetchModel  fetch model for DE
      * @param paramValues  query parameters for DE
      *
-     * @return  ME containers enhanced with collectional property by populating it with DE containers which are also
+     * @return  ME containers enhanced with collectional property by populating it with DE containers, which are also
      *          enhanced by populating the link property with the corresponding ME
      */
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional
-            (final List<EntityContainer<E>> masterEntities,
-             final String collPropName, final Class<?> collPropType,
-             final String linkPropName,
-             final EntityRetrievalModel<T> fetchModel,
-             final Map<String, Object> paramValues)
+    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(
+            final List<EntityContainer<E>> masterEntities,
+            final String collPropName, final Class<?> collPropType,
+            final String linkPropName,
+            final EntityRetrievalModel<T> fetchModel,
+            final Map<String, Object> paramValues)
     {
         final Map<Long, EntityContainer<E>> idToMaster = masterEntities.stream()
                 .collect(toImmutableMap(EntityContainer::getId, Function.identity()));
@@ -276,7 +277,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         masterIdToDetails.forEach((masterId, dets) ->
                                     dets.forEach(det -> det.getEntities().put(linkPropName, idToMaster.get(masterId))));
 
-        if (!(SortedSet.class.equals(collPropType) || Set.class.equals(collPropType))) {
+        if (!SortedSet.class.equals(collPropType) && !Set.class.equals(collPropType)) {
             throw new EntityRetrievalException(
                     "Fetching of collectional property type [%s] is not supported.".formatted(collPropType.getTypeName()));
         }
@@ -292,14 +293,19 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
      * Retrieves and enhances entity containers that match given entity IDs.
      * The type of retrieved entities is derived from the fetch model.
      *
-     * @param idProp  name of the property against which IDs should be matched
-     * @param fetchModel  fetch model to apply during retrieval
+     * @param ids  ID values for entities to be retrieved.
+     * @param idProp  name of the property against which IDs should be matched.
+     * @param fetchModel  fetch model to apply during retrieval.
+     * @param paramValues  query parameters.
      */
     private <T extends AbstractEntity<?>> List<EntityContainer<T>> getDataInBatches(
-            final Collection<Long> ids, final String idProp, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues)
+            final Collection<Long> ids,
+            final String idProp,
+            final EntityRetrievalModel<T> fetchModel,
+            final Map<String, Object> paramValues)
     {
         // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
-        // this ceremony with spliterators is needed to accept any Collection
+        // This ceremony with spliterators is needed to accept any Collection
         return StreamSupport.stream(spliterator(partition(ids, BATCH_SIZE).iterator(), BATCH_SIZE, NONNULL), false)
                 .flatMap(batch -> {
                     final var model = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
