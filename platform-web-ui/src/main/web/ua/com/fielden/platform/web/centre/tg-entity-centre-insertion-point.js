@@ -54,7 +54,6 @@ const template = html`
             background: white;
             border-radius: 2px;
             position: relative;
-            overflow: auto;
         }
 
         :host(:not([maximised]):not([alternative-view])) {
@@ -124,7 +123,7 @@ const template = html`
             color: var(--paper-grey-300);
         }
 
-        #insertionPointBody {
+        #scrollableBody {
             overflow: auto;
         }
 
@@ -147,15 +146,15 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="insertionPointContainer" class="relative layout vertical flex">
         <div id="titleBar" draggable$="[[_titleBarDraggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog" tooltip-text$="[[longDesc]]">
             <span class="title-text truncate">[[shortDesc]]</span>
-            <div class="layout horizontal centre">
-                <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detachedView)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detachedView)]]"></paper-icon-button>
-                <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(minimised)]]" disabled="[[maximised]]"></paper-icon-button>
-                <paper-icon-button class="title-bar-button" style$="[[_maximiseButtonStyle(maximised)]]" icon="icons:open-in-new" on-tap="_toggleMaximise" tooltip-text$="[[_maximiseButtonTooltip(maximised)]]" disabled="[[minimised]]"></paper-icon-button>
-            </div>
+        <div class="layout horizontal centre">
+            <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detachedView)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detachedView)]]"></paper-icon-button>
+            <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(minimised)]]" disabled="[[maximised]]"></paper-icon-button>
+            <paper-icon-button class="title-bar-button" style$="[[_maximiseButtonStyle(maximised)]]" icon="icons:open-in-new" on-tap="_toggleMaximise" tooltip-text$="[[_maximiseButtonTooltip(maximised)]]" disabled="[[minimised]]"></paper-icon-button>
         </div>
+    </div>
+    <div id="scrollableBody" class="relative flex layout vertical">
         <div id="insertionPointBody" class="relative flex layout vertical">
             <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(maximised, alternativeView)]]">
                 <slot id="entitySpecificActions" slot="entity-specific-action" name="entity-specific-action"></slot>
@@ -166,9 +165,9 @@ const template = html`
             </div>
             <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
-        <iron-icon id="resizer" style$="[[_getResizerStyle(detachedView)]]" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
-        <tg-toast id="toaster"></tg-toast>
     </div>
+    <iron-icon id="resizer" style$="[[_getResizerStyle(detachedView)]]" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
+    <tg-toast id="toaster"></tg-toast>
 `;
 
 Polymer({
@@ -894,7 +893,7 @@ Polymer({
 
     _setDimension: function () {
         this.style.removeProperty('margin');
-        this.$.insertionPointContainer.style.removeProperty("min-width");
+        this.$.insertionPointBody.style.removeProperty("min-width");
         if (this.detachedView) {
             let dimToApply = this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT);
             if (!dimToApply) {
@@ -920,7 +919,7 @@ Polymer({
                 if (!this.minimised && !this.maximised) {
                     this.style.margin = INSERTION_POINT_MARGIN + 'px';
                     this.style.width = "auto";
-                    this.$.insertionPointContainer.style.minWidth = prefDim && prefDim[0];
+                    this.$.insertionPointBody.style.minWidth = prefDim && prefDim[0];
                     this.style.height = heightToApply || (prefDim && prefDim[1]);
                 } else if (this.maximised && !this.minimised) {
                     this.style.width = '100%';
@@ -929,7 +928,7 @@ Polymer({
                     this.style.margin = INSERTION_POINT_MARGIN + 'px';
                     this.style.height = this._titleBarHeight();
                     this.style.width = "auto";
-                    this.$.insertionPointContainer.style.minWidth = prefDim && prefDim[0];
+                    this.$.insertionPointBody.style.minWidth = prefDim && prefDim[0];
                 }
             }
         }
