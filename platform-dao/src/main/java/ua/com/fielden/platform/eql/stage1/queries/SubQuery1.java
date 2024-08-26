@@ -60,7 +60,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
 
     private static PropType enhance(final Class<?> resultType, final Yields2 yields) {
         return resultType == null
-               ? yields.getYields().iterator().next().operand.type() // the case of modelAsPrimitive() no ResultType provided
+               ? yields.getYields().iterator().next().operand().type() // the case of modelAsPrimitive() no ResultType provided
                : propType(resultType, H_ENTITY); // the case of modelAsEntity(..)
     }
 

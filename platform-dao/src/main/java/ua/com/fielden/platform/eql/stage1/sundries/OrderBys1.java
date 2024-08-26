@@ -64,8 +64,8 @@ public class OrderBys1 {
         return models.isEmpty()
                 ? ImmutableSet.of()
                 : models.stream()
-                        .filter(el -> el.operand != null)
-                        .map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream)
+                        .filter(el -> el.operand() != null)
+                        .map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream)
                         .collect(toImmutableSet());
     }
 

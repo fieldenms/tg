@@ -90,8 +90,8 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromSt
         }
 
         final Yield2 firstYield = yields.getYields().iterator().next();
-        if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias) && isPersistedEntityType(resultType)) {
-            return new Yields2(listOf(new Yield2(firstYield.operand, ID, firstYield.hasNonnullableHint)));
+        if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias()) && isPersistedEntityType(resultType)) {
+            return new Yields2(listOf(new Yield2(firstYield.operand(), ID, firstYield.hasNonnullableHint())));
         }
 
         return yields;

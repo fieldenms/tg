@@ -9,7 +9,6 @@ import ua.com.fielden.platform.eql.stage2.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 import static ua.com.fielden.platform.utils.CollectionUtil.concat;
@@ -19,16 +18,11 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concat;
  *
  * @author TG Team
  */
-public class SetPredicate1 implements ICondition1<SetPredicate2> {
-    private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
-    private final ISetOperand1<? extends ISetOperand2<?>> rightOperand;
-    private final boolean negated;
-
-    public SetPredicate1(final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand, final boolean negated, final ISetOperand1<? extends ISetOperand2<?>> rightOperand) {
-        this.leftOperand = leftOperand;
-        this.rightOperand = rightOperand;
-        this.negated = negated;
-    }
+public record SetPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> leftOperand,
+                             boolean negated,
+                             ISetOperand1<? extends ISetOperand2<?>> rightOperand)
+        implements ICondition1<SetPredicate2>
+{
 
     @Override
     public SetPredicate2 transform(final TransformationContextFromStage1To2 context) {
@@ -40,30 +34,4 @@ public class SetPredicate1 implements ICondition1<SetPredicate2> {
         return concat(HashSet::new, leftOperand.collectEntityTypes(), rightOperand.collectEntityTypes());
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + leftOperand.hashCode();
-        result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + rightOperand.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof SetPredicate1)) {
-            return false;
-        }
-
-        final SetPredicate1 other = (SetPredicate1) obj;
-
-        return Objects.equals(leftOperand, other.leftOperand) &&
-                Objects.equals(rightOperand, other.rightOperand) &&
-                Objects.equals(negated, other.negated);
-    }
 }

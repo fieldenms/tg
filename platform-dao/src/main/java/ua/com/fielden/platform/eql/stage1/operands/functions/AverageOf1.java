@@ -27,20 +27,7 @@ public class AverageOf1 extends SingleOperandFunction1<AverageOf2> {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof AverageOf1)) {
-            return false;
-        }
-        
-        final AverageOf1 other = (AverageOf1) obj;
-        
-        return distinct == other.distinct;
+        return this == obj || obj instanceof AverageOf1 that && distinct == that.distinct && super.equals(obj);
     }
+
 }

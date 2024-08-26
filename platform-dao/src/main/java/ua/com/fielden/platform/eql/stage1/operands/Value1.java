@@ -4,25 +4,23 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
 
-import java.util.Objects;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
 
-public class Value1 implements ISingleOperand1<Value2> {
+/**
+ * Instead of the constructor, static methods {@link #value()} and {@link #nullValue(boolean)} should be used.
+ *
+ * @param value  the actual value of this operand (compiles to an SQL literal)
+ * @param ignoreNull  indicates whether the expression containing this operand can be ignored if the value is {@code null}
+ */
+public record Value1(Object value, boolean ignoreNull) implements ISingleOperand1<Value2> {
+
     public static final Value1 NULL = new Value1(null, false);
     public static final Value1 INULL = new Value1(null, true);
 
-    public final Object value;
-    public final boolean ignoreNull;
-
     private Value1(final Object value) {
         this(value, false);
-    }
-
-    private Value1(final Object value, final boolean ignoreNull) {
-        this.value = value;
-        this.ignoreNull = ignoreNull;
     }
 
     public static Value1 value(final Object value, final boolean ignoreNull) {
@@ -42,7 +40,7 @@ public class Value1 implements ISingleOperand1<Value2> {
 
     @Override
     public Value2 transform(final TransformationContextFromStage1To2 context) {
-        return new Value2(value, ignoreNull);
+        return new Value2(value(), ignoreNull());
     }
     
     @Override
@@ -50,27 +48,4 @@ public class Value1 implements ISingleOperand1<Value2> {
         return emptySet();
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (ignoreNull ? 1231 : 1237);
-        result = prime * result + ((value == null) ? 0 : value.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Value1)) {
-            return false;
-        }
-
-        final Value1 other = (Value1) obj;
-
-        return Objects.equals(value, other.value) && ignoreNull == other.ignoreNull;
-    }
 }

@@ -172,7 +172,7 @@ public abstract class AbstractQuery1 {
             return EMPTY_GROUP_BYS;
         }
 
-        final List<GroupBy2> enhanced = groupBys.getGroups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
+        final List<GroupBy2> enhanced = groupBys.groups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
         return new GroupBys2(enhanced);
     }
 
@@ -183,8 +183,8 @@ public abstract class AbstractQuery1 {
 
         final List<OrderBy2> enhanced = new ArrayList<>();
 
-        for (final OrderBy2 original : orderBys.getOrderBys()) {
-            enhanced.addAll(original.operand != null ? transformForOperand(original.operand, original.isDesc) :
+        for (final OrderBy2 original : orderBys.orderBys()) {
+            enhanced.addAll(original.operand() != null ? transformForOperand(original.operand(), original.isDesc()) :
                 transformForYield(original, yields, mainSource));
         }
 
@@ -192,24 +192,24 @@ public abstract class AbstractQuery1 {
     }
 
     private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (yields.getYieldsMap().containsKey(original.yieldName)) {
-            final Yield2 yield = yields.getYieldsMap().get(original.yieldName);
-            if (yield.operand instanceof Prop2 yieldedProp && needsExtraction(yieldedProp.lastPart(), yieldedProp.penultPart())) {
-                return transformForOperand(yieldedProp, original.isDesc);
+        if (yields.getYieldsMap().containsKey(original.yieldName())) {
+            final Yield2 yield = yields.getYieldsMap().get(original.yieldName());
+            if (yield.operand() instanceof Prop2 yieldedProp && needsExtraction(yieldedProp.lastPart(), yieldedProp.penultPart())) {
+                return transformForOperand(yieldedProp, original.isDesc());
             } else {
                 return asList(original);
             }
         }
 
         if (yields.getYieldsMap().isEmpty()) {
-            final PropResolution propResolution = Prop1.resolvePropAgainstSource(mainSource, new Prop1(original.yieldName, false));
+            final PropResolution propResolution = Prop1.resolvePropAgainstSource(mainSource, new Prop1(original.yieldName(), false));
             if (propResolution != null) {
                 final List<AbstractQuerySourceItem<?>> path = enhancePath(propResolution.getPath());
-                return transformForOperand(new Prop2(mainSource, path), original.isDesc);
+                return transformForOperand(new Prop2(mainSource, path), original.isDesc());
             }
         }
 
-        throw new EqlStage1ProcessingException(ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY.formatted(original.yieldName));
+        throw new EqlStage1ProcessingException(ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY.formatted(original.yieldName()));
     }
 
     private static List<OrderBy2> transformForOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
@@ -219,7 +219,7 @@ public abstract class AbstractQuery1 {
     }
 
     private static List<GroupBy2> enhance(final GroupBy2 original) {
-        return original.operand instanceof Prop2 originalOperandAsProp
+        return original.operand() instanceof Prop2 originalOperandAsProp
                 ? extract(originalOperandAsProp).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList())
                 : asList(original);
     }

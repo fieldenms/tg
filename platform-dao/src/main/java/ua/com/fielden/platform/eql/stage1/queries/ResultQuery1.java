@@ -76,8 +76,8 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     }
 
     private Yields2 enhanceNonEmptyAndNotYieldAll(final Yield2 fstYield, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (yields.getYields().size() == 1 && isEmpty(fstYield.alias) && isPersistedEntityType(resultType)) {
-            return new Yields2(List.of(new Yield2(fstYield.operand, ID, fstYield.hasNonnullableHint)));
+        if (yields.getYields().size() == 1 && isEmpty(fstYield.alias()) && isPersistedEntityType(resultType)) {
+            return new Yields2(List.of(new Yield2(fstYield.operand(), ID, fstYield.hasNonnullableHint())));
         }
 
         // TODO need to remove the explicit yields, not contained in the fetch model to be consistent with EQL2.

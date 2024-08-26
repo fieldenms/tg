@@ -7,7 +7,6 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.Value3;
 import ua.com.fielden.platform.types.tuples.T2;
 
-import java.util.Objects;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
@@ -17,17 +16,10 @@ import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.hibT
 import static ua.com.fielden.platform.persistence.HibernateConstants.N;
 import static ua.com.fielden.platform.persistence.HibernateConstants.Y;
 
-public class Value2 implements ISingleOperand2<Value3> {
-    private final Object value;
-    private final boolean ignoreNull;
+public record Value2 (Object value, boolean ignoreNull) implements ISingleOperand2<Value3> {
 
     public Value2(final Object value) {
         this(value, false);
-    }
-
-    public Value2(final Object value, final boolean ignoreNull) {
-        this.value = value;
-        this.ignoreNull = ignoreNull;
     }
 
     private boolean needsParameter() {
@@ -74,27 +66,4 @@ public class Value2 implements ISingleOperand2<Value3> {
         return emptySet();
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (ignoreNull ? 1231 : 1237);
-        result = prime * result + ((value == null) ? 0 : value.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Value2)) {
-            return false;
-        }
-
-        final Value2 other = (Value2) obj;
-
-        return Objects.equals(value, other.value) && ignoreNull == other.ignoreNull;
-    }
 }

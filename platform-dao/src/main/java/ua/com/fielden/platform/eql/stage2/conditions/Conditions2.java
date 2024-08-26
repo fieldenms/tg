@@ -10,17 +10,15 @@ import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
-public class Conditions2 implements ICondition2<Conditions3> {
+public record Conditions2 (boolean negated, List<List<? extends ICondition2<?>>> dnf)
+        implements ICondition2<Conditions3>
+{
     public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, ImmutableList.of());
-
-    private final List<List<? extends ICondition2<?>>> dnf;
-    private final boolean negated;
 
     public static Conditions2 conditions(final boolean negated, final List<List<? extends ICondition2<?>>> dnf) {
         if (dnf.isEmpty()) {
@@ -103,27 +101,4 @@ public class Conditions2 implements ICondition2<Conditions3> {
                         || (cond instanceof Conditions2 conds && conds.conditionIsSatisfied(conditionToMatch)));
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + dnf.hashCode();
-        result = prime * result + (negated ? 1231 : 1237);
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Conditions2)) {
-            return false;
-        }
-
-        final Conditions2 other = (Conditions2) obj;
-
-        return Objects.equals(dnf, other.dnf) && (negated == other.negated);
-    }
 }

@@ -8,7 +8,6 @@ import ua.com.fielden.platform.eql.stage2.conditions.LikePredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 import static ua.com.fielden.platform.utils.CollectionUtil.concat;
@@ -19,16 +18,12 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concat;
  *
  * @author TG Team
  */
-public class LikePredicate1 implements ICondition1<LikePredicate2> {
-    private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
-    private final ISingleOperand1<? extends ISingleOperand2<?>> rightOperand;
-    private final LikeOptions options;
+public record LikePredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> leftOperand,
+                              ISingleOperand1<? extends ISingleOperand2<?>> rightOperand,
+                              LikeOptions options)
+        implements ICondition1<LikePredicate2>
+{
 
-    public LikePredicate1(final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand, final ISingleOperand1<? extends ISingleOperand2<?>> rightOperand, final LikeOptions options) {
-        this.leftOperand = leftOperand;
-        this.rightOperand = rightOperand;
-        this.options = options;
-    }
 
     @Override
     public LikePredicate2 transform(final TransformationContextFromStage1To2 context) {
@@ -40,30 +35,4 @@ public class LikePredicate1 implements ICondition1<LikePredicate2> {
         return concat(HashSet::new, leftOperand.collectEntityTypes(), rightOperand.collectEntityTypes());
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + leftOperand.hashCode();
-        result = prime * result + options.hashCode();
-        result = prime * result + rightOperand.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof LikePredicate1)) {
-            return false;
-        }
-
-        final LikePredicate1 other = (LikePredicate1) obj;
-
-        return Objects.equals(leftOperand, other.leftOperand) &&
-                Objects.equals(rightOperand, other.rightOperand) &&
-                Objects.equals(options, other.options);
-    }
 }

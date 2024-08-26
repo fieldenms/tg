@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.sources;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -15,18 +11,16 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinInnerNode3;
 
-public class JoinInnerNode2 implements IJoinNode2<JoinInnerNode3> {
-    public final IJoinNode2<? extends IJoinNode3> leftNode;
-    public final IJoinNode2<? extends IJoinNode3> rightNode;
-    public final JoinType joinType;
-    public final Conditions2 joinConditions;
+import java.util.HashSet;
+import java.util.Set;
 
-    public JoinInnerNode2(final IJoinNode2<?> leftNode, final IJoinNode2<?> rightNode, final JoinType joinType, final Conditions2 joinConditions) {
-        this.leftNode = leftNode;
-        this.rightNode = rightNode;
-        this.joinType = joinType;
-        this.joinConditions = joinConditions;
-    }
+public record JoinInnerNode2 (IJoinNode2<? extends IJoinNode3> leftNode,
+                              IJoinNode2<? extends IJoinNode3> rightNode,
+                              JoinType joinType,
+                              Conditions2 joinConditions)
+        implements IJoinNode2<JoinInnerNode3>
+{
+
 
     @Override
     public TransformationResultFromStage2To3<JoinInnerNode3> transform(TransformationContextFromStage2To3 context) {
@@ -59,32 +53,4 @@ public class JoinInnerNode2 implements IJoinNode2<JoinInnerNode3> {
         return leftNode.mainSource();
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + leftNode.hashCode();
-        result = prime * result + rightNode.hashCode();
-        result = prime * result + joinConditions.hashCode();
-        result = prime * result + joinType.hashCode();
-        return result;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof JoinInnerNode2)) {
-            return false;
-        }
-        
-        final JoinInnerNode2 other = (JoinInnerNode2) obj;
-        
-        return Objects.equals(leftNode, other.leftNode) &&
-                Objects.equals(rightNode, other.rightNode) &&
-                Objects.equals(joinType, other.joinType) &&
-                Objects.equals(joinConditions, other.joinConditions);
-    }
 }

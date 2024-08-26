@@ -78,7 +78,7 @@ public abstract class EqlStage1TestCase extends EqlTestCase {
 
     protected static Yields1 yields(final Yield1 ... yields) {
         if (yields.length > 0) {
-            return new Yields1(asList(yields));
+            return Yields1.yields(asList(yields));
         } else {
             return EMPTY_YIELDS;
         }

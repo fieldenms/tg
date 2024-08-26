@@ -14,29 +14,21 @@ import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorresp
 import static ua.com.fielden.platform.eql.meta.PropType.propType;
 import static ua.com.fielden.platform.persistence.types.PlaceholderType.newPlaceholderType;
 
-public class Yield3 {
-
-    public final ISingleOperand3 operand;
-    public final String alias;
-
-    /** Name of the column in the resulting set that this value is yielded under or {@code null}. */
-    public final String column;
-
-    /**
-     * The expected type of this yield.
-     * <ul>
-     *   <li>for calculated properties -- the type declared at the model level; the type of {@link #operand} will be
-     *       inferred from the actual expression and may be different.
-     *   <li>for other operands -- equal to the type of {@link #operand}.
-     * </ul>
-     */
-    public final PropType type;
+/**
+ *
+ * @param operand
+ * @param column  Name of the column in the resulting set that this value is yielded under or {@code null}
+ * @param type  The expected type of this yield.
+ * <ul>
+ *   <li>for calculated properties -- the type declared at the model level; the type of {@link #operand} will be
+ *       inferred from the actual expression and may be different.
+ *   <li>for other operands -- equal to the type of {@link #operand}.
+ * </ul>
+ */
+public record Yield3 (ISingleOperand3 operand, String alias, String column, PropType type) {
 
     public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final PropType type) {
-        this.operand = operand;
-        this.alias = alias;
-        this.column = isEmpty(alias) ? null : "C_" + columnId;
-        this.type = type;
+        this(operand, alias, isEmpty(alias) ? null : "C_" + columnId, type);
     }
 
     /**
@@ -78,27 +70,16 @@ public class Yield3 {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((alias == null) ? 0 : alias.hashCode());
-        result = prime * result + operand.hashCode();
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        return result;
+        return Objects.hash(alias, operand, type);
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Yield3)) {
-            return false;
-        }
-        
-        final Yield3 other = (Yield3) obj;
-        
-        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && Objects.equals(type, other.type);
+        return this == obj
+               || obj instanceof Yield3 that
+                  && Objects.equals(operand, that.operand)
+                  && Objects.equals(alias, that.alias)
+                  && Objects.equals(type, that.type);
     }
 
     @Override

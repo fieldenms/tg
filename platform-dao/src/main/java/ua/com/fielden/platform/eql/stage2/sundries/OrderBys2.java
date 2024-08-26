@@ -22,14 +22,13 @@ import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.NO_OFFSET;
 /**
  * To identify empty order-bys with no limit and no offset, {@link #EMPTY_ORDER_BYS} can be compared with {@code ==}
  * (due to only static methods available for creating instances).
+ * <p>
+ * Prefer static method {@link #orderBys()} over the constructor.
  */
-public class OrderBys2 {
+public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) {
+
     public static final OrderBys2 EMPTY_ORDER_BYS = new OrderBys2(ImmutableList.of(), Limit.all(), NO_OFFSET);
     
-    private final List<OrderBy2> orderBys;
-    private final Limit limit;
-    private final long offset;
-
     public static OrderBys2 orderBys2(final List<OrderBy2> orderBys, final Limit limit, final long offset) {
         if (orderBys.isEmpty() && limit instanceof Limit.All && offset == NO_OFFSET) {
             return EMPTY_ORDER_BYS;
@@ -41,7 +40,7 @@ public class OrderBys2 {
         return orderBys.isEmpty() ? EMPTY_ORDER_BYS : new OrderBys2(orderBys, Limit.all(), NO_OFFSET);
     }
 
-    private OrderBys2(final List<OrderBy2> orderBys, final Limit limit, final long offset) {
+    public OrderBys2(final List<OrderBy2> orderBys, final Limit limit, final long offset) {
         this.orderBys = ImmutableList.copyOf(orderBys);
         this.limit = limit;
         this.offset = offset;
@@ -68,7 +67,7 @@ public class OrderBys2 {
 
     public Set<Prop2> collectProps() {
         return orderBys.stream()
-                .map(o -> o.operand)
+                .map(OrderBy2::operand)
                 .filter(Objects::nonNull)
                 .map(ITransformableFromStage2To3::collectProps)
                 .flatMap(Set::stream)
@@ -79,36 +78,11 @@ public class OrderBys2 {
         return orderBys.isEmpty()
                 ? ImmutableSet.of()
                 : orderBys.stream()
-                        .map(o -> o.operand)
+                        .map(OrderBy2::operand)
                         .filter(Objects::nonNull)
                         .map(ITransformableFromStage2To3::collectEntityTypes)
                         .flatMap(Set::stream)
                         .collect(toImmutableSet());
     }
     
-    public List<OrderBy2> getOrderBys() {
-        return orderBys;
-    }
-
-    public long offset() {
-        return offset;
-    }
-
-    public Limit limit() {
-        return limit;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(orderBys, limit, offset);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj || obj instanceof OrderBys2 that
-                              && offset == that.offset
-                              && limit.equals(that.limit)
-                              && orderBys.equals(that.orderBys);
-    }
-
 }

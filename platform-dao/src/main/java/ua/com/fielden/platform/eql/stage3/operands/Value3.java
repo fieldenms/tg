@@ -6,16 +6,12 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.Objects;
 
-public class Value3 implements ISingleOperand3 {
-    public final Object value; // can be 'null' in case of yield stmt
-    public final String paramName;
-    public final PropType type;
-
-    public Value3(final Object value, final String paramName, final PropType type) {
-        this.value = value;
-        this.paramName = paramName;
-        this.type = type;
-    }
+/**
+ * @param value  can be {@code null} in case of yield statement
+ */
+public record Value3 (Object value, String paramName, PropType type)
+        implements ISingleOperand3
+{
 
     public Value3(final Object value, final PropType type) {
         this(value, null, type);
@@ -40,21 +36,9 @@ public class Value3 implements ISingleOperand3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Value3)) {
-            return false;
-        }
-
-        final Value3 other = (Value3) obj;
-
-        return Objects.equals(value, other.value) && paramName == other.paramName;
+        return this == obj
+               || obj instanceof Value3 that
+                  && Objects.equals(value, that.value) && Objects.equals(paramName, that.paramName);
     }
 
-    @Override
-    public PropType type() {
-        return type;
-    }
 }

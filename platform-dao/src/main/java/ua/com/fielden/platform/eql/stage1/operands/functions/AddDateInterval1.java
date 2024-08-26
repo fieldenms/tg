@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.eql.stage1.operands.functions;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.AddDateInterval2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+
+import java.util.Objects;
 
 public class AddDateInterval1 extends TwoOperandsFunction1<AddDateInterval2> {
     
@@ -32,20 +32,7 @@ public class AddDateInterval1 extends TwoOperandsFunction1<AddDateInterval2> {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof AddDateInterval1)) {
-            return false;
-        }
-        
-        final AddDateInterval1 other = (AddDateInterval1) obj;
-        
-        return Objects.equals(intervalUnit, other.intervalUnit);
+        return this == obj || obj instanceof AddDateInterval1 that && Objects.equals(intervalUnit, that.intervalUnit);
     }
+
 }

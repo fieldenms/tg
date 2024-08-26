@@ -1,20 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.sources;
 
-import static java.util.Arrays.asList;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
-import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.propType;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -28,12 +14,19 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinInnerNode3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
 
-public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
-    public final ISource2<?> source;
+import java.util.List;
+import java.util.Set;
 
-    public JoinLeafNode2(final ISource2<?> source) {
-        this.source = source;
-    }
+import static java.util.Arrays.asList;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
+import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
+
+public record JoinLeafNode2 (ISource2<?> source) implements IJoinNode2<IJoinNode3> {
 
     @Override
     public Set<Prop2> collectProps() {
@@ -53,7 +46,8 @@ public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
     @Override
     public TransformationResultFromStage2To3<IJoinNode3> transform(TransformationContextFromStage2To3 context) {
         final TransformationResultFromStage2To3<? extends ISource3> explicitSourceTr = source.transform(context);
-        return generateJoinNode(explicitSourceTr.item, context.getHelperNodesForSource(source.id()), explicitSourceTr.updatedContext);
+        return generateJoinNode(explicitSourceTr.item, context.getHelperNodesForSource(source.id()),
+                                explicitSourceTr.updatedContext);
     }
 
     /**
@@ -71,7 +65,8 @@ public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
 
         // enhancing current join node with helper nodes
         for (final HelperNodeForImplicitJoins helperNode : helperNodes) {
-            final TransformationResultFromStage2To3<JoinInnerNode3> tr = joinImplicitNode(currentJoinNode, helperNode, source, currentContext);
+            final TransformationResultFromStage2To3<JoinInnerNode3> tr = joinImplicitNode(currentJoinNode, helperNode,
+                                                                                          source, currentContext);
             currentJoinNode = tr.item;
             currentContext = tr.updatedContext;
         }
@@ -80,10 +75,10 @@ public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
     }
 
     /**
-     *
-     *
-     * @param currentJoinNode -- join node that will become {@code leftNode} in a {@link JoinInnerNode3} instance being generated as a result of the join.
-     * @param helperNode -- helper node, which serves as a base for generation of {@code rightNode} in a {@link JoinInnerNode3} instance being generated as a result of the implicit join.
+     * @param currentJoinNode -- join node that will become {@code leftNode} in a {@link JoinInnerNode3} instance being
+     *                        generated as a result of the join.
+     * @param helperNode      -- helper node, which serves as a base for generation of {@code rightNode} in a
+     *                        {@link JoinInnerNode3} instance being generated as a result of the implicit join.
      * @param rootSource
      * @param context
      * @return
@@ -98,35 +93,23 @@ public class JoinLeafNode2 implements IJoinNode2<IJoinNode3> {
         if (helperNode.expr == null) {
             leftOperand = new Prop3(helperNode.name, rootSource, propType(helperNode.source.sourceType(), H_ENTITY));
         } else {
-            final TransformationResultFromStage2To3<Expression3> exprTransRes = helperNode.expr.transform(currentContext);
-            leftOperand = exprTransRes.item.isSingleOperandExpression() ? exprTransRes.item.firstOperand : exprTransRes.item;
+            final TransformationResultFromStage2To3<Expression3> exprTransRes = helperNode.expr.transform(
+                    currentContext);
+            leftOperand = exprTransRes.item.isSingleOperandExpression()
+                    ? exprTransRes.item.firstOperand
+                    : exprTransRes.item;
             currentContext = exprTransRes.updatedContext;
         }
 
         final Prop3 rightOperand = new Prop3(ID, addedSource, LONG_PROP_TYPE);
         final ComparisonPredicate3 comparisonPredicate = new ComparisonPredicate3(leftOperand, EQ, rightOperand);
         final Conditions3 joinOnConditions = new Conditions3(false, asList(asList(comparisonPredicate)));
-        final TransformationResultFromStage2To3<IJoinNode3> implicitJoinNodeTr = generateJoinNode(addedSource, helperNode.subnodes(), currentContext);
-        return new TransformationResultFromStage2To3<>(new JoinInnerNode3(currentJoinNode, implicitJoinNodeTr.item, (helperNode.nonnullable ? IJ : LJ), joinOnConditions), implicitJoinNodeTr.updatedContext);
+        final TransformationResultFromStage2To3<IJoinNode3> implicitJoinNodeTr = generateJoinNode(addedSource,
+                                                                                                  helperNode.subnodes(),
+                                                                                                  currentContext);
+        return new TransformationResultFromStage2To3<>(
+                new JoinInnerNode3(currentJoinNode, implicitJoinNodeTr.item, (helperNode.nonnullable ? IJ : LJ),
+                                   joinOnConditions), implicitJoinNodeTr.updatedContext);
     }
 
-    @Override
-    public int hashCode() {
-        return 31 + source.hashCode();
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof JoinLeafNode2)) {
-            return false;
-        }
-
-        final JoinLeafNode2 other = (JoinLeafNode2) obj;
-
-        return Objects.equals(source, other.source);
-    }
 }
