@@ -3,15 +3,16 @@ package ua.com.fielden.platform.utils;
 import com.google.common.collect.Streams;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.IteratorUtils.HeadedIterator;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.utils.IteratorUtils.headedIterator;
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
  * A utility to replace contents of a string over specific {@linkplain Range ranges}.
@@ -106,74 +107,84 @@ public class StringRangeReplacement {
                           final List<? extends T2<Range, ? extends CharSequence>> replacements,
                           final UncheckedAppendable sink)
     {
-        final Consumer<CharSequence> appendLine = s -> {
-            sink.append(s);
-            sink.append(lineTerminator);
-        };
-
-        int curLine = 0;
-        String line = null;
-        for (int i = 0; i < replacements.size(); i++) {
-            final var replacement = replacements.get(i);
-            final var range = replacement._1;
-            final var newText = replacement._2;
-
-            final @Nullable var prevRange = i == 0 ? null : replacements.get(i - 1)._1;
-            final @Nullable var nextRange = i == replacements.size() - 1 ? null : replacements.get(i + 1)._1;
-
-            if (curLine > range.firstLineIndex()) {
-                throw new InvalidArgumentException("Range out of order: %s".formatted(range));
-            }
-            // preserve lines before this range starts
-            else if (curLine < range.firstLineIndex()) {
-                if (!lines.hasNext()) {
-                    throw new InvalidArgumentException("Range out of bounds: %s".formatted(range));
-                }
-                // if this is the first range, then we skip one more line, because imperative programming is hard
-                final int skipN = prevRange == null ? range.firstLineIndex() - curLine : range.firstLineIndex() - curLine - 1;
-                IteratorUtils.forNextN(lines, skipN, appendLine);
-                line = lines.next();
-            }
-
-            // special case for the first range
-            if (prevRange == null && range.firstLineIndex() == 0) {
-                line = lines.next();
-            }
-
-            // preserve text before start column in first line of this range, unless the previous range covers the same line
-            final var firstLine = line;
-            if (prevRange == null || prevRange.lastLineIndex() != range.firstLineIndex()) {
-                sink.append(firstLine.substring(0, range.firstColumn()));
-            }
-            // replace text covered by this range with the new text
-            sink.append(newText);
-
-            // skip whole original lines that fall between start and end lines of this range
-            if (range.totalLines() > 2) {
-                IteratorUtils.skipN(lines, range.lastLineIndex() - range.firstLineIndex() - 1);
-            }
-
-            // preserve text after end column in last line of this range, unless the next range is in the same line
-            final var lastLine = range.isSingleLine() ? firstLine : lines.next();
-            sink.append(lastLine.substring(range.lastColumn(),
-                                            nextRange != null && nextRange.firstLineIndex() == range.lastLineIndex()
-                                                    ? nextRange.firstColumn()
-                                                    : lastLine.length()));
-
-            // add a line terminator only if this is not the last line and the next range is not in the same line
-            if (lines.hasNext() && (nextRange == null || nextRange.firstLineIndex() != range.firstLineIndex())) {
-                sink.append(lineTerminator);
-            }
-
-            curLine = range.lastLineIndex();
+        if (!lines.hasNext() && !replacements.isEmpty()) {
+            throw new InvalidArgumentException("There is nothing to replace (no lines).");
         }
 
-        // preserve lines after the last range, but don't terminate the last one
-        IteratorUtils.forEachRemainingAndLast(lines, appendLine, sink::append);
+        final var linesIter = headedIterator(lines);
+        final var cursor = foldLeft(replacements.stream(), new Cursor(0, 0),
+                                    (cur, replac) -> replaceRange(cur, linesIter, replac._1, replac._2, sink));
+
+        // copy text after last range
+        if (!replacements.isEmpty()) {
+            sink.append(linesIter.head().substring(cursor.column));
+            if (lines.hasNext()) {
+                sink.append(lineTerminator);
+            }
+        }
+
+        if (lines.hasNext()) {
+            IteratorUtils.forEachRemainingAndLast(lines, ln -> appendLine(ln, sink), sink::append);
+        }
 
         if (isTerminateLastLine) {
             sink.append(lineTerminator);
         }
+    }
+
+    private Cursor replaceRange(final Cursor cursor,
+                                final HeadedIterator<String> lines,
+                                final Range range, final CharSequence newText,
+                                final UncheckedAppendable sink)
+    {
+        if (cursor.line > range.firstLineIndex) {
+            throw new InvalidArgumentException("Range out of bounds: %s".formatted(range));
+        }
+
+        // copy lines before range starts
+        if (cursor.line < range.firstLineIndex) {
+            if (!lines.hasNext()) {
+                throw new InvalidArgumentException("Range out of bounds: %s".formatted(range));
+            }
+            // handle this line, which may have been part of a previous range
+            appendLine(lines.head().substring(cursor.column), sink);
+            // copy whole lines in-between range boundaries if this range spans more than 2 lines
+            if (range.totalLines() > 2) {
+                IteratorUtils.forNextN(lines, range.firstLineIndex - cursor.line - 1, ln -> appendLine(ln, sink));
+            }
+            // advance the iterator to the first line of the range
+            lines.next();
+            // reposition the cursor at the beginning of the range
+            return replaceRange(new Cursor(range.firstLineIndex, 0), lines, range, newText, sink);
+        }
+        // cursor is on the line where this range starts
+        else {
+            // copy text before range start
+            sink.append(lines.head().substring(cursor.column, range.firstColumn));
+
+            sink.append(newText);
+
+            // advance the iterator in case of a multi-line range
+            if (range.totalLines() > 1) {
+                IteratorUtils.skipN(lines, range.totalLines() - 1);
+            }
+
+            // reposition the cursor at the end of the range
+            return new Cursor(range.lastLineIndex, range.lastColumn);
+        }
+    }
+
+    /**
+     * Position in a text.
+     *
+     * @param line  0-based line index
+     * @param column  0-based column index; can be equal to the length of a line, which means "end of line"
+     */
+    record Cursor (int line, int column) {}
+
+    private void appendLine(final CharSequence cs, final UncheckedAppendable sink) {
+        sink.append(cs);
+        sink.append(lineTerminator);
     }
 
     private Pattern lineTerminatorPattern() {

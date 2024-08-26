@@ -160,6 +160,50 @@ public final class IteratorUtils {
         doWhile(iterator, predicate, action, $ -> {});
     }
 
+    /**
+     * @see HeadedIterator
+     */
+    public static <E> HeadedIterator<E> headedIterator(final Iterator<E> iterator) {
+        return new HeadedIterator<>(iterator);
+    }
+
+    /**
+     * Iterator with a "head" -- the last element returned by {@link #next()}.
+     * <p>
+     * If {@link #next()} hasn't yet been called, accessing a head will force it to be called. All subsequent accesses
+     * will use the last element returned by {@link #next()}.
+     * <p>
+     * An empty iterator will throw an exception upon accessing its head.
+     */
+    public static final class HeadedIterator<E> implements Iterator<E> {
+        private static final Object NO_ELEMENT = new Object();
+
+        private final Iterator<E> iterator;
+        private Object head = NO_ELEMENT;
+
+        private HeadedIterator(final Iterator<E> iterator) {
+            this.iterator = iterator;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public E next() {
+            final var next = iterator.next();
+            head = next;
+            return next;
+        }
+
+        public E head() {
+            if (head == NO_ELEMENT) {
+                head = iterator.next();
+            }
+            return (E) head;
+        }
+    }
 
     private IteratorUtils() {}
 
