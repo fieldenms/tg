@@ -28,7 +28,7 @@ public abstract class RangeValidatorFunction<T> {
             return Result.successful("Null is not applicable for validation.");
         } else if (startValue == null && endValue != null) {
             return Result.failure(format("Property [%s] cannot be specified without property [%s]",
-                                         startProperty.getTitle(), startProperty.getTitle()));
+                                         endProperty.getTitle(), startProperty.getTitle()));
         } else if (startValue != null && endValue == null) {
             return Result.successful();
         } else {
