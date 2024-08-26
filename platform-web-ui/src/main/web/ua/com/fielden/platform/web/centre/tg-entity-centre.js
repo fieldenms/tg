@@ -921,6 +921,7 @@ Polymer({
         if (this._insertionPointToDrag) {
             tearDownEvent(dragEvent);
             const containerToDrop = this._getInsertionPointContainer(dragEvent);
+            const scrollContainer = this._getScrollContainer(dragEvent);
             const insertionPoints = containerToDrop && [...containerToDrop.children];
             if (insertionPoints) {
                 const nextInsertionPoint = this._getNearestElementInVerticalContainer(insertionPoints, dragEvent);
@@ -929,6 +930,20 @@ Polymer({
                     this.$.placeHolder.style.display = "initial";
                 } else {
                     this.$.placeHolder.style.display = "none";
+                }
+            }
+            const mousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, scrollContainer);
+            if (scrollContainer && scrollContainer.offsetHeight !== scrollContainer.scrollHeight) { //scroll container has scrollbar and is scrollable
+                if (mousePos.y < 20 /* minimal distance to the edge */) { // mouse is close to the top edge
+                    const scrollDistance = Math.min(20 - mousePos.y, scrollContainer.scrollTop);
+                    if (scrollDistance > 0) { // if scrollbar is not on the top then scroll to the top
+                        scrollContainer.scrollTop -= scrollDistance;
+                    }
+                } else if (mousePos.y > scrollContainer.offsetHeight - 20 /* minimal distance to the edge */) { // mouse is close to the bottom edge
+                    const scrollDistance = Math.min(mousePos.y - scrollContainer.offsetHeight + 20, scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.offsetHeight);
+                    if (scrollDistance > 0) { //if scrollbar is not on the bottom then scroll to the bottom
+                        scrollContainer.scrollTop += scrollDistance;
+                    }
                 }
             }
         }
@@ -954,6 +969,11 @@ Polymer({
             }
             return nextContainer;
         }
+    },
+
+    _getScrollContainer: function  (dragEvent) {
+        const scrollContainers = [this.$.leftInsertionPointContainer, this.$.centreInsertionPointContainer, this.$.rightInsertionPointContainer];
+        return scrollContainers.find(c => this._insertionPointContainerContainsEvent(c, dragEvent));
     },
 
     _getNearestElementInVerticalContainer(elements, dragEvent) {
