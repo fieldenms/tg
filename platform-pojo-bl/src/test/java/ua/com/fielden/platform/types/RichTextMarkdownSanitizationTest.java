@@ -10,6 +10,33 @@ import static org.junit.Assert.fail;
 public class RichTextMarkdownSanitizationTest {
 
     @Test
+    public void blank_lines_are_preserved() {
+        assertSanitizationSuccess("""
+        first
+        
+        \t\t
+        
+        second
+        """);
+        assertSanitizationSuccess("""
+        first
+        
+        \t\r
+        second
+        """);
+    }
+
+    @Test
+    public void empty_text() {
+        assertSameAfterSanitization("");
+    }
+
+    @Test
+    public void empty_lines_are_preserved() {
+        assertSameAfterSanitization("\n\n\n");
+    }
+
+    @Test
     public void script_tag_is_prohibited() {
         assertSanitizationFailure("""
         hello

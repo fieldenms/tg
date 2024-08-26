@@ -26,18 +26,28 @@ the essential abstraction is that of an object.
     }
 
     @Test
-    public void same_line() {
+    public void multiple_replacements_on_the_same_line() {
         final String input = """
 In functional programming,
 the essential abstraction is that of a function.
 """;
         final var r1 = T2.t2(new StringRangeReplacement.Range(0, 3, 0, 13), "object-oriented");
-        final var r2 = T2.t2(new StringRangeReplacement.Range(0, 14, 0, 15), "b");
+        final var r2 = T2.t2(new StringRangeReplacement.Range(0, 14, 0, 15), "P");
         final var output = new StringRangeReplacement(true).replace(input, List.of(r1, r2));
         assertEquals("""
-In object-oriented brogramming,
+In object-oriented Programming,
 the essential abstraction is that of a function.
 """, output);
+    }
+
+    @Test
+    public void no_replacements() {
+        final String input = """
+In functional programming,
+the essential abstraction is that of a function.
+""";
+        final var output = new StringRangeReplacement(true).replace(input, List.of());
+        assertEquals(input, output);
     }
 
 }
