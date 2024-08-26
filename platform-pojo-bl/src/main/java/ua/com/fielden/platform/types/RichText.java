@@ -157,6 +157,8 @@ public sealed class RichText permits RichText.Persisted {
      * <a href="https://spec.commonmark.org/0.31.2/#html-blocks">HTML Blocks</a> and
      * <a href="https://spec.commonmark.org/0.31.2/#raw-html">Raw HTML (Inline HTML)</a>.
      * This selective sanitization avoids messing up other, non-HTML parts of the input.
+     * <p>
+     * The sanitization policy is specified via {@link #POLICY_FACTORY}.
      *
      * @return Result of RichText
      */
@@ -228,10 +230,33 @@ public sealed class RichText permits RichText.Persisted {
     }
 
     // @formatter:off
+    private static final PolicyFactory LISTS = new HtmlPolicyBuilder()
+            .allowElements(
+                    "ul", // Unordered lists
+                    "ol", // Ordered lists
+                    "li", // List items
+                    "dl", // Description lists
+                    "dt", // Terms in description lists
+                    "dd" // Descriptions in description lists
+            )
+            .toFactory();
+
     private static final PolicyFactory POLICY_FACTORY =
-        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS)
+        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS).and(LISTS)
         .and(new HtmlPolicyBuilder()
-                .allowElements("b", "i", "pre")
+                .allowElements(
+                        "b", "strong", // bold text
+                        "i", "em", // italic text
+                        "u", // underlined text
+                        "del", // strikethrough text
+                        "sup", // superscript text
+                        "sub", // subscript text
+                        "mark", // highlighted text
+                        "code", // inline code
+                        "pre",  // preformatted text block
+                        "br", // line break
+                        "span" // generic inline container (used for text colouring)
+                )
                 .toFactory());
     // @formatter:on
 
