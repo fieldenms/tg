@@ -34,7 +34,7 @@ the essential abstraction is that of an object.
 """, output);
  * }
  */
-public class StringRangeReplacement {
+public final class StringRangeReplacement {
 
     private static final String DEFAULT_LINE_TERMINATOR = "\n";
     private static final Pattern DEFAULT_LINE_TERMINATOR_PATTERN = Pattern.compile(Pattern.quote(DEFAULT_LINE_TERMINATOR));
@@ -57,7 +57,11 @@ public class StringRangeReplacement {
             return input;
         } else {
             final var sb = new StringBuilder(input.length());
-            replace(input, replacements, sb);
+            try {
+                replace(input, replacements, sb);
+            } catch (final IOException e) {
+                throw new RuntimeException(e);
+            }
             return sb.toString();
         }
     }
@@ -67,37 +71,41 @@ public class StringRangeReplacement {
             return Streams.stream(lines).collect(joining(lineTerminator));
         } else {
             final var sb = new StringBuilder();
-            replace(lines, replacements, sb);
+            try {
+                replace(lines, replacements, sb);
+            } catch (final IOException e) {
+                throw new RuntimeException(e);
+            }
             return sb.toString();
         }
     }
 
+    /**
+     * @throws IOException  if an operation on {@code sink} throws
+     */
     public void replace(final String input,
                         final List<? extends T2<Range, ? extends CharSequence>> replacements,
                         final Appendable sink)
+            throws IOException
     {
         if (replacements.isEmpty()) {
-            try {
-                sink.append(input);
-            } catch (final IOException e) {
-                throw new RuntimeException(e);
-            }
+            sink.append(input);
         } else {
             final var lines = lineTerminatorPattern().splitAsStream(input).iterator();
             replace_(lines, replacements, new UncheckedAppendable(sink));
         }
     }
 
+    /**
+     * @throws IOException  if an operation on {@code sink} throws
+     */
     public void replace(final Iterable<String> lines,
                         final List<? extends T2<Range, ? extends CharSequence>> replacements,
                         final Appendable sink)
+            throws IOException
     {
         if (replacements.isEmpty()) {
-            try {
-                sink.append(Streams.stream(lines).collect(joining(lineTerminator)));
-            } catch (final IOException e) {
-                throw new RuntimeException(e);
-            }
+            sink.append(Streams.stream(lines).collect(joining(lineTerminator)));
         } else {
             replace_(lines.iterator(), replacements, new UncheckedAppendable(sink));
         }
