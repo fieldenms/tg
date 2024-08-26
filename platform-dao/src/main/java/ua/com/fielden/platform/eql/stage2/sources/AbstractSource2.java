@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage2.sources;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
+
+import java.util.Objects;
 
 public abstract class AbstractSource2 {
     public final Integer id;
@@ -59,16 +59,12 @@ public abstract class AbstractSource2 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof AbstractSource2)) {
-            return false;
-        }
-        
-        final AbstractSource2 other = (AbstractSource2) obj;
-
-        return Objects.equals(id, other.id) && Objects.equals(alias, other.alias) && Objects.equals(querySourceInfo, other.querySourceInfo) && (isExplicit == other.isExplicit) && (isPartOfCalcProp == other.isPartOfCalcProp);
+        return this == obj
+               || obj instanceof AbstractSource2 that
+                  && Objects.equals(id, that.id)
+                  && Objects.equals(alias, that.alias)
+                  && Objects.equals(querySourceInfo, that.querySourceInfo)
+                  && isExplicit == that.isExplicit
+                  && isPartOfCalcProp == that.isPartOfCalcProp;
    }
 }

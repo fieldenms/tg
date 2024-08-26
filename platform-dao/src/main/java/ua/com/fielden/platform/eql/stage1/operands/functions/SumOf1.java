@@ -17,7 +17,7 @@ public class SumOf1 extends SingleOperandFunction1<SumOf2> {
     public SumOf2 transform(final TransformationContextFromStage1To2 context) {
         return new SumOf2(operand.transform(context), distinct);
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -27,20 +27,10 @@ public class SumOf1 extends SingleOperandFunction1<SumOf2> {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof SumOf1)) {
-            return false;
-        }
-        
-        final SumOf1 other = (SumOf1) obj;
-        
-        return distinct == other.distinct;
+        return this == obj
+               || obj instanceof SumOf1 that
+                  && distinct == that.distinct
+                  && super.equals(that);
     }
+
 }

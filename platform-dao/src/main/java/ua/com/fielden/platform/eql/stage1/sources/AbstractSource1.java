@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+
+import java.util.Objects;
 
 public abstract class AbstractSource1<T extends ISource2<?>> implements ISource1<T> {
 
@@ -41,16 +41,11 @@ public abstract class AbstractSource1<T extends ISource2<?>> implements ISource1
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof AbstractSource1)) {
-            return false;
-        }
-
-        final AbstractSource1<?> other = (AbstractSource1<?>) obj;
-
-        return Objects.equals(id, other.id) && Objects.equals(alias, other.alias) && Objects.equals(sourceType, other.sourceType);
+        return this == obj
+               || obj instanceof AbstractSource1 that
+                  && Objects.equals(id, that.id)
+                  && Objects.equals(alias, that.alias)
+                  && Objects.equals(sourceType, that.sourceType);
     }
+
 }

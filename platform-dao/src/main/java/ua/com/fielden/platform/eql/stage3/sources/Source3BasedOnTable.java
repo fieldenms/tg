@@ -35,20 +35,9 @@ public class Source3BasedOnTable extends AbstractSource3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof Source3BasedOnTable)) {
-            return false;
-        }
-
-        final Source3BasedOnTable other = (Source3BasedOnTable) obj;
-
-        return Objects.equals(tableName, other.tableName);
+        return this == obj
+               || obj instanceof Source3BasedOnTable that
+                  && Objects.equals(this.tableName, that.tableName)
+                  && super.equals(that);
     }
 }

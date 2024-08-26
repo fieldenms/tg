@@ -44,16 +44,8 @@ public class Concat3 extends AbstractFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-    
-        if (!(obj instanceof Concat3)) {
-            return false;
-        }
-        
-        final Concat3 other = (Concat3) obj;
-        
-        return Objects.equals(operands, other.operands);
+        return this == obj
+               || obj instanceof Concat3 that
+                  && Objects.equals(this.operands, that.operands);
     }
 }

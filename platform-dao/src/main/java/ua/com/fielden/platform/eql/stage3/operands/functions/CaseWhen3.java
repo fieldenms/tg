@@ -85,20 +85,12 @@ public class CaseWhen3 extends AbstractFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }        
-        
-        if (!(obj instanceof CaseWhen3)) {
-            return false;
-        }
-
-        final CaseWhen3 other = (CaseWhen3) obj;
-
-        return Objects.equals(whenThenPairs, other.whenThenPairs) && Objects.equals(elseOperand, other.elseOperand) && Objects.equals(typeCast, other.typeCast);
+        return this == obj
+               || obj instanceof CaseWhen3 that
+                  && Objects.equals(whenThenPairs, that.whenThenPairs)
+                  && Objects.equals(elseOperand, that.elseOperand)
+                  && Objects.equals(typeCast, that.typeCast)
+                  && super.equals(that);
     }
+
 }

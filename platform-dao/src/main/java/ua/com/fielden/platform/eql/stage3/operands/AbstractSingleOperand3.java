@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.eql.meta.PropType;
+
+import java.util.Objects;
 
 public abstract class AbstractSingleOperand3 implements ISingleOperand3 {
     public final PropType type;
@@ -26,16 +26,9 @@ public abstract class AbstractSingleOperand3 implements ISingleOperand3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof AbstractSingleOperand3)) {
-            return false;
-        }
-
-        final AbstractSingleOperand3 other = (AbstractSingleOperand3) obj;
-
-        return Objects.equals(type, other.type);
+        return this == obj
+               || obj instanceof AbstractSingleOperand3 that
+                  && Objects.equals(this.type, that.type);
     }
+
 }

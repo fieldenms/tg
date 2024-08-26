@@ -27,20 +27,10 @@ public class CountOf1 extends SingleOperandFunction1<CountOf2> {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof CountOf1)) {
-            return false;
-        }
-        
-        final CountOf1 other = (CountOf1) obj;
-        
-        return distinct == other.distinct;
+        return this == obj
+               || obj instanceof CountOf1 that
+                  && distinct == that.distinct
+                  && super.equals(that);
     }
+
 }

@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+
+import java.util.Objects;
 
 abstract class TwoOperandsFunction3 extends AbstractFunction3 {
     public final ISingleOperand3 operand1;
@@ -26,20 +26,10 @@ abstract class TwoOperandsFunction3 extends AbstractFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }     
-        
-        if (!(obj instanceof TwoOperandsFunction3)) {
-            return false;
-        }
-        
-        final TwoOperandsFunction3 other = (TwoOperandsFunction3) obj;
-        
-        return Objects.equals(operand1, other.operand1) && Objects.equals(operand2, other.operand2);
+        return this == obj
+               || obj instanceof TwoOperandsFunction3 that
+                  && Objects.equals(operand1, that.operand1)
+                  && Objects.equals(operand2, that.operand2)
+                  && super.equals(that);
     }
 }

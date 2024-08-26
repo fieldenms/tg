@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.queries;
 
-import static java.util.Collections.emptySet;
-
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -22,6 +16,12 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
+
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import static java.util.Collections.emptySet;
 
 public abstract class AbstractQuery2 {
 
@@ -94,21 +94,13 @@ public abstract class AbstractQuery2 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof AbstractQuery2)) {
-            return false;
-        }
-
-        final AbstractQuery2 other = (AbstractQuery2) obj;
-
-        return Objects.equals(resultType, other.resultType) &&
-                Objects.equals(joinRoot, other.joinRoot) &&
-                Objects.equals(yields, other.yields) &&
-                Objects.equals(whereConditions, other.whereConditions) &&
-                Objects.equals(groups, other.groups) &&
-                Objects.equals(orderings, other.orderings);
+        return this == obj
+               || obj instanceof AbstractQuery2 that
+                  && Objects.equals(resultType, that.resultType)
+                  && Objects.equals(joinRoot, that.joinRoot)
+                  && Objects.equals(yields, that.yields)
+                  && Objects.equals(whereConditions, that.whereConditions)
+                  && Objects.equals(groups, that.groups)
+                  && Objects.equals(orderings, that.orderings);
     }
 }

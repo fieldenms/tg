@@ -33,20 +33,10 @@ public class AddDateInterval2 extends TwoOperandsFunction2<AddDateInterval3> {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof AddDateInterval2)) {
-            return false;
-        }
-        
-        final AddDateInterval2 other = (AddDateInterval2) obj;
-        
-        return Objects.equals(intervalUnit, other.intervalUnit);
+        return this == obj
+               || obj instanceof AddDateInterval2 that
+                  && Objects.equals(intervalUnit, that.intervalUnit)
+                  && super.equals(that);
     }
+
 }

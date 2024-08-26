@@ -35,20 +35,10 @@ public class AverageOf3 extends SingleOperandFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof AverageOf3)) {
-            return false;
-        }
-        
-        final AverageOf3 other = (AverageOf3) obj;
-        
-        return distinct == other.distinct;
+        return this == obj
+               || obj instanceof AverageOf3 that
+                  && distinct == that.distinct
+                  && super.equals(that);
     }
+
 }

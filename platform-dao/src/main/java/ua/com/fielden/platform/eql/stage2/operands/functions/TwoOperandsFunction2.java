@@ -46,16 +46,9 @@ abstract class TwoOperandsFunction2<T extends ISingleOperand3> extends AbstractF
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof TwoOperandsFunction2)) {
-            return false;
-        }
-        
-        final TwoOperandsFunction2<?> other = (TwoOperandsFunction2<?>) obj;
-        
-        return Objects.equals(operand1, other.operand1) && Objects.equals(operand2, other.operand2);
+        return this == obj
+               || obj instanceof TwoOperandsFunction2 that
+                  && Objects.equals(operand1, that.operand1)
+                  && Objects.equals(operand2, that.operand2);
     }
 }

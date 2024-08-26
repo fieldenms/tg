@@ -136,20 +136,9 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof CountDateInterval3)) {
-            return false;
-        }
-        
-        final CountDateInterval3 other = (CountDateInterval3) obj;
-        
-        return Objects.equals(intervalUnit, other.intervalUnit);
+        return this == obj
+               || obj instanceof CountDateInterval3 that
+                  && Objects.equals(intervalUnit, that.intervalUnit)
+                  && super.equals(that);
     }
 }

@@ -142,21 +142,11 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof Source1BasedOnQueries)) {
-            return false;
-        }
-
-        final Source1BasedOnQueries other = (Source1BasedOnQueries) obj;
-
-        return Objects.equals(models, other.models) && Objects.equals(isSyntheticEntity, other.isSyntheticEntity);
+        return this == obj ||
+               obj instanceof Source1BasedOnQueries that
+               && Objects.equals(models, that.models)
+               && isSyntheticEntity == that.isSyntheticEntity
+               && super.equals(that);
     }
 
     @Override

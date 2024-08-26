@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+
+import java.util.Objects;
+import java.util.Set;
 
 abstract class SingleOperandFunction2<T extends ISingleOperand3> extends AbstractFunction2<T> {
 
@@ -38,16 +38,9 @@ abstract class SingleOperandFunction2<T extends ISingleOperand3> extends Abstrac
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof SingleOperandFunction2)) {
-            return false;
-        }
-        
-        final SingleOperandFunction2<?> other = (SingleOperandFunction2<?>) obj;
-        
-        return Objects.equals(operand, other.operand);
+        return this == obj
+               || obj instanceof SingleOperandFunction2 that
+                  && Objects.equals(operand, that.operand);
     }
+
 }

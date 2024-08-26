@@ -30,20 +30,10 @@ public class CountOf3 extends SingleOperandFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof CountOf3)) {
-            return false;
-        }
-        
-        final CountOf3 other = (CountOf3) obj;
-        
-        return distinct == other.distinct;
+        return this == obj
+               || obj instanceof CountOf3 that
+                  && distinct == that.distinct
+                  && super.equals(that);
     }
+
 }

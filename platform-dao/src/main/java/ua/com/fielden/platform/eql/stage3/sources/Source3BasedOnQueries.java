@@ -97,21 +97,10 @@ public class Source3BasedOnQueries extends AbstractSource3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof Source3BasedOnQueries)) {
-            return false;
-        }
-        
-        final Source3BasedOnQueries other = (Source3BasedOnQueries) obj;
-        
-        return Objects.equals(models, other.models);
+        return this == obj
+               || obj instanceof Source3BasedOnQueries that
+                  && Objects.equals(this.models, that.models)
+                  && super.equals(that);
     }
 
 }

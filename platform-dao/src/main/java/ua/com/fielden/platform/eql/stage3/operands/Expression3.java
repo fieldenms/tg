@@ -45,20 +45,11 @@ public class Expression3 extends AbstractSingleOperand3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof Expression3)) {
-            return false;
-        }
-
-        final Expression3 other = (Expression3) obj;
-
-        return Objects.equals(firstOperand, other.firstOperand) && Objects.equals(otherOperands, other.otherOperands);
+        return this == obj
+               || obj instanceof Expression3 that
+                  && Objects.equals(firstOperand, that.firstOperand)
+                  && Objects.equals(otherOperands, that.otherOperands)
+                  && super.equals(that);
     }
+
 }

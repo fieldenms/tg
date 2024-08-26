@@ -1,21 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.queries;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
-import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
-import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
-import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_BYS;
-import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_BYS;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
@@ -37,17 +21,23 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sundries.GroupBy2;
-import ua.com.fielden.platform.eql.stage2.sundries.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.sundries.OrderBy2;
-import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
-import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
+import ua.com.fielden.platform.eql.stage2.sundries.*;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
+import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
+import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.conditions;
+import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_BYS;
+import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_BYS;
 /**
  * Base class for stage 1 data structures representing an EQL query, suitable for transformation into stage 2.
  * There are four kinds of structures for representing queries depending on its usage:
@@ -242,24 +232,17 @@ public abstract class AbstractQuery1 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof AbstractQuery1)) {
-            return false;
-        }
-
-        final AbstractQuery1 other = (AbstractQuery1) obj;
-
-        return Objects.equals(resultType, other.resultType) &&
-                Objects.equals(joinRoot, other.joinRoot) &&
-                Objects.equals(yields, other.yields) &&
-                Objects.equals(whereConditions, other.whereConditions) &&
-                Objects.equals(udfConditions, other.udfConditions) &&
-                Objects.equals(groups, other.groups) &&
-                Objects.equals(orderings, other.orderings) &&
-                Objects.equals(yieldAll, other.yieldAll) &&
-                Objects.equals(shouldMaterialiseCalcPropsAsColumnsInSqlQuery, other.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
+        return this == obj
+               || obj instanceof AbstractQuery1 that
+                  && Objects.equals(resultType, that.resultType)
+                  && Objects.equals(joinRoot, that.joinRoot)
+                  && Objects.equals(yields, that.yields)
+                  && Objects.equals(whereConditions, that.whereConditions)
+                  && Objects.equals(udfConditions, that.udfConditions)
+                  && Objects.equals(groups, that.groups)
+                  && Objects.equals(orderings, that.orderings)
+                  && Objects.equals(yieldAll, that.yieldAll)
+                  && Objects.equals(shouldMaterialiseCalcPropsAsColumnsInSqlQuery, that.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
     }
+
 }

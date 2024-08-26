@@ -88,17 +88,10 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Expression2)) {
-            return false;
-        }
-        
-        final Expression2 other = (Expression2) obj;
-        
-        return Objects.equals(first, other.first) &&
-                Objects.equals(items, other.items);
+        return this == obj
+               || obj instanceof Expression2 that
+                  && Objects.equals(first, that.first)
+                  && Objects.equals(items, that.items);
     }
+
 }

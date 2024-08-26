@@ -30,20 +30,9 @@ public class SumOf3 extends SingleOperandFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof SumOf3)) {
-            return false;
-        }
-        
-        final SumOf3 other = (SumOf3) obj;
-        
-        return distinct == other.distinct;
+        return this == obj
+               || obj instanceof SumOf3 that
+                  && distinct == that.distinct
+                  && super.equals(obj);
     }
 }
