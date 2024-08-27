@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.CountAll2;
 
-public class CountAll1 extends AbstractFunction1<CountAll2> {
+public class CountAll1 implements IFunction1<CountAll2> {
 
     public static CountAll1 INSTANCE = new CountAll1();
     

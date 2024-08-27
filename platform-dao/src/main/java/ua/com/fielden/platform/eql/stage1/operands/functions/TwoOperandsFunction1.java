@@ -10,7 +10,7 @@ import java.util.Set;
 
 import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 
-abstract class TwoOperandsFunction1<T extends ISingleOperand2<?>> extends AbstractFunction1<T> {
+abstract class TwoOperandsFunction1<T extends ISingleOperand2<?>> implements IFunction1<T> {
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand1;
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand2;
 

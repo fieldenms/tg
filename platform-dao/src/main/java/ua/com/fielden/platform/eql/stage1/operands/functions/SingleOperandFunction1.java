@@ -3,11 +3,12 @@ package ua.com.fielden.platform.eql.stage1.operands.functions;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 import java.util.Set;
 
-public abstract class SingleOperandFunction1<T extends ISingleOperand2<?>> extends AbstractFunction1<T> {
+public abstract class SingleOperandFunction1<T extends ISingleOperand2<?>> implements IFunction1<T> {
 
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand;
 
@@ -31,6 +32,17 @@ public abstract class SingleOperandFunction1<T extends ISingleOperand2<?>> exten
     @Override
     public boolean equals(final Object obj) {
         return this == obj || obj instanceof SingleOperandFunction1 that && Objects.equals(operand, that.operand);
+    }
+
+    @Override
+    public String toString() {
+        return addToString(ToString.standard.toString(this)
+                                   .add("operand", operand))
+                .$();
+    }
+
+    protected ToString addToString(final ToString toString) {
+        return toString;
     }
 
 }
