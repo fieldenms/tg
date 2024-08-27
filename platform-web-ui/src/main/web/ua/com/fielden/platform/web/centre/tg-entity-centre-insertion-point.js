@@ -389,8 +389,6 @@ Polymer({
         //z-index management related settings
         const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
-        this.addEventListener('focus', this._onCaptureClick, true);
-        this.addEventListener('keydown', this._onCaptureClick, true);
         //Title bar event to identify whether element is draggable or not
         this.$.titleBar.addEventListener("mousedown", this._handleDraggable.bind(this), true);
     },
