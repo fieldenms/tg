@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.queries;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
@@ -10,6 +8,8 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 import ua.com.fielden.platform.utils.ToString;
+
+import java.util.Objects;
 
 public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuery3> {
     public final boolean isRefetchOnly;
@@ -53,21 +53,11 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof SubQuery2)) {
-            return false;
-        }
-
-        final SubQuery2 other = (SubQuery2) obj;
-
-        return Objects.equals(type, other.type) && (isRefetchOnly == other.isRefetchOnly);
+        return this == obj
+               || obj instanceof SubQuery2 that
+                  && Objects.equals(type, that.type)
+                  && (isRefetchOnly == that.isRefetchOnly)
+                  && super.equals(that);
     }
 
     @Override

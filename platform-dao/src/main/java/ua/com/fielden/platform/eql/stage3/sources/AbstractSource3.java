@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
-import static java.lang.String.format;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Map;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
-import ua.com.fielden.platform.utils.ToString;
+import static java.lang.String.format;
 
 public abstract class AbstractSource3 implements ISource3 {
     public final String sqlAlias;
@@ -63,19 +63,11 @@ public abstract class AbstractSource3 implements ISource3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof AbstractSource3)) {
-            return false;
-        }
-
-        final AbstractSource3 other = (AbstractSource3) obj;
-
-        return
-                Objects.equals(sqlAlias, other.sqlAlias) &&
-                Objects.equals(id, other.id) && Objects.equals(columns, other.columns);
+        return this == obj
+               || obj instanceof AbstractSource3 that
+                  && Objects.equals(sqlAlias, that.sqlAlias)
+                  && Objects.equals(id, that.id)
+                  && Objects.equals(columns, that.columns);
     }
 
     @Override
