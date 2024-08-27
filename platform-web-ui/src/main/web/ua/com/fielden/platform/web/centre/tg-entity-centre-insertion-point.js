@@ -127,6 +127,10 @@ const template = html`
             overflow: auto;
         }
 
+        #loadableContent {
+            z-index: 0; /*It is needed to create separate stacking context for insertion point content that should be lower then toolbar to make it's dropdowns visible*/
+        }
+
         #resizer {
             position: absolute;
             bottom: 0;
@@ -146,8 +150,8 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-        <div id="titleBar" draggable$="[[_titleBarDraggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog" tooltip-text$="[[longDesc]]">
-            <span class="title-text truncate">[[shortDesc]]</span>
+    <div id="titleBar" draggable$="[[_titleBarDraggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog" tooltip-text$="[[longDesc]]">
+        <span class="title-text truncate">[[shortDesc]]</span>
         <div class="layout horizontal centre">
             <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detachedView)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detachedView)]]"></paper-icon-button>
             <paper-icon-button class="title-bar-button" icon="[[_minimiseButtonIcon(minimised)]]" on-tap="_toggleMinimised" tooltip-text$="[[_minimisedTooltip(minimised)]]" disabled="[[maximised]]"></paper-icon-button>
@@ -191,8 +195,7 @@ Polymer({
         alternativeView: {
             type: Boolean,
             value: false,
-            reflectToAttribute: true,
-            observer: "_alternativeViewChanged"
+            reflectToAttribute: true
         },
 
         /**
@@ -373,7 +376,7 @@ Polymer({
         }
     },
 
-    observers: ['_shouldEnableDraggable(contextRetriever)','_restoreFromLocalStorage(_element, contextRetriever)'],
+    observers: ['_alternativeViewChanged(alternativeView, contextRetriever)', '_shouldEnableDraggable(contextRetriever)','_restoreFromLocalStorage(_element, contextRetriever)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -637,7 +640,6 @@ Polymer({
         if (this.contextRetriever) {
             this.contextRetriever()._dom()._makeCentreSelectable();
         }
-
     },
 
     _resizeDetached: function (event) {
@@ -792,8 +794,8 @@ Polymer({
             }
             this._setDimension();
             this._setPosition();
+            this._saveState(ST_MAXIMISED, this.maximised);
         }
-        this._saveState(ST_MAXIMISED, this.maximised);
     },
 
     _makeDetached: function () {
@@ -810,7 +812,7 @@ Polymer({
     _makeAttached: function () {
         delete this._preferredSize;
         this.contextRetriever().insertionPointManager.remove(this);
-        if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
+        if (this.contextRetriever().$.centreResultContainer) {
             this.contextRetriever().$.centreResultContainer.focus();
         }
     },
@@ -837,8 +839,8 @@ Polymer({
     _minimisedChanged: function (newValue) {
         if (this.contextRetriever) {
             this._setDimension();
+            this._saveState(ST_MINIMISED, this.minimised);
         }
-        this._saveState(ST_MINIMISED, this.minimised);
     },
 
     /******************** detach button related logic *************************/
@@ -865,13 +867,13 @@ Polymer({
             }
             this._setDimension();
             this._setPosition();
+            this._saveState(ST_DETACHED_VIEW, this.detachedView);
         }
-        this._saveState(ST_DETACHED_VIEW, this.detachedView);
     },
 
-    _alternativeViewChanged: function (newValue) {
-        if (this.contextRetriever) {
-            this.setAttribute('tabindex', this._getTabIndex(newValue));
+    _alternativeViewChanged: function (alternativeView, contextRetriever) {
+        if (contextRetriever) {
+            this.setAttribute('tabindex', this._getTabIndex(alternativeView));
             this._setDimension();
             this._setPosition();
         }
@@ -951,14 +953,14 @@ Polymer({
                 this.style.top = "0";
             }
         } else {
-            if (!this.maximised) {
-                this.style.removeProperty('position');
-                this.style.removeProperty('left');
-                this.style.removeProperty('top');
-            } else {
+            if (this.maximised) {
                 this.style.position = "fixed";
                 this.style.left = "0";
                 this.style.top = "0";
+            } else {
+                this.style.removeProperty('position');
+                this.style.removeProperty('left');
+                this.style.removeProperty('top');
             }
         }
     },
@@ -1035,7 +1037,7 @@ Polymer({
     },
 
     _generateKey: function (name) {
-        const extendedName = `${(this.contextRetriever() && this.contextRetriever().miType) || ""}_${this._element && this._element.tagName}_${name}`;
+        const extendedName = `${this.contextRetriever().miType}_${this._element && this._element.tagName}_${name}`;
         return localStorageKey(extendedName);
     },
 
