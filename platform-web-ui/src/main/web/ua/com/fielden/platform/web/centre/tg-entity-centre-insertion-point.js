@@ -917,7 +917,7 @@ Polymer({
                 const heightToApply = this._getProp(ST_ATTACHED_HEIGHT);
                 const prefDim = this._getPrefDim();
                 if (!this.minimised && !this.maximised) {
-                    this.style.margin = INSERTION_POINT_MARGIN + 'px';
+                    this.style.margin = `${INSERTION_POINT_MARGIN}px ${2 * INSERTION_POINT_MARGIN}px`;
                     this.style.width = "auto";
                     this.$.insertionPointBody.style.minWidth = prefDim && prefDim[0];
                     this.style.height = heightToApply || (prefDim && prefDim[1]);
@@ -925,7 +925,7 @@ Polymer({
                     this.style.width = '100%';
                     this.style.height = '100%';
                 } else if (this.minimised && !this.maximised) {
-                    this.style.margin = INSERTION_POINT_MARGIN + 'px';
+                    this.style.margin = `${INSERTION_POINT_MARGIN}px ${2 * INSERTION_POINT_MARGIN}px`;
                     this.style.height = this._titleBarHeight();
                     this.style.width = "auto";
                     this.$.insertionPointBody.style.minWidth = prefDim && prefDim[0];

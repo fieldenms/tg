@@ -224,7 +224,7 @@ const template = html`
             min-height: 100%
         }
         .insertion-point-slot {
-            padding: var(--tg-insertion-point-container-margin, 0);
+            padding: var(--tg-insertion-point-container-margin, 0) 0;
             overflow: hidden;
         }
         .insertion-point-slot[scroll-container] {
@@ -299,7 +299,7 @@ const template = html`
                 <slot id="rightInsertionPointContent" name="right-insertion-point"></slot>
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
-            <div id="placeHolder" style="background-color:  var(--paper-light-blue-600); height: 9px; width: auto; display: none; margin: 5px -5px;"></div>
+            <div id="placeHolder" style="background-color:  var(--paper-light-blue-600); height: 9px; width: auto; display: none; margin: 5px 0;"></div>
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
     </iron-pages>`;
