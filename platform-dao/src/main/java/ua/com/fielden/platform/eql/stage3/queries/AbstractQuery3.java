@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static com.google.common.base.Predicates.or;
 import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 
 public abstract class AbstractQuery3 {
@@ -80,10 +81,10 @@ public abstract class AbstractQuery3 {
         return ToString.separateLines.toString(this)
                 .add("resultType", resultType)
                 .addIfNotNull("join", joinRoot)
-                .addIfNot("where", whereConditions, Conditions3::isEmpty)
-                .addIfNot("yields", yields, Yields3::isEmpty)
-                .addIfNot("groups", groups, GroupBys3::isEmpty)
-                .addIfNot("orderings", orderings, OrderBys3::isEmpty)
+                .addIfNot("where", whereConditions, or(Objects::isNull, Conditions3::isEmpty))
+                .addIfNot("yields", yields, or(Objects::isNull, Yields3::isEmpty))
+                .addIfNot("groups", groups, or(Objects::isNull, GroupBys3::isEmpty))
+                .addIfNot("orderings", orderings, or(Objects::isNull, OrderBys3::isEmpty))
                 .pipe(this::addToString)
                 .$();
     }
