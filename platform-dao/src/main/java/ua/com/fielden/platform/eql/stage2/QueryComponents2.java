@@ -8,14 +8,17 @@ import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.utils.ToString;
 
+import java.util.Optional;
+
 /**
  * Represents all structural query parts (components) obtained as the result of stage 1 to stage 2 transformation.
  * This class is used as a convenience to keep all the query components together.
  *
- * @param joinRoot -- if not null represents a FROM part of SQL query; otherwise it means that query yields are derived either from values or from props of outer query sources.
+ * @param maybeJoinRoot  if present, represents a FROM part of an SQL query; otherwise it means that query yields are
+ *                       derived either from values or from props of outer query sources.
  */
 public record QueryComponents2(
-        IJoinNode2<? extends IJoinNode3> joinRoot,
+        Optional<IJoinNode2<? extends IJoinNode3>> maybeJoinRoot,
         Conditions2 whereConditions,
         Yields2 yields,
         GroupBys2 groups,
@@ -25,7 +28,7 @@ public record QueryComponents2(
     @Override
     public String toString() {
         return ToString.separateLines.toString(this)
-                .addIfNotNull("join", joinRoot)
+                .addIfPresent("join", maybeJoinRoot)
                 .addIfNot("where", whereConditions, Conditions2::isEmpty)
                 .addIfNot("yields", yields, Yields2::isEmpty)
                 .addIfNot("groups", groups, GroupBys2::isEmpty)

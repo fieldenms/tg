@@ -5,10 +5,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
-import ua.com.fielden.platform.eql.stage1.PropResolution;
-import ua.com.fielden.platform.eql.stage1.QueryComponents1;
-import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-import ua.com.fielden.platform.eql.stage1.TransformationResultFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.*;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
@@ -30,7 +27,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
@@ -55,7 +51,7 @@ public abstract class AbstractQuery1 {
 
     public static final String ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY = "Cannot find yield [%s] used within order by operation.";
 
-    public final IJoinNode1<? extends IJoinNode2<?>> joinRoot;
+    public final Optional<IJoinNode1<? extends IJoinNode2<?>>> maybeJoinRoot;
     public final Conditions1 whereConditions;
     public final Conditions1 udfConditions;
     public final Yields1 yields;
@@ -75,7 +71,7 @@ public abstract class AbstractQuery1 {
     public final boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
 
     public AbstractQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
-        this.joinRoot = queryComponents.joinRoot();
+        this.maybeJoinRoot = queryComponents.maybeJoinRoot();
         this.whereConditions = queryComponents.whereConditions();
         this.udfConditions = queryComponents.udfConditions();
         this.yields = queryComponents.yields();
@@ -88,7 +84,7 @@ public abstract class AbstractQuery1 {
 
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
-        result.addAll(joinRoot != null ? joinRoot.collectEntityTypes() : emptySet());
+        maybeJoinRoot.map(ITransformableFromStage1To2::collectEntityTypes).ifPresent(result::addAll);
         result.addAll(whereConditions.collectEntityTypes());
         result.addAll(yields.collectEntityTypes());
         result.addAll(groups.collectEntityTypes());
@@ -104,7 +100,7 @@ public abstract class AbstractQuery1 {
      * @return
      */
     protected QueryComponents2 transformSourceless(final TransformationContextFromStage1To2 context) {
-        return new QueryComponents2(null /*joinRoot*/, whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
+        return new QueryComponents2(Optional.empty(), whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
 
     /**
@@ -113,7 +109,9 @@ public abstract class AbstractQuery1 {
      * @param context
      * @return
      */
-    protected final QueryComponents2 transformQueryComponents(final TransformationContextFromStage1To2 context) {
+    protected final QueryComponents2 transformQueryComponents(final TransformationContextFromStage1To2 context,
+                                                              final IJoinNode1<? extends IJoinNode2<?>> joinRoot)
+    {
         final TransformationResultFromStage1To2<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(context);
         final TransformationContextFromStage1To2 enhancedContext = joinRootTr.updatedContext;
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
@@ -123,7 +121,7 @@ public abstract class AbstractQuery1 {
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         // it is important to enhance yields after orderings to enable functioning of 'orderBy().yield(..)' in application to properties rather than true yields
         final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource());
-        return new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
+        return new QueryComponents2(Optional.of(joinRoot2), whereConditions2, enhancedYields2, groups2, orderings2);
     }
 
     /**
@@ -224,7 +222,7 @@ public abstract class AbstractQuery1 {
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + ((joinRoot == null) ? 0 : joinRoot.hashCode());
+        result = prime * result + maybeJoinRoot.hashCode();
         result = prime * result + yields.hashCode();
         result = prime * result + (yieldAll ? 1231 : 1237);
         result = prime * result + (shouldMaterialiseCalcPropsAsColumnsInSqlQuery ? 1231 : 1237);
@@ -236,7 +234,7 @@ public abstract class AbstractQuery1 {
         return this == obj
                || obj instanceof AbstractQuery1 that
                   && Objects.equals(resultType, that.resultType)
-                  && Objects.equals(joinRoot, that.joinRoot)
+                  && Objects.equals(maybeJoinRoot, that.maybeJoinRoot)
                   && Objects.equals(yields, that.yields)
                   && Objects.equals(whereConditions, that.whereConditions)
                   && Objects.equals(udfConditions, that.udfConditions)
@@ -252,7 +250,7 @@ public abstract class AbstractQuery1 {
                 .add("resultType", resultType)
                 .add("yieldAll", yieldAll)
                 .add("shouldMaterialiseCalcPropsAsColumnsInSqlQuery", shouldMaterialiseCalcPropsAsColumnsInSqlQuery)
-                .addIfNotNull("join", joinRoot)
+                .addIfPresent("join", maybeJoinRoot)
                 .addIfNot("where", whereConditions, Conditions1::isEmpty)
                 .addIfNot("udf", udfConditions, Conditions1::isEmpty)
                 .addIfNot("yields", yields, Yields1::isEmpty)

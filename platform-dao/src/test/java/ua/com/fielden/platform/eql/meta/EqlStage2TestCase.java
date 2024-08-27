@@ -36,10 +36,7 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -113,11 +110,11 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static QueryComponents2 qc2(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields) {
-        return new QueryComponents2(sources, conditions, yields, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS);
+        return new QueryComponents2(Optional.ofNullable(sources), conditions, yields, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS);
     }
 
     protected static QueryComponents2 qc2(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
-        return new QueryComponents2(sources, conditions, yields, EMPTY_GROUP_BYS, orderBys);
+        return new QueryComponents2(Optional.ofNullable(sources), conditions, yields, EMPTY_GROUP_BYS, orderBys);
     }
 
     protected static Yields2 mkYields(final Yield2... yields) {
@@ -302,7 +299,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static SubQueryForExists2 typelessSubqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
-        return new SubQueryForExists2(new QueryComponents2(sources, conditions, nullYields, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS));
+        return new SubQueryForExists2(new QueryComponents2(Optional.ofNullable(sources), conditions, nullYields, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS));
     }
 
     protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final PropType resultType) {

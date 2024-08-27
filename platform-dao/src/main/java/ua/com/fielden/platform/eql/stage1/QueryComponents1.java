@@ -8,13 +8,15 @@ import ua.com.fielden.platform.eql.stage1.sundries.Yields1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.utils.ToString;
 
+import java.util.Optional;
+
 /**
  * Represents all structural query parts (components) obtained as the result of stage 0 (fluent API tokens) to stage 1 transformation.
  * This class is used as a convenience to keep all the query components together.
  *
  */
 public record QueryComponents1(
-                IJoinNode1<? extends IJoinNode2<?>> joinRoot,
+                Optional<IJoinNode1<? extends IJoinNode2<?>>> maybeJoinRoot,
                 Conditions1 whereConditions,
                 Conditions1 udfConditions,
                 Yields1 yields,
@@ -28,7 +30,7 @@ public record QueryComponents1(
         return ToString.separateLines.toString(this)
                 .add("yieldAll", yieldAll)
                 .add("shouldMaterialiseCalcPropsAsColumnsInSqlQuery", shouldMaterialiseCalcPropsAsColumnsInSqlQuery)
-                .addIfNotNull("joinRoot", joinRoot)
+                .addIfPresent("join", maybeJoinRoot)
                 .addIfNot("where", whereConditions, Conditions1::isEmpty)
                 .addIfNot("udf", udfConditions, Conditions1::isEmpty)
                 .addIfNot("yields", yields, Yields1::isEmpty)

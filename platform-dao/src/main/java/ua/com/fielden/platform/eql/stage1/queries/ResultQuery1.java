@@ -52,7 +52,9 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
 
     @Override
     public ResultQuery2 transform(final TransformationContextFromStage1To2 context) {
-        return new ResultQuery2(joinRoot == null ? transformSourceless(context) : transformQueryComponents(context), resultType);
+        final var queryComponents = maybeJoinRoot.map(joinRoot -> transformQueryComponents(context, joinRoot))
+                .orElseGet(() -> transformSourceless(context));
+        return new ResultQuery2(queryComponents, resultType);
     }
 
     /**

@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage1.ITransformableFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -58,7 +59,9 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromSt
                         ? TransformationContextFromStage1To2.forCalcPropContext(context.querySourceInfoProvider)
                         : TransformationContextFromStage1To2.forMainContext(context.querySourceInfoProvider);
 
-        return new SourceQuery2(joinRoot == null ? transformSourceless(localContext) : transformQueryComponents(localContext), resultType);
+        final var queryComponents = maybeJoinRoot.map(joinRoot -> transformQueryComponents(localContext, joinRoot))
+                .orElseGet(() -> transformSourceless(localContext));
+        return new SourceQuery2(queryComponents, resultType);
     }
 
     @Override

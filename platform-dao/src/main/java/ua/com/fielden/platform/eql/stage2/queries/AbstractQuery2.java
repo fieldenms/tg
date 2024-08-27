@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.queries;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage2.ITransformableFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
@@ -20,13 +21,14 @@ import ua.com.fielden.platform.utils.ToString;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
 
 public abstract class AbstractQuery2 {
 
-    public final IJoinNode2<? extends IJoinNode3> joinRoot;
+    public final Optional<IJoinNode2<? extends IJoinNode3>> maybeJoinRoot;
     public final Conditions2 whereConditions;
     public final Yields2 yields;
     public final GroupBys2 groups;
@@ -34,7 +36,7 @@ public abstract class AbstractQuery2 {
     public final Class<?> resultType;
 
     public AbstractQuery2(final QueryComponents2 queryComponents, final Class<?> resultType) {
-        this.joinRoot = queryComponents.joinRoot();
+        this.maybeJoinRoot = queryComponents.maybeJoinRoot();
         this.whereConditions = queryComponents.whereConditions();
         this.yields = queryComponents.yields();
         this.groups = queryComponents.groups();
@@ -49,18 +51,19 @@ public abstract class AbstractQuery2 {
      * @return
      */
     protected TransformationResultFromStage2To3<QueryComponents3> transformQueryComponents(final TransformationContextFromStage2To3 context) {
-        final TransformationResultFromStage2To3<? extends IJoinNode3> joinRootTr = joinRoot != null ? joinRoot.transform(context) : new TransformationResultFromStage2To3<IJoinNode3>(null, context);
+        final var joinRootTr = maybeJoinRoot.map(joinRoot -> joinRoot.transform(context))
+                .orElseGet(() -> new TransformationResultFromStage2To3<>(null, context));
         final TransformationResultFromStage2To3<Conditions3> whereConditionsTr = whereConditions.transform(joinRootTr.updatedContext);
         final TransformationResultFromStage2To3<Yields3> yieldsTr = yields.transform(whereConditionsTr.updatedContext);
         final TransformationResultFromStage2To3<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResultFromStage2To3<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
 
-        return new TransformationResultFromStage2To3<>(new QueryComponents3(joinRootTr.item, whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item), orderingsTr.updatedContext);
+        return new TransformationResultFromStage2To3<>(new QueryComponents3(Optional.ofNullable(joinRootTr.item), whereConditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item), orderingsTr.updatedContext);
     }
 
     public Set<Prop2> collectProps() {
         final Set<Prop2> result = new HashSet<>();
-        result.addAll(joinRoot != null ? joinRoot.collectProps() : emptySet());
+        maybeJoinRoot.map(ITransformableFromStage2To3::collectProps).ifPresent(result::addAll);
         result.addAll(whereConditions.collectProps());
         result.addAll(yields.collectProps());
         result.addAll(groups.collectProps());
@@ -71,7 +74,7 @@ public abstract class AbstractQuery2 {
 
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
-        result.addAll(joinRoot != null ? joinRoot.collectEntityTypes() : emptySet());
+        maybeJoinRoot.map(ITransformableFromStage2To3::collectEntityTypes).ifPresent(result::addAll);
         result.addAll(whereConditions.collectEntityTypes());
         result.addAll(yields.collectEntityTypes());
         result.addAll(groups.collectEntityTypes());
@@ -87,7 +90,7 @@ public abstract class AbstractQuery2 {
         result = prime * result + whereConditions.hashCode();
         result = prime * result + groups.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + ((joinRoot == null) ? 0 : joinRoot.hashCode());
+        result = prime * result + maybeJoinRoot.hashCode();
         result = prime * result + yields.hashCode();
         result = prime * result + orderings.hashCode();
         return result;
@@ -98,7 +101,7 @@ public abstract class AbstractQuery2 {
         return this == obj
                || obj instanceof AbstractQuery2 that
                   && Objects.equals(resultType, that.resultType)
-                  && Objects.equals(joinRoot, that.joinRoot)
+                  && Objects.equals(maybeJoinRoot, that.maybeJoinRoot)
                   && Objects.equals(yields, that.yields)
                   && Objects.equals(whereConditions, that.whereConditions)
                   && Objects.equals(groups, that.groups)
@@ -110,7 +113,7 @@ public abstract class AbstractQuery2 {
         return ToString.separateLines.toString(this)
                 .add("resultType", resultType)
                 .addIfNot("whereConditions", whereConditions, Conditions2::isEmpty)
-                .addIfNotNull("join", joinRoot)
+                .addIfPresent("join", maybeJoinRoot)
                 .addIfNot("where", whereConditions, Conditions2::isEmpty)
                 .addIfNot("yields", yields, Yields2::isEmpty)
                 .addIfNot("groups", groups, GroupBys2::isEmpty)

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.utils;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -103,6 +104,10 @@ public final class ToString {
 
     public ToString addIfNotNull(final String name, final Object value) {
         return addIfNot(name, value, Objects::isNull);
+    }
+
+    public ToString addIfPresent(final String name, final Optional<?> maybeValue) {
+        return maybeValue.map(v -> add(name, v)).orElse(this);
     }
 
     public ToString addIfNotEmpty(final String name, final Collection<?> value) {

@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.EMPTY_ORDER_
 import static ua.com.fielden.platform.eql.stage1.sundries.Yields1.EMPTY_YIELDS;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.Before;
 
@@ -69,11 +70,11 @@ public abstract class EqlStage1TestCase extends EqlTestCase {
     }
 
     protected static QueryComponents1 qc1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions) {
-        return new QueryComponents1(sources, conditions, EMPTY_CONDITIONS, EMPTY_YIELDS, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS, false, false);
+        return new QueryComponents1(Optional.ofNullable(sources), conditions, EMPTY_CONDITIONS, EMPTY_YIELDS, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS, false, false);
     }
 
     protected static QueryComponents1 qc1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions, final Yields1 yields) {
-        return new QueryComponents1(sources, conditions, EMPTY_CONDITIONS, yields, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS, false, false);
+        return new QueryComponents1(Optional.ofNullable(sources), conditions, EMPTY_CONDITIONS, yields, EMPTY_GROUP_BYS, EMPTY_ORDER_BYS, false, false);
     }
 
     protected static Yields1 yields(final Yield1 ... yields) {
