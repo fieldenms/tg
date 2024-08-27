@@ -127,6 +127,10 @@ const template = html`
             overflow: auto;
         }
 
+        #loadableContent {
+            z-index: 0; /*It is needed to create separate stacking context for insertion point content that should be lower then toolbar to make it's dropdowns visible*/
+        }
+
         #resizer {
             position: absolute;
             bottom: 0;
@@ -191,8 +195,7 @@ Polymer({
         alternativeView: {
             type: Boolean,
             value: false,
-            reflectToAttribute: true,
-            observer: "_alternativeViewChanged"
+            reflectToAttribute: true
         },
 
         /**
@@ -389,7 +392,7 @@ Polymer({
         }
     },
 
-    observers: ['_shouldEnableDraggable(contextRetriever)','_restoreFromLocalStorage(_element, contextRetriever)'],
+    observers: ['_alternativeViewChanged(alternativeView, contextRetriever)', '_shouldEnableDraggable(contextRetriever)','_restoreFromLocalStorage(_element, contextRetriever)'],
 
     listeners: {
         'tg-save-as-name-changed': '_updateSaveAsName',
@@ -407,8 +410,6 @@ Polymer({
         //z-index management related settings
         const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
-        this.addEventListener('focus', this._onCaptureClick, true);
-        this.addEventListener('keydown', this._onCaptureClick, true);
         //Title bar event to identify whether element is draggable or not
         this.$.titleBar.addEventListener("mousedown", this._handleDraggable.bind(this), true);
     },
@@ -658,7 +659,6 @@ Polymer({
         if (this.contextRetriever) {
             this.contextRetriever()._dom()._makeCentreSelectable();
         }
-
     },
 
     _resizeDetached: function (event) {
@@ -813,8 +813,8 @@ Polymer({
             }
             this._setDimension();
             this._setPosition();
+            this._saveState(ST_MAXIMISED, this.maximised);
         }
-        this._saveState(ST_MAXIMISED, this.maximised);
     },
 
     _makeDetached: function () {
@@ -831,7 +831,7 @@ Polymer({
     _makeAttached: function () {
         delete this._preferredSize;
         this.contextRetriever().insertionPointManager.remove(this);
-        if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
+        if (this.contextRetriever().$.centreResultContainer) {
             this.contextRetriever().$.centreResultContainer.focus();
         }
     },
@@ -858,8 +858,8 @@ Polymer({
     _minimisedChanged: function (newValue) {
         if (this.contextRetriever) {
             this._setDimension();
+            this._saveState(ST_MINIMISED, this.minimised);
         }
-        this._saveState(ST_MINIMISED, this.minimised);
     },
 
     /******************** detach button related logic *************************/
@@ -886,13 +886,13 @@ Polymer({
             }
             this._setDimension();
             this._setPosition();
+            this._saveState(ST_DETACHED_VIEW, this.detachedView);
         }
-        this._saveState(ST_DETACHED_VIEW, this.detachedView);
     },
 
-    _alternativeViewChanged: function (newValue) {
-        if (this.contextRetriever) {
-            this.setAttribute('tabindex', this._getTabIndex(newValue));
+    _alternativeViewChanged: function (alternativeView, contextRetriever) {
+        if (contextRetriever) {
+            this.setAttribute('tabindex', this._getTabIndex(alternativeView));
             this._setDimension();
             this._setPosition();
         }
@@ -938,7 +938,7 @@ Polymer({
                 const heightToApply = this._getProp(ST_ATTACHED_HEIGHT);
                 const prefDim = this._getPrefDim();
                 if (!this.minimised && !this.maximised) {
-                    this.style.margin = INSERTION_POINT_MARGIN + 'px';
+                    this.style.margin = `${INSERTION_POINT_MARGIN}px ${2 * INSERTION_POINT_MARGIN}px`;
                     this.style.width = "auto";
                     this.$.insertionPointBody.style.minWidth = prefDim && prefDim[0];
                     this.style.height = heightToApply || (prefDim && prefDim[1]);
@@ -946,7 +946,7 @@ Polymer({
                     this.style.width = '100%';
                     this.style.height = '100%';
                 } else if (this.minimised && !this.maximised) {
-                    this.style.margin = INSERTION_POINT_MARGIN + 'px';
+                    this.style.margin = `${INSERTION_POINT_MARGIN}px ${2 * INSERTION_POINT_MARGIN}px`;
                     this.style.height = this._titleBarHeight();
                     this.style.width = "auto";
                     this.$.insertionPointBody.style.minWidth = prefDim && prefDim[0];
@@ -972,14 +972,14 @@ Polymer({
                 this.style.top = "0";
             }
         } else {
-            if (!this.maximised) {
-                this.style.removeProperty('position');
-                this.style.removeProperty('left');
-                this.style.removeProperty('top');
-            } else {
+            if (this.maximised) {
                 this.style.position = "fixed";
                 this.style.left = "0";
                 this.style.top = "0";
+            } else {
+                this.style.removeProperty('position');
+                this.style.removeProperty('left');
+                this.style.removeProperty('top');
             }
         }
     },
@@ -1089,7 +1089,7 @@ Polymer({
     },
 
     _generateKey: function (name) {
-        const extendedName = `${(this.contextRetriever() && this.contextRetriever().miType) || ""}_${this._element && this._element.tagName}_${name}`;
+        const extendedName = `${this.contextRetriever().miType}_${this._element && this._element.tagName}_${name}`;
         return localStorageKey(extendedName);
     },
 
