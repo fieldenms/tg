@@ -170,7 +170,7 @@ const template = html`
             <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
     </div>
-    <iron-icon id="resizer" style$="[[_getResizerStyle(detachedView)]]" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
+    <iron-icon id="resizer" style$="[[_getResizerStyle(detachedView)]]" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" tooltip-text$="[[_resizeButtonTooltip(detachedView)]]"></iron-icon>
     <tg-toast id="toaster"></tg-toast>
 `;
 
@@ -1077,6 +1077,10 @@ Polymer({
             prefDim[1] = this._getProp(ST_ATTACHED_HEIGHT) || prefDim[1];
         }
         return prefDim
+    },
+
+    _resizeButtonTooltip: function (detachedView) {
+        return `Drag to resize<br>Double tap to reset ${detachedView ? 'dimensions / position' : 'height'}`;
     },
 
     /********************************* Local storage related functions ********************************/
