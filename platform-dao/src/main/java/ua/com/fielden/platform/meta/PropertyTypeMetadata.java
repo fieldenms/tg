@@ -103,7 +103,7 @@ public sealed interface PropertyTypeMetadata {
     }
 
     /**
-     * Type of collectional properties.
+     * Type for representing collectional properties.
      * <p>
      * Has no corresponding {@link TypeMetadata}.
      * <p>
@@ -128,7 +128,7 @@ public sealed interface PropertyTypeMetadata {
     }
 
     /**
-     * Type of properties with composite type.
+     * Type for representing properties that are component-like product types that have one or more distinct attributes.
      * <p>
      * Examples: {@link Money}.
      * <p>
@@ -139,8 +139,8 @@ public sealed interface PropertyTypeMetadata {
     }
 
     /**
-     * Type of a composite key property, i.e., property named "key" defined in an entity whose key type is {@link DynamicEntityKey}.
-     * Such a property is implicitly calculated as concatenation of all composite key members and its Java type is {@link String}.
+     * Type representing a composite key property, in other words, property named "key" defined in an entity whose key type is {@link DynamicEntityKey}.
+     * Such properties hava Java type {@link String} and they're implicitly calculated by concatenating the values of all composite key members with a corresponding key separator.
      * <p>
      * Has no corresponding {@link TypeMetadata}.
      */

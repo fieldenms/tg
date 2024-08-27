@@ -29,11 +29,11 @@ public class UnionEntityMetadataTest {
     }
 
     /**
-     * Assert that for a union entity the following properties have metadata generated:
+     * Assert that the following properties have metadata generated for a union entity:
      * <ul>
      *  <li> Union members.
-     *  <li> "key", "id", "desc"; always calculated.
-     *  <li> Properties common to union members; always calculated.
+     *  <li> "key", "id", "desc", always calculated.
+     *  <li> Properties common to union members, always calculated.
      * <ul>
      */
     @Test

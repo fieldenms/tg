@@ -2,9 +2,9 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-/* Implementations of PropertyTypeMetadata.
+/**
+ * Implementations of PropertyTypeMetadata.
  */
-
 final class PropertyTypeMetadataImpls {}
 
 record PrimitivePropertyTypeMetadata(Class<?> javaType) implements PropertyTypeMetadata.Primitive {
