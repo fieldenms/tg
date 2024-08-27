@@ -16,6 +16,7 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -103,4 +104,23 @@ public abstract class AbstractQuery2 {
                   && Objects.equals(groups, that.groups)
                   && Objects.equals(orderings, that.orderings);
     }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("resultType", resultType)
+                .addIfNot("whereConditions", whereConditions, Conditions2::isEmpty)
+                .addIfNotNull("join", joinRoot)
+                .addIfNot("where", whereConditions, Conditions2::isEmpty)
+                .addIfNot("yields", yields, Yields2::isEmpty)
+                .addIfNot("groups", groups, GroupBys2::isEmpty)
+                .addIfNot("orderings", orderings, OrderBys2::isEmpty)
+                .pipe(this::addToString)
+                .$();
+    }
+
+    protected ToString addToString(final ToString toString) {
+        return toString;
+    }
+
 }

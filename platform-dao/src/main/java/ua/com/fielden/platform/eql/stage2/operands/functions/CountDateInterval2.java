@@ -6,6 +6,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.CountDateInterval3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
@@ -40,6 +41,11 @@ public class CountDateInterval2 extends TwoOperandsFunction2<CountDateInterval3>
                || obj instanceof CountDateInterval2 that
                   && Objects.equals(intervalUnit, that.intervalUnit)
                   && super.equals(that);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("unit", intervalUnit);
     }
 
 }

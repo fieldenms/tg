@@ -20,6 +20,10 @@ public record GroupBys1 (List<GroupBy1> groups) {
         return groups.isEmpty() ? EMPTY_GROUP_BYS : new GroupBys1(groups);
     }
 
+    public boolean isEmpty() {
+        return groups.isEmpty();
+    }
+
     public GroupBys2 transform(final TransformationContextFromStage1To2 context) {
         if (groups.isEmpty()) {
             return GroupBys2.EMPTY_GROUP_BYS;

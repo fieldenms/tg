@@ -9,6 +9,7 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.JoinInnerNode2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -42,5 +43,15 @@ public record JoinInnerNode1 (IJoinNode1<? extends IJoinNode2<?>> leftNode,
         result.addAll(joinConditions.collectEntityTypes());
         return result;
     }
-    
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("left", leftNode)
+                .add("right", rightNode)
+                .add("type", joinType)
+                .addIfNot("conditions", joinConditions, Conditions1::isEmpty)
+                .$();
+    }
+
 }

@@ -24,6 +24,7 @@ import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sundries.*;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -245,4 +246,23 @@ public abstract class AbstractQuery1 {
                   && Objects.equals(shouldMaterialiseCalcPropsAsColumnsInSqlQuery, that.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
     }
 
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("resultType", resultType)
+                .add("yieldAll", yieldAll)
+                .add("shouldMaterialiseCalcPropsAsColumnsInSqlQuery", shouldMaterialiseCalcPropsAsColumnsInSqlQuery)
+                .addIfNotNull("join", joinRoot)
+                .addIfNot("where", whereConditions, Conditions1::isEmpty)
+                .addIfNot("udf", udfConditions, Conditions1::isEmpty)
+                .addIfNot("yields", yields, Yields1::isEmpty)
+                .addIfNot("groups", groups, GroupBys1::isEmpty)
+                .addIfNot("orderings", orderings, OrderBys1::isEmpty)
+                .pipe(this::addToString)
+                .$();
+    }
+
+    protected ToString addToString(final ToString toString) {
+        return toString;
+    }
 }

@@ -8,6 +8,7 @@ import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.StreamUtils;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Collection;
 import java.util.List;
@@ -101,6 +102,11 @@ public class Source3BasedOnQueries extends AbstractSource3 {
                || obj instanceof Source3BasedOnQueries that
                   && Objects.equals(this.models, that.models)
                   && super.equals(that);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("models", models);
     }
 
 }

@@ -5,6 +5,7 @@ import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 import java.util.Set;
@@ -41,6 +42,11 @@ abstract class SingleOperandFunction2<T extends ISingleOperand3> extends Abstrac
         return this == obj
                || obj instanceof SingleOperandFunction2 that
                   && Objects.equals(operand, that.operand);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("operand", operand);
     }
 
 }

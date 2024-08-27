@@ -4,6 +4,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.SumOf2;
+import ua.com.fielden.platform.utils.ToString;
 
 public class SumOf1 extends SingleOperandFunction1<SumOf2> {
     private final boolean distinct;
@@ -31,6 +32,11 @@ public class SumOf1 extends SingleOperandFunction1<SumOf2> {
                || obj instanceof SumOf1 that
                   && distinct == that.distinct
                   && super.equals(that);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("distinct", distinct);
     }
 
 }

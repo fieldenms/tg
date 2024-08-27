@@ -11,6 +11,7 @@ import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage3.conditions.QuantifiedPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -52,6 +53,16 @@ public record QuantifiedPredicate2 (ISingleOperand2<? extends ISingleOperand3> l
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return concat(HashSet::new, leftOperand.collectEntityTypes(), rightOperand.collectEntityTypes());
+    }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("left", leftOperand)
+                .add("right", rightOperand)
+                .add("operator", operator)
+                .add("quantifier", quantifier)
+                .$();
     }
 
 }

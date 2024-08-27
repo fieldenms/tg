@@ -10,6 +10,7 @@ import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Collections;
 import java.util.List;
@@ -50,13 +51,6 @@ public abstract class AbstractQuery3 {
     }
 
     @Override
-    public String toString() {
-        // TODO choose an informative representation
-//        return sql(DbVersion.H2);
-        return super.toString();
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(yields, orderings, groups, whereConditions, joinRoot, resultType);
     }
@@ -79,6 +73,23 @@ public abstract class AbstractQuery3 {
 
     public static boolean isSubQuery(final AbstractQuery3 query) {
         return !isTopLevelQuery(query);
+    }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("resultType", resultType)
+                .addIfNotNull("join", joinRoot)
+                .addIfNot("where", whereConditions, Conditions3::isEmpty)
+                .addIfNot("yields", yields, Yields3::isEmpty)
+                .addIfNot("groups", groups, GroupBys3::isEmpty)
+                .addIfNot("orderings", orderings, OrderBys3::isEmpty)
+                .pipe(this::addToString)
+                .$();
+    }
+
+    protected ToString addToString(final ToString toString) {
+        return toString;
     }
 
 }

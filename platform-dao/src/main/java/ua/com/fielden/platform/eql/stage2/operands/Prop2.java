@@ -13,6 +13,7 @@ import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Objects;
@@ -142,6 +143,14 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
                obj instanceof Prop2 that
                && Objects.equals(path, that.path)
                && Objects.equals(source.id(), that.source.id());
+    }
+
+    @Override
+    public ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("source", source)
+                .add("propPath", propPath)
+                .add("path", path);
     }
 
 }

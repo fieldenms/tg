@@ -9,6 +9,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
+import ua.com.fielden.platform.utils.ToString;
 
 public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuery3> {
     public final boolean isRefetchOnly;
@@ -68,4 +69,12 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
 
         return Objects.equals(type, other.type) && (isRefetchOnly == other.isRefetchOnly);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("refetchOnly", isRefetchOnly)
+                .add("type", type);
+    }
+
 }

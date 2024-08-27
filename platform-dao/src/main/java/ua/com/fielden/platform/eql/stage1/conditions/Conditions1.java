@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -167,6 +168,15 @@ public record Conditions1 (boolean negated,
             result.addAll(firstCondition.collectEntityTypes());
             return result;
         }
+    }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("first", firstCondition)
+                .addIfNotEmpty("rest", otherConditions)
+                .add("negated", negated)
+                .$();
     }
 
 }

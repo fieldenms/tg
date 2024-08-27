@@ -6,6 +6,7 @@ import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.AddDateInterval2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
@@ -33,6 +34,11 @@ public class AddDateInterval1 extends TwoOperandsFunction1<AddDateInterval2> {
     @Override
     public boolean equals(final Object obj) {
         return this == obj || obj instanceof AddDateInterval1 that && Objects.equals(intervalUnit, that.intervalUnit);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("unit", intervalUnit);
     }
 
 }

@@ -13,4 +13,8 @@ public record GroupBys3 (List<GroupBy3> groups) {
         return groups.stream().map(g -> g.sql(metadata, dbVersion)).collect(joining(", "));
     }
 
+    public boolean isEmpty() {
+        return groups.isEmpty();
+    }
+
 }

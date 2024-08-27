@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Objects;
@@ -48,4 +49,10 @@ public class Concat3 extends AbstractFunction3 {
                || obj instanceof Concat3 that
                   && Objects.equals(this.operands, that.operands);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("operands", operands);
+    }
+
 }

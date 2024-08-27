@@ -8,6 +8,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.CompoundSingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 
@@ -92,6 +93,13 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
                || obj instanceof Expression2 that
                   && Objects.equals(first, that.first)
                   && Objects.equals(items, that.items);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("first", first)
+                .add("rest", items);
     }
 
 }

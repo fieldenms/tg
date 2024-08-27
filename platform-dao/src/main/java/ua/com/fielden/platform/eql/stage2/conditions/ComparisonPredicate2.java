@@ -8,6 +8,7 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -47,6 +48,15 @@ public record ComparisonPredicate2 (ISingleOperand2<? extends ISingleOperand3> l
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return concat(HashSet::new, leftOperand.collectEntityTypes(), rightOperand.collectEntityTypes());
+    }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("left", leftOperand)
+                .add("right", rightOperand)
+                .add("operator", operator)
+                .$();
     }
 
 }

@@ -17,6 +17,7 @@ import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.utils.StreamUtils;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Optional;
@@ -141,4 +142,11 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof ResultQuery1 && Objects.equal(fetchModel, ((ResultQuery1) obj).fetchModel);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .addIfNotNull("fetch", fetchModel);
+    }
+
 }

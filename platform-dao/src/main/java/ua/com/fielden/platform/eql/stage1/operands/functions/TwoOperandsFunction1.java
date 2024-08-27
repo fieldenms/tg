@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage1.operands.functions;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -39,6 +40,19 @@ abstract class TwoOperandsFunction1<T extends ISingleOperand2<?>> implements IFu
                || obj instanceof TwoOperandsFunction1 that
                   && Objects.equals(operand1, that.operand1)
                   && Objects.equals(operand2, that.operand2);
+    }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("operand1", operand1)
+                .add("operand2", operand2)
+                .pipe(this::addToString)
+                .$();
+    }
+
+    protected ToString addToString(final ToString toString) {
+        return toString;
     }
 
 }

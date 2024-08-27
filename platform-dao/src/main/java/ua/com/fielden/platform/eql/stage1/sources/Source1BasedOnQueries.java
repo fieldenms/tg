@@ -14,6 +14,7 @@ import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 
@@ -151,7 +152,12 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
 
     @Override
     public String toString() {
-        return "Source(%s, alias=%s, id=%s, models=(%s))".formatted(sourceType().getTypeName(), alias, id, CollectionUtil.toString(models, "; "));
+        return ToString.separateLines.toString(this)
+                .add("type", sourceType().getTypeName())
+                .add("alias", alias)
+                .add("id", id)
+                .add("models", CollectionUtil.toString(models, "; "))
+                .$();
     }
 
 }

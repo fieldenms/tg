@@ -24,6 +24,10 @@ public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) {
         this.offset = offset;
     }
 
+    public boolean isEmpty() {
+        return models.isEmpty();
+    }
+
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final AbstractQuery3 enclosingQuery) {
         final var modelsStr = models.stream().map(o -> o.sql(metadata, dbVersion)).collect(joining(", "));
 

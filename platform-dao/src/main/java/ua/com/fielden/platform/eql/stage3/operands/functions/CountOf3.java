@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import static java.lang.String.format;
 
@@ -34,6 +35,11 @@ public class CountOf3 extends SingleOperandFunction3 {
                || obj instanceof CountOf3 that
                   && distinct == that.distinct
                   && super.equals(that);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("distinct", distinct);
     }
 
 }

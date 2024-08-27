@@ -4,6 +4,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.AverageOf2;
+import ua.com.fielden.platform.utils.ToString;
 
 public class AverageOf1 extends SingleOperandFunction1<AverageOf2> {
     private final boolean distinct;
@@ -28,6 +29,11 @@ public class AverageOf1 extends SingleOperandFunction1<AverageOf2> {
     @Override
     public boolean equals(final Object obj) {
         return this == obj || obj instanceof AverageOf1 that && distinct == that.distinct && super.equals(obj);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("distinct", distinct);
     }
 
 }

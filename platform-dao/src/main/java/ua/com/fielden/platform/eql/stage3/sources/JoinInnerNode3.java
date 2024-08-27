@@ -4,8 +4,10 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.left;
 
 public record JoinInnerNode3 (IJoinNode3 leftNode, IJoinNode3 rightNode,
                               JoinType joinType, Conditions3 joinConditions)
@@ -33,6 +35,16 @@ public record JoinInnerNode3 (IJoinNode3 leftNode, IJoinNode3 rightNode,
     @Override
     public boolean needsParentheses() {
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("left", leftNode)
+                .add("right", rightNode)
+                .add("type", joinType)
+                .addIfNot("conditions", joinConditions, Conditions3::isEmpty)
+                .$();
     }
 
 }

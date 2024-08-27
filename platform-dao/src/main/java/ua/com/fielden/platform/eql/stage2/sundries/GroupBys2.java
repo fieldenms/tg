@@ -35,6 +35,10 @@ public record GroupBys2 (List<GroupBy2> groups) {
         return new TransformationResultFromStage2To3<>(new GroupBys3(transformed), currentContext);
     }
 
+    public boolean isEmpty() {
+        return groups.isEmpty();
+    }
+
     public Set<Prop2> collectProps() {
         final Set<Prop2> result = new HashSet<>();
         for (final GroupBy2 group : groups) {

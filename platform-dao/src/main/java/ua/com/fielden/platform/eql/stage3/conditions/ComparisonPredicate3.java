@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.utils.ToString;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
@@ -38,6 +39,15 @@ public record ComparisonPredicate3 (ISingleOperand3 leftOperand,
         } else {
             return operand.sql(metadata, dbVersion);
         }
+    }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("left", leftOperand)
+                .add("right", rightOperand)
+                .add("operator", operator)
+                .$();
     }
 
 }

@@ -46,6 +46,10 @@ public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) {
         this.offset = offset;
     }
 
+    public boolean isEmpty() {
+        return orderBys.isEmpty();
+    }
+
     public OrderBys2 updateOrderBys(final List<OrderBy2> newOrderBys) {
         return new OrderBys2(newOrderBys, limit, offset);
     }

@@ -5,6 +5,7 @@ import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -51,4 +52,12 @@ abstract class TwoOperandsFunction2<T extends ISingleOperand3> extends AbstractF
                   && Objects.equals(operand1, that.operand1)
                   && Objects.equals(operand2, that.operand2);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("operand1", operand1)
+                .add("operand2", operand2);
+    }
+
 }

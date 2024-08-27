@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage3.operands;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Objects;
@@ -50,6 +51,13 @@ public class Expression3 extends AbstractSingleOperand3 {
                   && Objects.equals(firstOperand, that.firstOperand)
                   && Objects.equals(otherOperands, that.otherOperands)
                   && super.equals(that);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("first", firstOperand)
+                .add("rest", otherOperands);
     }
 
 }

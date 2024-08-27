@@ -39,6 +39,10 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) {
         return unmodifiableCollection(yieldsMap.values());
     }
 
+    public boolean isEmpty() {
+        return yieldsMap.isEmpty();
+    }
+
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return yieldsMap.isEmpty() ? emptySet() : yieldsMap.values().stream().map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }

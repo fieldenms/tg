@@ -6,6 +6,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.LikePredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +34,15 @@ public record LikePredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> left
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return concat(HashSet::new, leftOperand.collectEntityTypes(), rightOperand.collectEntityTypes());
+    }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("left", leftOperand)
+                .add("right", rightOperand)
+                .addIf("options", options, opts -> opts != LikeOptions.DEFAULT_OPTIONS)
+                .$();
     }
 
 }

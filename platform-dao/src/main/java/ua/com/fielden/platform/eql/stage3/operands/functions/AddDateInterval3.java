@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
@@ -48,4 +49,10 @@ public class AddDateInterval3 extends TwoOperandsFunction3 {
                   && Objects.equals(intervalUnit, that.intervalUnit)
                   && super.equals(that);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("unit", intervalUnit);
+    }
+
 }

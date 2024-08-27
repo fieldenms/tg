@@ -7,6 +7,7 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.CountAll2;
+import ua.com.fielden.platform.utils.ToString;
 
 public class CountAll1 implements IFunction1<CountAll2> {
 
@@ -22,5 +23,11 @@ public class CountAll1 implements IFunction1<CountAll2> {
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return emptySet();
-    } 
+    }
+
+    @Override
+    public String toString() {
+        return ToString.standard.toString(this).$();
+    }
+
 }

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import ua.com.fielden.platform.utils.ToString;
 
 public abstract class AbstractSource3 implements ISource3 {
     public final String sqlAlias;
@@ -76,4 +77,19 @@ public abstract class AbstractSource3 implements ISource3 {
                 Objects.equals(sqlAlias, other.sqlAlias) &&
                 Objects.equals(id, other.id) && Objects.equals(columns, other.columns);
     }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("id", id)
+                .addIfNotNull("sqlAlias", sqlAlias)
+                .add("columns", columns)
+                .pipe(this::addToString)
+                .$();
+    }
+
+    protected ToString addToString(final ToString toString) {
+        return toString;
+    }
+
 }

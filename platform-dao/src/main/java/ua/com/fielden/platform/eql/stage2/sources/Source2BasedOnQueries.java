@@ -10,6 +10,7 @@ import ua.com.fielden.platform.eql.stage2.queries.AbstractQuery2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 
@@ -78,7 +79,10 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
     }
 
     @Override
-    public String toString() {
-        return sourceType().getSimpleName();
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("models", models)
+                .add("isSyntheticEntity", isSyntheticEntity);
     }
+
 }

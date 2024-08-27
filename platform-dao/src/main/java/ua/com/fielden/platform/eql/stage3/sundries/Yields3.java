@@ -22,6 +22,10 @@ public record Yields3 (SortedMap<String, Yield3> yieldsMap) {
         this(yields.stream().collect(toImmutableSortedMap(naturalOrder(), Yield3::alias, Function.identity())));
     }
 
+    public boolean isEmpty() {
+        return yieldsMap.isEmpty();
+    }
+
     public int size() {
         return yieldsMap.size();
     }

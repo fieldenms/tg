@@ -33,6 +33,10 @@ public record Yields2 (SortedMap<String, Yield2> yieldsMap, boolean allGenerated
         this(yields, false);
     }
 
+    public boolean isEmpty() {
+        return yieldsMap.isEmpty();
+    }
+
     public Collection<Yield2> getYields() {
         return unmodifiableCollection(yieldsMap.values());
     }

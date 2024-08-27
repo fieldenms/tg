@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.operands.functions;
 
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
@@ -32,4 +33,12 @@ abstract class TwoOperandsFunction3 extends AbstractFunction3 {
                   && Objects.equals(operand2, that.operand2)
                   && super.equals(that);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("operand1", operand1)
+                .add("operand2", operand2);
+    }
+
 }

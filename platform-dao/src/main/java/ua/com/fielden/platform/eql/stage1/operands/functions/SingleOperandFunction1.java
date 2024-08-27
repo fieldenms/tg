@@ -36,9 +36,7 @@ public abstract class SingleOperandFunction1<T extends ISingleOperand2<?>> imple
 
     @Override
     public String toString() {
-        return addToString(ToString.standard.toString(this)
-                                   .add("operand", operand))
-                .$();
+        return ToString.standard.toString(this).add("operand", operand).pipe(this::addToString).$();
     }
 
     protected ToString addToString(final ToString toString) {

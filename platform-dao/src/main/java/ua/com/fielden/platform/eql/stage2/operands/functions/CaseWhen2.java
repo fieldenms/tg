@@ -12,6 +12,7 @@ import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.CaseWhen3;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 
@@ -103,6 +104,14 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
                   && Objects.equals(whenThenPairs, that.whenThenPairs)
                   && Objects.equals(elseOperand, that.elseOperand)
                   && Objects.equals(typeCast, that.typeCast);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("whenThenPairs", whenThenPairs)
+                .addIfNotNull("else", elseOperand)
+                .addIfNotNull("typeCast", typeCast);
     }
 
 }

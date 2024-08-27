@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage2.sources;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
@@ -66,5 +67,21 @@ public abstract class AbstractSource2 {
                   && Objects.equals(querySourceInfo, that.querySourceInfo)
                   && isExplicit == that.isExplicit
                   && isPartOfCalcProp == that.isPartOfCalcProp;
+   }
+
+   @Override
+   public String toString() {
+       return ToString.separateLines.toString(this)
+               .add("id", id)
+               .addIfNotNull("alias", alias)
+               .add("querySourceInfo", querySourceInfo)
+               .add("isExplicit", isExplicit)
+               .add("isPartOfCalcProp", isPartOfCalcProp)
+               .pipe(this::addToString)
+               .$();
+   }
+
+   protected ToString addToString(final ToString toString) {
+       return toString;
    }
 }

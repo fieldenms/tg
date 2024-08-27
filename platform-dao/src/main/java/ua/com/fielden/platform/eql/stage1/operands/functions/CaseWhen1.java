@@ -12,6 +12,7 @@ import ua.com.fielden.platform.eql.stage2.operands.functions.CaseWhen2;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ToString;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -61,6 +62,15 @@ public record CaseWhen1 (List<T2<ICondition1<? extends ICondition2<?>>, ISingleO
         }
         
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return ToString.separateLines.toString(this)
+                .add("whenThenPairs", whenThenPairs)
+                .addIfNotNull("else", elseOperand)
+                .addIfNotNull("typeCast", typeCast)
+                .$();
     }
 
 }

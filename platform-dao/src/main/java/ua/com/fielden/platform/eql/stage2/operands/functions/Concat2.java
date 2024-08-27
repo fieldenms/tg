@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.Concat3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 
@@ -61,6 +62,11 @@ public class Concat2 extends AbstractFunction2<Concat3> {
         return this == obj
                || obj instanceof Concat2 that
                   && Objects.equals(operands, that.operands);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("operands", operands);
     }
 
 }
