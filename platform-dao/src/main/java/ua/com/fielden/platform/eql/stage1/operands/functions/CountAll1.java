@@ -10,7 +10,7 @@ import ua.com.fielden.platform.eql.stage2.operands.functions.CountAll2;
 
 public class CountAll1 implements IFunction1<CountAll2> {
 
-    public static CountAll1 INSTANCE = new CountAll1();
+    public static final CountAll1 INSTANCE = new CountAll1();
     
     private CountAll1() {}
     
