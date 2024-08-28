@@ -117,12 +117,15 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         entityMetadata.properties().stream()
                 .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
                 // calculated components are included (legacy EQL2 behaviour)
-                // TODO don't treat calculated components specially once TG applications no longer rely on this behaviour
+                // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour
                 .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
                 .forEach(pm -> {
-                    // if this property is a key member typed with a union entity that has property P typed with this entity
-                    // (the one we are constructing the fetch model for), then we need to ensure that P is not explored,
-                    // otherwise, fetch model construction will never terminate
+                    // FIXME: Union-entity typed keys or key members are not supported at this stage.
+                    //        However, there is nothing preventing such definitions, which leads to StackOverflowErrors during fetch model construction.
+                    //        To support such definitions, it would be necessary to take into account recursive definitions,
+                    //        where a key or key member that is of a union type may have a union-property of the same type as the enclosing entity.
+                    //        We would need to ensure that such union-properties are not explored to prevent StackOverflowErrors during fetch model construction.
+                    //        For now, let's simply skip the whole union-typed key and key-members from exploration.
                     final boolean exploreEntities = pm.type().isEntity()
                                                     && !propMetadataUtils.isPropEntityType(pm, EntityMetadata::isUnion)
                                                     && (KEY.equals(pm.name()) || pm.has(KEY_MEMBER));
