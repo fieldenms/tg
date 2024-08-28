@@ -309,6 +309,11 @@ public final class ToString {
     /**
      * A format that puts each field on a separate line.
      * <p>
+     * Additional capabilities:
+     * <ul>
+     *   <li> Special support for {@link Map} values: entries are formatted as if they were fields in a class.
+     * </ul>
+     * <p>
      * It is highly recommended to implement {@link IFormattable}, which will enable control over levels of indentation.
      */
     public static final class SeparateLinesFormat implements IFormat {
@@ -394,8 +399,26 @@ public final class ToString {
         private String formatValue(final Object value) {
             return switch (value) {
                 case IFormattable it -> it.toString(setDepth(depth + 1));
+                case Map<?, ?> it -> setDepth(depth + 1).formatMap(it);
                 case null, default -> Objects.toString(value);
             };
+        }
+
+        private String formatMap(final Map<?, ?> map) {
+            if (map.isEmpty()) {
+                return "{}";
+            } else {
+                // use the same name for all maps to keep it simple
+                final var toString = this.toString("Map");
+                map.forEach((key, value) -> toString.add(key instanceof CharSequence csq ? quote(csq.toString()) : Objects.toString(key),
+                                                         formatValue(value)));
+                return toString.$();
+            }
+        }
+
+        private static String quote(final String string) {
+            // enclose in double-quotes and escape double-quotes inside
+            return '"' + string.replace("\"", "\\\"") + '"';
         }
 
     }
