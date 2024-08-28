@@ -37,7 +37,7 @@ final class PropertyTypeMetadataGenerator {
         return Optional.<PropertyTypeMetadata>empty()
                 .or(() -> asPrimitive(type))
                 .or(() -> asEntity(type))
-                .or(() -> asComposite(type))
+                .or(() -> asComponent(type))
                 .or(() -> DynamicEntityKey.class == type
                         ? Optional.of(PropertyTypeMetadata.COMPOSITE_KEY)
                         : Optional.empty())
@@ -58,7 +58,7 @@ final class PropertyTypeMetadataGenerator {
                 .map(klass -> new EntityPropertyTypeMetadata((Class<? extends AbstractEntity<?>>) klass));
     }
 
-    private Optional<PropertyTypeMetadata.Component> asComposite(final Type type) {
+    private Optional<PropertyTypeMetadata.Component> asComponent(final Type type) {
         return type instanceof Class<?> klass && COMPONENT_TYPES.contains(klass)
                 ? Optional.of(new ComponentPropertyTypeMetadata(klass))
                 : Optional.empty();
