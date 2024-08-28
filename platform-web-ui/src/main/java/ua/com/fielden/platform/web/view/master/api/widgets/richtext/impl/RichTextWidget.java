@@ -10,11 +10,14 @@ import static java.lang.String.format;
 
 public class RichTextWidget extends AbstractWidget {
 
+    private final Class<? extends AbstractEntity<?>> entityType;
+
     private int height = 100; //default height
     private int minHeight = 100; //default min height
 
     public RichTextWidget(final Pair<String, String> titleDesc, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
         super("editors/tg-rich-text-editor", titleDesc, propertyName);
+        this.entityType = entityType;
     }
 
     public void setHeight (int height) {
@@ -29,6 +32,7 @@ public class RichTextWidget extends AbstractWidget {
         final Map<String, Object> customAttr = super.createCustomAttributes();
         customAttr.put("height", format("%spx", this.height));
         customAttr.put("min-height", format("%spx", this.minHeight));
+        customAttr.put("entity-type", entityType.getName());
         return customAttr;
     }
 }

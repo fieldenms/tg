@@ -42,6 +42,8 @@ const customInputTemplate = html`
         disabled$="[[_disabled]]" 
         value="{{_editingValue}}"
         change-event-handler="[[_onChange]]"
+        entity-type="[[entityType]]"
+        property-name="[[propertyName]]"
         min-height="[[minHeight]]"
         height="[[height]]">
     </tg-rich-text-input>`;
@@ -55,6 +57,10 @@ export class TgRichTextEditor extends TgEditor {
 
     static get properties() {
         return {
+
+            entityType: {
+                type: String
+            },
 
             minHeight: {
                 type: String,

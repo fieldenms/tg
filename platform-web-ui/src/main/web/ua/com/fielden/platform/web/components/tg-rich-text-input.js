@@ -3,7 +3,7 @@ import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polyme
 import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 import '/resources/toastui-editor/toastui-editor-all.min.js';
 
-import { tearDownEvent} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, localStorageKey} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <link rel="stylesheet" href="/resources/toastui-editor/toastui-editor.min.css" />
@@ -73,6 +73,14 @@ class TgRichTextInput extends GestureEventListeners(PolymerElement) {
                 value: null
             },
 
+            entityType: {
+                type: String
+            },
+
+            propertyName: {
+                type: String
+            },
+
             height: {
                 type: String
             },
@@ -95,7 +103,7 @@ class TgRichTextInput extends GestureEventListeners(PolymerElement) {
         
         this._editor = new toastui.Editor({
             el: this.$.editor,
-            height: this.height,
+            height: this._readHeight() || this.height,
             minHeight: this.minHeight,
             initialEditType: 'wysiwyg',
             events: {
@@ -154,6 +162,9 @@ class TgRichTextInput extends GestureEventListeners(PolymerElement) {
                     break;
                 case 'track':
                     let newHeight = this.$.editor.offsetHeight + event.detail.ddy;
+                    if (newHeight < this.minHeight) {
+                        newHeight = this.minHeight;
+                    }
                     this._editor.setHeight(newHeight + "px");
                     break;
                 case 'end':
@@ -162,6 +173,7 @@ class TgRichTextInput extends GestureEventListeners(PolymerElement) {
                     if (document.styleSheets.length > 0 && document.styleSheets[0].cssRules.length > 0) {
                         document.styleSheets[0].deleteRule(0);
                     }
+                    this._saveHeight(this._editor.getHeight());
                     break;
             }
         }
@@ -170,6 +182,18 @@ class TgRichTextInput extends GestureEventListeners(PolymerElement) {
 
     _resetHeight(e) {
         console.log("Height was reset");
+    }
+
+    _saveHeight(height) {
+        localStorage.setItem(this._generateKey(), height);
+    }
+
+    _readHeight() {
+        return localStorage.getItem(this._generateKey());
+    }
+
+    _generateKey() {
+        return localStorageKey(`${this.entityType}_${this.propertyName}_height`);
     }
 }
 
