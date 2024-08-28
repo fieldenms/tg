@@ -237,25 +237,25 @@ interface Assertions {
         }
     }
 
-    class CompositeA {
-        private final TypeMetadata.Composite typeMetadata;
+    class ComponentA {
+        private final TypeMetadata.Component typeMetadata;
 
-        public CompositeA(final TypeMetadata.Composite typeMetadata) {
+        public ComponentA(final TypeMetadata.Component typeMetadata) {
             this.typeMetadata = typeMetadata;
         }
 
-        static CompositeA of(final TypeMetadata.Composite typeMetadata) {
-            return new CompositeA(typeMetadata);
+        static ComponentA of(final TypeMetadata.Component typeMetadata) {
+            return new ComponentA(typeMetadata);
         }
 
-        public TypeMetadata.Composite get() { return typeMetadata; }
+        public TypeMetadata.Component get() { return typeMetadata; }
 
-        public CompositeA assertJavaType(final Class<?> expectedJavaType) {
+        public ComponentA assertJavaType(final Class<?> expectedJavaType) {
             assertEquals("Wrong Java Type", expectedJavaType, typeMetadata.javaType());
             return this;
         }
 
-        public CompositeA assertProperty(final CharSequence propName, final Consumer<PropertyA<PropertyMetadata>> assertor) {
+        public ComponentA assertProperty(final CharSequence propName, final Consumer<PropertyA<PropertyMetadata>> assertor) {
             final PropertyMetadata propertyMetadata = assertPresent(
                     "Metadata for property [%s] not found in [%s]".formatted(propName, typeMetadata),
                     typeMetadata.propertyOpt(propName.toString()));
@@ -263,13 +263,13 @@ interface Assertions {
             return this;
         }
 
-        public CompositeA assertPropertyExists(final CharSequence propName) {
+        public ComponentA assertPropertyExists(final CharSequence propName) {
             assertPresent("Metadata for property [%s] not found in [%s]".formatted(propName, typeMetadata),
                           typeMetadata.propertyOpt(propName.toString()));
             return this;
         }
 
-        public CompositeA assertPropertiesExist(final Iterable<? extends CharSequence> propName) {
+        public ComponentA assertPropertiesExist(final Iterable<? extends CharSequence> propName) {
             propName.forEach(this::assertPropertyExists);
             return this;
         }

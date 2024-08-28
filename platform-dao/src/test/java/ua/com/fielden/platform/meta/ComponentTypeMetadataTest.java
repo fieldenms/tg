@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
-import ua.com.fielden.platform.meta.Assertions.CompositeA;
+import ua.com.fielden.platform.meta.Assertions.ComponentA;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
 import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 import ua.com.fielden.platform.types.Money;
@@ -14,7 +14,7 @@ import java.util.Currency;
 
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 
-public class CompositeTypeMetadataTest {
+public class ComponentTypeMetadataTest {
 
     private final DomainMetadataGenerator generator = new DomainMetadataGenerator(
             Guice.createInjector(new HibernateUserTypesModule()),
@@ -23,8 +23,8 @@ public class CompositeTypeMetadataTest {
     );
 
     @Test
-    public void composite_type_metadata_generation() {
-        CompositeA.of(assertPresent("Expected metadata to have been generated.", generator.forComposite(Money.class)))
+    public void metadata_is_generated_for_type_Money() {
+        ComponentA.of(assertPresent("Expected metadata to have been generated.", generator.forComponent(Money.class)))
                 .assertProperty("amount", p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(BigDecimal.class))

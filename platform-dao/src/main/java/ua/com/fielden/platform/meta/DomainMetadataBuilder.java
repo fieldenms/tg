@@ -12,7 +12,7 @@ import java.util.Map;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toConcurrentMap;
-import static ua.com.fielden.platform.meta.TypeRegistry.COMPOSITE_TYPES;
+import static ua.com.fielden.platform.meta.TypeRegistry.COMPONENT_TYPES;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -44,7 +44,7 @@ public class DomainMetadataBuilder {
                         .map(em -> t2(type, em)).stream())
                 .collect(toConcurrentMap(pair -> pair._1, pair -> pair._2));
 
-        COMPOSITE_TYPES.parallelStream().forEach(type -> generator.forComposite(type).map(ctm -> t2(type, ctm)));
+        COMPONENT_TYPES.parallelStream().forEach(type -> generator.forComponent(type).map(ctm -> t2(type, ctm)));
 
         return new DomainMetadataImpl(entityMetadataMap, entityTypes, generator, hibTypesInjector, hibTypesDefaults, dbVersion);
     }

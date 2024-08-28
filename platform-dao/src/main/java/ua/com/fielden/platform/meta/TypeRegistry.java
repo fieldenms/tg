@@ -13,7 +13,7 @@ import java.util.Set;
 
 final class TypeRegistry {
 
-    public static final Set<Class<?>> COMPOSITE_TYPES = Set.of(Money.class);
+    public static final Set<Class<?>> COMPONENT_TYPES = Set.of(Money.class);
 
     public static final Set<Class<?>> PRIMITIVE_PROPERTY_TYPES = Set.of(
             String.class, Long.class, Integer.class, BigDecimal.class, Date.class, boolean.class, byte[].class,

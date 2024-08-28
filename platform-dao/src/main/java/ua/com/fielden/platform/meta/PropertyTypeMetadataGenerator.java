@@ -11,7 +11,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Optional;
 
-import static ua.com.fielden.platform.meta.TypeRegistry.COMPOSITE_TYPES;
+import static ua.com.fielden.platform.meta.TypeRegistry.COMPONENT_TYPES;
 import static ua.com.fielden.platform.meta.TypeRegistry.PRIMITIVE_PROPERTY_TYPES;
 
 final class PropertyTypeMetadataGenerator {
@@ -58,9 +58,9 @@ final class PropertyTypeMetadataGenerator {
                 .map(klass -> new EntityPropertyTypeMetadata((Class<? extends AbstractEntity<?>>) klass));
     }
 
-    private Optional<PropertyTypeMetadata.Composite> asComposite(final Type type) {
-        return type instanceof Class<?> klass && COMPOSITE_TYPES.contains(klass)
-                ? Optional.of(new CompositePropertyTypeMetadata(klass))
+    private Optional<PropertyTypeMetadata.Component> asComposite(final Type type) {
+        return type instanceof Class<?> klass && COMPONENT_TYPES.contains(klass)
+                ? Optional.of(new ComponentPropertyTypeMetadata(klass))
                 : Optional.empty();
     }
 

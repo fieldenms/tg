@@ -133,7 +133,7 @@ public class QuerySourceInfoProvider {
 
                 return switch (pm.type()) {
                     case PropertyTypeMetadata.Entity et -> mkQuerySourceItemForEntityType(pm, et, allQuerySourceInfos);
-                    case PropertyTypeMetadata.Composite ct -> {
+                    case PropertyTypeMetadata.Component ct -> {
                         final var propTpi = new QuerySourceItemForComponentType<>(name, ct.javaType(), hibType);
                         for (final PropertyMetadata spm : pmUtils.subProperties(pm)) {
                             propTpi.addSubitem(
@@ -191,7 +191,7 @@ public class QuerySourceInfoProvider {
                                 subprops.put(cspm.name(), new QuerySourceItemForEntityType<>(cspm.name(), allQuerySourceInfos.get(t.javaType()),
                                                                                              cspm.hibType(), false,
                                                                                              toCalcPropInfo(cspm)));
-                        case PropertyTypeMetadata.Composite t ->
+                        case PropertyTypeMetadata.Component t ->
                                 subprops.put(cspm.name(), new QuerySourceItemForPrimType<>(cspm.name(), t.javaType(),
                                                                                            cspm.hibType(), toCalcPropInfo(cspm)));
                         case PropertyTypeMetadata.CompositeKey t ->

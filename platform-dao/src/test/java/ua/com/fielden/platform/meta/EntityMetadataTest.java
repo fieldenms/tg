@@ -148,7 +148,7 @@ public class EntityMetadataTest {
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(boolean.class)))
                 .assertProperty("moneySingle", p -> p
                         .assertIs(CritOnly.class)
-                        .assertType(t -> t.assertIs(PropertyTypeMetadata.Composite.class).assertJavaType(Money.class)))
+                        .assertType(t -> t.assertIs(PropertyTypeMetadata.Component.class).assertJavaType(Money.class)))
                 .assertProperty("orgunitCritOnly", p -> p
                         .assertIs(CritOnly.class)
                         .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgOrgUnit1.class)));

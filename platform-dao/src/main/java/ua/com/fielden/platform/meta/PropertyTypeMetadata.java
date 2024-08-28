@@ -44,8 +44,8 @@ public sealed interface PropertyTypeMetadata {
         return this instanceof Collectional;
     }
 
-    default boolean isComposite() {
-        return this instanceof Composite;
+    default boolean isComponent() {
+        return this instanceof Component;
     }
 
     default boolean isCompositeKey() {
@@ -60,8 +60,8 @@ public sealed interface PropertyTypeMetadata {
         return this instanceof Primitive it ? Optional.of(it) : Optional.empty();
     }
 
-    default Optional<Composite> asComposite() {
-        return this instanceof Composite it ? Optional.of(it) : Optional.empty();
+    default Optional<Component> asComponent() {
+        return this instanceof Component it ? Optional.of(it) : Optional.empty();
     }
 
     default Optional<Entity> asEntity() {
@@ -114,8 +114,6 @@ public sealed interface PropertyTypeMetadata {
 
         PropertyTypeMetadata elementType();
 
-//        String linkProp();
-
         @Override
         default PropertyTypeMetadata wrappedType() {
             return elementType();
@@ -132,15 +130,15 @@ public sealed interface PropertyTypeMetadata {
      * <p>
      * Examples: {@link Money}.
      * <p>
-     * Corresponds to {@link TypeMetadata.Composite}.
+     * Corresponds to {@link TypeMetadata.Component}.
      */
-    non-sealed interface Composite extends PropertyTypeMetadata {
+    sealed interface Component extends PropertyTypeMetadata permits ComponentPropertyTypeMetadata {
         Class<?> javaType();
     }
 
     /**
      * Type representing a composite key property, in other words, property named "key" defined in an entity whose key type is {@link DynamicEntityKey}.
-     * Such properties hava Java type {@link String} and they're implicitly calculated by concatenating the values of all composite key members with a corresponding key separator.
+     * Such properties hava Java type {@link String} and they are implicitly calculated by concatenating the values of all composite key members with a corresponding key separator.
      * <p>
      * Has no corresponding {@link TypeMetadata}.
      */
@@ -181,8 +179,8 @@ public sealed interface PropertyTypeMetadata {
 
         static PropertyTypeMetadata unwrap(PropertyTypeMetadata typeMetadata) {
             return typeMetadata instanceof Wrapper wrapper
-                    ? wrapper.wrappedType()
-                    : typeMetadata;
+                   ? wrapper.wrappedType()
+                   : typeMetadata;
         }
     }
 

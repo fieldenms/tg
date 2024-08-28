@@ -21,9 +21,8 @@ record EntityPropertyTypeMetadata(Class<? extends AbstractEntity<?>> javaType) i
     }
 }
 
-record CollectionalPropertyTypeMetadata
-        (Class<?> collectionType, PropertyTypeMetadata elementType)
-        implements PropertyTypeMetadata.Collectional
+record CollectionalPropertyTypeMetadata(Class<?> collectionType, PropertyTypeMetadata elementType)
+    implements PropertyTypeMetadata.Collectional
 {
     @Override
     public String toString() {
@@ -31,10 +30,10 @@ record CollectionalPropertyTypeMetadata
     }
 }
 
-record CompositePropertyTypeMetadata(Class<?> javaType) implements PropertyTypeMetadata.Composite {
+record ComponentPropertyTypeMetadata(Class<?> javaType) implements PropertyTypeMetadata.Component {
     @Override
     public String toString() {
-        return "CompositeType(%s)".formatted(javaType.getTypeName());
+        return "ComponentType(%s)".formatted(javaType.getTypeName());
     }
 
 }

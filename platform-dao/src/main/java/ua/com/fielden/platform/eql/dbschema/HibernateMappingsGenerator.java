@@ -201,7 +201,7 @@ public class HibernateMappingsGenerator {
             return generateUnionEntityPropertyMapping(prop);
         }
         // potential multi-column mapping
-        else if (prop.type().isComposite() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
+        else if (prop.type().isComponent() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
             final List<PropColumn> subColumns = pmUtils.subProperties(prop).stream()
                     .flatMap(subProp -> subProp.asPersistent().stream())
                     .map(subProp -> subProp.data().column())

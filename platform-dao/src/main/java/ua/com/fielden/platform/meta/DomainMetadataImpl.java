@@ -84,7 +84,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
         if (AbstractEntity.class.isAssignableFrom(javaType)) {
             return forEntityOpt((Class<? extends AbstractEntity<?>>) javaType);
         }
-        return forComposite(javaType);
+        return forComponent(javaType);
     }
 
     @Override
@@ -100,8 +100,8 @@ final class DomainMetadataImpl implements IDomainMetadata {
     }
 
     @Override
-    public Optional<TypeMetadata.Composite> forComposite(final Class<?> javaType) {
-        return generator.forComposite(javaType);
+    public Optional<TypeMetadata.Component> forComponent(final Class<?> javaType) {
+        return generator.forComponent(javaType);
     }
 
     @Override
@@ -128,7 +128,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
 
     private Optional<PropertyMetadata> forProperty_(final PropertyMetadata pm, final String propPath) {
         return switch (pm.type()) {
-            case PropertyTypeMetadata.Composite ct -> forPropertyOpt(ct.javaType(), propPath);
+            case PropertyTypeMetadata.Component ct -> forPropertyOpt(ct.javaType(), propPath);
             case PropertyTypeMetadata.Entity et -> forPropertyOpt(et.javaType(), propPath);
             default -> Optional.empty();
         };
@@ -137,7 +137,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
     private Optional<PropertyMetadata> propertyFromType(final TypeMetadata tm, final String simpleProp) {
         return switch (tm) {
             case EntityMetadata em -> em.propertyOpt(simpleProp);
-            case TypeMetadata.Composite cm -> cm.propertyOpt(simpleProp);
+            case TypeMetadata.Component cm -> cm.propertyOpt(simpleProp);
         };
     }
 
@@ -177,7 +177,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
         final Map<String, String> columns = entityMetadata.properties().stream()
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                 .flatMap(prop -> {
-                    if (prop.type().isComposite() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
+                    if (prop.type().isComponent() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
                         return pmUtils.subProperties(prop).stream()
                                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                                 .map(subProp -> t2(prop.name() + "." + subProp.name(), subProp.data().column().name));
@@ -202,7 +202,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
                 .filter(prop -> !ID.equals(prop.name()) && !VERSION.equals(prop.name()))
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                 .flatMap(prop -> {
-                    if (prop.type().isComposite()) {
+                    if (prop.type().isComponent()) {
                         final var subColumnNames = pmUtils.subProperties(prop).stream()
                                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                                 .map(p -> p.data().column().name)

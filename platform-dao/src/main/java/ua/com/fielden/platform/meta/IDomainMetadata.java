@@ -49,7 +49,7 @@ public interface IDomainMetadata {
     /**
      * Empty optional is returned if the given type is not composite or not a known composite type.
      */
-    Optional<TypeMetadata.Composite> forComposite(Class<?> javaType);
+    Optional<TypeMetadata.Component> forComponent(Class<?> javaType);
 
     /**
      * A non-throwing alternative to {@link #forProperty(Class, CharSequence)}.

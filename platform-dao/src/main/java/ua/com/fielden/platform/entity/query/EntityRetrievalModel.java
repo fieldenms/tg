@@ -116,13 +116,13 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private void includeAllFirstLevelPrimPropsAndKey() {
         entityMetadata.properties().stream()
                 .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
-                // calculated composite are included (legacy EQL2 behaviour)
-                // TODO don't treat calculated composite specially once TG applications no longer rely on this behaviour
-                .filter(pm -> !pm.isCalculated() || pm.type().isComposite())
+                // calculated components are included (legacy EQL2 behaviour)
+                // TODO don't treat calculated components specially once TG applications no longer rely on this behaviour
+                .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
                 .forEach(pm -> {
                     // if this property is a key member typed with a union entity that has property P typed with this entity
-                    // (the one we are constructing fetch model for), then we need to ensure that P is not explored,
-                    // otherwise fetch model construction will never terminate
+                    // (the one we are constructing the fetch model for), then we need to ensure that P is not explored,
+                    // otherwise, fetch model construction will never terminate
                     final boolean exploreEntities = pm.type().isEntity()
                                                     && !propMetadataUtils.isPropEntityType(pm, EntityMetadata::isUnion)
                                                     && (KEY.equals(pm.name()) || pm.has(KEY_MEMBER));
@@ -157,7 +157,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
                 // calculated composite are included (legacy EQL2 behaviour)
                 // TODO don't treat calculated composite specially once TG applications no longer rely on this behaviour
-                .filter(pm -> !pm.isCalculated() || pm.type().isComposite())
+                .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
                 .forEach(pm -> with(pm.name(), false));
     }
 
