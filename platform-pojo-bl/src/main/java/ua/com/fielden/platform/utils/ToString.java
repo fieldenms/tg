@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.types.tuples.T2;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -402,8 +403,18 @@ public final class ToString {
                 case IFormattable it -> it.toString(setDepth(depth + 1));
                 case Map<?, ?> it -> setDepth(depth + 1).formatMap(it);
                 case Collection<?> it -> setDepth(depth + 1).formatCollection(it);
+                case T2<?, ?> it -> setDepth(depth + 1).formatPair(it);
                 case null, default -> Objects.toString(value);
             };
+        }
+
+        private static boolean isFormattable(final Object object) {
+            // keep this method in sync with formatValue by testing against all types used in the switch
+            return object != null
+                   && (object instanceof IFormattable
+                       || object instanceof Map<?, ?>
+                       || object instanceof Collection<?>
+                       || object instanceof T2<?, ?>);
         }
 
         private String formatMap(final Map<?, ?> map) {
@@ -435,6 +446,20 @@ public final class ToString {
                                          '\n' + indent(depth - 1) + ']'));
             }
         }
+
+        private String formatPair(final T2<?, ?> pair) {
+            if (isFormattable(pair._1) || isFormattable(pair._2)) {
+                return "("
+                       + formatValue(pair._1)
+                       + ",\n"
+                       + indent(depth)
+                       + formatValue(pair._2)
+                       + ')';
+            } else {
+                return '(' + formatValue(pair._1) + ", " + formatValue(pair._2) + ')';
+            }
+        }
+
     }
 
 }
