@@ -32,7 +32,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.entityTypeHierarchy;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 /**
- * Performs instant (re-)persistence of the Domain Metadata Model entities, generated for an application domain.
+ * Performs instant persistence of the Domain Metadata Model entities, generated for an application domain.
  *
  * @author TG Team
  *
@@ -57,7 +57,7 @@ public class PersistDomainMetadataModel {
         LOGGER.info("Starting to save the domain metadata...");
         try {
             LOGGER.info("Removing old domain metadata records...");
-            emptyExistingMetadata(trEx);
+            clearExistingMetadata(trEx);
 
             final Set<Class<? extends AbstractEntity<?>>> domainTypesForIntrospection = entityTypes.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toSet());
             final Map<Class<?>, DomainTypeData> typesMap = generateDomainTypeData(domainTypesForIntrospection, domainMetadata);
@@ -70,17 +70,17 @@ public class PersistDomainMetadataModel {
 
             LOGGER.info("Completed saving of the domain metadata.");
         } catch (final Exception ex) {
-            LOGGER.fatal("Presisting of the domain metadata did not succeed.", ex);
+            LOGGER.fatal("Saving domain metadata failed.", ex);
             throw ex;
         }
     }
 
-    private static void emptyExistingMetadata(final TransactionalExecution trEx) {
+    private static void clearExistingMetadata(final TransactionalExecution trEx) {
         trEx.exec(conn -> {
             try (final Statement st = conn.createStatement()) {
                 st.execute(EXISTING_DATA_DELETE_STMT);
             } catch (final SQLException ex) {
-                throw new DbException(format("Failed to empty existing metadata."), ex);
+                throw new DbException("Failed to clear existing metadata.", ex);
             }
         });
     }
@@ -107,14 +107,16 @@ public class PersistDomainMetadataModel {
                                           domainMetadata.entityMetadataUtils().compositeKeyMembers(em),
                                           props));
 
-            // collecting primitive, union,custom user types and pure types (like XXXGroupingProperty) from props
+            // collecting primitive, union, custom user types and transient types (like XXXGroupingProperty) from props
             for (final PropertyMetadata pm : props) {
                 final Optional<Class<?>> optPropJavaType = switch (pm.type()) {
-                    case PropertyTypeMetadata.Composite    it -> Optional.of(it.javaType());
-                    case PropertyTypeMetadata.Primitive    it -> Optional.of(it.javaType());
-                    case PropertyTypeMetadata.Entity       it when domainMetadata.forType(it.javaType()).isEmpty()
-                                                                   || !entityTypes.contains(it.javaType())
-                                                                      && !result.containsKey(it.javaType())
+                    case PropertyTypeMetadata.Component it
+                            -> Optional.of(it.javaType());
+                    case PropertyTypeMetadata.Primitive it
+                            -> Optional.of(it.javaType());
+                    case PropertyTypeMetadata.Entity    it when domainMetadata.forType(it.javaType()).isEmpty() ||
+                                                                !entityTypes.contains(it.javaType()) &&
+                                                                !result.containsKey(it.javaType())
                             -> Optional.of(it.javaType());
                     default -> Optional.empty();
                 };

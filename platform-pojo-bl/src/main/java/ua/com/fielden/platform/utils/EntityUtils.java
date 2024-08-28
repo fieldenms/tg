@@ -754,7 +754,7 @@ public class EntityUtils {
                     }
                 }
             }
-            klass = klass.getSuperclass(); // move to the next super class in the hierarchy in search for more declared fields
+            klass = klass.getSuperclass(); // move to the next superclass in the hierarchy in search for more declared fields
         }
         return null;
     }
