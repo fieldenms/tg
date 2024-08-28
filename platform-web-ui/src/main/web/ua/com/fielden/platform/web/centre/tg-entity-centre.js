@@ -231,6 +231,9 @@ const template = html`
             overflow: auto;
         }
         .noselect {
+            /* This prevents any action invocation on mouse-up event */
+            pointer-events:none;
+            /* Webkit */
             -webkit-touch-callout: none;
             /* iOS Safari */
             -webkit-user-select: none;
