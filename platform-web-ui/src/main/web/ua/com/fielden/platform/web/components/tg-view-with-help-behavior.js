@@ -52,8 +52,10 @@ export const TgViewWithHelpBehavior = {
         if (e.button == 0 || e.type.startsWith("touch")) {
             e.preventDefault();
             this._helpActionLongPress = false;
+            this._helpActionShortPress = true;
             this._helpActionTimer = setTimeout(() => {
                 this._helpActionLongPress = true;
+                this._helpActionShortPress = false;
                 this.getOpenHelpMasterAction().chosenProperty = "showMaster";
                 this.getOpenHelpMasterAction()._run();
             }, 1000);
@@ -68,7 +70,7 @@ export const TgViewWithHelpBehavior = {
                 clearTimeout(this._helpActionTimer);
             }
             //If there was long touch or long mouse button press then skip it otherwise decide what to do 
-            if (!this._helpActionLongPress) {
+            if (!this._helpActionLongPress && this._helpActionShortPress) {
                 //Init action props.
                 this.getOpenHelpMasterAction()._openLinkInAnotherWindow = true;
                 this.getOpenHelpMasterAction().chosenProperty = null;
@@ -85,6 +87,7 @@ export const TgViewWithHelpBehavior = {
             }
             //Reset action type and timer;
             this._helpActionLongPress = false;
+            this._helpActionShortPress = false;
             this._helpActionTimer = null;
         }
     },
