@@ -63,6 +63,11 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
     }
 
     @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
                 .add("yieldsMap", yieldsMap)

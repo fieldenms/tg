@@ -72,6 +72,11 @@ public record OrderBys1 (List<OrderBy1> models, Limit limit, long offset) implem
     }
 
     @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
                 .add("models", models)

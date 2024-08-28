@@ -38,6 +38,11 @@ public record GroupBys1 (List<GroupBy1> groups) implements ToString.IFormattable
     }
 
     @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
                 .add("groups", groups)

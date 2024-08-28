@@ -29,6 +29,11 @@ public record Yield1 (ISingleOperand1<? extends ISingleOperand2<?>> operand,
     }
 
     @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
                 .add("operand", operand)
