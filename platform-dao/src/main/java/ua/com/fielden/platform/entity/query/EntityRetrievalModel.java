@@ -194,7 +194,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 includeAllUnionEntityKeyMembers();
             } else {
                 final var propType = unwrap(pm.type());
-                // treat PropertyDescriptor as primitive, it does not make sense to fetch its sub-properties
+                // Treat PropertyDescriptor as primitive, it does not make sense to fetch its sub-properties
+                // TODO: The commented out condition !optPm.isId() is a very old one and its intent is not known
+                //       It was migrated from the SVN repo 10 years ago.
+                //       https://github.com/fieldenms/tg/commit/40cc8e3bbe19b9100718c1476780dc9be46b0915#diff-5561eb2f0bc449a4430ec09dcf2b9f76d64fc8205771489eae8ba1472664233cR134
                 if (propType instanceof PropertyTypeMetadata.Entity et && !PropertyDescriptor.class.equals(et.javaType())/* && !optPm.isId()*/) {
                     if (!skipEntities) {
                         if (propMetadataUtils.isPropEntityType(propType, EntityMetadata::isUnion)) {
@@ -258,6 +261,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
      * <p>
      * For synthetic entities, properties of any nature can be retrieved as long as they are yielded or can be calculated.
      * This is why it is considered that such entities do not have "pure" properties that cannot be retrieved.
+     * Although, it is possible to declare a plain property and not use it in the model for yielding.
+     * Attempts to specify such properties in a fetch model when retrieving a synthetic entity, should result in a runtime exception.
      *
      * @param pm
      * @return
