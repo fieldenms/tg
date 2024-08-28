@@ -22,7 +22,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 public record SetPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> leftOperand,
                              boolean negated,
                              ISetOperand1<? extends ISetOperand2<?>> rightOperand)
-        implements ICondition1<SetPredicate2>
+        implements ICondition1<SetPredicate2>, ToString.IFormattable
 {
 
     @Override
@@ -37,7 +37,12 @@ public record SetPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> leftO
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
                 .add("negated", negated)

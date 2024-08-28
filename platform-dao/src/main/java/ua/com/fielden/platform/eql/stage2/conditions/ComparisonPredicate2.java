@@ -18,7 +18,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 public record ComparisonPredicate2 (ISingleOperand2<? extends ISingleOperand3> leftOperand,
                                     ComparisonOperator operator,
                                     ISingleOperand2<? extends ISingleOperand3> rightOperand)
-        implements ICondition2<ComparisonPredicate3>
+        implements ICondition2<ComparisonPredicate3>, ToString.IFormattable
 {
 
     @Override
@@ -52,7 +52,12 @@ public record ComparisonPredicate2 (ISingleOperand2<? extends ISingleOperand3> l
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
                 .add("operator", operator)

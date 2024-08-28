@@ -5,7 +5,7 @@ import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
-public abstract class AbstractSingleOperand3 implements ISingleOperand3 {
+public abstract class AbstractSingleOperand3 implements ISingleOperand3, ToString.IFormattable {
     public final PropType type;
     
     public AbstractSingleOperand3(final PropType type) {
@@ -34,10 +34,15 @@ public abstract class AbstractSingleOperand3 implements ISingleOperand3 {
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
-            .add("type", type)
-            .pipe(this::addToString)
-            .$();
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("type", type)
+                .pipe(this::addToString)
+                .$();
     }
 
     protected ToString addToString(final ToString toString) {

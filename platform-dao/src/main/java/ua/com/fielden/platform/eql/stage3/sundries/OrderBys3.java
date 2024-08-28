@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.NO_OFFSET;
 import static ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3.isSubQuery;
 
-public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) {
+public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implements ToString.IFormattable {
 
     public OrderBys3(final List<OrderBy3> models) {
         this(models, Limit.all(), NO_OFFSET);
@@ -71,6 +72,20 @@ public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) {
         }
 
         return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("models", models)
+                .add("limit", limit)
+                .add("offset", offset)
+                .$();
     }
 
 }

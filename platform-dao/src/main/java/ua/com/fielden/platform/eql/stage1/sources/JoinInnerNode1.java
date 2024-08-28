@@ -18,7 +18,7 @@ public record JoinInnerNode1 (IJoinNode1<? extends IJoinNode2<?>> leftNode,
                               IJoinNode1<? extends IJoinNode2<?>> rightNode,
                               JoinType joinType,
                               Conditions1 joinConditions)
-        implements IJoinNode1<JoinInnerNode2>
+        implements IJoinNode1<JoinInnerNode2>, ToString.IFormattable
 {
 
     @Override
@@ -46,7 +46,12 @@ public record JoinInnerNode1 (IJoinNode1<? extends IJoinNode2<?>> leftNode,
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("left", leftNode)
                 .add("right", rightNode)
                 .add("type", joinType)

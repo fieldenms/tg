@@ -7,11 +7,10 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.left;
 
 public record JoinInnerNode3 (IJoinNode3 leftNode, IJoinNode3 rightNode,
                               JoinType joinType, Conditions3 joinConditions)
-        implements IJoinNode3
+        implements IJoinNode3, ToString.IFormattable
 {
 
     @Override
@@ -39,7 +38,12 @@ public record JoinInnerNode3 (IJoinNode3 leftNode, IJoinNode3 rightNode,
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("left", leftNode)
                 .add("right", rightNode)
                 .add("type", joinType)

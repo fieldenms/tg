@@ -47,7 +47,7 @@ import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_
  * </ol>
  *
  */
-public abstract class AbstractQuery1 {
+public abstract class AbstractQuery1 implements ToString.IFormattable {
 
     public static final String ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY = "Cannot find yield [%s] used within order by operation.";
 
@@ -246,7 +246,12 @@ public abstract class AbstractQuery1 {
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("resultType", resultType)
                 .add("yieldAll", yieldAll)
                 .add("shouldMaterialiseCalcPropsAsColumnsInSqlQuery", shouldMaterialiseCalcPropsAsColumnsInSqlQuery)
@@ -263,4 +268,5 @@ public abstract class AbstractQuery1 {
     protected ToString addToString(final ToString toString) {
         return toString;
     }
+
 }

@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 
@@ -12,7 +13,7 @@ import static java.util.Collections.*;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public record Yields1 (SortedMap<String, Yield1> yieldsMap) {
+public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.IFormattable {
     public static final Yields1 EMPTY_YIELDS = new Yields1(emptyList());
 
     public static Yields1 yields(final Collection<Yield1> yields) {
@@ -52,12 +53,20 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) {
 
         for (final Yield1 yield : yields) {
             if (map.containsKey(yield.alias())) {
-                throw new EqlStage1ProcessingException(format("Query contains duplicate yields for alias [%s].", yield.alias()));
+                throw new EqlStage1ProcessingException(
+                        String.format("Query contains duplicate yields for alias [%s].", yield.alias()));
             }
             map.put(yield.alias(), yield);
         }
 
         return unmodifiableSortedMap(map);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("yieldsMap", yieldsMap)
+                .$();
     }
 
 }

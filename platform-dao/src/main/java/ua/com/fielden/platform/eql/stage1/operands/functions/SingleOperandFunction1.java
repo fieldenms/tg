@@ -8,7 +8,7 @@ import ua.com.fielden.platform.utils.ToString;
 import java.util.Objects;
 import java.util.Set;
 
-public abstract class SingleOperandFunction1<T extends ISingleOperand2<?>> implements IFunction1<T> {
+public abstract class SingleOperandFunction1<T extends ISingleOperand2<?>> implements IFunction1<T>, ToString.IFormattable {
 
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand;
 
@@ -36,11 +36,16 @@ public abstract class SingleOperandFunction1<T extends ISingleOperand2<?>> imple
 
     @Override
     public String toString() {
-        return ToString.standard.toString(this).add("operand", operand).pipe(this::addToString).$();
+        return toString(ToString.separateLines);
     }
 
     protected ToString addToString(final ToString toString) {
         return toString;
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this).add("operand", operand).pipe(this::addToString).$();
     }
 
 }

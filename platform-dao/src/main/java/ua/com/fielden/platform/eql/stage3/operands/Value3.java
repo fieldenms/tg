@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage3.operands;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
@@ -10,7 +11,7 @@ import java.util.Objects;
  * @param value  can be {@code null} in case of yield statement
  */
 public record Value3 (Object value, String paramName, PropType type)
-        implements ISingleOperand3
+        implements ISingleOperand3, ToString.IFormattable
 {
 
     public Value3(final Object value, final PropType type) {
@@ -39,6 +40,20 @@ public record Value3 (Object value, String paramName, PropType type)
         return this == obj
                || obj instanceof Value3 that
                   && Objects.equals(value, that.value) && Objects.equals(paramName, that.paramName);
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("value", value)
+                .addIfNotNull("paramName", paramName)
+                .add("type", type)
+                .$();
     }
 
 }

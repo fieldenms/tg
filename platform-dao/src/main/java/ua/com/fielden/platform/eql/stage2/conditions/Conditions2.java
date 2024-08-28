@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
 public record Conditions2 (boolean negated, List<List<? extends ICondition2<?>>> dnf)
-        implements ICondition2<Conditions3>
+        implements ICondition2<Conditions3>, ToString.IFormattable
 {
     public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, ImmutableList.of());
 
@@ -103,6 +104,19 @@ public record Conditions2 (boolean negated, List<List<? extends ICondition2<?>>>
         return conditions.stream()
                 .anyMatch(cond -> cond.equals(conditionToMatch)
                         || (cond instanceof Conditions2 conds && conds.conditionIsSatisfied(conditionToMatch)));
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("negated", negated)
+                .add("dnf", dnf)
+                .$();
     }
 
 }

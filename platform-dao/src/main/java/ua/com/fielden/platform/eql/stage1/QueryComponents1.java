@@ -23,11 +23,18 @@ public record QueryComponents1(
                 GroupBys1 groups,
                 OrderBys1 orderings,
                 boolean yieldAll,
-                boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery) {
+                boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery)
+    implements ToString.IFormattable
+{
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("yieldAll", yieldAll)
                 .add("shouldMaterialiseCalcPropsAsColumnsInSqlQuery", shouldMaterialiseCalcPropsAsColumnsInSqlQuery)
                 .addIfPresent("join", maybeJoinRoot)

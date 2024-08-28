@@ -6,7 +6,7 @@ import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
-public abstract class AbstractSource2 {
+public abstract class AbstractSource2 implements ToString.IFormattable {
     public final Integer id;
     /** Alias or {@code null}. */
     public final String alias;
@@ -71,7 +71,12 @@ public abstract class AbstractSource2 {
 
    @Override
    public String toString() {
-       return ToString.separateLines.toString(this)
+       return toString(ToString.separateLines);
+   }
+
+   @Override
+   public String toString(final ToString.IFormat format) {
+       return format.toString(this)
                .add("id", id)
                .addIfNotNull("alias", alias)
                .add("querySourceInfo", querySourceInfo)
@@ -84,4 +89,5 @@ public abstract class AbstractSource2 {
    protected ToString addToString(final ToString toString) {
        return toString;
    }
+
 }

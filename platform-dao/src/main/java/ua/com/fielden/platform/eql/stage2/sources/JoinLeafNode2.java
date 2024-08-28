@@ -13,6 +13,7 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinInnerNode3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinLeafNode3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Set;
@@ -26,7 +27,7 @@ import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.propType;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
 
-public record JoinLeafNode2 (ISource2<?> source) implements IJoinNode2<IJoinNode3> {
+public record JoinLeafNode2 (ISource2<?> source) implements IJoinNode2<IJoinNode3>, ToString.IFormattable {
 
     @Override
     public Set<Prop2> collectProps() {
@@ -110,6 +111,18 @@ public record JoinLeafNode2 (ISource2<?> source) implements IJoinNode2<IJoinNode
         return new TransformationResultFromStage2To3<>(
                 new JoinInnerNode3(currentJoinNode, implicitJoinNodeTr.item, (helperNode.nonnullable ? IJ : LJ),
                                    joinOnConditions), implicitJoinNodeTr.updatedContext);
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("source", source)
+                .$();
     }
 
 }

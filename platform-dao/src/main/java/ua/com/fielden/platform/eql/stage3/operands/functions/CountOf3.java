@@ -19,7 +19,7 @@ public class CountOf3 extends SingleOperandFunction3 {
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final String distinctClause = distinct ? "DISTINCT " : "";
-        return format("COUNT(%s %s)", distinctClause, operand.sql(metadata, dbVersion));
+        return String.format("COUNT(%s %s)", distinctClause, operand.sql(metadata, dbVersion));
     }
 
     @Override

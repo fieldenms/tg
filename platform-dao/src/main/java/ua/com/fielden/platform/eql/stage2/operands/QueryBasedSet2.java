@@ -6,10 +6,11 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage3.operands.QueryBasedSet3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Set;
 
-public record QueryBasedSet2 (SubQuery2 model) implements ISetOperand2<QueryBasedSet3> {
+public record QueryBasedSet2 (SubQuery2 model) implements ISetOperand2<QueryBasedSet3>, ToString.IFormattable {
 
     @Override
     public TransformationResultFromStage2To3<QueryBasedSet3> transform(final TransformationContextFromStage2To3 context) {
@@ -25,6 +26,18 @@ public record QueryBasedSet2 (SubQuery2 model) implements ISetOperand2<QueryBase
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return model.collectEntityTypes();
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("model", model)
+                .$();
     }
 
 }

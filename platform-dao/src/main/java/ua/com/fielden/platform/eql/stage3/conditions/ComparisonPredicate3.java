@@ -7,26 +7,25 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.utils.ToString;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
 
 public record ComparisonPredicate3 (ISingleOperand3 leftOperand,
                                     ComparisonOperator operator,
                                     ISingleOperand3 rightOperand)
-        implements ICondition3
+        implements ICondition3, ToString.IFormattable
 {
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         if (dbVersion == POSTGRESQL) {
-            return format("%s %s %s",
-                          operandToSqlWithCast(leftOperand, rightOperand, metadata, dbVersion),
-                          operator,
-                          operandToSqlWithCast(rightOperand, leftOperand, metadata, dbVersion));
+            return String.format("%s %s %s",
+                                 operandToSqlWithCast(leftOperand, rightOperand, metadata, dbVersion),
+                                 operator,
+                                 operandToSqlWithCast(rightOperand, leftOperand, metadata, dbVersion));
         } else {
-            return format("%s %s %s", leftOperand.sql(metadata, dbVersion), operator,
-                          rightOperand.sql(metadata, dbVersion));
+            return String.format("%s %s %s", leftOperand.sql(metadata, dbVersion), operator,
+                                 rightOperand.sql(metadata, dbVersion));
         }
     }
 
@@ -43,7 +42,12 @@ public record ComparisonPredicate3 (ISingleOperand3 leftOperand,
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
                 .add("operator", operator)

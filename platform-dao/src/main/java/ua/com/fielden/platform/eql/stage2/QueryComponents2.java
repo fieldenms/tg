@@ -23,11 +23,17 @@ public record QueryComponents2(
         Yields2 yields,
         GroupBys2 groups,
         OrderBys2 orderings)
+    implements ToString.IFormattable
 {
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .addIfPresent("join", maybeJoinRoot)
                 .addIfNot("where", whereConditions, Conditions2::isEmpty)
                 .addIfNot("yields", yields, Yields2::isEmpty)

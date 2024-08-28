@@ -10,6 +10,7 @@ import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.conditions.NullPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Set;
@@ -26,7 +27,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
  * @author TG Team
  */
 public record NullPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> operand, boolean negated)
-        implements ICondition1<ICondition2<?>>
+        implements ICondition1<ICondition2<?>>, ToString.IFormattable
 {
 
     @Override
@@ -57,6 +58,19 @@ public record NullPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> oper
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return operand.collectEntityTypes();
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("operand", operand)
+                .add("negated", negated)
+                .$();
     }
 
 }

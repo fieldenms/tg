@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 import java.util.function.Function;
@@ -18,7 +19,7 @@ import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
-public record Yields2 (SortedMap<String, Yield2> yieldsMap, boolean allGenerated) {
+public record Yields2 (SortedMap<String, Yield2> yieldsMap, boolean allGenerated) implements ToString.IFormattable {
 
     public static final Yields2 EMPTY_YIELDS = new Yields2(emptyList());
     
@@ -66,6 +67,19 @@ public record Yields2 (SortedMap<String, Yield2> yieldsMap, boolean allGenerated
     
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return yieldsMap.isEmpty() ? emptySet() : yieldsMap.values().stream().map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("yields", yieldsMap)
+                .add("allGenerated", allGenerated)
+                .$();
     }
 
 }

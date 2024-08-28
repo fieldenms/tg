@@ -37,10 +37,10 @@ public class CaseWhen3 extends AbstractFunction3 {
         final StringBuffer sb = new StringBuffer();
         sb.append("CASE");
         for (final T2<ICondition3, ISingleOperand3> whenThen : whenThenPairs) {
-            sb.append(format(" WHEN %s THEN %s", whenThen._1.sql(metadata, dbVersion), getOperandSql(whenThen._2, metadata, dbVersion)));
+            sb.append(String.format(" WHEN %s THEN %s", whenThen._1.sql(metadata, dbVersion), getOperandSql(whenThen._2, metadata, dbVersion)));
         }
         if (elseOperand != null) {
-            sb.append(format(" ELSE %s", getOperandSql(elseOperand, metadata, dbVersion)));
+            sb.append(String.format(" ELSE %s", getOperandSql(elseOperand, metadata, dbVersion)));
         }
         sb.append(" END");
         return sb.toString();

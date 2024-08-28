@@ -11,6 +11,7 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yields3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Objects;
@@ -25,7 +26,7 @@ import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.NO_OFFSET;
  * <p>
  * Prefer static method {@link #orderBys()} over the constructor.
  */
-public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) {
+public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) implements ToString.IFormattable {
 
     public static final OrderBys2 EMPTY_ORDER_BYS = new OrderBys2(ImmutableList.of(), Limit.all(), NO_OFFSET);
     
@@ -88,5 +89,19 @@ public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) {
                         .flatMap(Set::stream)
                         .collect(toImmutableSet());
     }
-    
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("orderBys", orderBys)
+                .add("limit", limit)
+                .add("offset", offset)
+                .$();
+    }
+
 }

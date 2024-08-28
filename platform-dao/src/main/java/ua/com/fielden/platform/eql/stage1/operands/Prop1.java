@@ -11,19 +11,19 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.append1;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
-public record Prop1(String propPath, boolean external) implements ISingleOperand1<Prop2> {
+public record Prop1(String propPath, boolean external) implements ISingleOperand1<Prop2>, ToString.IFormattable {
 
     public static final String ERR_CANNOT_RESOLVE_PROPERTY = "Cannot resolve property [%s].";
 
@@ -74,8 +74,8 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
                     return new PropResolution(source, aliaslessResolution.getResolved());
                 } else {
                     throw new EqlStage1ProcessingException(
-                            format("Ambiguity while resolving prop [%s]. Both [%s] and [%s] are resolvable against the given source.",
-                                   prop.propPath, prop.propPath, aliaslessPropName));
+                            String.format("Ambiguity while resolving prop [%s]. Both [%s] and [%s] are resolvable against the given source.",
+                                          prop.propPath, prop.propPath, aliaslessPropName));
                 }
             }
         }
@@ -89,7 +89,7 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
                 .toList();
 
         if (result.size() > 1) {
-            throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", prop.propPath));
+            throw new EqlStage1ProcessingException("Ambiguity while resolving prop [%s]".formatted(prop.propPath));
         }
 
         return result.size() == 1 ? result.getFirst() : null;
@@ -98,6 +98,19 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return emptySet();
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.standard);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("path", propPath)
+                .add("external", external)
+                .$();
     }
 
 }

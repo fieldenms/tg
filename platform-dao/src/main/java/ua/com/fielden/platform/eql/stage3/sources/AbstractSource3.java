@@ -8,7 +8,7 @@ import java.util.Objects;
 
 import static java.lang.String.format;
 
-public abstract class AbstractSource3 implements ISource3 {
+public abstract class AbstractSource3 implements ISource3, ToString.IFormattable {
     public final String sqlAlias;
     private final Integer id;
     private final Map<String, String> columns;
@@ -32,7 +32,7 @@ public abstract class AbstractSource3 implements ISource3 {
         if (column != null) {
             return sqlAlias + "." + column;
         } else {
-            throw new EqlStage3ProcessingException(format("Query source doesn't contain column for property [%s]", propName));
+            throw new EqlStage3ProcessingException("Query source doesn't contain column for property [%s]".formatted(propName));
         }
     }
 
@@ -72,7 +72,12 @@ public abstract class AbstractSource3 implements ISource3 {
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("id", id)
                 .addIfNotNull("sqlAlias", sqlAlias)
                 .add("columns", columns)

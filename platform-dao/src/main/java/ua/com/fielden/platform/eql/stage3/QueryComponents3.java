@@ -20,11 +20,17 @@ public record QueryComponents3(
         Yields3 yields,
         GroupBys3 groups,
         OrderBys3 orderings)
+    implements ToString.IFormattable
 {
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .addIfPresent("join", maybeJoinRoot)
                 .addIfNot("where", whereConditions, Conditions3::isEmpty)
                 .addIfNot("yields", yields, Yields3::isEmpty)

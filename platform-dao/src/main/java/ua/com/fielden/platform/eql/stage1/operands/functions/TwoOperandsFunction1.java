@@ -11,7 +11,7 @@ import java.util.Set;
 
 import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 
-abstract class TwoOperandsFunction1<T extends ISingleOperand2<?>> implements IFunction1<T> {
+abstract class TwoOperandsFunction1<T extends ISingleOperand2<?>> implements IFunction1<T>, ToString.IFormattable {
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand1;
     public final ISingleOperand1<? extends ISingleOperand2<?>> operand2;
 
@@ -44,15 +44,20 @@ abstract class TwoOperandsFunction1<T extends ISingleOperand2<?>> implements IFu
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
-                .add("operand1", operand1)
-                .add("operand2", operand2)
-                .pipe(this::addToString)
-                .$();
+        return toString(ToString.separateLines);
     }
 
     protected ToString addToString(final ToString toString) {
         return toString;
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("operand1", operand1)
+                .add("operand2", operand2)
+                .pipe(this::addToString)
+                .$();
     }
 
 }

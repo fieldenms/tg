@@ -5,6 +5,7 @@ import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
@@ -25,7 +26,7 @@ import static ua.com.fielden.platform.persistence.types.PlaceholderType.newPlace
  *   <li>for other operands -- equal to the type of {@link #operand}.
  * </ul>
  */
-public record Yield3 (ISingleOperand3 operand, String alias, String column, PropType type) {
+public record Yield3 (ISingleOperand3 operand, String alias, String column, PropType type) implements ToString.IFormattable {
 
     public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final PropType type) {
         this(operand, alias, isEmpty(alias) ? null : "C_" + columnId, type);
@@ -84,7 +85,17 @@ public record Yield3 (ISingleOperand3 operand, String alias, String column, Prop
 
     @Override
     public String toString() {
-        return "Yield3(alias=%s, column=%s, type=%s, operand=%s)".formatted(alias, column, type, operand);
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("operand", operand)
+                .addIfNotNull("alias", alias)
+                .addIfNotNull("column", column)
+                .add("type", type)
+                .$();
     }
 
 }

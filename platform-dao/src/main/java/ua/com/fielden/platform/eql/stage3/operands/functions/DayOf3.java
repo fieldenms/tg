@@ -18,9 +18,9 @@ public class DayOf3 extends SingleOperandFunction3 {
         switch (dbVersion) {
         case H2:
         case MSSQL:
-            return format("DAY(%s)", operand.sql(metadata, dbVersion));
+            return String.format("DAY(%s)", operand.sql(metadata, dbVersion));
         case POSTGRESQL:
-            return format("CAST(EXTRACT(DAY FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
+            return String.format("CAST(EXTRACT(DAY FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
         default:
             return super.sql(metadata, dbVersion);
         }

@@ -7,11 +7,12 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SubQueryForExists2;
 import ua.com.fielden.platform.eql.stage3.conditions.ExistencePredicate3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Set;
 
 public record ExistencePredicate2 (boolean negated, SubQueryForExists2 subQuery)
-        implements ICondition2<ExistencePredicate3>
+        implements ICondition2<ExistencePredicate3>, ToString.IFormattable
 {
 
     @Override
@@ -33,6 +34,19 @@ public record ExistencePredicate2 (boolean negated, SubQueryForExists2 subQuery)
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return subQuery.collectEntityTypes();
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("negated", negated)
+                .add("subQuery", subQuery)
+                .$();
     }
 
 }

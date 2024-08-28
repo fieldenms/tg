@@ -151,13 +151,10 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     }
 
     @Override
-    public String toString() {
-        return ToString.separateLines.toString(this)
-                .add("type", sourceType().getTypeName())
-                .add("alias", alias)
-                .add("id", id)
-                .add("models", CollectionUtil.toString(models, "; "))
-                .$();
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("models", models)
+                .add("isSyntheticEntity", isSyntheticEntity);
     }
 
 }

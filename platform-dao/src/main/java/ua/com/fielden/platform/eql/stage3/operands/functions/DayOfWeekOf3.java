@@ -17,14 +17,14 @@ public class DayOfWeekOf3 extends SingleOperandFunction3 {
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         switch (dbVersion) {
         case H2:
-            return format("ISO_DAY_OF_WEEK(%s)", operand.sql(metadata, dbVersion));
+            return String.format("ISO_DAY_OF_WEEK(%s)", operand.sql(metadata, dbVersion));
         case MSSQL:
             final String operandSql = operand.sql(metadata, dbVersion);
-            return format("((DATEPART(DW, %s) + @@DATEFIRST - 1) %% 8 + (DATEPART(DW, %s) + @@DATEFIRST - 1) / 8)", operandSql, operandSql);
+            return String.format("((DATEPART(DW, %s) + @@DATEFIRST - 1) %% 8 + (DATEPART(DW, %s) + @@DATEFIRST - 1) / 8)", operandSql, operandSql);
         case POSTGRESQL:
             // need to typecast explicitly to allow usage of date literals
             // TODO differentiate between date literals and date columns – only date literals need to be typecasted explicitly. 
-            return format("CAST(EXTRACT(ISODOW FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
+            return String.format("CAST(EXTRACT(ISODOW FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
         default:
             return super.sql(metadata, dbVersion);
         }   

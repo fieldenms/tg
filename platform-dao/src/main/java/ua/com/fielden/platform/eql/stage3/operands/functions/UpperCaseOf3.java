@@ -16,7 +16,7 @@ public class UpperCaseOf3 extends SingleOperandFunction3 {
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        return format("UPPER(%s)", operandToSqlAsString(metadata, dbVersion, operand));
+        return String.format("UPPER(%s)", operandToSqlAsString(metadata, dbVersion, operand));
     }
 
     @Override

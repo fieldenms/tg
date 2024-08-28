@@ -5,6 +5,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.OperandsBasedSet3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,7 +15,7 @@ import java.util.Set;
 import static java.util.stream.Collectors.toSet;
 
 public record OperandsBasedSet2 (List<ISingleOperand2<? extends ISingleOperand3>> operands)
-        implements ISetOperand2<OperandsBasedSet3>
+        implements ISetOperand2<OperandsBasedSet3>, ToString.IFormattable
 {
 
     @Override
@@ -43,5 +44,17 @@ public record OperandsBasedSet2 (List<ISingleOperand2<? extends ISingleOperand3>
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return operands.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
-    
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("operands", operands)
+                .$();
+    }
+
 }

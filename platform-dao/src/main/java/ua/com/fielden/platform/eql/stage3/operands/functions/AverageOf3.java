@@ -21,9 +21,9 @@ public class AverageOf3 extends SingleOperandFunction3 {
         final String distinctClause = distinct ? "DISTINCT " : "";
         switch (dbVersion) {
         case H2:
-            return format("AVG(%s CAST (%s AS FLOAT))", distinctClause, operand.sql(metadata, dbVersion));
+            return String.format("AVG(%s CAST (%s AS FLOAT))", distinctClause, operand.sql(metadata, dbVersion));
         default:
-            return format("AVG(%s %s)", distinctClause, operand.sql(metadata, dbVersion));
+            return String.format("AVG(%s %s)", distinctClause, operand.sql(metadata, dbVersion));
         }
     }
     

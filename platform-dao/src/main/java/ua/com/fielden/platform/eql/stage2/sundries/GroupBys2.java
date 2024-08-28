@@ -6,6 +6,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.sundries.GroupBys3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -16,7 +17,7 @@ import static java.util.Collections.*;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3.skipTransformation;
 
-public record GroupBys2 (List<GroupBy2> groups) {
+public record GroupBys2 (List<GroupBy2> groups) implements ToString.IFormattable {
 
     public static final GroupBys2 EMPTY_GROUP_BYS = new GroupBys2(emptyList());
 
@@ -56,6 +57,18 @@ public record GroupBys2 (List<GroupBy2> groups) {
     @Override
     public List<GroupBy2> groups() {
         return unmodifiableList(groups);
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("groups", groups)
+                .$();
     }
 
 }

@@ -7,7 +7,7 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.ToString;
 
 public record SetPredicate3(ISingleOperand3 leftOperand, boolean negated, ISetOperand3 rightOperand)
-        implements ICondition3
+        implements ICondition3, ToString.IFormattable
 {
 
     @Override
@@ -17,12 +17,16 @@ public record SetPredicate3(ISingleOperand3 leftOperand, boolean negated, ISetOp
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
                 .add("negated", negated)
                 .$();
     }
-
 
 }

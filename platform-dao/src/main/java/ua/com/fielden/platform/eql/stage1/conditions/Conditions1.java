@@ -35,7 +35,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.
 public record Conditions1 (boolean negated,
                            ICondition1<? extends ICondition2<?>> firstCondition,
                            List<CompoundCondition1> otherConditions)
-        implements ICondition1<Conditions2>
+        implements ICondition1<Conditions2>, ToString.IFormattable
 {
 
     public static final Conditions1 EMPTY_CONDITIONS = new Conditions1(false, null, ImmutableList.of());
@@ -172,7 +172,12 @@ public record Conditions1 (boolean negated,
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("first", firstCondition)
                 .addIfNotEmpty("rest", otherConditions)
                 .add("negated", negated)

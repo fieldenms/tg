@@ -5,6 +5,7 @@ import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +17,7 @@ import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
-public record Yields3 (SortedMap<String, Yield3> yieldsMap) {
+public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.IFormattable {
 
     public Yields3(final List<Yield3> yields) {
         this(yields.stream().collect(toImmutableSortedMap(naturalOrder(), Yield3::alias, Function.identity())));
@@ -51,6 +52,18 @@ public record Yields3 (SortedMap<String, Yield3> yieldsMap) {
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return "SELECT\n" + getYields().stream().map(y -> y.sql(metadata, dbVersion)).collect(joining(", "));
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("yields", yieldsMap)
+                .$();
     }
 
 }

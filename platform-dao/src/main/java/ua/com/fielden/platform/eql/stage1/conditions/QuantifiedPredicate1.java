@@ -24,7 +24,7 @@ public record QuantifiedPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>
                                     ComparisonOperator operator,
                                     Quantifier quantifier,
                                     SubQuery1 rightOperand)
-        implements ICondition1<QuantifiedPredicate2>
+        implements ICondition1<QuantifiedPredicate2>, ToString.IFormattable
 {
 
     @Override
@@ -39,7 +39,12 @@ public record QuantifiedPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
                 .add("operator", operator)

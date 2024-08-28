@@ -22,7 +22,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 public record LikePredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> leftOperand,
                               ISingleOperand1<? extends ISingleOperand2<?>> rightOperand,
                               LikeOptions options)
-        implements ICondition1<LikePredicate2>
+        implements ICondition1<LikePredicate2>, ToString.IFormattable
 {
 
 
@@ -38,7 +38,12 @@ public record LikePredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> left
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
                 .addIf("options", options, opts -> opts != LikeOptions.DEFAULT_OPTIONS)

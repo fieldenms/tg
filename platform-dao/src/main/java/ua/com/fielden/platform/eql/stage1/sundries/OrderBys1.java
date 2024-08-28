@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Set;
@@ -21,7 +22,7 @@ import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.orderBys2;
  * <p>
  * Prefer static methods for instantiation over the constructor.
  */
-public record OrderBys1 (List<OrderBy1> models, Limit limit, long offset) {
+public record OrderBys1 (List<OrderBy1> models, Limit limit, long offset) implements ToString.IFormattable {
 
     public static final long NO_OFFSET = 0;
     public static final OrderBys1 EMPTY_ORDER_BYS = new OrderBys1(ImmutableList.of(), Limit.all(), NO_OFFSET);
@@ -69,5 +70,14 @@ public record OrderBys1 (List<OrderBy1> models, Limit limit, long offset) {
     public boolean isEmpty() {
         return models.isEmpty();
     }
-    
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("models", models)
+                .add("limit", limit)
+                .add("offset", offset)
+                .$();
+    }
+
 }

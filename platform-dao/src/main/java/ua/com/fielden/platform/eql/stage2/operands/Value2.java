@@ -6,6 +6,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.Value3;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Set;
 
@@ -16,7 +17,7 @@ import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.hibT
 import static ua.com.fielden.platform.persistence.HibernateConstants.N;
 import static ua.com.fielden.platform.persistence.HibernateConstants.Y;
 
-public record Value2 (Object value, boolean ignoreNull) implements ISingleOperand2<Value3> {
+public record Value2 (Object value, boolean ignoreNull) implements ISingleOperand2<Value3>, ToString.IFormattable {
 
     public Value2(final Object value) {
         this(value, false);
@@ -64,6 +65,19 @@ public record Value2 (Object value, boolean ignoreNull) implements ISingleOperan
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return emptySet();
+    }
+
+    @Override
+    public String toString() {
+        return toString(ToString.standard);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("value", value)
+                .add("ignoreNull", ignoreNull)
+                .$();
     }
 
 }

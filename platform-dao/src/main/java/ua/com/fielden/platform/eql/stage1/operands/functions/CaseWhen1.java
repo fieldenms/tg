@@ -25,7 +25,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 public record CaseWhen1 (List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs,
                          @Nullable ISingleOperand1<? extends ISingleOperand2<?>> elseOperand,
                          ITypeCast typeCast)
-        implements IFunction1<CaseWhen2>
+        implements IFunction1<CaseWhen2>, ToString.IFormattable
 {
 
     public CaseWhen1(final List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs,
@@ -66,7 +66,12 @@ public record CaseWhen1 (List<T2<ICondition1<? extends ICondition2<?>>, ISingleO
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("whenThenPairs", whenThenPairs)
                 .addIfNotNull("else", elseOperand)
                 .addIfNotNull("typeCast", typeCast)

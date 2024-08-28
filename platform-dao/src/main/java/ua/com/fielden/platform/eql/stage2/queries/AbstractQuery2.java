@@ -24,9 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import static java.util.Collections.emptySet;
-
-public abstract class AbstractQuery2 {
+public abstract class AbstractQuery2 implements ToString.IFormattable {
 
     public final Optional<IJoinNode2<? extends IJoinNode3>> maybeJoinRoot;
     public final Conditions2 whereConditions;
@@ -110,7 +108,12 @@ public abstract class AbstractQuery2 {
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("resultType", resultType)
                 .addIfNot("whereConditions", whereConditions, Conditions2::isEmpty)
                 .addIfPresent("join", maybeJoinRoot)

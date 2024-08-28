@@ -9,7 +9,7 @@ import ua.com.fielden.platform.utils.ToString;
 import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
 
 public record LikePredicate3(ISingleOperand3 leftOperand, ISingleOperand3 rightOperand, LikeOptions options)
-        implements ICondition3
+        implements ICondition3, ToString.IFormattable
 {
 
     @Override
@@ -22,7 +22,12 @@ public record LikePredicate3(ISingleOperand3 leftOperand, ISingleOperand3 rightO
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
                 .addIf("options", options, opts -> opts != LikeOptions.DEFAULT_OPTIONS)

@@ -20,7 +20,7 @@ import java.util.Optional;
 import static com.google.common.base.Predicates.or;
 import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 
-public abstract class AbstractQuery3 {
+public abstract class AbstractQuery3 implements ToString.IFormattable {
 
     public final Optional<IJoinNode3> maybeJoinRoot;
     public final Conditions3 whereConditions;
@@ -80,7 +80,12 @@ public abstract class AbstractQuery3 {
 
     @Override
     public String toString() {
-        return ToString.separateLines.toString(this)
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
                 .add("resultType", resultType)
                 .addIfPresent("join", maybeJoinRoot)
                 .addIfNot("where", whereConditions, or(Objects::isNull, Conditions3::isEmpty))
