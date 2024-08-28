@@ -194,7 +194,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 includeAllUnionEntityKeyMembers();
             } else {
                 final var propType = unwrap(pm.type());
-                // treat PropertyDescriptor as primitive, it doesn't make sense to fetch its subproperties
+                // treat PropertyDescriptor as primitive, it does not make sense to fetch its sub-properties
                 if (propType instanceof PropertyTypeMetadata.Entity et && !PropertyDescriptor.class.equals(et.javaType())/* && !optPm.isId()*/) {
                     if (!skipEntities) {
                         if (propMetadataUtils.isPropEntityType(propType, EntityMetadata::isUnion)) {
@@ -249,12 +249,25 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                         .orElse(FALSE));
     }
 
+    /**
+     * Indicates whether property belongs to a persistent entity, but is such that has no meaning from the persistence perspective.
+     * In other words, values for such properties cannot be retrieved from a database.
+     * <p>
+     * Effectively, for persistent entities, only calculated and persistent properties can be retrieved.
+     * Properties of any other nature are considered such that do not have anything to do with persistence.
+     * <p>
+     * For synthetic entities, properties of any nature can be retrieved as long as they are yielded or can be calculated.
+     * This is why it is considered that such entities do not have "pure" properties that cannot be retrieved.
+     *
+     * @param pm
+     * @return
+     */
     private boolean isPure(final PropertyMetadata pm) {
         return entityMetadata.isPersistent() &&
                switch (pm.nature()) {
                    case PropertyNature.Persistent $ -> false;
-                   case PropertyNature.Calculated $ -> false;
-                   case PropertyNature.Transient  $ -> true;
+                   case PropertyNature.Calculated $ -> false; // is Transient, but has an expression, so can be retrieved
+                   case PropertyNature.Transient  $ -> true;  // covers the cases of CritOnly and Plain, which cannot be retrieved
                };
     }
 
