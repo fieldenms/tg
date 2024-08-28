@@ -94,8 +94,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             label #copyIcon {
                 cursor: pointer;
             }
-            :host(:hover) #copyIcon,
-            #decorator[focused]  #copyIcon {
+            :host(:hover) #copyIcon,#decorator[focused]  #copyIcon {
                 display: unset;
             }
             .input-layer {

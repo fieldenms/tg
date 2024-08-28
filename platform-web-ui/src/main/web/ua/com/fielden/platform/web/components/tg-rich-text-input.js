@@ -21,6 +21,9 @@ const template = html`
         .toastui-editor-defaultUI .ProseMirror {
             padding: 0 !important;
         }
+        .toastui-editor-contents {
+            font-size: inherit !important;
+        }
         .noselect {
             -webkit-touch-callout: none;
             /* iOS Safari */
@@ -97,13 +100,34 @@ class TgRichTextInput extends GestureEventListeners(PolymerElement) {
             initialEditType: 'wysiwyg',
             events: {
                 change: this._changeValue.bind(this),
-                blur: this.changeEventHandler.bind(this)
+                //blur: this.changeEventHandler.bind(this)
             },
+            useCommandShortcut: true,
             usageStatistics: false,
             toolbarItems: [],
             hideModeSwitch: true
         });
         this._editor.setMarkdown(this.value);
+    }
+
+    switchToMarkdownMode() {
+        this._editor.changeMode("markdown", false);
+    }
+
+    switchToWysiwyg() {
+        this._editor.changeMode("wysiwyg", false);
+    }
+
+    applyBold() {
+        this._editor.exec('bold');
+    }
+
+    applyItalic() {
+        this._editor.exec('italic');
+    }
+
+    applyStrikethough() {
+        this._editor.exec('strike');
     }
 
     _valueChanged(newValue) {

@@ -11,11 +11,28 @@ const additionalTemplate = html`
         #input {
             cursor: text;
         }
+        .title-action {
+            display: none;
+            width: 18px;
+            height: 18px;
+            margin-left: 4px;
+        }
+        label .title-action {
+            cursor: pointer;
+        }
+        :host(:hover) .title-action,#decorator[focused] .title-action {
+            display: unset;
+        }
     </style>`;
 const customLabelTemplate = html`
-    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
+    <label id="editorLabel" style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
         <span>[[propTitle]]</span>
-        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" class="title-action" icon="icons:content-copy" action-title="Copy" tooltip-text="Copy content" on-tap="_copyTap"></iron-icon>
+        <!-- <iron-icon hidden$="[[noLabelFloat]]" id="markdownIcon" icon="editor:mode-edit" on-tap="_switchToMarkdownMode"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" id="htmlIcon" icon="icons:visibility" on-tap="_switchToWysiwyg"></iron-icon> -->
+        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Make your text bold" on-tap="_makeBold"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text" on-tap="_makeItalic"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it" on-tap="_makeStrike"></iron-icon>
     </label>`;
 
 const customInputTemplate = html`
@@ -25,8 +42,8 @@ const customInputTemplate = html`
         disabled$="[[_disabled]]" 
         value="{{_editingValue}}"
         change-event-handler="[[_onChange]]"
-        min-height="100px"
-        height="500px">
+        min-height="[[minHeight]]"
+        height="[[height]]">
     </tg-rich-text-input>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
@@ -34,6 +51,21 @@ export class TgRichTextEditor extends TgEditor {
 
     static get template() { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate, customLabelTemplate);
+    }
+
+    static get properties() {
+        return {
+
+            minHeight: {
+                type: String,
+                value: "100px"
+            },
+
+            height: {
+                type: String,
+                value: "100px"
+            }
+        }
     }
 
     /**
@@ -47,17 +79,38 @@ export class TgRichTextEditor extends TgEditor {
         return {'formattedText': strValue};
     }
 
-    // _copyTap () {
-    //     if (this.multi) {
-    //         super._copyTap();
-    //     } else if (this.lastValidationAttemptPromise) {
-    //         this.lastValidationAttemptPromise.then(res => {
-    //             this._copyFromLayerIfPresent(super._copyTap.bind(this));
-    //         });
-    //     } else {
-    //         this._copyFromLayerIfPresent(super._copyTap.bind(this));
-    //     }
-    // }
+    _switchToMarkdownMode(e) {
+        this.$.input.switchToMarkdownMode();
+    }
+
+    _switchToWysiwyg(e) {
+        this.$.input.switchToWysiwyg();
+    }
+
+    _makeBold(e) {
+        this.$.input.applyBold();
+    }
+    
+    _makeItalic(e) {
+        this.$.input.applyItalic();
+    }
+
+    _makeStrike(e) {
+        this.$.input.applyStrikethough();
+    }
+
+    /**
+     * Returns tooltip for action
+     */
+    _getActionTooltip () {
+        const actions = [...this.$.editorLabel.children].slice(1, 2);//remove first child that is lable title.
+        const actionStr = actions.map(action => `<b>${action.getAttribute("action-title")}</b><br>${action.getAttribute("tooltip-text")}`);
+
+        return `<div style='display:flex;'>
+            <div style='margin-right:10px;'>With action: </div>
+            <div style='flex-grow:1;'>${actionStr.join('<br><br>')}</div>
+            </div>`
+    }
 }
 
 customElements.define('tg-rich-text-editor', TgRichTextEditor);
