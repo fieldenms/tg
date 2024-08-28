@@ -155,8 +155,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private void includeAllFirstLevelProps() {
         entityMetadata.properties().stream()
                 .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
-                // calculated composite are included (legacy EQL2 behaviour)
-                // TODO don't treat calculated composite specially once TG applications no longer rely on this behaviour
+                // calculated components are included (legacy EQL2 behaviour)
+                // TODO don't treat calculated components specially once TG applications no longer rely on this behaviour
                 .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
                 .forEach(pm -> with(pm.name(), false));
     }
@@ -206,7 +206,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                         with(propName, fetchIdOnly(et.javaType()));
                     }
                 } else {
-                    getSinglePropertyOfCompositeUserType(pm).ifPresent(prop -> addPrimProp(propName + "." + prop));
+                    getSinglePropertyOfComponentType(pm).ifPresent(prop -> addPrimProp(propName + "." + prop));
                     addPrimProp(propName);
                 }
             }
@@ -258,7 +258,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                };
     }
 
-    private Optional<String> getSinglePropertyOfCompositeUserType(final PropertyMetadata pm) {
+    private Optional<String> getSinglePropertyOfComponentType(final PropertyMetadata pm) {
         if (pm.hibType() instanceof ICompositeUserTypeInstantiate hibUserType) {
             final String[] propNames = hibUserType.getPropertyNames();
             if (propNames.length == 1) {
