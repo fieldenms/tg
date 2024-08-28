@@ -9,6 +9,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 /**
  * A utility that assists with implementation of the {@link Object#toString()} method.
@@ -400,6 +401,7 @@ public final class ToString {
             return switch (value) {
                 case IFormattable it -> it.toString(setDepth(depth + 1));
                 case Map<?, ?> it -> setDepth(depth + 1).formatMap(it);
+                case Collection<?> it -> setDepth(depth + 1).formatCollection(it);
                 case null, default -> Objects.toString(value);
             };
         }
@@ -421,6 +423,18 @@ public final class ToString {
             return '"' + string.replace("\"", "\\\"") + '"';
         }
 
+        private String formatCollection(final Collection<?> collection) {
+            if (collection.isEmpty()) {
+                return "[]";
+            }
+            else {
+                return collection.stream()
+                        .map(this::formatValue)
+                        .collect(joining(",\n" + indent(depth),
+                                         "[\n" + indent(depth),
+                                         '\n' + indent(depth - 1) + ']'));
+            }
+        }
     }
 
 }
