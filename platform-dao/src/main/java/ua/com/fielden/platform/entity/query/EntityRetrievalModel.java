@@ -18,7 +18,7 @@ import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -222,7 +222,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
         final var propType = unwrap(pm.type());
         if (propType.javaType() != fetchModel.getEntityType()) {
-            throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, pm.type(), propName, getEntityType(), fetchModel.getEntityType()));
+            throw new EqlException(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES.formatted(pm.type(), propName, getEntityType(), fetchModel.getEntityType()));
         }
 
         if (propType instanceof PropertyTypeMetadata.Entity et) {
