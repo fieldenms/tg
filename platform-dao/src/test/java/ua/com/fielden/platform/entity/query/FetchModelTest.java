@@ -305,7 +305,10 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
         assertPropsAreFetched(model, Set.of("sumOfPrices"));
     }
 
-    // asserts that fetch model construction terminates
+    /*----------------------------------------------------------------------------
+     | Assert that fetch model construction terminates
+     -----------------------------------------------------------------------------*/
+
     @Test
     public void strategy_ALL_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertPropsAreFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL),
@@ -315,7 +318,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    public void stragegy_DEFAUL_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
+    public void strategy_DEFAULT_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertPropsAreFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, DEFAULT),
                 Set.of("union"));
         assertPropsAreFetched(produceRetrievalModel(Circular_UnionEntity.class, DEFAULT),
@@ -323,7 +326,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    public void stragegy_ALL_INCL_CALC_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
+    public void strategy_ALL_INCL_CALC_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertPropsAreFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL_INCL_CALC),
                 Set.of("union"));
         assertPropsAreFetched(produceRetrievalModel(Circular_UnionEntity.class, ALL_INCL_CALC),
@@ -331,7 +334,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    public void stragegy_KEY_AND_DESC_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
+    public void strategy_KEY_AND_DESC_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertPropsAreFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, KEY_AND_DESC),
                 Set.of("union"));
         assertPropsAreFetched(produceRetrievalModel(Circular_UnionEntity.class, KEY_AND_DESC),
@@ -339,7 +342,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    public void stragegy_ID_AND_VERSION_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
+    public void strategy_ID_AND_VERSION_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertPropsAreNotFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_AND_VERSION),
                 Set.of("union"));
         assertPropsAreNotFetched(produceRetrievalModel(Circular_UnionEntity.class, ID_AND_VERSION),
@@ -347,7 +350,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    public void stragegy_ID_ONLY_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
+    public void strategy_ID_ONLY_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertPropsAreNotFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_ONLY),
                 Set.of("union"));
         assertPropsAreNotFetched(produceRetrievalModel(Circular_UnionEntity.class, ID_ONLY),
@@ -355,7 +358,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    public void stragegy_NONE_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
+    public void strategy_NONE_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertPropsAreNotFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, NONE),
                 Set.of("union"));
         assertPropsAreNotFetched(produceRetrievalModel(Circular_UnionEntity.class, NONE),
