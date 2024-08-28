@@ -91,7 +91,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = pm.name();
             if (!ID.equals(name) &&
-                !(KEY.equals(name) && !pm.isPersistent()) &&
+                (!KEY.equals(name) || pm.isPersistent()) &&
                 !pm.type().isCollectional() &&
                 !pm.isCritOnly() &&
                 !name.contains(".") &&
