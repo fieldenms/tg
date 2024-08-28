@@ -2,7 +2,7 @@ package ua.com.fielden.platform.meta.test_entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
-import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountUserType;
+import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountType;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
@@ -17,7 +17,7 @@ public class Entity_VariousMoney extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @PersistentType(userType = MoneyWithTaxAmountUserType.class)
+    @PersistentType(userType = MoneyWithTaxAmountType.class)
     private Money moneyWithTax;
 
     @IsProperty

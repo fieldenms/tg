@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.meta;
 
-import ua.com.fielden.platform.persistence.types.MoneyUserType;
-import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountUserType;
+import ua.com.fielden.platform.persistence.types.MoneyType;
+import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountType;
 import ua.com.fielden.platform.types.Money;
 
 import java.util.List;
@@ -39,7 +39,7 @@ public interface PropertyMetadataUtils {
      *     </ul>
      *     Note that a composite type may have several representations. Thus, which component properties are included
      *     depends on the representation used by the property. For example, {@link Money} can be represented as:
-     *     {@link MoneyUserType}, {@link MoneyWithTaxAmountUserType}, etc. Each of these representations is free to
+     *     {@link MoneyType}, {@link MoneyWithTaxAmountType}, etc. Each of these representations is free to
      *     decide which properties of {@link Money} are included.
      *   <li> Other types - nothing is included.
      * </ul>

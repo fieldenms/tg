@@ -13,17 +13,18 @@ import org.hibernate.type.CurrencyType;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountUserType;
+import ua.com.fielden.platform.types.markers.IMoneyType;
 
 /**
- * Hibernate type for storing tax sensitive instances of type {@link Money}. This type expects that {@link Money} is mapped into three columns -- one for storing full amount,
- * second for storing tax amount and thirds for currency
- * 
- * @author 01es
+ * Class that helps Hibernate to map {@link Money} class into database. <br>
+ * Note : copied from auction.persistence.MonetaryAmountCompositeUserType class <br>
+ * Note : {@link Money} class instance is mapped into 2 columns in the database : one of NUMERIC type (amount), another of VARCHAR(or LONGVARCHAR) type (currency).
+ *
+ * @author Yura
  */
-public class MoneyWithTaxAmountUserType extends AbstractCompositeUserType implements IMoneyWithTaxAmountUserType {
+public class MoneyType extends AbstractCompositeUserType implements IMoneyType {
 
-    public static final MoneyWithTaxAmountUserType INSTANCE = new MoneyWithTaxAmountUserType();
+    public static final MoneyType INSTANCE = new MoneyType();
     
     @Override
     public Class<Money> returnedClass() {
@@ -39,9 +40,8 @@ public class MoneyWithTaxAmountUserType extends AbstractCompositeUserType implem
         if (resultSet.wasNull()) {
             return null;
         }
-        final BigDecimal taxAmount = resultSet.getBigDecimal(names[1]);
-        final Currency currency = Currency.getInstance(resultSet.getString(names[2]));
-        return new Money(amount, taxAmount, currency);
+        final Currency currency = Currency.getInstance(resultSet.getString(names[1]));
+        return new Money(amount, currency);
     }
 
     @Override
@@ -49,32 +49,31 @@ public class MoneyWithTaxAmountUserType extends AbstractCompositeUserType implem
         if (allArgumentsAreNull(arguments)) {
             return null;
         }
-        return new Money((BigDecimal) arguments.get("amount"), (BigDecimal) arguments.get("taxAmount"), (Currency) arguments.get("currency"));
+        return new Money((BigDecimal) arguments.get("amount"), (Currency) arguments.get("currency"));
     }
 
     @Override
     public void nullSafeSet(final PreparedStatement statement, final Object value, final int index, final SharedSessionContractImplementor session) throws SQLException {
         if (value == null) {
+            
             statement.setNull(index, BigDecimalType.INSTANCE.sqlType());
-            statement.setNull(index + 1, BigDecimalType.INSTANCE.sqlType());
-            statement.setNull(index + 2, CurrencyType.INSTANCE.sqlType());
+            statement.setNull(index + 1, CurrencyType.INSTANCE.sqlType());
         } else {
             final Money amount = (Money) value;
             final String currencyCode = amount.getCurrency().getCurrencyCode();
             statement.setBigDecimal(index, amount.getAmount());
-            statement.setBigDecimal(index + 1, amount.getTaxAmount());
-            statement.setString(index + 2, currencyCode);
+            statement.setString(index + 1, currencyCode);
         }
     }
 
     @Override
     public String[] getPropertyNames() {
-        return new String[] { "amount", "taxAmount", "currency" };
+        return new String[] { "amount", "currency" };
     }
 
     @Override
     public Type[] getPropertyTypes() {
-        return new Type[] { BigDecimalType.INSTANCE, BigDecimalType.INSTANCE, CurrencyType.INSTANCE };
+        return new Type[] { BigDecimalType.INSTANCE, CurrencyType.INSTANCE };
     }
 
     @Override
@@ -82,8 +81,6 @@ public class MoneyWithTaxAmountUserType extends AbstractCompositeUserType implem
         final Money monetaryAmount = (Money) component;
         if (property == 0) {
             return monetaryAmount.getAmount();
-        } else if (property == 1) {
-            return monetaryAmount.getTaxAmount();
         } else {
             return monetaryAmount.getCurrency();
         }

@@ -13,18 +13,17 @@ import org.hibernate.type.CurrencyType;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IMoneyUserType;
+import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountType;
 
 /**
- * Class that helps Hibernate to map {@link Money} class into database. <br>
- * Note : copied from auction.persistence.MonetaryAmountCompositeUserType class <br>
- * Note : {@link Money} class instance is mapped into 2 columns in the database : one of NUMERIC type (amount), another of VARCHAR(or LONGVARCHAR) type (currency).
+ * Hibernate type for storing tax sensitive instances of type {@link Money}. This type expects that {@link Money} is mapped into three columns -- one for storing full amount,
+ * second for storing tax amount and thirds for currency
  * 
- * @author Yura
+ * @author 01es
  */
-public class MoneyUserType extends AbstractCompositeUserType implements IMoneyUserType {
+public class MoneyWithTaxAmountType extends AbstractCompositeUserType implements IMoneyWithTaxAmountType {
 
-    public static final MoneyUserType INSTANCE = new MoneyUserType();
+    public static final MoneyWithTaxAmountType INSTANCE = new MoneyWithTaxAmountType();
     
     @Override
     public Class<Money> returnedClass() {
@@ -40,8 +39,9 @@ public class MoneyUserType extends AbstractCompositeUserType implements IMoneyUs
         if (resultSet.wasNull()) {
             return null;
         }
-        final Currency currency = Currency.getInstance(resultSet.getString(names[1]));
-        return new Money(amount, currency);
+        final BigDecimal taxAmount = resultSet.getBigDecimal(names[1]);
+        final Currency currency = Currency.getInstance(resultSet.getString(names[2]));
+        return new Money(amount, taxAmount, currency);
     }
 
     @Override
@@ -49,31 +49,32 @@ public class MoneyUserType extends AbstractCompositeUserType implements IMoneyUs
         if (allArgumentsAreNull(arguments)) {
             return null;
         }
-        return new Money((BigDecimal) arguments.get("amount"), (Currency) arguments.get("currency"));
+        return new Money((BigDecimal) arguments.get("amount"), (BigDecimal) arguments.get("taxAmount"), (Currency) arguments.get("currency"));
     }
 
     @Override
     public void nullSafeSet(final PreparedStatement statement, final Object value, final int index, final SharedSessionContractImplementor session) throws SQLException {
         if (value == null) {
-            
             statement.setNull(index, BigDecimalType.INSTANCE.sqlType());
-            statement.setNull(index + 1, CurrencyType.INSTANCE.sqlType());
+            statement.setNull(index + 1, BigDecimalType.INSTANCE.sqlType());
+            statement.setNull(index + 2, CurrencyType.INSTANCE.sqlType());
         } else {
             final Money amount = (Money) value;
             final String currencyCode = amount.getCurrency().getCurrencyCode();
             statement.setBigDecimal(index, amount.getAmount());
-            statement.setString(index + 1, currencyCode);
+            statement.setBigDecimal(index + 1, amount.getTaxAmount());
+            statement.setString(index + 2, currencyCode);
         }
     }
 
     @Override
     public String[] getPropertyNames() {
-        return new String[] { "amount", "currency" };
+        return new String[] { "amount", "taxAmount", "currency" };
     }
 
     @Override
     public Type[] getPropertyTypes() {
-        return new Type[] { BigDecimalType.INSTANCE, CurrencyType.INSTANCE };
+        return new Type[] { BigDecimalType.INSTANCE, BigDecimalType.INSTANCE, CurrencyType.INSTANCE };
     }
 
     @Override
@@ -81,6 +82,8 @@ public class MoneyUserType extends AbstractCompositeUserType implements IMoneyUs
         final Money monetaryAmount = (Money) component;
         if (property == 0) {
             return monetaryAmount.getAmount();
+        } else if (property == 1) {
+            return monetaryAmount.getTaxAmount();
         } else {
             return monetaryAmount.getCurrency();
         }
