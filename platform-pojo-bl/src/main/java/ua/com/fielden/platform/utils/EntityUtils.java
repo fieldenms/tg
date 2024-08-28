@@ -647,7 +647,7 @@ public class EntityUtils {
     }
 
     /**
-     * Identifies whether the entity type represent a composite entity.
+     * Identifies whether an entity type represents a composite entity.
      *
      * @param entityType
      * @return

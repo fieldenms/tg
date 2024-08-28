@@ -45,8 +45,7 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
-import static ua.com.fielden.platform.meta.EntityNature.SYNTHETIC;
-import static ua.com.fielden.platform.meta.EntityNature.UNION;
+import static ua.com.fielden.platform.meta.EntityNature.*;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.*;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.UNION_MEMBER;
@@ -817,17 +816,17 @@ final class DomainMetadataGenerator {
     ////////////////////////////
 
     static EntityNature inferEntityNature(final Class<? extends AbstractEntity<?>> entityType) {
-        if (isUnionEntityType(entityType)) {
-            return UNION;
-        }
-        else if (isPersistedEntityType(entityType)) {
-            return EntityNature.PERSISTENT;
+        if (isPersistedEntityType(entityType)) {
+            return PERSISTENT;
         }
         else if (isSyntheticEntityType(entityType)) {
             return SYNTHETIC;
         }
+        else if (isUnionEntityType(entityType)) {
+            return UNION;
+        }
         else {
-            return EntityNature.OTHER;
+            return OTHER;
         }
     }
 

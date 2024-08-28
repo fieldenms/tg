@@ -93,10 +93,10 @@ public class EntityContainerFetcher {
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(executionContext.getEntityFactory());
 
         // let's execute the query and time the duration
-        final DateTime st = new DateTime();
+        // final DateTime st = new DateTime();
         final List<?> res = query.list();
-        final Period pd = new Period(st, new DateTime());
-        logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType().getSimpleName()));
+        // final Period pd = new Period(st, new DateTime());
+        // logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType().getSimpleName()));
 
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
