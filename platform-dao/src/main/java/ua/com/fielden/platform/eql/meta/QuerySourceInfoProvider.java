@@ -63,9 +63,10 @@ public class QuerySourceInfoProvider {
         modelledQuerySourceInfoMap.values()
                 .forEach(ei -> ei.addProps(generateQuerySourceItems(modelledQuerySourceInfoMap, ei.javaType())));
 
+        // Generating models and dependency information for SE types
+        // There is no need to include UE types here as their models are implicitly generated and have no interdependencies.
         seModels = new ConcurrentHashMap<>();
-        // generating models and dependencies info for SE types (there is no need to include UE types here as their models are implicitly generated and have no interdependencies)
-        final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> seDependencies = new HashMap<>();
+        final var seDependencies = new HashMap<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>>();
         domainMetadata.allTypes(EntityMetadata.class)
                 .map(EntityMetadata::asSynthetic).flatMap(Optional::stream)
                 .forEach(em -> {
@@ -79,7 +80,7 @@ public class QuerySourceInfoProvider {
                 final QuerySourceInfo<? extends AbstractEntity<?>> modelledQuerySourceInfo = generateModelledQuerySourceInfoForSyntheticType(seType, seModels.get(seType));
                 modelledQuerySourceInfoMap.put(modelledQuerySourceInfo.javaType(), modelledQuerySourceInfo);
             } catch (final Exception e) {
-                final var msg = "Could not generate modelled entity info for synthetic entity [" + seType + "]";
+                final var msg = "Could not generate modelled entity info for synthetic entity [" + seType + "].";
                 LOGGER.error(msg, e);
                 throw new EqlMetadataGenerationException(msg);
             }
@@ -110,19 +111,20 @@ public class QuerySourceInfoProvider {
     }
 
     public List<String> getCalcPropsOrder(final Class<? extends AbstractEntity<?>> entityType) {
-        // it's assumed that there will be no generated types with newly added dependent calc props
+        // TODO: It is assumed that there would be no generated types with newly added dependent calc props.
+        //       This assumption needs to be revisited when implementing support for user-definable calculated properties.
         return entityTypesDependentCalcPropsOrder.get(getOriginalType(entityType).getName());
     }
 
-    private List<AbstractQuerySourceItem<?>> generateQuerySourceItems
-        (final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allQuerySourceInfos,
-         final Class<? extends AbstractEntity<?>> entityType)
+    private List<AbstractQuerySourceItem<?>> generateQuerySourceItems(
+            final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allQuerySourceInfos,
+            final Class<? extends AbstractEntity<?>> entityType)
     {
         final var pmUtils = domainMetadata.propertyMetadataUtils();
         final var entityMetadata = domainMetadata.forEntity(entityType);
 
         // Exclude properties that are irrelevant to EQL.
-        // TODO Formally define the set of EQL-relevant properties and define a corresponding predicate.
+        // TODO: Formally define the set of EQL-relevant properties and define a corresponding predicate.
         return entityMetadata.properties().stream()
             .filter(pm -> !pm.isCritOnly())
             .filter(pm -> !(pm.isPlain() && entityMetadata.isPersistent()))
@@ -154,21 +156,29 @@ public class QuerySourceInfoProvider {
             .toList();
     }
 
-    private Optional<AbstractQuerySourceItem<?>> mkQuerySourceItemForEntityType
-        (final PropertyMetadata pm, final PropertyTypeMetadata.Entity et,
-         final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allQuerySourceInfos)
+    private Optional<AbstractQuerySourceItem<?>> mkQuerySourceItemForEntityType(
+            final PropertyMetadata pm,
+            final PropertyTypeMetadata.Entity et,
+            final Map<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> allQuerySourceInfos)
     {
         return domainMetadata.forEntityOpt(et.javaType())
                 .map(em -> switch (em) {
                     case EntityMetadata.Union uem -> mkQuerySourceItemForUnionEntityType(pm, uem, allQuerySourceInfos);
                     case EntityMetadata.Persistent pem ->
-                        // TODO may be used for future improvement related to treating ID property as if it is an entity, while yielding ID property within EntityAggregates result model.
+                        // TODO: The following commented out code may potentially be used for future improvements related to treating ID property as if it is an entity
+                        //       while yielding ID property within an EntityAggregates result model.
                         // if (ID.equals(name))
                         //     querySourceInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(querySourceInfo.javaType()), hibType, required, expr));
                             new QuerySourceItemForEntityType<>(pm.name(), allQuerySourceInfos.get(pem.javaType()), pm.hibType(), pm.is(REQUIRED),
                                                                pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null));
-                    // TODO Why PrimType ?
-                    default -> mkPrim(pm);
+                    default ->
+                        // TODO: It is not clear why QuerySourceItemForPrimType is used in all other cases.
+                        //       The original comment here was:
+                        //       // Finally, if nothing else, the property must be of some primitive type or a type with a custom Hibernate converter:
+                        //       // String, Long, Integer, BigDecimal, Date, boolean, Colour, Hyperlink, PropertyDescriptor, SecurityToken.
+                        //       However, this case would also include properties of Synthetic Entity type.
+                        //       Although, such properties are recognised as transient (plain).
+                            mkPrim(pm);
                 })
                 .or(() -> Optional.of(mkPrim(pm)));
     }
