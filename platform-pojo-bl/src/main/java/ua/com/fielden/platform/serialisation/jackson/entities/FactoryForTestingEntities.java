@@ -183,7 +183,7 @@ public class FactoryForTestingEntities {
     }
 
     public EntityWithInteger createEntityWithInteger() {
-        return finalise(createPersistedEntity(EntityWithInteger.class, 1L, "key", "description").setProp(new Integer(23)));
+        return finalise(createPersistedEntity(EntityWithInteger.class, 1L, "key", "description").setProp(Integer.valueOf(23)));
     }
 
     public EntityWithString createEntityWithString() {

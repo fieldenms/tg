@@ -5,29 +5,29 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 
 abstract class DateAddIntervalFunctionTo<T, ET extends AbstractEntity<?>> //
-		extends AbstractQueryLink //
-		implements IDateAddIntervalFunctionTo<T, ET> {
+        extends AbstractQueryLink //
+        implements IDateAddIntervalFunctionTo<T, ET> {
 
-	protected DateAddIntervalFunctionTo(final EqlSentenceBuilder builder) {
-		super(builder);
-	}
+    protected DateAddIntervalFunctionTo(final EqlSentenceBuilder builder) {
+        super(builder);
+    }
 
-	protected abstract T nextForDateAddIntervalFunctionTo(final EqlSentenceBuilder builder);
+    protected abstract T nextForDateAddIntervalFunctionTo(final EqlSentenceBuilder builder);
 
-	@Override
-	public IFunctionLastArgument<T, ET> to() {
-		return createFunctionLastArgument(builder.to());
-	}
+    @Override
+    public IFunctionLastArgument<T, ET> to() {
+        return createFunctionLastArgument(builder.to());
+    }
 
-	private FunctionLastArgument<T, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {
-		return new FunctionLastArgument<T, ET>(builder) {
+    private FunctionLastArgument<T, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {
+        return new FunctionLastArgument<T, ET>(builder) {
 
-			@Override
-			protected T nextForFunctionLastArgument(final EqlSentenceBuilder builder) {
-				return DateAddIntervalFunctionTo.this.nextForDateAddIntervalFunctionTo(builder);
-			}
+            @Override
+            protected T nextForFunctionLastArgument(final EqlSentenceBuilder builder) {
+                return DateAddIntervalFunctionTo.this.nextForDateAddIntervalFunctionTo(builder);
+            }
 
-		};
-	}
+        };
+    }
 
 }

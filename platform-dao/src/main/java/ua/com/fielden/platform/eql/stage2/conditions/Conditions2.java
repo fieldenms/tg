@@ -39,7 +39,7 @@ public class Conditions2 implements ICondition2<Conditions3> {
         this.negated = negated;
     }
 
-    public Conditions2 withNegated(final boolean negated) {
+    private Conditions2 withNegated(final boolean negated) {
         return negated == this.negated ? this : new Conditions2(negated, dnf);
     }
 

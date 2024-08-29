@@ -46,6 +46,7 @@ import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
 import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_BYS;
 import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_BYS;
@@ -300,7 +301,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        return new SubQuery2(qc2(sources, conditions, yields), new PropType(resultType, H_LONG), false);
+        return new SubQuery2(qc2(sources, conditions, yields), propType(resultType, H_LONG), false);
     }
 
     protected static SubQueryForExists2 typelessSubqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {

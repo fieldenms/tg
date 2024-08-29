@@ -1,15 +1,19 @@
 package ua.com.fielden.platform.test_utils;
-import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Assert;
+import org.junit.function.ThrowingRunnable;
+
+import java.util.Optional;
+import java.util.function.Consumer;
+
+import static org.junit.Assert.*;
 
 /**
  * A collection of general-purpose test utilities.
  *
  * @author TG Team
  */
-public class TestUtils {
+public final class TestUtils {
 
     private TestUtils() {}
 
@@ -85,6 +89,25 @@ public class TestUtils {
             return type.cast(object);
         }
         throw new AssertionError("Expected [%s] but was: %s".formatted(type.getTypeName(), object));
+    }
+
+    public static void assertNotThrows(final ThrowingRunnable runnable) {
+        try {
+            runnable.run();
+        } catch (final Throwable ex) {
+            ex.printStackTrace();
+            fail("No exception was expected: %s".formatted(ex.getMessage()));
+        }
+    }
+
+    /**
+     * Like {@link Assert#assertThrows(Class, ThrowingRunnable)} but allows futher processing of the thrown exception.
+     */
+    public static <T extends Throwable> void assertThrows(
+            final ThrowingRunnable runnable, final Class<T> throwableType, final Consumer<? super T> action)
+    {
+        final T throwable = Assert.assertThrows(throwableType, runnable);
+        action.accept(throwable);
     }
 
 }

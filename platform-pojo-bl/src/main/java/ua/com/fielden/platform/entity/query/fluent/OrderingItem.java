@@ -8,38 +8,38 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
 class OrderingItem //
-		extends ExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> //
-		implements IOrderingItem {
+        extends ExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> //
+        implements IOrderingItem {
 
-	public OrderingItem(final EqlSentenceBuilder builder) {
-		super(builder);
-	}
+    public OrderingItem(final EqlSentenceBuilder builder) {
+        super(builder);
+    }
 
-	@Override
-	protected ISingleOperandOrderable nextForSingleOperand(final EqlSentenceBuilder builder) {
-		return new SingleOperandOrderable(builder);
-	}
+    @Override
+    protected ISingleOperandOrderable nextForSingleOperand(final EqlSentenceBuilder builder) {
+        return new SingleOperandOrderable(builder);
+    }
 
-	@Override
-	protected IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> nextForExprOperand(final EqlSentenceBuilder builder) {
-		return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>(builder) {
+    @Override
+    protected IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> nextForExprOperand(final EqlSentenceBuilder builder) {
+        return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>(builder) {
 
-			@Override
-			protected ISingleOperandOrderable nextForExprOperand0(final EqlSentenceBuilder builder) {
-				return OrderingItem.this.nextForSingleOperand(builder);
-			}
+            @Override
+            protected ISingleOperandOrderable nextForExprOperand0(final EqlSentenceBuilder builder) {
+                return OrderingItem.this.nextForSingleOperand(builder);
+            }
 
-		};
-	}
+        };
+    }
 
-	@Override
-	public ISingleOperandOrderable yield(final String yieldAlias) {
-		return new SingleOperandOrderable(builder.yield(yieldAlias));
-	}
+    @Override
+    public ISingleOperandOrderable yield(final CharSequence yieldAlias) {
+        return new SingleOperandOrderable(builder.yield(yieldAlias));
+    }
 
-	@Override
-	public IOrderingItemCloseable order(OrderingModel model) {
-		return new OrderingItemCloseable(builder.order(model));
-	}
+    @Override
+    public IOrderingItemCloseable order(OrderingModel model) {
+        return new OrderingItemCloseable(builder.order(model));
+    }
 
 }

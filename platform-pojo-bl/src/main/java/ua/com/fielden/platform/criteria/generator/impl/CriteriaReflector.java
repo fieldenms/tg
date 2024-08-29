@@ -13,7 +13,6 @@ import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -85,28 +84,12 @@ public class CriteriaReflector {
      * entityType_property_anotherProperty_nestedProperty.
      *
      * @param root
-     *            - the type from which the property was taken.
+     *            a type from which the property was taken.
      * @param propertyName
-     *            - the name of the property for which criteria property name must be generated.
-     * @return
+     *            the name of the property for which criteria property name must be generated.
      */
-    public static String critName(final Class<?> root, final String propertyName) {
-        return root.getSimpleName().substring(0, 1).toLowerCase() + root.getSimpleName().substring(1) + "_" + replaceAll(propertyName, Reflector.DOT_SPLITTER_PATTERN, "_");
-    }
-
-    /**
-     * Generates the criteria property name. The generated property name must be unique. New generated criteria property name consists of two parts: root type name, property name.
-     * For example: if root = EntityType.class, property = property.anotherProperty.nestedProperty, then generated property name will be -
-     * entityType_property_anotherProperty_nestedProperty.
-     *
-     * @param root
-     *            - the type from which the property was taken.
-     * @param propertyPath
-     *            - the path to the property for which criteria property name must be generated.
-     * @return
-     */
-    public static String critName(final Class<?> root, final IConvertableToPath propertyPath) {
-        return root.getSimpleName().substring(0, 1).toLowerCase() + root.getSimpleName().substring(1) + "_" + replaceAll(propertyPath.toPath(), Reflector.DOT_SPLITTER_PATTERN, "_");
+    public static String critName(final Class<? extends AbstractEntity<?>> root, final CharSequence propertyName) {
+        return root.getSimpleName().substring(0, 1).toLowerCase() + root.getSimpleName().substring(1) + "_" + replaceAll(propertyName.toString(), Reflector.DOT_SPLITTER_PATTERN, "_");
     }
 
     /**

@@ -5,6 +5,7 @@ import ua.com.fielden.platform.eql.antlr.exceptions.EqlSyntaxException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.persistence.HibernateConstants;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,7 +21,7 @@ abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
 
     protected final QueryModelToStage1Transformer transformer;
 
-    AbstractEqlVisitor(QueryModelToStage1Transformer transformer) {
+    AbstractEqlVisitor(final QueryModelToStage1Transformer transformer) {
         this.transformer = transformer;
     }
 
@@ -47,6 +48,7 @@ abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
     }
 
     protected static Object preprocessValue(final Object value) {
+        // TODO Consider if value processing should be aligned with ValuePreprocessor.convertValue(value).
         if (value != null) {
             if (value.getClass().isArray()) {
                 return preprocessValues(Arrays.asList((Object[]) value));
@@ -73,7 +75,7 @@ abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
     /** Ensures that values of boolean types are converted properly. */
     protected static Object preprocessScalarValue(final Object value) {
         if (value instanceof Boolean) {
-            return (boolean) value ? Y : N;
+            return (boolean) value ? HibernateConstants.Y : HibernateConstants.N;
         }
         return value;
     }

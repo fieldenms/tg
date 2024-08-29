@@ -1,9 +1,14 @@
 package fielden.platform.bnf.util;
 
+import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.*;
 import fielden.platform.bnf.Optional;
 import fielden.platform.bnf.*;
+import fielden.platform.eql.CanonicalEqlGrammar;
+import fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal;
 import org.antlr.v4.runtime.CommonToken;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,9 +17,18 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static com.squareup.javapoet.MethodSpec.constructorBuilder;
-import static fielden.platform.bnf.TermMetadata.LABEL;
+import static fielden.platform.bnf.Metadata.*;
+import static fielden.platform.bnf.Rule.isSingleAltRule;
+import static fielden.platform.bnf.util.BnfUtils.countRhsOccurrences;
+import static fielden.platform.bnf.util.BnfUtils.removeUnused;
+import static fielden.platform.eql.CanonicalEqlGrammar.EqlTerminal.*;
+import static fielden.platform.eql.CanonicalEqlGrammar.EqlVariable.*;
+import static java.util.Comparator.comparing;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -44,20 +58,26 @@ import static ua.com.fielden.platform.utils.StreamUtils.zip;
  */
 public class BnfToG4 {
 
-    protected final BNF bnf;
-    protected final BNF originalBnf;
-    protected final String grammarName;
+    private final BNF bnf;
+    private final BNF originalBnf;
+    private final String grammarName;
 
-    public BnfToG4(BNF bnf, String grammarName) {
+    public BnfToG4(final BNF bnf, final String grammarName) {
         this.originalBnf = bnf;
-        this.bnf = stripParameters(bnf);
+        this.bnf = removeUnused
+                .compose(RuleInliner.inlineRules)
+                .compose(labelTokens)
+                .compose(stripParameters)
+                .compose(transformYieldOperandExpr)
+                .compose(transformSelect)
+                .apply(bnf);
         this.grammarName = grammarName;
     }
 
-    public static void writeResult(Result result, Path directory) throws IOException {
+    public static void writeResult(final Result result, final Path directory) throws IOException {
         Files.createDirectories(directory);
 
-        Path filePath = directory.resolve(result.grammarName + ".g4");
+        final var filePath = directory.resolve(result.grammarName + ".g4");
         Files.writeString(filePath, result.grammarSource());
 
         for (final JavaFile file : result.files) {
@@ -65,7 +85,7 @@ public class BnfToG4 {
         }
     }
 
-    protected String lexerRule(Terminal terminal) {
+    protected String lexerRule(final Terminal terminal) {
         return terminal.name().toUpperCase();
     }
 
@@ -76,13 +96,13 @@ public class BnfToG4 {
     }
 
     protected String generateGrammar() {
-        var sb = new StringBuilder();
+        final var sb = new StringBuilder();
 
         sb.append("// This grammar was generated. Timestamp: %s\n\n".formatted(ZonedDateTime.now().toString()));
         sb.append("grammar %s;\n\n".formatted(grammarName));
         sb.append("start : %s EOF;\n\n".formatted(convert(bnf.start())));
 
-        bnf.rules().stream()
+        replicateOrder(bnf.rules(), originalBnf.rules())
                 .map(this::convert)
                 .forEach(rule -> {
                     sb.append(rule);
@@ -96,71 +116,81 @@ public class BnfToG4 {
                 .sorted()
                 .forEach(sb::append);
 
+        // Using "channel(HIDDEN)" instead of "skip" makes these tokens appear in error messages, making them more readable.
         sb.append("""
 
-                WHITESPACE : [ \\r\\t\\n]+ -> skip ;
-                COMMENT : '//' .*? '\\n' -> skip ;
-                BLOCK_COMMENT : '/*' .*? '*/' -> skip ;
+                WHITESPACE : [ \\r\\t\\n]+ -> channel(HIDDEN) ;
+                COMMENT : '//' .*? '\\n' -> channel(HIDDEN) ;
+                BLOCK_COMMENT : '/*' .*? '*/' -> channel(HIDDEN) ;
 
                 """);
 
         return sb.toString();
     }
 
-    protected String convert(Rule rule) {
-        Function<String, String> labeler =  switch (rule) {
-            case Derivation $ -> isSingleTerminalRule(rule) ? s -> "token=" + s : Function.identity();
-            case Specialization $ -> s -> makeAltLabelName(rule, s);
-        };
+    protected String convert(final Rule rule) {
+        final var labeler = makeLabeler(rule);
         return "%s :\n      %s\n;".formatted(
                 convert(rule.lhs()),
-                rule.rhs().options().stream().map(this::convert).map(labeler).collect(joining("\n    | ")));
+                rule.rhs().options().stream().map(term -> labeler.apply(term, convert(term))).collect(joining("\n    | ")));
     }
 
-    protected String makeAltLabelName(Rule rule, String alt) {
-        return "%s # %s_%s".formatted(alt, capitalize(rule.lhs().name()), capitalize(alt));
+    private BiFunction<Term, String, String> makeLabeler(final Rule rule) {
+        return (term, s) -> term.metadata().get(AltLabel.class)
+                .map(altLabel -> makeRuleWithAltLabel(s, altLabel.label()))
+                .orElse(s);
     }
 
-    protected String convert(Sequence seq) {
+    private static String makeRuleWithAltLabel(final String rule, final String label) {
+        return rule + " # " + label;
+    }
+
+    protected String convert(final Sequence seq) {
         return seq.stream().map(this::convert).collect(joining(" "));
     }
 
-    protected String convert(Term term) {
-        String s = switch (term) {
+    protected String convert(final Term term) {
+        final var s = switch (term) {
             case Symbol symbol -> convert(symbol);
             case Sequence sequence -> convert(sequence);
             case Notation notation -> convert(notation);
         };
-        return term.metadata().maybeGet(LABEL).map(lbl -> convertLabeled(lbl, s)).orElse(s);
+        return term.metadata().get(ListLabel.class).map(lbl -> convertListLabeled(lbl, s))
+                .or(() -> term.metadata().get(Label.class).map(lbl -> convertLabeled(lbl, s)))
+                .orElse(s);
     }
 
-    protected String convertLabeled(String label, String term) {
-        return "%s=%s".formatted(label, term);
+    protected String convertListLabeled(final ListLabel label, final String term) {
+        return "%s+=%s".formatted(label.label(), term);
     }
 
-    protected String convert(Symbol symbol) {
+    protected String convertLabeled(final Label label, final String term) {
+        return "%s=%s".formatted(label.label(), term);
+    }
+
+    protected String convert(final Symbol symbol) {
         return switch (symbol) {
             case Terminal terminal -> convert(terminal);
             case Variable variable -> convert(variable);
         };
     }
 
-    protected String convert(Variable variable) {
+    protected String convert(final Variable variable) {
         return uncapitalize(variable.name());
     }
 
-    protected String convert(Terminal terminal) {
+    protected String convert(final Terminal terminal) {
         return switch (terminal) {
             case Token token -> convert(token);
             default -> convertTerminal(terminal);
         } ;
     }
 
-    protected String convertTerminal(Terminal terminal) {
+    protected String convertTerminal(final Terminal terminal) {
         return lexerRule(terminal);
     }
 
-    protected String convert(Token token) {
+    protected String convert(final Token token) {
         return convertTerminal(token);
     }
 
@@ -180,14 +210,14 @@ public class BnfToG4 {
     }
 
     protected String convert(final Quantifier quantifier) {
-        final String q = switch (quantifier) {
+        final var q = switch (quantifier) {
             case ZeroOrMore x -> "*";
             case OneOrMore x ->  "+";
             case Optional x ->   "?";
         };
         final Function<String, String> wrapper = switch (quantifier.term()) {
             case Sequence seq when (seq.size() > 1) -> "(%s)"::formatted;
-            default -> Function.identity();
+            default -> identity();
         };
 
         return wrapper.apply(convert(quantifier.term())) + q;
@@ -196,8 +226,7 @@ public class BnfToG4 {
     static boolean isSingleTerminalRule(final Rule rule) {
         return switch (rule) {
             case Specialization $ -> false;
-            case Derivation derivation -> derivation.rhs().options().stream()
-                    .allMatch(seq -> seq.size() == 1 && seq.getFirst() instanceof Terminal);
+            case Derivation derivation -> derivation.rhs().options().stream().allMatch(term -> term instanceof Terminal);
         };
     }
 
@@ -219,8 +248,8 @@ public class BnfToG4 {
     /**
      * Generates a custom token type for ANTLR corresponding to the token in the BNF grammar.
      */
-    class TokenSourceGenerator {
-        final Token token;
+    private class TokenSourceGenerator {
+        private final Token token;
 
         TokenSourceGenerator(final Token token) {
             this.token = token;
@@ -238,7 +267,7 @@ public class BnfToG4 {
         }
 
         protected MethodSpec makeConstructor(final List<FieldSpec> fields) {
-            final List<ParameterSpec> parameterSpecs = fields.stream()
+            final var parameterSpecs = fields.stream()
                     .map(f -> ParameterSpec.builder(f.type, f.name, FINAL).build())
                     .toList();
 
@@ -270,16 +299,69 @@ public class BnfToG4 {
     }
 
     private static CodeBlock makeStatements(final Collection<? extends CodeBlock> codeBlocks) {
-        var builder = CodeBlock.builder();
-        for (final CodeBlock codeBlock : codeBlocks) {
-            builder = builder.addStatement(codeBlock);
-        }
+        final var builder = CodeBlock.builder();
+        codeBlocks.forEach(builder::addStatement);
         return builder.build();
     }
 
     // -------------------- Utilities
 
-    private static BNF stripParameters(final BNF bnf) {
+    public static final GrammarTransformer labelTokens = bnf -> bnf.transformRules(rule -> switch (rule) {
+        case Derivation derivation when isSingleTerminalRule(derivation) -> derivation.mapRhs(term -> {
+            final Terminal terminal = (Terminal) term;
+            return !terminal.metadata().has(Metadata.Label.class)
+                    ? terminal.annotate(Metadata.label("token"))
+                    : terminal;
+        });
+        default -> rule;
+    });
+
+    /**
+     * Transform the {@link CanonicalEqlGrammar.EqlVariable#Select} rule.
+     * <p>
+     * On the ANTLR grammar level all {@linkplain EqlTerminal#select selects} are equal as there is
+     * no information about token parameters, thus there is no need to distinguish {@linkplain CanonicalEqlGrammar.EqlVariable#SourcelessSelect sourceless selects}
+     * (which would also introduce ambiguity and slow down the parser).
+     */
+    private static final GrammarTransformer transformSelect = bnf -> {
+        return bnf.mergeFrom($ -> $.
+                specialize(Select).into(SelectFrom).
+                annotate(Select, inline())
+                );
+    };
+
+    /**
+     * Transforms the {@link CanonicalEqlGrammar.EqlVariable#YieldOperandExpr} rule to prevent ambiguities in the generated
+     * ANTLR grammar.
+     * <p>
+     * Yield operands can be said to <i>extend</i> regular single operands. This gives rise to an interesting case:
+     * yielded expressions (delimited by {@link EqlTerminal#beginExpr} & {@link EqlTerminal#endExpr})
+     * can contain the whole set of yield operands, not just single operands (see {@link CanonicalEqlGrammar.EqlVariable#YieldOperandExpr}).
+     * Therefore, we need a separate rule for yielded expressions. However, if it used the same pair of delimiters
+     * (i.e., {@code beginExpr} & {@code endExpr}), an ambiguity would occur: is this a single operand or a yield operand?
+     * This could be resolved with ANTLR's semantic predicates, but introducing a new pair of delimiters (the chosen
+     * approach) is much simpler.
+     * <p>
+     * <b>N.B.</b>: {@link EqlTerminal#endYieldExpr} was introduced for the sake of consistency, we could have used
+     * {@link EqlTerminal#beginYieldExpr} ... {@code endExpr} as well.
+     * On the ANTLR grammar level all {@linkplain EqlTerminal#select selects} are equal as there is
+     * no information about token parameters, thus there is no need to distinguish {@linkplain CanonicalEqlGrammar.EqlVariable#SourcelessSelect sourceless selects}
+     * (which would also introduce ambiguity and slow down the parser).
+     */
+    private static final GrammarTransformer transformYieldOperandExpr = bnf -> {
+        return bnf.transformRule(YieldOperandExpr, rule -> {
+            return ((Derivation) rule).recMap(term -> {
+                if (term.normalize() == beginExpr) {
+                    return beginYieldExpr;
+                } else if (term.normalize() == endExpr) {
+                    return endYieldExpr;
+                }
+                return term;
+            });
+        });
+    };
+
+    private static final GrammarTransformer stripParameters = bnf -> {
         final Set<Rule> newRules = bnf.rules().stream()
                 .map(rule -> switch (rule) {
                     case Derivation derivation -> derivation.recMap(term -> switch (term) {
@@ -299,28 +381,179 @@ public class BnfToG4 {
                 .collect(toSet());
 
         return new BNF(newTerminals, bnf.variables(), bnf.start(), newRules);
-    }
+    };
 
     /**
      * @return a new rule without duplicate alternations on the right-hand side
      */
-    private static Rule deduplicate(Rule rule) {
+    private static Rule deduplicate(final Rule rule) {
         return switch (rule) {
-            case Derivation d -> new Derivation(d.lhs(), new Alternation(d.rhs().options().stream().distinct().toList(), d.rhs().metadata()));
-            case Specialization s -> new Specialization(s.lhs(), s.specializers().stream().distinct().toList());
+            case Derivation d -> new Derivation(d.lhs(), new Alternation(d.rhs().options().stream().distinct().toList(), d.rhs().metadata()), d.metadata());
+            case Specialization s -> new Specialization(s.lhs(), s.specializers().stream().distinct().toList(), s.metadata());
         };
     }
 
-    private static <T, R> List<R> enumerate(Collection<? extends T> items, BiFunction<? super T, Integer, ? extends R> mapper) {
-        var result = new ArrayList<R>(items.size());
+    /**
+     * A rule associated with a variable that occurs in another rule's body is inlineable if that variable doesn't occur
+     * anywhere else.
+     * <p>
+     * A rule can be inlined if any of the following holds:
+     * <ul>
+     *   <li> Its RHS consists of a single alternative. For example, {@code Add = Number + Number}.
+     *   <li> Its RHS consists of an alternation of sole terminals. For example, {@code Symbol = a | b | c}.
+     * </ul>
+     *
+     * To inline a rule is to inline a variable associated with that rule. For example,
+     * <pre>
+     * Condition = Predicate Argument | AndCondition
+     * AndCondition = Condition and Condition
+     *
+     * // AndCondition can be inlined
+     *
+     * Condition = Predicate Argument | Condition and Condition
+     * </pre>
+     */
+    private static final class RuleInliner {
+        public static final GrammarTransformer inlineRules = bnf ->
+                bnf.rules().stream()
+                        .reduce(bnf,
+                                (accBnf, rule) -> new RuleInliner(accBnf).inlineRule(rule.lhs()),
+                                ($1, $2) -> {throw new UnsupportedOperationException("No combiner.");});
 
-        int i = 0;
-        for (final T item : items) {
-            result.add(mapper.apply(item, i));
-            i++;
+        private final BNF bnf;
+
+        private RuleInliner(final BNF bnf) {
+            this.bnf = bnf;
         }
 
-        return result;
+        public BNF inlineRule(final Variable variable) {
+            return bnf.findRuleFor(variable).map(rule -> {
+                final var result = inline(rule);
+                return !result.wasInlined()
+                        ? bnf
+                        : new RuleInliner(bnf.addRule(result.rule()).removeVars(result.variables()))
+                                .inlineRule(result.rule().lhs());
+            }).orElse(bnf);
+        }
+
+        private record Result (Rule rule, Set<Variable> variables) {
+            public boolean wasInlined() {
+                return !variables.isEmpty();
+            }
+
+            public boolean wasInlined(final Variable variable) {
+                return variables.contains(variable);
+            }
+
+            public Result mapRuleIfInlined(final Function<? super Derivation, ? extends Rule> fn) {
+                return wasInlined() ? new Result(fn.apply((Derivation) rule), variables) : this;
+            }
+        }
+
+        /**
+         * Returns an inlined rule and variables that were inlined in the original rule.
+         */
+        private Result inline(final Rule rule) {
+            final var result = switch (rule) {
+                case Derivation derivation -> inline(derivation);
+                case Specialization specialization -> inline(specialization);
+            };
+            return result.mapRuleIfInlined(newRule -> {
+                // inlined single-variable alternatives should be annotated with alternative labels named after the inlined variable
+                // Condition = AndCondition
+                // after inlining:
+                // Condition = Condition and Condition # AndCondition
+                return newRule.updateRhs(options -> StreamUtils.zip(rule.rhs().options(), newRule.rhs().options(), (origTerm, newTerm) -> {
+                    return origTerm instanceof Variable origVar && result.wasInlined(origVar)
+                            ? newTerm.annotate(altLabel(origVar.name()))
+                            : newTerm;
+                }).toList());
+            });
+        }
+
+        private Result inline(final Derivation derivation) {
+            final var variables = ImmutableSet.<Variable>builder();
+            final var newRule = derivation.recMap(term -> {
+                if (term instanceof Variable var) {
+                    return inlineIn(var, derivation).map(inlined -> {
+                        variables.add(var);
+                        return inlined;
+                    }).orElse(term);
+                }
+                return term;
+            });
+            return new Result(newRule, variables.build());
+        }
+
+        private Result inline(final Specialization rule) {
+            final var variables = new HashSet<Variable>();
+            final var inlinedSpecializers = rule.specializers().stream()
+                    .map(var -> {
+                        return inlineIn(var, rule).map(inlined -> {
+                            variables.add(var);
+                            return inlined;
+                        }).orElse(var);
+                    }).toList();
+            return variables.isEmpty()
+                    ? new Result(rule, variables)
+                    : new Result(new Derivation(rule.lhs(), new Alternation(inlinedSpecializers), rule.metadata()), variables);
+        }
+
+        /**
+         * Returns the result of inlining a variable inside a rule. If the variable can't be inlined, an empty optional
+         * is returned.
+         */
+        private java.util.Optional<Term> inlineIn(final Variable variable, final Rule rule) {
+            if (bnf.getRuleFor(variable).metadata().has(Inline.class)) {
+                if (countRhsOccurrences(variable, rule) == 1 && occursOnlyInRhsOf(variable, rule)) {
+                    final var varRule = bnf.getRuleFor(variable);
+                    if (isSingleAltRule(varRule)) {
+                        return java.util.Optional.of(varRule.rhs().options().getFirst());
+                    } else if (varRule instanceof Derivation derivation) {
+                        return matchRuleWithSingleTerminals(derivation).map(Alternation::new);
+                    }
+                }
+            }
+
+            return java.util.Optional.empty();
+        }
+
+        /**
+         * Does a symbol occur only in the RHS of the specified rule?
+         */
+        private boolean occursOnlyInRhsOf(final Symbol symbol, final Rule rule) {
+            final var occurences = BnfUtils.findRhsOccurences(symbol, bnf).toList();
+            return occurences.size() == 1 && rule.equals(occurences.getFirst());
+        }
+
+        /**
+         * Is this a rule whose RHS is an alternation of terminals?
+         */
+        private java.util.Optional<List<Terminal>> matchRuleWithSingleTerminals(final Rule rule) {
+            final List<Terminal> terminals = new ArrayList<>();
+            for (final Term option : rule.rhs().options()) {
+                if (option instanceof Terminal terminal) {
+                    terminals.add(terminal);
+                } else {
+                    return java.util.Optional.empty();
+                }
+            }
+            return java.util.Optional.of(terminals);
+        }
+    }
+
+    private static <T, R> List<R> enumerate(final Collection<? extends T> items, final BiFunction<? super T, Integer, R> mapper) {
+        return enumerate(items.stream(), mapper).toList();
+    }
+
+    private static <X, R> Stream<R> enumerate(final Stream<? extends X> xs, final BiFunction<? super X, Integer, R> fn) {
+        return StreamUtils.zip(xs, IntStream.iterate(0, i -> i + 1).boxed(), fn);
+    }
+
+    private static Stream<Rule> replicateOrder(final Collection<Rule> rules, final Collection<Rule> orderedRules) {
+        final var orderedRulesIndexes = enumerate(orderedRules.stream(), T2::t2)
+                .collect(toMap(t2 -> t2._1.lhs().name(), t2 -> t2._2));
+        return rules.stream().sorted(comparing(rule -> orderedRulesIndexes.getOrDefault(rule.lhs().name(), Integer.MAX_VALUE)));
     }
 
 }

@@ -6,6 +6,7 @@ import java.util.*;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.function.Function.identity;
+import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 
 final class CompositeTypeMetadataImpl implements TypeMetadata.Composite {
 
@@ -29,7 +30,16 @@ final class CompositeTypeMetadataImpl implements TypeMetadata.Composite {
     }
 
     @Override
-    public Optional<PropertyMetadata> property(final String name) {
+    public PropertyMetadata property(final String name) {
+        final var property = properties.get(name);
+        if (property == null) {
+            throw noSuchPropertyException(javaType, name);
+        }
+        return property;
+    }
+
+    @Override
+    public Optional<PropertyMetadata> propertyOpt(final String name) {
         return Optional.ofNullable(properties.get(name));
     }
 

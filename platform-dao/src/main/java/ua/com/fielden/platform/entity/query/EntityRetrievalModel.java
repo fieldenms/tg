@@ -215,8 +215,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-        final PropertyMetadata pm = domainMetadata.forProperty(getEntityType(), propName)
-                .orElseThrow(() -> new EqlException("Property [%s] not found in [%s].".formatted(propName, getEntityType())));
+        final PropertyMetadata pm = domainMetadata.forProperty(getEntityType(), propName);
 
         final var propType = unwrap(pm.type());
         if (propType.javaType() != fetchModel.getEntityType()) {
@@ -244,7 +243,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     @Override
     public boolean containsOnlyTotals() {
         return getPrimProps().stream()
-                .allMatch(prop -> entityMetadata.property(prop)
+                .allMatch(prop -> entityMetadata.propertyOpt(prop)
                         .flatMap(PropertyMetadata::asCalculated)
                         .map(pm -> pm.data().forTotals())
                         .orElse(FALSE));

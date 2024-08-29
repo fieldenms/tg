@@ -26,7 +26,7 @@ public class BnfToHtml {
 
     public BnfToHtml() {}
 
-    public String bnfToHtml(BNF bnf) {
+    public String bnfToHtml(final BNF bnf) {
         // @formatter:off
         return document(
                 html(
@@ -44,7 +44,7 @@ public class BnfToHtml {
     }
 
     protected DomContent makeStyle() {
-        var sb = new StringBuilder();
+        final var sb = new StringBuilder();
 
         sb.append("""
                 .%s {
@@ -87,7 +87,7 @@ public class BnfToHtml {
         return style(sb.toString());
     }
 
-    protected DomContent toHtml(Rule rule) {
+    protected DomContent toHtml(final Rule rule) {
         var first = tr(
                 td(a(rule.lhs().name()).attr("name", rule.lhs().name()).withClass(NONTERMINAL_LHS_CLASS)),
                 td(""));
@@ -99,7 +99,7 @@ public class BnfToHtml {
         return tr(td(), td(toHtml(term)));
     }
 
-    protected DomContent toHtml(Term term) {
+    protected DomContent toHtml(final Term term) {
         return switch (term) {
             case Symbol symbol -> toHtml(symbol);
             case Sequence sequence -> toHtml(sequence);
@@ -107,29 +107,29 @@ public class BnfToHtml {
         };
     }
 
-    protected DomContent toHtml(Symbol symbol) {
+    protected DomContent toHtml(final Symbol symbol) {
         return switch (symbol) {
             case Terminal terminal -> toHtml(terminal);
             case Variable variable -> toHtml(variable);
         };
     }
 
-    protected DomContent toHtml(Variable variable) {
+    protected DomContent toHtml(final Variable variable) {
         return a(variable.name()).withHref("#" + variable.name()).withClass(NONTERMINAL_CLASS);
     }
 
-    protected DomContent toHtml(Terminal terminal) {
+    protected DomContent toHtml(final Terminal terminal) {
         return switch (terminal) {
             case Token token -> toHtml(token);
             default -> terminalToHtml(terminal);
         };
     }
 
-    protected DomContent terminalToHtml(Terminal terminal) {
+    protected DomContent terminalToHtml(final Terminal terminal) {
         return span(terminal.name()).withClass(TERMINAL_CLASS);
     }
 
-    protected DomContent toHtml(Token token) {
+    protected DomContent toHtml(final Token token) {
         if (!token.hasParameters()) {
             return terminalToHtml(token);
         }
@@ -140,23 +140,23 @@ public class BnfToHtml {
                 text(")"));
     }
 
-    protected DomContent toHtml(Parameter parameter) {
+    protected DomContent toHtml(final Parameter parameter) {
         return switch (parameter) {
             case NormalParameter singleParameter -> toHtml(singleParameter);
             case VarArityParameter varArityParameter -> toHtml(varArityParameter);
         };
     }
 
-    protected DomContent toHtml(NormalParameter parameter) {
+    protected DomContent toHtml(final NormalParameter parameter) {
         String name = parameter.type().getSimpleName();
         return wrapParameter(name);
     }
 
-    protected DomContent toHtml(VarArityParameter parameter) {
+    protected DomContent toHtml(final VarArityParameter parameter) {
         return each(wrapParameter(parameter.type().getSimpleName()), text("*"));
     }
 
-    private static DomContent wrapParameter(String text) {
+    private static DomContent wrapParameter(final String text) {
         return span("<%s>".formatted(text)).withClass(PARAMETER_CLASS);
     }
 
@@ -192,27 +192,29 @@ public class BnfToHtml {
         );
     }
 
-    protected DomContent toHtml(Sequence seq) {
+    protected DomContent toHtml(final Sequence seq) {
         return each(withDelimiter(seq.stream().map(this::toHtml), text(" ")));
     }
 
-    private static <T, D extends T> Stream<T> withDelimiter(Stream<T> stream, D delimiter) {
+    private static <T, D extends T> Stream<T> withDelimiter(final Stream<T> stream, final D delimiter) {
         return StreamSupport.stream(withDelimiter(stream.spliterator(), delimiter), false);
     }
 
-    private static <T, D extends T> Spliterator<T> withDelimiter(final Spliterator<T> splitr, D delimiter) {
+    private static <T, D extends T> Spliterator<T> withDelimiter(final Spliterator<T> splitr, final D delimiter) {
         return new Spliterators.AbstractSpliterator<>(splitr.estimateSize(), 0) {
-            boolean afterFirst = false;
+            private boolean afterFirst = false;
 
             @Override
             public boolean tryAdvance(final Consumer<? super T> consumer) {
                 final boolean hadNext = splitr.tryAdvance(elt -> {
-                    if (afterFirst)
+                    if (afterFirst) {
                         consumer.accept(delimiter);
+                    }
                     consumer.accept(elt);
                 });
-                if (hadNext)
+                if (hadNext) {
                     afterFirst = true;
+                }
                 return hadNext;
             }
         };

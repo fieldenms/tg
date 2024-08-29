@@ -2,6 +2,8 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -28,7 +30,28 @@ sealed public interface EntityMetadata extends TypeMetadata {
 
     Collection<PropertyMetadata> properties();
 
-    Optional<PropertyMetadata> property(String name);
+    /**
+     * Retrieves metadata for a property if it exists in this entity type, otherwise throws an exception.
+     * </p>
+     * {@link #propertyOpt(String)} is a non-throwing alternative.
+     */
+    PropertyMetadata property(String name);
+
+    /**
+     * Non-throwing alternative to {@link #property(String)}.
+     */
+    Optional<PropertyMetadata> propertyOpt(String name);
+
+    /**
+     * Returns metadata for a property represented by the given meta-property.
+     * <ul>
+     *   <li> If the property has metadata, returns an optional describing it.
+     *   <li> If the property doesn't have metadata but satisfies {@link AbstractEntity#isAlwaysMetaProperty(String)},
+     *   returns an empty optional.
+     *   <li> Otherwise, returns an error.
+     * </ul>
+     */
+    Either<RuntimeException, Optional<PropertyMetadata>> property(MetaProperty<?> metaProperty);
 
     <R> R match(EntityMetadataVisitor<R> visitor);
 

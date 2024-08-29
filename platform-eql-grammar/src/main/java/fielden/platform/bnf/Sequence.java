@@ -1,37 +1,65 @@
 package fielden.platform.bnf;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
+/**
+ * A sequence of terms, which is itself a term. More commonly known as <i>grouping</i>.
+ */
 public final class Sequence implements List<Term>, Term {
 
-    private static final Sequence EMPTY_SEQUENCE = new Sequence();
+    private static final Sequence EMPTY_SEQUENCE = new Sequence(ImmutableList.of());
 
     private final List<Term> terms;
-    private final TermMetadata metadata;
+    private final Metadata metadata;
 
-    public Sequence(Collection<? extends Term> terms, TermMetadata metadata) {
-        this.terms = List.copyOf(terms);
+    private Sequence(final Collection<? extends Term> terms, Metadata metadata) {
+        this.terms = ImmutableList.copyOf(terms);
         this.metadata = metadata;
     }
 
-    public Sequence(Collection<? extends Term> terms) {
-        this(terms, TermMetadata.EMPTY_METADATA);
+    private Sequence(final Collection<? extends Term> terms) {
+        this(terms, Metadata.EMPTY_METADATA);
     }
 
-    public Sequence(Term... terms) {
-        this(Arrays.asList(terms), TermMetadata.EMPTY_METADATA);
+    public static Sequence of(final Term... terms) {
+        return of(ImmutableList.copyOf(terms));
     }
 
-    public static Sequence of(Term... terms) {
-        if (terms.length == 0) {
+    public static Sequence of(final Collection<? extends Term> terms) {
+        if (terms.isEmpty()) {
             return EMPTY_SEQUENCE;
         }
-        else if (terms.length == 1 && terms[0] instanceof Sequence seq) {
+        else if (terms.size() == 1 && terms.iterator().next() instanceof Sequence seq) {
             return seq;
         }
         return new Sequence(terms);
+    }
+
+    /**
+     * Given a single term, returns it, otherwise returns a sequence containing all given terms.
+     */
+    public static Term seqOrTerm(Term... terms) {
+        return terms.length == 1 ? terms[0] : of(terms);
+    }
+
+    /**
+     * Given a single term, returns it, otherwise returns a sequence containing all given terms.
+     */
+    public static Term seqOrTerm(Term term, Term... terms) {
+        return terms.length == 0 ? term : of(ImmutableList.<Term>builder().add(term).add(terms).build());
+    }
+
+    /**
+     * Given a single term, returns it, otherwise returns a sequence containing all given terms.
+     */
+    public static Term seqOrTerm(Collection<? extends Term> terms) {
+        return terms.size() == 1 ? terms.iterator().next() : of(terms);
     }
 
     @Override
@@ -40,17 +68,23 @@ public final class Sequence implements List<Term>, Term {
     }
 
     @Override
-    public <V> Sequence annotate(final TermMetadata.Key<V> key, final V value) {
-        return new Sequence(terms, TermMetadata.merge(metadata, key, value));
+    public Metadata metadata() {
+        return metadata;
+    }
+
+    @Override
+    public Sequence annotate(final Metadata.Annotation annotation) {
+        return new Sequence(terms, Metadata.merge(metadata, annotation));
     }
 
     @Override
     public Sequence recMap(final Function<? super Term, ? extends Term> mapper) {
-        return new Sequence(terms.stream().map(t -> t.recMap(mapper)).toList(), metadata);
+        return new Sequence(terms.stream().map(t -> t.recMap(mapper)).collect(toImmutableList()), metadata);
     }
 
+    @Override
     public Sequence map(final Function<? super Term, ? extends Term> mapper) {
-        return new Sequence(terms.stream().map(mapper).toList(), metadata);
+        return new Sequence(terms.stream().map(mapper).collect(toImmutableList()), metadata);
     }
 
     @Override
@@ -135,7 +169,7 @@ public final class Sequence implements List<Term>, Term {
 
     @Override
     public boolean equals(final Object o) {
-        return terms.equals(o);
+        return this == o || o instanceof Sequence that && terms.equals(that.terms);
     }
 
     @Override

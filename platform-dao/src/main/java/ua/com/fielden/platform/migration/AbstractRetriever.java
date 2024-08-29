@@ -45,12 +45,8 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
         return null;
     }
 
-    public static FieldMapping field(final String key, final String stmt) {
-        return new FieldMapping(key, stmt);
-    }
-
-    public static FieldMapping field(final IConvertableToPath path, final String stmt) {
-        return new FieldMapping(path.toPath(), stmt);
+    public static FieldMapping field(final CharSequence key, final String stmt) {
+        return new FieldMapping(key.toString(), stmt);
     }
 
     protected static class FieldMapping {
