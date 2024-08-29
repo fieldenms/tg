@@ -4,9 +4,37 @@ import org.junit.Test;
 import ua.com.fielden.platform.error.Result;
 
 import static graphql.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class RichTextMarkdownSanitizationTest {
+
+    @Test
+    public void blank_lines_are_preserved() {
+        assertSanitizationSuccess("""
+        first
+        
+        \t\t
+        
+        second
+        """);
+        assertSanitizationSuccess("""
+        first
+        
+        \t\r
+        second
+        """);
+    }
+
+    @Test
+    public void empty_text() {
+        assertSameAfterSanitization("");
+    }
+
+    @Test
+    public void empty_lines_are_preserved() {
+        assertSameAfterSanitization("\n\n\n");
+    }
 
     @Test
     public void script_tag_is_prohibited() {
@@ -45,9 +73,9 @@ public class RichTextMarkdownSanitizationTest {
 
     @Test
     public void image_tag_is_allowed() {
-        assertSanitizationSuccess("""
+        assertSameAfterSanitization("""
         This is my cat:
-        <img src="cat.jpeg"/>
+        <img src="cat.jpeg" />
         Isn't he adorable?
         """);
         assertSanitizationSuccess("This is my cat: <img src=\"cat.jpeg\"/> Isn't he adorable?");
@@ -55,18 +83,49 @@ public class RichTextMarkdownSanitizationTest {
 
     @Test
     public void bold_text_is_allowed() {
-        assertSanitizationSuccess("the <b>big</b> bang");
-        assertSanitizationSuccess("the <b>big</B> bang");
-        assertSanitizationSuccess("the <B>big</b> bang");
-        assertSanitizationSuccess("the <B>big</B> bang");
+        assertAfterSanitization("the <b>big</b> bang", "the <b>big</b> bang");
+        assertAfterSanitization("the <b>big</b> bang", "the <b>big</B> bang");
+        assertAfterSanitization("the <b>big</b> bang", "the <B>big</b> bang");
+        assertAfterSanitization("the <b>big</b> bang", "the <B>big</B> bang");
     }
 
     @Test
     public void italic_text_is_allowed() {
-        assertSanitizationSuccess("the <i>big</i> bang");
-        assertSanitizationSuccess("the <I>big</i> bang");
-        assertSanitizationSuccess("the <i>big</I> bang");
-        assertSanitizationSuccess("the <I>big</I> bang");
+        assertAfterSanitization("the <i>big</i> bang", "the <i>big</i> bang");
+        assertAfterSanitization("the <i>big</i> bang", "the <I>big</i> bang");
+        assertAfterSanitization("the <i>big</i> bang", "the <i>big</I> bang");
+        assertAfterSanitization("the <i>big</i> bang", "the <I>big</I> bang");
+    }
+
+    @Test
+    public void non_html_contents_are_not_modified_by_sanitization() {
+        assertSameAfterSanitization("the *big* `bang` in [the universe](link)");
+        assertSameAfterSanitization("""
+        And Hagrid said:
+        > You're a Wizard, Harry.
+        
+        Abc""");
+        assertSameAfterSanitization("""
+        ### Heading
+        * a
+          * b - definition
+        ---""");
+        assertSameAfterSanitization("""
+        Example:
+        ```lisp
+        (apply '+ '(1 2 3))
+        ```
+        End.
+        """);
+    }
+
+    @Test
+    public void non_html_contents_in_one_line_with_html_are_not_modified_by_sanitization() {
+        assertAfterSanitization("the *big* <b>bang</b> in [the universe](link)",
+                                "the *big* <b>bang</b> in [the universe](link)");
+        // *bang* is parsed as strong emphasis Node, not as Text inside <b> tags, thus <b> tags are sanitized separately
+        assertAfterSanitization("the *big* <b></b>*bang* in [the universe](link)",
+                                "the *big* <b>*bang*</b> in [the universe](link)");
     }
 
     private void assertSanitizationFailure(final String input) {
@@ -78,6 +137,19 @@ public class RichTextMarkdownSanitizationTest {
         if (!result.isSuccessful()) {
             fail(result.getMessage());
         }
+    }
+
+    private void assertAfterSanitization(final String expected, final String input) {
+        final Result result = RichText.sanitizeMarkdown(input);
+        if (!result.isSuccessful()) {
+            fail(result.getMessage());
+        } else {
+            assertEquals(expected, result.getInstance(RichText.class).formattedText());
+        }
+    }
+
+    private void assertSameAfterSanitization(final String input) {
+        assertAfterSanitization(input, input);
     }
 
 }
