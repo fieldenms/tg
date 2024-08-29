@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.dbschema;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.meta.*;
@@ -44,7 +45,7 @@ public class HibernateMappingsGenerator {
     }
 
     public String generateMappings() {
-        final StringBuffer sb = new StringBuffer();
+        final var sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");
         sb.append("\"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n");
@@ -56,7 +57,7 @@ public class HibernateMappingsGenerator {
                 .sorted(comparing(em -> em.javaType().getSimpleName())) // sort for testing purposes
                 .forEach(em -> {
                     try {
-                        String tableName = domainMetadata.getTableForEntityType(em.javaType()).name();
+                        final var tableName = domainMetadata.getTableForEntityType(em.javaType()).name();
                         sb.append(generateEntityClassMapping(domainMetadata, em, tableName, dbVersion));
                     } catch (final Exception ex) {
                         LOGGER.error(ex);
@@ -69,15 +70,15 @@ public class HibernateMappingsGenerator {
         return sb.toString();
     }
 
-    private String generateEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
-        final StringBuilder sb = new StringBuilder();
+    private static String generateEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
+        final var sb = new StringBuilder();
         sb.append("\t<id name=\"" + name + "\" column=\"" + columnName + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
         sb.append("\t</id>\n");
         return sb.toString();
     }
 
-    private String generateOneToOneEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
-        final StringBuffer sb = new StringBuffer();
+    private static String generateOneToOneEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
+        final var sb = new StringBuffer();
         sb.append("\t<id name=\"" + name + "\" column=\"" + columnName + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
         sb.append("\t\t<generator class=\"foreign\">\n");
         sb.append("\t\t\t<param name=\"property\">key</param>\n");
@@ -87,29 +88,29 @@ public class HibernateMappingsGenerator {
         return sb.toString();
     }
 
-    private String generateEntityVersionMapping(final String name, final String columnName, final String hibTypeName) {
-        final StringBuffer sb = new StringBuffer();
+    private static String generateEntityVersionMapping(final String name, final String columnName, final String hibTypeName) {
+        final var sb = new StringBuffer();
         sb.append("\t<version name=\"" + name + "\" type=\"" + hibTypeName + "\" access=\"field\" insert=\"false\">\n");
         sb.append("\t\t<column name=\"" + columnName + "\" default=\"0\" />\n");
         sb.append("\t</version>\n");
         return sb.toString();
     }
 
-    private String generateManyToOnePropertyMapping(final String propName, final String columnName, final Class entityType) {
-        final StringBuffer sb = new StringBuffer();
+    private static String generateManyToOnePropertyMapping(final String propName, final String columnName, final Class entityType) {
+        final var sb = new StringBuffer();
         sb.append("\t<many-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" column=\"" + columnName + "\"");
         sb.append("/>\n");
         return sb.toString();
     }
 
-    private String generateOneToOnePropertyMapping(final String propName, final Class entityType) {
+    private static String generateOneToOnePropertyMapping(final String propName, final Class entityType) {
         return "\t<one-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" constrained=\"true\"/>\n";
     }
 
-    private String generateUnionEntityPropertyMapping(final PropertyMetadata pm) {
+    private static String generateUnionEntityPropertyMapping(final PropertyMetadata pm, final PropertyMetadataUtils pmUtils) {
         final var entityType = (Class<?>) pm.type().javaType();
 
-        final StringBuffer sb = new StringBuffer();
+        final var sb = new StringBuffer();
         sb.append("\t<component name=\"" + pm.name() + "\" class=\"" + entityType.getName() + "\">\n");
 
         pmUtils.subProperties(pm).stream()
@@ -127,24 +128,26 @@ public class HibernateMappingsGenerator {
     /**
      * @param column  either a single column or multiple column names
      */
-    private String generatePlainPropertyMapping(final String propName,
-                                                final Either<PropColumn, List<String>> column,
-                                                final String hibTypeName) {
-        final String propNameClause = "\t<property name=\"" + propName + "\"";
-        final String typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
-        final String endClause = "/>\n";
+    private static String generatePlainPropertyMapping(
+            final String propName,
+            final Either<PropColumn, List<String>> column,
+            final String hibTypeName)
+    {
+        final var propNameClause = "\t<property name=\"" + propName + "\"";
+        final var typeClause = hibTypeName == null ? "" : " type=\"" + hibTypeName + "\"";
+        final var endClause = "/>\n";
         return column.fold(
-                singleCol -> {
-                    final String columnClause = " column=\"" + singleCol.name + "\"";
-                    final String lengthClause = singleCol.length == null ? "" : " length=\"" + singleCol.length + "\"";
-                    final String precisionClause = singleCol.precision == null ? "" : " precision=\"" + singleCol.precision + "\"";
-                    final String scaleClause = singleCol.scale == null ? "" : " scale=\"" + singleCol.scale + "\"";
+                singleColumn -> {
+                    final var columnClause = " column=\"" + singleColumn.name + "\"";
+                    final var lengthClause = singleColumn.length == null ? "" : " length=\"" + singleColumn.length + "\"";
+                    final var precisionClause = singleColumn.precision == null ? "" : " precision=\"" + singleColumn.precision + "\"";
+                    final var scaleClause = singleColumn.scale == null ? "" : " scale=\"" + singleColumn.scale + "\"";
                     return propNameClause + columnClause + typeClause + lengthClause + precisionClause + scaleClause + endClause;
                 },
-                multCols -> {
-                    final StringBuffer sb = new StringBuffer();
+                multipleColumns -> {
+                    final var sb = new StringBuffer();
                     sb.append(propNameClause + typeClause + ">\n");
-                    for (final String name : multCols) {
+                    for (final String name : multipleColumns) {
                         sb.append("\t\t<column name=\"" + name + "\"" + endClause);
                     }
                     sb.append("\t</property>\n");
@@ -155,11 +158,14 @@ public class HibernateMappingsGenerator {
     /**
      * Generates mapping for an entity type.
      */
-    private String generateEntityClassMapping(final IDomainMetadata domainMetadata, final EntityMetadata em,
-                                              final String tableName, final DbVersion dbVersion)
+    private static String generateEntityClassMapping(
+            final IDomainMetadata domainMetadata,
+            final EntityMetadata em,
+            final String tableName,
+            final DbVersion dbVersion)
     {
         final Class<? extends AbstractEntity<?>> entityType= em.javaType();
-        final StringBuffer sb = new StringBuffer();
+        final var sb = new StringBuffer();
         sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + tableName + "\">\n");
 
         sb.append(em.propertyOpt(ID).flatMap(PropertyMetadata::asPersistent).map(pm -> {
@@ -187,18 +193,16 @@ public class HibernateMappingsGenerator {
         return sb.toString();
     }
 
-    private boolean anySubPropMatches(final PropertyMetadata pm, final Predicate<? super PropertyMetadata> predicate) {
-        return pmUtils.subProperties(pm).stream().anyMatch(predicate);
-    }
-
     /**
      * Generates mapping string for common property based on it persistence info.
      */
-    private String generatePropertyMappingFromPropertyMetadata(final IDomainMetadata domainMetadata,
-                                                               final PropertyMetadata.Persistent prop) {
+    private static String generatePropertyMappingFromPropertyMetadata(
+            final IDomainMetadata domainMetadata,
+            final PropertyMetadata.Persistent prop)
+    {
         final var pmUtils = domainMetadata.propertyMetadataUtils();
         if (pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
-            return generateUnionEntityPropertyMapping(prop);
+            return generateUnionEntityPropertyMapping(prop, pmUtils);
         }
         // potential multi-column mapping
         else if (prop.type().isComponent() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
@@ -225,8 +229,8 @@ public class HibernateMappingsGenerator {
         }
     }
 
-    private static IllegalArgumentException unexpectedPropNature(Object prop, Object expectedNature) {
-        return new IllegalArgumentException("Expected property [%s] to have nature [%s].".formatted(prop, expectedNature));
+    private static DbSchemaException unexpectedPropNature(final String prop, final PropertyNature expectedNature) {
+        return new DbSchemaException("Expected property [%s] to have nature [%s].".formatted(prop, expectedNature));
     }
 
 }
