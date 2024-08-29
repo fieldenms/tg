@@ -50,4 +50,40 @@ the essential abstraction is that of a function.
         assertEquals(input, output);
     }
 
+    @Test
+    public void lines_before_first_range_are_copied() {
+        final var input = """
+Tasty
+Apple
+Pie
+On
+Sale
+""";
+        final var r1 = T2.t2(new StringRangeReplacement.Range(2, 0, 2, 1), "L");
+        final var output = new StringRangeReplacement(true).replace(input, List.of(r1));
+        assertEquals("""
+Tasty
+Apple
+Lie
+On
+Sale
+""", output);
+    }
+
+    @Test
+    public void multi_line_replacement() {
+        final var input = """
+Programming is
+an act
+of engineering.
+End
+""";
+        final var r1 = T2.t2(new StringRangeReplacement.Range(0, 12, 2, 2), "resembles both art and");
+        final var output = new StringRangeReplacement(true).replace(input, List.of(r1));
+        assertEquals("""
+Programming resembles both art and engineering.
+End
+""", output);
+    }
+
 }
