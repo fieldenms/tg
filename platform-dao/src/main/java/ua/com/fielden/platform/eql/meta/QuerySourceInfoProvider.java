@@ -176,7 +176,7 @@ public class QuerySourceInfoProvider {
                         //       The original comment here was:
                         //       // Finally, if nothing else, the property must be of some primitive type or a type with a custom Hibernate converter:
                         //       // String, Long, Integer, BigDecimal, Date, boolean, Colour, Hyperlink, PropertyDescriptor, SecurityToken.
-                        //       However, this case would also include properties of Synthetic Entity type.
+                        //       However, this case would also include properties of Synthetic Entity type and Value Entity type.
                         //       Although, such properties are recognised as transient (plain).
                             mkPrim(pm);
                 })
