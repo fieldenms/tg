@@ -156,10 +156,8 @@ public final class StringRangeReplacement {
             }
             // handle this line, which may have been part of a previous range
             appendLine(lines.head().substring(cursor.column), sink);
-            // copy whole lines in-between range boundaries if this range spans more than 2 lines
-            if (range.totalLines() > 2) {
-                IteratorUtils.forNextN(lines, range.firstLineIndex - cursor.line - 1, ln -> appendLine(ln, sink));
-            }
+            // handle the rest of the lines before range starts
+            IteratorUtils.forNextN(lines, range.firstLineIndex - cursor.line - 1, ln -> appendLine(ln, sink));
             // advance the iterator to the first line of the range
             lines.next();
             // reposition the cursor at the beginning of the range
