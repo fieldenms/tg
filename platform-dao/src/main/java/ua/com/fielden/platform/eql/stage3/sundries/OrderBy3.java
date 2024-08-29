@@ -27,9 +27,9 @@ public record OrderBy3 (ISingleOperand3 operand, Yield3 yield, boolean isDesc) i
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .addIfNotNull("operand", operand)
                 .addIfNotNull("yield", yield)
                 .add("isDesc", isDesc)
+                .addIfNotNull("operand", operand)
                 .$();
     }
 

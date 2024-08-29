@@ -91,10 +91,10 @@ public record Yield3 (ISingleOperand3 operand, String alias, String column, Prop
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("operand", operand)
+                .add("type", type)
                 .addIfNotNull("alias", alias)
                 .addIfNotNull("column", column)
-                .add("type", type)
+                .add("operand", operand)
                 .$();
     }
 

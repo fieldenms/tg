@@ -82,9 +82,9 @@ public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implem
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("models", models)
                 .add("limit", limit)
                 .add("offset", offset)
+                .add("models", models)
                 .$();
     }
 

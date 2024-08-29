@@ -77,8 +77,8 @@ public record Yields2 (SortedMap<String, Yield2> yieldsMap, boolean allGenerated
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("yields", yieldsMap)
                 .add("allGenerated", allGenerated)
+                .add("yields", yieldsMap)
                 .$();
     }
 

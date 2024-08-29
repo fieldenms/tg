@@ -39,9 +39,9 @@ public record OrderBy2 (ISingleOperand2<? extends ISingleOperand3> operand,
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("operand", operand)
                 .add("yieldName", yieldName)
                 .add("isDesc", isDesc)
+                .add("operand", operand)
                 .$();
     }
 

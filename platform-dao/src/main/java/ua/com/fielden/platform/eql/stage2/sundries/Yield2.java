@@ -28,9 +28,9 @@ public record Yield2(ISingleOperand2<? extends ISingleOperand3> operand, String 
         @Override
         public String toString(final ToString.IFormat format) {
             return format.toString(this)
-                    .add("operand", operand)
                     .add("alias", alias)
                     .add("hasNonnullableHint", hasNonnullableHint)
+                    .add("operand", operand)
                     .$();
         }
 

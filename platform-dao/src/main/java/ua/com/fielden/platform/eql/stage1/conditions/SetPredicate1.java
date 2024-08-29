@@ -43,9 +43,9 @@ public record SetPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> leftO
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
+                .add("negated", negated)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
-                .add("negated", negated)
                 .$();
     }
 

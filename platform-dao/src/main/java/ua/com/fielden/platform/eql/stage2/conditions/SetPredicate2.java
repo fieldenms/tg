@@ -58,9 +58,9 @@ public record SetPredicate2 (ISingleOperand2<? extends ISingleOperand3> leftOper
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
+                .add("negated", negated)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
-                .add("negated", negated)
                 .$();
     }
 

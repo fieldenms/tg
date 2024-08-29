@@ -81,8 +81,8 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString)
-                .add("models", models)
-                .add("isSyntheticEntity", isSyntheticEntity);
+                .add("isSyntheticEntity", isSyntheticEntity)
+                .add("models", models);
     }
 
 }

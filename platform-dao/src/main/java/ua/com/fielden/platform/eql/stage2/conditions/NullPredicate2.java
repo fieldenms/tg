@@ -44,8 +44,8 @@ public record NullPredicate2 (ISingleOperand2<? extends ISingleOperand3> operand
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("operand", operand)
                 .add("negated", negated)
+                .add("operand", operand)
                 .$();
     }
 

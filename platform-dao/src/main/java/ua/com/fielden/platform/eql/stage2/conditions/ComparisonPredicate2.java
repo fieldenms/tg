@@ -58,9 +58,9 @@ public record ComparisonPredicate2 (ISingleOperand2<? extends ISingleOperand3> l
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
+                .add("operator", operator)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
-                .add("operator", operator)
                 .$();
     }
 

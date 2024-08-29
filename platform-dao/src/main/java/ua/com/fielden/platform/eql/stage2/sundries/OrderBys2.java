@@ -98,9 +98,9 @@ public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) impl
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("orderBys", orderBys)
                 .add("limit", limit)
                 .add("offset", offset)
+                .add("orderBys", orderBys)
                 .$();
     }
 

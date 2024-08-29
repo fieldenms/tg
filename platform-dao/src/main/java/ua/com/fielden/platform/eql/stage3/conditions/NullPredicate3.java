@@ -20,8 +20,8 @@ public record NullPredicate3 (ISingleOperand3 operand, boolean negated) implemen
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("operand", operand)
                 .add("negated", negated)
+                .add("operand", operand)
                 .$();
     }
 

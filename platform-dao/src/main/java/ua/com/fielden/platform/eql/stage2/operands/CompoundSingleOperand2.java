@@ -17,8 +17,8 @@ public record CompoundSingleOperand2 (ISingleOperand2<? extends ISingleOperand3>
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("operand", operand)
                 .add("operator", operator)
+                .add("operand", operand)
                 .$();
     }
 

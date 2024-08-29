@@ -27,10 +27,10 @@ public record QuantifiedPredicate3(ISingleOperand3 leftOperand, ComparisonOperat
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("left", leftOperand)
-                .add("right", rightOperand)
                 .add("operand", operator)
                 .add("quantifier", quantifier)
+                .add("left", leftOperand)
+                .add("right", rightOperand)
                 .$();
     }
 

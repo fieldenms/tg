@@ -19,8 +19,8 @@ public record CompoundSingleOperand3 (ISingleOperand3 operand, ArithmeticalOpera
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("operand", operand)
                 .add("operator", operator)
+                .add("operand", operand)
                 .$();
     }
 

@@ -48,9 +48,9 @@ public record ComparisonPredicate3 (ISingleOperand3 leftOperand,
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
+                .add("operator", operator)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
-                .add("operator", operator)
                 .$();
     }
 

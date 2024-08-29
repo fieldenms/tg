@@ -57,9 +57,9 @@ public record LikePredicate2 (ISingleOperand2<? extends ISingleOperand3> leftOpe
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
+                .addIf("options", options, opts -> opts != LikeOptions.DEFAULT_OPTIONS)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
-                .addIf("options", options, opts -> opts != LikeOptions.DEFAULT_OPTIONS)
                 .$();
     }
 

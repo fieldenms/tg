@@ -62,9 +62,9 @@ public record JoinInnerNode2 (IJoinNode2<? extends IJoinNode3> leftNode,
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
+                .add("type", joinType)
                 .add("left", leftNode)
                 .add("right", rightNode)
-                .add("type", joinType)
                 .addIfNot("conditions", joinConditions, Conditions2::isEmpty)
                 .$();
     }

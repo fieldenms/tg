@@ -79,9 +79,9 @@ public abstract class AbstractSource2 implements ToString.IFormattable {
        return format.toString(this)
                .add("id", id)
                .addIfNotNull("alias", alias)
-               .add("querySourceInfo", querySourceInfo)
                .add("isExplicit", isExplicit)
                .add("isPartOfCalcProp", isPartOfCalcProp)
+               .add("querySourceInfo", querySourceInfo)
                .pipe(this::addToString)
                .$();
    }

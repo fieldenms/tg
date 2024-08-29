@@ -35,8 +35,8 @@ public record ExistencePredicate1 (boolean negated, SubQueryForExists1 subQuery)
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
-                .add("subQuery", subQuery)
                 .add("negated", negated)
+                .add("subQuery", subQuery)
                 .$();
     }
 

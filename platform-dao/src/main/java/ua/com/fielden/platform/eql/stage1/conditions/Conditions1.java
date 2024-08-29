@@ -178,9 +178,9 @@ public record Conditions1 (boolean negated,
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
+                .add("negated", negated)
                 .add("first", firstCondition)
                 .addIfNotEmpty("rest", otherConditions)
-                .add("negated", negated)
                 .$();
     }
 

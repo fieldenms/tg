@@ -23,9 +23,9 @@ public record SetPredicate3(ISingleOperand3 leftOperand, boolean negated, ISetOp
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
+                .add("negated", negated)
                 .add("left", leftOperand)
                 .add("right", rightOperand)
-                .add("negated", negated)
                 .$();
     }
 
