@@ -248,7 +248,7 @@ public sealed class RichText permits RichText.Persisted {
                         "b", "strong", // bold text
                         "i", "em", // italic text
                         "u", // underlined text
-                        "del", // strikethrough text
+                        "del", "s", // strikethrough text
                         "sup", // superscript text
                         "sub", // subscript text
                         "mark", // highlighted text
