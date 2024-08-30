@@ -294,8 +294,13 @@ public sealed class RichText permits RichText.Persisted {
             )
             .toFactory();
 
+    private static final PolicyFactory BLOCKQUOTE = new HtmlPolicyBuilder()
+            .allowElements("blockquote")
+            .allowAttributes("cite").onElements("blockquote")
+            .toFactory();
+
     private static final PolicyFactory POLICY_FACTORY =
-        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS).and(LISTS)
+        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS).and(LISTS).and(BLOCKQUOTE)
         .and(new HtmlPolicyBuilder()
                 .allowElements(
                         "b", "strong", // bold text
@@ -308,6 +313,7 @@ public sealed class RichText permits RichText.Persisted {
                         "code", // inline code
                         "pre",  // preformatted text block
                         "br", // line break
+                        "hr", // thematic break (horizontal rule)
                         "span" // generic inline container (used for text colouring)
                 )
                 .toFactory());
