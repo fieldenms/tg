@@ -76,6 +76,22 @@ class TgRichTextInput extends PolymerElement {
         this._editor.setMarkdown(this.value);
     }
 
+    applyHeader1() {
+        this._editor.exec('heading', { level: 1 });
+    }
+
+    applyHeader2() {
+        this._editor.exec('heading', { level: 2 });
+    }
+
+    applyHeader3() {
+        this._editor.exec('heading', { level: 3 });
+    }
+
+    applyParagraph() {
+        this._editor.exec('heading', { level: 0 });
+    }
+
     applyBold() {
         this._editor.exec('bold');
     }
@@ -86,6 +102,28 @@ class TgRichTextInput extends PolymerElement {
 
     applyStrikethough() {
         this._editor.exec('strike');
+    }
+
+    //TODO other methods for link and color text should go here
+
+    applyIndent() {
+        this._editor.exec('indent');
+    }
+
+    applyOutdent() {
+        this._editor.exec('outdent');
+    }
+
+    createBulletList(e) {
+        this._editor.exec('bulletList');
+    }
+
+    createOrderedList(e) {
+        this._editor.exec('orderedList');
+    }
+
+    createTaskList(e) {
+        this._editor.exec('taskList');
     }
 
     makeReadOnly() {
