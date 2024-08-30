@@ -2,14 +2,11 @@ package ua.com.fielden.platform.types;
 
 import org.commonmark.node.*;
 import org.commonmark.renderer.Renderer;
-import ua.com.fielden.platform.utils.StringUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static java.lang.Character.isWhitespace;
+import java.util.stream.Collectors;
 
 /**
  * Renders nodes into <i>core text</i> for {@link RichText}.
@@ -272,78 +269,19 @@ final class CoreTextRenderer implements Renderer {
         }
 
         /**
-         * Transforms a char sequence by stripping whitespace as follows:
-         * <ol>
-         *   <li> Strip all leading whitespace.
-         *   <li> Strip all trailing whitespace.
-         *   <li> Replace newline characters in-between by space characters (effectively joining lines).
-         * </ol>
+         * Matches either {@code \r\n} or {@code \n}.
+         */
+        private static final Pattern NEWLINE_PATTERN = Pattern.compile(Pattern.quote("\r") + '?' + Pattern.quote("\n"));
+
+        /**
+         * Transforms a char sequence by trimming each line and joining the resulting non-empty lines with spaces into a single line.
          */
         private CharSequence stripWs(final CharSequence charSeq) {
             if (charSeq.isEmpty()) {
                 return charSeq;
             }
 
-            StringBuilder sb = null; // might not be necessary to instantiate
-
-            final int end; // last non-whitespace char
-            {
-                int j = charSeq.length() - 1;
-                while (j >= 0 && isWhitespace(charSeq.charAt(j))) {
-                    j--;
-                }
-                end = j;
-            }
-
-            if (end < 0) {
-                return "";
-            }
-
-            int i = 0;
-
-            // skip leading whitespace
-            for (; i <= end; i++) {
-                final char c = charSeq.charAt(i);
-                if (!isWhitespace(c)) {
-                    break;
-                }
-            }
-
-            // Replace consecutive newlines by spaces in body.
-            // If a newline is followed by a whitespace, simply skip that newline.
-            if (i <= end) {
-                if (sb == null) {
-                    sb = new StringBuilder(charSeq.length() - i);
-                }
-
-                // handle all but the 'end' character
-                while (i < end) {
-                    final char c = charSeq.charAt(i);
-                    if (c == '\n' || c == '\r' && !isWhitespace(charSeq.charAt(i + 1))) {
-                        sb.append(' ');
-                        // advance to the next non-newline character
-                        final var nextNonLine = StringUtils.indexOfAnyBut(charSeq, i + 1, end + 1, '\n', '\r');
-                        if (nextNonLine == -1) {
-                            break;
-                        } else {
-                            i = nextNonLine;
-                        }
-                    }
-                    else {
-                        sb.append(c);
-                        i++;
-                    }
-                }
-
-                // handle the 'end' character
-                final var endChar = charSeq.charAt(end);
-                if (endChar != '\n' && endChar != '\r') {
-                    sb.append(charSeq.charAt(end));
-                }
-            }
-
-            // sb == null ==> input contains only whitespace
-            return sb != null ? sb.toString() : charSeq;
+            return NEWLINE_PATTERN.splitAsStream(charSeq).map(String::trim).filter(s -> !s.isBlank()).collect(Collectors.joining(" "));
         }
     }
 
