@@ -5,6 +5,8 @@ import org.commonmark.renderer.Renderer;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Character.isWhitespace;
 
@@ -86,8 +88,49 @@ final class CoreTextRenderer implements Renderer {
         @Override
         public void visit(final HtmlInline htmlInline) {}
 
+        /**
+         * In general, HTML blocks are excluded from core text, but there is an exception to this rule: if a block begins
+         * with a {@code br} tag, then the text that follows it gets included in core text. This is necessitated by an
+         * idiosyncrasy on part of the client-side Markdown editor, which represents blank lines with {@code br} tags and
+         * appends a single newline character after them. If it were to append 2 newline characters after a {@code br},
+         * then the resulting HTML block would consist solely of the {@code br} tag. Instead, it incorporates any text
+         * that might follow it into its block. This is illustrated below.
+         * <p>
+         * The following Markdown produces an HTML block that contains {@code "<br>\nworld"} (line numbers are not part of the Markdown).
+         * <pre>
+         * 1 | hello
+         * 2 |
+         * 3 | &lt;br&gt;
+         * 4 | world
+         * </pre>
+         *
+         * The following Markdown produces an HTML block that contains only {@code "<br>"} (line numbers are not part of the Markdown).
+         * <pre>
+         * 1 | hello
+         * 2 |
+         * 3 | &lt;br&gt;
+         * 4 |
+         * 5 | world
+         * </pre>
+         */
         @Override
-        public void visit(final HtmlBlock htmlBlock) {}
+        public void visit(final HtmlBlock htmlBlock) {
+            final var matcher = BR_BLOCK_PATTERN.matcher(htmlBlock.getLiteral());
+            if (matcher.matches()) {
+                final var content = matcher.group(1);
+                if (content != null && !content.isBlank()) {
+                    writer.append(content);
+                }
+            }
+        }
+
+        /**
+         * Matches an HTML block starting with a {@code <br>} tag. The first capture group will contain text after the
+         * {@code <br>} tag.
+         * <p>
+         * {@link Pattern#DOTALL} flag is required for {@code .} to match any character, including line terminators.
+         */
+        private static final Pattern BR_BLOCK_PATTERN = Pattern.compile("^[ \t]*</?br[ \t\n]*/?>[ \t]*\n(.*)", Pattern.DOTALL);
 
         @Override
         public void visit(final Image image) {
