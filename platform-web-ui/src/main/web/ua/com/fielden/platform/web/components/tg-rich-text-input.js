@@ -68,12 +68,13 @@ class TgRichTextInput extends PolymerElement {
                 change: this._changeValue.bind(this),
                 blur: this.changeEventHandler.bind(this)
             },
+            customHTMLSanitizer: (html) => html,
             useCommandShortcut: true,
             usageStatistics: false,
             toolbarItems: [],
             hideModeSwitch: true
         });
-        this._editor.setMarkdown(this.value);
+        this._editor.setHTML(this.value);
     }
 
     applyHeader1() {
@@ -139,15 +140,15 @@ class TgRichTextInput extends PolymerElement {
     }
 
     _valueChanged(newValue) {
-        if(this._editor && newValue !== this._editor.getMarkdown()) {
-            this._editor.setMarkdown(newValue);
+        if(this._editor && newValue !== this._editor.getHTML()) {
+            this._editor.setHTML(newValue);
         }
     }
 
     _changeValue (e) {
-        const markdownText = this._editor.getMarkdown();
-        if (this.value !== markdownText) {
-            this.value = markdownText;
+        const htmlText = this._editor.getHTML();
+        if (this.value !== htmlText) {
+            this.value = htmlText;
         }
     }
 
