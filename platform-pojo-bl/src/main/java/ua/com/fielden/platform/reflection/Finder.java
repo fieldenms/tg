@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.reflection;
 
-import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.utils.CollectionUtil.first;
-import java.util.stream.Collectors;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +29,7 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
@@ -42,6 +40,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
@@ -812,7 +811,7 @@ public class Finder {
      * @param entityTypes
      * @return
      */
-    public static Set<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+    public static SequencedSet<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
         // (EntityType, Properties)
         final var pairs = entityTypes.stream().map(t -> t2(t, findRealProperties(t))).toList();
 
@@ -822,12 +821,12 @@ public class Finder {
                     return fstPair._2.stream()
                             .filter(prop -> restPairs.stream().allMatch(pair -> isPropertyPresent(prop, fstType, pair._2, pair._1)));
                 }).orElseGet(Stream::of)
-                .map(Field::getName).collect(toSet());
+                .map(Field::getName).collect(toCollection(LinkedHashSet::new));
     }
 
     /**
      * Returns {@code true} if the {@code field} is present in the list of specified properties, which is determined by matching field names and types.
-     * In case of property with name "key", special care is taken to determine its type.
+     * In the case of property with the name "key", special care is taken to determine its type.
      *
      * @param field -- the field to check.
      * @param fieldOwner -- the type where {@code field} is declared; this is required to overcome the problem with the absence of type reification in case of generic inherited properties.
