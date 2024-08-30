@@ -2,6 +2,7 @@ package ua.com.fielden.platform.types;
 
 import org.commonmark.node.*;
 import org.commonmark.renderer.Renderer;
+import ua.com.fielden.platform.utils.StringUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -308,14 +309,36 @@ final class CoreTextRenderer implements Renderer {
                 }
             }
 
-            // replace newlines by spaces in body
+            // Replace consecutive newlines by spaces in body.
+            // If a newline is followed by a whitespace, simply skip that newline.
             if (i <= end) {
                 if (sb == null) {
                     sb = new StringBuilder(charSeq.length() - i);
                 }
-                for (; i <= end; i++) {
+
+                // handle all but the 'end' character
+                while (i < end) {
                     final char c = charSeq.charAt(i);
-                    sb.append(c == '\n' || c == '\r' ? ' ' : c);
+                    if (c == '\n' || c == '\r' && !isWhitespace(charSeq.charAt(i + 1))) {
+                        sb.append(' ');
+                        // advance to the next non-newline character
+                        final var nextNonLine = StringUtils.indexOfAnyBut(charSeq, i + 1, end + 1, '\n', '\r');
+                        if (nextNonLine == -1) {
+                            break;
+                        } else {
+                            i = nextNonLine;
+                        }
+                    }
+                    else {
+                        sb.append(c);
+                        i++;
+                    }
+                }
+
+                // handle the 'end' character
+                final var endChar = charSeq.charAt(end);
+                if (endChar != '\n' && endChar != '\r') {
+                    sb.append(charSeq.charAt(end));
                 }
             }
 

@@ -210,11 +210,11 @@ public class MaxLengthValidatorTest {
     public void RichText_coreText_cannot_be_longer_than_limit() {
         final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
         final var mpRichText = entity.getProperty("richText");
-        entity.setRichText(RichText.fromMarkdown("hello *world*"));
+        entity.setRichText(RichText.fromHtml("hello <b> world </b>"));
         assertFalse(mpRichText.isValid());
         assertEquals(format(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH, 5), mpRichText.getFirstFailure().getMessage());
 
-        entity.setRichText(RichText.fromMarkdown("a"));
+        entity.setRichText(RichText.fromHtml("a"));
         assertTrue(mpRichText.isValid());
     }
 

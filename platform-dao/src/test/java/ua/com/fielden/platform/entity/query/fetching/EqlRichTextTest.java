@@ -18,7 +18,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
 
     @Test
     public void RichText_property_is_interpreted_as_its_core_text() {
-        final var richText = RichText.fromMarkdown("`cons` **does not** evaluate its arguments in a *lazy* language.");
+        final var richText = RichText.fromHtml("<code>cons</code> <b>does not</b> evaluate its arguments in a <i>lazy</i> language.");
         save(new_(EntityWithRichText.class, "1").setText(richText));
 
         assertTrue(co$(EntityWithRichText.class)
@@ -29,7 +29,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
 
     @Test
     public void RichText_components_can_be_used_in_property_paths() {
-        final var richText = RichText.fromMarkdown("`cons` **does not** evaluate its arguments in a *lazy* language.");
+        final var richText = RichText.fromHtml("<code>cons</code> <b>does not</b> evaluate its arguments in a <i>lazy</i> language.");
         save(new_(EntityWithRichText.class, "1").setText(richText));
 
         assertTrue(co$(EntityWithRichText.class)
@@ -44,7 +44,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
 
     @Test
     public void RichText_value_is_interpreted_as_its_core_text() {
-        final var richText = RichText.fromMarkdown("`cons` **does not** evaluate its arguments in a *lazy* language.");
+        final var richText = RichText.fromHtml("<code>cons</code> <b>does not</b> evaluate its arguments in a <i>lazy</i> language.");
         final var entityAgg = co(EntityAggregates.class).getEntity(
                 from(select().yield()
                              .caseWhen().val(richText.coreText()).eq().val(richText).then().val("true").otherwise().val("false").end()
@@ -57,7 +57,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
     // * sendStringParametersAsUnicode=true
     @Test
     public void utf8_formattedText_can_be_used_as_search_criteria() {
-        final var richText = RichText.fromMarkdown("привіт world");
+        final var richText = RichText.fromHtml("привіт world");
         save(new_(EntityWithRichText.class, "1").setText(richText));
 
         final var co = co(EntityWithRichText.class);
@@ -74,7 +74,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
     // * UTF8 collation
     @Test
     public void utf8_coreText_can_be_used_as_search_criteria() {
-        final var richText = RichText.fromMarkdown("привіт world");
+        final var richText = RichText.fromHtml("привіт world");
         save(new_(EntityWithRichText.class, "1").setText(richText));
 
         final var co = co(EntityWithRichText.class);

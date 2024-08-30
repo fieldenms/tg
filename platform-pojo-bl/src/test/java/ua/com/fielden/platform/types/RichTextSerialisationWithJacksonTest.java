@@ -52,7 +52,7 @@ public class RichTextSerialisationWithJacksonTest {
 
     @Test
     public void RichText_contents_are_preserved_after_serialisation_and_deserialisation() {
-        final var richText = RichText.fromMarkdown("hello *world*");
+        final var richText = RichText.fromHtml("hello <b> world </b>");
         final var entity = factory.createEntityWithRichText(richText);
         final var restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithRichText.class);
 
@@ -65,7 +65,7 @@ public class RichTextSerialisationWithJacksonTest {
 
     @Test
     public void persisted_RichText_contents_are_preserved_after_serialisation_and_deserialisation() {
-        final var richText = RichText.fromMarkdown("hello *world*").asPersisted();
+        final var richText = RichText.fromHtml("hello <b> world </b>").asPersisted();
         final var entity = factory.createEntityWithRichText(richText);
         final var restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithRichText.class);
 
