@@ -81,6 +81,7 @@ public sealed class RichText permits RichText.Persisted {
         this.coreText = coreText;
     }
 
+    // NOTE: If RichText with HTML as markup is accepted completely, Markdown support can be removed.
     /**
      * Creates {@link RichText} by parsing the input as Markdown and sanitizing all embedded HTML.
      * Throws an exception if embedded HTML is deemed to be unsafe.

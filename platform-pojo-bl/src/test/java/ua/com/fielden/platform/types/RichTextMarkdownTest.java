@@ -336,7 +336,7 @@ public class RichTextMarkdownTest {
     }
 
     private static void assertCoreText(final String expected, final String input) {
-        assertEquals(expected, RichText.fromMarkdown(input).coreText());
+        assertEquals(expected, RichText.fromHtml(input).coreText());
     }
 
     private static void assertCoreTextId(final String input) {

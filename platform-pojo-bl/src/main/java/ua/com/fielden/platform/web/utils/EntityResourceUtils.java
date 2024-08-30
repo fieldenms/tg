@@ -664,7 +664,7 @@ public class EntityResourceUtils {
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
             // in a modified RichText value we care only about formatted text
             final String formattedText = (String) map.get(RichText._formattedText);
-            return formattedText == null ? null : RichText.fromMarkdown(formattedText);
+            return formattedText == null ? null : RichText.fromHtml(formattedText);
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else if (Class.class.isAssignableFrom(propertyType)) {
