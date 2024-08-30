@@ -105,6 +105,9 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         }
     }
 
+    convertToString (value) {
+        return (value && value.formattedText) || '';
+    }
     /**
      * This method converts string value to rich test object
      */
@@ -113,7 +116,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             return null;
         }
 
-        return {'formattedText': strValue};
+        return {coreText: '', 'formattedText': strValue};
     }
 
     _switchToMarkdownMode(e) {

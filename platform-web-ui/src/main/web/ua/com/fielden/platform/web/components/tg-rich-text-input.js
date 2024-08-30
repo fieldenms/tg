@@ -76,14 +76,6 @@ class TgRichTextInput extends PolymerElement {
         this._editor.setMarkdown(this.value);
     }
 
-    switchToMarkdownMode() {
-        this._editor.changeMode("markdown", false);
-    }
-
-    switchToWysiwyg() {
-        this._editor.changeMode("wysiwyg", false);
-    }
-
     applyBold() {
         this._editor.exec('bold');
     }
