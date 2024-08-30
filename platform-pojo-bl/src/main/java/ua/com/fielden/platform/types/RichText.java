@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableList;
 import org.commonmark.node.*;
 import org.commonmark.parser.IncludeSourceSpans;
 import org.commonmark.parser.Parser;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import ua.com.fielden.platform.commonmark.CommonMark;
@@ -11,10 +14,12 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.jsoup.NodeVisitor;
 import ua.com.fielden.platform.owasp.html.SimpleHtmlChangeListener;
 import ua.com.fielden.platform.utils.IteratorUtils;
 import ua.com.fielden.platform.utils.StringRangeReplacement.Range;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -29,9 +34,10 @@ import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
 
 /**
  * Rich text is text which has attributes beyond those of plain text (e.g., styles such as color, boldface, italic), and
- * is expressed in some markup language (e.g., Markdown).
+ * is expressed in some markup language (e.g., Markdown, HTML).
  * <p>
- * This representation does not commit to a fixed markup language, values can be created for arbitrary markup languages.
+ * This representation does not commit to a fixed markup language, values can be created for arbitrary markup languages,
+ * provided that there exists a corresponding static method in this class.
  * It also does not contain information about the markup language used in the formatted text.
  * <p>
  * This representation is immutable.
@@ -42,7 +48,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
  * </ul>
  * All newly created instances must go through {@linkplain #sanitizeMarkdown(String) sanitization} first, unless instantiation
  * happens for a value that is known to have been persisted previously (and thus had been sanitized already), represented
- * by {@link RichText.Persisted}.
+ * by {@link Persisted}.
  */
 public sealed class RichText permits RichText.Persisted {
 
@@ -73,6 +79,7 @@ public sealed class RichText permits RichText.Persisted {
         this.coreText = coreText;
     }
 
+    // NOTE: If RichText with HTML as markup is accepted completely, Markdown support can be removed.
     /**
      * Creates {@link RichText} by parsing the input as Markdown and sanitizing all embedded HTML.
      * Throws an exception if embedded HTML is deemed to be unsafe.
@@ -80,6 +87,15 @@ public sealed class RichText permits RichText.Persisted {
     public static RichText fromMarkdown(final String input) {
         final RichText richText = sanitizeMarkdown(input).getInstanceOrElseThrow();
         return richText;
+    }
+
+    /**
+     * Creates {@link RichText} by parsing the input as HTML and sanitizing it.
+     * Throws an exception if the HTML is deemed to be unsafe.
+     */
+    public static RichText fromHtml(final String html) {
+        return new RichText(sanitizeHtml(html).getInstanceOrElseThrow(),
+                            coreTextFromHtml(html));
     }
 
     /**
@@ -131,7 +147,7 @@ public sealed class RichText permits RichText.Persisted {
     }
 
     /**
-     * Type-insensitive {@link #equals(Object)}: {@link RichText} can be compared to {@link RichText.Persisted}.
+     * Type-insensitive {@link #equals(Object)}: {@link RichText} can be compared to {@link Persisted}.
      */
     public final boolean iEquals(final Object obj) {
         return obj == this ||
@@ -205,6 +221,35 @@ public sealed class RichText permits RichText.Persisted {
         }
     }
 
+    /**
+     * Sanitizes the input and returns a successful result if the input is safe, otherwise returns a failure.
+     * <p>
+     * Sanitization is performed in a <i>validation mode</i>, meaning that the output will differ from the input only if
+     * the input explicitly violated the sanitization policy (e.g., contained an unsafe element). The main motiviation
+     * behind this choice is to avoid unnecessary modifications of the input (due to normalisation: dropped comments,
+     * normalised tag names), which has been observed to conflict with the client-side processing of HTML in Markdown.
+     * <p>
+     * The sanitization policy is specified via {@link #POLICY_FACTORY}.
+     *
+     * @return  a result that contains the given HTML if it's safe, otherwise a failure
+     */
+    static Result sanitizeHtml(final String html) {
+        final var violations = Sanitizer.findViolations(html);
+        return violations.isEmpty()
+                ? successful(html)
+                : failure(html, "Input contains unsafe HTML:\n" +
+                                enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
+                                        .collect(joining("\n")));
+    }
+
+    static String coreTextFromHtml(final String html) {
+        final var doc = Jsoup.parse(html);
+        return CoreTextNodeVisitor.toString(doc);
+    }
+
+    // NOTE: Consider replacing the OWASP sanitizer by jsoup sanitizer (https://jsoup.org/cookbook/cleaning-html/safelist-sanitizer).
+    //       OWASP sanitizer discards useless tags like the one below, even when a policy allows it, and there is no way
+    //       of knowing the reason of a tag's discarding.
     private static final class Sanitizer {
         private final List<String> violations = new ArrayList<>();
 
@@ -227,6 +272,12 @@ public sealed class RichText permits RichText.Persisted {
         public List<String> violations() {
             return unmodifiableList(violations);
         }
+
+        public static List<String> findViolations(final String input) {
+            final var sanitizer = new Sanitizer();
+            sanitizer.sanitize(input);
+            return sanitizer.violations();
+        }
     }
 
     // @formatter:off
@@ -241,20 +292,26 @@ public sealed class RichText permits RichText.Persisted {
             )
             .toFactory();
 
+    private static final PolicyFactory BLOCKQUOTE = new HtmlPolicyBuilder()
+            .allowElements("blockquote")
+            .allowAttributes("cite").onElements("blockquote")
+            .toFactory();
+
     private static final PolicyFactory POLICY_FACTORY =
-        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS).and(LISTS)
+        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS).and(LISTS).and(BLOCKQUOTE)
         .and(new HtmlPolicyBuilder()
                 .allowElements(
                         "b", "strong", // bold text
                         "i", "em", // italic text
                         "u", // underlined text
-                        "del", // strikethrough text
+                        "del", "s", // strikethrough text
                         "sup", // superscript text
                         "sub", // subscript text
                         "mark", // highlighted text
                         "code", // inline code
                         "pre",  // preformatted text block
                         "br", // line break
+                        "hr", // thematic break (horizontal rule)
                         "span" // generic inline container (used for text colouring)
                 )
                 .toFactory());
@@ -327,6 +384,123 @@ Text  [HtmlInline]  Emphasis  [HtmlInline]  Link
                 }
             };
             node.accept(visitor);
+        }
+    }
+
+    /**
+     * Extracts <i>core text</i> from an HTML document.
+     */
+    private static class CoreTextNodeVisitor implements NodeVisitor {
+
+        public static String toString(final org.jsoup.nodes.Node node) {
+            final var sb = new StringBuilder();
+            new CoreTextNodeVisitor(sb).visit(node);
+            return sb.toString();
+        }
+
+        private final Writer writer;
+
+        private CoreTextNodeVisitor(final Appendable sink) {
+            this.writer = new Writer(sink);
+        }
+
+        public void visit(final org.jsoup.nodes.Node node) {
+            switch (node) {
+                case Element elt -> visitElement(elt);
+                case TextNode text -> visitText(text);
+                default -> {}
+            }
+        }
+
+        private void visitText(final TextNode text) {
+            writer.append(text.getWholeText());
+        }
+
+        private void visitElement(final Element element) {
+            if ("a".equals(element.tagName())) {
+                // <a> may have child nodes (e.g., <a href="..."> <b>text</b> </a>), that's why we want text() and not ownText()
+                visitLink(element.attr("href"), element.text());
+            }
+            else if ("img".equals(element.tagName())) {
+                visitLink(element.attr("src"), element.attr("alt"));
+            }
+            else {
+                visitChildren(element);
+            }
+        }
+
+        private void visitLink(final String destination, final String text) {
+            final boolean hasDest = destination != null && !destination.isBlank();
+            final boolean hasText = text != null && !text.isBlank();
+
+            if (hasText) {
+                writer.append(text);
+            }
+
+            if (hasDest) {
+                writer.append_('(' + destination + ')');
+            }
+        }
+
+        private static final class Writer {
+
+            private final Appendable sink;
+            private boolean empty = true;
+
+            private Writer(final Appendable sink) {
+                this.sink = sink;
+            }
+
+            /**
+             * Appends provided text to the output. The appended text will be separated from surrounding text (the previous
+             * text and the next text given to this method) by whitespace.
+             */
+            public void append(final CharSequence charSeq) {
+                append_(stripWs(charSeq));
+            }
+
+            private void append_(final CharSequence charSeq) {
+                if (!charSeq.isEmpty()) {
+                    if (!empty) {
+                        append_(' ');
+                    }
+
+                    try {
+                        sink.append(charSeq);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    if (empty) {
+                        empty = false;
+                    }
+                }
+            }
+
+            private void append_(final char c) {
+                try {
+                    sink.append(c);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            /**
+             * Matches either {@code \r\n} or {@code \n}.
+             */
+            private static final Pattern NEWLINE_PATTERN = Pattern.compile(Pattern.quote("\r") + '?' + Pattern.quote("\n"));
+
+            /**
+             * Transforms a char sequence by trimming each line and joining the resulting non-empty lines with spaces into a single line.
+             */
+            private CharSequence stripWs(final CharSequence charSeq) {
+                if (charSeq.isEmpty()) {
+                    return charSeq;
+                }
+
+                return NEWLINE_PATTERN.splitAsStream(charSeq).map(String::trim).filter(s -> !s.isBlank()).collect(joining(" "));
+            }
+
         }
     }
 
