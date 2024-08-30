@@ -12,9 +12,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.owasp.html.SimpleHtmlChangeListener;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.IteratorUtils;
-import ua.com.fielden.platform.utils.StringRangeReplacement;
 import ua.com.fielden.platform.utils.StringRangeReplacement.Range;
 
 import java.util.*;
@@ -27,7 +25,6 @@ import static java.util.stream.Collectors.joining;
 import static org.owasp.html.Sanitizers.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
 
 /**
@@ -43,6 +40,9 @@ import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
  * <ul>
  *   <li> {@link IsProperty#length()} applies to {@link #coreText}.
  * </ul>
+ * All newly created instances must go through {@linkplain #sanitizeMarkdown(String) sanitization} first, unless instantiation
+ * happens for a value that is known to have been persisted previously (and thus had been sanitized already), represented
+ * by {@link RichText.Persisted}.
  */
 public sealed class RichText permits RichText.Persisted {
 
@@ -153,6 +153,11 @@ public sealed class RichText permits RichText.Persisted {
     /**
      * Sanitizes the input and returns a successful result if the input is safe, otherwise returns a failure.
      * <p>
+     * Sanitization is performed in a <i>validation mode</i>, meaning that the output will differ from the input only if
+     * the input explicitly violated the sanitization policy (e.g., contained an unsafe element). The main motiviation
+     * behind this choice is to avoid unnecessary modifications of the input (due to normalisation: dropped comments,
+     * normalised tag names), which has been observed to conflict with the client-side processing of HTML in Markdown.
+     * <p>
      * Sanitization is performed only for those parts of the input that contain HTML:
      * <a href="https://spec.commonmark.org/0.31.2/#html-blocks">HTML Blocks</a> and
      * <a href="https://spec.commonmark.org/0.31.2/#raw-html">Raw HTML (Inline HTML)</a>.
@@ -160,7 +165,7 @@ public sealed class RichText permits RichText.Persisted {
      * <p>
      * The sanitization policy is specified via {@link #POLICY_FACTORY}.
      *
-     * @return Result of RichText
+     * @return Result of {@link RichText}
      */
     static Result sanitizeMarkdown(final String input) {
         final var lines = NEWLINE_PATTERN.splitAsStream(input).toList();
@@ -169,10 +174,9 @@ public sealed class RichText permits RichText.Persisted {
         final var sanitizer = new Sanitizer();
         final Node root = Parser.builder().includeSourceSpans(IncludeSourceSpans.BLOCKS_AND_INLINES).build().parse(input);
 
-        // 1. Collect sanitized parts of the input
+        // 1. Sanitize all HTML in the input
         // 1.1 Process HtmlInline nodes, which are particularly tricky
-        final var sanitizedAreas = new ArrayList<T2<Range, String>>();
-        HtmlInlineVisitor.forEachRange(root, range -> sanitizedAreas.add(t2(range, sanitizer.sanitize(range.apply(lines, "\n")))));
+        HtmlInlineVisitor.forEachRange(root, range -> sanitizer.sanitize(range.apply(lines, "\n")));
 
         // 1.2 Process HtmlBlock nodes
         root.accept(new AbstractVisitor() {
@@ -183,7 +187,7 @@ public sealed class RichText permits RichText.Persisted {
                 }
                 // HtmlBlock may span multiple lines, and its source spans always cover whole lines (from column 0 to the end of the line)
                 rangeFromSourceSpans(htmlBlock.getSourceSpans())
-                        .ifPresent(range -> sanitizedAreas.add(t2(range, sanitizer.sanitize(htmlBlock.getLiteral()))));
+                        .ifPresent(range -> sanitizer.sanitize(htmlBlock.getLiteral()));
                 // this kind of node does not have children, so we need not process them, but let's do it just in case of parser bugs
                 visitChildren(htmlBlock);
             }
@@ -195,14 +199,10 @@ public sealed class RichText permits RichText.Persisted {
                                   enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
                                           .collect(joining("\n")));
         }
-
-        // Substitute all sanitized areas into the original document
-        final boolean lastLineTerminated = input.endsWith("\n");
-        final String formattedText = sanitizedAreas.isEmpty()
-                ? input
-                : new StringRangeReplacement(lastLineTerminated).replace(lines, sanitizedAreas);
-        final String coreText = CoreTextRenderer.INSTANCE.render(root);
-        return successful(new RichText(formattedText, coreText));
+        else {
+            final String coreText = CoreTextRenderer.INSTANCE.render(root);
+            return successful(new RichText(input, coreText));
+        }
     }
 
     private static final class Sanitizer {
