@@ -136,6 +136,7 @@ const template = html`
             bottom: 0;
             right: 0;
             --iron-icon-fill-color: var(--paper-grey-600);
+            pointer-events: auto; /* required to override pointer-events:none from noselect class of parent entity centre, set on mouse-down for resizing events; otherwise double tap (reset dim/pos) will not work due to child relationship from parent centre */
         }
 
         .lock-layer {
