@@ -11,6 +11,9 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.Set;
 
+/**
+ * A registry to encode categorisation of types as defined in <a href="https://github.com/fieldenms/tg/wiki/Property-definitions#more-about-types">Types</a>.
+ */
 final class TypeRegistry {
 
     public static final Set<Class<?>> COMPONENT_TYPES = Set.of(Money.class);

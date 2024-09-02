@@ -176,10 +176,13 @@ public class QuerySourceInfoProvider {
                         //       The original comment here was:
                         //       // Finally, if nothing else, the property must be of some primitive type or a type with a custom Hibernate converter:
                         //       // String, Long, Integer, BigDecimal, Date, boolean, Colour, Hyperlink, PropertyDescriptor, SecurityToken.
-                        //       However, this case would also include properties of Synthetic Entity type and Value Entity type.
-                        //       Although, such properties are recognised as transient (plain).
+                        //       However, this case would also include properties of Synthetic Entity type, but such properties are recognised as transient (plain) and later ignored.
+                        //       Properties of Value Entity type are not handled by this case.
+                        //       This is because, domainMetadata.forEntityOpt(PropertyDescriptor.class) returns an empty result, and Union Entities are handled separately above.
                             mkPrim(pm);
                 })
+                // TODO: The empty case seems to handle only properties of type PropertyDescriptor, which is a Value Entity rather than a primitive property.
+                //       Need to investigate this further.
                 .or(() -> Optional.of(mkPrim(pm)));
     }
     // where
