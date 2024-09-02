@@ -1,7 +1,8 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
-import '/resources/components/tg-rich-text-input.js';
 import '/resources/images/tg-rich-text-editor-icons.js';
+import '/resources/components/tg-rich-text-input.js';
+import '/resources/components/tg-link-dialog.js';
 
 import { html } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
@@ -51,7 +52,14 @@ const additionalTemplate = html`
             /* Non-prefixed version, currently
                supported by Chrome and Opera */
         }
-    </style>`;
+        .dropdown-content {
+            background-color: white;
+            box-shadow: 0px 2px 6px #ccc;
+        }
+    </style>
+    <iron-dropdown id="linkDropdown" vertical-align="top" horizontal-align="left" vertical-offset="13.5" always-on-top>
+        <tg-link-dialog class="dropdown-content" slot="dropdown-content"></tg-link-dialog>
+    </iron-dropdown>`;
 const customLabelTemplate = html`
     <label id="editorLabel" style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
         <span>[[propTitle]]</span>
@@ -66,7 +74,7 @@ const customLabelTemplate = html`
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text" on-tap="_makeItalic"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it" on-tap="_makeStrike"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-tap="_changeTextColor"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-tap="_insertLink"></iron-icon>
+        <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-tap="_insertLink"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-indent-increase" action-title="Increase Indent" tooltip-text="Move your paragraph further away from the margin" on-tap="_indent"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-indent-decrease" action-title="Decrease Indent" tooltip-text="Move your paragraph closer to the margin" on-tap="_outdent"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list" on-tap="_createBulletedList"></iron-icon>
@@ -117,6 +125,11 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         }
     }
 
+    ready() {
+        super.ready();
+        this.$.linkDropdown.positionTarget = this.$.linkAction;
+    }
+
     convertToString (value) {
         return (value && value.formattedText) || '';
     }
@@ -164,7 +177,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _insertLink(e) {
-        //TODO implement
+        this.$.linkDropdown.open();
     }
 
     _indent(e) {
