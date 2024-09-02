@@ -12,10 +12,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.Optional.ofNullable;
@@ -199,7 +196,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      * @param type
      * @return
      */
-    public static final Set<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
+    public static final SequencedSet<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
         // collect all properties of entity type
         final List<Class<? extends AbstractEntity<?>>> propertyTypes = new ArrayList<>();
         final List<Field> fields = unionProperties(type);
