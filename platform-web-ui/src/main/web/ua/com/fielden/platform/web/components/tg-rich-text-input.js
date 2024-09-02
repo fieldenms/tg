@@ -65,15 +65,16 @@ class TgRichTextInput extends PolymerElement {
             minHeight: this.minHeight,
             initialEditType: 'wysiwyg',
             events: {
-                change: this._changeValue.bind(this),
+                change: this._htmlContetnChanged.bind(this),
                 blur: this.changeEventHandler.bind(this)
             },
-            customHTMLSanitizer: (html) => html,
             useCommandShortcut: true,
             usageStatistics: false,
             toolbarItems: [],
             hideModeSwitch: true
         });
+        //The following code is nedded to preserve whitespaces after loading html into editor.
+        this._editor.wwEditor.schema.cached.domParser.rules.forEach(r => r.preserveWhitespace = "full");
         this._editor.setHTML(this.value);
     }
 
@@ -145,7 +146,7 @@ class TgRichTextInput extends PolymerElement {
         }
     }
 
-    _changeValue (e) {
+    _htmlContetnChanged (e) {
         const htmlText = this._editor.getHTML();
         if (this.value !== htmlText) {
             this.value = htmlText;
