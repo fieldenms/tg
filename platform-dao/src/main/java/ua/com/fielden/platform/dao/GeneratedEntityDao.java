@@ -50,7 +50,7 @@ public class GeneratedEntityDao<T extends AbstractEntity<?>> implements IGenerat
 
     @Override
     public void setEntityType(final Class<T> type) {
-        this.companion = coFinder.find(type);
+        this.companion = coFinder.find(type, true);
     }
 
     @Override
