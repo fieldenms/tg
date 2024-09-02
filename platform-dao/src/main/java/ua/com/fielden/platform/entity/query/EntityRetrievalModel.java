@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 
 import static java.lang.Boolean.FALSE;
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -35,6 +34,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private final EntityMetadata entityMetadata;
     private final EntityMetadataUtils entityMetadataUtils;
     private final PropertyMetadataUtils propMetadataUtils;
+    private final boolean containsOnlyTotals;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata) {
         this(originalFetch, domainMetadata, true);
@@ -45,6 +45,11 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         this.entityMetadata = domainMetadata.forEntity(originalFetch.getEntityType());
         this.entityMetadataUtils = domainMetadata.entityMetadataUtils();
         this.propMetadataUtils = domainMetadata.propertyMetadataUtils();
+
+        // It is important to determine whether the fetch contains only totals before the original fetch is enriched.
+        // Calculated properties that represent totals of a component type lead to the expansion of the original fetch by adding sub-properties.
+        // And those sub-properties violate the "contains-only-totals" predicate.
+        this.containsOnlyTotals = computeContainsOnlyTotals();
 
         switch (originalFetch.getFetchCategory()) {
         case ALL_INCL_CALC:
@@ -96,7 +101,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 !pm.isCritOnly() &&
                 !name.contains(".") &&
                 !containsProp(name) &&
-                (entityMetadata.isSynthetic() || !pm.isPlain())) {
+                (entityMetadata.isSynthetic() || !pm.isPlain()))
+            {
                 getProxiedProps().add(name);
             }
         }
@@ -251,6 +257,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     @Override
     public boolean containsOnlyTotals() {
+        return containsOnlyTotals;
+    }
+
+    private boolean computeContainsOnlyTotals() {
         return getPrimProps().stream()
                 .allMatch(prop -> entityMetadata.propertyOpt(prop)
                         .flatMap(PropertyMetadata::asCalculated)
