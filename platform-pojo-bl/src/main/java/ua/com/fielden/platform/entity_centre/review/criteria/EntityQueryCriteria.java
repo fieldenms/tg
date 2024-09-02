@@ -378,7 +378,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * This is temporary solution needed for pagination support on web ui
+     * This is a temporary solution, needed for pagination support in the Web UI.
      */
     public IPage<T> getPage(final int pageNumber, final int pageCapacity) {
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = generateQuery();
