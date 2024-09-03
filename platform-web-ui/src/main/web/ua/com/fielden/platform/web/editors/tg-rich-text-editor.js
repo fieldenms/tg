@@ -183,7 +183,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _changeTextColor(e) {
-        //TODO implement
+        this.$.input.applyColor('red');
     }
 
     _insertLink(e) {

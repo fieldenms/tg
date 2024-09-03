@@ -2,6 +2,69 @@
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import '/resources/toastui-editor/toastui-editor-all.min.js';
 
+function createSelection(tr, selection, SelectionClass, openTag, closeTag) {
+    const { mapping, doc } = tr;
+    const { from, to, empty } = selection;
+    const mappedFrom = mapping.map(from) + openTag.length;
+    const mappedTo = mapping.map(to) - closeTag.length;
+
+    return empty
+        ? SelectionClass.create(doc, mappedTo, mappedTo)
+        : SelectionClass.create(doc, mappedFrom, mappedTo);
+}
+
+function colorTextPlugin (context, options) {
+    const { eventEmitter, pmState } = context;
+
+
+    return {
+        markdownCommands: {
+            color: ({ selectedColor }, { tr, selection, schema }, dispatch) => {
+                if (selectedColor) {
+                    const slice = selection.content();
+                    const textContent = slice.content.textBetween(0, slice.content.size, '\n');
+                    const openTag = `<span style='color: ${selectedColor}'>`;
+                    const closeTag = `</span>`;
+                    const colored = `${openTag}${textContent}${closeTag}`;
+
+                    tr.replaceSelectionWith(schema.text(colored)).setSelection(
+                        createSelection(tr, selection, pmState.TextSelection, openTag, closeTag)
+                    );
+
+                    dispatch(tr);
+
+                    return true;
+                }
+                return false;
+            },
+        },
+        wysiwygCommands: {
+            color: ({ selectedColor }, { tr, selection, schema }, dispatch) => {
+                if (selectedColor) {
+                    const { from, to } = selection;
+                    const attrs = { htmlAttrs: { style: `color: ${selectedColor}` } };
+                    const mark = schema.marks.span.create(attrs);
+
+                    tr.addMark(from, to, mark);
+                    dispatch(tr);
+
+                    return true;
+                }
+                return false;
+            },
+        },
+        toHTMLRenderers: {
+            htmlInline: {
+                span(node, { entering }) {
+                    return entering
+                        ? { type: 'openTag', tagName: 'span', attributes: node.attrs }
+                        : { type: 'closeTag', tagName: 'span' };
+                },
+            },
+        },
+    };
+}
+
 const template = html`
     <link rel="stylesheet" href="/resources/toastui-editor/toastui-editor.min.css" />
     <style>
@@ -53,12 +116,12 @@ class TgRichTextInput extends PolymerElement {
             },
 
             _editor: Object,
+            _prevSelection: Array
         }
     }
 
     ready () {
         super.ready();
-        
         this._editor = new toastui.Editor({
             el: this.$.editor,
             height: this.height,
@@ -66,11 +129,13 @@ class TgRichTextInput extends PolymerElement {
             initialEditType: 'wysiwyg',
             events: {
                 change: this._htmlContetnChanged.bind(this),
-                blur: this.changeEventHandler.bind(this)
+                blur: this.changeEventHandler.bind(this),
+                caretChange: this._saveSelection.bind(this)
             },
             linkAttributes: {
                 target: "_blank"
             },
+            plugins: [colorTextPlugin],
             useCommandShortcut: true,
             usageStatistics: false,
             toolbarItems: [],
@@ -110,10 +175,14 @@ class TgRichTextInput extends PolymerElement {
     }
 
     insertLink(url, text) {
-        this._editor.exec('addLink', { linkText: text, linkUrl: url })
+        this._editor.exec('addLink', { linkText: text, linkUrl: url });
     }
 
-    //TODO other methods for link and color text should go here
+    applyColor(selectedColor) {
+        this._editor.exec("color", {selectedColor: selectedColor});
+        this._editor.focus();
+        this._editor.setSelection(this._prevSelection[0], this._prevSelection[1]);
+    }
 
     applyIndent() {
         this._editor.exec('indent');
@@ -153,6 +222,12 @@ class TgRichTextInput extends PolymerElement {
         }
     }
 
+    _saveSelection() {
+        if (this._editor) {
+            this._prevSelection = this._editor.getSelection();
+        }
+    }
+
     _htmlContetnChanged (e) {
         const htmlText = this._editor.getHTML();
         if (this.value !== htmlText) {
@@ -165,6 +240,8 @@ class TgRichTextInput extends PolymerElement {
             this._editor.setHeight(newHeight);
         }
     }
+
+
 }
 
 customElements.define('tg-rich-text-input', TgRichTextInput);
