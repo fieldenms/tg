@@ -68,6 +68,9 @@ class TgRichTextInput extends PolymerElement {
                 change: this._htmlContetnChanged.bind(this),
                 blur: this.changeEventHandler.bind(this)
             },
+            linkAttributes: {
+                target: "_blank"
+            },
             useCommandShortcut: true,
             usageStatistics: false,
             toolbarItems: [],
@@ -104,6 +107,10 @@ class TgRichTextInput extends PolymerElement {
 
     applyStrikethough() {
         this._editor.exec('strike');
+    }
+
+    insertLink(url, text) {
+        this._editor.exec('addLink', { linkText: text, linkUrl: url })
     }
 
     //TODO other methods for link and color text should go here

@@ -58,7 +58,7 @@ const additionalTemplate = html`
         }
     </style>
     <iron-dropdown id="linkDropdown" vertical-align="top" horizontal-align="left" vertical-offset="13.5" always-on-top>
-        <tg-link-dialog class="dropdown-content" slot="dropdown-content"></tg-link-dialog>
+        <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]"></tg-link-dialog>
     </iron-dropdown>`;
 const customLabelTemplate = html`
     <label id="editorLabel" style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
@@ -121,13 +121,23 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             withoutResizing: {
                 type: Boolean,
                 value: false
-            }
+            },
+
+            _cancelLinkInsertion: Function,
+            _acceptLink: Function
         }
     }
 
     ready() {
         super.ready();
         this.$.linkDropdown.positionTarget = this.$.linkAction;
+        this._cancelLinkInsertion = function () {
+            this.$.linkDropdown.cancel();
+        }.bind(this);
+        this._acceptLink = function () {
+            this.$.input.insertLink(this.$.linkDialog.url, this.$.linkDialog.linkText);
+            this.$.linkDropdown.close();
+        }.bind(this);
     }
 
     convertToString (value) {
