@@ -34,6 +34,9 @@ import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
+/**
+ * The default implementation of {@link IDomainMetadata}.
+ */
 final class DomainMetadataImpl implements IDomainMetadata {
 
     private final Collection<? extends Class<? extends AbstractEntity<?>>> entityTypes;

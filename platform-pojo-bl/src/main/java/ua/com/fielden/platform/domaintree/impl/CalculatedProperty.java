@@ -299,7 +299,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
      * @return
      */
     protected static String above(final String contextPath) {
-        return PropertyTypeDeterminator.isDotNotation(contextPath) ? PropertyTypeDeterminator.penultAndLast(contextPath).getKey() : "";
+        return PropertyTypeDeterminator.isDotExpression(contextPath) ? PropertyTypeDeterminator.penultAndLast(contextPath).getKey() : "";
     }
 
     @Override

@@ -87,7 +87,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     }
 
     private int level(final String path) {
-        return !PropertyTypeDeterminator.isDotNotation(path) ? 0 : 1 + level(PropertyTypeDeterminator.penultAndLast(path).getKey());
+        return !PropertyTypeDeterminator.isDotExpression(path) ? 0 : 1 + level(PropertyTypeDeterminator.penultAndLast(path).getKey());
     }
 
     /**
@@ -405,7 +405,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         // logger().info("\t\t\ttransform.");
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(root, property);
         // logger().info("\t\t\tpenultAndLast.");
-        final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
+        final String penultPropertyName = PropertyTypeDeterminator.isDotExpression(property) ? PropertyTypeDeterminator.penultAndLast(property).getKey() : null;
         final Class<?> penultType = transformed.getKey();
         final String lastPropertyName = transformed.getValue();
         // logger().info("\t\t\tdetermineClass.");
@@ -434,7 +434,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
                 // 1. !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
                 // 2. !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(DynamicEntityClassLoader.getOriginalType(root), penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(root), penultPropertyName)) || // exclude link properties in one2many and one2one associations
-                !isEntityItself && isExcluded(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : "", manuallyExcludedProperties, rootTypes, strictKeys, strictIsPropertyProps); // exclude property if it is an ascender (any level) of already excluded property
+                !isEntityItself && isExcluded(root, PropertyTypeDeterminator.isDotExpression(property) ? penultPropertyName : "", manuallyExcludedProperties, rootTypes, strictKeys, strictIsPropertyProps); // exclude property if it is an ascender (any level) of already excluded property
         // logger().info("\t\tEnded isExcludedImmutably for property [" + property + "].");
         return excl;
     }
@@ -459,7 +459,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @return
      */
     protected static Set<Class<?>> typesInHierarchy(final Class<?> root, final String property, final boolean addCollectionalElementType) {
-        if (!PropertyTypeDeterminator.isDotNotation(property)) {
+        if (!PropertyTypeDeterminator.isDotExpression(property)) {
             return new HashSet<Class<?>>() {
                 private static final long serialVersionUID = 6314144790005942324L;
                 {

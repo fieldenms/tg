@@ -179,8 +179,8 @@ public class DynamicQueryBuilder {
             }
 
             final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
-            final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : null;
-            this.aECritOnlyChild = !isEntityItself && PropertyTypeDeterminator.isDotNotation(propertyName) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, this.entityClass, penultPropertyName);
+            final String penultPropertyName = PropertyTypeDeterminator.isDotExpression(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : null;
+            this.aECritOnlyChild = !isEntityItself && PropertyTypeDeterminator.isDotExpression(propertyName) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, this.entityClass, penultPropertyName);
             this.single = isCritOnly() && Type.SINGLE.equals(critAnnotation.value());
         }
 
