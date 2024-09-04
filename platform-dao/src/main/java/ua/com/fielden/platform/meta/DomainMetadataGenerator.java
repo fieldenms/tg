@@ -57,38 +57,40 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
 
-/* General verification rules for entities:
- * - Synthetic based on Persistent - can't have an entity-typed key.
- */
-
 /**
  * <h3> Property Metadata </h3>
- * Given a Java type that has properties (e.g., entity type or component type), metadata is optionally generated for each
- * property.
+ * Given a Java type that has properties (e.g., entity type or component type), metadata is optionally generated for each property.
  * <p>
  * For the purpose of metadata generation properties can be divided into <i>special</i> and <i>ordinary</i> groups.
  * <p>
  * Special properties include: "id", "version", "key", one-to-one associations.
  * <p>
- * Whether metadata is generated for a property depends on several factors: the nature of its enclosing type (e.g.,
- * persistent entity), the nature and the type of the property itself.
+ * Whether metadata is generated for a property depends on several factors: the nature of its enclosing type (e.g., persistent entity),
+ * the nature and the type of the property itself.
  *
  * <h4> Property Type Metadata </h4>
  * Metadata is also generated for property types, see {@link PropertyTypeMetadata}.
  * <p>
- * Properties whose type cannot be modelled by metadata are skipped. However, for some properties it is required that
- * their type be modelled, otherwise the property's definition must be incorrect. These include:
+ * Properties whose type cannot be modelled by metadata are skipped.
+ * However, for some properties it is required that their type be modelled, otherwise the property's definition must be incorrect.
+ * These include:
  * <ul>
  *   <li> Special properties.
  *   <li> Persistent properties.
  *   <li> Calculated properties.
- *   <li> Crit-only properties.
+ *   <li> CritOnly properties.
  * </ul>
  *
  * <h4> Collectional Properties </h4>
- * Although collectional properties are implicitly calculated, the nature of any given collectional property is inferred
- * from its definition (typically it is {@link PropertyNature.Plain}). The calculation part is independently
- * performed by {@link EntityContainerEnhancer}.
+ * Although collectional properties are implicitly calculated, the nature of any given collectional property gets inferred from its definition (typically it is {@link PropertyNature.Plain}).
+ * The calculation part is performed independently by {@link EntityContainerEnhancer}.
+ *
+ * <h4>General verification rules for entities</h4>
+ * <ul>
+ *   <li>Synthetic based on Persistent entities cannot have an entity-typed key.
+ *   <li>Union entities cannot be used as keys or composite key members.
+ * </ul>
+ *
  */
 final class DomainMetadataGenerator {
 
@@ -386,7 +388,9 @@ final class DomainMetadataGenerator {
             final var entityType = (Class<? extends AbstractEntity<DynamicEntityKey>>) entityBuilder.getJavaType();
             return Optional.of(calculatedProp(KEY, COMPOSITE_KEY, H_STRING,
                                               PropertyNature.Calculated.data(generateCompositeKeyEqlExpression(entityType), true, false))
-                                       // TODO why required?
+                                       // TODO: Why required?
+                                       //       Most likely this indicates that a composite key (not just a member) would always have a value.
+                                       //       Need to better understand how this information is used when transpiling from EQL to SQL.
                                        .required(true).build());
         } else {
             final var keyColumn = new PropColumn("KEY_");
