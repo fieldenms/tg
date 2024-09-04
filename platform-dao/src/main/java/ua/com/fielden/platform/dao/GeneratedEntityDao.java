@@ -50,7 +50,11 @@ public class GeneratedEntityDao<T extends AbstractEntity<?>> implements IGenerat
 
     @Override
     public void setEntityType(final Class<T> type) {
-        this.companion = coFinder.find(type, true);
+        // It is important to use a companion that produces instrumented instances.
+        // This is to support customisation where necessary to retrieve either instrumented or unstrumented entity instances,
+        // which is controlled by using lightweight query models to avoid instrumentation.
+        // The use of lightweight query models is the default for Entity Centres.
+        this.companion = coFinder.find(type);
     }
 
     @Override
