@@ -81,7 +81,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                                  }
                              }
                          },
-                         // TODO Why is absence of property metadata a valid condition? Platform tests show no such occurences
+                         // TODO Why is absence of property metadata a valid condition? Platform tests show no such occurrences?
                          () -> enhanceCollectional(entities, fetchModel, paramValues, propName, propFetchModel));
                     // @formatter:on
                 } else {
@@ -241,9 +241,9 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
      * Enhances entity containers by populating collectional property {@code collPropName}.
      * This method mutates the containers it is given.
      * <p>
-     * There are 2 entities at play here:
+     * There are two entities at play here:
      * <ol>
-     * <li> master entity (<i>ME</i>) -- the one being enhanced and owning the collectional property;
+     * <li> main entity (<i>ME</i>) -- the one being enhanced and owning the collectional property;
      * <li> detail entity (<i>DE</i>) -- the type of the collectional property's elements;
      * </ol>
      *

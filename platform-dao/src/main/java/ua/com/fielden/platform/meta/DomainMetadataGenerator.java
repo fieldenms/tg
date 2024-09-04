@@ -221,9 +221,9 @@ final class DomainMetadataGenerator {
         final EntityMetadata metadata;
         try {
             metadata = forEntity_(entityType);
-        } catch (final Exception e) {
+        } catch (final Exception ex) {
             // rethrow to facilitate debugging
-            throw new DomainMetadataGenerationException("Failed to generate metadata for entity [%s]".formatted(entityType), e);
+            throw new DomainMetadataGenerationException("Failed to generate metadata for entity [%s].".formatted(entityType), ex);
         }
 
         if (metadata == null) {
@@ -371,7 +371,7 @@ final class DomainMetadataGenerator {
     private Optional<PropertyMetadata> mkPropKey(final EntityMetadataBuilder<?, ?> entityBuilder) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityBuilder.getJavaType());
         if (keyType == null) {
-            throw new EntityDefinitionException("Can't determine key type of [%s]".formatted(entityBuilder.getJavaType().getTypeName()));
+            throw new EntityDefinitionException("Cannot determine key type of [%s].".formatted(entityBuilder.getJavaType().getTypeName()));
         }
 
         if (isOneToOne(entityBuilder.getJavaType())) {
@@ -454,15 +454,16 @@ final class DomainMetadataGenerator {
      * <p>
      * Special cases:
      * <ul>
-     *   <li> One-to-one association - implicitly calculated.
+     *   <li> One-2-one association - implicitly calculated with an EQL expression generated dynamically and included as part of the property metadata.
+     *   <li> One-2-many associations - represented by collectional properties, which could also be recognised as implicitly calculated, but are recognised as transient (plain), with {@link EntityContainerEnhancer} completing their processing at the time of query execution. </li>
      * </ul>
      */
     Optional<PropertyMetadataImpl.Builder<?, ?>> mkProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
         try {
             return mkProp_(field, entityBuilder);
-        } catch (final Exception e) {
+        } catch (final Exception ex) {
             // rethrow to facilitate debugging
-            throw new DomainMetadataGenerationException("Failed to generate metadata for property [%s]".formatted(field), e);
+            throw new DomainMetadataGenerationException("Failed to generate metadata for property [%s].".formatted(field), ex);
         }
     }
 
@@ -491,7 +492,8 @@ final class DomainMetadataGenerator {
         }
         // PERSISTENT
         // old code: last 2 conditions are to overcome incorrect metadata combinations
-        // TODO throw an exception for incorrect definitions ?
+        // TODO: Should an exception be thrown for incorrect definitions?
+        //       It is probably best to delegate verification of property declarations to the compile time verifier.
         else if (atMapTo != null && !isSyntheticEntityType(enclosingEntityType) && atCalculated == null) {
             final String columnName = mkColumnName(field.getName(), atMapTo);
             final var propTypeMd = mkPropertyTypeOrThrow(field);
@@ -504,7 +506,7 @@ final class DomainMetadataGenerator {
         else if (atCalculated != null) {
             final boolean aggregatedExpression = AGGREGATED_EXPRESSION == atCalculated.category();
             final var data = PropertyNature.Calculated.data(
-                    extractExpressionModelFromCalculatedProperty(enclosingEntityType, field, atCalculated), false, aggregatedExpression);
+                    extractExpressionModelForCalculatedProperty(enclosingEntityType, field, atCalculated), false, aggregatedExpression);
             final var propTypeMd = mkPropertyTypeOrThrow(field);
             builder = Optional.of(calculatedProp(field.getName(), propTypeMd,
                                                  hibTypeGenerator.generate(propTypeMd).use(field).get(),
@@ -515,7 +517,7 @@ final class DomainMetadataGenerator {
             // skip properties that have an unknown type
             final var optPropType = mkPropertyType(field);
             if (optPropType.isEmpty()) {
-                LOGGER.debug(format("Skipping metadata generation for property [%s] due to its unrecognised type.", field));
+                LOGGER.debug("Skipping metadata generation for property [%s] due to its unrecognised type.".formatted(field));
             }
             builder = optPropType
                     .map(propTypeMd -> plainProp(field.getName(), propTypeMd,
@@ -529,9 +531,10 @@ final class DomainMetadataGenerator {
     }
 
     private Optional<PropertyMetadataImpl.Builder<?, ?>> mkOne2OneProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
-        // TODO optional metadata Key<Boolean> to indicate that this property is one2one?
+        // TODO: Optional metadata Key<Boolean> to indicate that this property is one-2-one?
         final var propType = (Class<? extends AbstractEntity<?>>) field.getType();
-        // one2one is not required to exist -- that's why need longer formula -- that's why one2one is in fact implicitly calculated nullable prop
+        // Properties representing one-2-one associations are implicitly calculated nullable properties.
+        // Instances of one-2-one are not required to exist, but in practice they always do get created and saved together with the main entity.
         final ExpressionModel expressionModel = expr()
                 .model(select(propType).where().prop(KEY).eq().extProp(ID).model())
                 .model();
@@ -556,7 +559,7 @@ final class DomainMetadataGenerator {
         });
         return optPtm;
     }
-    // Cache for primitive property types that exists throughout the lifetime of this generator
+    // A cache for primitive property types that exists throughout the lifetime of this generator
     private final ConcurrentHashMap<Type, PropertyTypeMetadata.Primitive> primitivePropTypeMetadataCache = new ConcurrentHashMap<>();
 
     public Optional<PropertyTypeMetadata> mkPropertyType(final Type type) {
@@ -577,17 +580,18 @@ final class DomainMetadataGenerator {
     private PropertyTypeMetadata mkPropertyTypeOrThrow(final Field field) {
         return mkPropertyType(field)
                 .orElseThrow(() -> new DomainMetadataGenerationException(
-                        "Failed to generate metadata for type of property [%s]".formatted(field.toGenericString())));
+                        "Failed to generate metadata for type of property [%s].".formatted(field.toGenericString())));
     }
 
     private PropertyTypeMetadata mkPropertyTypeOrThrow(final Type type) {
         return mkPropertyType(type)
                 .orElseThrow(() -> new DomainMetadataGenerationException(
-                        "Failed to generate metadata for property type [%s]".formatted(type.getTypeName())));
+                        "Failed to generate metadata for property type [%s].".formatted(type.getTypeName())));
     }
 
-    // ****************************************
-    // * Persistent Entity
+    ///////////////////////////
+    //// Persistent Entity ////
+    ///////////////////////////
 
     private static String mkColumnName(final String propName, final MapTo mapTo) {
         return isNotEmpty(mapTo.value()) ? mapTo.value() : propName.toUpperCase() + "_";
@@ -631,8 +635,7 @@ final class DomainMetadataGenerator {
                 return mapEntityToAnnotation.value();
             }
         } catch (final Exception ex) {
-            throw new DomainMetadataGenerationException(
-                    format("Could not determine table name for entity [%s].", entityType.getTypeName()), ex);
+            throw new DomainMetadataGenerationException("Could not determine table name for entity [%s].".formatted(entityType.getTypeName()), ex);
         }
     }
 
@@ -656,9 +659,7 @@ final class DomainMetadataGenerator {
                 return ImmutableList.copyOf((List<EntityResultQueryModel<T>>) modelField.get(null));
             }
         } catch (final Exception ex) {
-            throw new DomainMetadataGenerationException(
-                    format("Could not obtain model(s) for synthetic entity [%s].", entityType.getSimpleName()),
-                    ex);
+            throw new DomainMetadataGenerationException("Could not obtain model(s) for synthetic entity [%s].".formatted(entityType.getSimpleName()), ex);
 
         }
     }
@@ -696,7 +697,8 @@ final class DomainMetadataGenerator {
      * where {@code B} is the type of property {@code "b"}.
      */
     private static EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded<?>
-    generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp) {
+    generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp)
+    {
         final var startWith = select((Class<? extends AbstractEntity<?>>) currProp.getType());
         final var firstUnionProp = unionProps.getFirst();
         final var initialModel = firstUnionProp.equals(currProp)
@@ -709,9 +711,11 @@ final class DomainMetadataGenerator {
                                   : m.yield().val(null).as(f.getName()));
     }
 
-    List<PropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionType,
-                                                             @Nullable final String contextPropName,
-                                                             final EntityMetadataBuilder<?, ?> entityBuilder) {
+    List<PropertyMetadata> generateUnionImplicitCalcSubprops(
+            final Class<? extends AbstractUnionEntity> unionType,
+            @Nullable final String contextPropName,
+            final EntityMetadataBuilder<?, ?> entityBuilder)
+    {
         final List<Field> unionMembers = unionProperties(unionType);
         if (unionMembers.isEmpty()) {
             throw new EntityDefinitionException("Ill-defined union entity [%s] has no union members.".formatted(unionType.getTypeName()));
@@ -728,13 +732,12 @@ final class DomainMetadataGenerator {
                                  PropertyNature.Calculated.data(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName), true, false))
                           .build());
 
-        final Class<?> firstUnionEntityPropType = unionMembers.getFirst().getType(); // e.g. WagonSlot in TgBogieLocation
+        final Class<?> firstUnionEntityPropType = unionMembers.getFirst().getType(); // e.g., WagonSlot in TgBogieLocation
         for (final String commonProp : commonProperties(unionType).stream().filter(n -> !DESC.equals(n) && !KEY.equals(n)).toList()) {
             if (unionMembersNames.contains(commonProp)) {
-                throw new EntityDefinitionException(format("""
-                                                           Ill-defined union entity: %s
-                                                           Common property and union member share the same name [%s].""",
-                                                           unionType.getTypeName(), commonProp));
+                throw new EntityDefinitionException("""
+                                                    Ill-defined union entity: %s
+                                                    Common property and union property share the same name [%s].""".formatted(unionType.getTypeName(), commonProp));
             }
             final Field commonPropField = findFieldByName(firstUnionEntityPropType, commonProp);
             final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(commonPropField);
@@ -747,13 +750,13 @@ final class DomainMetadataGenerator {
         return unmodifiableList(props);
     }
 
-    private List<PropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionType,
-                                                                     final EntityMetadataBuilder<?, ?> entityBuilder) {
+    private List<PropertyMetadata> generateUnionImplicitCalcSubprops
+            (final Class<? extends AbstractUnionEntity> unionType, final EntityMetadataBuilder<?, ?> entityBuilder)
+    {
         return generateUnionImplicitCalcSubprops(unionType, null, entityBuilder);
     }
 
-    private ExpressionModel generateUnionCommonDescPropExpressionModel(final List<Field> unionMembers,
-                                                                       final @Nullable String contextPropName) {
+    private ExpressionModel generateUnionCommonDescPropExpressionModel(final List<Field> unionMembers, final @Nullable String contextPropName) {
         final List<String> unionMembersNames = unionMembers.stream()
                 .filter(et -> hasDescProperty((Class<? extends AbstractEntity<?>>) et.getType()))
                 .map(Field::getName)
@@ -761,9 +764,11 @@ final class DomainMetadataGenerator {
         return generateUnionEntityPropertyContextualExpression(unionMembersNames, DESC, contextPropName);
     }
 
-    private static ExpressionModel generateUnionEntityPropertyContextualExpression(final List<String> unionMembers,
-                                                                                   final String commonSubpropName,
-                                                                                   final @Nullable String contextPropName) {
+    private static ExpressionModel generateUnionEntityPropertyContextualExpression(
+            final List<String> unionMembers,
+            final String commonSubpropName,
+            final @Nullable String contextPropName)
+    {
         if (unionMembers.isEmpty()) {
             return expr().val(null).model();
         }
@@ -783,7 +788,7 @@ final class DomainMetadataGenerator {
     ////// Calculated property utilities /////
     //////////////////////////////////////////
 
-    private static ExpressionModel extractExpressionModelFromCalculatedProperty
+    private static ExpressionModel extractExpressionModelForCalculatedProperty
             (final Class<? extends AbstractEntity<?>> entityType, final Field prop, final Calculated atCalculated)
     {
         try {
@@ -794,14 +799,13 @@ final class DomainMetadataGenerator {
                 exprField.setAccessible(true);
                 return (ExpressionModel) exprField.get(null);
             }
-        } catch (final Exception e) {
-            throw new DomainMetadataGenerationException(
-                    format("Can't obtain expression model for calculated property [%s]", prop), e);
+        } catch (final Exception ex) {
+            throw new DomainMetadataGenerationException("Cannot obtain expression model for calculated property [%s].".formatted(prop), ex);
         }
     }
 
     private static ExpressionText2ModelConverter createExpressionText2ModelConverter
-            (final Class<? extends AbstractEntity<?>> entityType, final Calculated atCalculated) throws Exception
+            (final Class<? extends AbstractEntity<?>> entityType, final Calculated atCalculated)
     {
         if (isContextual(atCalculated)) {
             return new ExpressionText2ModelConverter(getRootType(atCalculated), atCalculated.contextPath(), atCalculated.value());
@@ -810,8 +814,12 @@ final class DomainMetadataGenerator {
         }
     }
 
-    private static Class<? extends AbstractEntity<?>> getRootType(final Calculated atCalculated) throws ClassNotFoundException {
-        return (Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.loadType(atCalculated.rootTypeName());
+    private static Class<? extends AbstractEntity<?>> getRootType(final Calculated atCalculated) {
+        try {
+            return (Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.loadType(atCalculated.rootTypeName());
+        } catch(final Exception ex) {
+            throw new DomainMetadataGenerationException("Could not load type [%s].".formatted(atCalculated.rootTypeName()), ex);
+        }
     }
 
 
