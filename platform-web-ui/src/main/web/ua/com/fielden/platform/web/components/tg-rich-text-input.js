@@ -81,6 +81,9 @@ const template = html`
         .toastui-editor-defaultUI .ProseMirror {
             padding: 0 !important;
         }
+        .toastui-editor-contents h1, .toastui-editor-contents h2 {
+            border-bottom: none !important;
+        }
         .toastui-editor-contents {
             font-size: inherit !important;
         }

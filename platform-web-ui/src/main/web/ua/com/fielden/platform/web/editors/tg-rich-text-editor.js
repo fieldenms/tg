@@ -85,7 +85,6 @@ const customLabelTemplate = html`
 const customInputTemplate = html`
     <tg-rich-text-input id="input" 
         class="custom-input paper-input-input"
-        tooltip-text$="[[_getTooltip(_editingValue, entity)]]"
         disabled$="[[_disabled]]" 
         value="{{_editingValue}}"
         change-event-handler="[[_onChange]]"
