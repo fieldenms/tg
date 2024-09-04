@@ -3,6 +3,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/images/tg-rich-text-editor-icons.js';
 import '/resources/components/tg-rich-text-input.js';
 import '/resources/components/tg-link-dialog.js';
+import '/resources/components/tg-color-picker-dialog.js';
 
 import { html } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
@@ -59,6 +60,9 @@ const additionalTemplate = html`
     </style>
     <iron-dropdown id="linkDropdown" vertical-align="top" horizontal-align="left" vertical-offset="13.5" always-on-top>
         <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]"></tg-link-dialog>
+    </iron-dropdown>
+    <iron-dropdown id="colorDropdown" vertical-align="top" horizontal-align="left" vertical-offset="13.5" always-on-top>
+        <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]"></tg-color-picker-dialog>
     </iron-dropdown>`;
 const customLabelTemplate = html`
     <label id="editorLabel" style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
@@ -73,7 +77,7 @@ const customLabelTemplate = html`
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Make your text bold" on-tap="_makeBold"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text" on-tap="_makeItalic"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it" on-tap="_makeStrike"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-tap="_changeTextColor"></iron-icon>
+        <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-tap="_changeTextColor"></iron-icon>
         <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-tap="_insertLink"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-indent-increase" action-title="Increase Indent" tooltip-text="Move your paragraph further away from the margin" on-tap="_indent"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-indent-decrease" action-title="Decrease Indent" tooltip-text="Move your paragraph closer to the margin" on-tap="_outdent"></iron-icon>
@@ -123,7 +127,10 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             },
 
             _cancelLinkInsertion: Function,
-            _acceptLink: Function
+            _acceptLink: Function,
+
+            _cancelColorAction: Function,
+            _acceptColor: Function
         }
     }
 
@@ -136,6 +143,14 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         this._acceptLink = function () {
             this.$.input.insertLink(this.$.linkDialog.url, this.$.linkDialog.linkText);
             this.$.linkDropdown.close();
+        }.bind(this);
+        this.$.colorDropdown.positionTarget = this.$.colorAction;
+        this._cancelColorAction = function() {
+            this.$.colorDropdown.cancel();
+        }.bind(this);
+        this._acceptColor = function() {
+            this.$.input.applyColor(this.$.colorDialog.color);
+            this.$.colorDropdown.close();
         }.bind(this);
     }
 
@@ -182,7 +197,13 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _changeTextColor(e) {
-        this.$.input.applyColor('red');
+        // const element = this.$.input.getDomAtCaretPosition();
+        // if (element.style.color) {
+        //     this.$.colorDialog.color = element.style.color;
+        // }
+        if (this.$.input._prevSelection[0] != this.$.input._prevSelection[1]) {
+            this.$.colorDropdown.open();
+        }
     }
 
     _insertLink(e) {

@@ -219,13 +219,19 @@ class TgRichTextInput extends PolymerElement {
         return this._editor && this._editor.getHeight();
     }
 
+    getDomAtCaretPosition() {
+        if (this._editor && this._prevSelection) {
+            return this._editor.wwEditor.view.domAtPos(this._prevSelection[1]).node.parentElement;
+        }
+    }
+
     _valueChanged(newValue) {
         if(this._editor && newValue !== this._editor.getHTML()) {
             this._editor.setHTML(newValue);
         }
     }
 
-    _saveSelection() {
+    _saveSelection(e) {
         if (this._editor) {
             this._prevSelection = this._editor.getSelection();
         }
