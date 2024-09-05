@@ -5,6 +5,8 @@ import '/resources/toastui-editor/toastui-editor-all.min.js';
 
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
+import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+
 function createSelection(tr, selection, SelectionClass, openTag, closeTag) {
     const { mapping, doc } = tr;
     const { from, to, empty } = selection;
@@ -67,6 +69,15 @@ function colorTextPlugin (context, options) {
         },
     };
 }
+
+function mouseOverHandler(e) {
+    if (e.target.hasAttribute("href")) {
+        const text = e.target.getAttribute("href");
+        this.showTooltip(text);
+    } else {
+        this._hideTooltip();
+    }
+};
 
 let mouseTimer = null;
 let longPress = false;
@@ -136,7 +147,7 @@ const template = html`
     </style>
     <div id="editor"></div>`; 
 
-class TgRichTextInput extends mixinBehaviors([IronResizableBehavior], PolymerElement) {
+class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, TgTooltipBehavior], PolymerElement) {
 
     static get template() { 
         return template;
@@ -188,8 +199,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior], PolymerEle
             toolbarItems: [],
             hideModeSwitch: true
         });
+        //trigger tooltips manually
+        this.triggerManual = true;
         //The following code is nedded to preserve whitespaces after loading html into editor.
         this._editor.wwEditor.schema.cached.domParser.rules.forEach(r => r.preserveWhitespace = "full");
+        //Add event listeners for tooltips on editor
+        this._editor.getEditorElements().wwEditor.children[0].addEventListener("mouseover", mouseOverHandler.bind(this));
         //Add event listeners to make link clickable and with proper cursor
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("mousedown", mouseDownHandler.bind(this));
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("mouseup", mouseUpHandler.bind(this));
