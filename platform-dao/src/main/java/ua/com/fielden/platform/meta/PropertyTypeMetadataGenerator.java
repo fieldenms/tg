@@ -68,7 +68,6 @@ final class PropertyTypeMetadataGenerator {
         return generate(elementType)
                 .filter(PropertyTypeMetadataGenerator::isValidCollectionalElementType)
                 .map(eltTypeMd -> new CollectionalPropertyTypeMetadata(rawType, eltTypeMd));
-        // new EqlMetadataGenerationException("Failed to generate metadata for element type of collectional property type [%s].".formatted(type));
     }
 
     private static boolean isValidCollectionalElementType(final PropertyTypeMetadata eltTypeMetadata) {
