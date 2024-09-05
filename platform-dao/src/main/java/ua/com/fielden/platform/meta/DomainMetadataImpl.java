@@ -93,8 +93,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
     @Override
     public EntityMetadata forEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return forEntityOpt(entityType)
-                .orElseThrow(() -> new DomainMetadataGenerationException(
-                        format("Could not generate metadata for entity [%s]", entityType.getTypeName())));
+                .orElseThrow(() -> new DomainMetadataGenerationException("Could not generate metadata for entity [%s].".formatted(entityType.getTypeName())));
     }
 
     @Override
@@ -168,7 +167,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
             try {
                 this.hibTypesDefaults.put(javaType, hibType.getDeclaredField("INSTANCE").get(null));
             } catch (final Exception e) {
-                throw new DomainMetadataGenerationException("Couldn't instantiate Hibernate type [%s]".formatted(hibType), e);
+                throw new DomainMetadataGenerationException("Could not instantiate Hibernate type [%s].".formatted(hibType), e);
             }
         });
 
