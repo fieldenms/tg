@@ -1,6 +1,9 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import '/resources/toastui-editor/toastui-editor-all.min.js';
+
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 function createSelection(tr, selection, SelectionClass, openTag, closeTag) {
     const { mapping, doc } = tr;
@@ -14,7 +17,7 @@ function createSelection(tr, selection, SelectionClass, openTag, closeTag) {
 }
 
 function colorTextPlugin (context, options) {
-    const { eventEmitter, pmState } = context;
+    const { pmState } = context;
 
 
     return {
@@ -133,7 +136,7 @@ const template = html`
     </style>
     <div id="editor"></div>`; 
 
-class TgRichTextInput extends PolymerElement {
+class TgRichTextInput extends mixinBehaviors([IronResizableBehavior], PolymerElement) {
 
     static get template() { 
         return template;
@@ -158,7 +161,8 @@ class TgRichTextInput extends PolymerElement {
             },
 
             minHeight: {
-                type: String
+                type: String,
+                observer: "_minHeightChanged"
             },
 
             _editor: Object,
@@ -291,10 +295,18 @@ class TgRichTextInput extends PolymerElement {
     _heightChanged (newHeight) {
         if (this._editor) {
             this._editor.setHeight(newHeight);
+            this.fire("iron-resize", {
+                node: this,
+                bubbles: true,
+            });
         }
     }
 
-
+    _minHeightChanged(newMinHeight) {
+        if (this._editor) {
+            this._editor.setMinHeight(newMinHeight);
+        }
+    }
 }
 
 customElements.define('tg-rich-text-input', TgRichTextInput);

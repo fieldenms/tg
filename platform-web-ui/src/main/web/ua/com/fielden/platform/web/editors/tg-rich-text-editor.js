@@ -9,7 +9,7 @@ import { html } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
-import { tearDownEvent, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -113,7 +113,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
             minHeight: {
                 type: String,
-                value: "100px"
+                value: "16px"
             },
 
             height: {
@@ -256,11 +256,32 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
                 case 'start':
                     break;
                 case 'track':
+                    const prevHeight = this.$.input.offsetHeight;
                     let newHeight = this.$.input.offsetHeight + event.detail.ddy;
+                    //Adjust height if mouse is out of the scroll container
+                    const scrollContainer = this._getScrollingParent();
+                    const mousePos = scrollContainer && getRelativePos(event.detail.x, event.detail.y, scrollContainer);
+                    if (scrollContainer && mousePos) {
+                        if (mousePos.y > scrollContainer.offsetHeight) {
+                            newHeight += mousePos.y - scrollContainer.offsetHeight;
+                        } else if (mousePos.y < 0) {
+                            newHeight += mousePos.y;
+                        }
+                    }
+                    //Adjust new height if it less then resizer icon or min height of this editor
+                    if (newHeight < this.$.resizer.offsetHeight) {
+                        newHeight = this.$.resizer.offsetHeight;
+                    }
                     if (newHeight < parseInt(this.minHeight)) {
                         newHeight = parseInt(this.minHeight);
                     }
                     this.$.input.height = newHeight + "px";
+                    //scroll if needed
+                    if (scrollContainer && mousePos) {
+                        if (mousePos.y > scrollContainer.offsetHeight || mousePos.y < 0) {
+                            scrollContainer.scrollTop += newHeight - prevHeight;
+                        }
+                    }
                     break;
                 case 'end':
                     this._saveHeight(this.$.input.getHeight());
@@ -268,6 +289,15 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             }
         }
         tearDownEvent(event);  
+    }
+
+    _getScrollingParent() {
+        let parent = this;
+        while (parent && parent.offsetHeight === parent.scrollHeight) {
+            // go through parent elements (including going out from shadow DOM)
+            parent = parent.assignedSlot || parent.parentElement || parent.getRootNode().host;
+        }
+        return parent;
     }
 
     _makeInputUnselectable () {

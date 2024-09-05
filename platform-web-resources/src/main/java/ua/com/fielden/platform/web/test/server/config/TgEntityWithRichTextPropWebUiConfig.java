@@ -93,8 +93,7 @@ public class TgEntityWithRichTextPropWebUiConfig {
 
     private EntityMaster<TgEntityWithRichTextProp> createMaster(final Injector injector) {
         final String layout = cell(
-                cell(cell(CELL_LAYOUT)).repeat(2).
-                cell(cell(CELL_LAYOUT), FLEXIBLE_ROW),
+                cell(cell(CELL_LAYOUT)).repeat(3),
             FLEXIBLE_LAYOUT_WITH_PADDING).toString();
 
         final IMaster<TgEntityWithRichTextProp> masterConfig = new SimpleMasterBuilder<TgEntityWithRichTextProp>().forEntity(TgEntityWithRichTextProp.class)
