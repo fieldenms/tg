@@ -28,9 +28,9 @@ final class PropertyTypeMetadataGenerator {
     }
 
     /**
-     * Prefer {@link #generate(Field)} if the property's {@link Field} is available. This method should be used only in
-     * special cases. It's uncapable of handling collectional types, for example, since that would require knowledge
-     * of property's annotations.
+     * Prefer {@link #generate(Field)} if the property's {@link Field} is available.
+     * This method should be used only in special cases.
+     * For example, it is incapable of handling collectional types, since that would require information about property's annotations.
      */
     public Optional<PropertyTypeMetadata> generate(final Type type) {
         // start with empty() to type-check

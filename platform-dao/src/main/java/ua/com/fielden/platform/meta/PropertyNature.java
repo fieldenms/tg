@@ -118,7 +118,7 @@ public sealed interface PropertyNature {
 
         @Override
         public String toString() {
-            return "Crit-only Property";
+            return "CritOnly Property";
         }
     }
 

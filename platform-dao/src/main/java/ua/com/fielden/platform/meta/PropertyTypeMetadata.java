@@ -12,20 +12,22 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Represents a property type. This abstraction can be viewed as being in a class-instance relationship with {@link TypeMetadata}:
- * {@link PropertyTypeMetadata} is an instance of {@link TypeMetadata}. This means that {@link PropertyTypeMetadata} can
- * refine {@link TypeMetadata} with arbitrary information.
+ * Represents a property type.
+ * This abstraction can be viewed as being in a class-instance relationship with {@link TypeMetadata}:
+ * {@link PropertyTypeMetadata} is an instance of {@link TypeMetadata}.
+ * This means that {@link PropertyTypeMetadata} can extend {@link TypeMetadata} with additional information.
  * <p>
- * However, the mentioned class-instance relationship is not a universal rule. There are property types that don't directly
- * correspond to any {@link TypeMetadata}. For example, types of collectional properties or primitive types such as {@link String}.
+ * However, the mentioned class-instance relationship is not a universal rule.
+ * There are property types that do not correspond directly to any {@link TypeMetadata}.
+ * For example, types of collectional properties or primitive types such as {@link String}.
  *
  * <h5> Property types that aren't modelled </h5>
- * This abstraction is not exhaustive, i.e., it does not cover all possible property types.
+ * This abstraction is not exhaustive – it does not cover all possible property types.
  * <p>
- * Examples property types that aren't modelled:
+ * Examples of property types that are not modelled:
  * <ul>
- *   <li> {@link Map}
- *   <li> Collectional types parameterised with unmodelled property types (e.g, with a type variable)
+ *   <li> {@link Map};
+ *   <li> Collectional types parameterised with unmodelled property types (e.g., with a type variable).
  * </ul>
  */
 public sealed interface PropertyTypeMetadata {
