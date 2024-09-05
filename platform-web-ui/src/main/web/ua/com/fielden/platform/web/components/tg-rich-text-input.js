@@ -65,6 +65,46 @@ function colorTextPlugin (context, options) {
     };
 }
 
+let mouseTimer = null;
+let longPress = false;
+let shortPress = false;
+
+function runLinkIfPossible(el) {
+    if (el.hasAttribute('href')) {
+        const w = window.open(el.getAttribute('href'));
+
+        w.focus();
+    }
+}
+
+function mouseDownHandler(e) {
+    if ((e.button == 0 && (e.ctrlKey || e.metaKey)) || e.type.startsWith("touch")) {
+        longPress = false;
+        shortPress = true;
+        const el = e.target;
+        mouseTimer = setTimeout(() => {
+            longPress = true;
+            shortPress = false;
+            setTimeout( () => {runLinkIfPossible(el)}, 1);
+        }, 1000);
+    }
+}
+
+function mouseUpHandler(e) {
+    if (e.button == 0 || e.type.startsWith("touch")) {
+        if (mouseTimer) {
+            clearTimeout(mouseTimer);
+        }
+        if (shortPress && !longPress && (e.ctrlKey || e.metaKey)) {
+            const el = e.target;
+            setTimeout( () => {runLinkIfPossible(el)}, 150);
+        }
+        longPress = false;
+        shortPress = false;
+        mouseTimer = null;
+    }
+}
+
 const template = html`
     <link rel="stylesheet" href="/resources/toastui-editor/toastui-editor.min.css" />
     <style>
@@ -81,11 +121,14 @@ const template = html`
         .toastui-editor-defaultUI .ProseMirror {
             padding: 0 !important;
         }
+        .toastui-editor-contents {
+            font-size: inherit !important;
+        }
         .toastui-editor-contents h1, .toastui-editor-contents h2 {
             border-bottom: none !important;
         }
-        .toastui-editor-contents {
-            font-size: inherit !important;
+        .toastui-editor-contents a {
+            cursor: pointer !important;
         }
     </style>
     <div id="editor"></div>`; 
@@ -135,9 +178,6 @@ class TgRichTextInput extends PolymerElement {
                 blur: this.changeEventHandler.bind(this),
                 caretChange: this._saveSelection.bind(this)
             },
-            linkAttributes: {
-                target: "_blank"
-            },
             plugins: [colorTextPlugin],
             useCommandShortcut: true,
             usageStatistics: false,
@@ -146,7 +186,11 @@ class TgRichTextInput extends PolymerElement {
         });
         //The following code is nedded to preserve whitespaces after loading html into editor.
         this._editor.wwEditor.schema.cached.domParser.rules.forEach(r => r.preserveWhitespace = "full");
-        this._editor.setHTML(this.value);
+        //Add event listeners to make link clickable and with proper cursor
+        this._editor.getEditorElements().wwEditor.children[0].addEventListener("mousedown", mouseDownHandler.bind(this));
+        this._editor.getEditorElements().wwEditor.children[0].addEventListener("mouseup", mouseUpHandler.bind(this));
+        this._editor.getEditorElements().wwEditor.children[0].addEventListener("touchstart", mouseDownHandler.bind(this));
+        this._editor.getEditorElements().wwEditor.children[0].addEventListener("touchend", mouseUpHandler.bind(this));
     }
 
     applyHeader1() {
