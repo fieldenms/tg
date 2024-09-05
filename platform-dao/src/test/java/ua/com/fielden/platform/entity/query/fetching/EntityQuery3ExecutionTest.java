@@ -967,7 +967,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void union_members_can_be_yielded_with_dot_notation() {
+    public void union_members_can_be_yielded_with_dot_expression() {
         final var query = select(TgBogie.class)
                 .where().prop("key").eq().val("BOGIE1")
                 .yield().prop("location.workshop").as("workshop")

@@ -235,7 +235,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         }
 
         // TODO: The following code to extend a fetch model for union-typed properties to include their union-properties appears to be irrelevant.
-        //       Test EntityQuery3ExecutionTest.union_members_can_be_yielded_with_dot_notation demonstrates this.
+        //       Test EntityQuery3ExecutionTest.union_members_can_be_yielded_with_dot_expression demonstrates this.
         //       For now let's comment this code out with the intent to eventually remove it.
         //if (propType instanceof PropertyTypeMetadata.Entity et) {
         //    final EntityMetadata em = domainMetadata.forEntity(et.javaType());
