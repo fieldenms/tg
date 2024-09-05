@@ -12,7 +12,6 @@ import java.util.StringJoiner;
 import java.util.function.Predicate;
 
 import static java.lang.Boolean.FALSE;
-import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.calculatedProp;
@@ -86,25 +85,28 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         };
     }
 
-    private List<PropertyMetadata> subPropertiesForCompositeAny(final PropertyMetadata prop, final Object hibType,
-                                                                final TypeMetadata.Component componentTypeMetadata) {
+    private List<PropertyMetadata> subPropertiesForCompositeAny(
+            final PropertyMetadata prop,
+            final Object hibType,
+            final TypeMetadata.Component componentTypeMetadata)
+    {
         final var compositeHibType = (ICompositeUserTypeInstantiate) hibType;
 
         return zip(stream(compositeHibType.getPropertyNames()), stream(compositeHibType.getPropertyTypes()), (subPropName, subHibType) -> {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
-                    .orElseThrow(() -> new DomainMetadataGenerationException(
-                            format("Missing property [%s] in [%s]. Expected by [%s].", subPropName, componentTypeMetadata, compositeHibType)));
-
+                    .orElseThrow(() -> new DomainMetadataGenerationException("Missing property [%s] in [%s]. Expected by [%s].".formatted(subPropName, componentTypeMetadata, compositeHibType)));
             return PropertyMetadataImpl.Builder.toBuilder(prop)
                     .name(subPropName).type(subProp.type()).hibType(subHibType)
                     .build();
         }).toList();
     }
 
-    private List<PropertyMetadata> subPropertiesForCompositePersistent(final PropertyMetadata.Persistent prop,
-                                                                       final TypeMetadata.Component componentTypeMetadata) {
+    private List<PropertyMetadata> subPropertiesForCompositePersistent(
+            final PropertyMetadata.Persistent prop,
+            final TypeMetadata.Component componentTypeMetadata)
+    {
         if (prop.hibType() == null) {
-            throw new DomainMetadataGenerationException("Expected Hibernate type to be present for [%s]".formatted(prop));
+            throw new DomainMetadataGenerationException("Expected Hibernate type to be present for [%s].".formatted(prop));
         }
         final var compositeHibType = (ICompositeUserTypeInstantiate) prop.hibType();
 
@@ -113,8 +115,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
 
         return zip(stream(subPropNames), stream(compositeHibType.getPropertyTypes()), (subPropName, subHibType) -> {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
-                    .orElseThrow(() -> new DomainMetadataGenerationException(
-                            format("Missing property [%s] in [%s]. Expected by [%s].", subPropName, componentTypeMetadata, compositeHibType)));
+                    .orElseThrow(() -> new DomainMetadataGenerationException("Missing property [%s] in [%s]. Expected by [%s].".formatted(subPropName, componentTypeMetadata, compositeHibType)));
 
             final var mapToColumn = getPropertyAnnotationOptionally(MapTo.class, compositeJavaType, subPropName)
                     .map(MapTo::value).orElse("");
@@ -130,8 +131,10 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         }).toList();
     }
 
-    private List<PropertyMetadata> subPropertiesForCompositeCalculated(final Calculated prop,
-                                                                       final TypeMetadata.Component componentTypeMetadata) {
+    private List<PropertyMetadata> subPropertiesForCompositeCalculated(
+            final Calculated prop,
+            final TypeMetadata.Component componentTypeMetadata)
+    {
         if (prop.hibType() == null) {
             throw new DomainMetadataGenerationException("Expected Hibernate type to be present for [%s]".formatted(prop));
         }
@@ -139,8 +142,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
 
         return zip(stream(compositeHibType.getPropertyNames()), stream(compositeHibType.getPropertyTypes()), (subPropName, subHibType) -> {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
-                    .orElseThrow(() -> new DomainMetadataGenerationException(
-                            format("Missing property [%s] in [%s]. Expected by [%s].", subPropName, componentTypeMetadata, compositeHibType)));
+                    .orElseThrow(() -> new DomainMetadataGenerationException("Missing property [%s] in [%s]. Expected by [%s].".formatted(subPropName, componentTypeMetadata, compositeHibType)));
             return calculatedProp(subPropName, subProp.type(), subHibType, prop.data()).build();
         }).toList();
     }
