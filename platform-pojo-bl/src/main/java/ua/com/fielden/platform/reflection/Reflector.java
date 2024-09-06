@@ -1,28 +1,9 @@
 package ua.com.fielden.platform.reflection;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.joining;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
-import static ua.com.fielden.platform.utils.Pair.pair;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Accessor;
@@ -35,6 +16,19 @@ import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.*;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
  * This is a helper class to provide some commonly used method for retrieval of RTTI not provided directly by the Java reflection package.
@@ -231,7 +225,7 @@ public final class Reflector {
      * @return
      * @throws Exception
      */
-    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) {
+    public static Method obtainPropertyAccessor(final Class<?> entityClass, final CharSequence propertyName) {
         try {
             return Reflector.getMethod(entityClass, Accessor.GET.getName(propertyName));
         } catch (final Exception e1) {
@@ -252,8 +246,8 @@ public final class Reflector {
      * @throws NoSuchMethodException
      * @throws Exception
      */
-    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) {
-        if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.contains("()")) {
+    public static Method obtainPropertySetter(final Class<?> entityClass, final CharSequence dotNotationExp) {
+        if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.toString().contains("()")) {
             throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
@@ -506,16 +500,83 @@ public final class Reflector {
     }
     
     /**
-     * Returns <code>true</code> if the specified property is proxied for a given entity instance.
-     *  
+     * A predicate that evaluates to {@code true} only if none of the properties in a dot-expression is proxied for a given entity and none of the intermediate values is {@code null}.
+     * <p>
+     * For example, {@code isPropertyProxied(entity, "prop.subProp.subSubProp")} would be {@code false} in the following cases:
+     * <ol>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is not proxied,
+     *          <li> {@code entity.get("prop")} is {@code null},
+     *      </ul>
+     *      </li>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is not proxied,
+     *          <li> {@code entity.get("prop")} is not {@code null},
+     *          <li> {@code "prop.subProp"} is not proxied,
+     *          <li> {@code entity.get("prop").get("subProp")} is {@code null},
+     *      </ul>
+     *      </li>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is not proxied,
+     *          <li> {@code entity.get("prop")} is not {@code null},
+     *          <li> {@code "prop.subProp"} is not proxied,
+     *          <li> {@code entity.get("prop").get("subProp")} is not {@code null},
+     *          <li> {@code "prop.subProp.subSubProp"} is not proxied.
+     *      </ul>
+     *      </li>
+     * </ol>
+     * And the same would be {@code true} in the following cases:
+     * <ol>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is proxied
+     *      </ul>
+     *      </li>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is not proxied,
+     *          <li> {@code entity.get("prop")} is not {@code null},
+     *          <li> {@code "prop.subProp"} is proxied
+     *      </ul>
+     *      </li>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is not proxied,
+     *          <li> {@code entity.get("prop")} is not {@code null},
+     *          <li> {@code "prop.subProp"} is not proxied,
+     *          <li> {@code entity.get("prop").get("subProp")} is not {@code null},
+     *          <li> {@code "prop.subProp.subSubProp"} is proxied.
+     *      </ul>
+     *      </li>
+     * </ol>
+     *
      * @param entity
-     * @param propName
+     * @param propPath
      * @return
      */
-    public static boolean isPropertyProxied(final AbstractEntity<?> entity, final String propName) {
-        return entity.proxiedPropertyNames().contains(propName);
+    public static boolean isPropertyProxied(final AbstractEntity<?> entity, final CharSequence propPath) {
+        final var props = splitPropPath(propPath).iterator();
+        return isPropertyProxied_(entity, props.next(), props);
     }
-    
+    // a helper function to implement recursive processing of propPath
+    private static boolean isPropertyProxied_(final AbstractEntity<?> entity, final String propName, final Iterator<String> tail) {
+        if (entity.proxiedPropertyNames().contains(propName)) {
+            return true;
+        }
+        if (tail.hasNext()) {
+            final AbstractEntity<?> nextEntity = entity.get(propName);
+            // if the next entity is null then there is nothing to violate the proxy condition -- consider its sub-properties to be not proxied
+            if (nextEntity == null) {
+                return false;
+            }
+            return isPropertyProxied_(nextEntity, tail.next(), tail);
+        }
+        return false;
+    }
+
     /**
      * Identifies whether the specified field represents a retrievable property.
      * The notion of <code>retrievable</code> is different to <code>persistent</code> as it also includes calculated properties, which do get retrieved from a database. 
@@ -565,6 +626,54 @@ public final class Reflector {
         } catch (final Exception ex) {
             throw new ReflectionException("Could not assign value to a static field.", ex);
         }
+    }
+
+    public static ParameterizedType newParameterizedType(final Class<?> rawType, final Type... typeArguments) {
+        final Type owner = rawType.getDeclaringClass();
+
+        return new ParameterizedType() {
+            @Override public Class<?> getRawType() { return rawType; }
+            @Override public Type getOwnerType() { return owner; }
+            @Override public Type[] getActualTypeArguments() { return typeArguments; }
+            @Override
+            public String toString() {
+                final StringBuilder sb = new StringBuilder();
+                if (owner != null) {
+                    sb.append(owner.getTypeName());
+                    sb.append('$');
+                    sb.append(rawType.getSimpleName());
+                }
+                else {
+                    sb.append(rawType.getName());
+                }
+
+                final StringJoiner sj = new StringJoiner(", ", "<", ">").setEmptyValue("");
+                for (final Type arg : typeArguments) {
+                    sj.add(arg.getTypeName());
+                }
+
+                return sb.append(sj.toString()).toString();
+            }
+
+            @Override
+            public boolean equals(final Object obj) {
+                return this == obj
+                       || obj instanceof ParameterizedType that
+                          && Objects.equals(rawType, that.getRawType())
+                          && Objects.equals(owner, that.getOwnerType())
+                          && Arrays.equals(typeArguments, that.getActualTypeArguments());
+            }
+
+            @Override
+            public int hashCode() {
+                final int prime = 31;
+                int result = 1;
+                result = prime * result + Objects.hashCode(rawType);
+                result = prime * result + Objects.hashCode(owner);
+                result = prime * result + Arrays.hashCode(typeArguments);
+                return result;
+            }
+        };
     }
 
 }

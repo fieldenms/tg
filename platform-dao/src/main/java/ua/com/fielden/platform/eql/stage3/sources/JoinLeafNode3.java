@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
-import java.util.Objects;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import java.util.Objects;
 
 public class JoinLeafNode3 implements IJoinNode3 {
     public final ISource3 source;
@@ -12,7 +12,7 @@ public class JoinLeafNode3 implements IJoinNode3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return source.sql(metadata);
     }
     

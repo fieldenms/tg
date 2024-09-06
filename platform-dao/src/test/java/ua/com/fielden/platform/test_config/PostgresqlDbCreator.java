@@ -15,8 +15,8 @@ import java.util.Properties;
 import org.hibernate.dialect.Dialect;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
@@ -43,7 +43,7 @@ public class PostgresqlDbCreator extends DbCreator {
      * Generates DDL for creation of a test database. All constraints are dropped to enable out-of-order data insertion and table truncation.
      */
     @Override
-    protected List<String> genDdl(final DomainMetadata domainMetaData, final Dialect dialect) {
+    protected List<String> genDdl(final IDomainMetadata domainMetaData, final Dialect dialect) {
         final List<String> result = DbUtils.prependDropDdlForPostgresql(domainMetaData.generateDatabaseDdl(dialect));
         // Drop all the foreign key constraints to allow out-of-order data truncation and/or population.
         // Need to pass the following PL/SQL as a single line otherwise it gets executed one independent line at a time, which does not work.
@@ -55,8 +55,8 @@ public class PostgresqlDbCreator extends DbCreator {
      * Generate the script for emptying the test database.
      */
     @Override
-    public List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) {
-        return entityMetadata.stream().map(entry -> format("delete from %s;", entry.getTable())).collect(toList());
+    public List<String> genTruncStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) {
+        return entityMetadata.stream().map(em -> format("delete from %s;", em.data().tableName())).collect(toList());
     }
 
     /**
@@ -64,9 +64,9 @@ public class PostgresqlDbCreator extends DbCreator {
      * Tables <code>ENTITY_CENTRE_CONFIG</code>, <code>ENTITY_LOCATOR_CONFIG</code> and <code>ENTITY_MASTER_CONFIG</code> are included even though they contains <code>varbinary</code> columns.
      */
     @Override
-    public List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException {
+    public List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) throws SQLException {
         return entityMetadata.stream()
-                .map(PersistedEntityMetadata::getTable)
+                .map(em -> em.data().tableName())
                 .flatMap(table -> {
                     final List<String> inserts = new ArrayList<>();
                     try {

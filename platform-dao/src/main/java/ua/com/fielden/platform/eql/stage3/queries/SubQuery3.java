@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.queries;
 
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         if (yields.getYields().size() != 1) {
             throw new EqlStage3ProcessingException(
                     "Subquery must yield only 1 value but yields %s: [%s]".formatted(

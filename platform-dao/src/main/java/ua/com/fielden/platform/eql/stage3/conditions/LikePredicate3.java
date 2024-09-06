@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.Objects;
 
@@ -20,8 +20,8 @@ public class LikePredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
-        return metadata.dbVersion.likeSql(options.negated, operandToSqlAsString(metadata, leftOperand), rightOperand.sql(metadata), options.caseInsensitive);
+    public String sql(final IDomainMetadata metadata) {
+        return metadata.dbVersion().likeSql(options.negated, operandToSqlAsString(metadata, leftOperand), rightOperand.sql(metadata), options.caseInsensitive);
     }
 
     @Override

@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import static java.util.stream.Collectors.joining;
+import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.meta.PropType;
+import static java.util.stream.Collectors.joining;
 
 public class Expression3 extends AbstractSingleOperand3 {
 
@@ -24,7 +24,7 @@ public class Expression3 extends AbstractSingleOperand3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return isSingleOperandExpression() ? firstOperand.sql(metadata) : "(" + firstOperand.sql(metadata) + otherOperands.stream().map(co -> co.sql(metadata)).collect(joining()) +")";
     }
 

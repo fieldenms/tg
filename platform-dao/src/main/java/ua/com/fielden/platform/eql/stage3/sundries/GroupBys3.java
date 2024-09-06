@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
-import static java.util.stream.Collectors.joining;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import static java.util.stream.Collectors.joining;
 
 public class GroupBys3 {
     private final List<GroupBy3> groups;
@@ -15,7 +14,7 @@ public class GroupBys3 {
         this.groups = groups;
     }
 
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return groups.stream().map(g -> g.sql(metadata)).collect(joining(", "));
     }
 

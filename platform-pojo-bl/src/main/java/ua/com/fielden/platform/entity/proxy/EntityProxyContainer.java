@@ -1,17 +1,8 @@
 package ua.com.fielden.platform.entity.proxy;
 
-import static java.util.stream.Collectors.joining;
-
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ExecutionException;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
+import com.google.common.collect.ImmutableSet;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.DynamicType.Builder;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
@@ -19,8 +10,18 @@ import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.reflection.Reflector;
+
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.entity.AbstractEntity.PROXIED_PROPERTY_NAMES_METHOD_NAME;
 
 /**
  * 
@@ -28,87 +29,120 @@ import ua.com.fielden.platform.reflection.Reflector;
  * Factory method {@link #proxy(Class, String...)} should be used to create proxied entity type.
  * 
  * @author TG Team
- *
- * @param <T>
  */
 public class EntityProxyContainer {
 
     private static final MethodDelegation proxyChecker = MethodDelegation.to(ProxyPropertyInterceptor.class);
     
-    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<? extends AbstractEntity<?>>>> TYPES = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(10000).concurrencyLevel(50).build();
+    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<Object, Class<? extends AbstractEntity<?>>>>
+            TYPES = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(10000).concurrencyLevel(50).build();
     
     public static long cleanUp() {
         TYPES.cleanUp();
         return TYPES.size();
     }
 
-    private EntityProxyContainer() {
-    }
-    
-    
+    private EntityProxyContainer() {}
+
     /**
      * Factory method for creating entity type proxies.
      * 
-     * @param entityType -- entity that is the owner of the properties to be proxied
-     * @param propNames -- the names of properties to be proxied
-     * @return
+     * @param entityType  entity that is the owner of the properties to be proxied
+     * @param propNames  the names of properties to be proxied
+     * @param interfaces  interfaces for the proxied type to implement
      */
-    public static <T extends AbstractEntity<?>> Class<? extends T> proxy(final Class<T> entityType, final String... propNames) {
+    public static <T extends AbstractEntity<?>>
+    Class<? extends T> proxy(final Class<T> entityType, final Collection<? extends CharSequence> propNames,
+                             final List<? extends Class> interfaces) {
         // if there is nothing to proxy then we can simply return the same type
-        if (propNames.length == 0) {
+        if (propNames.isEmpty()) {
             return entityType;
         }
-        
-        // let's use a set to avoid potential property duplicates
-        // it should be an ordered set to ensure equality between sets for the same propNames, but in different order
-        final Set<String> properties = new TreeSet<>(Arrays.asList(propNames));
-        final String key = properties.stream().collect(joining(","));
 
+        final Set<CharSequence> uniquePropNames = ImmutableSet.copyOf(propNames);
+
+        final var typeKey = makeTypeKey(uniquePropNames, interfaces);
         // let's try to find the generated type in the cache
-        final Cache<String, Class<? extends AbstractEntity<?>>> typeCache = getOrCreateTypeCache(entityType);
-        final Class<? extends AbstractEntity<?>> type = typeCache.getIfPresent(key);
+        final var typeCache = getOrCreateTypeCache(entityType);
+        final Class<? extends AbstractEntity<?>> type = typeCache.getIfPresent(typeKey);
         if (type != null) {
             return (Class<? extends T>) type;
         }
-        
-        Builder<T> buddy = new ByteBuddy().subclass(entityType);
 
-        for (final String propName: properties) {
-    
+        Builder<T> buddy = new ByteBuddy()
+                .subclass(entityType);
+
+        // try to avoid implementing IProxyEntity more than once
+        if (interfaces.stream().noneMatch(IProxyEntity.class::isAssignableFrom)) {
+            buddy = buddy.implement(IProxyEntity.class);
+        }
+
+        buddy = buddy.implement(interfaces);
+
+        for (final CharSequence propName: uniquePropNames) {
             final Method accessor = Reflector.obtainPropertyAccessor(entityType, propName);
             final Method setter = Reflector.obtainPropertySetter(entityType, propName);
     
             buddy = buddy
-                .method(ElementMatchers.named(accessor.getName())) //
+                .method(ElementMatchers.named(accessor.getName()))
                     .intercept(proxyChecker)
-                .method(ElementMatchers.named(setter.getName())) // 
+                .method(ElementMatchers.named(setter.getName()))
                     .intercept(proxyChecker);
-
         }
         
-        final Class<? extends T> ownerType = buddy
-            .method(ElementMatchers.named("proxiedPropertyNames"))
-            .intercept(FixedValue.value(Collections.unmodifiableSet(properties)))
+        final Class<? extends T> proxyType = buddy
+            .method(ElementMatchers.named(PROXIED_PROPERTY_NAMES_METHOD_NAME))
+            .intercept(FixedValue.value(ImmutableSet.copyOf(uniquePropNames)))
             .make()
             // use class loader of the entity being proxied instead of a general system class loader,
             // since it might have been loaded by a different class loader (e.g. a child class loader)
             .load(entityType.getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
             .getLoaded();
 
-        typeCache.put(key, ownerType);
-        return ownerType;
+        typeCache.put(typeKey, proxyType);
+        return proxyType;
     }
 
+    /**
+     * Factory method for creating entity type proxies.
+     *
+     * @param entityType -- entity that is the owner of the properties to be proxied
+     * @param propNames -- the names of properties to be proxied
+     */
+    public static <T extends AbstractEntity<?>>
+    Class<? extends T> proxy(final Class<T> entityType, final Collection<? extends CharSequence> propNames) {
+        return proxy(entityType, propNames, List.of());
+    }
 
-    protected static <T extends AbstractEntity<?>> Cache<String, Class<? extends AbstractEntity<?>>> getOrCreateTypeCache(final Class<T> entityType) {
+    /**
+     * Factory method for creating entity type proxies.
+     *
+     * @param entityType -- entity that is the owner of the properties to be proxied
+     * @param propNames -- the names of properties to be proxied
+     */
+    public static <T extends AbstractEntity<?>> Class<? extends T> proxy(final Class<T> entityType, final CharSequence... propNames) {
+        return proxy(entityType, Arrays.asList(propNames), List.of());
+    }
+
+    protected static <T extends AbstractEntity<?>>
+    Cache<Object, Class<? extends AbstractEntity<?>>> getOrCreateTypeCache(final Class<T> entityType) {
         try {
-            return TYPES.get(entityType, () -> { 
-                final Cache<String, Class<? extends AbstractEntity<?>>> newTypeCache = CacheBuilder.newBuilder().weakValues().build();
-                TYPES.put(entityType, newTypeCache);
-                return newTypeCache;
-            });
+            return TYPES.get(entityType, () -> CacheBuilder.newBuilder().weakValues().build());
         } catch (final ExecutionException ex) {
-            throw new EntityException("Could not create a proxy type.", ex);
+            throw new RuntimeException("Failed to create type cache.", ex);
         }
     }
+
+    /**
+     * Creates a unique key for a type.
+     *
+     * @param properties  properties to be proxied in the type
+     * @param interfaces  interfaces for the type to implement
+     */
+    protected static Object makeTypeKey(Collection<? extends CharSequence> properties, Collection<? extends Class> interfaces) {
+        final String propertiesKey = properties.stream().distinct().sorted(CharSequence::compare).collect(joining(","));
+        final String interfacesKey = interfaces.stream().distinct().map(Class::getCanonicalName).sorted(String::compareTo).collect(joining(","));
+        return Stream.of(propertiesKey, interfacesKey).filter(s -> !s.isEmpty()).collect(joining(":"));
+    }
+
 }

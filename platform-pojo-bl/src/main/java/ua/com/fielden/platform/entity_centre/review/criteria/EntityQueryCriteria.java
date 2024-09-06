@@ -12,7 +12,7 @@ import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.b
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createParamValuesMap;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.separateFetchAndTotalProperties;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotExpression;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -278,7 +278,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final IFetchProvider<V> rootProviderWithResultSetProperties = properties.stream()
                 .filter(property -> isShortCollection(managedType, property))
                 .reduce(rootProvider.with(properties), (fetchProvider, shortCollectionProp) -> {
-                    final String shortCollectionParent = isDotNotation(shortCollectionProp) ? penultAndLast(shortCollectionProp).getKey() : "";
+                    final String shortCollectionParent = isDotExpression(shortCollectionProp) ? penultAndLast(shortCollectionProp).getKey() : "";
                     final Class<AbstractEntity<?>> shortCollectionParentType = (Class<AbstractEntity<?>>) transform(managedType, shortCollectionProp).getKey();
                     return "".equals(shortCollectionParent)
                             ? fetchProvider.with((IFetchProvider<V>) EntityUtils.fetchNotInstrumentedWithKeyAndDesc(shortCollectionParentType))
@@ -378,7 +378,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * This is temporary solution needed for pagination support on web ui
+     * This is a temporary solution, needed for pagination support in the Web UI.
      */
     public IPage<T> getPage(final int pageNumber, final int pageCapacity) {
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = generateQuery();

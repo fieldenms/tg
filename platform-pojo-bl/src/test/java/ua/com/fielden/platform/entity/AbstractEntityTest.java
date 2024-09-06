@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
+import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
@@ -27,7 +28,11 @@ import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
 
 import java.lang.annotation.Annotation;
-import java.util.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import static java.lang.String.format;
 import static org.junit.Assert.*;
@@ -50,7 +55,7 @@ public class AbstractEntityTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     {
         module.getDomainValidationConfig().setValidator(Entity.class, "firstProperty", new HappyValidator());
-        module.getDomainValidationConfig().setValidator(Entity.class, "doubles", new HappyValidator());
+        module.getDomainValidationConfig().setValidator(Entity.class, "bigDecimals", new HappyValidator());
         module.getDomainValidationConfig().setValidator(Entity.class, "number", new HappyValidator() {
             @Override
             public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
@@ -80,18 +85,18 @@ public class AbstractEntityTest {
 
     @Test
     public void testThatObservablePropertyMaintainsOriginalAndPrevValue() {
-        entity.getProperty("observableProperty").setPrevValue(Double.valueOf("0.0")); // setting the same value as the current one does not change prev-value
+        entity.getProperty("observableProperty").setPrevValue(BigDecimal.ZERO); // setting the same value as the current one does not change prev-value
         assertEquals("current value must be changed (original value null)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
         assertEquals("current value must be changed (previous value null)", true, entity.getProperty("observableProperty").isChangedFromPrevious());
-        final Double newValue = Double.valueOf("22.0");
+        final var newValue = new BigDecimal("22.0");
         entity.setObservableProperty(newValue);
-        assertEquals("Prev property value is incorrect", Double.valueOf("0.0"), entity.getProperty("observableProperty").getPrevValue());
+        assertEquals("Prev property value is incorrect", BigDecimal.ZERO, entity.getProperty("observableProperty").getPrevValue());
         assertNull("Original property value is incorrect", entity.getProperty("observableProperty").getOriginalValue());
         assertEquals("Property change count is incorrect", 1, entity.getProperty("observableProperty").getValueChangeCount());
         assertEquals("current value must be changed (original value 1)", true, entity.getProperty("observableProperty").isChangedFromOriginal());
         assertEquals("current value must be changed (previous value 1)", true, entity.getProperty("observableProperty").isChangedFromPrevious());
 
-        entity.setObservableProperty(23.0);
+        entity.setObservableProperty(new BigDecimal("23.0"));
         assertEquals("Prev property value is incorrect", newValue, entity.getProperty("observableProperty").getPrevValue());
         assertNull("Original property value is incorrect", entity.getProperty("observableProperty").getOriginalValue());
         assertEquals("Property change count is incorrect", 2, entity.getProperty("observableProperty").getValueChangeCount());
@@ -129,14 +134,14 @@ public class AbstractEntityTest {
     @Test
     public void final_property_for_non_persistent_entity_can_only_be_assigned_once() {
         assertTrue(entity.getProperty("finalProperty").isEditable());
-        entity.setFinalProperty(60.0);
+        entity.setFinalProperty(new BigDecimal("60.0"));
         assertTrue(entity.getProperty("finalProperty").isValid());
-        assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
+        assertEquals(new BigDecimal("60.0"), entity.getFinalProperty());
         assertFalse(entity.getProperty("finalProperty").isEditable());
 
-        entity.setFinalProperty(31.0);
+        entity.setFinalProperty(new BigDecimal("31.0"));
         assertFalse(entity.getProperty("finalProperty").isValid());
-        assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
+        assertEquals(new BigDecimal("60.0"), entity.getFinalProperty());
         assertFalse(entity.getProperty("finalProperty").isEditable());
     }
 
@@ -144,7 +149,7 @@ public class AbstractEntityTest {
     public void persistentOnly_final_property_for_non_persistent_entity_yields_invalid_definition() {
         final Either<Exception, EntityInvalidDefinition> result = Try(() -> factory.newEntity(EntityInvalidDefinition.class, "key", "desc"));
         assertTrue(result instanceof Left);
-        final Throwable rootCause = ExceptionUtils.getRootCause(((Left<Exception, EntityInvalidDefinition>) result).value);
+        final Throwable rootCause = ExceptionUtils.getRootCause(((Left<Exception, EntityInvalidDefinition>) result).value());
         assertTrue(rootCause instanceof EntityDefinitionException);
         assertEquals(format("Non-persistent entity [%s] has property [%s], which is incorrectly annotated with @Final(persistentOnly = true).", EntityInvalidDefinition.class.getSimpleName(), "firstProperty"),
                 rootCause.getMessage());
@@ -215,8 +220,8 @@ public class AbstractEntityTest {
 
     @Test
     public void testThatMetaInformationForCollectionalPropertiesIsDeterminedCorrectly() {
-        assertTrue("Property 'doubles' is not recognised as collectional.", entity.getProperty("doubles").isCollectional());
-        assertEquals("Meta-property for 'doubles' has incorrect collectional type.", Double.class, entity.getProperty("doubles").getPropertyAnnotationType());
+        assertTrue("Property 'bigDecimals' is not recognised as collectional.", entity.getProperty("bigDecimals").isCollectional());
+        assertEquals("Meta-property for 'bigDecimals' has incorrect collectional type.", BigDecimal.class, entity.getProperty("bigDecimals").getPropertyAnnotationType());
 
         assertTrue("Property 'entities' is not recognised as collectional.", entity.getProperty("entities").isCollectional());
         assertEquals("Meta-property for 'entities' has incorrect collectional type.", Entity.class, entity.getProperty("entities").getPropertyAnnotationType());
@@ -227,35 +232,35 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
+     * <li>validators are provided with correct values (this is actually done by {@link ObservableMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
     @Test
     public void testThatCollectionalPropertySetterIsObservedAndValidated() {
-        final MetaProperty<List<Double>> doublesProperty = entity.getProperty("doubles");
-        assertEquals("Incorrect number of validators.", 2, doublesProperty.getValidators().size());
-        assertTrue("Should have domain validation.", doublesProperty.getValidators().containsKey(ValidationAnnotation.DOMAIN));
-        assertTrue("Should have not-null validation.", doublesProperty.getValidators().containsKey(ValidationAnnotation.REQUIRED));
-        assertNull("There should be no domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
-        assertNull("There should be no rquiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
-        entity.setDoubles(Arrays.asList(new Double[] { 2.0, 3.0 }));
-        entity.setDoubles(Arrays.asList(new Double[] { 2.0 }));
+        final MetaProperty<List<BigDecimal>> bigDecimalsProperty = entity.getProperty("bigDecimals");
+        assertEquals("Incorrect number of validators.", 2, bigDecimalsProperty.getValidators().size());
+        assertTrue("Should have domain validation.", bigDecimalsProperty.getValidators().containsKey(ValidationAnnotation.DOMAIN));
+        assertTrue("Should have not-null validation.", bigDecimalsProperty.getValidators().containsKey(ValidationAnnotation.REQUIRED));
+        assertNull("There should be no domain validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+        assertNull("There should be no rquiredness validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED));
+        entity.setBigDecimals(List.of(new BigDecimal("2.0"), new BigDecimal("3.0")));
+        entity.setBigDecimals(List.of(new BigDecimal("2.0")));
 
-        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
-        assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
-        assertEquals("Incorrect previous value", Arrays.asList(new Double[] { 2.0, 3.0 }), doublesProperty.getPrevValue());
-        assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
-        assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
+        assertNull("Incorrect original value", bigDecimalsProperty.getOriginalValue());
+        assertTrue("Incorrect isChangedFrom original.", bigDecimalsProperty.isChangedFromOriginal());
+        assertEquals("Incorrect previous value", List.of(new BigDecimal("2.0"), new BigDecimal("3.0")), bigDecimalsProperty.getPrevValue());
+        assertTrue("Incorrect isChangedFrom previous.", bigDecimalsProperty.isChangedFromPrevious());
+        assertTrue("Incorrect isDirty.", bigDecimalsProperty.isDirty());
         assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
 
-        assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
-        assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
-        assertNotNull("There should be a requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
-        assertTrue("Requirendess validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
+        assertNotNull("There should be domain validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+        assertTrue("Domain validation result should be successful.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
+        assertNotNull("There should be a requiredness validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED));
+        assertTrue("Requirendess validation result should be successful.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
 
-        entity.setDoubles(null);
-        assertFalse("Requiredness validation result should not be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
-        assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
+        entity.setBigDecimals(null);
+        assertFalse("Requiredness validation result should not be successful.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
+        assertEquals("Incorrect size for bigDecimals", 1, entity.getBigDecimals().size());
     }
 
     /**
@@ -263,33 +268,33 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
+     * <li>validators are provided with correct values (this is actually done by {@link ObservableMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
     @Test
     public void testThatCollectionalPropertyIncrementorIsObservedAndValidated() {
-        final MetaProperty<List<Double>> doublesProperty = entity.getProperty("doubles");
-        entity.setDoubles(Arrays.asList(new Double[] { -2.0, -3.0 }));
+        final MetaProperty<List<BigDecimal>> bigDecimalsProperty = entity.getProperty("bigDecimals");
+        entity.setBigDecimals(List.of(new BigDecimal("-2.0"), new BigDecimal("-3.0")));
 
-        entity.addToDoubles(2.0);
+        entity.addToBigDecimals(new BigDecimal("2.0"));
 
-        assertEquals("Incorrect size for doubles", 3, entity.getDoubles().size());
+        assertEquals("Incorrect size for bigDecimals", 3, entity.getBigDecimals().size());
 
-        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
-        assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
-        assertEquals("Incorrect previous value", Arrays.asList(new Double[] { -2.0, -3.0 }), doublesProperty.getPrevValue());
-        assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
-        assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
+        assertNull("Incorrect original value", bigDecimalsProperty.getOriginalValue());
+        assertTrue("Incorrect isChangedFrom original.", bigDecimalsProperty.isChangedFromOriginal());
+        assertEquals("Incorrect previous value", List.of(new BigDecimal("-2.0"), new BigDecimal("-3.0")), bigDecimalsProperty.getPrevValue());
+        assertTrue("Incorrect isChangedFrom previous.", bigDecimalsProperty.isChangedFromPrevious());
+        assertTrue("Incorrect isDirty.", bigDecimalsProperty.isDirty());
         assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
 
-        assertNotNull("There should be a domain validation result.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
-        assertNotNull("There should be requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
-        assertTrue("Requiredness validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
+        assertNotNull("There should be a domain validation result.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+        assertNotNull("There should be requiredness validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED));
+        assertTrue("Requiredness validation result should be successful.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
 
-        entity.addToDoubles(null);
-        assertFalse("Requiredness validation result should not be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
-        assertEquals("Incorrect size for doubles", 3, entity.getDoubles().size());
-        assertNull("Null value is expected for the last invalid value.", entity.getProperty("doubles").getLastInvalidValue());
+        entity.addToBigDecimals(null);
+        assertFalse("Requiredness validation result should not be successful.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
+        assertEquals("Incorrect size for bigDecimals", 3, entity.getBigDecimals().size());
+        assertNull("Null value is expected for the last invalid value.", entity.getProperty("bigDecimals").getLastInvalidValue());
     }
 
     /**
@@ -297,29 +302,29 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
+     * <li>validators are provided with correct values (this is actually done by {@link ObservableMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
     @Test
     public void testThatCollectionalPropertyDecrementorIsObservedAndValidated() {
-        final MetaProperty<List<Double>> doublesProperty = entity.getProperty("doubles");
-        entity.setDoubles(Arrays.asList(new Double[] { -2.0, -3.0 }));
+        final MetaProperty<List<BigDecimal>> bigDecimalsProperty = entity.getProperty("bigDecimals");
+        entity.setBigDecimals(List.of(new BigDecimal("-2.0"), new BigDecimal("-3.0")));
 
-        entity.removeFromDoubles(-2.0);
+        entity.removeFromBigDecimals(new BigDecimal("-2.0"));
 
-        assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
+        assertEquals("Incorrect size for bigDecimals", 1, entity.getBigDecimals().size());
 
-        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
-        assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
-        assertEquals("Incorrect previous value", Arrays.asList(new Double[] { -2.0, -3.0 }), doublesProperty.getPrevValue());
-        assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
-        assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
+        assertNull("Incorrect original value", bigDecimalsProperty.getOriginalValue());
+        assertTrue("Incorrect isChangedFrom original.", bigDecimalsProperty.isChangedFromOriginal());
+        assertEquals("Incorrect previous value", List.of(new BigDecimal("-2.0"), new BigDecimal("-3.0")), bigDecimalsProperty.getPrevValue());
+        assertTrue("Incorrect isChangedFrom previous.", bigDecimalsProperty.isChangedFromPrevious());
+        assertTrue("Incorrect isDirty.", bigDecimalsProperty.isDirty());
         assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
 
-        assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
-        assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
-        assertNotNull("There should be requiredness validation result.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
-        assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
+        assertNotNull("There should be domain validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+        assertTrue("Domain validation result should be successful.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
+        assertNotNull("There should be requiredness validation result.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED));
+        assertEquals("Incorrect size for bigDecimals", 1, entity.getBigDecimals().size());
     }
 
     @Test
@@ -343,29 +348,29 @@ public class AbstractEntityTest {
     @Test
     public void testValidationAndSettingRestrictionInObservableMutator() {
         // preparing
-        final MetaProperty<Double> metaProperty = entity.getProperty("observableProperty");
+        final MetaProperty<BigDecimal> metaProperty = entity.getProperty("observableProperty");
         // 1. test the error recovery by the same value
-        entity.setObservableProperty(100.0);
+        entity.setObservableProperty(new BigDecimal("100.0"));
         entity.setObservableProperty(null);
-        entity.setObservableProperty(100.0);
+        entity.setObservableProperty(new BigDecimal("100.0"));
         assertTrue("the property after the error recovery have to be valid", metaProperty.isValid());
 
         // 2. test the error recovery by the different value
-        entity.setObservableProperty(100.0);
+        entity.setObservableProperty(new BigDecimal("100.0"));
         entity.setObservableProperty(null);
-        entity.setObservableProperty(101.0);
+        entity.setObservableProperty(new BigDecimal("101.0"));
         assertTrue("the property after the error recovery have to be valid", metaProperty.isValid());
 
         // 3. collectional property validation/observation tested in previous tests
 
         // 4. test simple property validation/observation invoking for different new/old values :
-        entity.setObservableProperty(100.0);
-        entity.setObservableProperty(101.0);
+        entity.setObservableProperty(new BigDecimal("100.0"));
+        entity.setObservableProperty(new BigDecimal("101.0"));
         assertTrue("the property after different value setted have to be valid", metaProperty.isValid());
 
         // 5. test simple property validation/observation not invoking for the same new/old values :
-        entity.setObservableProperty(100.0);
-        entity.setObservableProperty(100.0);
+        entity.setObservableProperty(new BigDecimal("100.0"));
+        entity.setObservableProperty(new BigDecimal("100.0"));
         assertTrue("the property after the same value setted have to be valid", metaProperty.isValid());
 
         // 6. test simple property validation/observation in case where it is initialised with NULL at construction time
@@ -426,13 +431,13 @@ public class AbstractEntityTest {
         assertEquals("Incorrect title", "First Property", firstPropertyMetaProp.getTitle());
         assertEquals("Incorrect desc", "used for testing", firstPropertyMetaProp.getDesc());
 
-        final MetaProperty<Double> observablePropertyMetaProp = entity.getProperty("observableProperty");
+        final MetaProperty<BigDecimal> observablePropertyMetaProp = entity.getProperty("observableProperty");
         assertTrue("Should be requried", observablePropertyMetaProp.isRequired());
         assertTrue("Should be editable", observablePropertyMetaProp.isEditable());
         assertEquals("Incorrect title", "Observable Property", observablePropertyMetaProp.getTitle());
         assertEquals("Incorrect desc", "Observable Property", observablePropertyMetaProp.getDesc());
 
-        final MetaProperty<Double> finalPropertyMetaProp = entity.getProperty("finalProperty");
+        final MetaProperty<BigDecimal> finalPropertyMetaProp = entity.getProperty("finalProperty");
         assertFalse("Should not bevisible", finalPropertyMetaProp.isVisible());
 
         final MetaProperty<String> keyMetaProp = entity.getProperty("key");
@@ -700,7 +705,7 @@ public class AbstractEntityTest {
         entity.setKey("key");
         entity.setDesc("description");
         entity.setMoney(new Money("23.25"));
-        entity.setAdditionalProperty(23.0);
+        entity.setAdditionalProperty(new BigDecimal("23.0"));
 
         final Entity copy = entity.copy(Entity.class);
 
@@ -1085,7 +1090,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidMoneyPropWithPrecision> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithPrecision.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidMoneyPropWithPrecision> left = (Left<Exception, EntityWithInvalidMoneyPropWithPrecision>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithPrecision.class.getName()), ex.getMessage());
     }
@@ -1095,7 +1100,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidMoneyPropWithScale> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithScale.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidMoneyPropWithScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithScale>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithScale.class.getName()), ex.getMessage());
     }
@@ -1105,7 +1110,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithNegativePrecisionAndPositiveScale.class.getName()), ex.getMessage());
     }
@@ -1115,7 +1120,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale> left = (Left<Exception, EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, "numericMoney", EntityWithInvalidMoneyPropWithPositivePrecisionAndNegativeScale.class.getName()), ex.getMessage());
     }
@@ -1125,7 +1130,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidMoneyPropWithLength> result = Try(() -> factory.newByKey(EntityWithInvalidMoneyPropWithLength.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidMoneyPropWithLength> left = (Left<Exception, EntityWithInvalidMoneyPropWithLength>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_OF_PARAM_LENGTH_MSG, "numericMoney", EntityWithInvalidMoneyPropWithLength.class.getName()), ex.getMessage());
     }
@@ -1135,7 +1140,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidIntegerProp> result = Try(() -> factory.newByKey(EntityWithInvalidIntegerProp.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidIntegerProp> left = (Left<Exception, EntityWithInvalidIntegerProp>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG, "numericInteger", EntityWithInvalidIntegerProp.class.getName()), ex.getMessage());
     }
@@ -1145,7 +1150,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidStringPropWithTrailingZeros> result = Try(() -> factory.newByKey(EntityWithInvalidStringPropWithTrailingZeros.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidStringPropWithTrailingZeros> left = (Left<Exception, EntityWithInvalidStringPropWithTrailingZeros>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithTrailingZeros.class.getName()), ex.getMessage());
     }
@@ -1155,7 +1160,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidStringPropWithPrecision> result = Try(() -> factory.newByKey(EntityWithInvalidStringPropWithPrecision.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidStringPropWithPrecision> left = (Left<Exception, EntityWithInvalidStringPropWithPrecision>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithPrecision.class.getName()), ex.getMessage());
     }
@@ -1165,7 +1170,7 @@ public class AbstractEntityTest {
         final Either<Exception, EntityWithInvalidStringPropWithScale> result = Try(() -> factory.newByKey(EntityWithInvalidStringPropWithScale.class, "some key"));
         assertTrue(result instanceof Left);
         final Left<Exception, EntityWithInvalidStringPropWithScale> left = (Left<Exception, EntityWithInvalidStringPropWithScale>) result;
-        final Throwable ex = left.value.getCause().getCause();
+        final Throwable ex = left.value().getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithScale.class.getName()), ex.getMessage());
     }

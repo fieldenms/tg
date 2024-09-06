@@ -15,9 +15,9 @@ import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
 import static ua.com.fielden.platform.eql.meta.PropType.propType;
 import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 /**

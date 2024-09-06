@@ -4,8 +4,8 @@ import com.google.inject.AbstractModule;
 
 import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.HyperlinkType;
-import ua.com.fielden.platform.persistence.types.MoneyUserType;
-import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountUserType;
+import ua.com.fielden.platform.persistence.types.MoneyType;
+import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountType;
 import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SecurityTokenType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
@@ -14,8 +14,8 @@ import ua.com.fielden.platform.persistence.types.SimplyMoneyWithTaxAndExTaxAmoun
 import ua.com.fielden.platform.persistence.types.UtcDateTimeType;
 import ua.com.fielden.platform.types.markers.IColourType;
 import ua.com.fielden.platform.types.markers.IHyperlinkType;
-import ua.com.fielden.platform.types.markers.IMoneyUserType;
-import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountUserType;
+import ua.com.fielden.platform.types.markers.IMoneyType;
+import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountType;
 import ua.com.fielden.platform.types.markers.IPropertyDescriptorType;
 import ua.com.fielden.platform.types.markers.ISecurityTokenType;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
@@ -39,10 +39,10 @@ public class HibernateUserTypesModule extends AbstractModule {
         bind(IHyperlinkType.class).to(HyperlinkType.class);
         bind(IUtcDateTimeType.class).to(UtcDateTimeType.class);
 
-        bind(IMoneyUserType.class).to(MoneyUserType.class);
+        bind(IMoneyType.class).to(MoneyType.class);
         bind(ISimpleMoneyType.class).to(SimpleMoneyType.class);
         bind(ISimplyMoneyWithTaxAndExTaxAmountType.class).to(SimplyMoneyWithTaxAndExTaxAmountType.class);
         bind(ISimplyMoneyWithTaxAmountType.class).to(SimplyMoneyWithTaxAmountType.class);
-        bind(IMoneyWithTaxAmountUserType.class).to(MoneyWithTaxAmountUserType.class);
+        bind(IMoneyWithTaxAmountType.class).to(MoneyWithTaxAmountType.class);
     }
 }

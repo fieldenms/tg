@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
@@ -8,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -19,15 +22,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 
 import com.google.common.io.Files;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 /**
@@ -45,8 +50,8 @@ public abstract class DbCreator {
     protected final Logger logger = getLogger(getClass());
 
     private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
-    public final Connection conn;
-    public final Collection<PersistedEntityMetadata<?>> entityMetadatas;
+    private final Connection conn;
+    private final Collection<EntityMetadata.Persistent> persistentEntitiesMetadata;
 
     private final Set<String> dataScripts = new LinkedHashSet<>();
     private final List<String> truncateScripts = new ArrayList<>();
@@ -60,7 +65,7 @@ public abstract class DbCreator {
             final boolean execDdslScripts) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 
         this.testCaseType = testCaseType;
-        this.entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
+        this.persistentEntitiesMetadata = config.getInstance(IDomainMetadata.class).allTypes(EntityMetadata.Persistent.class).collect(toImmutableList());
 
         // this is a single place where a new DB connection is established
         logger.info("CREATING DB CONNECTION...");
@@ -72,7 +77,7 @@ public abstract class DbCreator {
             final Class<?> dialectType = Class.forName(defaultDbProps.getProperty("hibernate.dialect"));
             final Dialect dialect = (Dialect) dialectType.newInstance();
         
-            maybeDdl.addAll(genDdl(config.getDomainMetadata(), dialect));
+            maybeDdl.addAll(genDdl(config.getInstance(IDomainMetadata.class), dialect));
         }
         
         if (execDdslScripts) {
@@ -102,8 +107,16 @@ public abstract class DbCreator {
      * @param dialect
      * @return
      */
-    protected abstract List<String> genDdl(final DomainMetadata domainMetaData, final Dialect dialect);
-    
+    protected abstract List<String> genDdl(final IDomainMetadata domainMetaData, final Dialect dialect);
+
+    public Collection<EntityMetadata.Persistent> persistentEntitiesMetadata() {
+        return persistentEntitiesMetadata;
+    }
+
+    public Connection connection() {
+        return conn;
+    }
+
     /**
      * Executes test data population logic. Should be executed before each unit test. 
      * 
@@ -206,10 +219,10 @@ public abstract class DbCreator {
     private void recordDataPopulationScript(final AbstractDomainDrivenTestCase testCase, final Connection conn) {
         try {
             dataScripts.clear();
-            dataScripts.addAll(genInsertStmt(entityMetadatas, conn));
+            dataScripts.addAll(genInsertStmt(persistentEntitiesMetadata, conn));
 
             truncateScripts.clear();
-            truncateScripts.addAll(genTruncStmt(entityMetadatas, conn));
+            truncateScripts.addAll(genTruncStmt(persistentEntitiesMetadata, conn));
 
             if (testCase.saveDataPopulationScriptToFile()) {
                 // flush data population script to file for later use
@@ -230,7 +243,7 @@ public abstract class DbCreator {
      * @param conn
      * @return
      */
-    public abstract List<String> genTruncStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn);
+    public abstract List<String> genTruncStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn);
 
     /**
      * Implement to generate SQL statements for inserting records that correspond to test domain data that is present currently in the database with the specified connection.
@@ -240,7 +253,7 @@ public abstract class DbCreator {
      * @return
      * @throws SQLException
      */
-    public abstract List<String> genInsertStmt(final Collection<PersistedEntityMetadata<?>> entityMetadata, final Connection conn) throws SQLException;
+    public abstract List<String> genInsertStmt(final Collection<EntityMetadata.Persistent> entityMetadata, final Connection conn) throws SQLException;
     
     /**
      * Creates a new DB connection based on the provided properties.
@@ -308,6 +321,12 @@ public abstract class DbCreator {
      * @param fileName
      */
     public static void saveScriptToFile(final List<String> scripts, final String fileName) {
+        try {
+            Files.createParentDirs(new File(fileName));
+        } catch (final IOException ex) {
+            throw new DomainDriventTestException("Failed to create parent directories for [%s]".formatted(fileName), ex);
+        }
+
         try (final PrintWriter out = new PrintWriter(fileName, StandardCharsets.UTF_8.name())) {
             final StringBuilder builder = new StringBuilder();
             for (final Iterator<String> iter = scripts.iterator(); iter.hasNext();) {
@@ -319,7 +338,8 @@ public abstract class DbCreator {
             }
             out.print(builder.toString());
         } catch (final Exception ex) {
-            throw new DomainDriventTestException(format("Could not save [%s] scripts to file [%s].", scripts.size(), fileName));
+            throw new DomainDriventTestException(format("Could not save [%s] scripts to file [%s].", scripts.size(), fileName),
+                                                 ex);
         }
 
     }

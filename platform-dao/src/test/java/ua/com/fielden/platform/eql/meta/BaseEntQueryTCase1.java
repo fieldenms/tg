@@ -1,53 +1,26 @@
 package ua.com.fielden.platform.eql.meta;
 
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
-import static ua.com.fielden.platform.test.PlatformTestDomainTypes.entityTypes;
+import com.google.inject.Guice;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.types.*;
+import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
-
-import com.google.inject.Guice;
-
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
-import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
-import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
-import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
-import ua.com.fielden.platform.persistence.HibernateHelpers;
-import ua.com.fielden.platform.persistence.types.ColourType;
-import ua.com.fielden.platform.persistence.types.DateTimeType;
-import ua.com.fielden.platform.persistence.types.HyperlinkType;
-import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
-import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
-import ua.com.fielden.platform.sample.domain.TgAuthor;
-import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgPersonName;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgWagonSlot;
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.test.PlatformTestDomainTypes.entityTypes;
 
 public class BaseEntQueryTCase1 {
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
@@ -81,9 +54,7 @@ public class BaseEntQueryTCase1 {
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
 
-    protected static final DomainMetadata DOMAIN_METADATA;
-
-    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
+    protected static final IDomainMetadata DOMAIN_METADATA;
 
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
@@ -93,19 +64,8 @@ public class BaseEntQueryTCase1 {
         hibTypeDefaults.put(Colour.class, ColourType.class);
         hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
 
-        DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
-                Guice.createInjector(new HibernateUserTypesModule()), 
-                entityTypes, 
-                HibernateHelpers.getDialect(H2));
-        
-        DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
-    }
-    
-    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type/*, final EntityTypeInfo <? extends AbstractEntity<?>> entityCategory*/) {
-        return new PropertyMetadata.Builder(name, javaType, nullable, null /*entityCategory*/).column(new PropertyColumn(column)).hibType(hibType).category(type).build();
+        DOMAIN_METADATA = new DomainMetadataBuilder(
+                hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), entityTypes, H2).build();
     }
 
-    public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyCategory type/*, final EntityTypeInfo <? extends AbstractEntity<?>> entityCategory*/) {
-        return new PropertyMetadata.Builder(name, javaType, nullable, null /*entityCategory*/).columns(columns).hibType(hibType).category(type).build();
-    }
 }

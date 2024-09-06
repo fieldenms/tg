@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 
 import java.util.Objects;
 
@@ -40,15 +41,16 @@ public class Yield3 {
     /**
      * @param expectedType  unless equal to {@link #NO_EXPECTED_TYPE}, then the yielded value is cast to the given type
      */
-    public String sql(final EqlDomainMetadata metadata, final PropType expectedType) {
+    public String sql(final IDomainMetadata metadata, final PropType expectedType) {
         final String operandSql = operand.sql(metadata);
         final var sb = new StringBuilder(operandSql.length());
 
         // Cast even if the expected type is the same as this type to cover the auto-yield case where a yielded null
         // can be represented as Prop3 "id" with type Long.
         // Expected type should never be the null type but let's be vigilant.
-        if (metadata.dbVersion == POSTGRESQL && expectedType != NO_EXPECTED_TYPE && expectedType.isNotNull()) {
-            sb.append(POSTGRESQL.castSql(operandSql, sqlCastTypeName(expectedType.hibType(), metadata.dialect)));
+        if (metadata.dbVersion() == POSTGRESQL && expectedType != NO_EXPECTED_TYPE && expectedType.isNotNull()) {
+            final var dialect = HibernateHelpers.getDialect(metadata.dbVersion());
+            sb.append(POSTGRESQL.castSql(operandSql, sqlCastTypeName(expectedType.hibType(), dialect)));
         } else {
             sb.append(operandSql);
         }
@@ -64,11 +66,12 @@ public class Yield3 {
     /**
      * A placeholder value to be used when there is no expectation of a particular type.
      *
-     * @see #sql(EqlDomainMetadata, PropType)
+     * @see #sql(IDomainMetadata, PropType)
+     *
      */
     public static final PropType NO_EXPECTED_TYPE = propType(String.class, newPlaceholderType("no_expected_type"));
 
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return sql(metadata, NO_EXPECTED_TYPE);
     }
 

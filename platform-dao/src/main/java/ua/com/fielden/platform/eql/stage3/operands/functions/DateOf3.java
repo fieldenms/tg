@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import static java.lang.String.format;
 
 public class DateOf3 extends SingleOperandFunction3 {
 
@@ -13,8 +13,8 @@ public class DateOf3 extends SingleOperandFunction3 {
     }
     
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
-        switch (metadata.dbVersion) {
+    public String sql(final IDomainMetadata metadata) {
+        switch (metadata.dbVersion()) {
         case H2:
             return format("CAST(%s AS DATE)", operand.sql(metadata));
         case MSSQL:

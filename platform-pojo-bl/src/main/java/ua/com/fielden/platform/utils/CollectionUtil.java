@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
@@ -57,7 +58,17 @@ public final class CollectionUtil {
      * An alternative of {@link List#copyOf(Collection)} that allows the given collection to contain nulls.
      */
     public static <T> List<T> listCopy(final Collection<? extends T> collection) {
-        return collection.isEmpty() ? List.of() : unmodifiableList(new ArrayList<>(collection));
+        if (collection.isEmpty()) {
+            return ImmutableList.of();
+        }
+        else if (collection instanceof ImmutableCollection<? extends T> immCol) {
+            return ImmutableList.copyOf(immCol);
+        }
+        else {
+            final ArrayList<? extends T> list = new ArrayList<>(collection);
+            list.trimToSize();
+            return unmodifiableList(list);
+        }
     }
 
     /**
@@ -262,10 +273,46 @@ public final class CollectionUtil {
     }
 
     /**
+     * If a collection is not empty, returns its first element, which must not be null.
+     *
+     * @throws InvalidArgumentException  if the first element is null
+     * @see #firstNullable(Collection)
+     */
+    public static <E> Optional<E> first(final Collection<E> xs) {
+        if (xs.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // creating a new iterator bears a cost, try to avoid it
+        final E elt = xs instanceof SequencedCollection<E> seq ? seq.getFirst() : xs.iterator().next();
+        if (elt == null) {
+            throw new InvalidArgumentException("Collection's first element must not be null.");
+        }
+
+        return Optional.of(elt);
+    }
+
+    /**
+     * If a collection is not empty, returns its first element.
+     * If the first element is null, an empty optional is returned.
+     *
+     * @see #firstNullable(Collection)
+     */
+    public static <E> Optional<E> firstNullable(final Collection<E> xs) {
+        if (xs.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // creating a new iterator bears a cost, try to avoid it
+        final E elt = xs instanceof SequencedCollection<E> seq ? seq.getFirst() : xs.iterator().next();
+        return Optional.ofNullable(elt);
+    }
+
+    /**
      * Transforms a map into another map by applying provided transformations to its entries.
      * <p>
      * Disallows duplicates among resulting keys.
-     * Diallows {@code null} as a resulting key.
+     * Disallows {@code null} as a resulting key.
      *
      * @param keyMapper  returns a key of the resulting map, accepts both key and value of the input's map entry
      * @param valueMapper returns a value of the resulting map, accepts both key and value of the input's map entry

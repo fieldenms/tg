@@ -70,8 +70,8 @@ public class DependentCalcPropsOrder {
                     }
                 }
                 propDependencies.put(calcPropChunk.name(), determineCalcPropChunksSets(externalProps));
-            } catch (final Exception e) {
-                throw new EqlException("There is an error in expression of calculated property [%s.%s]: %s".formatted(querySourceInfo.javaType().getSimpleName(), calcPropChunk.name(), e.getMessage()));
+            } catch (final Exception ex) {
+                throw new EqlException("There is an error in the expression for calculated property [%s.%s].".formatted(querySourceInfo.javaType().getTypeName(), calcPropChunk.name()), ex);
             }
         }
 

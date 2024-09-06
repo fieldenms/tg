@@ -1,21 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.queries;
 
-import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
-
 import com.google.common.base.Objects;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
@@ -30,6 +16,18 @@ import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.utils.StreamUtils;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * A structure used for representing the most outer query that is used to actually execute to get some data out.
@@ -59,79 +57,83 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     /**
      * Enhances {@code yields}, which were determined during EQL stage2 processing, with additional yields:
      * <ol>
-     * <li> No yields or {@code yieldAll} - adds all properties that belong to {@code mainSource} and are also present in {@code fetchModel}; in case of entity-typed properties and being one of the queries, constructed during fetching process (i.e., not the main user query), their properties are also included (if they exist in a fetch model) to improve query performance.
-     *      It is important to note that in case of the synthetic entities (excluding the case of fetching totals only), {@code id} is added to the yields.
-     *      This is necessary to overcome the current limitation of fetch strategies that ignore {@code id} for synthetic entities.
-     * <li> Single yield {@code .modelAsEntity} - enhances the yield with "id" as alias.
+     * <li> No yields or {@code yieldAll} - adds all properties that belong to {@code mainSource} and are also present in {@code fetchModel}.
+     *   <ul>
+     *   <li> In case of entity-typed properties and being one of the queries constructed during fetching process (i.e., not the main user query),
+     *        their properties are also included (if they exist in the fetch model) to improve query performance.
+     *   <li> In case of synthetic entities (excluding the case of fetching totals only), {@code id} is also yielded.
+     *        This is necessary to overcome the current limitation of fetch strategies that ignore {@code id} for synthetic entities.
+     *   </ul>
+     * <li> Single yield {@code .modelAsEntity()} - enhances that yield with {@code "id"} as alias.
      * </ol>
-     *
-     * @param yields
-     * @param mainSource
-     * @param allAggregated
-     * @return
      */
     @Override
     protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (yields.getYields().isEmpty() || yieldAll) {
-            final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
+        return first(yields.getYields())
+                .filter($ -> !yieldAll)
+                .map(fstYield -> enhanceNonEmptyAndNotYieldAll(fstYield, yields, mainSource))
+                .orElseGet(() -> enhanceAll(mainSource));
+    }
 
-            final boolean isNotTopFetch = fetchModel == null ? false : !fetchModel.topLevel();
-
-            for (final Entry<String, AbstractQuerySourceItem<?>> l1Prop : mainSource.querySourceInfo().getProps().entrySet()) {
-            	// FIXME condition for {@code id} should be removed once the default fetch strategies are adjusted to recognise the presence of {@code id} in synthetic entities.
-                if (fetchModel == null || fetchModel.containsProp(l1Prop.getValue().name) || (!fetchModel.containsOnlyTotals() && ID.equals(l1Prop.getValue().name) && isSyntheticEntityType(resultType))) {
-                    final EntityRetrievalModel<? extends AbstractEntity<?>> l1PropFm = fetchModel == null ? null : fetchModel.getRetrievalModels().get(l1Prop.getValue().name);
-                    final boolean yieldSubprops = isNotTopFetch && l1PropFm != null && l1Prop.getValue() instanceof QuerySourceItemForEntityType;
-
-                    if (!yieldSubprops) {
-                        if (l1Prop.getValue() instanceof QuerySourceItemForUnionType) {
-                            for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForUnionType<?>) l1Prop.getValue()).getProps().entrySet()) {
-                                if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
-                                    enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + sub.getValue().name, false));
-                                }
-                            }
-                        } else if (l1Prop.getValue() instanceof QuerySourceItemForComponentType) {
-                            for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForComponentType<?>) l1Prop.getValue()).getSubitems().entrySet()) {
-                                enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + sub.getValue().name, false));
-                            }
-                        } else {
-                            enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue())), l1Prop.getKey(), false));
-                        }
-                    } else {
-                        final QuerySourceItemForEntityType<?> l1PropMd = ((QuerySourceItemForEntityType<?>) l1Prop.getValue());
-                        for (final Entry<String, AbstractQuerySourceItem<?>> l2Prop : l1PropMd.querySourceInfo.getProps().entrySet()) {
-                            if (l1PropFm.containsProp(l2Prop.getValue().name)) {
-                                if (l2Prop.getValue() instanceof QuerySourceItemForUnionType) {
-                                    for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForUnionType<?>) l2Prop.getValue()).getProps().entrySet()) {
-                                        if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
-                                            enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + l2Prop.getKey() + "." + sub.getValue().name, false));
-                                        }
-                                    }
-                                } else if (l2Prop.getValue() instanceof QuerySourceItemForComponentType) {
-                                    for (final Entry<String, AbstractQuerySourceItem<?>> sub : ((QuerySourceItemForComponentType<?>) l2Prop.getValue()).getSubitems().entrySet()) {
-                                        enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + l2Prop.getKey() + "." + sub.getValue().name, false));
-                                    }
-                                } else {
-                                    enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue())), l1Prop.getKey() + "." + l2Prop.getKey(), false));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            return new Yields2(enhancedYields);
+    private Yields2 enhanceNonEmptyAndNotYieldAll(final Yield2 fstYield, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+        if (yields.getYields().size() == 1 && isEmpty(fstYield.alias) && isPersistedEntityType(resultType)) {
+            return new Yields2(List.of(new Yield2(fstYield.operand, ID, fstYield.hasNonnullableHint)));
         }
 
-        final Yield2 firstYield = yields.getYields().iterator().next();
-        if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias) && isPersistedEntityType(resultType)) {
-            return new Yields2(listOf(new Yield2(firstYield.operand, ID, firstYield.hasNonnullableHint)));
-        }
-
-        // TODO need to remove the explicit yields, not contained in the fetch model to be consistent with EQL2.
-        // This more of a desire to guarantee that columns in the SELECT statement are not wider than the fetch model specifies.
+        // TODO: Need to remove the explicit yields, not contained in the fetch model to be consistent with the approach used in EQL2.
+        //       This is more of a desire to guarantee that columns in the SELECT statement are not wider than the fetch model specifies.
 
         return yields;
+    }
+
+    private Yields2 enhanceAll(final ISource2<? extends ISource3> mainSource) {
+        final boolean isNotTopFetch = fetchModel != null && !fetchModel.topLevel();
+        final boolean fetchOnlyTotals = fetchModel != null && fetchModel.containsOnlyTotals();
+        final boolean synResulType = isSyntheticEntityType(resultType);
+        final var enhancedYields = mainSource.querySourceInfo().getProps().values().stream()
+                // FIXME: Condition for {@code id} should be removed once default fetch strategies are adjusted
+                //        to recognise the presence of {@code id} in synthetic entities.
+                .filter(level1Prop -> fetchModel == null ||
+                                      fetchModel.containsProp(level1Prop.name) ||
+                                      (!fetchOnlyTotals && ID.equals(level1Prop.name) && synResulType))
+                // prop -> stream of prop path components
+                .flatMap(level1Prop -> {
+                    final var level1PropFetchModel = fetchModel == null ? null : fetchModel.getRetrievalModels().get(level1Prop.name);
+                    if (isNotTopFetch && level1PropFetchModel != null && level1Prop instanceof QuerySourceItemForEntityType<?> level1EntityProp) {
+                        // yielding sub-properties
+                        return level1EntityProp.querySourceInfo.getProps().values().stream()
+                                .filter(level2Prop -> level1PropFetchModel.containsProp(level2Prop.name))
+                                .flatMap(level2Prop -> streamSubProps(level2Prop)
+                                                       .map(optLevel3Prop -> Stream.concat(Stream.of(level1Prop, level2Prop), optLevel3Prop.stream())));
+                    } else {
+                        return streamSubProps(level1Prop).map(optProp2 -> StreamUtils.prepend(level1Prop, optProp2.stream()));
+                    }
+                })
+                .map(Stream::toList)
+                .map(props -> new Yield2(new Prop2(mainSource, props),
+                                         props.stream().map(i -> i.name).collect(joining(".")),
+                                         false))
+                .toList();
+
+        return new Yields2(enhancedYields);
+    }
+
+    /**
+     * A helper function to stream sub-properties of {@code prop}, if any.
+     *
+     * @param prop a property source
+     * @return a stream of optional sub-properties of {@code prop}; the result can stream empty optionals.
+     */
+    private static Stream<Optional<AbstractQuerySourceItem<?>>> streamSubProps(final AbstractQuerySourceItem<?> prop) {
+        return switch (prop) {
+            case QuerySourceItemForUnionType<?> unionTypedProp ->
+                    unionTypedProp.getProps().values().stream()
+                            .filter(unionProp -> isEntityType(unionProp.javaType()) && !unionProp.hasExpression())
+                            .map(Optional::of);
+            case QuerySourceItemForComponentType<?> componentTypedProp ->
+                    componentTypedProp.getSubitems().values().stream().map(Optional::of);
+            default -> Stream.of(Optional.empty());
+        };
     }
 
     @Override

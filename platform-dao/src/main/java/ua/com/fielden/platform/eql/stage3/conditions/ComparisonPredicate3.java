@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 
 import java.util.Objects;
 
@@ -22,8 +23,8 @@ public class ComparisonPredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
-        if (metadata.dbVersion == POSTGRESQL) {
+    public String sql(final IDomainMetadata metadata) {
+        if (metadata.dbVersion() == POSTGRESQL) {
             return format("%s %s %s",
                     operandToSqlWithCast(leftOperand, rightOperand, metadata),
                     operator,
@@ -33,9 +34,10 @@ public class ComparisonPredicate3 implements ICondition3 {
         }
     }
 
-    private static String operandToSqlWithCast(final ISingleOperand3 operand, final ISingleOperand3 other, final EqlDomainMetadata metadata) {
+    private static String operandToSqlWithCast(final ISingleOperand3 operand, final ISingleOperand3 other, final IDomainMetadata metadata) {
         if (operand.type().isNull() && other.type().isNotNull()) {
-            return metadata.dbVersion.castSql(operand.sql(metadata), sqlCastTypeName(other.type().hibType(), metadata.dialect));
+            final var dialect = HibernateHelpers.getDialect(metadata.dbVersion());
+            return metadata.dbVersion().castSql(operand.sql(metadata), sqlCastTypeName(other.type().hibType(), dialect));
         } else {
             return operand.sql(metadata);
         }

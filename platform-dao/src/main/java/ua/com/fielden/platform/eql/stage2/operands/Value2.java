@@ -1,21 +1,21 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import static java.util.Collections.emptySet;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
-import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.propType;
-import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.hibTypeFromJavaType;
-
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.Value3;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import java.util.Objects;
+import java.util.Set;
+
+import static java.util.Collections.emptySet;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
+import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.hibTypeFromJavaType;
+import static ua.com.fielden.platform.persistence.HibernateConstants.N;
+import static ua.com.fielden.platform.persistence.HibernateConstants.Y;
 
 public class Value2 implements ISingleOperand2<Value3> {
     private final Object value;

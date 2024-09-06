@@ -7,9 +7,9 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.DefaultFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
@@ -72,10 +72,10 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
     }
 
     @Override
-    public DomainMetadata getDomainMetadata() {
+    public IDomainMetadata getDomainMetadata() {
         return hibernateModule.getDomainMetadata();
     }
-    
+
     @Override
     public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
         return hibernateModule.getIdOnlyProxiedEntityTypeCache();

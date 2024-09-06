@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import java.util.Objects;
-
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import java.util.Objects;
 
 public class QueryBasedSet3 implements ISetOperand3 {
     private final SubQuery3 model;
@@ -13,7 +13,7 @@ public class QueryBasedSet3 implements ISetOperand3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         return "(" + model.sql(metadata) + ")";
     }
 

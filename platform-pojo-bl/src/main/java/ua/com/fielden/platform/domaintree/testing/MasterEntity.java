@@ -47,8 +47,6 @@ public class MasterEntity extends AbstractEntity<String> {
     //    @Calculated(contextualExpression = "1 * integerProp", contextPath = "", attribute = CalculatedPropertyAttribute.NO_ATTR, origination = "integerProp", category = CalculatedPropertyCategory.EXPRESSION)
     //    private Integer calcIntegerProp = null;
     @IsProperty
-    private Double doubleProp = 0.0;
-    @IsProperty
     private BigDecimal bigDecimalProp = new BigDecimal(0.0);
     @IsProperty
     private BigDecimal checkedUntouchedProp = new BigDecimal(0.0);
@@ -175,15 +173,6 @@ public class MasterEntity extends AbstractEntity<String> {
     @Observable
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
-    }
-
-    public Double getDoubleProp() {
-        return doubleProp;
-    }
-
-    @Observable
-    public void setDoubleProp(final Double doubleProp) {
-        this.doubleProp = doubleProp;
     }
 
     public BigDecimal getBigDecimalProp() {

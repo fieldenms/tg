@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -43,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Arrays.stream;
@@ -52,6 +54,8 @@ import static org.apache.commons.lang3.StringUtils.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.*;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
@@ -375,12 +379,12 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.after(finish)) {
-                    throw Result.failure(finishSetter
+                    throw failure(finishSetter
                     ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), dates.toString(finish) , startProperty.getTitle(), dates.toString(start))
                     : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), dates.toString(start), finishProperty.getTitle(), dates.toString(finish)));
                 }
             } else {
-                throw Result.failure(finishSetter
+                throw failure(finishSetter
                 ? format("Property [%s] (value [%s]) cannot be specified without property [%s].", finishProperty.getTitle(), finish, startProperty.getTitle())
                 : format("Property [%s] cannot be empty if property [%s] (value [%s]) if specified.", startProperty.getTitle(), finishProperty.getTitle(), finish));
 
@@ -402,12 +406,12 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.isAfter(finish)) {
-                    throw Result.failure(finishSetter
+                    throw failure(finishSetter
                     ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), dates.toString(finish) , startProperty.getTitle(), dates.toString(start))
                     : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), dates.toString(start), finishProperty.getTitle(), dates.toString(finish)));
                 }
             } else {
-                throw Result.failure(finishSetter
+                throw failure(finishSetter
                 ? format("Property [%s] (value [%s]) cannot be specified without property [%s].", finishProperty.getTitle(), finish, startProperty.getTitle())
                 : format("Property [%s] cannot be empty if property [%s] (value [%s]) if specified.", startProperty.getTitle(), finishProperty.getTitle(), finish));
             }
@@ -417,7 +421,7 @@ public class EntityUtils {
     /**
      * A convenient method for validating two integer properties that form a range [from;to].
      * <p>
-     * Note, the use use Of Number is not possible because it does not implement interface Comparable due to valid reasons. See
+     * Note, the use Of Number is not possible because it does not implement interface Comparable due to valid reasons. See
      * http://stackoverflow.com/questions/480632/why-doesnt-java-lang-number-implement-comparable from more.
      *
      * @param start
@@ -431,14 +435,14 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
-                    throw new Result("", new Exception(finishSetter ? //
-                    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
-                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                    throw failure(finishSetter
+                                  ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
+                                  : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + ".");
                 }
             } else {
-                throw new Result("", new Exception(finishSetter ? //
-                /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw failure(finishSetter
+                              ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
+                              : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified.");
             }
         }
     }
@@ -457,14 +461,36 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
-                    throw new Result("", new Exception(finishSetter ? //
-                    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
-                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                    throw failure(finishSetter
+                                  ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
+                                  : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + ".");
                 }
             } else {
-                throw new Result("", new Exception(finishSetter ? //
-                /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw failure(finishSetter
+                              ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
+                              : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified.");
+            }
+        }
+    }
+
+    /**
+     * A convenient method for validating two {@link BigDecimal} properties that form a range [from;to].
+     */
+    public static void validateBigDecimalRange(final BigDecimal start, final BigDecimal finish,
+                                               final MetaProperty<BigDecimal> startProperty,
+                                               final MetaProperty<BigDecimal> finishProperty,
+                                               final boolean finishSetter) {
+        if (finish != null) {
+            if (start != null) {
+                if (start.compareTo(finish) > 0) { //  after(finish)
+                    throw failure(finishSetter
+                                  ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
+                                  : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + ".");
+                }
+            } else {
+                throw failure(finishSetter
+                              ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
+                              : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified.");
             }
         }
     }
@@ -483,14 +509,14 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
-                    throw new Result("", new Exception(finishSetter ? //
-                    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
-                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                    throw failure(finishSetter
+                                  ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
+                                  : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + ".");
                 }
             } else {
-                throw new Result("", new Exception(finishSetter ? //
-                /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw failure(finishSetter
+                              ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
+                              : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified.");
             }
         }
     }
@@ -621,7 +647,7 @@ public class EntityUtils {
     }
 
     /**
-     * Identifies whether the entity type represent a composite entity.
+     * Identifies whether an entity type represents a composite entity.
      *
      * @param entityType
      * @return
@@ -651,6 +677,23 @@ public class EntityUtils {
                 throw new ReflectionException(msg, ex);
             }
         }
+    }
+
+    /**
+     * Returns a hierarchy of entity types starting from the given one.
+     * <p>
+     * <b>NOTE</b>: This method won't accept generic entity types.
+     *
+     * @param withAbstractEntity  whether to include {@link AbstractEntity} as the last element
+     */
+    public static Stream<Class<? extends AbstractEntity<?>>> entityTypeHierarchy(final Class<? extends AbstractEntity<?>> entityType,
+                                                                                 final boolean withAbstractEntity) {
+        final Stream<Class<? extends AbstractEntity<?>>> stream =
+                Stream.iterate(entityType, type -> (Class<? extends AbstractEntity<?>>) type.getSuperclass());
+        return withAbstractEntity
+                // won't compile without type cast...
+                ? StreamUtils.stopAfter(stream, type -> (Class) type == AbstractEntity.class)
+                : stream.takeWhile(type -> (Class) type != AbstractEntity.class);
     }
 
     /**
@@ -711,7 +754,7 @@ public class EntityUtils {
                     }
                 }
             }
-            klass = klass.getSuperclass(); // move to the next super class in the hierarchy in search for more declared fields
+            klass = klass.getSuperclass(); // move to the next superclass in the hierarchy in search for more declared fields
         }
         return null;
     }
@@ -932,6 +975,7 @@ public class EntityUtils {
 
     /**
      * Splits dot.notated property in two parts: first level property and the rest of subproperties.
+     * If there is no rest, the 2nd pair element will be {@code null}.
      *
      * @param dotNotatedPropName
      * @return
@@ -996,21 +1040,28 @@ public class EntityUtils {
     }
 
     /**
-     * Retrieves all collectional properties fields within given entity type
-     *
-     * @param entityType
-     * @return
+     * Retrieves all collectional properties of an entity.
+     */
+    public static Stream<Field> streamCollectionalProperties(final Class<? extends AbstractEntity<?>> entityType) {
+        return Finder.streamRealProperties(entityType)
+                .filter(prop -> isCollectional(prop.getType()) && Finder.hasLinkProperty(entityType, prop.getName()));
+    }
+
+    /**
+     * Retrieves all collectional properties of an entity.
      */
     public static List<Field> getCollectionalProperties(final Class<? extends AbstractEntity<?>> entityType) {
-        final List<Field> result = new ArrayList<>();
+        return streamCollectionalProperties(entityType).collect(toImmutableList());
+    }
 
-        for (final Field propField : Finder.findRealProperties(entityType)) {
-            if (Collection.class.isAssignableFrom(propField.getType()) && Finder.hasLinkProperty(entityType, propField.getName())) {
-                result.add(propField);
-            }
-        }
-
-        return result;
+    /**
+     * Finds a collectional property with the given simple name.
+     */
+    public static Optional<Field> findCollectionalProperty(final Class<? extends AbstractEntity<?>> entityType,
+                                                           final CharSequence name) {
+        return streamCollectionalProperties(entityType)
+                .filter(prop -> prop.getName().contentEquals(name))
+                .findAny();
     }
 
     public static class BigDecimalWithTwoPlaces {
@@ -1163,7 +1214,7 @@ public class EntityUtils {
             return (T) copy;
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             logger.error(e.getMessage(), e);
-            throw Result.failure(String.format("Collection copying has been failed. Type [%s]. Exception [%s].", value.getClass(), e.getMessage())); // throw result indicating the failure of copying
+            throw failuref("Collection copying has been failed. Type [%s]. Exception [%s].", value.getClass(), e.getMessage()); // throw result indicating the failure of copying
         }
     }
 

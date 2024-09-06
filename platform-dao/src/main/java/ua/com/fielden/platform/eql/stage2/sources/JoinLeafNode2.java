@@ -5,7 +5,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_ENTITY;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.propType;
 

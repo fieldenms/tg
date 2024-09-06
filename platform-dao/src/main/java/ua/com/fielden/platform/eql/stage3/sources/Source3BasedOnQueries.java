@@ -2,10 +2,10 @@ package ua.com.fielden.platform.eql.stage3.sources;
 
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.Collection;
@@ -50,8 +50,8 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
-        if (metadata.dbVersion == POSTGRESQL) {
+    public String sql(final IDomainMetadata metadata) {
+        if (metadata.dbVersion() == POSTGRESQL) {
             final List<PropType> types = expectedYieldTypes();
             return models.stream().map(m -> m.sql(metadata, types)).collect(joining("\n UNION ALL \n", "(", ")"))
                     + "AS " + sqlAlias;

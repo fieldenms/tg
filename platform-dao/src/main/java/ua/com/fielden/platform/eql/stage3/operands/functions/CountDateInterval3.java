@@ -1,14 +1,14 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
+import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
-import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.meta.PropType;
-import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import static java.lang.String.format;
 
 public class CountDateInterval3 extends TwoOperandsFunction3 {
 
@@ -20,10 +20,10 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
     }
 
     @Override
-    public String sql(final EqlDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata) {
         final String op1Sql = operand1.sql(metadata);
         final String op2Sql = operand2.sql(metadata);
-        switch (metadata.dbVersion) {
+        switch (metadata.dbVersion()) {
         case H2:
             return sqlForH2(op1Sql, op2Sql);
         case MSSQL:

@@ -21,9 +21,9 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.*;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -59,7 +59,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private Session session;
     private String transactionGuid;
-    private DomainMetadata domainMetadata;
+    private IDomainMetadata domainMetadata;
     private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
     @Inject
@@ -110,7 +110,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::getSession,
                 entityType,
                 this::newQueryExecutionContext,
-                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), getDomainMetadata().eqlDomainMetadata.entityMetadataHolder.getTableForEntityType(entityType)));
+                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), getDomainMetadata().getTableForEntityType(entityType)));
 
         entitySaver = new PersistentEntitySaver<>(
                 this::getSession,
@@ -141,7 +141,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 getEntityFactory(),
                 getCoFinder(),
                 getDomainMetadata(),
-                getDomainMetadata().eqlDomainMetadata,
                 getFilter(),
                 getUsername(),
                 dates,
@@ -154,13 +153,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param domainMetadata
      */
     @Inject
-    protected void setDomainMetadata(final DomainMetadata domainMetadata) {
+    protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
     }
 
     @Override
     public DbVersion getDbVersion() {
-        return domainMetadata.getDbVersion();
+        return domainMetadata.dbVersion();
     }
 
     @Inject
@@ -329,7 +328,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles));
     }
 
-    public DomainMetadata getDomainMetadata() {
+    public IDomainMetadata getDomainMetadata() {
         return domainMetadata;
     }
 
