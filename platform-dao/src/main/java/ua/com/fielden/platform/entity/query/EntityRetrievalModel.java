@@ -261,7 +261,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private boolean computeContainsOnlyTotals() {
-        return getPrimProps().stream()
+        return !getPrimProps().isEmpty() && // If there are no primitive properties, then there are no totals.
+               getPrimProps().stream()
                 .allMatch(prop -> entityMetadata.propertyOpt(prop)
                         .flatMap(PropertyMetadata::asCalculated)
                         .map(pm -> pm.data().forTotals())
