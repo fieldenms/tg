@@ -252,7 +252,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     @Override
     public boolean containsOnlyTotals() {
         return getPrimProps().stream()
-                .filter(prop -> !prop.contains(".")) // need to filter out sub-props for components such as Money.amount, which are not recognised as being for totals
+                .filter(prop -> prop.indexOf(".") == 0) // need to filter out sub-props for components such as Money.amount, which are not recognised as being for totals
                 .allMatch(prop -> entityMetadata.propertyOpt(prop)
                         .flatMap(PropertyMetadata::asCalculated)
                         .map(pm -> pm.data().forTotals())
