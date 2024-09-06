@@ -34,7 +34,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private final EntityMetadata entityMetadata;
     private final EntityMetadataUtils entityMetadataUtils;
     private final PropertyMetadataUtils propMetadataUtils;
-    private final boolean containsOnlyTotals;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata) {
         this(originalFetch, domainMetadata, true);
@@ -45,11 +44,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         this.entityMetadata = domainMetadata.forEntity(originalFetch.getEntityType());
         this.entityMetadataUtils = domainMetadata.entityMetadataUtils();
         this.propMetadataUtils = domainMetadata.propertyMetadataUtils();
-
-        // It is important to determine whether the fetch contains only totals before the original fetch is enriched.
-        // Calculated properties that represent totals of a component type (e.g., Money) lead to the expansion of the original fetch by adding sub-properties.
-        // And those sub-properties violate the "contains-only-totals" predicate.
-        this.containsOnlyTotals = computeContainsOnlyTotals();
 
         switch (originalFetch.getFetchCategory()) {
         case ALL_INCL_CALC:
@@ -257,12 +251,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     @Override
     public boolean containsOnlyTotals() {
-        return containsOnlyTotals;
-    }
-
-    private boolean computeContainsOnlyTotals() {
-        return !getPrimProps().isEmpty() && // If there are no primitive properties, then there are no totals.
-               getPrimProps().stream()
+        return getPrimProps().stream()
+                .filter(prop -> prop.indexOf(".") == 0) // need to filter out sub-props for components such as Money.amount, which are not recognised as being for totals
                 .allMatch(prop -> entityMetadata.propertyOpt(prop)
                         .flatMap(PropertyMetadata::asCalculated)
                         .map(pm -> pm.data().forTotals())
