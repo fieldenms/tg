@@ -1,7 +1,7 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
-import '/resources/toastui-editor/toastui-editor-all.min.js';
+import '/resources/toastui-editor/toastui-editor-all.js';
 
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
@@ -238,6 +238,14 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, TgTooltipBe
 
     applyStrikethough() {
         this._editor.exec('strike');
+    }
+
+    undo() {
+        this._editor.exec('undo');
+    }
+
+    redo() {
+        this._editor.exec('redo');
     }
 
     insertLink(url, text) {
