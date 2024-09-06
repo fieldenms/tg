@@ -70,13 +70,26 @@ function colorTextPlugin (context, options) {
     };
 }
 
+let currentTooltipElement = null;
 function mouseOverHandler(e) {
-    if (e.target.hasAttribute("href")) {
-        const text = e.target.getAttribute("href");
-        this.showTooltip(text);
+    const a = findLinkParent.bind(this)(e.target);
+    if (a && a.hasAttribute('href')) {
+        if (currentTooltipElement !== a) {
+            this._hideTooltip();
+        }
+        this.showTooltip(a.getAttribute('href'));
     } else {
         this._hideTooltip();
     }
+    currentTooltipElement = a;
+};
+
+function findLinkParent(element) {
+    let parent = element;
+    while (parent && parent !== this._editor.getEditorElements().wwEditor.children[0] && !parent.hasAttribute('href')) {
+        parent = parent.parentElement;
+    }
+    return parent;
 };
 
 let mouseTimer = null;
@@ -84,8 +97,9 @@ let longPress = false;
 let shortPress = false;
 
 function runLinkIfPossible(el) {
-    if (el.hasAttribute('href')) {
-        const w = window.open(el.getAttribute('href'));
+    const a = findLinkParent.bind(this)(el);
+    if (a && a.hasAttribute('href')) {
+        const w = window.open(a.getAttribute('href'));
 
         w.focus();
     }
@@ -99,7 +113,7 @@ function mouseDownHandler(e) {
         mouseTimer = setTimeout(() => {
             longPress = true;
             shortPress = false;
-            setTimeout( () => {runLinkIfPossible(el)}, 1);
+            setTimeout( () => {runLinkIfPossible.bind(this)(el)}, 1);
         }, 1000);
     }
 }
@@ -111,7 +125,7 @@ function mouseUpHandler(e) {
         }
         if (shortPress && !longPress && (e.ctrlKey || e.metaKey)) {
             const el = e.target;
-            setTimeout( () => {runLinkIfPossible(el)}, 150);
+            setTimeout( () => {runLinkIfPossible.bind(this)(el)}, 150);
         }
         longPress = false;
         shortPress = false;
@@ -293,6 +307,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, TgTooltipBe
     getDomAtCaretPosition() {
         if (this._editor && this._prevSelection) {
             return this._editor.wwEditor.view.domAtPos(this._prevSelection[1]).node.parentElement;
+        }
+    }
+
+    getSelectedText() {
+        if (this._editor && this._prevSelection) {
+            return this._editor.getSelectedText(this._prevSelection[0], this._prevSelection[1]);
         }
     }
 

@@ -104,7 +104,8 @@ export class TgLinkDialog extends PolymerElement {
 
             linkText: {
                 type: String,
-                value: ''
+                value: '',
+                observer: "_linkTextChanged"
             },
 
             validationCallback: Function,
@@ -131,7 +132,6 @@ export class TgLinkDialog extends PolymerElement {
     }
 
     _cancleLink() {
-        this._resetEntity();
         this.cancelCallback && this.cancelCallback();
     }
 
@@ -170,16 +170,28 @@ export class TgLinkDialog extends PolymerElement {
         if (!hasError) {
             this.url = this._entity['urlProp'].value;
             this.linkText = this._entity['linkTextProp'];
-            this._resetEntity();
             this.okCallback && this.okCallback();
         }
     }
 
-    _resetEntity() {
+    resetState() {
+        this.url = '';
+        this.linkText = '';
         this.$.urlEditor.assignConcreteValue({value: ''}, this._reflector.tg_convert.bind(this._reflector));
         this.$.urlEditor.commit();
         this.$.linkTextEditor.assignConcreteValue('', this._reflector.tg_convert.bind(this._reflector));
         this.$.linkTextEditor.commit();
+    }
+
+    _linkTextChanged(newText) {
+        if (newText !== this._entity['linkTextProp']) {
+            this.$.linkTextEditor.assignConcreteValue(this.linkText, this._reflector.tg_convert.bind(this._reflector));
+            this.$.linkTextEditor.commit();
+            this._entity['@linkTextProp_editable'] = !newText;
+            //Next two rows needed to trigger recalculation of _disabled property
+            this.$.linkTextEditor.currentState="VIEW";
+            this.$.linkTextEditor.currentState="EDIT";
+        }
     }
 
 }

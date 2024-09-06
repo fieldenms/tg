@@ -117,7 +117,6 @@ export class TgColorPickerDialog extends PolymerElement {
     }
 
     _cancleLink() {
-        this._resetEntity();
         this.cancelCallback && this.cancelCallback();
     }
 
@@ -140,7 +139,6 @@ export class TgColorPickerDialog extends PolymerElement {
         }
         if (!hasError) {
             this.color = `#${this._entity['colorProp'].hashlessUppercasedColourValue}`;
-            this._resetEntity();
             this.okCallback && this.okCallback();
         }
     }
@@ -153,7 +151,8 @@ export class TgColorPickerDialog extends PolymerElement {
         }
     }
 
-    _resetEntity() {
+    resetState() {
+        this.color = '';
         this.$.colorEditor.assignConcreteValue({hashlessUppercasedColourValue: ''}, this._reflector.tg_convert.bind(this._reflector));
         this.$.colorEditor.commit();
     }

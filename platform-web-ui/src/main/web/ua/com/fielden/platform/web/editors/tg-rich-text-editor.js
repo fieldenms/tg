@@ -58,10 +58,10 @@ const additionalTemplate = html`
             box-shadow: 0px 2px 6px #ccc;
         }
     </style>
-    <iron-dropdown id="linkDropdown" vertical-align="top" horizontal-align="left" vertical-offset="13.5" always-on-top>
+    <iron-dropdown id="linkDropdown" vertical-align="top" horizontal-align="left" vertical-offset="13.5" always-on-top on-iron-overlay-closed="_linkDialogClosed">
         <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]"></tg-link-dialog>
     </iron-dropdown>
-    <iron-dropdown id="colorDropdown" vertical-align="top" horizontal-align="left" vertical-offset="13.5" always-on-top>
+    <iron-dropdown id="colorDropdown" vertical-align="top" horizontal-align="left" vertical-offset="13.5" always-on-top on-iron-overlay-closed="_colorDialogClosed">
         <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]"></tg-color-picker-dialog>
     </iron-dropdown>`;
 const customLabelTemplate = html`
@@ -215,6 +215,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _insertLink(e) {
+        this.$.linkDialog.linkText = this.$.input.getSelectedText();
         this.$.linkDropdown.open();
     }
 
@@ -336,6 +337,18 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _generateKey() {
         return localStorageKey(`${this.entityType}_${this.propertyName}_height`);
+    }
+
+    _linkDialogClosed(e) {
+        if (e.composedPath()[0] === this.$.linkDropdown) {
+            this.$.linkDialog.resetState();
+        }
+    }
+
+    _colorDialogClosed(e) {
+        if (e.composedPath()[0] === this.$.colorDropdown) {
+            this.$.colorDialog.resetState();
+        }
     }
 }
 
