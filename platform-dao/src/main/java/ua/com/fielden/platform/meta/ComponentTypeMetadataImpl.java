@@ -8,12 +8,12 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.function.Function.identity;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 
-final class CompositeTypeMetadataImpl implements TypeMetadata.Composite {
+final class ComponentTypeMetadataImpl implements TypeMetadata.Component {
 
     private final Class<?> javaType;
     private final Map<String, ? extends PropertyMetadata> properties;
 
-    CompositeTypeMetadataImpl(final Builder builder) {
+    ComponentTypeMetadataImpl(final Builder builder) {
         this.javaType = builder.javaType;
         this.properties = builder.properties.stream()
                 .collect(toImmutableMap(PropertyMetadata::name, identity()));
@@ -46,7 +46,7 @@ final class CompositeTypeMetadataImpl implements TypeMetadata.Composite {
     @Override
     public boolean equals(Object obj) {
         return obj == this
-               || obj instanceof CompositeTypeMetadataImpl that
+               || obj instanceof ComponentTypeMetadataImpl that
                   && Objects.equals(this.javaType, that.javaType)
                   && Objects.equals(this.properties, that.properties);
     }
@@ -58,7 +58,7 @@ final class CompositeTypeMetadataImpl implements TypeMetadata.Composite {
 
     @Override
     public String toString() {
-        return "CompositeTypeMetadata[" +
+        return "ComponentTypeMetadata[" +
                "javaType=" + javaType + ", " +
                "properties=" + properties + ']';
     }
@@ -90,8 +90,8 @@ final class CompositeTypeMetadataImpl implements TypeMetadata.Composite {
             return this;
         }
 
-        public TypeMetadata.Composite build() {
-            return new CompositeTypeMetadataImpl(this);
+        public Component build() {
+            return new ComponentTypeMetadataImpl(this);
         }
 
     }

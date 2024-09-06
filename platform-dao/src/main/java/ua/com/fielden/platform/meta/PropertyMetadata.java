@@ -8,16 +8,18 @@ import static java.lang.Boolean.FALSE;
 /**
  * Represents property metadata.
  * <p>
- * Each property is classified according to its nature. A nature may specify essential metadata that is attributed to a
- * property. This essential data can be accessed via {@link #data()}.
+ * Each property gets classified according to its nature.
+ * Nature determines the essential metadata attributed to a property.
+ * This essential data is accessible via {@link #data()}.
  * Matching on the property's nature can be performed with the {@code switch} statement or via {@link #match(PropertyMetadataVisitor)}.
  *
  * <h3> Arbitrary Metadata </h3>
- * A property might have arbitrary additional information associated with it which is modelled with key-value pairs.
- * Keys come in 2 forms:
- * <ul>
- *   <li> General-purpose keys that are applicable to properties of all natures: {@link AnyKey}. Access via {@link #get(AnyKey)}.
- *   <li> <s>Specialised keys, applicable to properties of a specific nature: {@link Key}. Access via {@link #get(Key)}</s>.
+ * A property might have arbitrary additional information associated with it, which is modelled with key-value pairs.
+ * At the moment, only general-purpose keys {@link AnyKey} that are applicable to properties of all natures are supported.
+ * Values can be accessed via {@link #get(AnyKey)}.
+ * <p>
+ * It is possible that at some stage specialised keys, applicable to properties of a specific nature, would become required.
+ * There is already some commented out code to support such keys. Please refer to the <i>TODO</i> entries in the source.
  * </ul>
  * The purpose of this mechanism is to represent optional information.
  *
@@ -50,21 +52,23 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
 
     <R> R match(PropertyMetadataVisitor<R> visitor);
 
-    // NOTE if a need for specialised keys arises, this interface will have to be parameterised with PropertyNature
-//    <V> Optional<V> get(Key<V, N> key);
+    // TODO: If nature-specific arbitrary key-value metadata would become required, this method would need to be uncommented.
+    // NOTE: if a need for specialised keys arises, this interface will have to be parameterised with PropertyNature.
+    // <V> Optional<V> get(Key<V, N> key);
 
     <V> Optional<V> get(AnyKey<V> key);
 
     /**
-     * If key is present, returns a proof of its presence.
+     * If a key is present, returns a proof of its presence.
      *
      * @see PropertyMetadataWithKey
      */
     <K extends AnyKey<V>, V> Optional<PropertyMetadataWithKey<K, V>> withKey(K key);
 
-//    default boolean is(Key<Boolean, N> key) {
-//        return get(key).orElse(FALSE);
-//    }
+    // TODO: If nature-specific arbitrary key-value metadata would become required, this method would need to be uncommented.
+    // default boolean is(Key<Boolean, N> key) {
+    //     return get(key).orElse(FALSE);
+    // }
 
     default boolean is(AnyKey<Boolean> key) {
         return get(key).orElse(FALSE);
@@ -156,7 +160,8 @@ public sealed interface PropertyMetadata extends Comparable<PropertyMetadata> {
         PropertyNature.Plain nature();
     }
 
-    interface Key<V, N extends PropertyNature> extends IKey {}
+    // TODO: If nature-specific arbitrary key-value metadata would become required, this type should be used to model a key.
+    // interface Key<V, N extends PropertyNature> extends IKey {}
 
     interface AnyKey<V> extends IKey {}
 

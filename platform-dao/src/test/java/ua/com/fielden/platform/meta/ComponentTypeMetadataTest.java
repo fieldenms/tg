@@ -2,7 +2,7 @@ package ua.com.fielden.platform.meta;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.meta.Assertions.CompositeA;
+import ua.com.fielden.platform.meta.Assertions.ComponentA;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
 import ua.com.fielden.platform.types.Money;
 
@@ -13,14 +13,14 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 
-public class CompositeTypeMetadataTest {
+public class ComponentTypeMetadataTest {
 
     private final DomainMetadataGenerator generator = new DomainMetadataGenerator(
             PLATFORM_HIBERNATE_TYPE_MAPPINGS, constantDbVersion(DbVersion.MSSQL));
 
     @Test
-    public void composite_type_metadata_generation() {
-        CompositeA.of(assertPresent("Expected metadata to have been generated.", generator.forComposite(Money.class)))
+    public void metadata_is_generated_for_type_Money() {
+        ComponentA.of(assertPresent("Expected metadata to have been generated.", generator.forComponent(Money.class)))
                 .assertProperty("amount", p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(BigDecimal.class))

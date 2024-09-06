@@ -26,11 +26,11 @@ public final class PlatformHibernateTypeMappings {
             .put(IHyperlinkType.class, HyperlinkType.INSTANCE)
             .put(IUtcDateTimeType.class, UtcDateTimeType.INSTANCE)
 
-            .put(IMoneyUserType.class, MoneyUserType.INSTANCE)
+            .put(IMoneyType.class, MoneyType.INSTANCE)
             .put(ISimpleMoneyType.class, SimpleMoneyType.INSTANCE)
             .put(ISimplyMoneyWithTaxAndExTaxAmountType.class, SimplyMoneyWithTaxAndExTaxAmountType.INSTANCE)
             .put(ISimplyMoneyWithTaxAmountType.class, SimplyMoneyWithTaxAmountType.INSTANCE)
-            .put(IMoneyWithTaxAmountUserType.class, MoneyWithTaxAmountUserType.INSTANCE)
+            .put(IMoneyWithTaxAmountType.class, MoneyWithTaxAmountType.INSTANCE)
 
             .build();
 

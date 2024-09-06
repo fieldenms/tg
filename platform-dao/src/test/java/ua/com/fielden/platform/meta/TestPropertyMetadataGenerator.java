@@ -26,8 +26,7 @@ class TestPropertyMetadataGenerator {
      */
     public PropertyTypeMetadata generate(final Field field) {
         return generator.generate(field)
-                .orElseThrow(() -> new AssertionError(format("Expected metadata to be generated for [%s]",
-                                                             field.toGenericString())));
+                .orElseThrow(() -> new AssertionError("Expected metadata to be generated for [%s].".formatted(field.toGenericString())));
     }
 
     /**
@@ -35,17 +34,17 @@ class TestPropertyMetadataGenerator {
      */
     public PropertyTypeMetadata generate(final Type type) {
         return generator.generate(type)
-                .orElseThrow(() -> new AssertionError(format("Expected metadata to be generated for [%s]", type.getTypeName())));
+                .orElseThrow(() -> new AssertionError("Expected metadata to be generated for [%s].".formatted(type.getTypeName())));
     }
 
     public TestPropertyMetadataGenerator assertNotGenerated(final Field field) {
-        assertTrue(format("Did not expect property type metadata to be generated for [%s]", field.toGenericString()),
+        assertTrue("Did not expect property type metadata to be generated for [%s].".formatted(field.toGenericString()),
                    generator.generate(field).isEmpty());
         return this;
     }
 
     public TestPropertyMetadataGenerator assertNotGenerated(final Type type) {
-        assertTrue(format("Did not expect property type metadata to be generated for [%s]", type.getTypeName()),
+        assertTrue("Did not expect property type metadata to be generated for [%s].".formatted(type.getTypeName()),
                    generator.generate(type).isEmpty());
         return this;
     }

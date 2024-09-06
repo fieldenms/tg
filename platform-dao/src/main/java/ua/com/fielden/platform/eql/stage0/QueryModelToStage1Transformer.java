@@ -27,7 +27,7 @@ import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.EMPTY_CO
 import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.EMPTY_ORDER_BYS;
 
 /**
- * Transforms EQL models in form of fluent API tokens to the stage 1 representation.
+ * Transforms EQL models in the form of fluent API tokens to the stage 1 representation.
  *
  */
 public class QueryModelToStage1Transformer {

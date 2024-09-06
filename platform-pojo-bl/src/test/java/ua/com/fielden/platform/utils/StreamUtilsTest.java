@@ -261,14 +261,24 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void foldLeft_returns_empty_optional_for_empty_stream() {
-        assertEmpty(foldLeft(IntStream.of(), Integer::sum));
+    public void reduceLeft_returns_empty_optional_for_empty_stream() {
+        assertEmpty(reduceLeft(IntStream.of(), Integer::sum));
     }
 
     @Test
-    public void foldLeft_returns_present_optional_for_non_empty_stream() {
-        assertOptEquals(1, foldLeft(IntStream.of(1), Integer::sum));
-        assertOptEquals(3, foldLeft(IntStream.of(1, 2), Integer::sum));
+    public void reduceLeft_returns_optional_with_first_element_for_stream_with_one_element() {
+        assertOptEquals("one", reduceLeft(Stream.of("one"), String::concat));
+    }
+
+    @Test
+    public void reduceLeft_processes_stream_elements_sequentially_from_left_to_right() {
+        assertOptEquals(1, reduceLeft(IntStream.of(1), Integer::sum));
+        assertOptEquals("one-two", reduceLeft(Stream.of("one-", "two"), String::concat));
+    }
+
+    @Test
+    public void foldLeft_returns_optional_with_initial_element_for_empty_stream() {
+        assertEquals("zero", foldLeft(Stream.of(), "zero", String::concat));
     }
 
     @Test

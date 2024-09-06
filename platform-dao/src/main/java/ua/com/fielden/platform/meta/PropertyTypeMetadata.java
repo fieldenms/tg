@@ -12,20 +12,22 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Represents a property type. This abstraction can be viewed as being in a class-instance relationship with {@link TypeMetadata}:
- * {@link PropertyTypeMetadata} is an instance of {@link TypeMetadata}. This means that {@link PropertyTypeMetadata} can
- * refine {@link TypeMetadata} with arbitrary information.
+ * Represents a property type.
+ * This abstraction can be viewed as being in a class-instance relationship with {@link TypeMetadata}:
+ * {@link PropertyTypeMetadata} is an instance of {@link TypeMetadata}.
+ * This means that {@link PropertyTypeMetadata} can extend {@link TypeMetadata} with additional information.
  * <p>
- * However, the mentioned class-instance relationship is not a universal rule. There are property types that don't directly
- * correspond to any {@link TypeMetadata}. For example, types of collectional properties or primitive types such as {@link String}.
+ * However, the mentioned class-instance relationship is not a universal rule.
+ * There are property types that do not correspond directly to any {@link TypeMetadata}.
+ * For example, types of collectional properties or primitive types such as {@link String}.
  *
  * <h5> Property types that aren't modelled </h5>
- * This abstraction is not exhaustive, i.e., it does not cover all possible property types.
+ * This abstraction is not exhaustive – it does not cover all possible property types.
  * <p>
- * Examples property types that aren't modelled:
+ * Examples of property types that are not modelled:
  * <ul>
- *   <li> {@link Map}
- *   <li> Collectional types parameterised with unmodelled property types (e.g, with a type variable)
+ *   <li> {@link Map};
+ *   <li> Collectional types parameterised with unmodelled property types (e.g., with a type variable).
  * </ul>
  */
 public sealed interface PropertyTypeMetadata {
@@ -44,8 +46,8 @@ public sealed interface PropertyTypeMetadata {
         return this instanceof Collectional;
     }
 
-    default boolean isComposite() {
-        return this instanceof Composite;
+    default boolean isComponent() {
+        return this instanceof Component;
     }
 
     default boolean isCompositeKey() {
@@ -60,8 +62,8 @@ public sealed interface PropertyTypeMetadata {
         return this instanceof Primitive it ? Optional.of(it) : Optional.empty();
     }
 
-    default Optional<Composite> asComposite() {
-        return this instanceof Composite it ? Optional.of(it) : Optional.empty();
+    default Optional<Component> asComponent() {
+        return this instanceof Component it ? Optional.of(it) : Optional.empty();
     }
 
     default Optional<Entity> asEntity() {
@@ -103,7 +105,7 @@ public sealed interface PropertyTypeMetadata {
     }
 
     /**
-     * Type of collectional properties.
+     * Type for representing collectional properties.
      * <p>
      * Has no corresponding {@link TypeMetadata}.
      * <p>
@@ -113,8 +115,6 @@ public sealed interface PropertyTypeMetadata {
         Class<?> collectionType();
 
         PropertyTypeMetadata elementType();
-
-//        String linkProp();
 
         @Override
         default PropertyTypeMetadata wrappedType() {
@@ -128,19 +128,19 @@ public sealed interface PropertyTypeMetadata {
     }
 
     /**
-     * Type of properties with composite type.
+     * Type for representing properties that are component-like product types that have one or more distinct attributes.
      * <p>
      * Examples: {@link Money}.
      * <p>
-     * Corresponds to {@link TypeMetadata.Composite}.
+     * Corresponds to {@link TypeMetadata.Component}.
      */
-    non-sealed interface Composite extends PropertyTypeMetadata {
+    sealed interface Component extends PropertyTypeMetadata permits ComponentPropertyTypeMetadata {
         Class<?> javaType();
     }
 
     /**
-     * Type of a composite key property, i.e., property named "key" defined in an entity whose key type is {@link DynamicEntityKey}.
-     * Such a property is implicitly calculated as concatenation of all composite key members and its Java type is {@link String}.
+     * Type representing a composite key property, in other words, property named "key" defined in an entity whose key type is {@link DynamicEntityKey}.
+     * Such properties hava Java type {@link String} and they are implicitly calculated by concatenating the values of all composite key members with a corresponding key separator.
      * <p>
      * Has no corresponding {@link TypeMetadata}.
      */
@@ -181,8 +181,8 @@ public sealed interface PropertyTypeMetadata {
 
         static PropertyTypeMetadata unwrap(PropertyTypeMetadata typeMetadata) {
             return typeMetadata instanceof Wrapper wrapper
-                    ? wrapper.wrappedType()
-                    : typeMetadata;
+                   ? wrapper.wrappedType()
+                   : typeMetadata;
         }
     }
 

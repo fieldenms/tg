@@ -7,9 +7,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 /**
- * Represents type metadata that is derived from the type's definition.
+ * Represents type metadata derived from the type's definition.
  */
-public sealed interface TypeMetadata permits EntityMetadata, TypeMetadata.Composite {
+public sealed interface TypeMetadata permits EntityMetadata, TypeMetadata.Component {
 
     /**
      * Returns the underlying Java type.
@@ -20,16 +20,16 @@ public sealed interface TypeMetadata permits EntityMetadata, TypeMetadata.Compos
         return this instanceof EntityMetadata em ? Optional.of(em) : Optional.empty();
     }
 
-    default Optional<Composite> asComposite() {
-        return this instanceof Composite ctm ? Optional.of(ctm) : Optional.empty();
+    default Optional<Component> asComponent() {
+        return this instanceof Component ctm ? Optional.of(ctm) : Optional.empty();
     }
 
     /**
-     * Represents composite type metadata.
+     * Represents metadata for a type that is a component.
      * <p>
-     * Examples of composite types: {@link Money}.
+     * Examples of component types: {@link Money}.
      */
-    non-sealed interface Composite extends TypeMetadata {
+    sealed interface Component extends TypeMetadata permits ComponentTypeMetadataImpl {
 
         @Override
         Class<?> javaType();

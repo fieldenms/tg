@@ -72,7 +72,7 @@ public class FinderTest {
         }
 
         @Override
-        public boolean ignore(final Class<?> enttyType) {
+        public boolean ignore(final Class<?> entityType) {
             return false;
         }
     };
