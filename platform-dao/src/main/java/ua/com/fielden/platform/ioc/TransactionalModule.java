@@ -55,8 +55,8 @@ public abstract class TransactionalModule extends EntityModule {
         bind(IIdOnlyProxiedEntityTypeCache.class).to(IdOnlyProxiedEntityTypeCache.class);
 
         // bind SessionRequired interceptor
-        bindInterceptor(subclassesOf(ISessionEnabled.class), // match only DAO derived from  CommonEntityDao
-                        annotatedWith(SessionRequired.class), // having annotated methods
+        bindInterceptor(subclassesOf(ISessionEnabled.class), // match only instances implementing ISessionEnabled
+                        annotatedWith(SessionRequired.class), // having methods annotated with @SessionRequired
                         new SessionInterceptor(getProvider(Key.get(SessionFactory.class,
                                                                    Names.named(SESSION_FACTORY_FOR_SESSION_INTERCEPTOR)))));
 
