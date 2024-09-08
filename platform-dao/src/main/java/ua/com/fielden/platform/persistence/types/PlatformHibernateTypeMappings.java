@@ -9,11 +9,15 @@ import ua.com.fielden.platform.types.markers.*;
 
 import java.util.Date;
 
+/**
+ * Mappings of primitive and component types to Hibernate user types.
+ * <p>
+ * This information used to be provided by {@code HibernateUserTypesModule} and {@code HibernateSetup} at the level of applications.
+ */
 public final class PlatformHibernateTypeMappings {
 
     public static final HibernateTypeMappings PLATFORM_HIBERNATE_TYPE_MAPPINGS = HibernateTypeMappings.builder()
             .put(boolean.class, YesNoType.INSTANCE)
-            .put(Boolean.class, YesNoType.INSTANCE)
             .put(Date.class, DateTimeType.INSTANCE)
             .put(PropertyDescriptor.class, PropertyDescriptorType.INSTANCE)
             .put(Money.class, SimpleMoneyType.INSTANCE)
