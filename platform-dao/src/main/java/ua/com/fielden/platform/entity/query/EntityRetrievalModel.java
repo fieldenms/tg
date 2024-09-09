@@ -7,10 +7,13 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.meta.*;
 
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
 
 import static java.lang.Boolean.FALSE;
+import static java.lang.String.format;
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -30,219 +33,61 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  * is used because of the way fetch models are constructed -- heuristically, and one case where unwrapping is needed is
  * collectional properties: fetch models know only about the collectional element type.
  */
-public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
-    private final EntityMetadata entityMetadata;
-    private final EntityMetadataUtils entityMetadataUtils;
-    private final PropertyMetadataUtils propMetadataUtils;
+public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
+
+    private final fetch<T> originalFetch;
+    private final boolean topLevel;
+    private final boolean onlyTotals;
+    private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps;
+    private final Set<String> primProps;
+    private final Set<String> proxiedProps;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata) {
         this(originalFetch, domainMetadata, true);
     }
 
     EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata, final boolean topLevel) {
-        super(originalFetch, domainMetadata, topLevel);
-        this.entityMetadata = domainMetadata.forEntity(originalFetch.getEntityType());
-        this.entityMetadataUtils = domainMetadata.entityMetadataUtils();
-        this.propMetadataUtils = domainMetadata.propertyMetadataUtils();
+        this.originalFetch = originalFetch;
+        this.topLevel = topLevel;
+
+        final var builder = buildModel(originalFetch, domainMetadata);
+        this.primProps = unmodifiableSet(builder.primProps);
+        this.entityProps = unmodifiableMap(builder.entityProps);
+        this.proxiedProps = unmodifiableSet(builder.proxiedProps);
+        this.onlyTotals = builder.containsOnlyTotals();
+    }
+
+    private static <T extends AbstractEntity<?>> Builder buildModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata) {
+        final var builder = new Builder(originalFetch.getEntityType(), domainMetadata);
 
         switch (originalFetch.getFetchCategory()) {
-        case ALL_INCL_CALC:
-            includeAllFirstLevelPropsInclCalc();
-            break;
-        case ALL:
-            includeAllFirstLevelProps();
-            break;
-        case DEFAULT:
-            includeAllFirstLevelPrimPropsAndKey();
-            break;
-        case KEY_AND_DESC:
-            includeKeyAndDescOnly();
-            break;
-        case ID_AND_VERSION:
-            includeIdAndVersionOnly();
-            break;
-        case ID_ONLY:
-            includeIdOnly();
-            break;
-        case NONE:
-            break;
-        default:
-            throw new IllegalStateException("Unknown fetch category [" + originalFetch.getFetchCategory() + "]");
+            case ALL_INCL_CALC -> builder.includeAllFirstLevelPropsInclCalc();
+            case ALL -> builder.includeAllFirstLevelProps();
+            case DEFAULT -> builder.includeAllFirstLevelPrimPropsAndKey();
+            case KEY_AND_DESC -> builder.includeKeyAndDescOnly();
+            case ID_AND_VERSION -> builder.includeIdAndVersionOnly();
+            case ID_ONLY -> builder.includeIdOnly();
+            case NONE -> {}
+            default -> throw new IllegalStateException("Unknown fetch category [" + originalFetch.getFetchCategory() + "]");
         }
 
         for (final String propName : originalFetch.getExcludedProps()) {
-            without(propName);
+            builder.without(propName);
         }
 
         for (final String propName : originalFetch.getIncludedProps()) {
-            with(propName, false);
+            builder.with(propName, false);
         }
 
-        for (final Entry<String, fetch<? extends AbstractEntity<?>>> entry : originalFetch.getIncludedPropsWithModels().entrySet()) {
-            with(entry.getKey(), entry.getValue());
-        }
+        originalFetch.getIncludedPropsWithModels().forEach(builder::with);
 
-        populateProxies();
+        builder.populateProxies();
+
+        return builder;
     }
 
-    private void populateProxies() {
-        for (final PropertyMetadata pm : entityMetadata.properties()) {
-            // FIXME the following condition needs to be revisited as part of EQL 3 implementation
-            final String name = pm.name();
-            if (!ID.equals(name) &&
-                (!KEY.equals(name) || pm.isPersistent()) &&
-                !pm.type().isCollectional() &&
-                !pm.isCritOnly() &&
-                !name.contains(".") &&
-                !containsProp(name) &&
-                (entityMetadata.isSynthetic() || !pm.isPlain()))
-            {
-                getProxiedProps().add(name);
-            }
-        }
-    }
-
-    private void includeAllCompositeKeyMembers() {
-        entityMetadataUtils.compositeKeyMembers(entityMetadata)
-                .forEach(pm -> with(pm.name(), !pm.type().isEntity()));
-    }
-
-    private void includeAllUnionEntityKeyMembers() {
-        entityMetadata.properties().stream()
-                .filter(pm -> propMetadataUtils.isPropEntityType(pm.type(), EntityMetadata::isPersistent))
-                .forEach(pm -> with(pm.name(), false));
-    }
-
-    private void includeAllFirstLevelPrimPropsAndKey() {
-        entityMetadata.properties().stream()
-                .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
-                // calculated components are included (legacy EQL2 behaviour)
-                // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour
-                .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
-                .forEach(pm -> {
-                    // FIXME: Union-entity typed keys or key members are not supported at this stage.
-                    //        However, there is nothing preventing such definitions, which leads to StackOverflowErrors during fetch model construction.
-                    //        To support such definitions, it would be necessary to take into account recursive definitions,
-                    //        where a key or key member that is of a union type may have a union-property of the same type as the enclosing entity.
-                    //        We would need to ensure that such union-properties are not explored to prevent StackOverflowErrors during fetch model construction.
-                    //        For now, let's simply skip the whole union-typed key and key-members from exploration.
-                    final boolean exploreEntities = pm.type().isEntity()
-                                                    && !propMetadataUtils.isPropEntityType(pm, EntityMetadata::isUnion)
-                                                    && (KEY.equals(pm.name()) || pm.has(KEY_MEMBER));
-                    with(pm.name(), !exploreEntities);
-                });
-    }
-
-    private void includeLastUpdatedByGroupOfProperties() {
-        if (AbstractPersistentEntity.class.isAssignableFrom(getEntityType())) {
-            with(LAST_UPDATED_BY, true);
-            addPrimProp(LAST_UPDATED_DATE);
-            addPrimProp(LAST_UPDATED_TRANSACTION_GUID);
-        }
-    }
-
-    private void includeKeyAndDescOnly() {
-        if (isPersistedEntityType(getEntityType())) {
-            includeIdAndVersionOnly();
-        } else if (isSyntheticBasedOnPersistentEntityType(getEntityType())) {
-            addPrimProp(ID);
-        }
-
-        with(KEY, true);
-
-        if (hasDescProperty(getEntityType())) {
-            addPrimProp(DESC);
-        }
-    }
-
-    private void includeAllFirstLevelProps() {
-        entityMetadata.properties().stream()
-                .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
-                // calculated components are included (legacy EQL2 behaviour)
-                // TODO don't treat calculated components specially once TG applications no longer rely on this behaviour
-                .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
-                .forEach(pm -> with(pm.name(), false));
-    }
-
-    private void includeAllFirstLevelPropsInclCalc() {
-        entityMetadata.properties().stream()
-                .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
-                .forEach(pm -> with(pm.name(), false));
-    }
-
-    private void includeIdOnly() {
-        addPrimProp(ID);
-    }
-
-    private void includeIdAndVersionOnly() {
-        if (isPersistedEntityType(getEntityType())) {
-            addPrimProp(ID);
-            addPrimProp(VERSION);
-            if (isActivatableEntityType(getEntityType())) {
-                addPrimProp(ACTIVE);
-                addPrimProp(REF_COUNT);
-            }
-            includeLastUpdatedByGroupOfProperties();
-        } else if (isEntityType(getKeyType(getEntityType()))) {
-            addPrimProp(ID);
-        }
-    }
-
-    private void with(final String propName, final boolean skipEntities) {
-        getPropMetadata(propName).ifPresentOrElse(pm -> {
-            if (pm.type().isCompositeKey()) {
-                includeAllCompositeKeyMembers();
-            } else if (propName.equals(KEY) && isUnionEntityType(getEntityType())) {
-                addPrimProp(KEY);
-                includeAllUnionEntityKeyMembers();
-            } else {
-                final var propType = unwrap(pm.type());
-                // Treat PropertyDescriptor as primitive, it does not make sense to fetch its sub-properties
-                // TODO: The commented out condition !optPm.isId() is a very old one and its intent is not known
-                //       It was migrated from the SVN repo 10 years ago.
-                //       https://github.com/fieldenms/tg/commit/40cc8e3bbe19b9100718c1476780dc9be46b0915#diff-5561eb2f0bc449a4430ec09dcf2b9f76d64fc8205771489eae8ba1472664233cR134
-                if (propType instanceof PropertyTypeMetadata.Entity et && !PropertyDescriptor.class.equals(et.javaType())/* && !optPm.isId()*/) {
-                    if (!skipEntities) {
-                        if (propMetadataUtils.isPropEntityType(propType, EntityMetadata::isUnion)) {
-                            with(propName, fetchAll(et.javaType()));
-                        } else {
-                            with(propName, fetch(et.javaType()));
-                        }
-                    } else if (pm.isPersistent()) {
-                        with(propName, fetchIdOnly(et.javaType()));
-                    }
-                } else {
-                    getSinglePropertyOfComponentType(pm).ifPresent(prop -> addPrimProp(propName + "." + prop));
-                    addPrimProp(propName);
-                }
-            }
-        }, () -> addPrimProp(propName)); // when PropertyMetadata is missing but this is considered legal -- just add it as primitive property
-
-    }
-
-    private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-        final PropertyMetadata pm = domainMetadata.forProperty(getEntityType(), propName);
-
-        final var propType = unwrap(pm.type());
-        if (propType.javaType() != fetchModel.getEntityType()) {
-            throw new EqlException(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES.formatted(pm.type(), propName, getEntityType(), fetchModel.getEntityType()));
-        }
-
-        // TODO: The following code to extend a fetch model for union-typed properties to include their union-properties appears to be irrelevant.
-        //       Test EntityQuery3ExecutionTest.union_members_can_be_yielded_with_dot_expression demonstrates this.
-        //       For now let's comment this code out with the intent to eventually remove it.
-        //if (propType instanceof PropertyTypeMetadata.Entity et) {
-        //    final EntityMetadata em = domainMetadata.forEntity(et.javaType());
-        //    em.asUnion().ifPresent(uem -> entityMetadataUtils.unionMembers(uem).stream()
-        //            .map(PropertyMetadata::name)
-        //            .map(s -> pm.name() + "." + s)
-        //            //  is added here as primitive prop only to avoid its removal in EntQuery.adjustAccordingToFetchModel
-        //            .forEach(this::addPrimProp));
-        //}
-
-        final EntityRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
-        fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
-        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, domainMetadata, false));
+    public fetch<T> getOriginalFetch() {
+        return originalFetch;
     }
 
     public boolean isFetchIdOnly() {
@@ -250,50 +95,325 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     @Override
+    public Class<T> getEntityType() {
+        return originalFetch.getEntityType();
+    }
+
+    @Override
+    public boolean isInstrumented() {
+        return originalFetch.isInstrumented();
+    }
+
+    @Override
+    public Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels() {
+        return entityProps;
+    }
+
+    @Override
+    public Set<String> getPrimProps() {
+        return primProps;
+    }
+
+    @Override
+    public Set<String> getProxiedProps() {
+        return proxiedProps;
+    }
+
+    @Override
+    public boolean containsProp(final String propName) {
+        return primProps.contains(propName) || entityProps.containsKey(propName);
+    }
+
+    @Override
+    public boolean containsProxy(final String propName) {
+        return proxiedProps.contains(propName);
+    }
+
+    @Override
+    public boolean topLevel() {
+        return topLevel;
+    }
+
+    @Override
     public boolean containsOnlyTotals() {
-        return getPrimProps().stream()
-                // Need to filter out sub-props for components such as Money.amount, which are not recognised as being for totals.
-                // The filtering condition relies on the fact that both a component typed property and its sub-props are present among prim props,
-                // so that after filtering the component typed properties would remain for further totals-only identification.
-                .filter(prop -> !prop.contains("."))
-                .allMatch(prop -> entityMetadata.propertyOpt(prop)
-                        .flatMap(PropertyMetadata::asCalculated)
-                        .map(pm -> pm.data().forTotals())
-                        .orElse(FALSE));
+        return onlyTotals;
     }
 
-    /**
-     * Indicates whether property belongs to a persistent entity, but is such that has no meaning from the persistence perspective.
-     * In other words, values for such properties cannot be retrieved from a database.
-     * <p>
-     * Effectively, for persistent entities, only calculated and persistent properties can be retrieved.
-     * Properties of any other nature are considered such that do not have anything to do with persistence.
-     * <p>
-     * For synthetic entities, properties of any nature can be retrieved as long as they are yielded or can be calculated.
-     * This is why it is considered that such entities do not have "pure" properties that cannot be retrieved.
-     * Although, it is possible to declare a plain property and not use it in the model for yielding.
-     * Attempts to specify such properties in a fetch model when retrieving a synthetic entity, should result in a runtime exception.
-     *
-     * @param pm
-     * @return
-     */
-    private boolean isPure(final PropertyMetadata pm) {
-        return entityMetadata.isPersistent() &&
-               switch (pm.nature()) {
-                   case PropertyNature.Persistent $ -> false;
-                   case PropertyNature.Calculated $ -> false; // is Transient, but has an expression, so can be retrieved
-                   case PropertyNature.Transient  $ -> true;  // covers the cases of CritOnly and Plain, which cannot be retrieved
-               };
-    }
-
-    private Optional<String> getSinglePropertyOfComponentType(final PropertyMetadata pm) {
-        if (pm.hibType() instanceof ICompositeUserTypeInstantiate hibUserType) {
-            final String[] propNames = hibUserType.getPropertyNames();
-            if (propNames.length == 1) {
-                return Optional.of(propNames[0]);
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer();
+        sb.append("Fetch model:\n------------------------------------------------\n");
+        sb.append("\t original:\n" + originalFetch + "\n\n");
+        sb.append(primProps);
+        if (entityProps.size() > 0) {
+            sb.append("\n------------------------------------------------");
+            for (final Entry<String, EntityRetrievalModel<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
+                sb.append("\n" + fetchEntry.getKey() + " <<< " + fetchEntry.getValue());
+                sb.append("\n------------------------------------------------");
             }
         }
-        return Optional.empty();
+
+        return sb.toString();
+    }
+
+    private static final class Builder {
+        final Class<? extends AbstractEntity<?>> entityType;
+        final IDomainMetadata domainMetadata;
+        final EntityMetadataUtils entityMetadataUtils;
+        final PropertyMetadataUtils propMetadataUtils;
+        final EntityMetadata entityMetadata;
+
+        // Mutable components that are being built
+
+        final Set<String> primProps;
+        final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps;
+        final Set<String> proxiedProps;
+
+        Builder(final Class<? extends AbstractEntity<?>> entityType, final IDomainMetadata domainMetadata) {
+            this.domainMetadata = domainMetadata;
+            this.entityType = entityType;
+            this.entityMetadata = domainMetadata.forEntity(entityType);
+            this.entityMetadataUtils = domainMetadata.entityMetadataUtils();
+            this.propMetadataUtils = domainMetadata.propertyMetadataUtils();
+            this.primProps = new HashSet<>();
+            this.entityProps = new HashMap<>();
+            this.proxiedProps = new HashSet<>();
+        }
+
+        private boolean containsProp(final String propName) {
+            return primProps.contains(propName) || entityProps.containsKey(propName);
+        }
+
+        private void populateProxies() {
+            for (final PropertyMetadata pm : entityMetadata.properties()) {
+                // FIXME the following condition needs to be revisited as part of EQL 3 implementation
+                final String name = pm.name();
+                if (!ID.equals(name) &&
+                        (!KEY.equals(name) || pm.isPersistent()) &&
+                        !pm.type().isCollectional() &&
+                        !pm.isCritOnly() &&
+                        !name.contains(".") &&
+                        !containsProp(name) &&
+                        (entityMetadata.isSynthetic() || !pm.isPlain()))
+                {
+                    proxiedProps.add(name);
+                }
+            }
+        }
+
+        private void includeAllCompositeKeyMembers() {
+            entityMetadataUtils.compositeKeyMembers(entityMetadata)
+                    .forEach(pm -> with(pm.name(), !pm.type().isEntity()));
+        }
+
+        private void includeAllUnionEntityKeyMembers() {
+            entityMetadata.properties().stream()
+                    .filter(pm -> propMetadataUtils.isPropEntityType(pm.type(), EntityMetadata::isPersistent))
+                    .forEach(pm -> with(pm.name(), false));
+        }
+
+        private void includeAllFirstLevelPrimPropsAndKey() {
+            entityMetadata.properties().stream()
+                    .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
+                    // calculated components are included (legacy EQL2 behaviour)
+                    // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour
+                    .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
+                    .forEach(pm -> {
+                        // FIXME: Union-entity typed keys or key members are not supported at this stage.
+                        //        However, there is nothing preventing such definitions, which leads to StackOverflowErrors during fetch model construction.
+                        //        To support such definitions, it would be necessary to take into account recursive definitions,
+                        //        where a key or key member that is of a union type may have a union-property of the same type as the enclosing entity.
+                        //        We would need to ensure that such union-properties are not explored to prevent StackOverflowErrors during fetch model construction.
+                        //        For now, let's simply skip the whole union-typed key and key-members from exploration.
+                        final boolean exploreEntities = pm.type().isEntity()
+                                && !propMetadataUtils.isPropEntityType(pm, EntityMetadata::isUnion)
+                                && (KEY.equals(pm.name()) || pm.has(KEY_MEMBER));
+                        with(pm.name(), !exploreEntities);
+                    });
+        }
+
+        private void includeLastUpdatedByGroupOfProperties() {
+            if (AbstractPersistentEntity.class.isAssignableFrom(entityType)) {
+                with(LAST_UPDATED_BY, true);
+                primProps.add(LAST_UPDATED_DATE);
+                primProps.add(LAST_UPDATED_TRANSACTION_GUID);
+            }
+        }
+
+        private void includeKeyAndDescOnly() {
+            if (isPersistedEntityType(entityType)) {
+                includeIdAndVersionOnly();
+            } else if (isSyntheticBasedOnPersistentEntityType(entityType)) {
+                primProps.add(ID);
+            }
+
+            with(KEY, true);
+
+            if (hasDescProperty(entityType)) {
+                primProps.add(DESC);
+            }
+        }
+
+        private void includeAllFirstLevelProps() {
+            entityMetadata.properties().stream()
+                    .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
+                    // calculated components are included (legacy EQL2 behaviour)
+                    // TODO don't treat calculated components specially once TG applications no longer rely on this behaviour
+                    .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
+                    .forEach(pm -> with(pm.name(), false));
+        }
+
+        private void includeAllFirstLevelPropsInclCalc() {
+            entityMetadata.properties().stream()
+                    .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
+                    .forEach(pm -> with(pm.name(), false));
+        }
+
+        private void includeIdOnly() {
+            primProps.add(ID);
+        }
+
+        private void includeIdAndVersionOnly() {
+            if (isPersistedEntityType(entityType)) {
+                primProps.add(ID);
+                primProps.add(VERSION);
+                if (isActivatableEntityType(entityType)) {
+                    primProps.add(ACTIVE);
+                    primProps.add(REF_COUNT);
+                }
+                includeLastUpdatedByGroupOfProperties();
+            } else if (isEntityType(getKeyType(entityType))) {
+                primProps.add(ID);
+            }
+        }
+
+        private void with(final String propName, final boolean skipEntities) {
+            getPropMetadata(propName).ifPresentOrElse(pm -> {
+                if (pm.type().isCompositeKey()) {
+                    includeAllCompositeKeyMembers();
+                } else if (propName.equals(KEY) && isUnionEntityType(entityType)) {
+                    primProps.add(KEY);
+                    includeAllUnionEntityKeyMembers();
+                } else {
+                    final var propType = unwrap(pm.type());
+                    // Treat PropertyDescriptor as primitive, it does not make sense to fetch its sub-properties
+                    // TODO: The commented out condition !optPm.isId() is a very old one and its intent is not known
+                    //       It was migrated from the SVN repo 10 years ago.
+                    //       https://github.com/fieldenms/tg/commit/40cc8e3bbe19b9100718c1476780dc9be46b0915#diff-5561eb2f0bc449a4430ec09dcf2b9f76d64fc8205771489eae8ba1472664233cR134
+                    if (propType instanceof PropertyTypeMetadata.Entity et && !PropertyDescriptor.class.equals(et.javaType())/* && !optPm.isId()*/) {
+                        if (!skipEntities) {
+                            if (propMetadataUtils.isPropEntityType(propType, EntityMetadata::isUnion)) {
+                                with(propName, fetchAll(et.javaType()));
+                            } else {
+                                with(propName, fetch(et.javaType()));
+                            }
+                        } else if (pm.isPersistent()) {
+                            with(propName, fetchIdOnly(et.javaType()));
+                        }
+                    } else {
+                        getSinglePropertyOfComponentType(pm).ifPresent(prop -> primProps.add(propName + "." + prop));
+                        primProps.add(propName);
+                    }
+                }
+            }, () -> primProps.add(propName)); // when PropertyMetadata is missing but this is considered legal -- just add it as primitive property
+        }
+
+        private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
+            final PropertyMetadata pm = entityMetadata.property(propName);
+
+            final var propType = unwrap(pm.type());
+            if (propType.javaType() != fetchModel.getEntityType()) {
+                throw new EqlException(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES.formatted(pm.type(), propName, entityType, fetchModel.getEntityType()));
+            }
+
+            // TODO: The following code to extend a fetch model for union-typed properties to include their union-properties appears to be irrelevant.
+            //       Test EntityQuery3ExecutionTest.union_members_can_be_yielded_with_dot_expression demonstrates this.
+            //       For now let's comment this code out with the intent to eventually remove it.
+            //if (propType instanceof PropertyTypeMetadata.Entity et) {
+            //    final EntityMetadata em = domainMetadata.forEntity(et.javaType());
+            //    em.asUnion().ifPresent(uem -> entityMetadataUtils.unionMembers(uem).stream()
+            //            .map(PropertyMetadata::name)
+            //            .map(s -> pm.name() + "." + s)
+            //            //  is added here as primitive prop only to avoid its removal in EntQuery.adjustAccordingToFetchModel
+            //            .forEach(primProps::add));
+            //}
+
+            final var existingFetch = entityProps.get(propName);
+            final var finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
+            entityProps.put(propName, new EntityRetrievalModel<>(finalFetch, domainMetadata, false));
+        }
+
+        private void without(final String propName) {
+            final Optional<PropertyMetadata> optPm = getPropMetadata(propName);
+
+            if (optPm.map(pm -> pm.type().isEntity()).orElse(FALSE)) {
+                final Object removalResult = entityProps.remove(propName);
+                if (removalResult == null) {
+                    throw new EqlException(format("Couldn't find property [%s] to be excluded from fetched entity properties of entity type [%s]", propName, entityType));
+                }
+            } else {
+                final boolean removalResult = primProps.remove(propName);
+                if (!removalResult) {
+                    throw new EqlException(format("Couldn't find property [%s] to be excluded from fetched primitive properties of entity type [%s]", propName, entityType));
+                }
+            }
+        }
+
+        private boolean containsOnlyTotals() {
+            return primProps.stream()
+                    // Need to filter out sub-props for components such as Money.amount, which are not recognised as being for totals.
+                    // The filtering condition relies on the fact that both a component typed property and its sub-props are present among prim props,
+                    // so that after filtering the component typed properties would remain for further totals-only identification.
+                    .filter(prop -> !prop.contains("."))
+                    .allMatch(prop -> entityMetadata.propertyOpt(prop)
+                            .flatMap(PropertyMetadata::asCalculated)
+                            .map(pm -> pm.data().forTotals())
+                            .orElse(FALSE));
+        }
+
+        /**
+         * Indicates whether property belongs to a persistent entity, but is such that has no meaning from the persistence perspective.
+         * In other words, values for such properties cannot be retrieved from a database.
+         * <p>
+         * Effectively, for persistent entities, only calculated and persistent properties can be retrieved.
+         * Properties of any other nature are considered such that do not have anything to do with persistence.
+         * <p>
+         * For synthetic entities, properties of any nature can be retrieved as long as they are yielded or can be calculated.
+         * This is why it is considered that such entities do not have "pure" properties that cannot be retrieved.
+         * Although, it is possible to declare a plain property and not use it in the model for yielding.
+         * Attempts to specify such properties in a fetch model when retrieving a synthetic entity, should result in a runtime exception.
+         */
+        private boolean isPure(final PropertyMetadata pm) {
+            return entityMetadata.isPersistent() &&
+                    switch (pm.nature()) {
+                        case PropertyNature.Persistent $ -> false;
+                        case PropertyNature.Calculated $ -> false; // is Transient, but has an expression, so can be retrieved
+                        case PropertyNature.Transient  $ -> true;  // covers the cases of CritOnly and Plain, which cannot be retrieved
+                    };
+        }
+
+        private Optional<String> getSinglePropertyOfComponentType(final PropertyMetadata pm) {
+            if (pm.hibType() instanceof ICompositeUserTypeInstantiate hibUserType) {
+                final String[] propNames = hibUserType.getPropertyNames();
+                if (propNames.length == 1) {
+                    return Optional.of(propNames[0]);
+                }
+            }
+            return Optional.empty();
+        }
+
+        private Optional<PropertyMetadata> getPropMetadata(final String propName) {
+            final var optPm = entityMetadata.propertyOpt(propName);
+            if (optPm.isEmpty()) {
+                // allow only IDs and VERSIONs to have missing PropertyMetadata; this is sometimes useful for pure synthetic entities that yield these props
+                if (ID.equals(propName) || VERSION.equals(propName)) {
+                    return Optional.empty();
+                }
+                throw new EqlException(format("Trying to fetch entity of type [%s] with non-existing property [%s]", entityType, propName));
+            }
+            return optPm;
+        }
+
     }
 
 }

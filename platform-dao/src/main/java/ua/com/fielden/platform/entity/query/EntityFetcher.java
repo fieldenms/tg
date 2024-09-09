@@ -61,14 +61,15 @@ public class EntityFetcher {
         final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), fm, queryModel.getParamValues(), queryModel.isLightweight());
         return entityContainerFetcher.listAndEnhanceContainers(qpm, pageNumber, pageCapacity);
     }
-    
+
     private <E extends AbstractEntity<?>> IRetrievalModel<E> produceRetrievalModel(final fetch<E> fetchModel, final Class<E> resultType, final IDomainMetadata domainMetadata) {
-        return fetchModel == null ? //
-        (resultType.equals(EntityAggregates.class) ? null
-                : new EntityRetrievalModel<E>(fetch(resultType), domainMetadata))
-                : // 
-                (resultType.equals(EntityAggregates.class) ? new EntityAggregatesRetrievalModel<E>(fetchModel, domainMetadata)
-                        : new EntityRetrievalModel<E>(fetchModel, domainMetadata));
+        if (fetchModel == null) {
+            return resultType == EntityAggregates.class ? null : new EntityRetrievalModel<>(fetch(resultType), domainMetadata);
+        } else {
+            return resultType == EntityAggregates.class
+                    ? (IRetrievalModel<E>) new EntityAggregatesRetrievalModel((fetch<EntityAggregates>) fetchModel, domainMetadata)
+                    : new EntityRetrievalModel<>(fetchModel, domainMetadata);
+        }
     }
     
     public <E extends AbstractEntity<?>> Stream<E> streamEntities(final QueryExecutionModel<E, ?> queryModel, final Optional<Integer> fetchSize) {

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @param <T>  the entity type that can be retrieved with a retrieval model instance
  * @see ua.com.fielden.platform.entity.query.fluent.fetch
  */
-public interface IRetrievalModel<T extends AbstractEntity<?>> {
+public sealed interface IRetrievalModel<T extends AbstractEntity<?>> permits EntityRetrievalModel, EntityAggregatesRetrievalModel {
 
     Class<T> getEntityType();
 
