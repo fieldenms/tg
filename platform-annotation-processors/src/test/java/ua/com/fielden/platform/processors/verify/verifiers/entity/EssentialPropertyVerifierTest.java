@@ -6,6 +6,8 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
@@ -31,6 +33,8 @@ import static ua.com.fielden.platform.processors.verify.verifiers.entity.Essenti
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier.*;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errEntityTypeMustBeRegistered;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.ERR_UNION_ENTITY_TYPED_SIMPLE_KEY;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.errUnionEntityTypedKeyMember;
 
 /**
  * Tests related to the composable verifier {@link EssentialPropertyVerifier} and its components.
@@ -523,6 +527,44 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
             assertTypeAllowed(ParameterizedTypeName.get(List.class, PropertyDescriptor.class));
         }
 
+    }
+
+    // 5. union-typed simple key and key members
+    public static class UnionEntityTypedKeyVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.class;
+
+        @Override
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
+            return new EssentialPropertyVerifier.UnionEntityTypedKeyVerifier(procEnv);
+        }
+
+        @Test
+        public void simple_key_typed_with_a_union_entity_is_disallowed() {
+            final var entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(Union.class, "key").build())
+                    .build();
+
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "key"),
+                    ERR_UNION_ENTITY_TYPED_SIMPLE_KEY);
+        }
+
+        @Test
+        public void key_member_typed_with_a_union_entity_is_disallowed() {
+            final var entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(Union.class, "prop")
+                            .addAnnotation(AnnotationSpec.builder(CompositeKeyMember.class).addMember("value", "$L", "1").build())
+                            .build())
+                    .build();
+
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
+                    errUnionEntityTypedKeyMember("prop"));
+        }
+
+        public static class Union extends AbstractUnionEntity {}
     }
 
 }
