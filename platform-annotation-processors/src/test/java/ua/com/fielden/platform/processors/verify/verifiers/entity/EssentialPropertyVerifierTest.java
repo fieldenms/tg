@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
 import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
+import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier;
@@ -25,6 +26,7 @@ import java.util.function.Function;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.compileWithTempStorage;
+import static ua.com.fielden.platform.processors.utils.CodeGenerationUtils.buildAtCompositeKeyMember;
 import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.setterBuilder;
@@ -555,7 +557,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
             final var entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(Union.class, "prop")
-                            .addAnnotation(AnnotationSpec.builder(CompositeKeyMember.class).addMember("value", "$L", "1").build())
+                            .addAnnotation(buildAtCompositeKeyMember(1))
                             .build())
                     .build();
 
