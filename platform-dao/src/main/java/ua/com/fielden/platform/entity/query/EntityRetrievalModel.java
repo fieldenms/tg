@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.meta.*;
 
 import java.util.*;
@@ -27,8 +28,82 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
- * <h4> Implementation Details </h4>
+ * Represents retrieval models specialised for entity types.
+ * <p>
+ * Retrieval model {@code RM} is constructed from {@linkplain fetch fetch model} {@code FM} as follows:
+ * <ol>
+ *   <li> {@link FetchCategory} is used to construct the initial parts of {@code RM}; more details are provided below.
+ *   <li> Any properties explicitly excluded by {@code FM} are excluded from {@code RM}.
+ *   <li> Any properties explicitly included by {@code FM} are included into {@code RM}.
+ *        Any sub-fetch models among them are combined with those used during previous steps.
+ *        For example, given entity-typed property {@code P}, if the fetch category resulted in a sub-retrieval model
+ *        {@code RM_P} (with an underlying fetch model {@code RMFM_P}) for {@code P} and {@code P} is explicitly included
+ *        into {@code FM} with a sub-fetch model {@code FM_P}, then {@code FM_P} is combined with {@code RMFM_P} to produce
+ *        the final sub-retrieval model for {@code P}.
+ *   <li> The set of proxied properties is constructed.
+ * </ol>
  *
+ * <h4> Processing of entity-typed properties </h4>
+ * Property {@code P} with entity type {@code E} may be explored during construction of a retrieval model, which will result in
+ * a richer sub-model for that property.
+ * <p>
+ * If {@code P} is explored, then:
+ * <ul>
+ *   <li> if {@code E} is a union entity, {@link FetchCategory#ALL} is used;
+ *   <li> otherwise {@link FetchCategory#DEFAULT} is used.
+ * </ul>
+ * Otherwise, if {@code P} is not explored, then:
+ * <ul>
+ *   <li> if {@code E} is a persistent entity, {@link FetchCategory#ID_ONLY} is used;
+ *   <li> otherwise, {@code P} is ignored and no sub-model is constructed for it.
+ * </ul>
+ *
+ * <h4> Fetch categories </h4>
+ * <ol>
+ *   <li> {@link FetchCategory#NONE} - nothing is included.
+ *   <li> {@link FetchCategory#ID_ONLY} - sole property {@code id} is included.
+ *   <li> {@link FetchCategory#ID_AND_VERSION} - if entity's nature is
+ *     <ul>
+ *       <li> persistent
+ *         <ul>
+ *           <li> {@code id} and {@code version} are included;
+ *           <li> if entity is activatable, {@code refCount} and {@code active} are included;
+ *           <li> if entity has a group of "last updated by" properties (see {@link AbstractPersistentEntity}), they are included;
+ *         </ul>
+ *       <li> other
+ *         <ul>
+ *           <li> if entity has an entity-typed key, {@code id} is included (it is not clearly understood why, but,
+ *                most likely, to support synthetic entities with entity-typed keys).
+ *         </ul>
+ *     </ul>
+ *   <li> {@link FetchCategory#KEY_AND_DESC}
+ *     <ul>
+ *       <li> if entity is persistent, includes {@link FetchCategory#ID_AND_VERSION};
+ *       <li> if entity is synthetic-based-on-persistent, includes {@code id};
+ *       <li> if entity has property {@code desc}, includes it;
+ *       <li> includes {@code key} without exploring it further (however, see the section on processing of {@code key});
+ *     </ul>
+ *   <li> {@link FetchCategory#DEFAULT}
+ *     <ul>
+ *       <li> collectional properties are excluded;
+ *       <li> non-retrievable properties are excluded;
+ *       <li> calculated properties are excluded (unless they have a component type);
+ *       <li> if entity has a simple entity-typed (but not a union) {@code key}, then it is explored further;
+ *       <li> if entity has a composite key, then all entity-typed (but not a union) key members are explored further;
+ *       <li> everything else is included.
+ *     </ul>
+ *   <li> {@link FetchCategory#ALL} - equivalent to {@link FetchCategory#DEFAULT} but without special handling of entity-typed
+ *        keys and key members.
+ *   <li> {@link FetchCategory#ALL_INCL_CALC} - equivalent to {@link FetchCategory#ALL} but also includes calculated properties.
+ * </ol>
+ *
+ * <h4> Processing of property {@code key} </h4>
+ * <ul>
+ *   <li> If an entity has a composite key, it is expanded into its key members, which are always explored further.
+ *   <li> If an entity is a union, {@code key} is included, as well as all of the union members, which are always explored further.
+ * </ul>
+ *
+ * <h4> Implementation Details </h4>
  * When inspecting property types for a potential entity type {@link PropertyTypeMetadata.Wrapper#unwrap(PropertyTypeMetadata)}
  * is used because of the way fetch models are constructed -- heuristically, and one case where unwrapping is needed is
  * collectional properties: fetch models know only about the collectional element type.
@@ -156,6 +231,11 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         return sb.toString();
     }
 
+    /**
+     * Mutable builder that assists with initialisation of {@link EntityRetrievalModel}.
+     * Its output is stored in {@link #primProps}, {@link #entityProps}, and {@link #proxiedProps}.
+     * There is also {@link #containsOnlyTotals()}.
+     */
     private static final class Builder {
         final Class<? extends AbstractEntity<?>> entityType;
         final IDomainMetadata domainMetadata;
@@ -274,6 +354,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeIdAndVersionOnly() {
+            // NOTE: Shouldn't this category produce a superset of ID_ONLY? It doesn't always include ID, unlike ID_ONLY.
             if (entityMetadata.isPersistent()) {
                 primProps.add(ID);
                 primProps.add(VERSION);
@@ -282,7 +363,10 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                     primProps.add(REF_COUNT);
                 }
                 includeLastUpdatedByGroupOfProperties();
-            } else if (isEntityType(getKeyType(entityType))) {
+            }
+            // NOTE: This should probably be reconciled with KEY_AND_DESC category, which includes ID for synthetic-based-on-persistent,
+            //       but not for other entities with an entity-typed key like it is done here.
+            else if (isEntityType(getKeyType(entityType))) {
                 primProps.add(ID);
             }
         }

@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.HashMap;
@@ -14,6 +15,21 @@ import java.util.Set;
 import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.NONE;
 
+/**
+ * Represents a retrieval model specialised for {@link EntityAggregates}.
+ * The following constraints apply to this type of retrieval models:
+ * <ul>
+ *   <li> The only valid fetch category is {@link FetchCategory#NONE}.
+ *   <li> It is illegal for a fetch model to specify excluded properties.
+ *   <li> It is illegal for a fetch model to be empty.
+ * </ul>
+ * Also, all retrieval models of this type have the following properties:
+ * <ul>
+ *   <li> They are always top-level.
+ *   <li> The set of proxied properties is always empty.
+ *   <li> {@link #containsOnlyTotals()} is always false.
+ * </ul>
+ */
 public final class EntityAggregatesRetrievalModel implements IRetrievalModel<EntityAggregates> {
 
     private final Set<String> primProps;
