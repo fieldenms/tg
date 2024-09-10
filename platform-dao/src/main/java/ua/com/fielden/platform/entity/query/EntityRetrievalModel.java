@@ -241,7 +241,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeKeyAndDescOnly() {
-            if (isPersistedEntityType(entityType)) {
+            if (entityMetadata.isPersistent()) {
                 includeIdAndVersionOnly();
             } else if (isSyntheticBasedOnPersistentEntityType(entityType)) {
                 primProps.add(ID);
@@ -274,7 +274,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeIdAndVersionOnly() {
-            if (isPersistedEntityType(entityType)) {
+            if (entityMetadata.isPersistent()) {
                 primProps.add(ID);
                 primProps.add(VERSION);
                 if (isActivatableEntityType(entityType)) {
@@ -291,7 +291,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             getPropMetadata(propName).ifPresentOrElse(pm -> {
                 if (pm.type().isCompositeKey()) {
                     includeAllCompositeKeyMembers();
-                } else if (propName.equals(KEY) && isUnionEntityType(entityType)) {
+                } else if (propName.equals(KEY) && entityMetadata.isUnion()) {
                     primProps.add(KEY);
                     includeAllUnionEntityKeyMembers();
                 } else {
