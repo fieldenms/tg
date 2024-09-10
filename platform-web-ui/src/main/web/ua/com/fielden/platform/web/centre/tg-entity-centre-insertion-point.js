@@ -405,7 +405,9 @@ Polymer({
 
     attached: function () {
         this.async(() => {
-            this.keyEventTarget = getKeyEventTarget(this.$.insertionPointContent, this);
+            // Start key event target finding from host element, which may have tab index altered.
+            // See '_alternativeViewChanged' method for more details.
+            this.keyEventTarget = getKeyEventTarget(this, this);
         }, 1);
     },
 
