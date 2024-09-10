@@ -883,7 +883,17 @@ Polymer({
 
     _alternativeViewChanged: function (alternativeView, contextRetriever) {
         if (contextRetriever) {
-            this.setAttribute('tabindex', this._getTabIndex(alternativeView));
+            // As for selection crit / grid views, the tab index for alternative view should be undefined to enable targeting of keyboard events to 'tg-menu-item-view'.
+            // For simple insertion points, target of keyboard events should be this 'tg-entity-centre-insertion-point'.
+            if (alternativeView) {
+                // Originally, for alternative views, we used tabindex='-1' to ensure proper redirection of keyboard events to 'tg-menu-item-view'.
+                // However, non-existent tabindex can also be used for this purpose (see 'tg-polymer-utils.getKeyEventTarget' method).
+                // In case of tabindex='-1' Shadow DOM elements are not tab-focusable (https://github.com/WICG/webcomponents/issues/774), which breaks usual focus circulation on TAB/Shift+TAB (as in selection crit or EGI).
+                // As for explicit mouse clicking on non-focusable area or '.focus()' on host element, the focus will shift to first focusable element above host which is 'tg-menu-item-view' -- this allows proper entering of focus into Shadow DOM of insertion point.
+                this.removeAttribute('tabindex');
+            } else {
+                this.setAttribute('tabindex', '0');
+            }
             this._setDimension();
             this._setPosition();
         }
@@ -992,14 +1002,6 @@ Polymer({
 
     _getResizerStyle: function (detachedView) {
         return `cursor: ${detachedView ? 'nwse-resize' : 'ns-resize'}`;
-    },
-
-    /**
-     * As for selection crit / grid views, the tab index for alternative view should be -1 to enable targeting of keyboard events to 'tg-menu-item-view'.
-     * For simple insertion points, target of keyboard events should be this 'tg-entity-centre-insertion-point'.
-     */
-    _getTabIndex: function (alternativeView) {
-        return alternativeView ? '-1' : '0';
     },
 
     _shortcutPressed: function (e) {
