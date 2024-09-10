@@ -184,6 +184,16 @@ Polymer({
         IronFitBehavior,
         IronResizableBehavior,
         IronA11yKeysBehavior,
+        /**
+         * `tg-tooltip-behavior.triggerElement` for this component is the component itself (host), as for almost all other components.
+         * Previously it was the <div> containing insertion point's content (probably, to avoid margin area from "tooltipping").
+         *
+         * It is worth noting that even removal of `TgTooltipBehavior` from this component would not break tooltips.
+         * It is because insertion points, even detached, always belong to Entity Centre, which belong to `tg-app-template`, which also has `TgTooltipBehavior`.
+         * And `tg-tooltip-behavior` is constructed in such a way that it processes deep elements.
+         * Sure, insertion point in isolation (e.g. in dialog on <body>) would require `TgTooltipBehavior` for tooltips to work.
+         * It may be desirable in future to reduce duplicate events (mousemove, mouseleave, touchstart and touchend) for areas of smaller elements that are placed on other bigger elements with TgTooltipBehavior.
+         */
         TgTooltipBehavior,
         TgShortcutProcessingBehavior,
         TgElementSelectorBehavior
@@ -401,7 +411,6 @@ Polymer({
     },
 
     ready: function () {
-        this.triggerElement = this.$.insertionPointContent;
         this.addEventListener('tg-config-uuid-before-change', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid browser URI change
         this.addEventListener('tg-config-uuid-changed', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid configUuid change on parent standalone centre
         //iron-fit-behavior related settings
