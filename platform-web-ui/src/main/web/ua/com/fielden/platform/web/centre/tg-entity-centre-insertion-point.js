@@ -1004,14 +1004,6 @@ Polymer({
         this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
     },
 
-    /**
-     * Redirect EGI shortcut handling to parent result view which will redirect it further to EGI.
-     */
-    _egiShortcutPressed: function (e) {
-        if (this.resultView) {
-            this.resultView._findParentCentre().$.egi._shortcutPressed(e);
-        }
-    },
 
     _getPrefDim: function () {
         const prefDim = this.$.elementLoader.prefDim;
