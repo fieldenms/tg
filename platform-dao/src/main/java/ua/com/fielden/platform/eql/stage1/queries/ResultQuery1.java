@@ -35,7 +35,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  * Yield processing is subject to the following rules:
  * <ul>
  *   <li> In case of no explicit yields or {@code yieldAll}, fetch models are used for auto-yielding.
- *   <li> In case of a single unaliased yield when the query result is an entity type, alias ID is used.
+ *   <li> In case of a single unaliased yield when the query result is a persistent entity type, alias ID is used.
  * </ul>
  *
  * @author TG Team
@@ -57,14 +57,14 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     /**
      * Enhances {@code yields}, which were determined during EQL stage2 processing, with additional yields:
      * <ol>
-     * <li> No yields or {@code yieldAll} - adds all properties that belong to {@code mainSource} and are also present in {@code fetchModel}.
+     * <li> No yields or {@code yieldAll} - adds all properties that belong to {@code mainSource} and are also present in the fetch model.
      *   <ul>
      *   <li> In case of entity-typed properties and being one of the queries constructed during fetching process (i.e., not the main user query),
      *        their properties are also included (if they exist in the fetch model) to improve query performance.
      *   <li> In case of synthetic entities (excluding the case of fetching totals only), {@code id} is also yielded.
      *        This is necessary to overcome the current limitation of fetch strategies that ignore {@code id} for synthetic entities.
      *   </ul>
-     * <li> Single yield {@code .modelAsEntity()} - enhances that yield with {@code "id"} as alias.
+     * <li> A single unalised yield with the result type being a persistent entity type - enhances that yield with {@code "id"} as alias.
      * </ol>
      */
     @Override
@@ -124,6 +124,8 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
      * @param prop a property source
      * @return a stream of optional sub-properties of {@code prop}; the result can stream empty optionals.
      */
+    // TODO: More than 1 empty optinal in the stream can lead to unexpected results. Consider changing the return type
+    //       to Optional<Stream>
     private static Stream<Optional<AbstractQuerySourceItem<?>>> streamSubProps(final AbstractQuerySourceItem<?> prop) {
         return switch (prop) {
             case QuerySourceItemForUnionType<?> unionTypedProp ->
