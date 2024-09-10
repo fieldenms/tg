@@ -214,7 +214,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
         private void includeAllFirstLevelPrimPropsAndKey() {
             entityMetadata.properties().stream()
-                    .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
+                    .filter(pm -> !pm.type().isCollectional() && isRetrievable(pm))
                     // calculated components are included (legacy EQL2 behaviour)
                     // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour
                     .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
@@ -256,7 +256,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
         private void includeAllFirstLevelProps() {
             entityMetadata.properties().stream()
-                    .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
+                    .filter(pm -> !pm.type().isCollectional() && isRetrievable(pm))
                     // calculated components are included (legacy EQL2 behaviour)
                     // TODO don't treat calculated components specially once TG applications no longer rely on this behaviour
                     .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
@@ -265,7 +265,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
         private void includeAllFirstLevelPropsInclCalc() {
             entityMetadata.properties().stream()
-                    .filter(pm -> !pm.type().isCollectional() && !isPure(pm))
+                    .filter(pm -> !pm.type().isCollectional() && isRetrievable(pm))
                     .forEach(pm -> with(pm.name(), false));
         }
 
@@ -372,8 +372,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         /**
-         * Indicates whether property belongs to a persistent entity, but is such that has no meaning from the persistence perspective.
-         * In other words, values for such properties cannot be retrieved from a database.
+         * Indicates whether property belongs to a persistent entity and is meaningful from the persistence perspective.
+         * In other words, values for such properties can be retrieved from a database.
          * <p>
          * Effectively, for persistent entities, only calculated and persistent properties can be retrieved.
          * Properties of any other nature are considered such that do not have anything to do with persistence.
@@ -383,13 +383,15 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
          * Although, it is possible to declare a plain property and not use it in the model for yielding.
          * Attempts to specify such properties in a fetch model when retrieving a synthetic entity, should result in a runtime exception.
          */
-        private boolean isPure(final PropertyMetadata pm) {
-            return entityMetadata.isPersistent() &&
-                    switch (pm.nature()) {
-                        case PropertyNature.Persistent $ -> false;
-                        case PropertyNature.Calculated $ -> false; // is Transient, but has an expression, so can be retrieved
-                        case PropertyNature.Transient  $ -> true;  // covers the cases of CritOnly and Plain, which cannot be retrieved
-                    };
+        private boolean isRetrievable(final PropertyMetadata pm) {
+            return switch (entityMetadata.nature()) {
+                case EntityNature.Persistent $ -> switch (pm.nature()) {
+                    case PropertyNature.Persistent $$ -> true;
+                    case PropertyNature.Calculated $$ -> true;  // is Transient, but has an expression, so can be retrieved
+                    case PropertyNature.Transient  $$ -> false; // covers the cases of CritOnly and Plain, which cannot be retrieved
+                };
+                default -> true;
+            };
         }
 
         private Optional<String> getSinglePropertyOfComponentType(final PropertyMetadata pm) {
