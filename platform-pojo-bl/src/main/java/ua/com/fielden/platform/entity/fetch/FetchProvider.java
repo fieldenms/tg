@@ -30,14 +30,11 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -216,6 +213,17 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             copy.removeIfExists(prop.toString());
         }
         return copy;
+    }
+
+    @Override
+    public IFetchProvider<T> without(final Iterable<? extends CharSequence> dotNotationProperties) {
+        if (Iterables.isEmpty(dotNotationProperties)) {
+            return this;
+        } else {
+            final FetchProvider<T> copy = this.copy();
+            dotNotationProperties.forEach(prop -> copy.removeIfExists(prop.toString()));
+            return copy;
+        }
     }
 
     @Override
@@ -489,7 +497,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         if (isUnionEntityType(entityType)) {
             critOnlyAndCommonProps.addAll(commonProperties((Class<? extends AbstractUnionEntity>) entityType));
         }
-        return critOnlyAndCommonProps.size() > 0 ? (FetchProvider<T>) fetchProvider.without(critOnlyAndCommonProps.get(0), critOnlyAndCommonProps.subList(1, critOnlyAndCommonProps.size()).toArray(new String[0])) : fetchProvider;
+        return (FetchProvider<T>) fetchProvider.without(critOnlyAndCommonProps);
     }
 
     @Override

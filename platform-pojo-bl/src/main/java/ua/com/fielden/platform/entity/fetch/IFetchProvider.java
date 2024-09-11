@@ -107,6 +107,15 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
     IFetchProvider<T> without(final CharSequence dotNotationProperty, final CharSequence... otherDotNotationProperties);
 
     /**
+     * Excludes the properties from {@link IFetchProvider} (if they were included before that).
+     *
+     * @param dotNotationProperties  property names ("dot-notation" syntax)
+     *
+     * @return new immutable {@link IFetchProvider} without specified properties
+     */
+    IFetchProvider<T> without(final Iterable<? extends CharSequence> dotNotationProperties);
+
+    /**
      * Copies {@link IFetchProvider} with new {@code managedType}.
      * <p>
      * The new type must be consistent with original type. I.e. it can be generated version of the same type (with calculated properties such as totals).
