@@ -49,12 +49,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             return entities;
         }
 
-        final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getRetrievalModels();
-
-        for (final Map.Entry<String, EntityRetrievalModel<?>> entry : propertiesFetchModels.entrySet()) {
-            final String propName = entry.getKey();
-            final EntityRetrievalModel<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
-
+        fetchModel.getRetrievalModels().forEach((propName, propFetchModel) -> {
             if (propFetchModel.isFetchIdOnly()) {
                 assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(entities, propName, propFetchModel.getEntityType());
             } else {
@@ -88,7 +83,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                     enhanceProperty(entities, propName, propFetchModel, paramValues);
                 }
             }
-        }
+        });
 
         assignProxiedResultTypeToContainers(entities, fetchModel);
         assignInstrumentationSetting(entities, fetchModel);
@@ -226,11 +221,9 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                     : new EntityContainerEnhancer<T>(fetcher, domainMetadata, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
 
             // Replacing in entities the proxies of properties with properly enhanced property instances.
-            for (final EntityContainer<? extends AbstractEntity<?>> enhancedPropInstance : enhancedPropInstances) {
-                final List<EntityContainer<E>> thisPropertyEntities = propertyValuesIds.get(enhancedPropInstance.getId());
-                for (final EntityContainer<E> thisPropertyEntity : thisPropertyEntities) {
-                    thisPropertyEntity.getEntities().put(propertyName, enhancedPropInstance);
-                }
+            for (final var enhancedPropInstance : enhancedPropInstances) {
+                final var thisPropertyEntities = propertyValuesIds.get(enhancedPropInstance.getId());
+                thisPropertyEntities.forEach(thisPropertyEntity -> thisPropertyEntity.getEntities().put(propertyName, enhancedPropInstance));
             }
         }
 
