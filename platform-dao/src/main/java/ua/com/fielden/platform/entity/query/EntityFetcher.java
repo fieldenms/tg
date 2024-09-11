@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.IRetrievalModel.createRetrievalModel;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 import java.util.ArrayList;
@@ -66,9 +67,7 @@ public class EntityFetcher {
         if (fetchModel == null) {
             return resultType == EntityAggregates.class ? null : new EntityRetrievalModel<>(fetch(resultType), domainMetadata);
         } else {
-            return resultType == EntityAggregates.class
-                    ? (IRetrievalModel<E>) new EntityAggregatesRetrievalModel((fetch<EntityAggregates>) fetchModel, domainMetadata)
-                    : new EntityRetrievalModel<>(fetchModel, domainMetadata);
+            return createRetrievalModel(fetchModel, domainMetadata);
         }
     }
     
