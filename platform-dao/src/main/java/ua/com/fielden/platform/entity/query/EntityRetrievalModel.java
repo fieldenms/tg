@@ -59,42 +59,21 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  * </ul>
  *
  * <h4> Fetch categories </h4>
+ * See the documentation {@link FetchCategory} for a description of each category.
+ * <p>
+ * Some categories deserve more detail:
  * <ol>
- *   <li> {@link FetchCategory#NONE} - nothing is included.
- *   <li> {@link FetchCategory#ID_ONLY} - sole property {@code id} is included.
- *   <li> {@link FetchCategory#ID_AND_VERSION} - if entity's nature is
- *     <ul>
- *       <li> persistent
- *         <ul>
- *           <li> {@code id} and {@code version} are included;
- *           <li> if entity is activatable, {@code refCount} and {@code active} are included;
- *           <li> if entity has a group of "last updated by" properties (see {@link AbstractPersistentEntity}), they are included;
- *         </ul>
- *       <li> other
- *         <ul>
- *           <li> if entity has an entity-typed key, {@code id} is included (it is not clearly understood why, but,
- *                most likely, to support synthetic entities with entity-typed keys).
- *         </ul>
- *     </ul>
  *   <li> {@link FetchCategory#KEY_AND_DESC}
  *     <ul>
- *       <li> if entity is persistent, includes {@link FetchCategory#ID_AND_VERSION};
- *       <li> if entity is synthetic-based-on-persistent, includes {@code id};
- *       <li> if entity has property {@code desc}, includes it;
  *       <li> includes {@code key} without exploring it further (however, see the section on processing of {@code key});
  *     </ul>
  *   <li> {@link FetchCategory#DEFAULT}
  *     <ul>
- *       <li> collectional properties are excluded;
- *       <li> non-retrievable properties are excluded;
- *       <li> calculated properties are excluded (unless they have a component type);
  *       <li> if entity has a simple entity-typed (but not a union) {@code key}, then it is explored further;
  *       <li> if entity has a composite key, then all entity-typed (but not a union) key members are explored further;
- *       <li> everything else is included.
  *     </ul>
  *   <li> {@link FetchCategory#ALL} - equivalent to {@link FetchCategory#DEFAULT} but without special handling of entity-typed
  *        keys and key members.
- *   <li> {@link FetchCategory#ALL_INCL_CALC} - equivalent to {@link FetchCategory#ALL} but also includes calculated properties.
  * </ol>
  *
  * <h4> Processing of property {@code key} </h4>

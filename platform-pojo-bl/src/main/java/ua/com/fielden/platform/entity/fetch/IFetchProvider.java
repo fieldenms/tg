@@ -12,8 +12,8 @@ import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
  * <p>
  * Note: all methods throw {@link IllegalArgumentException} in case of malformed <code>dotNotationProperties</code> (if the property does not exist etc.).
  *
+ * @see fetch
  * @author TG Team
- *
  */
 public interface IFetchProvider<T extends AbstractEntity<?>> {
     /**

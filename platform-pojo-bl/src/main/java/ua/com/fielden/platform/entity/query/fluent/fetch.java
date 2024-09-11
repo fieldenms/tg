@@ -27,17 +27,70 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
  * Represents an entity graph that describes the shape of an entity to be fetched.
  *
  * @param <T> entity type
+ * @see FetchCategory
+ * @see ua.com.fielden.platform.entity.query.IRetrievalModel
  */
 public class fetch<T extends AbstractEntity<?>> {
     public static final String ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
 
+    /**
+     * Standard fetch categories.
+     */
     public enum FetchCategory {
+        /**
+         *
+         * Equivalent to {@link #ALL} but also includes calculated properties.
+         */
         ALL_INCL_CALC,
-        ALL, 
-        DEFAULT, 
-        KEY_AND_DESC, 
-        ID_AND_VERSION, 
-        ID_ONLY, 
+        /**
+         * <ul>
+         *   <li> collectional properties are excluded;
+         *   <li> non-retrievable properties are excluded;
+         *   <li> calculated properties are excluded (unless they have a component type);
+         *   <li> everything else is included.
+         * </ul>
+         */
+        ALL,
+        /**
+         * Equivalent to {@link #ALL} but with narrower sub-fetch models - only simple keys and key members may have
+         * a sub-fetch model other than {@link #ID_ONLY}.
+         */
+        DEFAULT,
+        /**
+         * <ul>
+         *   <li> if entity is persistent, includes {@link #ID_AND_VERSION};
+         *   <li> if entity is synthetic-based-on-persistent, includes {@code id};
+         *   <li> if entity has property {@code desc}, includes it;
+         *   <li> includes {@code key};
+         * </ul>
+         */
+        KEY_AND_DESC,
+        /**
+         * A slightly broader fetch model than {@link #ID_ONLY}.
+         * If entity's nature is
+         * <ul>
+         *   <li> persistent
+         *     <ul>
+         *       <li> {@code id} and {@code version} are included;
+         *       <li> if entity is activatable, {@code refCount} and {@code active} are included;
+         *       <li> if entity has a group of "last updated by" properties (see {@link ua.com.fielden.platform.entity.AbstractPersistentEntity}),
+         *            they are included;
+         *     </ul>
+         *   <li> other
+         *     <ul>
+         *       <li> if entity has an entity-typed key, {@code id} is included (it is not clearly understood why, but,
+         *            most likely, to support synthetic entities with entity-typed keys).
+         *     </ul>
+         * </ul>
+         */
+        ID_AND_VERSION,
+        /**
+         * Sole property {@code id} is included.
+         */
+        ID_ONLY,
+        /**
+         * No properties are included.
+         */
         NONE
     }
 
