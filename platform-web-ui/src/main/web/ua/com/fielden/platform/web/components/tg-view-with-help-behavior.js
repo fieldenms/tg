@@ -51,11 +51,13 @@ export const TgViewWithHelpBehavior = {
     _helpMouseDownEventHandler: function (e) {
         if (e.button == 0 || e.type.startsWith("touch")) {
             e.preventDefault();
-            this._helpActionLongPress = false;
-            this._helpActionShortPress = true;
-            this._helpActionTimer = setTimeout(() => {
-                this._helpActionLongPress = true;
-                this._helpActionShortPress = false;
+
+            // Start 'long press' action timer:
+            this._helpActionTimer = setTimeout(() => { // assigns positive integer id into _helpActionTimer, hence it can be simply checked like `if (this._helpActionTimer) {...}`
+                // Remove 'long press' action timer (it is already cleared here):
+                delete this._helpActionTimer;
+
+                // Perform 'long press' action:
                 this.getOpenHelpMasterAction().chosenProperty = "showMaster";
                 this.getOpenHelpMasterAction()._run();
             }, 1000);
@@ -65,12 +67,15 @@ export const TgViewWithHelpBehavior = {
     _helpMouseUpEventHandler: function (e) {
         if (e.button == 0 || e.type.startsWith("touch")) {
             e.preventDefault();
-            //Clear timer to to remain the mouse key press as short.
+
+            // Check whether 'long press' timer is still in progress.
+            // If not -- do nothing, because 1) action started outside, but ended on a button OR 2) 'long press' action has already been performed after a timer.
             if (this._helpActionTimer) {
+                // Clear & remove 'long press' action timer:
                 clearTimeout(this._helpActionTimer);
-            }
-            //If there was long touch or long mouse button press then skip it otherwise decide what to do 
-            if (!this._helpActionLongPress && this._helpActionShortPress) {
+                delete this._helpActionTimer;
+
+                // Perform 'short press' action:
                 //Init action props.
                 this.getOpenHelpMasterAction()._openLinkInAnotherWindow = true;
                 this.getOpenHelpMasterAction().chosenProperty = null;
@@ -83,12 +88,8 @@ export const TgViewWithHelpBehavior = {
                     }
                 }
                 //Run action
-                this.getOpenHelpMasterAction()._run(); 
+                this.getOpenHelpMasterAction()._run();
             }
-            //Reset action type and timer;
-            this._helpActionLongPress = false;
-            this._helpActionShortPress = false;
-            this._helpActionTimer = null;
         }
     },
 
