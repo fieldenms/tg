@@ -919,6 +919,9 @@ Polymer({
         }
     },
 
+    /**
+     * Determines container into which IP will be inserted.
+     */
     _getInsertionPointContainer: function (dragEvent) {
         const sideContainers = [this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer];
         let container = sideContainers.find(c => this._insertionPointContainerContainsEvent(c, dragEvent));
@@ -941,6 +944,10 @@ Polymer({
         }
     },
 
+    /**
+     * Determines scroll container in which custom scrolling logic will be performed (see '_dragOver').
+     * The problem with automatic scrolling was pronounced in cases where we try to drag over other sub-scrollable-container inside bigger scrollable container.
+     */
     _getScrollContainer: function  (dragEvent) {
         const scrollContainers = [this.$.leftInsertionPointContainer, this.$.centreInsertionPointContainer, this.$.rightInsertionPointContainer];
         return scrollContainers.find(c => this._insertionPointContainerContainsEvent(c, dragEvent));

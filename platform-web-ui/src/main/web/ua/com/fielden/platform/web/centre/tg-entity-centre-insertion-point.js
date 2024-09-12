@@ -97,6 +97,7 @@ const template = html`
         }
 
         .title-text {
+            /* this is required due to the need to drag title bar if customised layout is enabled */
             pointer-events: none;
         }
 
@@ -356,11 +357,17 @@ Polymer({
             type: Object
         },
 
+        /**
+         * Indicates whether title bar can be dragged now.
+         */
         _titleBarDraggable: {
             type: Boolean,
             value: false
         },
 
+        /**
+         * Indicates whether insertion point can be draggable in some circumstances such as when it is detached or alt key pressed. This is derived from whether whole Entity Centre has IPs custom layout enabled.
+         */
         enableDraggable: {
             type: Boolean,
             value: false,
@@ -376,12 +383,18 @@ Polymer({
             observer: "_maximisedChanged"
         },
 
+        /**
+         * Determines whether insertion point is minimised or not.
+         */
         minimised: {
             type: Boolean,
             reflectToAttribute: true,
             observer: "_minimisedChanged"
         },
 
+        /**
+         * Determines whether insertion point is detached (= unsnapped) or not.
+         */
         detachedView: {
             type: Boolean,
             reflectToAttribute: true,
@@ -650,18 +663,27 @@ Polymer({
         tearDownEvent(event);
     },
 
+    /**
+     * Makes parent entity centre, that contains this IP and all other IPs, unselectable and with pointer-events:none. Useful during D'n'D process to avoid selection, tooltips etc.
+     */
     _makeCentreUnselectable: function () {
         if (this.contextRetriever) {
             this.contextRetriever()._dom()._makeCentreUnselectable();
         }
     },
 
+    /**
+     * Makes parent entity centre, that contains this IP and all other IPs, selectable after it was not. Useful after D'n'D process finished.
+     */
     _makeCentreSelectable: function () {
         if (this.contextRetriever) {
             this.contextRetriever()._dom()._makeCentreSelectable();
         }
     },
 
+    /**
+     * Logic for resizing IP in attached state, aka in 'detachedView == false'.
+     */
     _resizeAttached: function (event) {
         // Choose the container that is scrollable. Which container is scrollable depends on whether scrolling is locked to insertion point or to the whole centre.
         const scrollingContainer = this.contextRetriever()._dom().centreScroll ? this.contextRetriever()._dom().$.views : this.parentElement.assignedSlot.parentElement;
@@ -695,12 +717,18 @@ Polymer({
         }
     },
 
+    /**
+     * Event listener on whole IP to bring it to front (comparing to other IPs) if clicked.
+     */
     _onCaptureClick: function (e) {
         if ((this.detachedView || this.maximised) && this.contextRetriever) {
             this.contextRetriever().insertionPointManager.bringToFront(this);
         }
     },
 
+    /**
+     * Calculates whether IP is able to drag now (_titleBarDraggable property).
+     */
     _handleDraggable: function (e) {
         if (this.enableDraggable && (!this.detachedView || e.altKey || e.metaKey) && (!this.maximised)) {
             this._titleBarDraggable = 'true';
@@ -709,6 +737,9 @@ Polymer({
         }
     },
 
+    /**
+     * Sets zOrder (z-index) for this insertion point and syncs with persistent storage.
+     */
     setZOrder: function (zOrder) {
         if (zOrder <= 0 ) {
             this.style.removeProperty("z-index");
@@ -719,6 +750,9 @@ Polymer({
         }
     },
 
+    /**
+     * Retrieves actual z-index, converted to number, for this IP.
+     */
     getZOrder: function () {
         return +this.style.zIndex;
     },
@@ -749,6 +783,9 @@ Polymer({
         return maximised ? "Collapse" : "Maximise";
     },
 
+    /**
+     * Processes actual maximisation / collapsing logic. Please note, that maximisation may be done from either detached or attached IP.
+     */
     _maximisedChanged: function (newValue) {
         if (this.contextRetriever) {
             if (newValue) {
@@ -766,6 +803,9 @@ Polymer({
         }
     },
 
+    /**
+     * Makes IP detached with further zOrder correction from persistence storage + focus it.
+     */
     _makeDetached: function () {
         this._preferredSize = this._preferredSize || this._getPrefDimForDetachedView();
         const zOrder = this._getProp(ST_ZORDER);
@@ -777,6 +817,9 @@ Polymer({
         this.focus();
     },
 
+    /**
+     * Makes IP attached + focus the above centre.
+     */
     _makeAttached: function () {
         delete this._preferredSize;
         this.contextRetriever().insertionPointManager.remove(this);
@@ -785,6 +828,9 @@ Polymer({
         }
     },
 
+    /**
+     * The method, that is used during Back button pressing (see tg-app-template).
+     */
     closeDialog: function () {
         this._toggleMaximise();
     },
@@ -804,6 +850,9 @@ Polymer({
         return minimised ? "Restore": "Minimize";
     },
 
+    /**
+     * Processes actual minimisation / restoring logic. Please note, that minimisation may be done from either detached or attached IP.
+     */
     _minimisedChanged: function (newValue) {
         if (this.contextRetriever) {
             this._setDimension();
@@ -826,6 +875,9 @@ Polymer({
         return detachedView ? "Snap": "Unsnap";
     },
 
+    /**
+     * Processes actual detaching / attaching logic. Please note, that detaching may be done from either minimised or restored IP (not maximised).
+     */
     _detachedViewChanged: function (newValue) {
         if (this.contextRetriever) {
             if (newValue) {
@@ -839,6 +891,9 @@ Polymer({
         }
     },
 
+    /**
+     * Performs alternativeView adjustments including position / dimensions; maintains focusability and tab-focusability for non-alternative views.
+     */
     _alternativeViewChanged: function (alternativeView, contextRetriever) {
         if (contextRetriever) {
             // As for selection crit / grid views, the tab index for alternative view should be undefined to enable targeting of keyboard events to 'tg-menu-item-view'.
@@ -857,6 +912,9 @@ Polymer({
         }
     },
 
+    /**
+     * Takes 'enableDraggable' from parent centre configuration.
+     */
     _shouldEnableDraggable: function (contextRetriever) {
         if (contextRetriever) {
             this.enableDraggable = contextRetriever()._dom().insertionPointCustomLayoutEnabled;
@@ -871,6 +929,9 @@ Polymer({
         this._setDimension();
     },
 
+    /**
+     * Adjusts dimensions of IP according to its states. Uses locally stored values for some states. Notifies about resize in usual manner.
+     */
     _setDimension: function () {
         this.style.removeProperty('margin');
         this.$.insertionPointBody.style.removeProperty("min-width");
@@ -915,6 +976,9 @@ Polymer({
         this.async(() => this.notifyResize(), 1);
     },
 
+    /**
+     * Adjusts position of IP according to its states. Uses locally stored values for some states.
+     */
     _setPosition: function () {
         if (this.detachedView) {
             this.style.position = "fixed";
@@ -943,6 +1007,9 @@ Polymer({
         }
     },
 
+    /**
+     * Refits IP on resizer double tap.
+     */
     refit: function() {
         IronFitBehavior.refit.call(this);
 
@@ -979,6 +1046,9 @@ Polymer({
         return this._hasTitleBar(this.shortDesc, this.alternativeView) ? '44px' : '0px';
     },
 
+    /**
+     * First time prefDim during detach takes from currently attached state (actual width and actual height).
+     */
     _getPrefDimForDetachedView: function () {
         const prefDim = this._getPrefDim();
         if (prefDim) {
