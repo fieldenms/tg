@@ -996,9 +996,9 @@ Polymer({
     /********************************* Local storage related functions ********************************/
     _restoreFromLocalStorage: function(_element, contextRetriever) {
         if (_element && contextRetriever) {
-            this.minimised = !!(this._getProp(ST_MINIMISED) && true);
-            this.maximised = !!(this._getProp(ST_MAXIMISED) && true);
-            this.detachedView = !!(this._getProp(ST_DETACHED_VIEW) && true);
+            this.minimised = !!this._getProp(ST_MINIMISED);
+            this.maximised = !!this._getProp(ST_MAXIMISED);
+            this.detachedView = !!this._getProp(ST_DETACHED_VIEW);
         }
     },
 
