@@ -61,7 +61,38 @@ export const TgViewWithHelpBehavior = {
                 this.getOpenHelpMasterAction().chosenProperty = "showMaster";
                 this.getOpenHelpMasterAction()._run();
             }, 1000);
+
+            const button = e.composedPath().find(element => element.tagName === 'PAPER-ICON-BUTTON');
+            if (button && !button._helpMouseLeaveEventHandler) {
+                // Assign mouseleave listener to prevent 'long press' action if mouse pointer has been moved outside the button.
+                //  The same is applicable for touch devices.
+                //  Small finger movement will prevent 'long press' from actioning.
+                //  But it does not impede intentional 'long press' behavior.
+                button._helpMouseLeaveEventHandler = this._helpMouseLeaveEventHandler.bind(this);
+                ['mouseleave', 'touchmove'].forEach(type => button.addEventListener(type, button._helpMouseLeaveEventHandler));
+            }
         }
+    },
+
+    /**
+     * Listener for Help button to prevent 'long press' action outside the button.
+     */
+    _helpMouseLeaveEventHandler: function (e) {
+        if (e.button == 0 || e.type.startsWith("touch")) {
+            e.preventDefault();
+
+            if (this._helpActionTimer) {
+                this._cancelLongPress();
+            }
+        }
+    },
+
+    /**
+     * Cancels existing active non-empty 'long press' timer.
+     */
+    _cancelLongPress: function () {
+        clearTimeout(this._helpActionTimer);
+        delete this._helpActionTimer;
     },
 
     _helpMouseUpEventHandler: function (e) {
@@ -71,9 +102,8 @@ export const TgViewWithHelpBehavior = {
             // Check whether 'long press' timer is still in progress.
             // If not -- do nothing, because 1) action started outside, but ended on a button OR 2) 'long press' action has already been performed after a timer.
             if (this._helpActionTimer) {
-                // Clear & remove 'long press' action timer:
-                clearTimeout(this._helpActionTimer);
-                delete this._helpActionTimer;
+                // Cancel 'long press' action:
+                this._cancelLongPress();
 
                 // Perform 'short press' action:
                 //Init action props.
