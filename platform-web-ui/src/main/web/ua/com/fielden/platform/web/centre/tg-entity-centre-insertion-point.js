@@ -358,17 +358,17 @@ Polymer({
 
         _titleBarDraggable: {
             type: Boolean,
-            value: false,
+            value: false
         },
 
         enableDraggable: {
             type: Boolean,
             value: false,
-            reflectToAttribute: true,
+            reflectToAttribute: true
         },
 
         /**
-         * Determnes whether insertion point is maximised or not.
+         * Determines whether insertion point is maximised or not.
          */
         maximised: {
             type: Boolean,
@@ -392,7 +392,7 @@ Polymer({
     observers: ['_alternativeViewChanged(alternativeView, contextRetriever)', '_shouldEnableDraggable(contextRetriever)','_restoreFromLocalStorage(_element, contextRetriever)'],
 
     created: function () {
-        // initialise properties from tg-resizable-movable-behavior
+        // Initialise properties from tg-resizable-movable-behavior:
         this.minimumWidth = 60 /* reasonable minimum width of text */ + (8 * 2) /* padding left+right */ + (24 * 3) /* three buttons width */;
         this.persistSize = () => this._savePair(ST_DETACHED_VIEW_WIDTH, this.style.width, ST_DETACHED_VIEW_HEIGHT, this.style.height);
         this.persistPosition = () => this._savePair(ST_POS_X, this.style.left, ST_POS_Y, this.style.top);
@@ -402,14 +402,14 @@ Polymer({
     ready: function () {
         this.addEventListener('tg-config-uuid-before-change', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid browser URI change
         this.addEventListener('tg-config-uuid-changed', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid configUuid change on parent standalone centre
-        //iron-fit-behavior related settings
+        // 'iron-fit-behavior' related settings:
         this.positionTarget = document.body;
         this.horizontalAlign = 'center';
         this.verticalAlign = 'middle';
-        //z-index management related settings
+        // 'z-index' management related settings:
         const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
-        //Title bar event to identify whether element is draggable or not
+        // Title bar event to identify whether element is draggable or not:
         this.$.titleBar.addEventListener("mousedown", this._handleDraggable.bind(this), true);
     },
 
@@ -672,7 +672,7 @@ Polymer({
         let newHeight = elementHeight + event.detail.ddy;
 
         if (mousePos.y < 0) {
-            // If the mouse pointer is above the scrolling container then decrease the insertion point hight by the distance between the mouse pointer and the top edge of scrolling container.
+            // If the mouse pointer is above the scrolling container then decrease the insertion point height by the distance between the mouse pointer and the top edge of scrolling container.
             newHeight = elementHeight + mousePos.y
         } else if (mousePos.y >= containerHeight) {
             // If the mouse pointer is below the scrolling container then increase the insertion point height by the distance between the mouse pointer and the bottom edge of the scrolling container.
@@ -689,7 +689,7 @@ Polymer({
             this._saveProp(ST_ATTACHED_HEIGHT, this.style.height);
             this.notifyResize();
             if (mousePos.y >= scrollingContainer.offsetHeight || mousePos.y < 0) {
-                // If the mouse pointer is above or below the scrolling container then perform scrolling (the scrolling distance should be equal to a change of the insertion point height)
+                // If the mouse pointer is above or below the scrolling container then perform scrolling (the scrolling distance should be equal to a change of the insertion point height).
                 scrollingContainer.scrollTop += newHeight - elementHeight;
             }
         }
@@ -863,9 +863,9 @@ Polymer({
         }
     },
 
-    /****************Miscellaneous methods for restoring size and dimension***********************/
+    /**************** Miscellaneous methods for restoring size and dimensions ***********************/
     /**
-     * This method should be removed in the next releases as it required better name. And now it's functionality was enhanced and moved to _setDimension
+     * This method should be removed in the next releases as it required better name. And now its functionality was enhanced and moved to '_setDimension'.
      */
     _adjustView: function () {
         this._setDimension();
@@ -966,7 +966,6 @@ Polymer({
         this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
     },
 
-
     _getPrefDim: function () {
         const prefDim = this.$.elementLoader.prefDim;
         if (prefDim) {
@@ -986,7 +985,7 @@ Polymer({
             prefDim[0] = (this.parentElement.offsetWidth - INSERTION_POINT_MARGIN * 2) + 'px';
             prefDim[1] = this._getProp(ST_ATTACHED_HEIGHT) || prefDim[1];
         }
-        return prefDim
+        return prefDim;
     },
 
     _resizeButtonTooltip: function (detachedView) {
