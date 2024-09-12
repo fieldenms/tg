@@ -129,7 +129,7 @@ const template = html`
         }
 
         #loadableContent {
-            z-index: 0; /*It is needed to create separate stacking context for insertion point content that should be lower then toolbar to make it's dropdowns visible*/
+            z-index: 0; /* required to create separate stacking context for insertion point content, that should be lower than toolbar to make its dropdowns visible */
         }
 
         #resizer {
