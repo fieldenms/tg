@@ -465,7 +465,7 @@ Polymer({
             }
         });
 
-        //Add iron-resize event listener
+        // Add 'iron-resize' event listener.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
 
         this._createContextHolderForSave = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext) {
@@ -474,7 +474,7 @@ Polymer({
             return context;
         }).bind(this);
 
-        //Restore insertion point order
+        // Restore insertion point order.
         this._restoreInsertionPointOrder();
     },
 
@@ -876,7 +876,7 @@ Polymer({
         this.updateStyles({"--tg-insertion-point-container-margin": newValue ? "5px" : "0"});
     },
 
-    /*************************Insertion point drag related events******************************/
+    /************************* Insertion point drag & drop related events ******************************/
     _insertionPointCustomLayoutEnabledChanged: function (newValue) {
         if (newValue) {
             this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
@@ -893,11 +893,11 @@ Polymer({
 
     _startDrag: function (dragEvent) {
         this._insertionPointToDrag = dragEvent.target;
-        //configure drag transfer and drag transfer image
+        // Configure drag transfer and its image.
         dragEvent.dataTransfer.effectAllowed = "copyMove";
         const offsetRect = this._insertionPointToDrag.$.titleBar.getBoundingClientRect();
         dragEvent.dataTransfer.setDragImage(this._insertionPointToDrag.$.titleBar, dragEvent.clientX - offsetRect.left, dragEvent.clientY - offsetRect.top);
-        //Hide tooltip as it is not needed during drag&drop process.
+        // Hide tooltip as it is not needed during drag&drop process.
         hideTooltip();
     },
 
@@ -936,7 +936,7 @@ Polymer({
                 }
             }
             const mousePos = getRelativePos(dragEvent.clientX, dragEvent.clientY, scrollContainer);
-            if (scrollContainer && scrollContainer.offsetHeight !== scrollContainer.scrollHeight) { //scroll container has scrollbar and is scrollable
+            if (scrollContainer && scrollContainer.offsetHeight !== scrollContainer.scrollHeight) { // scroll container has scrollbar and is scrollable
                 if (mousePos.y < 20 /* minimal distance to the edge */) { // mouse is close to the top edge
                     const scrollDistance = Math.min(20 - mousePos.y, scrollContainer.scrollTop);
                     if (scrollDistance > 0) { // if scrollbar is not on the top then scroll to the top
@@ -944,7 +944,7 @@ Polymer({
                     }
                 } else if (mousePos.y > scrollContainer.offsetHeight - 20 /* minimal distance to the edge */) { // mouse is close to the bottom edge
                     const scrollDistance = Math.min(mousePos.y - scrollContainer.offsetHeight + 20, scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.offsetHeight);
-                    if (scrollDistance > 0) { //if scrollbar is not on the bottom then scroll to the bottom
+                    if (scrollDistance > 0) { // if scrollbar is not on the bottom then scroll to the bottom
                         scrollContainer.scrollTop += scrollDistance;
                     }
                 }
@@ -952,6 +952,9 @@ Polymer({
         }
     },
 
+    /**
+     * Determines container into which IP will be inserted.
+     */
     _getInsertionPointContainer: function (dragEvent) {
         const sideContainers = [this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer];
         let container = sideContainers.find(c => this._insertionPointContainerContainsEvent(c, dragEvent));
@@ -974,6 +977,10 @@ Polymer({
         }
     },
 
+    /**
+     * Determines scroll container in which custom scrolling logic will be performed (see '_dragOver').
+     * The problem with automatic scrolling was pronounced in cases where we try to drag over other sub-scrollable-container inside bigger scrollable container.
+     */
     _getScrollContainer: function  (dragEvent) {
         const scrollContainers = [this.$.leftInsertionPointContainer, this.$.centreInsertionPointContainer, this.$.rightInsertionPointContainer];
         return scrollContainers.find(c => this._insertionPointContainerContainsEvent(c, dragEvent));
@@ -992,7 +999,7 @@ Polymer({
                 dragEvent.clientY > containerRect.top && dragEvent.clientY < containerRect.bottom;
     },
 
-    /*********************************local storage related logic**************************************/
+    /********************************* Local storage related logic **************************************/
 
     _generateKey: function (name) {
         const extendedName = `${this.miType}_${name}`;

@@ -4,7 +4,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.IWithLeftSplitterPosition;
 
 /**
- * Aggregates Insertion points and their configurations. That was made to disallow configuring splitter and custom layout before any insertion point was added.
+ * A contract that aggregates insertion points and their configurations.
+ * The intention is to disallow configuring splitters / custom layout before any insertion point was added.
+ *
+ * @author TG Team
  *
  * @param <T>
  */

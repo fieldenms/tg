@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.web.centre.api;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsWithCustomLayout;
 
 /**
- * The contract to specify the position of right splitter.
+ * A contract for defining right splitter position in insertion points.
  *
  * @author TG Team
  *
