@@ -18,6 +18,7 @@ import '/resources/egi/tg-responsive-toolbar.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 
 import '/resources/polymer/@polymer/paper-styles/color.js';
@@ -151,7 +152,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="titleBar" draggable$="[[_titleBarDraggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="_moveDialog" tooltip-text$="[[_calcTitleTooltip(longDesc, saveAsName, saveAsDesc)]]">
+    <div id="titleBar" draggable$="[[_titleBarDraggable]]" class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]" on-track="moveComponent" tooltip-text$="[[_calcTitleTooltip(longDesc, saveAsName, saveAsDesc)]]">
         <span class="title-text truncate">[[_calcTitle(shortDesc, saveAsName)]]</span>
         <div class="layout horizontal centre">
             <paper-icon-button class="title-bar-button" icon="[[_detachButtonIcon(detachedView)]]" on-tap="_toggleDetach" tooltip-text$="[[_detachTooltip(detachedView)]]"></paper-icon-button>
@@ -196,7 +197,8 @@ Polymer({
          */
         TgTooltipBehavior,
         TgShortcutProcessingBehavior,
-        TgElementSelectorBehavior
+        TgElementSelectorBehavior,
+        TgResizableMovableBehavior
     ],
 
     properties: {
@@ -408,6 +410,14 @@ Polymer({
     listeners: {
         'tg-save-as-name-changed': '_updateSaveAsName',
         'tg-save-as-desc-changed': '_updateSaveAsDesc'
+    },
+
+    created: function () {
+        // initialise properties from tg-resizable-movable-behavior
+        this.minimumWidth = 60 /* reasonable minimum width of text */ + (8 * 2) /* padding left+right */ + (24 * 3) /* three buttons width */;
+        this.persistSize = () => this._savePair(ST_DETACHED_VIEW_WIDTH, this.style.width, ST_DETACHED_VIEW_HEIGHT, this.style.height);
+        this.persistPosition = () => this._savePair(ST_POS_X, this.style.left, ST_POS_Y, this.style.top);
+        this.allowMove = () => this._titleBarDraggable !== 'true' && !this.maximised && this.detachedView;
     },
 
     ready: function () {
@@ -646,7 +656,7 @@ Polymer({
                     break;
                 case 'track':
                     if (this.detachedView) {
-                        this._resizeDetached(event);
+                        this.resizeComponent(event);
                     } else {
                         this._resizeAttached(event);
                     }
@@ -670,23 +680,6 @@ Polymer({
     _makeCentreSelectable: function () {
         if (this.contextRetriever) {
             this.contextRetriever()._dom()._makeCentreSelectable();
-        }
-    },
-
-    _resizeDetached: function (event) {
-        const resizedHeight = this.offsetHeight + event.detail.ddy;
-        const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */ ;
-        if (heightNeedsResize) {
-            this.style.height = resizedHeight + 'px';
-        }
-        const resizedWidth = this.offsetWidth + event.detail.ddx;
-        const widthNeedsResize = resizedWidth >= 60 /* reasonable minimum width of text */ + (8 * 2) /* padding left+right */ + (24 * 3) /* three buttons width */
-        if (widthNeedsResize) {
-            this.style.width = resizedWidth + 'px';
-        }
-        if (heightNeedsResize || widthNeedsResize) {
-            this._savePair(ST_DETACHED_VIEW_WIDTH, this.style.width, ST_DETACHED_VIEW_HEIGHT, this.style.height);
-            this.notifyResize();
         }
     },
 
@@ -721,41 +714,6 @@ Polymer({
                 scrollingContainer.scrollTop += newHeight - elementHeight;
             }
         }
-    },
-
-    /**
-     *
-     * @param {Event} e - An event that is dipatched on title bar mouse move evnt.
-     */
-    _moveDialog: function(e) {
-        const target = e.target;
-        if (target === this.$.titleBar && this._titleBarDraggable !== 'true' && !this.maximised && this.detachedView) {
-            switch (e.detail.state) {
-                case 'start':
-                    this.$.titleBar.style.cursor = 'move';
-                    this._windowHeight = window.innerHeight;
-                    this._windowWidth = window.innerWidth;
-                    break;
-                case 'track':
-                    const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
-                    const leftNeedsChange = _titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44;
-                    if (leftNeedsChange) {
-                        this.style.left = _titleBarDimensions.left + e.detail.ddx + 'px';
-                    }
-                    const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
-                    if (topNeedsChange) {
-                        this.style.top = _titleBarDimensions.top + e.detail.ddy + 'px';
-                    }
-                    if (leftNeedsChange || topNeedsChange) {
-                        this._savePair(ST_POS_X, this.style.left, ST_POS_Y, this.style.top);
-                    }
-                    break;
-                case 'end':
-                    this.$.titleBar.style.removeProperty('cursor');
-                    break;
-            }
-        }
-        tearDownEvent(e);
     },
 
     _onCaptureClick: function (e) {

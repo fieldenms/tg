@@ -31,6 +31,7 @@ import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, 
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
+import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
 
 const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
@@ -177,7 +178,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
+    <div id="titleBar" class="title-bar layout horizontal justified center" on-track="moveComponent">
         <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
         <div class="title-text layout horizontal center flex">
             <span class="static-title truncate">[[staticTitle]]</span>
@@ -265,7 +266,8 @@ Polymer({
         TgFocusRestorationBehavior,
         TgTooltipBehavior,
         TgBackButtonBehavior,
-        TgElementSelectorBehavior
+        TgElementSelectorBehavior,
+        TgResizableMovableBehavior
     ],
 
     listeners: {
@@ -554,6 +556,11 @@ Polymer({
 
         this._setIsRunning(false);
 
+        // initialise properties from tg-resizable-movable-behavior
+        this.minimumWidth = 60 /* reasonable minimum width of text */ + (16 * 2) /* padding left+right */ + (22 * 3) /* three buttons width */;
+        this.persistSize = () => this._saveCustomDim(this.style.width, this.style.height);
+        this.persistPosition = () => this._saveCustomPosition(this.style.top, this.style.left);
+        this.allowMove = () => this._maximised === false;
     },
 
     ready: function() {
@@ -841,20 +848,7 @@ Polymer({
                     document.styleSheets[0].insertRule('* { cursor: nwse-resize !important; }', 0); // override custom cursors in all application with resizing cursor
                     break;
                 case 'track':
-                    const resizedHeight = this.offsetHeight + event.detail.ddy;
-                    const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */ ;
-                    if (heightNeedsResize) {
-                        this.style.height = resizedHeight + 'px';
-                    }
-                    const resizedWidth = this.offsetWidth + event.detail.ddx;
-                    const widthNeedsResize = resizedWidth >= 60 /* reasonable minimum width of text */ + (16 * 2) /* padding left+right */ + (22 * 3) /* three buttons width */
-                    if (widthNeedsResize) {
-                        this.style.width = resizedWidth + 'px';
-                    }
-                    if (heightNeedsResize || widthNeedsResize) {
-                        this._saveCustomDim(this.style.width, this.style.height);
-                        this.notifyResize();
-                    }
+                    this.resizeComponent(event);
                     break;
                 case 'end':
                     document.styleSheets[0].deleteRule(0);
@@ -999,39 +993,6 @@ Polymer({
                 appearedAndFunc.drawer.drawer.align = 'right';
             }
         }
-    },
-
-    _moveDialog: function(e) {
-        var target = e.target || e.srcElement;
-        if (target === this.$.titleBar && this._maximised === false) {
-            switch (e.detail.state) {
-                case 'start':
-                    this.$.titleBar.style.cursor = 'move';
-                    this._windowHeight = window.innerHeight;
-                    this._windowWidth = window.innerWidth;
-                    break;
-                case 'track':
-                    const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
-                    const leftNeedsChange = _titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44;
-                    if (leftNeedsChange) {
-                        this.style.left = _titleBarDimensions.left + e.detail.ddx + 'px';
-                    }
-                    const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
-                    if (topNeedsChange) {
-                        this.style.top = _titleBarDimensions.top + e.detail.ddy + 'px';
-                    }
-                    if (leftNeedsChange || topNeedsChange) {
-                        this._saveCustomPosition(
-                            topNeedsChange ? this.style.top : _titleBarDimensions.top + "px", 
-                            leftNeedsChange ? this.style.left : _titleBarDimensions.left + "px");
-                    }
-                    break;
-                case 'end':
-                    this.$.titleBar.style.removeProperty('cursor');
-                    break;
-            }
-        }
-        tearDownEvent(event);
     },
 
     _closeDialogAndIndicateActionCompletion: function() {
