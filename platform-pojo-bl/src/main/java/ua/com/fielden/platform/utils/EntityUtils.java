@@ -639,11 +639,7 @@ public class EntityUtils {
      */
     public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
-        if (isEntityType(keyType)) {
-            return isPersistedEntityType(keyType);
-        } else {
-            return false;
-        }
+        return keyType != null && isPersistedEntityType(keyType);
     }
 
     /**

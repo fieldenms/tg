@@ -82,7 +82,7 @@ public class QuerySourceInfoProvider {
             } catch (final Exception e) {
                 final var msg = "Could not generate modelled entity info for synthetic entity [" + seType + "].";
                 LOGGER.error(msg, e);
-                throw new EqlMetadataGenerationException(msg);
+                throw new EqlMetadataGenerationException(msg, e);
             }
         }
 
