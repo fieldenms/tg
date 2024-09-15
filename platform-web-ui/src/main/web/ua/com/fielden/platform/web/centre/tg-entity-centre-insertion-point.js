@@ -422,7 +422,10 @@ Polymer({
         // 'z-index' management related settings:
         const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
-        // Title bar event to identify whether element is draggable or not:
+        // Add title bar event to identify whether element is draggable or not.
+        //  Use 'useCapture = true' (capturing phase, not bubbling, see https://www.quirksmode.org/js/events_order.html) as a parameter to ensure event dispatching before
+        //   1. drag on parent centre element (tg-entity-centre._startDrag => this.$.centreResultContainer.on-dragstart) and
+        //   2. move this element (this.moveComponent => this.$.titleBar.on-track)
         this.$.titleBar.addEventListener("mousedown", this._handleDraggable.bind(this), true);
     },
 
