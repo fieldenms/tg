@@ -13,11 +13,8 @@ import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KE
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -130,9 +127,9 @@ public class fetch<T extends AbstractEntity<?>> {
     }
     
     private void checkForExistence(final String propName) {
-        if (entityType != EntityAggregates.class && // 
-                !ID.equals(propName) && //
-                !VERSION.equals(propName) && //
+        if (entityType != EntityAggregates.class &&
+                !ID.equals(propName) &&
+                !VERSION.equals(propName) &&
                 !isPropertyPresent(entityType, propName)) {
             throw new IllegalArgumentException("Property [" + propName + "] is not present within [" + entityType.getSimpleName() + "] entity!");
         }
@@ -221,67 +218,27 @@ public class fetch<T extends AbstractEntity<?>> {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((entityType == null) ? 0 : entityType.hashCode());
-        result = prime * result + ((excludedProps == null) ? 0 : excludedProps.hashCode());
-        result = prime * result + ((fetchCategory == null) ? 0 : fetchCategory.hashCode());
-        result = prime * result + ((includedProps == null) ? 0 : includedProps.hashCode());
-        result = prime * result + ((includedPropsWithModels == null) ? 0 : includedPropsWithModels.hashCode());
-        result = prime * result + (instrumented ? 1231 : 1237);
-        return result;
+        return Objects.hash(entityType,
+                            excludedProps,
+                            fetchCategory,
+                            includedProps,
+                            includedPropsWithModels,
+                            instrumented);
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof fetch)) {
-            return false;
-        }
-        final fetch other = (fetch) obj;
-        if (entityType == null) {
-            if (other.entityType != null) {
-                return false;
-            }
-        } else if (!entityType.equals(other.entityType)) {
-            return false;
-        }
-        if (excludedProps == null) {
-            if (other.excludedProps != null) {
-                return false;
-            }
-        } else if (!excludedProps.equals(other.excludedProps)) {
-            return false;
-        }
-        if (fetchCategory != other.fetchCategory) {
-            return false;
-        }
-        if (includedProps == null) {
-            if (other.includedProps != null) {
-                return false;
-            }
-        } else if (!includedProps.equals(other.includedProps)) {
-            return false;
-        }
-        if (includedPropsWithModels == null) {
-            if (other.includedPropsWithModels != null) {
-                return false;
-            }
-        } else if (!includedPropsWithModels.equals(other.includedPropsWithModels)) {
-            return false;
-        }
-        if (instrumented != other.instrumented) {
-            return false;
-        }
-        return true;
+        return obj == this
+               || obj instanceof fetch that
+                  && fetchCategory == that.fetchCategory
+                  && instrumented == that.instrumented
+                  && Objects.equals(entityType, that.entityType)
+                  && Objects.equals(excludedProps, that.excludedProps)
+                  && Objects.equals(includedProps, that.includedProps)
+                  && Objects.equals(includedPropsWithModels, that.includedPropsWithModels);
     }
 
-    private static String offset = "    ";
+    private static final String offset = "    ";
 
     @Override
     public String toString() {
@@ -291,13 +248,13 @@ public class fetch<T extends AbstractEntity<?>> {
     private String getString(final String currOffset) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\n" + currOffset + entityType.getSimpleName() + " [" + fetchCategory + "]" + (isInstrumented() ? " instrumented" : ""));
-        if (includedProps.size() > 0) {
+        if (!includedProps.isEmpty()) {
             sb.append("\n" + currOffset + "+ " + includedProps);
         }
-        if (excludedProps.size() > 0) {
+        if (!excludedProps.isEmpty()) {
             sb.append("\n" + currOffset + "- " + excludedProps);
         }
-        if (includedPropsWithModels.size() > 0) {
+        if (!includedPropsWithModels.isEmpty()) {
             for (final Map.Entry<String, fetch<?>> fetchModel : includedPropsWithModels.entrySet()) {
                 sb.append("\n" + currOffset + "+ " + fetchModel.getKey() + fetchModel.getValue().getString(currOffset + offset));
             }
@@ -336,15 +293,11 @@ public class fetch<T extends AbstractEntity<?>> {
         result.includedProps.addAll(second.includedProps);
         result.excludedProps.addAll(excludedProps);
         result.excludedProps.addAll(second.excludedProps);
-        for (final Entry<String, fetch<? extends AbstractEntity<?>>> iterable_element : includedPropsWithModels.entrySet()) {
-            result.includedPropsWithModels.put(iterable_element.getKey(), iterable_element.getValue().unionWith(second.getIncludedPropsWithModels().get(iterable_element.getKey())));
-        }
+        includedPropsWithModels.forEach((prop, fetch) -> result.includedPropsWithModels.put(prop, fetch.unionWith(second.getIncludedPropsWithModels().get(prop))));
 
-        for (final Entry<String, fetch<? extends AbstractEntity<?>>> iterable_element : second.includedPropsWithModels.entrySet()) {
-            if (!result.includedPropsWithModels.containsKey(iterable_element.getKey())) {
-                result.includedPropsWithModels.put(iterable_element.getKey(), iterable_element.getValue().unionWith(getIncludedPropsWithModels().get(iterable_element.getKey())));
-            }
-        }
+        second.includedPropsWithModels.entrySet().stream()
+                .filter(entry -> !result.includedPropsWithModels.containsKey(entry.getKey()))
+                .forEach(entry -> result.includedPropsWithModels.put(entry.getKey(), entry.getValue().unionWith(getIncludedPropsWithModels().get(entry.getKey()))));
 
         return result;
     }
