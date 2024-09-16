@@ -106,7 +106,7 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.*;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
-import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.RunAutomaticallyOptions.NO_CRITERIA_CLEARING;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.RunAutomaticallyOptions.ALLOW_CUSTOMISED;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectView;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
@@ -827,14 +827,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
-     * @return whether the centre should run automatically (by default; can be changed) and its criteria should be cleared in the process; only applies to default configurations
+     * @return whether the centre should run automatically (by default; can be changed) and its behaviour is not customised: criteria should be cleared in the process (default configs) and config moved to empty default (save-as configs, embedded only)
      */
-    public boolean isRunAutomaticallyAndAllowsCritClearing() {
-        return dslDefaultConfig.isRunAutomatically() && !noCriteriaClearing();
+    public boolean isRunAutomaticallyAndNotAllowCustomised() {
+        return dslDefaultConfig.isRunAutomatically() && !allowCustomised();
     }
 
-    private boolean noCriteriaClearing() {
-        return dslDefaultConfig.getRunAutomaticallyOptions().contains(NO_CRITERIA_CLEARING);
+    private boolean allowCustomised() {
+        return dslDefaultConfig.getRunAutomaticallyOptions().contains(ALLOW_CUSTOMISED);
     }
 
     /**
@@ -1270,7 +1270,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).
                 replace(CENTRE_RETRIEVE_ALL_OPTION, Boolean.toString(dslDefaultConfig.shouldRetrieveAll())).
                 replace(SSE_REFRESH_COUNTDOWN, dslDefaultConfig.getRefreshCountdown().map(seconds -> format("self.countdown=%s;", seconds)).orElse("")).
-                replace("@" + NO_CRITERIA_CLEARING.name(), noCriteriaClearing() ? "\nself.noCriteriaClearing = true;" : "").
+                replace("@" + ALLOW_CUSTOMISED.name(), allowCustomised() ? "\nself.allowCustomised = true;" : "").
                 replace(CENTRE_SCROLL, dslDefaultConfig.isLockScrollingForInsertionPoints() ? "centre-scroll" : "").
                 replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));

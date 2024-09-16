@@ -683,7 +683,7 @@ public class CentreUpdater {
      * @return
      */
     public static Optional<String> retrievePreferredConfigName(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder, final IWebUiConfig webUiConfig) {
-        if (webUiConfig.isEmbeddedCentreAndAllowsCritClearing(miType)) {
+        if (webUiConfig.isEmbeddedCentreAndNotAllowCustomised(miType)) {
             return empty();
         }
         final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
@@ -703,7 +703,7 @@ public class CentreUpdater {
      * @return
      */
     public static void makePreferred(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder, final IWebUiConfig webUiConfig) {
-        if (!webUiConfig.isEmbeddedCentreAndAllowsCritClearing(miType)) { // standalone centres only, not embedded
+        if (!webUiConfig.isEmbeddedCentreAndNotAllowCustomised(miType)) { // standalone centres only, not embedded
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final List<EntityCentreConfig> prefConfigs = getAllPreferredConfigs(user, miType, device, companionFinder);
             prefConfigs.stream().forEach(ecc -> eccCompanion.saveWithRetry(ecc.setPreferred(false)));
