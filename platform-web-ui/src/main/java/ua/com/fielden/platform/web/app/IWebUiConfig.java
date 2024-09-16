@@ -157,13 +157,13 @@ public interface IWebUiConfig extends IMenuRetriever {
     }
 
     /**
-     * Determines whether the centre, represented by {@code miType}, is embedded and allows criteria clearing for default configurations during auto-run (when master functional entity activates embedded centre).
+     * Determines whether the centre, represented by {@code miType}, is embedded and does not allow customisation.
      *
      * @param miType
      * @return
      */
-    default boolean isEmbeddedCentreAndAllowsCritClearing(final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        return isEmbeddedCentre(miType) && getEmbeddedCentres().get(miType)._1.isRunAutomaticallyAndAllowsCritClearing();
+    default boolean isEmbeddedCentreAndNotAllowCustomised(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        return isEmbeddedCentre(miType) && getEmbeddedCentres().get(miType)._1.isRunAutomaticallyAndNotAllowCustomised();
     }
 
     /**

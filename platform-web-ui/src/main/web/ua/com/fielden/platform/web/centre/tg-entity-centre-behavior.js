@@ -384,9 +384,14 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
-         * Indicates whether this entity centre is runAutomatically and has an option of not clearing criteria during auto-run for default configurations.
+         * Indicates whether this entity centre is runAutomatically and allows customisation.
+         *
+         * For standalone centre it means that no criteria clearing will be performed during auto-run for default configurations.
+         * For embedded centre it means that
+         *  1. no criteria clearing will be performed during auto-run -- for default configurations;
+         *  2. loaded config will be preserved as well as its criteria -- for save-as configurations.
          */
-        noCriteriaClearing: {
+        allowCustomised: {
             type: Boolean,
             value: false
         },
@@ -699,7 +704,7 @@ const TgEntityCentreBehaviorImpl = {
         // entity masters with their embedded centres can be cached and loaded save-as configurations will be used up until application will be refreshed;
         // this will not affect other places with the same masters -- e.g. Work Activity standalone centre has its own master cache with [WA => Details] embedded centre cached and [WA => Details] on other standalone centres will not be affected;
         // that's why resetting information about loaded configuration to default configuration is needed in these cached masters every time auto-running of embedded centre occurs
-        if (!this.noCriteriaClearing) {
+        if (!this.allowCustomised) {
             this.$.selection_criteria.saveAsName = '';
             this.$.selection_criteria.configUuid = '';
         }
@@ -886,7 +891,7 @@ const TgEntityCentreBehaviorImpl = {
         };
         this._resetAutocompleterState = () => this.$.selection_criteria._resetAutocompleterState();
         this.lastValidationAttemptPromise = () => this.$.selection_criteria.lastValidationAttemptPromise;
-        
+
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                 if (typeof result.summary !== 'undefined') {

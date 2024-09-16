@@ -204,13 +204,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     public enum RunAutomaticallyOptions {
         /**
-         * Prevents criteria clearing for auto-runnable centres during auto-running.
+         * If specified for either standalone or embedded centre, any selection criteria changes would get preserved upon auto-running.
          * <p>
-         * By default, auto-runnable centre selection criteria gets cleared during auto-run.
-         * This only applies to default configuration, not "save-as" / inherited.
-         * This option allows to customise this behaviour.
+         * Also this parameter preserves any loaded save-as configurations upon auto-run.
+         * For example, if a user loads some save-as configuration for an embedded centre, that configuration would be used for auto-run until such time as user changes it (loads the default or any other save-as configuration).
+         * <p>
+         * Without this parameter the default behaviour is applied. More specifically the default configuration is always loaded before auto-run is performed.
          */
-        NO_CRITERIA_CLEARING;
+        ALLOW_CUSTOMISED;
     }
 
     /**
