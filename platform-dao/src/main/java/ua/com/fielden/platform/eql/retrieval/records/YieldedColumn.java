@@ -2,6 +2,8 @@ package ua.com.fielden.platform.eql.retrieval.records;
 
 import ua.com.fielden.platform.eql.meta.PropType;
 
+import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
+
 /**
  * Data container for context-dependent representation of a yield in a result query.
  * 
@@ -15,4 +17,10 @@ public record YieldedColumn(
         String name, 
         PropType propType, 
         String column)
-{}
+{
+    public YieldedColumn {
+        requireNotNullArgument(column, "column");
+        requireNotNullArgument(name, "name");
+        requireNotNullArgument(propType, "propType");
+    }
+}

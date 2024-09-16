@@ -5,6 +5,7 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -18,8 +19,15 @@ public class Yield3 {
     public final ISingleOperand3 operand;
     public final String alias;
 
-    /** Name of the column in the resulting set that this value is yielded under or {@code null}. */
-    public final String column;
+    /**
+     * Name of the column in the result set that this operand is yielded under.
+     * Can also be {@code null}, but only in the following cases:
+     * <ul>
+     *   <li> When directly enclosed by an {@linkplain ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3 existence sub-query}.
+     *   <li> When directly enclosed by a {@linkplain ua.com.fielden.platform.eql.stage3.queries.SubQuery3 sub-query}.
+     * </ul>
+     */
+    public final @Nullable String column;
 
     /**
      * The expected type of this yield.
