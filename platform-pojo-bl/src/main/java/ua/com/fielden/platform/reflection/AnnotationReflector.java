@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penult
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -331,11 +332,13 @@ public final class AnnotationReflector {
      * @return  the annotation, if found, otherwise {@code null}
      */
     public static <A extends Annotation> @Nullable A getPropertyAnnotation(final Class<A> annotationType, final Class<?> forType, final String dotNotationExp) {
-        if (dotNotationExp.endsWith(AbstractEntity.KEY) && KeyType.class.equals(annotationType) ||
-            dotNotationExp.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) ||
-            dotNotationExp.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
+        final var lastProp = splitPropPath(dotNotationExp).getLast();
+        if (lastProp.equals(AbstractEntity.KEY) && KeyType.class == annotationType ||
+            lastProp.equals(AbstractEntity.KEY) && KeyTitle.class == annotationType ||
+            lastProp.equals(AbstractEntity.DESC) && DescTitle.class == annotationType) {
             return getAnnotationForClass(annotationType, transform(forType, dotNotationExp).getKey());
-        } else {
+        }
+        else {
             return findFieldByNameOptionally(forType, dotNotationExp).map(field -> getAnnotation(field, annotationType)).orElse(null);
         }
     }
