@@ -2,6 +2,9 @@ package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.Pair;
@@ -22,9 +25,10 @@ public class TgEntityWithRichTextProp extends AbstractPersistentEntity<String> {
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
-    @IsProperty
+    @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
     @Title(value = "Rich Text Prop", desc = "Rich Text Property")
+    @BeforeChange(@Handler(MaxLengthValidator.class))
     private RichText richTextProp;
 
     public RichText getRichTextProp() {
