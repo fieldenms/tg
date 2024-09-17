@@ -311,6 +311,16 @@ public sealed class RichText permits RichText.Persisted {
     }
 
     /**
+     * Creates a policy that allows common attributes.
+     */
+    private static PolicyFactory allowCommonAttributes() {
+        return new HtmlPolicyBuilder()
+                .allowAttributes("class")
+                    .globally()
+                .toFactory();
+    }
+
+    /**
      * Creates a policy that allows the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#target">{@code link}</a> element.
      */
     private static PolicyFactory allowLink() {
@@ -325,6 +335,7 @@ public sealed class RichText permits RichText.Persisted {
 
     private static final PolicyFactory POLICY_FACTORY =
         LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS).and(LISTS).and(BLOCKQUOTE)
+        .and(allowCommonAttributes())
         .and(allowEmptyElementsPolicy())
         .and(allowLink())
         .and(new HtmlPolicyBuilder()

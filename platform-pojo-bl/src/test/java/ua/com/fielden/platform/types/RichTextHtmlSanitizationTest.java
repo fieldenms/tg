@@ -10,6 +10,14 @@ import static org.junit.Assert.fail;
 public class RichTextHtmlSanitizationTest {
 
     @Test
+    public void attribute_class_is_allowed_globally() {
+        assertSameAfterSanitization("<p class='abc'> text </p>");
+        assertSameAfterSanitization("<img class='abc' />");
+        assertSameAfterSanitization("<h1 class='abc'> text </h1>");
+        assertSameAfterSanitization("<i class=''> text </i>");
+    }
+
+    @Test
     public void attribute_target_is_allowed_for_link_element() {
         assertSameAfterSanitization("<link href='resource' target='window' />");
     }
