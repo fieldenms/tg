@@ -892,13 +892,18 @@ Polymer({
     },
 
     _startDrag: function (dragEvent) {
-        this._insertionPointToDrag = dragEvent.target;
-        // Configure drag transfer and its image.
-        dragEvent.dataTransfer.effectAllowed = "copyMove";
-        const offsetRect = this._insertionPointToDrag.$.titleBar.getBoundingClientRect();
-        dragEvent.dataTransfer.setDragImage(this._insertionPointToDrag.$.titleBar, dragEvent.clientX - offsetRect.left, dragEvent.clientY - offsetRect.top);
-        // Hide tooltip as it is not needed during drag&drop process.
-        hideTooltip();
+        // 1. Even though drag events are added to parent tg-entity-centre component above draggable insertion points (actually IP.$.titleBar is draggable), still check the target to be sure it is actually an insertion point to be dragged.
+        //  This may prevent problems in future, if other draggable elements will appear in entity centres.
+        // 2. For insertion point's drag events we only consider dragging of IP title bar, not any other element inside IP (e.g. some drag anchor in EGI in embedded Entity Centre inside IP).
+        if (dragEvent.target && dragEvent.target.tagName === 'TG-ENTITY-CENTRE-INSERTION-POINT' && dragEvent.target.$.titleBar === dragEvent.composedPath()[0]) {
+            this._insertionPointToDrag = dragEvent.target;
+            // Configure drag transfer and its image.
+            dragEvent.dataTransfer.effectAllowed = "copyMove";
+            const offsetRect = this._insertionPointToDrag.$.titleBar.getBoundingClientRect();
+            dragEvent.dataTransfer.setDragImage(this._insertionPointToDrag.$.titleBar, dragEvent.clientX - offsetRect.left, dragEvent.clientY - offsetRect.top);
+            // Hide tooltip as it is not needed during drag&drop process.
+            hideTooltip();
+        }
     },
 
     _endDrag: function (dragEvent) {
