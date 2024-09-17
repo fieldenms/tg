@@ -310,9 +310,23 @@ public sealed class RichText permits RichText.Persisted {
                 .toFactory();
     }
 
+    /**
+     * Creates a policy that allows the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#target">{@code link}</a> element.
+     */
+    private static PolicyFactory allowLink() {
+        return new HtmlPolicyBuilder()
+                .allowElements("link")
+                .allowAttributes("href", "rel", "as", "disabled", "fetchpriority", "hreflang", "imagesizes",
+                                 "imagesrcset", "integrity", "media", "referrerpolicy", "sizes", "title", "type",
+                                 "target", "charset", "rev")
+                    .onElements("link")
+                .toFactory();
+    }
+
     private static final PolicyFactory POLICY_FACTORY =
         LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS).and(LISTS).and(BLOCKQUOTE)
         .and(allowEmptyElementsPolicy())
+        .and(allowLink())
         .and(new HtmlPolicyBuilder()
                 .allowElements(
                         "b", "strong", // bold text

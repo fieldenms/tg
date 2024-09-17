@@ -10,6 +10,11 @@ import static org.junit.Assert.fail;
 public class RichTextHtmlSanitizationTest {
 
     @Test
+    public void attribute_target_is_allowed_for_link_element() {
+        assertSameAfterSanitization("<link href='resource' target='window' />");
+    }
+
+    @Test
     public void empty_elements_are_preserved() {
         assertSameAfterSanitization("<img />");
         assertSameAfterSanitization("<span>text</span>");
