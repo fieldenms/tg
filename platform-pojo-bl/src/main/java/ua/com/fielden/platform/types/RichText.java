@@ -31,6 +31,7 @@ import static org.owasp.html.Sanitizers.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
  * Rich text is text which has attributes beyond those of plain text (e.g., styles such as color, boldface, italic), and
@@ -297,8 +298,21 @@ public sealed class RichText permits RichText.Persisted {
             .allowAttributes("cite").onElements("blockquote")
             .toFactory();
 
+    /**
+     * Creates a policy that allows empty elements, which would be discarded by the sanitizer otherwise.
+     * Relies on the existence of a defined set of elements that are subject to discarding if they are empty.
+     * This set is defined by {@link HtmlPolicyBuilder#DEFAULT_SKIP_IF_EMPTY}.
+     */
+    private static PolicyFactory allowEmptyElementsPolicy() {
+        return foldLeft(HtmlPolicyBuilder.DEFAULT_SKIP_IF_EMPTY.stream(),
+                        new HtmlPolicyBuilder(),
+                        (builder, elt) -> builder.allowElements(elt).allowWithoutAttributes(elt))
+                .toFactory();
+    }
+
     private static final PolicyFactory POLICY_FACTORY =
         LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS).and(LISTS).and(BLOCKQUOTE)
+        .and(allowEmptyElementsPolicy())
         .and(new HtmlPolicyBuilder()
                 .allowElements(
                         "b", "strong", // bold text

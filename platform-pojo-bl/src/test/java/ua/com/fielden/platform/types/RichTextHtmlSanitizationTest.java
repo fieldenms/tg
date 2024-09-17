@@ -10,6 +10,13 @@ import static org.junit.Assert.fail;
 public class RichTextHtmlSanitizationTest {
 
     @Test
+    public void empty_elements_are_preserved() {
+        assertSameAfterSanitization("<img />");
+        assertSameAfterSanitization("<span>text</span>");
+        assertSameAfterSanitization("<a>text</a>");
+    }
+
+    @Test
     public void script_tag_is_prohibited() {
         assertSanitizationFailure("""
         hello
