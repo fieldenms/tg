@@ -357,6 +357,37 @@ public sealed class RichText permits RichText.Persisted {
                 .toFactory();
     }
 
+    /**
+     * Creates a policy that allows HTML entities used by the <a href="https://github.com/nhn/tui.editor">TOAST UI Editor</a>.
+     */
+    private static PolicyFactory allowToastUi() {
+        return new HtmlPolicyBuilder()
+                // Attributes were extracted by grepping the source code of tui.editor with the following command:
+                // grep -hoRP '\bdata(-\w+\b)+' apps/ libs/ types/ plugins/ | sort -u
+                .allowAttributes(
+                        "data-backticks",
+                        "data-chart-id",
+                        "data-custom",
+                        "data-custom-info",
+                        "data-front-matter",
+                        "data-html-comment",
+                        "data-id",
+                        "data-language",
+                        "data-level",
+                        "data-my-attr",
+                        "data-my-nav",
+                        "data-nodeid",
+                        "data-placeholder",
+                        "data-raw-html",
+                        "data-task",
+                        "data-task-checked",
+                        "data-task-disabled",
+                        "data-type"
+                )
+                .globally()
+                .toFactory();
+    }
+
     private static final PolicyFactory POLICY_FACTORY =
         LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS)
         .and(allowLists())
@@ -364,7 +395,8 @@ public sealed class RichText permits RichText.Persisted {
         .and(allowCommonAttributes())
         .and(allowEmptyElementsPolicy())
         .and(allowLink())
-        .and(allowCommonElements());
+        .and(allowCommonElements())
+        .and(allowToastUi());
     // @formatter:on
 
     /**
