@@ -28,6 +28,7 @@ import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -731,21 +732,22 @@ public class EntityUtils {
     }
 
     /**
-     * A helper method to determine if {@code entityType} contains either static field "mode_" or "models_" of the appropriate types, which indicates that {@code entityType} is a synthetic entity.
+     * If {@code entityType} contains either static field "model_" or "models_" of the appropriate types, indicating that
+     * it's a synthetic entity, returns that field. Otherwise, returns {@code null}.
      * <p>
-     * It became required to traverse the type hierarchy instead of relying on declared fields with the implementation of issue <a href="https://github.com/fieldenms/tg/issues/1692">#1692</a>, which started generating types as subclasses of the original ones.
+     * Since issue <a href="https://github.com/fieldenms/tg/issues/1692">#1692</a>, which started generating types as
+     * subclasses of the original ones, static fields from supertypes are considered as well.
      *
-     * @param <T>
-     * @param entityType to be analysed.
-     * @return either a field corresponding to {@code model_} or {@code models_}, or {@code null}.
+     * @param entityType  entity type to be analysed
+     * @return either a field corresponding to {@code model_} or {@code models_}, or {@code null}
      */
-    public static <T extends AbstractEntity<?>> Field findSyntheticModelFieldFor(final Class<T> entityType) {
+    public static <T extends AbstractEntity<?>> @Nullable Field findSyntheticModelFieldFor(final Class<T> entityType) {
         Class<?> klass = entityType;
         while (klass != AbstractEntity.class) { // iterated thought hierarchy
             for (final Field field : klass.getDeclaredFields()) {
                 if (isStatic(field.getModifiers())) {
-                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) ||
-                        "models_".equals(field.getName()) && List.class.equals(field.getType())) {
+                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class == field.getType() ||
+                        "models_".equals(field.getName()) && List.class.isAssignableFrom(field.getType())) {
                         return field;
                     }
                 }
