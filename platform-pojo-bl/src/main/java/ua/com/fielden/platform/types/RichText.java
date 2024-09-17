@@ -282,21 +282,26 @@ public sealed class RichText permits RichText.Persisted {
     }
 
     // @formatter:off
-    private static final PolicyFactory LISTS = new HtmlPolicyBuilder()
-            .allowElements(
-                    "ul", // Unordered lists
-                    "ol", // Ordered lists
-                    "li", // List items
-                    "dl", // Description lists
-                    "dt", // Terms in description lists
-                    "dd" // Descriptions in description lists
-            )
-            .toFactory();
+    private static PolicyFactory allowLists() {
+        return new HtmlPolicyBuilder()
+                .allowElements(
+                        "ul", // Unordered lists
+                        "ol", // Ordered lists
+                        "li", // List items
+                        "dl", // Description lists
+                        "dt", // Terms in description lists
+                        "dd" // Descriptions in description lists
+                )
+                .toFactory();
+    }
 
-    private static final PolicyFactory BLOCKQUOTE = new HtmlPolicyBuilder()
-            .allowElements("blockquote")
-            .allowAttributes("cite").onElements("blockquote")
-            .toFactory();
+    private static PolicyFactory allowBlockquote() {
+        return new HtmlPolicyBuilder()
+                .allowElements("blockquote")
+                .allowAttributes("cite")
+                    .onElements("blockquote")
+                .toFactory();
+    }
 
     /**
      * Creates a policy that allows empty elements, which would be discarded by the sanitizer otherwise.
@@ -333,12 +338,8 @@ public sealed class RichText permits RichText.Persisted {
                 .toFactory();
     }
 
-    private static final PolicyFactory POLICY_FACTORY =
-        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS).and(LISTS).and(BLOCKQUOTE)
-        .and(allowCommonAttributes())
-        .and(allowEmptyElementsPolicy())
-        .and(allowLink())
-        .and(new HtmlPolicyBuilder()
+    private static PolicyFactory allowCommonElements() {
+        return new HtmlPolicyBuilder()
                 .allowElements(
                         "b", "strong", // bold text
                         "i", "em", // italic text
@@ -353,7 +354,17 @@ public sealed class RichText permits RichText.Persisted {
                         "hr", // thematic break (horizontal rule)
                         "span" // generic inline container (used for text colouring)
                 )
-                .toFactory());
+                .toFactory();
+    }
+
+    private static final PolicyFactory POLICY_FACTORY =
+        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS)
+        .and(allowLists())
+        .and(allowBlockquote())
+        .and(allowCommonAttributes())
+        .and(allowEmptyElementsPolicy())
+        .and(allowLink())
+        .and(allowCommonElements());
     // @formatter:on
 
     /**
