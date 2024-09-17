@@ -206,7 +206,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         /**
          * If specified for either standalone or embedded centre, any selection criteria changes would get preserved upon auto-running.
          * <p>
-         * Also this parameter preserves any loaded save-as configurations upon auto-run.
+         * Also, this parameter preserves any loaded save-as configurations upon auto-run.
          * For example, if a user loads some save-as configuration for an embedded centre, that configuration would be used for auto-run until such time as user changes it (loads the default or any other save-as configuration).
          * <p>
          * Without this parameter the default behaviour is applied. More specifically the default configuration is always loaded before auto-run is performed.
