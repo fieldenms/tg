@@ -947,7 +947,8 @@ Polymer({
 
     /**************** Miscellaneous methods for restoring size and dimensions ***********************/
     /**
-     * This method should be removed in the next releases as it required better name. And now its functionality was enhanced and moved to '_setDimension'.
+     * @Deprecated -- scheduled for removal
+     * Method _setDimension should be used instead.
      */
     _adjustView: function () {
         this._setDimension();
