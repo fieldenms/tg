@@ -14,7 +14,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  *
  */
-public class HelperIocTestModule extends AbstractPlatformIocModule {
+public class HelperTestIocModule extends AbstractPlatformIocModule {
 
     @Override
     protected void configure() {
