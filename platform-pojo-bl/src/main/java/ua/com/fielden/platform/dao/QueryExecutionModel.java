@@ -18,6 +18,27 @@ import java.util.Map;
 import static java.util.Collections.unmodifiableMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
+/**
+ * <b>QEM</b> (Query Execution Model) represents a query with additional data required for query execution by the EQL engine.
+ *
+ * <h3> Entity Instrumentation </h3>
+ * Instrumentation of entity instances produced by a QEM can be controlled in the following ways:
+ * <ol>
+ *   <li> By settings the <i>lightweightedness</i> of a QEM ({@link Builder#lightweight()}).
+ *        If a QEM is lightweight, then entity instances should not be instrumented.
+ *   <li> Via a fetch model ({@link Builder#with(fetch)}). See {@link fetch#isInstrumented()}.
+ *        If a fetch model is instrumented, then entity instances are instrumented.
+ * </ol>
+ * <b>A fetch model's instrumentation setting is preferred over the QEM's lightweightedness</b>. That is, if a QEM is
+ * lightweight but its fetch model is instrumented, then the resulting entities will be instrumented.
+ * <hr><br>
+ *
+ * {@linkplain ua.com.fielden.platform.companion.IEntityReader Entity companion methods} that retrieve entities from a
+ * data store accept this structure.
+ *
+ * @param <T>  the type of entities produced by the underlying query
+ * @param <Q>  the type of the underlying query
+ */
 public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
     private final Q queryModel;
     private final @Nullable OrderingModel orderModel;
@@ -48,11 +69,25 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
                                 final Map<String, Object> paramValues,
                                 final boolean lightweight)
     {
+        if (fetchModel != null) {
+            checkInstrumentation(lightweight, fetchModel, queryModel);
+        }
         this.queryModel = queryModel;
         this.orderModel = orderModel;
         this.fetchModel = fetchModel;
         this.paramValues = paramValues;
         this.lightweight = lightweight;
+    }
+
+    private static void checkInstrumentation(final boolean lightweight, final fetch<?> fetchModel, final QueryModel<?> queryModel) {
+        if (lightweight && fetchModel.isInstrumented()) {
+            logger.warn("""
+            Conflicting instrumentation settings: QEM is lightweight but fetch model is instrumented. \
+            Instrumentation will be enabled.
+            Entity type: %s
+            Query: %s\
+            """.formatted(fetchModel.getEntityType().getTypeName(), queryModel));
+        }
     }
 
     private QueryExecutionModel(final Builder<T, Q> builder) {
