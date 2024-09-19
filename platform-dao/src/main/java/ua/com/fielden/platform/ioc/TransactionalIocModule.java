@@ -11,7 +11,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.ioc.EntityModule;
+import ua.com.fielden.platform.entity.ioc.EntityIocModule;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
@@ -25,7 +25,6 @@ import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 
 import java.util.Properties;
 
-import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
@@ -37,13 +36,13 @@ import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMap
  * @author TG Team
  *
  */
-public abstract class TransactionalModule extends EntityModule {
+public abstract class TransactionalIocModule extends EntityIocModule {
 
     private static final String SESSION_FACTORY_FOR_SESSION_INTERCEPTOR = "SessionFactory for SessionInterceptor";
 
     private final Properties props;
 
-    public TransactionalModule(final Properties props) {
+    public TransactionalIocModule(final Properties props) {
         this.props = props;
     }
 

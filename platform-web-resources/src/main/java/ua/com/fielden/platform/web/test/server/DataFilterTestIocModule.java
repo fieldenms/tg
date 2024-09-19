@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web.test.server;
 
-import com.google.inject.AbstractModule;
+import ua.com.fielden.platform.entity.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.entity.query.IFilter;
 
-class DataFilterModule extends AbstractModule {
+class DataFilterTestIocModule extends AbstractPlatformIocModule {
 
     @Override
     protected void configure() {

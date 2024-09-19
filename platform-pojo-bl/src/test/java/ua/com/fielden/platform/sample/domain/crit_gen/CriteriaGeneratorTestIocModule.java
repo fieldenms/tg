@@ -14,14 +14,14 @@ import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.NoAuthorisation;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
-public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory {
+public class CriteriaGeneratorTestIocModule extends EntityTestIocModuleWithPropertyFactory {
 
     @Override
     protected void configure() {

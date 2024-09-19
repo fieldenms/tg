@@ -34,9 +34,9 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
 
             final ApplicationDomain appDomain = new ApplicationDomain();
             injector = new ApplicationInjectorFactory()
-                    .add(new TgTestApplicationServerModule(appDomain, appDomain.domainTypes(), props))
+                    .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), props))
                     .add(new NewUserNotifierMockBindingModule())
-                    .add(new DataFilterModule())
+                    .add(new DataFilterTestIocModule())
                     .getInjector();
         } catch (final Exception e) {
             throw new IllegalStateException("Could not create data population configuration.", e);

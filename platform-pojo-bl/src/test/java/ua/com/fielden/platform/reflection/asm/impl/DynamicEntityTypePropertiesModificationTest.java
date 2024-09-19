@@ -55,7 +55,7 @@ import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModifiedW
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModifiedWithInnerTypes.InnerEnum;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityWithCollectionalPropety;
 import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -78,7 +78,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     private boolean observed = false;
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
     private final Injector injector = new ApplicationInjectorFactory()
-            .add(new CommonTestEntityModuleWithPropertyFactory())
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
             .add(new AbstractModule() {
                 @Override
                 protected void configure() {

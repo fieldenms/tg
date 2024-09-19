@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import static org.openjdk.jmh.annotations.Threads.MAX;
-import static ua.com.fielden.companion.BenchmarkModule.newBenchmarkModule;
+import static ua.com.fielden.companion.BenchmarkIocModule.newBenchmarkModule;
 
 /**
  * <h3> Running this benchmark </h3>

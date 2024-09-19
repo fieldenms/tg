@@ -8,7 +8,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.ioc.BasicWebServerModule;
+import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-class BenchmarkModule extends BasicWebServerModule  {
+class BenchmarkIocModule extends BasicWebServerIocModule {
 
     public static Module newBenchmarkModule(final Properties props) {
-        return Modules.override(new BenchmarkModule(props))
+        return Modules.override(new BenchmarkIocModule(props))
                 .with(new AbstractModule() {
                     @Override
                     protected void configure() {
@@ -35,7 +35,7 @@ class BenchmarkModule extends BasicWebServerModule  {
                 });
     }
 
-    private BenchmarkModule(final Properties props) {
+    private BenchmarkIocModule(final Properties props) {
         super(List::of,
               List.of(),
               props);
@@ -45,7 +45,7 @@ class BenchmarkModule extends BasicWebServerModule  {
     protected void configure() {
         super.configure();
 
-        bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data for a test server.");
+        bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hashing key, which is used to hash session data for a test server.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(2); // five minutes
 

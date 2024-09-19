@@ -18,11 +18,11 @@ import java.util.Properties;
  * @author TG Team
  *
  */
-public class TgTestWebApplicationServerModule extends TgTestApplicationServerModule implements IBasicWebApplicationServerModule, IModuleWithInjector {
+public class TgTestWebApplicationServerIocModule extends TgTestApplicationServerIocModule implements IBasicWebApplicationServerModule, IModuleWithInjector {
 
     private final Properties props;
 
-    public TgTestWebApplicationServerModule(
+    public TgTestWebApplicationServerIocModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Properties props)

@@ -59,10 +59,10 @@ public class EntityBatchInsertOperation {
         this.trExecSupplier = trExecSupplier;
     }
 
-    public interface Factory {
+    interface Factory {
         EntityBatchInsertOperation create(final Supplier<TransactionalExecution> trExecSupplier);
     }
-    
+
     /**
      * Inserts streaming entities in batches of {@code batchSize},
      * Any persisted or non-persistent entities are skipped.

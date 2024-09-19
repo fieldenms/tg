@@ -63,7 +63,7 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.ioc.EntityModule;
+import ua.com.fielden.platform.entity.ioc.EntityIocModule;
 import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -179,7 +179,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * A similar situation is with support of property change event handling. Any setter annotated with {@link Observable} should be intercepted by {@link ObservableMutatorInterceptor},
  * which can be achieved by using appropriately configured Guice module.
  *
- * Please refer {@link EntityModule} for more details.
+ * Please refer {@link EntityIocModule} for more details.
  *
  * <h3>Property mutators</h3>
  * The <i>property</i> specification as defined in JavaBeans does not cover fully the needs identified by our team for working with business entities where properties have loosely coupled validation logic and change observation.

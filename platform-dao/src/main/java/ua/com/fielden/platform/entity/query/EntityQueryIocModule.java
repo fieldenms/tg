@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity.query;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import ua.com.fielden.platform.entity.ioc.AbstractPlatformIocModule;
 
-public class EntityQueryModule extends AbstractModule {
+public final class EntityQueryIocModule extends AbstractPlatformIocModule {
 
     @Override
     protected void configure() {

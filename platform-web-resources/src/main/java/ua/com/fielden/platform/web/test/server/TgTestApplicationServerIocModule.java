@@ -6,7 +6,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.ioc.BasicWebServerModule;
+import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -31,9 +31,9 @@ import static java.lang.String.format;
  * @author TG Team
  *
  */
-public class TgTestApplicationServerModule extends BasicWebServerModule {
+public class TgTestApplicationServerIocModule extends BasicWebServerIocModule {
 
-    public TgTestApplicationServerModule(
+    public TgTestApplicationServerIocModule(
             final IApplicationDomainProvider appDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Properties props)

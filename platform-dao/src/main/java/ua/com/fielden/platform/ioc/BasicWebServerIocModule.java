@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.ioc;
 
-import com.google.inject.Singleton;
 import com.google.inject.Stage;
 import com.google.inject.name.Names;
 import org.apache.logging.log4j.Logger;
@@ -52,14 +51,14 @@ import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_M
  * @author TG Team
  *
  */
-public class BasicWebServerModule extends CompanionModule {
-    private static final Logger LOGGER = getLogger(BasicWebServerModule.class);
+public class BasicWebServerIocModule extends CompanionIocModule {
+    private static final Logger LOGGER = getLogger(BasicWebServerIocModule.class);
 
     private final Properties props;
     private final IApplicationDomainProvider applicationDomainProvider;
     private final Class<? extends IAuthorisationModel> authorisationModelType;
 
-    public BasicWebServerModule(
+    public BasicWebServerIocModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Properties props)
@@ -67,13 +66,12 @@ public class BasicWebServerModule extends CompanionModule {
         super(props, domainEntityTypes);
         this.props = props;
         this.applicationDomainProvider = applicationDomainProvider;
-        // Currently there is no good way of binding the default implementation of IAuthorisationModel other than
-        // having multiple constructors in this module. Good old @ImplementedBy can't be used because the default
-        // implementations resides in platform-dao, while the interface in platform-pojo-bl.
+        // Currently there is no good way of binding the default implementation of IAuthorisationModel other than having multiple constructors in this module.
+        // Good old @ImplementedBy cannot be used because the default implementation resides in platform-dao, while the interface is in platform-pojo-bl.
         this.authorisationModelType = ServerAuthorisationModel.class;
     }
 
-    public BasicWebServerModule(
+    public BasicWebServerIocModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Class<? extends IAuthorisationModel> authorisationModelType,
@@ -132,7 +130,7 @@ public class BasicWebServerModule extends CompanionModule {
 
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         bind(IAuthorisationModel.class).to(authorisationModelType);
-        install(new AuthorisationModule());
+        install(new AuthorisationIocModule());
 
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???

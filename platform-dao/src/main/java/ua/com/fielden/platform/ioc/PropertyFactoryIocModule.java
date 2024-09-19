@@ -12,9 +12,9 @@ import java.util.Properties;
  * @author TG Team
  *
  */
-public class PropertyFactoryModule extends TransactionalModule {
+public class PropertyFactoryIocModule extends TransactionalIocModule {
 
-    public PropertyFactoryModule(final Properties props) {
+    public PropertyFactoryIocModule(final Properties props) {
         super(props);
     }
 

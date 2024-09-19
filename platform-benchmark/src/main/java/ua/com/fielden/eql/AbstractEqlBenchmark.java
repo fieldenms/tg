@@ -5,7 +5,7 @@ import com.google.inject.Injector;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
+import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocTestModule;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.SimpleUserFilter;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
@@ -299,7 +299,7 @@ public abstract class AbstractEqlBenchmark {
 
     // -------------------- SUPPORTING CODE --------------------
 
-    protected static final Injector injector = Guice.createInjector(new HelperIocModule());
+    protected static final Injector injector = Guice.createInjector(new HelperIocTestModule());
     protected static final IDates dates = injector.getInstance(IDates.class);
     protected static final IFilter filter = new SimpleUserFilter();
 

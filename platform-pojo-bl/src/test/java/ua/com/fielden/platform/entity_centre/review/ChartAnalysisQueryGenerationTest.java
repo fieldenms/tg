@@ -33,8 +33,8 @@ import ua.com.fielden.platform.report.query.generation.AnalysisResultClass;
 import ua.com.fielden.platform.report.query.generation.AnalysisResultClassBundle;
 import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerator;
 import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
 
 @SuppressWarnings("unchecked")
@@ -46,7 +46,7 @@ public class ChartAnalysisQueryGenerationTest {
     private final EntityFactory factory = createFactory(injector);
 
     private Injector createInjector() {
-        final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+        final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
         return new ApplicationInjectorFactory().add(module).getInjector();
     }
 

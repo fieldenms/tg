@@ -4,8 +4,6 @@ import com.google.inject.Injector;
 import org.restlet.Component;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierBindingModule;
-import ua.com.fielden.platform.utils.DefaultDates;
-import ua.com.fielden.platform.utils.DefaultUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.LoginCompleteResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginInitiateResetResourceFactory;
@@ -37,13 +35,13 @@ public class TgTestApplicationConfiguration extends Component {
         try {
             // create application IoC module and injector
             final var appDomain = new ApplicationDomain();
-            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(
+            final TgTestWebApplicationServerIocModule module = new TgTestWebApplicationServerIocModule(
                     appDomain,
                     appDomain.domainTypes(),
                     props);
             injector = new ApplicationInjectorFactory()
                     .add(module)
-                    .add(new DataFilterModule())
+                    .add(new DataFilterTestIocModule())
                     .add(new NewUserEmailNotifierBindingModule())
                     .getInjector();
 

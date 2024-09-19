@@ -6,7 +6,7 @@ import ua.com.fielden.platform.security.AuthorisationException;
 import ua.com.fielden.platform.security.ISecurityToken;
 
 /**
- * This is an authorisation model implementation, which is used mainly for testing purposes. It restricts access to {@link NoAccessToken}.
+ * This is an authorisation model implementation, which is used for testing purposes. It restricts access to {@link NoAccessToken}.
  * <p>
  * The authorisation logic covers situations where top level authorisation (by declaration -- not inheritance) overrides any sub-calls also requiring authorisation, but otherwise
  * restricting the call.
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.security.ISecurityToken;
  * @author TG Team
  * 
  */
-public class AuthorisationModel extends AbstractAuthorisationModel {
+public class AuthorisationModelForTests extends AbstractAuthorisationModel {
 
     @Override
     public Result authorise(final Class<? extends ISecurityToken> token) {

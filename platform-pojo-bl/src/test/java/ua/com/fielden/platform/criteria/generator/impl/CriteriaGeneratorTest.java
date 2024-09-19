@@ -51,7 +51,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestModule;
+import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestIocModule;
 import ua.com.fielden.platform.sample.domain.crit_gen.LastLevelEntity;
 import ua.com.fielden.platform.sample.domain.crit_gen.TopLevelEntity;
 import ua.com.fielden.platform.types.Money;
@@ -59,7 +59,7 @@ import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CriteriaGeneratorTest {
-    private final Injector injector = new ApplicationInjectorFactory().add(new CriteriaGeneratorTestModule()).getInjector();
+    private final Injector injector = new ApplicationInjectorFactory().add(new CriteriaGeneratorTestIocModule()).getInjector();
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
     private final ICriteriaGenerator cg = injector.getInstance(ICriteriaGenerator.class);
 

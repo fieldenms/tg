@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.entity.query.generation.ioc;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
+import ua.com.fielden.platform.entity.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.utils.DefaultDates;
 import ua.com.fielden.platform.utils.DefaultUniversalConstants;
 import ua.com.fielden.platform.utils.IDates;
@@ -15,7 +14,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  *
  */
-public class HelperIocModule extends AbstractModule {
+public class HelperIocTestModule extends AbstractPlatformIocModule {
 
     @Override
     protected void configure() {

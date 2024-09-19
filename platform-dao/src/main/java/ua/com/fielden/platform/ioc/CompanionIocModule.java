@@ -24,11 +24,11 @@ import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindC
 /**
  * Module responsible for everything related to entity companion objects.
  */
-public class CompanionModule extends CommonFactoryModule {
+public class CompanionIocModule extends CommonFactoryIocModule {
 
     private final List<Class<? extends AbstractEntity<?>>> domainEntityTypes;
 
-    public CompanionModule(final Properties props,
+    public CompanionIocModule(final Properties props,
                            final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
         super(props);
         this.domainEntityTypes = domainEntityTypes;
@@ -38,8 +38,8 @@ public class CompanionModule extends CommonFactoryModule {
     protected void configure() {
         super.configure();
 
-        bindDomainCos(domainEntityTypes);
-        bindPlatformCos();
+        bindDomainCompanionObjects(domainEntityTypes);
+        bindPlatformCompanionObjects();
 
         bind(IEntityAggregatesOperations.class).to(EntityAggregatesDao.class);
         bind(IEntityAggregates.class).to(CommonEntityAggregatesDao.class);
@@ -49,13 +49,13 @@ public class CompanionModule extends CommonFactoryModule {
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
     }
 
-    protected void bindDomainCos(final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
+    protected void bindDomainCompanionObjects(final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
         for (final Class<? extends AbstractEntity<?>> entityType : domainEntityTypes) {
             CompanionObjectAutobinder.bindCo(entityType, binder());
         }
     }
 
-    protected void bindPlatformCos() {
+    protected void bindPlatformCompanionObjects() {
         PlatformDomainTypes.typesNotDependentOnWebUI.stream()
                 // skip entity types that have no companions
                 .filter(type -> !AbstractTreeEntry.class.isAssignableFrom(type) && !Action.class.isAssignableFrom(type))

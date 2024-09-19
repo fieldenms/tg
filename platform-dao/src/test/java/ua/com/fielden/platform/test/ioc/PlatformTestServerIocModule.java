@@ -4,7 +4,6 @@ import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -17,7 +16,7 @@ import ua.com.fielden.platform.entity.functional.centre.ISavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolderDao;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessCo;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessDao;
-import ua.com.fielden.platform.ioc.BasicWebServerModule;
+import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.compound.*;
@@ -42,9 +41,9 @@ import java.util.concurrent.TimeUnit;
  * @author TG Team
  *
  */
-public class PlatformTestServerModule extends BasicWebServerModule {
+public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
-    public PlatformTestServerModule(
+    public PlatformTestServerIocModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Properties props)
@@ -56,7 +55,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     protected void configure() {
         super.configure();
 
-        bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data in unit tests.");
+        bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hashing key, which is used to hash session data in unit tests.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
@@ -68,7 +67,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
     }
 
     @Override
-    protected void bindDomainCos(final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
+    protected void bindDomainCompanionObjects(final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
         //	bind(IWheelsetDao.class).to(WheelsetDao.class);
         //	bind(IWorkshopDao2.class).to(WorkshopDao2.class);
         //	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);
