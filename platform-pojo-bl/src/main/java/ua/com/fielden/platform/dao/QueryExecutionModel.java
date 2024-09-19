@@ -95,15 +95,6 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         logger.debug(this);
     }
 
-    /**
-     * A convenient copy method.
-     * 
-     * @return
-     */
-    public QueryExecutionModel<T, Q> copy() {
-        return new QueryExecutionModel<>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, this.lightweight);
-    }
-
     @Override
     public String toString() {
         return new StringBuilder()
