@@ -239,6 +239,12 @@ Polymer({
          * The icon style for insertion point
          */
         iconStyle: String,
+
+        /**
+         * Uppercased tag name for functional Entity Master [to be] loaded inside this insertion point.
+         * This information is early generated and can be accessed before the actual functional Entity Master was loaded into <tg-element-loader>.
+         */
+        functionalMasterTagName: String,
         
         /**
          * The title for insertion point
@@ -1130,7 +1136,7 @@ Polymer({
     },
 
     _generateKey: function (name) {
-        const extendedName = `${this.contextRetriever().miType}_${this._element && this._element.tagName}_${name}`;
+        const extendedName = `${this.contextRetriever().miType}_${this.functionalMasterTagName}_${name}`;
         return localStorageKey(extendedName);
     },
 

@@ -1021,7 +1021,7 @@ Polymer({
                       this._generateKey(BOTTOM_INSERTION_POINT_ORDER),
                       this._generateKey(RIGHT_INSERTION_POINT_ORDER)];
         containers.forEach((c, i) => {
-            const toSave = [...c.children].filter(child => child.tagName && child.tagName === 'TG-ENTITY-CENTRE-INSERTION-POINT').map(child => child.getAttribute("id"));
+            const toSave = [...c.children].filter(child => child.tagName && child.tagName === 'TG-ENTITY-CENTRE-INSERTION-POINT').map(child => child.functionalMasterTagName);
             localStorage.setItem(keys[i], JSON.stringify(toSave));
         });
     },
@@ -1045,7 +1045,7 @@ Polymer({
     _restoreOrderForContainer: function (container, ipOrder, ips) {
         let nextSibling = container.children[0];
         for (let ipIdx = ipOrder.length - 1; ipIdx >= 0; ipIdx--) {
-            const ipIdxToAdd = ips.findIndex(ip => ip.getAttribute("id") === ipOrder[ipIdx]);
+            const ipIdxToAdd = ips.findIndex(ip => ip.functionalMasterTagName === ipOrder[ipIdx]);
             if (ipIdxToAdd >= 0) {
                 container.insertBefore(ips[ipIdxToAdd], nextSibling);
                 nextSibling = ips[ipIdxToAdd];
