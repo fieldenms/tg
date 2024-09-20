@@ -346,3 +346,13 @@ const _userName = function () {
 export const localStorageKey = function (subject) {
     return `${_userName()}_${subject}`;
 };
+
+/**
+ * Returns generated key for local storage and specified subject to save and retrieve data.
+ *
+ * @param {String} subject - subject that should be appended to user name to create key for local storage data.
+ * @returns
+ */
+export const localStorageKeyForCentre = function (miType, subject) {
+    return localStorageKey(`${miType}_${subject}`);
+};

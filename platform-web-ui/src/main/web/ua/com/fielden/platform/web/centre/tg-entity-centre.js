@@ -12,7 +12,7 @@ import '/resources/centre/tg-selection-view.js';
 import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, localStorageKeyForCentre } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -1009,8 +1009,7 @@ Polymer({
     /********************************* Local storage related logic **************************************/
 
     _generateKey: function (name) {
-        const extendedName = `${this.miType}_${name}`;
-        return localStorageKey(extendedName);
+        return localStorageKeyForCentre(this.miType, `${name}`);
     },
 
     _saveInsertionPointOrder: function () {

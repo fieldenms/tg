@@ -30,7 +30,7 @@ import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-s
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
-import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKeyForCentre } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const ST = {
@@ -1137,9 +1137,13 @@ Polymer({
         }
     },
 
+    _generateKeyFor: function (miType, name) {
+        const extendedName = `${this.functionalMasterTagName}_${name}`;
+        return localStorageKeyForCentre(miType, extendedName);
+    },
+
     _generateKey: function (name) {
-        const extendedName = `${this.contextRetriever().miType}_${this.functionalMasterTagName}_${name}`;
-        return localStorageKey(extendedName);
+        return this._generateKeyFor(this.contextRetriever().miType, name);
     },
 
     _saveState: function (key, value) {
