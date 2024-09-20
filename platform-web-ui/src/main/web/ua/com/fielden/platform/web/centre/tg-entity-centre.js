@@ -23,20 +23,6 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
-/**
- * Constants related to insertion point for local storage keys.
- */
-const TOP_INSERTION_POINT_ORDER = 'topInsertionPointOrder';
-const LEFT_INSERTION_POINT_ORDER = 'leftInsertionPointOrder';
-const BOTTOM_INSERTION_POINT_ORDER = 'bottomInsertionPointOrder';
-const RIGHT_INSERTION_POINT_ORDER = 'rightInsertionPointOrder';
-/**
- * Constants related to splitters for local storage keys.
- */
-const LEFT_SPLITTER_POSITION = 'leftSplitterPosition';
-const ACTUAL_LEFT_SPLITTER_POSITION = 'actualLeftSplitterPosition';
-const RIGHT_SPLITTER_POSITION = 'rightSplitterPosition';
-const ACTUAL_RIGHT_SPLITTER_POSITION = 'actualRightSplitterPosition';
 const ST = {
     /**
      * Constants related to insertion point for local storage keys.
@@ -699,8 +685,6 @@ Polymer({
         const centreWidthWithoutSplitter = centreWidth - (this.rightInsertionPointPresent ? 2 : 1) * this.$.leftSplitter.offsetWidth;
         this.leftSplitterPosition = newWidth / centreWidthWithoutSplitter + "";
         this.$.leftInsertionPointContainer.style.width = `${newWidth / centreWidth * 100}%`;
-        localStorage.setItem(this._generateKey(LEFT_SPLITTER_POSITION), this.leftSplitterPosition);
-        localStorage.setItem(this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION), this.leftSplitterPosition);
         localStorage.setItem(this._generateKey(ST.LEFT_SPLITTER_POSITION), this.leftSplitterPosition);
         localStorage.setItem(this._generateKey(ST.ACTUAL_LEFT_SPLITTER_POSITION), this.leftSplitterPosition);
     },
