@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.test.server;
 
 import com.google.inject.Injector;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
@@ -35,7 +35,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             final ApplicationDomain appDomain = new ApplicationDomain();
             injector = new ApplicationInjectorFactory()
                     .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), props))
-                    .add(new NewUserNotifierMockBindingModule())
+                    .add(new NewUserEmailNotifierTestIocModule())
                     .add(new DataFilterTestIocModule())
                     .getInjector();
         } catch (final Exception e) {

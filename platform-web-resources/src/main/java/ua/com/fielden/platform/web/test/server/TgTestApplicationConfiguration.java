@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import com.google.inject.Injector;
 import org.restlet.Component;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.NewUserEmailNotifierBindingModule;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierIocModule;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.LoginCompleteResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginInitiateResetResourceFactory;
@@ -42,7 +42,7 @@ public class TgTestApplicationConfiguration extends Component {
             injector = new ApplicationInjectorFactory()
                     .add(module)
                     .add(new DataFilterTestIocModule())
-                    .add(new NewUserEmailNotifierBindingModule())
+                    .add(new NewUserEmailNotifierIocModule())
                     .getInjector();
 
             // create and configure REST server utility

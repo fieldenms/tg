@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.ioc.AbstractPlatformIocModule;
  * @author TG Team
  * 
  */
-public class LegacyConnectionModule extends AbstractPlatformIocModule {
+public class LegacyConnectionIocModule extends AbstractPlatformIocModule {
 
     private final Provider<? extends Connection> provider;
 
@@ -20,7 +20,7 @@ public class LegacyConnectionModule extends AbstractPlatformIocModule {
      * 
      * @param provider
      */
-    public LegacyConnectionModule(final Provider<Connection> provider) {
+    public LegacyConnectionIocModule(final Provider<Connection> provider) {
         this.provider = provider;
     }
 

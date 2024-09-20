@@ -7,12 +7,12 @@ import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.NewUserNotifierByEmail;
 
 /**
- * IoC module to bind {@link INewUserNotifier} to an email based notification implementation.
+ * IoC module to bind {@link INewUserNotifier} to an email-based notification implementation.
  * 
  * @author TG Team
  *
  */
-public class NewUserEmailNotifierBindingModule implements Module {
+public class NewUserEmailNotifierIocModule implements Module {
 
     @Override
     public void configure(Binder binder) {

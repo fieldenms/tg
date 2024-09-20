@@ -11,7 +11,7 @@ import ua.com.fielden.platform.security.user.INewUserNotifier;
  * @author TG Team
  *
  */
-public class NewUserNotifierMockBindingModule implements Module {
+public class NewUserEmailNotifierTestIocModule implements Module {
 
     @Override
     public void configure(Binder binder) {

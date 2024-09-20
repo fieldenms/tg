@@ -5,7 +5,7 @@ import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class CompanionInstantiationBenchmark {
 
         injector = new ApplicationInjectorFactory(Workflows.development)
                 .add(newBenchmarkModule(properties))
-                .add(new NewUserNotifierMockBindingModule())
+                .add(new NewUserEmailNotifierTestIocModule())
                 .getInjector();
 
         // Need to initialise singleton dependencies of companions. Can't enable eager singletons for the whole injector
