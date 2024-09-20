@@ -33,17 +33,19 @@ import '/resources/centre/tg-entity-centre-styles.js';
 import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
-const ST_MINIMISED = 'minimised';
-const ST_MAXIMISED = 'maximised';
-const ST_DETACHED_VIEW = 'detachedView';
+const ST = {
+    MINIMISED: 'minimised',
+    MAXIMISED: 'maximised',
+    DETACHED_VIEW: 'detachedView',
 
-const ST_DETACHED_VIEW_WIDTH = 'detachedWidth';
-const ST_DETACHED_VIEW_HEIGHT = 'detachedHeight';
-const ST_POS_X = "posX";
-const ST_POS_Y = "posY";
-const ST_ZORDER = "zOrder";
+    DETACHED_VIEW_WIDTH: 'detachedWidth',
+    DETACHED_VIEW_HEIGHT: 'detachedHeight',
+    POS_X: "posX",
+    POS_Y: "posY",
+    ZORDER: "zOrder",
 
-const ST_ATTACHED_HEIGHT = 'attachedHeight';
+    ATTACHED_HEIGHT: 'attachedHeight'
+};
 
 const INSERTION_POINT_MARGIN = 5;
 
@@ -434,8 +436,8 @@ Polymer({
     created: function () {
         // Initialise properties from tg-resizable-movable-behavior:
         this.minimumWidth = 60 /* reasonable minimum width of text */ + (8 * 2) /* padding left+right */ + (24 * 3) /* three buttons width */;
-        this.persistSize = () => this._savePair(ST_DETACHED_VIEW_WIDTH, this.style.width, ST_DETACHED_VIEW_HEIGHT, this.style.height);
-        this.persistPosition = () => this._savePair(ST_POS_X, this.style.left, ST_POS_Y, this.style.top);
+        this.persistSize = () => this._savePair(ST.DETACHED_VIEW_WIDTH, this.style.width, ST.DETACHED_VIEW_HEIGHT, this.style.height);
+        this.persistPosition = () => this._savePair(ST.POS_X, this.style.left, ST.POS_Y, this.style.top);
         this.allowMove = () => this._titleBarDraggable !== 'true' && !this.maximised && this.detachedView;
     },
 
@@ -738,7 +740,7 @@ Polymer({
 
         if (elementHeight !== newHeight) {
             this.style.height = newHeight + 'px';
-            this._saveProp(ST_ATTACHED_HEIGHT, this.style.height);
+            this._saveProp(ST.ATTACHED_HEIGHT, this.style.height);
             this.notifyResize();
             if (mousePos.y >= scrollingContainer.offsetHeight || mousePos.y < 0) {
                 // If the mouse pointer is above or below the scrolling container then perform scrolling (the scrolling distance should be equal to a change of the insertion point height).
@@ -773,10 +775,10 @@ Polymer({
     setZOrder: function (zOrder) {
         if (zOrder <= 0 ) {
             this.style.removeProperty("z-index");
-            this._removeProp(ST_ZORDER);
+            this._removeProp(ST.ZORDER);
         } else {
             this.style.zIndex = zOrder;
-            this._saveProp(ST_ZORDER, this.style.zIndex);
+            this._saveProp(ST.ZORDER, this.style.zIndex);
         }
     },
 
@@ -829,7 +831,7 @@ Polymer({
             }
             this._setDimension();
             this._setPosition();
-            this._saveState(ST_MAXIMISED, this.maximised);
+            this._saveState(ST.MAXIMISED, this.maximised);
         }
     },
 
@@ -838,7 +840,7 @@ Polymer({
      */
     _makeDetached: function () {
         this._preferredSize = this._preferredSize || this._getPrefDimForDetachedView();
-        const zOrder = this._getProp(ST_ZORDER);
+        const zOrder = this._getProp(ST.ZORDER);
         if (zOrder) {
             this.contextRetriever().insertionPointManager.add(this, +zOrder);
         } else {
@@ -886,7 +888,7 @@ Polymer({
     _minimisedChanged: function (newValue) {
         if (this.contextRetriever) {
             this._setDimension();
-            this._saveState(ST_MINIMISED, this.minimised);
+            this._saveState(ST.MINIMISED, this.minimised);
         }
     },
 
@@ -917,7 +919,7 @@ Polymer({
             }
             this._setDimension();
             this._setPosition();
-            this._saveState(ST_DETACHED_VIEW, this.detachedView);
+            this._saveState(ST.DETACHED_VIEW, this.detachedView);
         }
     },
 
@@ -967,7 +969,7 @@ Polymer({
         this.style.removeProperty('margin');
         this.$.insertionPointBody.style.removeProperty("min-width");
         if (this.detachedView) {
-            let dimToApply = this._getPair(ST_DETACHED_VIEW_WIDTH, ST_DETACHED_VIEW_HEIGHT);
+            let dimToApply = this._getPair(ST.DETACHED_VIEW_WIDTH, ST.DETACHED_VIEW_HEIGHT);
             if (!dimToApply) {
                 dimToApply = this._preferredSize;
             }
@@ -986,7 +988,7 @@ Polymer({
                 this.style.width = '100%';
                 this.style.height = '100%';
             } else {
-                const heightToApply = this._getProp(ST_ATTACHED_HEIGHT);
+                const heightToApply = this._getProp(ST.ATTACHED_HEIGHT);
                 const prefDim = this._getPrefDim();
                 if (!this.minimised && !this.maximised) {
                     this.style.margin = `${INSERTION_POINT_MARGIN}px ${2 * INSERTION_POINT_MARGIN}px`;
@@ -1014,7 +1016,7 @@ Polymer({
         if (this.detachedView) {
             this.style.position = "fixed";
             if (!this.maximised) {
-                let posToApply = this._getPair(ST_POS_X, ST_POS_Y);
+                let posToApply = this._getPair(ST.POS_X, ST.POS_Y);
                 if (posToApply) {
                     this.style.left = posToApply[0];
                     this.style.top = posToApply[1];
@@ -1117,7 +1119,7 @@ Polymer({
         const prefDim = this._getPrefDim();
         if (prefDim) {
             prefDim[0] = (this.parentElement.offsetWidth - INSERTION_POINT_MARGIN * 2) + 'px';
-            prefDim[1] = this._getProp(ST_ATTACHED_HEIGHT) || prefDim[1];
+            prefDim[1] = this._getProp(ST.ATTACHED_HEIGHT) || prefDim[1];
         }
         return prefDim;
     },
@@ -1129,9 +1131,9 @@ Polymer({
     /********************************* Local storage related functions ********************************/
     _restoreFromLocalStorage: function(_element, contextRetriever) {
         if (_element && contextRetriever) {
-            this.minimised = !!this._getProp(ST_MINIMISED);
-            this.maximised = !!this._getProp(ST_MAXIMISED);
-            this.detachedView = !!this._getProp(ST_DETACHED_VIEW);
+            this.minimised = !!this._getProp(ST.MINIMISED);
+            this.maximised = !!this._getProp(ST.MAXIMISED);
+            this.detachedView = !!this._getProp(ST.DETACHED_VIEW);
         }
     },
 
@@ -1180,12 +1182,12 @@ Polymer({
     _clearLocalStorage: function (event) {
         if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
             if (this.detachedView) {
-                this._removeProp(ST_DETACHED_VIEW_WIDTH);
-                this._removeProp(ST_DETACHED_VIEW_HEIGHT);
-                this._removeProp(ST_POS_X);
-                this._removeProp(ST_POS_Y);
+                this._removeProp(ST.DETACHED_VIEW_WIDTH);
+                this._removeProp(ST.DETACHED_VIEW_HEIGHT);
+                this._removeProp(ST.POS_X);
+                this._removeProp(ST.POS_Y);
             } else {
-                this._removeProp(ST_ATTACHED_HEIGHT);
+                this._removeProp(ST.ATTACHED_HEIGHT);
             }
             this._setDimension();
             this._setPosition();

@@ -37,6 +37,22 @@ const LEFT_SPLITTER_POSITION = 'leftSplitterPosition';
 const ACTUAL_LEFT_SPLITTER_POSITION = 'actualLeftSplitterPosition';
 const RIGHT_SPLITTER_POSITION = 'rightSplitterPosition';
 const ACTUAL_RIGHT_SPLITTER_POSITION = 'actualRightSplitterPosition';
+const ST = {
+    /**
+     * Constants related to insertion point for local storage keys.
+     */
+    TOP_INSERTION_POINT_ORDER: 'topInsertionPointOrder',
+    LEFT_INSERTION_POINT_ORDER: 'leftInsertionPointOrder',
+    BOTTOM_INSERTION_POINT_ORDER: 'bottomInsertionPointOrder',
+    RIGHT_INSERTION_POINT_ORDER: 'rightInsertionPointOrder',
+    /**
+     * Constants related to splitters for local storage keys.
+     */
+    LEFT_SPLITTER_POSITION: 'leftSplitterPosition',
+    ACTUAL_LEFT_SPLITTER_POSITION: 'actualLeftSplitterPosition',
+    RIGHT_SPLITTER_POSITION: 'rightSplitterPosition',
+    ACTUAL_RIGHT_SPLITTER_POSITION: 'actualRightSplitterPosition'
+};
 
 /**
  * Initial save of splitter position and actual splitter position. Also updates the width style of insertion point container to make it's width flexible.
@@ -487,12 +503,12 @@ Polymer({
             const centreWidthWithoutSplitter = centreWidth - splitterCounter * splitterWidth;
 
             if (this.leftInsertionPointPresent) {
-                this.leftSplitterPosition = initSplitter(this.leftSplitterPosition, this._generateKey(LEFT_SPLITTER_POSITION), this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION),
+                this.leftSplitterPosition = initSplitter(this.leftSplitterPosition, this._generateKey(ST.LEFT_SPLITTER_POSITION), this._generateKey(ST.ACTUAL_LEFT_SPLITTER_POSITION),
                                                             this.$.leftInsertionPointContainer, centreWidth, centreWidthWithoutSplitter);
             }
 
             if (this.rightInsertionPointPresent) {
-                this.rightSplitterPosition = initSplitter(this.rightSplitterPosition, this._generateKey(RIGHT_SPLITTER_POSITION), this._generateKey(ACTUAL_RIGHT_SPLITTER_POSITION),
+                this.rightSplitterPosition = initSplitter(this.rightSplitterPosition, this._generateKey(ST.RIGHT_SPLITTER_POSITION), this._generateKey(ST.ACTUAL_RIGHT_SPLITTER_POSITION),
                                                             this.$.rightInsertionPointContainer, centreWidth, centreWidthWithoutSplitter);
             }
             this._notifyDescendantResize();
@@ -586,13 +602,13 @@ Polymer({
     _expandLeftInsertionPoint: function () {
         this._expandContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, this.rightInsertionPointPresent, 
             this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer,
-            this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION), this._generateKey(ACTUAL_RIGHT_SPLITTER_POSITION));
+            this._generateKey(ST.ACTUAL_LEFT_SPLITTER_POSITION), this._generateKey(ST.ACTUAL_RIGHT_SPLITTER_POSITION));
     },
 
     _expandRightInsertionPoint: function () {
         this._expandContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, this.leftInsertionPointPresent, 
             this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer,
-            this._generateKey(ACTUAL_RIGHT_SPLITTER_POSITION), this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION));
+            this._generateKey(ST.ACTUAL_RIGHT_SPLITTER_POSITION), this._generateKey(ST.ACTUAL_LEFT_SPLITTER_POSITION));
     },
 
     _expandContainer: function (splitterPosition, altSplitterPosition, splitterWidth, 
@@ -614,12 +630,12 @@ Polymer({
 
     _collapseLeftInsertionPoint: function () {
         this._collapseContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, this.rightInsertionPointPresent, 
-            this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer, this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION));
+            this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer, this._generateKey(ST.ACTUAL_LEFT_SPLITTER_POSITION));
     },
 
     _collapseRightInsertionPoint: function () {
         this._collapseContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, this.leftInsertionPointPresent, 
-            this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer, this._generateKey(ACTUAL_RIGHT_SPLITTER_POSITION));
+            this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer, this._generateKey(ST.ACTUAL_RIGHT_SPLITTER_POSITION));
     },
 
     _collapseContainer: function (splitterPosition, altSplitterPosition, splitterWidth, altInsertionPointPresent, 
@@ -685,6 +701,8 @@ Polymer({
         this.$.leftInsertionPointContainer.style.width = `${newWidth / centreWidth * 100}%`;
         localStorage.setItem(this._generateKey(LEFT_SPLITTER_POSITION), this.leftSplitterPosition);
         localStorage.setItem(this._generateKey(ACTUAL_LEFT_SPLITTER_POSITION), this.leftSplitterPosition);
+        localStorage.setItem(this._generateKey(ST.LEFT_SPLITTER_POSITION), this.leftSplitterPosition);
+        localStorage.setItem(this._generateKey(ST.ACTUAL_LEFT_SPLITTER_POSITION), this.leftSplitterPosition);
     },
 
     _rightInsertionPointContainerUpdater: function (newPos) {
@@ -698,8 +716,8 @@ Polymer({
         const centreWidthWithoutSplitter = centreWidth - (this.leftInsertionPointPresent ? 2 : 1) * this.$.rightSplitter.offsetWidth;
         this.rightSplitterPosition = newWidth / centreWidthWithoutSplitter + "";
         this.$.rightInsertionPointContainer.style.width = `${newWidth / centreWidth * 100}%`;
-        localStorage.setItem(this._generateKey(RIGHT_SPLITTER_POSITION), this.rightSplitterPosition);
-        localStorage.setItem(this._generateKey(ACTUAL_RIGHT_SPLITTER_POSITION), this.rightSplitterPosition);
+        localStorage.setItem(this._generateKey(ST.RIGHT_SPLITTER_POSITION), this.rightSplitterPosition);
+        localStorage.setItem(this._generateKey(ST.ACTUAL_RIGHT_SPLITTER_POSITION), this.rightSplitterPosition);
     },
 
     _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier, splitterPositionUpdater) {
@@ -1016,10 +1034,10 @@ Polymer({
                             this.$.leftInsertionPointContent.assignedNodes()[0],
                             this.$.bottomInsertionPointContent.assignedNodes()[0],
                             this.$.rightInsertionPointContent.assignedNodes()[0]];
-        const keys = [this._generateKey(TOP_INSERTION_POINT_ORDER),
-                      this._generateKey(LEFT_INSERTION_POINT_ORDER),
-                      this._generateKey(BOTTOM_INSERTION_POINT_ORDER),
-                      this._generateKey(RIGHT_INSERTION_POINT_ORDER)];
+        const keys = [this._generateKey(ST.TOP_INSERTION_POINT_ORDER),
+                      this._generateKey(ST.LEFT_INSERTION_POINT_ORDER),
+                      this._generateKey(ST.BOTTOM_INSERTION_POINT_ORDER),
+                      this._generateKey(ST.RIGHT_INSERTION_POINT_ORDER)];
         containers.forEach((c, i) => {
             const toSave = [...c.children].filter(child => child.tagName && child.tagName === 'TG-ENTITY-CENTRE-INSERTION-POINT').map(child => child.functionalMasterTagName);
             localStorage.setItem(keys[i], JSON.stringify(toSave));
@@ -1031,10 +1049,10 @@ Polymer({
                             this.$.leftInsertionPointContent.assignedNodes()[0],
                             this.$.bottomInsertionPointContent.assignedNodes()[0],
                             this.$.rightInsertionPointContent.assignedNodes()[0]];
-        const keys = [this._generateKey(TOP_INSERTION_POINT_ORDER),
-                      this._generateKey(LEFT_INSERTION_POINT_ORDER),
-                      this._generateKey(BOTTOM_INSERTION_POINT_ORDER),
-                      this._generateKey(RIGHT_INSERTION_POINT_ORDER)];
+        const keys = [this._generateKey(ST.TOP_INSERTION_POINT_ORDER),
+                      this._generateKey(ST.LEFT_INSERTION_POINT_ORDER),
+                      this._generateKey(ST.BOTTOM_INSERTION_POINT_ORDER),
+                      this._generateKey(ST.RIGHT_INSERTION_POINT_ORDER)];
         const ips = [...this.querySelectorAll("tg-entity-centre-insertion-point")];
         keys.forEach((key, i) => {
             const ipOrder = JSON.parse(localStorage.getItem(key) || "[]");
