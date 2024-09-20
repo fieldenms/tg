@@ -1198,5 +1198,12 @@ Polymer({
         }
     },
 
+    /**
+     * Resets all custom settings for this insertion point to default.
+     */
+    resetCustomSettings: function (miType) {
+        Object.values(ST).forEach(val => localStorage.removeItem(this._generateKeyFor(miType, val)));
+    }
+
     /********************************************************************************************/
 });

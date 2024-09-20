@@ -1037,10 +1037,22 @@ Polymer({
                       this._generateKey(ST.BOTTOM_INSERTION_POINT_ORDER),
                       this._generateKey(ST.RIGHT_INSERTION_POINT_ORDER)];
         const ips = [...this.querySelectorAll("tg-entity-centre-insertion-point")];
-        keys.forEach((key, i) => {
-            const ipOrder = JSON.parse(localStorage.getItem(key) || "[]");
-            this._restoreOrderForContainer(containers[i], ipOrder, ips);
-        });
+        const ipOrders = keys.map(key => JSON.parse(localStorage.getItem(key) || "[]"));
+        if (new Set(ipOrders.flat()).isSubsetOf(new Set(ips.map(ip => ip.functionalMasterTagName)))) { // all previously persisted insertion points in custom layout still exist in Centre DSL list of IPs
+            keys.forEach((key, i) => {
+                this._restoreOrderForContainer(containers[i], ipOrders[i], ips);
+            });
+        } else { // some IP(s) has disappeared from Centre DSL -- fallback to the layout as per Centre DSL
+            ips.forEach(ip => ip.resetCustomSettings(this.miType)); // remove all settings from each and every insertion points first
+            this.resetCustomSettingsForInsertionPoints(); // then remove all IP orders from each container and splitter positions too
+        }
+    },
+
+    /**
+     * Resets all custom insertion point settings for this entity centre to default.
+     */
+    resetCustomSettingsForInsertionPoints: function() {
+        Object.values(ST).forEach(val => localStorage.removeItem(this._generateKey(val)));
     },
 
     _restoreOrderForContainer: function (container, ipOrder, ips) {
