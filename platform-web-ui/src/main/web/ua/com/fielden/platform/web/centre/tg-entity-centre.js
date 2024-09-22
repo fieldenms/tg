@@ -16,6 +16,7 @@ import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp
 import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { resetCustomSettings } from '/resources/centre/tg-entity-centre-insertion-point.js';
 
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
@@ -1037,12 +1038,14 @@ Polymer({
                       this._generateKey(ST.RIGHT_INSERTION_POINT_ORDER)];
         const ips = [...this.querySelectorAll("tg-entity-centre-insertion-point")];
         const ipOrders = keys.map(key => JSON.parse(localStorage.getItem(key) || "[]"));
-        if (new Set(ipOrders.flat()).isSubsetOf(new Set(ips.map(ip => ip.functionalMasterTagName)))) { // all previously persisted insertion points in custom layout still exist in Centre DSL list of IPs
+        const removedIps = new Set(ipOrders.flat()).difference(new Set(ips.map(ip => ip.functionalMasterTagName)));
+        if (removedIps.size === 0) { // all previously persisted insertion points in custom layout still exist in Centre DSL list of IPs
             keys.forEach((key, i) => {
                 this._restoreOrderForContainer(containers[i], ipOrders[i], ips);
             });
         } else { // some IP(s) has disappeared from Centre DSL -- fallback to the layout as per Centre DSL
-            ips.forEach(ip => ip.resetCustomSettings(this.miType)); // remove all settings from each and every insertion points first; ip contextRetriever() is not bound yet, so need to use this.miType explicitly
+            ips.forEach(ip => resetCustomSettings(this.miType, ip.functionalMasterTagName)); // remove all settings from each and every insertion points first; ip contextRetriever() is not bound yet, so need to use this.miType explicitly
+            removedIps.forEach(tagName => resetCustomSettings(this.miType, tagName)); // remove all settings (this user only) from IP(s), that has disappeared from Centre DSL
             this.resetCustomSettingsForInsertionPoints(); // then remove all IP orders from each container and splitter positions too
         }
     },

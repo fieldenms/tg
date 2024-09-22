@@ -50,6 +50,23 @@ const ST = {
     ATTACHED_HEIGHT: 'attachedHeight'
 };
 
+/**
+ * Generates local storage key for the specified 'miType', 'functionalMasterTagName' and 'subject'.
+ */
+const _generateKeyFor = function (miType, functionalMasterTagName, subject) {
+    return localStorageKeyForCentre(miType, `${functionalMasterTagName}_${subject}`);
+};
+
+/**
+ * Resets all custom settings for insertion point to default.
+ *
+ * @param miType - menu item type of the parent entity centre for insertion point
+ * @param functionalMasterTagName - uppercased tag name for functional entity master loaded inside insertion point
+ */
+export const resetCustomSettings = function (miType, functionalMasterTagName) {
+    Object.values(ST).forEach(val => localStorage.removeItem(_generateKeyFor(miType, functionalMasterTagName, val)));
+};
+
 const INSERTION_POINT_MARGIN = 5;
 
 const template = html`
@@ -1140,16 +1157,8 @@ Polymer({
         }
     },
 
-    /**
-     * Generates local storage key for the specified 'miType' and 'name'.
-     * This method can be useful at times when 'this.contextRetriever()' (parent entity centre) was not yet bound.
-     */
-    _generateKeyFor: function (miType, name) {
-        return localStorageKeyForCentre(miType, `${this.functionalMasterTagName}_${name}`);
-    },
-
     _generateKey: function (name) {
-        return this._generateKeyFor(this.contextRetriever().miType, name);
+        return _generateKeyFor(this.contextRetriever().miType, this.functionalMasterTagName, name);
     },
 
     _saveState: function (key, value) {
@@ -1202,16 +1211,6 @@ Polymer({
             this._setDimension();
             this._setPosition();
         }
-    },
-
-    /**
-     * Resets all custom settings for this insertion point to default.
-     * This method uses 'miType' param because 'this.contextRetriever()' (parent entity centre) may not be bound yet.
-     *
-     * @param miType - menu item type of the parent entity centre
-     */
-    resetCustomSettings: function (miType) {
-        Object.values(ST).forEach(val => localStorage.removeItem(this._generateKeyFor(miType, val)));
     }
 
     /********************************************************************************************/
