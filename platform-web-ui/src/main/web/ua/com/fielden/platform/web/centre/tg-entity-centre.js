@@ -23,17 +23,16 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
+/**
+ * Local storage keys for entity centre's custom user-driven states.
+ */
 const ST = {
-    /**
-     * Constants related to insertion point for local storage keys.
-     */
+    // Constants related to insertion point custom order in each container:
     TOP_INSERTION_POINT_ORDER: 'topInsertionPointOrder',
     LEFT_INSERTION_POINT_ORDER: 'leftInsertionPointOrder',
     BOTTOM_INSERTION_POINT_ORDER: 'bottomInsertionPointOrder',
     RIGHT_INSERTION_POINT_ORDER: 'rightInsertionPointOrder',
-    /**
-     * Constants related to splitters for local storage keys.
-     */
+    // Constants related to insertion point splitter positions:
     LEFT_SPLITTER_POSITION: 'leftSplitterPosition',
     ACTUAL_LEFT_SPLITTER_POSITION: 'actualLeftSplitterPosition',
     RIGHT_SPLITTER_POSITION: 'rightSplitterPosition',
@@ -1043,7 +1042,7 @@ Polymer({
                 this._restoreOrderForContainer(containers[i], ipOrders[i], ips);
             });
         } else { // some IP(s) has disappeared from Centre DSL -- fallback to the layout as per Centre DSL
-            ips.forEach(ip => ip.resetCustomSettings(this.miType)); // remove all settings from each and every insertion points first
+            ips.forEach(ip => ip.resetCustomSettings(this.miType)); // remove all settings from each and every insertion points first; ip contextRetriever() is not bound yet, so need to use this.miType explicitly
             this.resetCustomSettingsForInsertionPoints(); // then remove all IP orders from each container and splitter positions too
         }
     },

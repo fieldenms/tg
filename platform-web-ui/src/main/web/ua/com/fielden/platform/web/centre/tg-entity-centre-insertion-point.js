@@ -33,6 +33,9 @@ import '/resources/centre/tg-entity-centre-styles.js';
 import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKeyForCentre } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
+/**
+ * Local storage keys for insertion point's custom user-driven states.
+ */
 const ST = {
     MINIMISED: 'minimised',
     MAXIMISED: 'maximised',
@@ -1137,9 +1140,12 @@ Polymer({
         }
     },
 
+    /**
+     * Generates local storage key for the specified 'miType' and 'name'.
+     * This method can be useful at times when 'this.contextRetriever()' (parent entity centre) was not yet bound.
+     */
     _generateKeyFor: function (miType, name) {
-        const extendedName = `${this.functionalMasterTagName}_${name}`;
-        return localStorageKeyForCentre(miType, extendedName);
+        return localStorageKeyForCentre(miType, `${this.functionalMasterTagName}_${name}`);
     },
 
     _generateKey: function (name) {
@@ -1200,6 +1206,9 @@ Polymer({
 
     /**
      * Resets all custom settings for this insertion point to default.
+     * This method uses 'miType' param because 'this.contextRetriever()' (parent entity centre) may not be bound yet.
+     *
+     * @param miType - menu item type of the parent entity centre
      */
     resetCustomSettings: function (miType) {
         Object.values(ST).forEach(val => localStorage.removeItem(this._generateKeyFor(miType, val)));

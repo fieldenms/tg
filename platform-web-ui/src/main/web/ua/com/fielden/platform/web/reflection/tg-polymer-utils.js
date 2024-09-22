@@ -338,20 +338,19 @@ const _userName = function () {
 };
 
 /**
- * Returns generated key for local storage and specified subject to save and retrieve data.
+ * Returns generated key for local storage to save and retrieve data.
  * 
- * @param {String} subject - subject that should be appended to user name to create key for local storage data.
- * @returns 
+ * @param {String} subject - subject that identifies concrete type of custom data to be persisted (e.g. *_...Person_1920x1200_height, *_...MiWorkBoardMain_leftSplitterPosition etc.)
  */
 export const localStorageKey = function (subject) {
     return `${_userName()}_${subject}`;
 };
 
 /**
- * Returns generated key for local storage and specified subject to save and retrieve data.
+ * Returns entity centre generated key for local storage to save and retrieve data.
  *
- * @param {String} subject - subject that should be appended to user name to create key for local storage data.
- * @returns
+ * @param {String} miType - menu item type of the centre
+ * @param {String} subject - subject that identifies concrete type of custom data to be persisted (e.g. *_...MiWorkBoardMain_topInsertionPointOrder, *_...MiWorkBoardMain_leftSplitterPosition etc.)
  */
 export const localStorageKeyForCentre = function (miType, subject) {
     return localStorageKey(`${miType}_${subject}`);
