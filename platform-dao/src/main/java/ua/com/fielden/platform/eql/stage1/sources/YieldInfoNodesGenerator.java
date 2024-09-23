@@ -16,6 +16,30 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 
+/**
+ * Transforms yields from multiple source queries into <i>yield trees</i>.
+ * <p>
+ * Example:
+ * <pre>
+ * yield(...).as("model.key")
+ * yield(...).as("model.id")
+ * yield(...).as("person")
+ * yield(...).as("person.id")
+ * yield(...).as("cost")
+ *
+ *            key
+ *          /
+ * 1. model
+ *          \
+ *            id
+ *
+ * 2. person
+ *           \
+ *             id
+ *
+ * 3. cost
+ * </pre>
+ */
 public class YieldInfoNodesGenerator {
 
     private YieldInfoNodesGenerator() {}
@@ -54,12 +78,7 @@ public class YieldInfoNodesGenerator {
     }
 
     private static boolean determineNonnullability(final List<YieldAndConditions> yieldVariants) {
-        for (final YieldAndConditions yield : yieldVariants) {
-            if (!determineNonnullability(yield)) {
-                return false;
-            }
-        }
-        return true;
+        return yieldVariants.stream().allMatch(YieldInfoNodesGenerator::determineNonnullability);
     }
 
     private static PropType determinePropType(final List<YieldAndConditions> yieldVariants) {

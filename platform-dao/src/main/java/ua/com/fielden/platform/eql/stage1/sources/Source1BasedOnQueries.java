@@ -64,8 +64,15 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
         return new Source2BasedOnQueries(transformedQueries, alias, id, ei, isSyntheticEntity, true, context.isForCalcProp);
     }
 
-    public static <T extends AbstractEntity<?>> QuerySourceInfo<T> produceQuerySourceInfoForEntityType(final QuerySourceInfoProvider querySourceInfoProvider, final List<SourceQuery2> models, final Class<T> sourceType, final boolean isComprehensive) {
-        final SortedMap<String, AbstractQuerySourceItem<?>> declaredProps = EntityAggregates.class.equals(sourceType) ? emptySortedMap() : querySourceInfoProvider.getDeclaredQuerySourceInfo(sourceType).getProps();
+    public static <T extends AbstractEntity<?>> QuerySourceInfo<T> produceQuerySourceInfoForEntityType(
+            final QuerySourceInfoProvider querySourceInfoProvider,
+            final List<SourceQuery2> models,
+            final Class<T> sourceType,
+            final boolean isComprehensive)
+    {
+        final Map<String, AbstractQuerySourceItem<?>> declaredProps = EntityAggregates.class == sourceType
+                ? emptySortedMap()
+                : querySourceInfoProvider.getDeclaredQuerySourceInfo(sourceType).getProps();
         final Collection<YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(models);
         final Map<String, AbstractQuerySourceItem<?>> createdProps = new HashMap<>();
         for (final YieldInfoNode yield : yieldInfoNodes) {
