@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.security.interception;
 
-import ua.com.fielden.platform.entity.ioc.AbstractPlatformIocModule;
+import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.ioc.AuthorisationIocModule;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 

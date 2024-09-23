@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.query.generation.ioc;
 
 import com.google.inject.name.Names;
 
-import ua.com.fielden.platform.entity.ioc.AbstractPlatformIocModule;
+import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.utils.DefaultDates;
 import ua.com.fielden.platform.utils.DefaultUniversalConstants;
 import ua.com.fielden.platform.utils.IDates;

@@ -42,8 +42,8 @@ import ua.com.fielden.platform.utils.Pair;
  * It is designed to be sub-typed in order to implement abstract methods, which are introduced here and are more of an infrastructural nature.
  * <p>
  * The main purpose to have this class extended, is to enable correct DB session association with instances of {@link IPage} that are produced by various pagination API methods.
- * These pages have the ability to move between next or previous pages, thus, requiring a DB session. 
- * However, by themselves neither page instances nor this class are session-enabled.
+ * These pages can move between next or previous pages, thus, requiring a DB session.
+ * However, by themselves, neither page instances nor this class are session-enabled.
  * So, this class should be sub-typed with a type that implements {@link ISessionEnabled}.     
  * 
  * @author TG Team
@@ -54,7 +54,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     public static final String ERR_MISSING_ID_VALUE = "Argument [id] must have a value to find an instance of [%s].";
 
     ///////////////////////////////////////////////////////////
-    ////////////// infrastructural methods ////////////////////
+    ////////////// Infrastructural methods ////////////////////
     ///////////////////////////////////////////////////////////
 
     protected abstract Session getSession();
@@ -101,7 +101,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         } catch (final EntityCompanionException e) {
             throw e;
         } catch (final Exception e) {
-            throw new EntityCompanionException(format("Could not find and fetch by key an entity of type [%s].", getEntityType().getName()), e);
+            throw new EntityCompanionException("Could not find and fetch by key an entity of type [%s].".formatted(getEntityType().getName()), e);
         }
     }
 
@@ -268,7 +268,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     }
 
     /**
-     * Calculates the number of pages of the given size required to fit the whole result set.
+     * Calculates the number of pages with a given size, needed to fit all records in a result set.
      *
      *
      * @param model

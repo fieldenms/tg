@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.ioc;
+package ua.com.fielden.platform.ioc;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;

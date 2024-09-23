@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.ioc.EntityIocModule;
+import ua.com.fielden.platform.ioc.EntityIocModule;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;

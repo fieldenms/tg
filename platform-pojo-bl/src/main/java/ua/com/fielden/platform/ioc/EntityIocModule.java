@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.ioc;
+package ua.com.fielden.platform.ioc;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
