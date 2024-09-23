@@ -17,13 +17,11 @@ import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.DataForProp3;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.TreeResultBySources;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class TransformationContextFromStage2To3 {
 
     private final TreeResultBySources treeResultBySources;
-    private final IDomainMetadata domainMetadata;
     private final EqlTables eqlTables;
     private final Map<Integer, ISource3> sourcesByIds = new HashMap<>();
     private final Map<String, Object> sqlParamValuesByNames = new HashMap<>();
@@ -31,19 +29,17 @@ public class TransformationContextFromStage2To3 {
     public final int sqlId;
     private final int paramId; //incremented after each new param name generation
 
-    public TransformationContextFromStage2To3(final TreeResultBySources treeResultBySources, final IDomainMetadata domainMetadata, final EqlTables eqlTables) {
-        this(treeResultBySources, domainMetadata, eqlTables, emptyMap(), emptyMap(), emptyMap(), 0, 1);
+    public TransformationContextFromStage2To3(final TreeResultBySources treeResultBySources, final EqlTables eqlTables) {
+        this(treeResultBySources, eqlTables, emptyMap(), emptyMap(), emptyMap(), 0, 1);
     }
 
     private TransformationContextFromStage2To3(final TreeResultBySources treeResultBySources,
-                                               final IDomainMetadata domainMetadata,
                                                final EqlTables eqlTables,
                                                final Map<Integer, ISource3> sourcesByIds,
                                                final Map<String, Object> sqlParamValuesByNames,
                                                final Map<Object, String> sqlParamNamesByValues,
                                                final int sqlId, final int paramId) {
         this.treeResultBySources = treeResultBySources;
-        this.domainMetadata = domainMetadata;
         this.eqlTables = eqlTables;
         this.sourcesByIds.putAll(sourcesByIds);
         this.sqlParamValuesByNames.putAll(sqlParamValuesByNames);
@@ -67,7 +63,7 @@ public class TransformationContextFromStage2To3 {
         } else {
             final String paramName = "P_" + paramId;
             final TransformationContextFromStage2To3 result = new TransformationContextFromStage2To3(
-                    treeResultBySources, domainMetadata, eqlTables, sourcesByIds, sqlParamValuesByNames,
+                    treeResultBySources, eqlTables, sourcesByIds, sqlParamValuesByNames,
                     sqlParamNamesByValues, sqlId, paramId + 1);
             result.sqlParamValuesByNames.put(paramName, paramValue);
             result.sqlParamNamesByValues.put(paramValue, paramName);
@@ -84,13 +80,13 @@ public class TransformationContextFromStage2To3 {
 
     public TransformationContextFromStage2To3 cloneWithNextSqlId() {
         return new TransformationContextFromStage2To3(
-                treeResultBySources, domainMetadata, eqlTables, sourcesByIds, sqlParamValuesByNames,
+                treeResultBySources, eqlTables, sourcesByIds, sqlParamValuesByNames,
                 sqlParamNamesByValues, sqlId + 1, paramId);
     }
 
     public TransformationContextFromStage2To3 cloneWithSource(final ISource3 source) {
         final TransformationContextFromStage2To3 result = new TransformationContextFromStage2To3(
-                treeResultBySources, domainMetadata, eqlTables, sourcesByIds, sqlParamValuesByNames,
+                treeResultBySources, eqlTables, sourcesByIds, sqlParamValuesByNames,
                 sqlParamNamesByValues, sqlId, paramId);
         result.sourcesByIds.put(source.id(), source);
         return result;

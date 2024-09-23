@@ -53,7 +53,6 @@ public class EqlQueryTransformer {
             final IFilter filter,
             final Optional<String> username,
             final IDates dates,
-            final IDomainMetadata domainMetadata,
             final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider)
     {
@@ -64,8 +63,7 @@ public class EqlQueryTransformer {
         final ResultQuery2 query2 = query1.transform(context1);
 
         final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, gen);
-        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()),
-                                                                    domainMetadata, eqlTables);
+        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlTables);
         return query2.transform(context2);
     }
 
@@ -75,7 +73,7 @@ public class EqlQueryTransformer {
             final EqlTables eqlTables, final QuerySourceInfoProvider querySourceInfoProvider)
     {
         final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates,
-                                                                             domainMetadata, eqlTables, querySourceInfoProvider);
+                                                                             eqlTables, querySourceInfoProvider);
         final ResultQuery3 entQuery3 = tr.item;
         final String sql = entQuery3.sql(domainMetadata, dbVersion);
         return new QueryModelResult<E>((Class<E>) entQuery3.resultType, sql, getYieldedColumns(entQuery3.yields), tr.updatedContext.getSqlParamValues(), qem.fetchModel);

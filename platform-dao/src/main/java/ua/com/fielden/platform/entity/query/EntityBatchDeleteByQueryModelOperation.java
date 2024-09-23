@@ -74,7 +74,7 @@ public class EntityBatchDeleteByQueryModelOperation {
         final String tableName = eqlTables.getTableForEntityType(model.getResultType()).name();
         final TransformationResultFromStage2To3<ResultQuery3> s2tr = transform(
                 new QueryProcessingModel(finalModel, null, null, paramValues, true),
-                null, empty(), dates, domainMetadata, eqlTables, querySourceInfoProvider);
+                null, empty(), dates, eqlTables, querySourceInfoProvider);
         final ResultQuery3 entQuery3 = s2tr.item;
         final String selectionSql = entQuery3.sql(domainMetadata, dbVersionProvider.dbVersion());
         final String deletionSql = produceDeletionSql(selectionSql, tableName, dbVersionProvider.dbVersion());
