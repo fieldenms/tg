@@ -59,7 +59,7 @@ public class EntityBatchInsertOperation {
         this.trExecSupplier = trExecSupplier;
     }
 
-    interface Factory {
+    public interface Factory {
         EntityBatchInsertOperation create(final Supplier<TransactionalExecution> trExecSupplier);
     }
 
