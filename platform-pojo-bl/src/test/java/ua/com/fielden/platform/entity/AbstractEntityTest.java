@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Before;
@@ -13,6 +14,7 @@ import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
@@ -21,8 +23,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.test_entities.*;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
@@ -52,24 +53,16 @@ import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
  */
 public class AbstractEntityTest {
     private boolean observedForIncorrectAttempt = false; // used
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-    {
-        module.getDomainValidationConfig().setValidator(Entity.class, "firstProperty", new HappyValidator());
-        module.getDomainValidationConfig().setValidator(Entity.class, "bigDecimals", new HappyValidator());
-        module.getDomainValidationConfig().setValidator(Entity.class, "number", new HappyValidator() {
-            @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
-                if (newValue != null && newValue.equals(35)) {
-                    return new Result(property, new Exception("Domain : Value 35 is not permitted."));
-                } else if (newValue != null && newValue.equals(77)) {
-                    return new Warning("DOMAIN validation : The value of 77 is dangerous.");
-                }
-                return super.handle(property, newValue, mutatorAnnotations);
-            }
-        });
-    }
 
-    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+    private final Injector injector = new ApplicationInjectorFactory()
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
+            .add(new AbstractModule() {
+                @Override
+                protected void configure() {
+                    bind(DomainValidationConfig.class).toInstance(newDomainValidationConfig());
+                }
+            })
+            .getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private Entity entity;
 
@@ -1219,6 +1212,24 @@ public class AbstractEntityTest {
     public void default_implementation_for_isDirty_does_not_thorow_exceptions_for_instrumented_entities() {
         final Entity entity = factory.newEntity(Entity.class);
         assertTrue(entity.isDirty());
+    }
+
+    private static DomainValidationConfig newDomainValidationConfig() {
+        final var config = new DomainValidationConfig();
+        config.setValidator(Entity.class, "firstProperty", new HappyValidator());
+        config.setValidator(Entity.class, "bigDecimals", new HappyValidator());
+        config.setValidator(Entity.class, "number", new HappyValidator() {
+            @Override
+            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
+                if (newValue != null && newValue.equals(35)) {
+                    return new Result(property, new Exception("Domain : Value 35 is not permitted."));
+                } else if (newValue != null && newValue.equals(77)) {
+                    return new Warning("DOMAIN validation : The value of 77 is dangerous.");
+                }
+                return super.handle(property, newValue, mutatorAnnotations);
+            }
+        });
+        return config;
     }
 
 }

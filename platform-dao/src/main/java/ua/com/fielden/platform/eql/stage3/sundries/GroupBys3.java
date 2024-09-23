@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.List;
@@ -14,8 +15,8 @@ public class GroupBys3 {
         this.groups = groups;
     }
 
-    public String sql(final IDomainMetadata metadata) {
-        return groups.stream().map(g -> g.sql(metadata)).collect(joining(", "));
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return groups.stream().map(g -> g.sql(metadata, dbVersion)).collect(joining(", "));
     }
 
     @Override

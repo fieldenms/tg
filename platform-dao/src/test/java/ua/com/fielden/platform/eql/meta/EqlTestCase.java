@@ -4,31 +4,26 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.YesNoType;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
+import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.persistence.types.*;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
+import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public abstract class EqlTestCase {
     protected static final Class<TeWorkOrder> WORK_ORDER = TeWorkOrder.class;
@@ -62,36 +57,32 @@ public abstract class EqlTestCase {
     protected static final Type H_BIG_DECIMAL = StandardBasicTypes.BIG_DECIMAL;
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
 
-    public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
-    private static Injector injector = Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule());
+    private static final Injector injector = Guice.createInjector(new HelperTestIocModule());
     protected static final IDates dates = injector.getInstance(IDates.class);
     protected static final IFilter filter = new SimpleUserFilter();
-    
+
+    // TODO let Guice take care of dependencies
     private static final IDomainMetadata DOMAIN_METADATA;
+    private static final QuerySourceInfoProvider QUERY_SOURCE_INFO_PROVIDER;
+    private static final EqlTables EQL_TABLES;
 
     static {
-        hibTypeDefaults.put(boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
-        hibTypeDefaults.put(Colour.class, ColourType.class);
-        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
-
-        DOMAIN_METADATA = new DomainMetadataBuilder(
-                hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, H2)
+        DOMAIN_METADATA = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, PlatformTestDomainTypes.entityTypes,
+                                                    constantDbVersion(H2))
                 .build();
+        QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
+        EQL_TABLES = new EqlTables(DOMAIN_METADATA);
     }
     
     protected static final QueryModelToStage1Transformer qb() {
-        return qb(new SimpleUserFilter(), null, injector.getInstance(IDates.class), emptyMap());
+        return qb(new SimpleUserFilter(), Optional.empty(), injector.getInstance(IDates.class), emptyMap());
     }
 
     protected static final QueryModelToStage1Transformer qb(final Map<String, Object> paramValues) {
-        return qb(new SimpleUserFilter(), null, injector.getInstance(IDates.class), paramValues);
+        return qb(new SimpleUserFilter(), Optional.empty(), injector.getInstance(IDates.class), paramValues);
     }
-    
-    protected static final QueryModelToStage1Transformer qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
+
+    protected static final QueryModelToStage1Transformer qb(final IFilter filter, final Optional<String> username, final IDates dates, final Map<String, Object> paramValues) {
         return new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), paramValues);
     }
     
@@ -100,7 +91,11 @@ public abstract class EqlTestCase {
     }
     
     protected static final QuerySourceInfoProvider querySourceInfoProvider() {
-        return DOMAIN_METADATA.querySourceInfoProvider();
+        return QUERY_SOURCE_INFO_PROVIDER;
     }
-    
+
+    protected static EqlTables eqlTables() {
+        return EQL_TABLES;
+    }
+
 }

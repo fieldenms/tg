@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.utils;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast.AsBoolean;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast.AsDecimal;
@@ -26,9 +27,11 @@ public final class TypeCastToSql {
      * @param typeCast  the type we are casting to
      * @param metadata  runtime context
      */
-    public static String typeCastToSql(final String expression, final ITypeCast typeCast, final IDomainMetadata metadata) {
+    public static String typeCastToSql(final String expression, final ITypeCast typeCast,
+                                       final IDomainMetadata metadata, final DbVersion dbVersion)
+    {
         // NOTE: Dialect.cast(...) can return invalid SQL in Hibernate 5.4.33; don't use it
-        final var dialect = HibernateHelpers.getDialect(metadata.dbVersion());
+        final var dialect = HibernateHelpers.getDialect(dbVersion);
         final String typeSql = switch (typeCast) {
             case AsString cast -> dialect.getTypeName(jdbcSqlTypeFor(H_STRING), cast.length, DEFAULT_PRECISION, DEFAULT_SCALE);
             case AsInteger $ -> dialect.getTypeName(jdbcSqlTypeFor(H_INTEGER), DEFAULT_LENGTH, DEFAULT_PRECISION, DEFAULT_SCALE);
@@ -36,7 +39,7 @@ public final class TypeCastToSql {
             case AsDecimal cast -> dialect.getTypeName(jdbcSqlTypeFor(H_BIGDECIMAL), DEFAULT_LENGTH, cast.precision, cast.scale);
         };
 
-        return metadata.dbVersion().castSql(expression, typeSql);
+        return dbVersion.castSql(expression, typeSql);
     }
 
 }

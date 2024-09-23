@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -50,7 +51,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
  */
 public class DefaultSerialisationClassProvider implements ISerialisationClassProvider {
 
-    protected final List<Class<?>> types = new ArrayList<>();
+    protected final ImmutableList<Class<?>> types;
 
     @Inject
     public DefaultSerialisationClassProvider(final IApplicationSettings settings, final IApplicationDomainProvider applicationDomain) throws Exception {
@@ -64,7 +65,7 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.add(UserMenuInvisibilityAssociationBatchAction.class);
         types.add(SecurityRoleAssociationBatchAction.class);
         types.add(PropertyDescriptor.class);
-        this.types.addAll(types);
+        this.types = ImmutableList.copyOf(types);
     }
 
     private List<Class<?>> typesForSerialisationTesting() {
@@ -98,8 +99,8 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
     }
 
     @Override
-    public List<Class<?>> classes() {
-        return Collections.unmodifiableList(types);
+    public ImmutableList<Class<?>> classes() {
+        return types;
     }
 
 }

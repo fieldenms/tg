@@ -2,33 +2,25 @@ package ua.com.fielden.eql;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import org.hibernate.type.YesNoType;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
+import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.SimpleUserFilter;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.persistence.types.*;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IDates;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 /**
  * Base class for benchmarks. Contains EQL expressions of various kinds and complexity in their raw unparsed form.
@@ -307,23 +299,17 @@ public abstract class AbstractEqlBenchmark {
 
     // -------------------- SUPPORTING CODE --------------------
 
-    protected static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
-    protected static final Injector injector = Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule());
+    protected static final Injector injector = Guice.createInjector(new HelperTestIocModule());
     protected static final IDates dates = injector.getInstance(IDates.class);
     protected static final IFilter filter = new SimpleUserFilter();
 
     protected static final IDomainMetadata DOMAIN_METADATA;
 
     static {
-        hibTypeDefaults.put(boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
-        hibTypeDefaults.put(Colour.class, ColourType.class);
-        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
-
-        DOMAIN_METADATA = new DomainMetadataBuilder(hibTypeDefaults, injector, PlatformTestDomainTypes.entityTypes, H2).build();
+        DOMAIN_METADATA = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS,
+                                                    PlatformTestDomainTypes.entityTypes,
+                                                    constantDbVersion(H2))
+                .build();
     }
 
     protected static final EqlRandomGenerator ELQ_GENERATOR = new EqlRandomGenerator(new Random(9375679861L));

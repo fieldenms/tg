@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -37,7 +38,7 @@ public class Yields3 {
         return unmodifiableSortedMap(yieldsMap);
     }
 
-    public String sql(final IDomainMetadata metadata, final List<PropType> expectedTypes) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final List<PropType> expectedTypes) {
         if (expectedTypes.size() != yieldsMap.size()) {
             throw new EqlStage3ProcessingException("""
                     Mismatch between number of yields and their expected types.
@@ -48,12 +49,12 @@ public class Yields3 {
         }
 
         return "SELECT\n" +
-                zip(getYields().stream(), expectedTypes.stream(), (y, type) -> y.sql(metadata, type))
+                zip(getYields().stream(), expectedTypes.stream(), (y, type) -> y.sql(metadata, dbVersion, type))
                         .collect(joining(", "));
     }
 
-    public String sql(final IDomainMetadata metadata) {
-        return "SELECT\n" + getYields().stream().map(y -> y.sql(metadata)).collect(joining(", "));
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return "SELECT\n" + getYields().stream().map(y -> y.sql(metadata, dbVersion)).collect(joining(", "));
     }
 
     @Override

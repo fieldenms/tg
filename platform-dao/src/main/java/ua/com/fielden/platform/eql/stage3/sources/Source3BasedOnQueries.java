@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
 import com.google.common.collect.ImmutableList;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
@@ -52,13 +53,13 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     }
 
     @Override
-    public String sql(final IDomainMetadata metadata) {
-        if (metadata.dbVersion() == POSTGRESQL) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        if (dbVersion == POSTGRESQL) {
             final List<PropType> types = expectedYieldTypes();
-            return models.stream().map(m -> m.sql(metadata, types)).collect(joining("\n UNION ALL \n", "(", ")"))
+            return models.stream().map(m -> m.sql(metadata, dbVersion, types)).collect(joining("\n UNION ALL \n", "(", ")"))
                     + "AS " + sqlAlias;
         } else {
-            return models.stream().map(m -> m.sql(metadata)).collect(joining("\n UNION ALL \n", "(", ")"))
+            return models.stream().map(m -> m.sql(metadata, dbVersion)).collect(joining("\n UNION ALL \n", "(", ")"))
                     + "AS " + sqlAlias;
         }
     }

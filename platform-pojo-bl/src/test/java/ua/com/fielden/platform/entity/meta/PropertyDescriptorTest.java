@@ -13,8 +13,8 @@ import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 
 /**
  * Ensures correct instantiation of {@link PropertyDescriptor}.
@@ -107,7 +107,7 @@ public class PropertyDescriptorTest {
 
     @Test
     public void PropertyDescriptor_key_has_all_default_String_validations_skipped() {
-        final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+        final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
         final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
         final EntityFactory factory = injector.getInstance(EntityFactory.class);
 

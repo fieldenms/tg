@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -68,6 +69,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
+@Singleton
 public class CriteriaGenerator implements ICriteriaGenerator {
     private static final String ERR_CRIT_TYPE_GEN_CENTRE_MANAGER_MISSING = "Criteria type could not be generated for empty centreManager.";
     private static final String ERR_CRIT_TYPE_COULD_NOT_BE_GENERATED = "Criteria type for [%s] could not be generated.";

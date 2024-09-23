@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.List;
@@ -19,8 +20,8 @@ public class OrderBys3 {
         return unmodifiableList(models);
     }
 
-    public String sql(final IDomainMetadata metadata) {
-        return models.stream().map(o -> o.sql(metadata)).collect(joining(", "));
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return models.stream().map(o -> o.sql(metadata, dbVersion)).collect(joining(", "));
     }
 
     @Override
