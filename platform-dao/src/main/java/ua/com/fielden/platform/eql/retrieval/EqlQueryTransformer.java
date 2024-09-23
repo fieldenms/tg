@@ -29,16 +29,20 @@ import static java.util.stream.Collectors.toList;
 /**
  * An entry point for transforming an EQL query to SQL.
  * <p>
- * There are 3 stages in the transformation from EQL to SQL:
+ * Transformation of EQL into SQL happens in 4 stages:
  * <ol>
- * <li> Stage 1 is created from a raw EQL model where a sequence of fluent API calls is transformed into an SQL-like structure.
- * <li> Stage 2 resolves dot-notated properties to their respective sources.
- * <li> Stage 3 builds up all implicit table joins, resulting from dot-notations, substitutes calculated property names used in dot-notations with their respective expressions.
+ * <li> <b>Stage 0: parsing</b>. A {@linkplain ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource sequence of EQL tokens}
+ *      is transformed into a {@linkplain ResultQuery1 stage 1 AST}. See {@link ua.com.fielden.platform.eql.antlr.EqlCompiler}.
+ * <li> <b>Stage 1: property resolution</b>. Properties are resolved to their respective sources.
+ *      An important part of this stage is the resolution of dot-notated properties.
+ * <li> <b>Stage 2</b>: builds up all implicit table joins resulting from dot-expressions, substitutes calculated property names used in dot-expressions with their respective expressions.
+ * <li> <b>Stage 3: SQL generation</b>. This stage also includes information needed to instantiate entities from the SQL query result.
  * </ol>
- * The result of stage 3 is then used to generate the actual SQL select statement. It also includes the information needed to instantiate entities from the SQL query result.
+ * For stages 1-3 there is a corresponding package, named {@code ua.com.fielden.platform.eql.stage$N}, where {@code $N} is the stage number.
+ * Each package contains classes that comprise a stage-specific AST. These classes are named with a suffix that corresponds to their stage number.
+ * For example, {@code Prop1} represents a property in stage 1, and is a result of stage 0.
  *
  * @author TG Team
- *
  */
 public class EqlQueryTransformer {
 

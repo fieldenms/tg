@@ -14,7 +14,8 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 /**
  * A helper construct to assist with Prop1 to Prop2 transformation (aka property resolution).
  * Its core idea is to maintain a stack of query sources that get accumulated during the query transformation process.
- * The stack of query source is searched for property attribution -- source where a property belongs to. In case of more than one matching source or no source, an exception is raised.
+ * The stack of query source is searched for property attribution -- the source that a property belongs to.
+ * In case of more than one matching source or no source, an exception is thrown.
  *
  * @author TG Team
  */

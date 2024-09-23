@@ -30,12 +30,14 @@ import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
- * A structure used for representing the most outer query that is used to actually execute to get some data out.
- * <p>
- * Yield processing is subject to the following rules:
+ * Represents a top-level query that produces results.
+ * <h3> Transformation to stage 2 </h3>
+ * Processing of yields is subject to the following rules:
  * <ul>
- *   <li> In case of no explicit yields or {@code yieldAll}, fetch models are used for auto-yielding.
- *   <li> In case of a single unaliased yield when the query result is a persistent entity type, alias ID is used.
+ *   <li> In case of no explicit yields or "yield all", the query source is used to expand the yields, which are then
+ *        filtered according to the fetch model. Yields are expanded by taking each property from the query source and
+ *        yielding it as if {@code yield().prop("x").as("x")} was used.
+ *   <li> In case of a single unaliased yield when the query result is a persistent entity type, alias {@code id} is used.
  * </ul>
  *
  * @author TG Team
