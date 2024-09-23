@@ -12,9 +12,9 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 import java.util.*;
 import java.util.Map.Entry;
 
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
+import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPath;
 
 /**
  * Transforms yields from multiple source queries into <i>yield trees</i>.
@@ -53,7 +53,7 @@ public class YieldInfoNodesGenerator {
      */
     public static Collection<YieldInfoNode> generate(final List<SourceQuery2> models) {
         final List<YieldInfoTail> yieldsInfo = generateYieldInfos(models).stream()
-                .map(yield -> new YieldInfoTail(asList(yield.name().split("\\.")), yield.propType(), yield.nonnullable()))
+                .map(yield -> new YieldInfoTail(laxSplitPropPath(yield.name()), yield.propType(), yield.nonnullable()))
                 .toList();
 
         return group(yieldsInfo).values();
