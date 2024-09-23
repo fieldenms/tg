@@ -27,8 +27,15 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 /**
  * A structure used for representing queries in the FROM/JOIN statements.
- * Technically these queries are sub queries from SQL point of view, but the nomenclature of the Sub-Query is reserved for sub queries in other parts (i.e., not FROM/JOIN).
- * <p>
+ * Technically these queries are sub-queries from the point of view of SQL, but the term "sub-query" is reserved for sub-queries in other parts
+ * (see {@link SubQuery1}, {@link SubQueryForExists1}).
+ *
+ * <h3> Source query correlation </h3>
+ * A source query can be correlated, which allows it to access values from outer queries, enabling the use of {@code extProp}.
+ * All simple queries as source queries can be correlated.
+ * Source queries underlying synthetic entities can't be correlated.
+ *
+ * <h3> Transformation to stage 2 </h3>
  * Yield processing is subject to the following rules:
  * <ul>
  *   <li> In case of no explicit yields or {@code yieldAll}, yields are derived from the main source of the query. No fetch models affect this.
@@ -39,9 +46,6 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
  */
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromStage1To2<SourceQuery2> {
 
-    /**
-     * All simple queries as source queries are accessible for correlation. Source queries derived from synthetic entities can't be correlated.
-     */
     public final boolean isCorrelated;
 
     public SourceQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType, final boolean isCorrelated) {
