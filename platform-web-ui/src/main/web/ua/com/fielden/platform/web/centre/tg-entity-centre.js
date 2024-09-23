@@ -1038,12 +1038,14 @@ Polymer({
                       this._generateKey(ST.RIGHT_INSERTION_POINT_ORDER)];
         const ips = [...this.querySelectorAll("tg-entity-centre-insertion-point")];
         const ipOrders = keys.map(key => JSON.parse(localStorage.getItem(key) || "[]"));
-        const removedIps = new Set(ipOrders.flat()).difference(new Set(ips.map(ip => ip.functionalMasterTagName)));
-        if (removedIps.size === 0) { // all previously persisted insertion points in custom layout still exist in Centre DSL list of IPs
+        const persistedIps = new Set(ipOrders.flat());
+        const dslIps = new Set(ips.map(ip => ip.functionalMasterTagName));
+        const removedIps = persistedIps.difference(dslIps);
+        if (removedIps.size === 0 && dslIps.isSubsetOf(persistedIps)) { // all previously persisted insertion points in custom layout exist in Centre DSL list of IPs and vice versa
             keys.forEach((key, i) => {
                 this._restoreOrderForContainer(containers[i], ipOrders[i], ips);
             });
-        } else { // some IP(s) has disappeared from Centre DSL -- fallback to the layout as per Centre DSL
+        } else { // some IP(s) has added / disappeared to / from Centre DSL -- fallback to the layout as per Centre DSL
             ips.forEach(ip => resetCustomSettings(this.miType, ip.functionalMasterTagName)); // remove all settings from each and every insertion points first; ip contextRetriever() is not bound yet, so need to use this.miType explicitly
             removedIps.forEach(tagName => resetCustomSettings(this.miType, tagName)); // remove all settings (this user only) from IP(s), that has disappeared from Centre DSL
             this.resetCustomSettingsForInsertionPoints(); // then remove all IP orders from each container and splitter positions too
