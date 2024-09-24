@@ -31,6 +31,7 @@ import static org.owasp.html.Sanitizers.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
  * Rich text is text which has attributes beyond those of plain text (e.g., styles such as color, boldface, italic), and
@@ -281,25 +282,64 @@ public sealed class RichText permits RichText.Persisted {
     }
 
     // @formatter:off
-    private static final PolicyFactory LISTS = new HtmlPolicyBuilder()
-            .allowElements(
-                    "ul", // Unordered lists
-                    "ol", // Ordered lists
-                    "li", // List items
-                    "dl", // Description lists
-                    "dt", // Terms in description lists
-                    "dd" // Descriptions in description lists
-            )
-            .toFactory();
+    private static PolicyFactory allowLists() {
+        return new HtmlPolicyBuilder()
+                .allowElements(
+                        "ul", // Unordered lists
+                        "ol", // Ordered lists
+                        "li", // List items
+                        "dl", // Description lists
+                        "dt", // Terms in description lists
+                        "dd" // Descriptions in description lists
+                )
+                .toFactory();
+    }
 
-    private static final PolicyFactory BLOCKQUOTE = new HtmlPolicyBuilder()
-            .allowElements("blockquote")
-            .allowAttributes("cite").onElements("blockquote")
-            .toFactory();
+    private static PolicyFactory allowBlockquote() {
+        return new HtmlPolicyBuilder()
+                .allowElements("blockquote")
+                .allowAttributes("cite")
+                    .onElements("blockquote")
+                .toFactory();
+    }
 
-    private static final PolicyFactory POLICY_FACTORY =
-        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS).and(LISTS).and(BLOCKQUOTE)
-        .and(new HtmlPolicyBuilder()
+    /**
+     * Creates a policy that allows empty elements, which would be discarded by the sanitizer otherwise.
+     * Relies on the existence of a defined set of elements that are subject to discarding if they are empty.
+     * This set is defined by {@link HtmlPolicyBuilder#DEFAULT_SKIP_IF_EMPTY}.
+     */
+    private static PolicyFactory allowEmptyElementsPolicy() {
+        return foldLeft(HtmlPolicyBuilder.DEFAULT_SKIP_IF_EMPTY.stream(),
+                        new HtmlPolicyBuilder(),
+                        (builder, elt) -> builder.allowElements(elt).allowWithoutAttributes(elt))
+                .toFactory();
+    }
+
+    /**
+     * Creates a policy that allows common attributes.
+     */
+    private static PolicyFactory allowCommonAttributes() {
+        return new HtmlPolicyBuilder()
+                .allowAttributes("class")
+                    .globally()
+                .toFactory();
+    }
+
+    /**
+     * Creates a policy that allows the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#target">{@code link}</a> element.
+     */
+    private static PolicyFactory allowLink() {
+        return new HtmlPolicyBuilder()
+                .allowElements("link")
+                .allowAttributes("href", "rel", "as", "disabled", "fetchpriority", "hreflang", "imagesizes",
+                                 "imagesrcset", "integrity", "media", "referrerpolicy", "sizes", "title", "type",
+                                 "target", "charset", "rev")
+                    .onElements("link")
+                .toFactory();
+    }
+
+    private static PolicyFactory allowCommonElements() {
+        return new HtmlPolicyBuilder()
                 .allowElements(
                         "b", "strong", // bold text
                         "i", "em", // italic text
@@ -314,7 +354,49 @@ public sealed class RichText permits RichText.Persisted {
                         "hr", // thematic break (horizontal rule)
                         "span" // generic inline container (used for text colouring)
                 )
-                .toFactory());
+                .toFactory();
+    }
+
+    /**
+     * Creates a policy that allows HTML entities used by the <a href="https://github.com/nhn/tui.editor">TOAST UI Editor</a>.
+     */
+    private static PolicyFactory allowToastUi() {
+        return new HtmlPolicyBuilder()
+                // Attributes were extracted by grepping the source code of tui.editor with the following command:
+                // grep -hoRP '\bdata(-\w+\b)+' apps/ libs/ types/ plugins/ | sort -u
+                .allowAttributes(
+                        "data-backticks",
+                        "data-chart-id",
+                        "data-custom",
+                        "data-custom-info",
+                        "data-front-matter",
+                        "data-html-comment",
+                        "data-id",
+                        "data-language",
+                        "data-level",
+                        "data-my-attr",
+                        "data-my-nav",
+                        "data-nodeid",
+                        "data-placeholder",
+                        "data-raw-html",
+                        "data-task",
+                        "data-task-checked",
+                        "data-task-disabled",
+                        "data-type"
+                )
+                .globally()
+                .toFactory();
+    }
+
+    private static final PolicyFactory POLICY_FACTORY =
+        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS)
+        .and(allowLists())
+        .and(allowBlockquote())
+        .and(allowCommonAttributes())
+        .and(allowEmptyElementsPolicy())
+        .and(allowLink())
+        .and(allowCommonElements())
+        .and(allowToastUi());
     // @formatter:on
 
     /**
