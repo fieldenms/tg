@@ -17,10 +17,12 @@ import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PropChunk;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.*;
 import java.util.Map.Entry;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.isHeaderProperty;
@@ -75,7 +77,13 @@ public class DependentCalcPropsOrder {
             }
         }
 
-        return orderDependentCalcProps(calcPropsOfEntityType, propDependencies);
+        try {
+            return orderDependentCalcProps(calcPropsOfEntityType, propDependencies);
+        } catch (final TopologicalSortException $) {
+            throw new EqlException(format("There are cyclic dependencies between calculated properties of [%s]. Properties: [%s]",
+                                          querySourceInfo.javaType().getSimpleName(),
+                                          CollectionUtil.toString(calcPropsOfEntityType, ",")));
+        }
     }
 
     /**
@@ -100,7 +108,7 @@ public class DependentCalcPropsOrder {
         return result;
     }
 
-    private static List<String> orderDependentCalcProps(final List<String> calcPropsOfEntityType, final Map<String, T2<Set<String>, Set<String>>> calcPropDependencies) {
+    private static List<String> orderDependentCalcProps(final List<String> calcPropsOfEntityType, final Map<String, T2<Set<String>, Set<String>>> calcPropDependencies) throws TopologicalSortException {
         final Map<String, Set<String>> mapOfDependencies = new HashMap<>();
 
         for (final String propName : calcPropsOfEntityType) {
