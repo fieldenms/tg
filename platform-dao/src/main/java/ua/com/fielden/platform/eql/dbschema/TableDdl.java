@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.lang.reflect.Field;
+import java.sql.Types;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +25,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -34,7 +37,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.ioc.HibernateConfigurationFactory;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
@@ -53,6 +55,9 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
  *
  */
 public class TableDdl {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public final Class<? extends AbstractEntity<?>> entityType;
     private final Set<ColumnDefinition> columns;
 
@@ -141,7 +146,13 @@ public class TableDdl {
             if (col.nullable() && MSSQL != dbVersion && POSTGRESQL != dbVersion) {
                 return null;
             }
-            
+
+            if (!isIndexApplicable(col, dbVersion)) {
+                LOGGER.warn(format("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s].",
+                                   col.sqlType(), dbVersion, col.name(), entityType.getSimpleName()));
+                return null;
+            }
+
             // otherwise, let's create unique index with the nullable clause if required
             final String tableName = tableName(entityType);
             final String indexName = "KEY_".equals(col.name()) ? format("KUI_%s", tableName) : format("UI_%s_%s", tableName, col.name());
@@ -156,13 +167,37 @@ public class TableDdl {
     }
 
     private List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
-        return cols.filter(col -> col.requiresIndex() || isPersistedEntityType(col.javaType())).map(col -> {
-            final StringBuilder sb = new StringBuilder();
+        final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
+        return cols.filter(col -> col.requiresIndex() || isPersistedEntityType(col.javaType()))
+                .filter(col -> {
+                    if (!isIndexApplicable(col, dbVersion)) {
+                        LOGGER.warn(format("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s].",
+                                           col.sqlType(), dbVersion, col.name(), entityType.getSimpleName()));
+                        return false;
+                    } else {
+                        return true;
+                    }
+                })
+                .map(col -> {
+                    final StringBuilder sb = new StringBuilder();
+                    final String tableName = tableName(entityType);
+                    sb.append(format("CREATE INDEX I_%s_%s ON %s(%s);", tableName, col.name(), tableName, col.name()));
+                    return sb.toString();
+                }).collect(toList());
+    }
 
-            final String tableName = tableName(entityType);
-            sb.append(format("CREATE INDEX I_%s_%s ON %s(%s);", tableName, col.name(), tableName, col.name()));
-            return sb.toString();
-        }).collect(toList());
+    private static boolean isIndexApplicable(final ColumnDefinition column, final DbVersion dbVersion) {
+        return switch (dbVersion) {
+            // https://learn.microsoft.com/en-us/sql/t-sql/statements/create-index-transact-sql
+            case MSSQL -> switch (column.sqlType()) {
+                case SqlType.Named $ -> true;
+                case SqlType.TypeCode (var code) -> switch (code) {
+                    case Types.VARCHAR, Types.VARBINARY, Types.NVARCHAR -> column.length() != Integer.MAX_VALUE;
+                    default -> true;
+                };
+            };
+            default -> true;
+        };
     }
 
     /**
