@@ -141,34 +141,37 @@ public class TableDdl {
 
     private List<String> createUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
-        return cols.map(col -> {
-            // for now we only know how to create unique indexes for nullable column in case of SQL Server
-            if (col.nullable() && MSSQL != dbVersion && POSTGRESQL != dbVersion) {
-                return null;
-            }
-
-            if (!isIndexApplicable(col, dbVersion)) {
-                LOGGER.warn(format("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s].",
-                                   col.sqlType(), dbVersion, col.name(), entityType.getSimpleName()));
-                return null;
-            }
-
-            // otherwise, let's create unique index with the nullable clause if required
-            final String tableName = tableName(entityType);
-            final String indexName = "KEY_".equals(col.name()) ? format("KUI_%s", tableName) : format("UI_%s_%s", tableName, col.name());
-            final StringBuilder sb = new StringBuilder();
-            sb.append(format("CREATE UNIQUE INDEX %s ON %s(%s)", indexName, tableName, col.name()));
-            if (col.nullable()) {
-                sb.append(format(" WHERE (%s IS NOT NULL)", col.name()));
-            }
-            sb.append(";");
-            return sb.toString();
-        }).filter(Objects::nonNull).collect(toList());
+        return cols
+                // We know how to create unique indexes for nullable columns in case of SQL Server and PostgreSQL.
+                .filter(col -> col.nullable() ? MSSQL == dbVersion || POSTGRESQL == dbVersion : true)
+                .filter(col -> {
+                    if (!isIndexApplicable(col, dbVersion)) {
+                        LOGGER.warn(format("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s].",
+                                           col.sqlType(), dbVersion, col.name(), entityType.getSimpleName()));
+                        return false;
+                    } else {
+                        return true;
+                    }
+                })
+                .map(col -> {
+                    // otherwise, let's create unique index with the nullable clause if required
+                    final String tableName = tableName(entityType);
+                    final String indexName = "KEY_".equals(col.name()) ? format("KUI_%s", tableName) : format("UI_%s_%s", tableName, col.name());
+                    final StringBuilder sb = new StringBuilder();
+                    sb.append(format("CREATE UNIQUE INDEX %s ON %s(%s)", indexName, tableName, col.name()));
+                    if (col.nullable()) {
+                        sb.append(format(" WHERE (%s IS NOT NULL)", col.name()));
+                    }
+                    sb.append(";");
+                    return sb.toString();
+                })
+                .collect(toList());
     }
 
     private List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
-        return cols.filter(col -> col.requiresIndex() || isPersistedEntityType(col.javaType()))
+        return cols
+                .filter(col -> col.requiresIndex() || isPersistedEntityType(col.javaType()))
                 .filter(col -> {
                     if (!isIndexApplicable(col, dbVersion)) {
                         LOGGER.warn(format("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s].",
@@ -183,7 +186,8 @@ public class TableDdl {
                     final String tableName = tableName(entityType);
                     sb.append(format("CREATE INDEX I_%s_%s ON %s(%s);", tableName, col.name(), tableName, col.name()));
                     return sb.toString();
-                }).collect(toList());
+                })
+                .collect(toList());
     }
 
     private static boolean isIndexApplicable(final ColumnDefinition column, final DbVersion dbVersion) {
