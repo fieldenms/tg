@@ -21,12 +21,12 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
 
     /**
-     * The type of a query source (either persistent entity, synthetic entity, union entity or entity aggregates).
+     * The type of this query source (either persistent entity, synthetic entity, union entity or entity aggregates).
      */
     private final Class<T> javaType;
 
     /**
-     * A map between java class field name representing a property and a corresponding query source item.
+     * Association between simple property names and their corresponding query source items.
      * The use of a sorted map is for convenience only (e.g., for unit testing).
      */
     private final SortedMap<String, AbstractQuerySourceItem<?>> propsMap = new TreeMap<>();

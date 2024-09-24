@@ -7,8 +7,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.query.*;
 import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
+import ua.com.fielden.platform.eql.meta.utils.TopologicalSortException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
@@ -16,12 +18,11 @@ import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
-import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.util.stream.Collectors.*;
@@ -29,26 +30,34 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
 
 @Singleton
 public class QuerySourceInfoProvider {
     private static final Logger LOGGER = getLogger(QuerySourceInfoProvider.class);
 
     /**
-     * Declared - all properties (as defined by EqlEntityMetadata) are included (even those with no way of getting data from a db for them).
+     * Association between an entity type and its <i>declared</i> query source info, which contains a subset of properties
+     * present in the corresponding {@linkplain ua.com.fielden.platform.reflection.EntityMetadata entity metadata}.
+     * Only properties that are relevant to EQL are included.
      */
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> declaredQuerySourceInfoMap;
 
     /**
-     * Modelled - only those properties are included that are either mapped to a table/query column or are calculated.
+     * Association between an entity type and its <i>modelled</i> query source info, contents of which depend on the
+     * entity's nature:
+     * <ul>
+     *   <li> Persistent, union - equal to the declared query source info.
+     *   <li> Synthetic - contains a superset of properties present in the entity's metadata. Additional properties include
+     *        those that can be inferred from the yields of the underlying models.
+     * </ul>
      */
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> modelledQuerySourceInfoMap;
 
-    /** Models for Synthetic Entities (SE), transformed to stage 1. */
+    /** Association between a synthetic entity type (SE) and its underlying models transformed to stage 1. */
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, List<SourceQuery1>> seModels;
 
-    private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder;
     private final IDomainMetadata domainMetadata;
 
     @Inject
@@ -56,32 +65,39 @@ public class QuerySourceInfoProvider {
         this.domainMetadata = domainMetadata;
         final var qmToS1Transformer = new QueryModelToStage1Transformer();
 
+        // Declared query source infos are created for all entities.
         declaredQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class)
                 .collect(toConcurrentMap(EntityMetadata::javaType, em -> new QuerySourceInfo<>(em.javaType(), true)));
         declaredQuerySourceInfoMap.values()
                 .forEach(ei -> ei.addProps(generateQuerySourceItems(declaredQuerySourceInfoMap, ei.javaType())));
 
-        modelledQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class)
-                .filter(em -> em.isPersistent() || em.isUnion())
-                .collect(toConcurrentMap(EntityMetadata::javaType, em -> new QuerySourceInfo<>(em.javaType(), true)));
-        modelledQuerySourceInfoMap.values()
-                .forEach(ei -> ei.addProps(generateQuerySourceItems(modelledQuerySourceInfoMap, ei.javaType())));
-
-        // Generating models and dependency information for SE types
-        // There is no need to include UE types here as their models are implicitly generated and have no interdependencies.
-        seModels = new ConcurrentHashMap<>();
-        final var seDependencies = new HashMap<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>>();
-        domainMetadata.allTypes(EntityMetadata.class)
+        // Modelled query source infos require a bit more work for synthetic entities, but for other entities are the same
+        // as the declared ones. Models of union entities are implicitly generated and have no interdependencies, thus
+        // don't require the extra work like synthetic models do.
+        // 1. Reuse declared query source infos for non-synthetic entities.
+        modelledQuerySourceInfoMap = declaredQuerySourceInfoMap.entrySet().stream()
+                .filter(entry -> {
+                    final var entityType = entry.getKey();
+                    return !domainMetadata.forEntity(entityType).isSynthetic();
+                })
+                .collect(toConcurrentMap(Map.Entry::getKey, Map.Entry::getValue));
+        // 2. Create modelled query source infos for synthetic entities by analysing their underlying models.
+        // Transform underlying models of synthetic entities to stage 1.
+        seModels = domainMetadata.allTypes(EntityMetadata.class)
                 .map(EntityMetadata::asSynthetic).flatMap(Optional::stream)
-                .forEach(em -> {
-                    final T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> res = generateModelsAndDependenciesForSyntheticType(em, qmToS1Transformer);
-                    seModels.put(em.javaType(), res._1);
-                    seDependencies.put(em.javaType(), res._2.stream().filter(EntityUtils::isSyntheticEntityType).collect(toSet()));
-                });
-
-        for (final Class<? extends AbstractEntity<?>> seType : sortTopologically(seDependencies)) {
+                .collect(toConcurrentMap(EntityMetadata::javaType,
+                                         em -> em.data().models().stream().map(qmToS1Transformer::generateAsUncorrelatedSourceQuery).toList()));
+        // Compute dependencies between synthetic entities.
+        final var seDependencies = mapValues(seModels,
+                                             (type, queries) -> queries.stream()
+                                                     .map(AbstractQuery1::collectEntityTypes)
+                                                     .flatMap(Set::stream)
+                                                     .filter(EntityUtils::isSyntheticEntityType)
+                                                     .collect(toSet()));
+        // Topological sorting will uncover any circular dependencies by throwing an exception.
+        for (final var seType : sortTopologically(seDependencies)) {
             try {
-                final QuerySourceInfo<? extends AbstractEntity<?>> modelledQuerySourceInfo = generateModelledQuerySourceInfoForSyntheticType(seType, seModels.get(seType));
+                final var modelledQuerySourceInfo = generateModelledQuerySourceInfoForSyntheticType(seType, seModels.get(seType));
                 modelledQuerySourceInfoMap.put(modelledQuerySourceInfo.javaType(), modelledQuerySourceInfo);
             } catch (final Exception e) {
                 final var msg = "Could not generate modelled entity info for synthetic entity [" + seType + "].";
@@ -89,18 +105,11 @@ public class QuerySourceInfoProvider {
                 throw new EqlMetadataGenerationException(msg, e);
             }
         }
+        // All modelled query source infos have been created.
 
-        for (final QuerySourceInfo<?> querySourceInfo : modelledQuerySourceInfoMap.values()) {
-            entityTypesDependentCalcPropsOrder.put(querySourceInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, qmToS1Transformer, querySourceInfo));
-        }
-    }
-
-    private static <T extends AbstractEntity<?>> T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>>
-    generateModelsAndDependenciesForSyntheticType(final EntityMetadata.Synthetic em, final QueryModelToStage1Transformer gen)
-    {
-        final var queries = em.data().models().stream().map(gen::generateAsUncorrelatedSourceQuery).toList();
-        final var dependencies = queries.stream().map(qry -> qry.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
-        return t2(queries, dependencies);
+        entityTypesDependentCalcPropsOrder = modelledQuerySourceInfoMap.values().stream()
+                .collect(toConcurrentMap(querySourceInfo -> querySourceInfo.javaType().getName(),
+                                         querySourceInfo -> DependentCalcPropsOrder.orderDependentCalcProps(this, qmToS1Transformer, querySourceInfo)));
     }
 
     /**
