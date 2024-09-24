@@ -194,11 +194,8 @@ public class TableDdl {
         return switch (dbVersion) {
             // https://learn.microsoft.com/en-us/sql/t-sql/statements/create-index-transact-sql
             case MSSQL -> switch (column.sqlType()) {
-                case SqlType.Named $ -> true;
-                case SqlType.TypeCode (var code) -> switch (code) {
-                    case Types.VARCHAR, Types.VARBINARY, Types.NVARCHAR -> column.length() != Integer.MAX_VALUE;
-                    default -> true;
-                };
+                case Types.VARCHAR, Types.VARBINARY, Types.NVARCHAR -> column.length() != Integer.MAX_VALUE;
+                default -> true;
             };
             default -> true;
         };
