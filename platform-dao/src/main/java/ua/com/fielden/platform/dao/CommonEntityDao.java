@@ -47,8 +47,8 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
-import static ua.com.fielden.platform.utils.Lazy.lazyP;
-import static ua.com.fielden.platform.utils.Lazy.lazyS;
+import static ua.com.fielden.platform.utils.Lazy.lazyProvider;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 
 /**
  * This is a base class for db-aware implementations of entity companions.
@@ -113,12 +113,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Inject
     protected void setDeleteOpsFactory(final Provider<DeleteOperations.Factory> deleteOpsFactory) {
-        deleteOps = lazyP(() -> deleteOpsFactory.get().create(this, this::getSession, entityType));
+        deleteOps = lazyProvider(() -> deleteOpsFactory.get().create(this, this::getSession, entityType));
     }
 
     @Inject
     protected void setPersistentEntitySaverFactory(final Provider<PersistentEntitySaver.Factory> factory) {
-        entitySaver = lazyS(() -> factory.get().create(
+        entitySaver = lazySupplier(() -> factory.get().create(
                 this::getSession,
                 this::getTransactionGuid,
                 entityType,
