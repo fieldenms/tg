@@ -7,8 +7,6 @@ import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.sample.domain.ITgSystem;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.NoAuthorisation;
@@ -43,7 +41,6 @@ public class CriteriaGeneratorTestIocModule extends EntityTestIocModuleWithPrope
         bind(ILastLevelEntity.class).to(LastLevelEntityDaoStub.class);
         bind(ISecondLevelEntity.class).to(SecondLevelEntityDaoStub.class);
         bind(IGeneratedEntityController.class).to(GeneratedEntityControllerStub.class);
-        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class);
         bind(ICriteriaGenerator.class).to(CriteriaGenerator.class);
         bind(ISerialiser.class).to(StubSerialiser.class);
         bind(ISerialisationClassProvider.class).to(StubSerialisationClassProvider.class);
