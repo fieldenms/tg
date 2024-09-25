@@ -94,8 +94,12 @@ public class QueryModelToStage1Transformer {
                 qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery());
     }
 
-    private Conditions1 generateUserDataFilteringCondition(final boolean filterable, final IFilter filter,
-                                                           final Optional<String> username, final ISource1<?> mainSource) {
+    private Conditions1 generateUserDataFilteringCondition(
+            final boolean filterable,
+            final IFilter filter,
+            final Optional<String> username,
+            final ISource1<?> mainSource)
+    {
         if (filterable && filter != null) {
             // now there is no need to rely on the main source alias while processing UDF (that's why null can be used until alias parameter is removed from the enhance() method.
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), null, username.orElse(null));
