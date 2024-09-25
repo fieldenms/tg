@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -11,6 +12,7 @@ import java.util.stream.*;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.Spliterators.spliteratorUnknownSize;
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.utils.IteratorUtils.distinctIterator;
 
 /**
@@ -155,7 +157,7 @@ public class StreamUtils {
      * @return
      */
     public static <X, Y, Z> Stream<Z> zip(final BaseStream<? extends X, ?> xs, final BaseStream<? extends Y, ?> ys, final BiFunction<? super X, ? super Y, ? extends Z> combine) {
-        Objects.requireNonNull(combine);
+        requireNonNull(combine, "combine");
         final Spliterator<? extends X> xsSpliterator = Objects.requireNonNull(xs).spliterator();
         final Spliterator<? extends Y> ysSpliterator = Objects.requireNonNull(ys).spliterator();
 
@@ -339,6 +341,52 @@ public class StreamUtils {
 
     /**
 <<<<<<< HEAD
+     * Transforms the given stream by filtering out all elements contained in {@code ys} that satisfy the predicate.
+     *
+     * @param test  returns {@code true} if an {@code x} matches a {@code y} and should be removed from the stream
+     */
+    public static <X, Y> Stream<X> removeAll(final Stream<X> xs, final Iterable<Y> ys, final BiPredicate<? super X, ? super Y> test) {
+        requireNonNull(xs, "xs");
+        requireNonNull(ys, "ys");
+        requireNonNull(test, "test");
+
+        if (ys instanceof Collection<Y> ysColl) {
+            return removeAll(xs, ysColl, test);
+        } else {
+            return xs.filter(x -> !Iterables.any(ys, y -> test.test(x, y)));
+        }
+    }
+
+    /**
+     * @see #removeAll(Stream, Iterable, BiPredicate)
+     */
+    public static <X, Y> Stream<X> removeAll(final Stream<X> xs, final Collection<Y> ys, final BiPredicate<? super X, ? super Y> test) {
+        requireNonNull(xs, "xs");
+        requireNonNull(ys, "ys");
+        requireNonNull(test, "test");
+
+        if (ys.isEmpty()) {
+            return xs;
+        } else {
+            return xs.filter(x -> ys.stream().noneMatch(y -> test.test(x, y)));
+        }
+    }
+
+    /**
+     * Transforms the given stream by filtering out all elements contained in {@code items}.
+     */
+    public static <X> Stream<X> removeAll(final Stream<X> xs, final Iterable<X> items) {
+        return removeAll(xs, items, Objects::equals);
+    }
+
+    /**
+     * @see #removeAll(Stream, Iterable)
+     */
+    public static <X> Stream<X> removeAll(final Stream<X> xs, final Collection<X> items) {
+        return removeAll(xs, items, Objects::equals);
+    }
+
+    /**
      * Returns an infinite stream of integers starting from the given one.
      */
     public static IntStream integers(final int start) {
