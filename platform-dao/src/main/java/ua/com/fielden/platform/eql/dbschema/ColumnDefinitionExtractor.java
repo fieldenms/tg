@@ -88,7 +88,7 @@ public class ColumnDefinitionExtractor {
 
                 final String sColumnName = columnName + "_" + (isEmpty(sMapTo.value()) ? sField.getName().toUpperCase() : sMapTo.value());
                 return new ColumnDefinition(unique, compositeKeyMemberOrder, true, sColumnName,
-                                            sField.getType(), new SqlType.TypeCode(jdbcSqlTypeFor((Type) hibType)),
+                                            sField.getType(), jdbcSqlTypeFor((Type) hibType),
                                             sIsProperty.length(), sIsProperty.scale(), sIsProperty.precision(),
                                             sMapTo.defaultValue(), false);
             }).collect(toImmutableSet());
@@ -96,12 +96,12 @@ public class ColumnDefinitionExtractor {
             if (hibType instanceof Type t) {
                 return ImmutableSet.of(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
-                                                            new SqlType.TypeCode(jdbcSqlTypeFor(t)),
+                                                            jdbcSqlTypeFor(t),
                                                             length, scale, precision, mapTo.defaultValue(), false));
             } else if (hibType instanceof UserType t) {
                 return ImmutableSet.of(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
-                                                            new SqlType.TypeCode(jdbcSqlTypeFor(t)),
+                                                            jdbcSqlTypeFor(t),
                                                             length, scale, precision, mapTo.defaultValue(), false));
             } else if (hibType instanceof CompositeUserType compositeUserType) {
                 final List<Pair<String, Integer>> subProps = jdbcSqlTypeFor(compositeUserType);
@@ -115,9 +115,9 @@ public class ColumnDefinitionExtractor {
                     final String sColumnNameSuggestion = sMapTo.value();
                     final Object sHibType = hibernateTypeDeterminer.getHibernateType(sField.getType(),
                                                                                            getAnnotation(sField, PersistentType.class));
-                    final SqlType sSqlType = switch (sHibType) {
-                        case UserType t -> new SqlType.TypeCode(jdbcSqlTypeFor(t));
-                        case Type t -> new SqlType.TypeCode(jdbcSqlTypeFor(t));
+                    final var sSqlType = switch (sHibType) {
+                        case UserType t -> jdbcSqlTypeFor(t);
+                        case Type t -> jdbcSqlTypeFor(t);
                         default -> throw new DbSchemaException("Property [%s] has unsupported Hibernate type: %s".formatted(
                                 "%s.%s".formatted(propType.getTypeName(), sName),
                                 sHibType));
