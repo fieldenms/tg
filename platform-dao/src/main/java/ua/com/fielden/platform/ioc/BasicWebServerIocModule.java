@@ -54,7 +54,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
     private static final Logger LOGGER = getLogger(BasicWebServerIocModule.class);
 
     private final Properties props;
-    private final IApplicationDomainProvider applicationDomainProvider;
+    protected final IApplicationDomainProvider applicationDomainProvider;
     private final Class<? extends IAuthorisationModel> authorisationModelType;
 
     public BasicWebServerIocModule(
