@@ -95,7 +95,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
      * An exception is thrown if the annotation is missing.
      * <p>
-     * <b>Deprecated</b>: use the no-arg constructor ({@code super} call is not needed anymore)
+     * <b>Deprecated</b>: use the no-arg constructor (the {@code super} call is no longer necessary).
      */
     @Deprecated(forRemoval = true)
     protected CommonEntityDao(final IFilter filter) {

@@ -1,7 +1,22 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import org.joda.time.DateTime;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.mutator.*;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.exceptions.PropertyBceOrAceDefinitionException;
+import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
+import ua.com.fielden.platform.entity.validation.*;
+import ua.com.fielden.platform.entity.validation.annotation.*;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.utils.StringConverter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -11,39 +26,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.inject.Inject;
-import org.joda.time.DateTime;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.inject.Injector;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.mutator.*;
-import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
-import ua.com.fielden.platform.entity.exceptions.PropertyBceOrAceDefinitionException;
-import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
-import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
-import ua.com.fielden.platform.entity.validation.FinalValidator;
-import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
-import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
-import ua.com.fielden.platform.entity.validation.MaxValueValidator;
-import ua.com.fielden.platform.entity.validation.RangePropertyValidator;
-import ua.com.fielden.platform.entity.validation.UniqueValidator;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.Final;
-import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
-import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
-import ua.com.fielden.platform.entity.validation.annotation.Max;
-import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.StringConverter;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 
 /**
  * Base implementation for {@link IMetaPropertyFactory}.
@@ -73,11 +57,12 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = new ConcurrentHashMap<>();
     protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = new ConcurrentHashMap<>();
 
+    // *** INJECTABLE FIELDS
     private Injector injector;
-
     protected DomainValidationConfig domainConfig;
     protected DomainMetaPropertyConfig domainMetaConfig;
     private IDates dates;
+    // ***
 
     protected AbstractMetaPropertyFactory() {}
 
@@ -94,6 +79,11 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     @Inject
     void setDates(final IDates dates) {
         this.dates = dates;
+    }
+
+    @Inject
+    public void setInjector(final Injector injector) {
+        this.injector = injector;
     }
 
     @Override
@@ -487,7 +477,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         if (handler != null) {
             return handler;
         }
-        // if not provided then need to follow the new way of instantiating and caching ACE handlers
+        // if not provided, then need to follow the new way of instantiating and caching ACE handlers
         final Class<?> type = entity.getType();
         Map<String, IAfterChangeEventHandler<?>> typeHandlers = afterChangeEventHandlers.get(type);
         if (typeHandlers == null) {
@@ -520,11 +510,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         }
 
         return propHandler;
-    }
-
-    @Inject
-    public void setInjector(final Injector injector) {
-        this.injector = injector;
     }
 
 }
