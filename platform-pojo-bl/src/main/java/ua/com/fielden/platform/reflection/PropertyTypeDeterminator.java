@@ -1,32 +1,8 @@
 package ua.com.fielden.platform.reflection;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.*;
-import static ua.com.fielden.platform.utils.Pair.pair;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
-import java.util.Map;
-import java.util.Optional;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.IProxyEntity;
 import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
@@ -37,6 +13,16 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.*;
+import java.util.Map;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
  * Contains methods for property type determination.
@@ -305,8 +291,14 @@ public class PropertyTypeDeterminator {
         return IProxyEntity.class.isAssignableFrom(type);
     }
 
-    public static boolean isIdOnlyProxy(final Class<?> clazz) {
-        return IIdOnlyProxyEntity.class.isAssignableFrom(clazz);
+    /**
+     * Returns {@code true} if the specified class represents an id-only proxy.
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isIdOnlyProxy(final Class<?> type) {
+        return IIdOnlyProxyEntity.class.isAssignableFrom(type);
     }
 
     /**
