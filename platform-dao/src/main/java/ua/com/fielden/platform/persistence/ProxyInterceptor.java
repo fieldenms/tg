@@ -24,9 +24,9 @@ public class ProxyInterceptor extends EmptyInterceptor {
 
     private static final Logger LOGGER = getLogger(ProxyInterceptor.class);
 
-    private transient EntityFactory factory;
+    private final transient EntityFactory factory;
 
-    public void setFactory(final EntityFactory factory) {
+    public ProxyInterceptor(final EntityFactory factory) {
         this.factory = factory;
     }
 

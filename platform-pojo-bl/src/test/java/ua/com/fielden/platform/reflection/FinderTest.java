@@ -52,7 +52,7 @@ import ua.com.fielden.platform.reflection.test_entities.SimpleWithoutDescEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityWithoutDesc;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**
@@ -62,7 +62,7 @@ import ua.com.fielden.platform.types.tuples.T2;
  *
  */
 public class FinderTest {
-    private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+    private final Injector injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     private final IPropertyPathFilteringCondition filter = new IPropertyPathFilteringCondition() {

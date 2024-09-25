@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
@@ -21,7 +22,7 @@ public class Value3 implements ISingleOperand3 {
     }
 
     @Override
-    public String sql(final IDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         if (value == null) {
             return " NULL ";
         } else {

@@ -1,17 +1,14 @@
 package ua.com.fielden.platform.meta;
 
-import com.google.inject.Guice;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
-import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
@@ -20,17 +17,16 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.hasHibType;
 import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.noHibType;
+import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class PropertyHibernateTypeTest {
 
     private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
-            new DomainMetadataGenerator(
-                    Guice.createInjector(new HibernateUserTypesModule()),
-                    PlatformTestHibernateSetup.getHibernateTypes(),
-                    DbVersion.MSSQL));
+            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, constantDbVersion(DbVersion.MSSQL)));
 
     @Test
     public void hibernate_type_is_attached() {

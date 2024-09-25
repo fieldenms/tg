@@ -12,11 +12,6 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
  */
 public interface IDomainDrivenTestCaseConfiguration {
 
-    EntityFactory getEntityFactory();
-
     <T> T getInstance(Class<T> type);
 
-    IDomainMetadata getDomainMetadata();
-    
-    IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache();
 }

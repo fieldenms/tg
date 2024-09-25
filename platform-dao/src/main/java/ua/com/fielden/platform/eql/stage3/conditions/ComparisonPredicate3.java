@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.conditions;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -23,23 +24,28 @@ public class ComparisonPredicate3 implements ICondition3 {
     }
 
     @Override
-    public String sql(final IDomainMetadata metadata) {
-        if (metadata.dbVersion() == POSTGRESQL) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        if (dbVersion == POSTGRESQL) {
             return format("%s %s %s",
-                    operandToSqlWithCast(leftOperand, rightOperand, metadata),
+                    operandToSqlWithCast(leftOperand, rightOperand, metadata, dbVersion),
                     operator,
-                    operandToSqlWithCast(rightOperand, leftOperand, metadata));
+                    operandToSqlWithCast(rightOperand, leftOperand, metadata, dbVersion));
         } else {
-            return format("%s %s %s", leftOperand.sql(metadata), operator, rightOperand.sql(metadata));
+            return format("%s %s %s", leftOperand.sql(metadata, dbVersion), operator, rightOperand.sql(metadata, dbVersion));
         }
     }
 
-    private static String operandToSqlWithCast(final ISingleOperand3 operand, final ISingleOperand3 other, final IDomainMetadata metadata) {
+    private static String operandToSqlWithCast(
+            final ISingleOperand3 operand,
+            final ISingleOperand3 other,
+            final IDomainMetadata metadata,
+            final DbVersion dbVersion)
+    {
         if (operand.type().isNull() && other.type().isNotNull()) {
-            final var dialect = HibernateHelpers.getDialect(metadata.dbVersion());
-            return metadata.dbVersion().castSql(operand.sql(metadata), sqlCastTypeName(other.type().hibType(), dialect));
+            final var dialect = HibernateHelpers.getDialect(dbVersion);
+            return dbVersion.castSql(operand.sql(metadata, dbVersion), sqlCastTypeName(other.type().hibType(), dialect));
         } else {
-            return operand.sql(metadata);
+            return operand.sql(metadata, dbVersion);
         }
     }
 

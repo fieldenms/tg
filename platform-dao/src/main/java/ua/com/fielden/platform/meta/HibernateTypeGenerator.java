@@ -1,27 +1,23 @@
 package ua.com.fielden.platform.meta;
 
-import com.google.inject.Injector;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static java.lang.String.format;
-import static java.util.Collections.unmodifiableMap;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.meta.DomainMetadataGenerator.hasAnyNature;
 import static ua.com.fielden.platform.meta.EntityNature.SYNTHETIC;
 import static ua.com.fielden.platform.meta.EntityNature.UNION;
-import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.classFrom;
 
@@ -34,30 +30,10 @@ class HibernateTypeGenerator {
     private static final TypeConfiguration typeConfiguration = new TypeConfiguration();
     private static final TypeResolver typeResolver = new TypeResolver(typeConfiguration, new TypeFactory(typeConfiguration));
 
-    /** Class-to-instance map for Hibernate types. */
-    private final Map<Class<?>, Object> hibTypesDefaults;
-    private final Injector hibTypesInjector;
+    private final HibernateTypeMappings hibernateTypeMappings;
 
-    HibernateTypeGenerator(final Map<? extends Class, ? extends Class> hibTypesDefaults, final Injector hibTypesInjector) {
-        this.hibTypesInjector = hibTypesInjector;
-
-        if (hibTypesDefaults != null) {
-            final var map = new HashMap<Class<?>, Object>();
-            hibTypesDefaults.forEach((javaType, hibType) -> {
-                try {
-                    map.put(javaType, hibType.getDeclaredField("INSTANCE").get(null));
-                } catch (final Exception e) {
-                    throw new DomainMetadataGenerationException("Couldn't instantiate Hibernate type [" + hibType + "].",
-                                                                e);
-                }
-            });
-            // TODO old code, definitely a kludge, this class should not be responsible for establishing any mappings
-            map.put(Boolean.class, H_BOOLEAN);
-            map.put(boolean.class, H_BOOLEAN);
-            this.hibTypesDefaults = unmodifiableMap(map);
-        } else {
-            this.hibTypesDefaults = Map.of();
-        }
+    HibernateTypeGenerator(final HibernateTypeMappings hibernateTypeMappings) {
+        this.hibernateTypeMappings = hibernateTypeMappings;
     }
 
     /**
@@ -117,17 +93,11 @@ class HibernateTypeGenerator {
                         final Class<?> hibernateUserTypeImplementor = atPersistentType.userType();
                         if (isNotEmpty(hibernateTypeName)) {
                             return typeResolver.basic(hibernateTypeName);
-                        } else if (hibTypesInjector != null && !Void.class.equals(hibernateUserTypeImplementor)) {
+                        } else if (!Void.class.equals(hibernateUserTypeImplementor)) {
                             // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
-                            try {
-                                // need to have the same instance for unit tests
-                                return hibTypesInjector.getInstance(hibernateUserTypeImplementor).getClass()
-                                        .getDeclaredField("INSTANCE").get(null);
-                            } catch (final Exception e) {
-                                throw new DomainMetadataGenerationException(
-                                        format("Couldn't obtain instance of Hibernate type [%s]", hibernateUserTypeImplementor),
-                                        e);
-                            }
+                            return hibernateTypeMappings.getHibernateType(hibernateUserTypeImplementor)
+                                    .orElseThrow(() -> new DomainMetadataGenerationException(
+                                            format("Couldn't obtain instance of Hibernate type [%s]", hibernateUserTypeImplementor)));
                         } else {
                             throw new DomainMetadataGenerationException(
                                     format("Annotation [%s] doesn't provide enough information to obtain a Hibernate type.",
@@ -137,12 +107,9 @@ class HibernateTypeGenerator {
                         // this helps us get the raw class of parameterized types such as PropertyDescriptor
                         final Class<?> klass = classFrom(typeMetadata.javaType());
                         if (klass != null) {
-                            final Object defaultHibType = hibTypesDefaults.get(klass);
-                            if (defaultHibType != null) { // default is provided for given property java type
-                                return defaultHibType;
-                            } else { // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults
-                                return typeResolver.basic(klass.getName());
-                            }
+                            return hibernateTypeMappings.getHibernateType(klass)
+                                    // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults
+                                    .orElseGet(() -> typeResolver.basic(klass.getName()));
                         }
                         return null;
                     });

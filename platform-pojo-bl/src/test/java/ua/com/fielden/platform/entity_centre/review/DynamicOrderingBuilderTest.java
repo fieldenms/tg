@@ -23,8 +23,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
 
 @SuppressWarnings({ "unchecked", "serial" })
@@ -33,7 +33,7 @@ public class DynamicOrderingBuilderTest {
     private final static EntityFactory factory = createFactory();
 
     private static EntityFactory createFactory() {
-        final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+        final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
         final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
         return injector.getInstance(EntityFactory.class);
     }

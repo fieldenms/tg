@@ -2,26 +2,22 @@ package ua.com.fielden.platform.meta;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.test.PlatformTestHibernateSetup;
 
 import java.util.List;
 
-import static com.google.inject.Guice.createInjector;
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
+import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
 
 public class EntityMetadataUtilsTest {
 
     private final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-            PlatformTestHibernateSetup.getHibernateTypes(),
-            createInjector(new HibernateUserTypesModule()),
-            List.of(),
-            DbVersion.MSSQL)
+            PLATFORM_HIBERNATE_TYPE_MAPPINGS, List.of(), constantDbVersion(DbVersion.MSSQL))
             .build();
     private final EntityMetadataUtils emUtils = domainMetadata.entityMetadataUtils();
 

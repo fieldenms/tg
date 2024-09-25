@@ -4,14 +4,13 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.inject.Injector;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -19,6 +18,7 @@ import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.eql.retrieval.EntityContainerEnhancer;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 import javax.annotation.Nullable;
@@ -109,14 +109,12 @@ final class DomainMetadataGenerator {
     /** Permanent cache for component types. */
     private final Cache<Class<?>, TypeMetadata.Component> componentTypeMetadataCache;
 
-    // TODO make this injectable
-    DomainMetadataGenerator(final Injector hibTypesInjector, final Map<? extends Class, ? extends Class> hibTypesDefaults,
-                            final DbVersion dbVersion) {
+    DomainMetadataGenerator(final HibernateTypeMappings hibernateTypeMappings, final IDbVersionProvider dbVersionProvider) {
         // some columns are DB-dependent
         this.specialPropColumns = Map.of(
-                ID, new PropColumn(dbVersion.idColumnName()),
-                VERSION, new PropColumn(dbVersion.versionColumnName()));
-        this.hibTypeGenerator = new HibernateTypeGenerator(hibTypesDefaults, hibTypesInjector);
+                ID, new PropColumn(dbVersionProvider.dbVersion().idColumnName()),
+                VERSION, new PropColumn(dbVersionProvider.dbVersion().versionColumnName()));
+        this.hibTypeGenerator = new HibernateTypeGenerator(hibernateTypeMappings);
         this.entityMetadataCache = CacheBuilder.newBuilder()
                 .concurrencyLevel(50)
                 .maximumSize(8192)

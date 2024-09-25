@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.queries;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
@@ -22,7 +23,7 @@ public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
     }
 
     @Override
-    public String sql(final IDomainMetadata metadata) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         if (yields.getYields().size() != 1) {
             throw new EqlStage3ProcessingException(
                     "Subquery must yield only 1 value but yields %s: [%s]".formatted(
@@ -30,7 +31,7 @@ public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
         }
 
         final PropType expectedType = Objects.requireNonNullElse(type, NO_EXPECTED_TYPE);
-        return "(" + super.sql(metadata, List.of(expectedType)) + ")";
+        return "(" + super.sql(metadata, dbVersion, List.of(expectedType)) + ")";
     }
     
     @Override

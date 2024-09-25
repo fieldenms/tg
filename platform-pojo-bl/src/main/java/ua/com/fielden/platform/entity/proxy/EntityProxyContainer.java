@@ -26,7 +26,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.PROXIED_PROPERTY_NAM
 /**
  * 
  * A class that represents runtime type information for a proxied entity type. 
- * Factory method {@link #proxy(Class, String...)} should be used to create proxied entity type.
+ * Factory method {@link #proxy(Class, CharSequence...)} should be used to create proxied entity types.
  * 
  * @author TG Team
  */
@@ -61,7 +61,8 @@ public class EntityProxyContainer {
 
         final Set<CharSequence> uniquePropNames = ImmutableSet.copyOf(propNames);
 
-        final var typeKey = makeTypeKey(uniquePropNames, interfaces);
+        // exclude IProxyEntity from the type key, all proxy types implement it
+        final var typeKey = makeTypeKey(uniquePropNames, interfaces.stream().filter(ty -> ty != IProxyEntity.class));
         // let's try to find the generated type in the cache
         final var typeCache = getOrCreateTypeCache(entityType);
         final Class<? extends AbstractEntity<?>> type = typeCache.getIfPresent(typeKey);
@@ -139,9 +140,9 @@ public class EntityProxyContainer {
      * @param properties  properties to be proxied in the type
      * @param interfaces  interfaces for the type to implement
      */
-    protected static Object makeTypeKey(Collection<? extends CharSequence> properties, Collection<? extends Class> interfaces) {
+    protected static Object makeTypeKey(final Collection<? extends CharSequence> properties, final Stream<? extends Class> interfaces) {
         final String propertiesKey = properties.stream().distinct().sorted(CharSequence::compare).collect(joining(","));
-        final String interfacesKey = interfaces.stream().distinct().map(Class::getCanonicalName).sorted(String::compareTo).collect(joining(","));
+        final String interfacesKey = interfaces.distinct().map(Class::getCanonicalName).sorted(String::compareTo).collect(joining(","));
         return Stream.of(propertiesKey, interfacesKey).filter(s -> !s.isEmpty()).collect(joining(":"));
     }
 

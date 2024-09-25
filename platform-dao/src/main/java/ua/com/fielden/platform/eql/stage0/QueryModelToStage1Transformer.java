@@ -20,6 +20,7 @@ import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.EMPTY_CONDITIONS;
@@ -32,10 +33,15 @@ import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.EMPTY_ORDER_
 public class QueryModelToStage1Transformer {
     public final QueryNowValue nowValue;
     public final IFilter filter;
-    public final String username;
+    private final Optional<String> username;
     private final Map<String, Object> paramValues = new HashMap<>();
 
-    public QueryModelToStage1Transformer(final IFilter filter, final String username, final QueryNowValue nowValue, final Map<String, Object> paramValues) {
+    public QueryModelToStage1Transformer(
+            final IFilter filter,
+            final Optional<String> username,
+            final QueryNowValue nowValue,
+            final Map<String, Object> paramValues)
+    {
         this.filter = filter;
         this.username = username;
         this.nowValue = nowValue;
@@ -43,7 +49,7 @@ public class QueryModelToStage1Transformer {
     }
 
     public QueryModelToStage1Transformer() {
-        this(null, null, null, emptyMap());
+        this(null, Optional.empty(), null, emptyMap());
     }
 
     private int sourceId = 0;
@@ -88,10 +94,15 @@ public class QueryModelToStage1Transformer {
                 qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery());
     }
 
-    private Conditions1 generateUserDataFilteringCondition(final boolean filterable, final IFilter filter, final String username, final ISource1<?> mainSource) {
+    private Conditions1 generateUserDataFilteringCondition(
+            final boolean filterable,
+            final IFilter filter,
+            final Optional<String> username,
+            final ISource1<?> mainSource)
+    {
         if (filterable && filter != null) {
             // now there is no need to rely on the main source alias while processing UDF (that's why null can be used until alias parameter is removed from the enhance() method.
-            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), null, username);
+            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), null, username.orElse(null));
             if (filteringCondition != null) {
                 // LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
                 return new EqlCompiler(this).compile(filteringCondition.getTokenSource(), EqlCompilationResult.StandaloneCondition.class).model();

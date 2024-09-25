@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 import com.google.inject.Inject;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.security.user.UserSecretCo;
  * @author TG Team
  *
  */
+@Singleton
 public class DefaultAuthenticationModel implements IAuthenticationModel {
 
     private static final Result failedAuthResult = failure("The presented login credentials are not recognized.");

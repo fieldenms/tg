@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.inject.AbstractModule;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,6 +43,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -53,10 +55,8 @@ import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModifiedW
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModifiedWithInnerTypes.InnerEnum;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityWithCollectionalPropety;
 import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * A test case to ensure correct dynamic modification of entity types by means of changing existing properties.
@@ -76,8 +76,16 @@ public class DynamicEntityTypePropertiesModificationTest {
             calculated);
 
     private boolean observed = false;
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+    private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
+    private final Injector injector = new ApplicationInjectorFactory()
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
+            .add(new AbstractModule() {
+                @Override
+                protected void configure() {
+                    bind(DomainMetaPropertyConfig.class).toInstance(domainMetaPropertyConfig);
+                }
+            })
+            .getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     @Before
@@ -410,7 +418,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                 .modifyProperties(np)
                 .endModification();
 
-        module.getDomainMetaPropertyConfig().setDefiner(newType, np.getName(), new IAfterChangeEventHandler<Object>() {
+        domainMetaPropertyConfig.setDefiner(newType, np.getName(), new IAfterChangeEventHandler<Object>() {
             @Override
             public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
                 observed = true;

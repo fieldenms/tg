@@ -40,7 +40,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
     protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
         this.config = config;
         provider = config.getInstance(ICompanionObjectFinder.class);
-        factory = config.getEntityFactory();
+        factory = config.getInstance(EntityFactory.class);
     }
 
     /**

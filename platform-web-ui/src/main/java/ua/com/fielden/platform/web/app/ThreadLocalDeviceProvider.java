@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.app;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
@@ -9,6 +10,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  * @author TG Team
  * 
  */
+@Singleton
 public class ThreadLocalDeviceProvider implements IDeviceProvider {
     
     private final ThreadLocal<DeviceProfile> deviceProfile = new ThreadLocal<>();

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.dao;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -19,22 +20,25 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.*;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
+import ua.com.fielden.platform.entity.query.IEntityFetcher;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
-import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -43,9 +47,13 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
+import static ua.com.fielden.platform.utils.Lazy.lazyProvider;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 
 /**
  * This is a base class for db-aware implementations of entity companions.
+ * <p>
+ * Method injection is used to free subclasses from the burden of declaring a huge constructor that only needs to call {@code super}.
  *
  * @author TG Team
  *
@@ -55,27 +63,23 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     private final Logger logger = getLogger(this.getClass());
 
-    private final PersistentEntitySaver<T> entitySaver;
-
-    private Session session;
-    private String transactionGuid;
-    private IDomainMetadata domainMetadata;
-    private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
-
-    @Inject
+    // *** INJECTABLE FIELDS
+    private IDbVersionProvider dbVersionProvider;
     private ICompanionObjectFinder coFinder;
-    @Inject
     private Injector injector;
-
-    private final IFilter filter;
-    private final DeleteOperations<T> deleteOps;
-
-    @Inject
     private IUniversalConstants universalConstants;
-    @Inject
-    private IDates dates;
-    @Inject
-    private IUserProvider up;
+    private IUserProvider userProvider;
+    private EntityFactory entityFactory;
+    private IEntityFetcher entityFetcher;
+    private Supplier<DeleteOperations<T>> deleteOps;
+    private Supplier<PersistentEntitySaver<T>> entitySaver;
+    // ***
+
+    /** Session-scoped. Set by {@link SessionInterceptor} */
+    private Session session;
+
+    /** Session-scoped. Set by {@link SessionInterceptor} */
+    private String transactionGuid;
 
     /** A guard against an accidental use of quick save to prevent its use for companions with overridden method <code>save</code>.
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
@@ -87,84 +91,88 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private final Class<T> entityType;
     private IFetchProvider<T> fetchProvider;
 
-    @Inject
-    private EntityFactory entityFactory;
-
     /**
      * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
      * An exception is thrown if the annotation is missing.
-     *
-     * @param filter
+     * <p>
+     * <b>Deprecated</b>: use the no-arg constructor (the {@code super} call is no longer necessary).
      */
+    @Deprecated(forRemoval = true)
     protected CommonEntityDao(final IFilter filter) {
+        this();
+    }
+
+    protected CommonEntityDao() {
         final EntityType annotation = AnnotationReflector.getAnnotation(getClass(), EntityType.class);
         if (annotation == null) {
             throw new EntityCompanionException(format("Companion object [%s] is missing @EntityType annotation.", getClass().getName()));
         }
         this.entityType = (Class<T>) annotation.value();
         this.keyType = AnnotationReflector.getKeyType(entityType);
+    }
 
-        this.filter = filter;
-        this.deleteOps = new DeleteOperations<>(
-                this,
-                this::getSession,
-                entityType,
-                this::newQueryExecutionContext,
-                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), getDomainMetadata().getTableForEntityType(entityType)));
+    @Inject
+    protected void setDeleteOpsFactory(final Provider<DeleteOperations.Factory> deleteOpsFactory) {
+        deleteOps = lazyProvider(() -> deleteOpsFactory.get().create(this, this::getSession, entityType));
+    }
 
-        entitySaver = new PersistentEntitySaver<>(
+    @Inject
+    protected void setPersistentEntitySaverFactory(final Provider<PersistentEntitySaver.Factory> factory) {
+        entitySaver = lazySupplier(() -> factory.get().create(
                 this::getSession,
                 this::getTransactionGuid,
-                this::getDbVersion,
                 entityType,
                 keyType,
-                this::getUser,
-                () -> getUniversalConstants().now(),
-                this::getCoFinder,
-                this::newQueryExecutionContext,
                 this::processAfterSaveEvent,
                 this::assignBeforeSave,
                 this::findById,
                 this::exists,
-                logger);
-
+                logger));
     }
 
-    /**
-     * A helper method to create new instances of {@link QueryExecutionContext}.
-     * @return
-     */
-    @Override
-    protected QueryExecutionContext newQueryExecutionContext() {
-        return new QueryExecutionContext(
-                getSession(),
-                getEntityFactory(),
-                getCoFinder(),
-                getDomainMetadata(),
-                getFilter(),
-                getUsername(),
-                dates,
-                getIdOnlyProxiedEntityTypeCache());
-    }
-
-    /**
-     * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
-     *
-     * @param domainMetadata
-     */
     @Inject
-    protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
-        this.domainMetadata = domainMetadata;
+    protected void setDbVersionProvider(final IDbVersionProvider dbVersionProvider) {
+        this.dbVersionProvider = dbVersionProvider;
+    }
+
+    @Inject
+    protected void setCoFinder(final ICompanionObjectFinder coFinder) {
+        this.coFinder = coFinder;
+    }
+
+    @Inject
+    protected void setInjector(final Injector injector) {
+        this.injector = injector;
+    }
+
+    @Inject
+    protected void setUniversalConstants(final IUniversalConstants universalConstants) {
+        this.universalConstants = universalConstants;
+    }
+
+    @Inject
+    protected void setUserProvider(final IUserProvider userProvider) {
+        this.userProvider = userProvider;
+    }
+
+    @Inject
+    protected void setEntityFactory(final EntityFactory entityFactory) {
+        this.entityFactory = entityFactory;
+    }
+
+    @Inject
+    protected void setEntityFetcher(final IEntityFetcher entityFetcher) {
+        this.entityFetcher = entityFetcher;
     }
 
     @Override
     public DbVersion getDbVersion() {
-        return domainMetadata.dbVersion();
+        return dbVersionProvider.dbVersion();
     }
 
-    @Inject
-    protected void setIdOnlyProxiedEntityTypeCache(final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
-        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
+    @Override
+    protected IEntityFetcher entityFetcher() {
+        return entityFetcher;
     }
 
     /**
@@ -224,7 +232,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         } else if (!entity.isPersistent()) {
             throw new EntityCompanionException(format("Quick save is not supported for non-persistent entity [%s].", entityType.getName()));
         } else {
-            final Long id = entitySaver.coreSave(entity, true, empty())._1;
+            final Long id = entitySaver.get().coreSave(entity, true, empty())._1;
             if (id == null) {
                 throw new EntityCompanionException(format("Saving of entity [%s] did not return its ID.", entityType.getName()));
             }
@@ -240,7 +248,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         } else if (!entity.isPersistent()) {
             return entity;
         } else {
-            return entitySaver.save(entity);
+            return entitySaver.get().save(entity);
         }
     }
 
@@ -263,7 +271,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     protected Either<Long, T> save(final T entity, final Optional<fetch<T>> maybeFetch) {
         // if maybeFetch is empty then we skip re-fetching
         final boolean skipRefetching = !maybeFetch.isPresent();
-        final T2<Long, T> result = entitySaver.coreSave(entity, skipRefetching, maybeFetch);
+        final T2<Long, T> result = entitySaver.get().coreSave(entity, skipRefetching, maybeFetch);
         return skipRefetching ? left(result._1) : right(result._2);
     }
 
@@ -328,21 +336,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles));
     }
 
-    public IDomainMetadata getDomainMetadata() {
-        return domainMetadata;
-    }
-
-    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
-        return idOnlyProxiedEntityTypeCache;
-    }
-
     @Override
     public User getUser() {
-        return up.getUser();
-    }
-
-    public IFilter getFilter() {
-        return filter;
+        return userProvider.getUser();
     }
 
     protected ICompanionObjectFinder getCoFinder() {
@@ -351,10 +347,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
-    }
-
-    public IDates dates() {
-        return dates;
     }
 
     /**
@@ -533,7 +525,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected void defaultDelete(final T entity) {
-        deleteOps.defaultDelete(entity);
+        deleteOps.get().defaultDelete(entity);
     }
 
     /**
@@ -544,7 +536,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        deleteOps.defaultDelete(model, paramValues);
+        deleteOps.get().defaultDelete(model, paramValues);
     }
 
     /**
@@ -554,7 +546,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model) {
-        deleteOps.defaultDelete(model);
+        deleteOps.get().defaultDelete(model);
     }
 
     /**
@@ -566,7 +558,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        return deleteOps.defaultBatchDelete(model, paramValues);
+        return deleteOps.get().defaultBatchDelete(model, paramValues);
     }
 
     /**
@@ -577,7 +569,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
-        return deleteOps.defaultBatchDelete(model);
+        return deleteOps.get().defaultBatchDelete(model);
     }
 
     /**
@@ -599,7 +591,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
-        return deleteOps.defaultBatchDelete(entitiesIds);
+        return deleteOps.get().defaultBatchDelete(entitiesIds);
     }
 
     /**
@@ -612,7 +604,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
-        return deleteOps.defaultBatchDeleteByPropertyValues(propName, entitiesIds);
+        return deleteOps.get().defaultBatchDeleteByPropertyValues(propName, entitiesIds);
     }
 
     /**
@@ -624,7 +616,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected <E extends AbstractEntity<?>> int defaultBatchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
-        return deleteOps.defaultBatchDeleteByPropertyValues(propName, propEntities);
+        return deleteOps.get().defaultBatchDeleteByPropertyValues(propName, propEntities);
     }
 
     @Override

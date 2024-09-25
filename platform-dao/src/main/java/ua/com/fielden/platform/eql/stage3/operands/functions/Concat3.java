@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -21,15 +22,15 @@ public class Concat3 extends AbstractFunction3 {
     }
 
     @Override
-    public String sql(final IDomainMetadata metadata) {
-        switch (metadata.dbVersion()) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        switch (dbVersion) {
         case H2:
         case MSSQL:
-            return format(" (%s)", operands.stream().map(so -> operandToSqlAsString(metadata, so)).collect(joining(" + ")));
+            return format(" (%s)", operands.stream().map(so -> operandToSqlAsString(metadata, dbVersion, so)).collect(joining(" + ")));
         case POSTGRESQL:
-            return format(" (%s)", operands.stream().map(so -> operandToSqlAsString(metadata, so)).collect(joining(" || ")));
+            return format(" (%s)", operands.stream().map(so -> operandToSqlAsString(metadata, dbVersion, so)).collect(joining(" || ")));
         default:
-            return super.sql(metadata);
+            return super.sql(metadata, dbVersion);
         }
     }
     

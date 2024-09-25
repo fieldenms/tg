@@ -1,25 +1,18 @@
 package ua.com.fielden.platform.eql.meta;
 
-import com.google.inject.Guice;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.persistence.types.*;
 import ua.com.fielden.platform.sample.domain.*;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
+import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 import static ua.com.fielden.platform.test.PlatformTestDomainTypes.entityTypes;
 
 public class BaseEntQueryTCase1 {
@@ -52,20 +45,10 @@ public class BaseEntQueryTCase1 {
     protected static final Type H_BIG_DECIMAL = StandardBasicTypes.BIG_DECIMAL;
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
 
-    public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
-
     protected static final IDomainMetadata DOMAIN_METADATA;
 
     static {
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
-        hibTypeDefaults.put(Colour.class, ColourType.class);
-        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
-
-        DOMAIN_METADATA = new DomainMetadataBuilder(
-                hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), entityTypes, H2).build();
+        DOMAIN_METADATA = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, entityTypes, constantDbVersion(H2)).build();
     }
 
 }

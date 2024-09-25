@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.eql.dbschema;
 
+import com.google.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
+import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.types.either.Either;
@@ -12,7 +15,6 @@ import ua.com.fielden.platform.types.either.Either;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import static java.util.Comparator.comparing;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -35,13 +37,18 @@ public class HibernateMappingsGenerator {
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
 
     private final IDomainMetadata domainMetadata;
-    private final DbVersion dbVersion;
+    private final EqlTables eqlTables;
+    private final IDbVersionProvider dbVersionProvider;
     private final PropertyMetadataUtils pmUtils;
 
-    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata) {
+    @Inject
+    public HibernateMappingsGenerator(final IDomainMetadata domainMetadata,
+                                      final IDbVersionProvider dbVersionProvider,
+                                      final EqlTables eqlTables) {
+        this.eqlTables = eqlTables;
         this.domainMetadata = domainMetadata;
         this.pmUtils = domainMetadata.propertyMetadataUtils();
-        this.dbVersion = domainMetadata.dbVersion();
+        this.dbVersionProvider = dbVersionProvider;
     }
 
     public String generateMappings() {
@@ -57,8 +64,8 @@ public class HibernateMappingsGenerator {
                 .sorted(comparing(em -> em.javaType().getSimpleName())) // sort for testing purposes
                 .forEach(em -> {
                     try {
-                        final var tableName = domainMetadata.getTableForEntityType(em.javaType()).name();
-                        sb.append(generateEntityClassMapping(domainMetadata, em, tableName, dbVersion));
+                        final var tableName = eqlTables.getTableForEntityType(em.javaType()).name();
+                        sb.append(generateEntityClassMapping(domainMetadata, em, tableName, dbVersionProvider.dbVersion()));
                     } catch (final Exception ex) {
                         LOGGER.error(ex);
                         throw new EqlMetadataGenerationException("Could not generate mapping for " + em, ex);

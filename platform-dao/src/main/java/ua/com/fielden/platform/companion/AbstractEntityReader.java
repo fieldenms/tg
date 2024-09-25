@@ -29,8 +29,7 @@ import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityFetcher;
-import ua.com.fielden.platform.entity.query.QueryExecutionContext;
+import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -43,8 +42,8 @@ import ua.com.fielden.platform.utils.Pair;
  * It is designed to be sub-typed in order to implement abstract methods, which are introduced here and are more of an infrastructural nature.
  * <p>
  * The main purpose to have this class extended, is to enable correct DB session association with instances of {@link IPage} that are produced by various pagination API methods.
- * These pages have the ability to move between next or previous pages, thus, requiring a DB session. 
- * However, by themselves neither page instances nor this class are session-enabled.
+ * These pages can move between next or previous pages, thus, requiring a DB session.
+ * However, by themselves, neither page instances nor this class are session-enabled.
  * So, this class should be sub-typed with a type that implements {@link ISessionEnabled}.     
  * 
  * @author TG Team
@@ -55,7 +54,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     public static final String ERR_MISSING_ID_VALUE = "Argument [id] must have a value to find an instance of [%s].";
 
     ///////////////////////////////////////////////////////////
-    ////////////// infrastructural methods ////////////////////
+    ////////////// Infrastructural methods ////////////////////
     ///////////////////////////////////////////////////////////
 
     protected abstract Session getSession();
@@ -64,13 +63,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     protected abstract boolean instrumented();
 
-    /**
-     * A factory method to create new instances of {@link QueryExecutionContext}, which is required for implementing various reader methods.
-     * This method is abstract in order to reduce dependencies of this reader implementation on types that are required for instantiating {@link QueryExecutionContext}.
-     *   
-     * @return
-     */
-    protected abstract QueryExecutionContext newQueryExecutionContext();
+    protected abstract IEntityFetcher entityFetcher();
 
     ///////////////////////////////////////////////////////////
     /////////////// Entity reader API methods /////////////////
@@ -108,7 +101,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         } catch (final EntityCompanionException e) {
             throw e;
         } catch (final Exception e) {
-            throw new EntityCompanionException(format("Could not find and fetch by key an entity of type [%s].", getEntityType().getName()), e);
+            throw new EntityCompanionException("Could not find and fetch by key an entity of type [%s].".formatted(getEntityType().getName()), e);
         }
     }
 
@@ -171,7 +164,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     public boolean exists(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel existsQuery = select().yield().caseWhen().exists(model).then().val(1).otherwise().val(0).endAsInt().as("exists").modelAsAggregate();
         final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(existsQuery).with(paramValues).with(fetchAggregates().with("exists")).lightweight().model();
-        final int result = new EntityFetcher(newQueryExecutionContext()).getEntities(countModel).get(0).get("exists");
+        final int result = entityFetcher().getEntities(getSession(), countModel).get(0).get("exists");
         return result == 1;
     }
 
@@ -196,7 +189,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     @SessionRequired
     public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
-        return new EntityFetcher(newQueryExecutionContext()).streamEntities(qem, Optional.of(fetchSize));
+        return entityFetcher().streamEntities(getSession(), qem, Optional.of(fetchSize));
     }
     
     /**
@@ -260,7 +253,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
-        return new EntityFetcher(newQueryExecutionContext()).getEntitiesOnPage(qem, pageNumber, pageCapacity);
+        return entityFetcher().getEntitiesOnPage(getSession(), qem, pageNumber, pageCapacity);
     }
 
     @Override
@@ -275,7 +268,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     }
 
     /**
-     * Calculates the number of pages of the given size required to fit the whole result set.
+     * Calculates the number of pages with a given size, needed to fit all records in a result set.
      *
      *
      * @param model
@@ -288,7 +281,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
                 : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
         final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetchAggregates().with("count")).lightweight().model();
 
-        final List<EntityAggregates> counts = new EntityFetcher(newQueryExecutionContext()).getEntities(countModel);
+        final List<EntityAggregates> counts = entityFetcher().getEntities(getSession(), countModel);
 
         final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 

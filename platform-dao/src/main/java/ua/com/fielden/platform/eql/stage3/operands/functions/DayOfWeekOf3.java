@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -13,19 +14,19 @@ public class DayOfWeekOf3 extends SingleOperandFunction3 {
     }
     
     @Override
-    public String sql(final IDomainMetadata metadata) {
-        switch (metadata.dbVersion()) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        switch (dbVersion) {
         case H2:
-            return format("ISO_DAY_OF_WEEK(%s)", operand.sql(metadata));
+            return format("ISO_DAY_OF_WEEK(%s)", operand.sql(metadata, dbVersion));
         case MSSQL:
-            final String operandSql = operand.sql(metadata);
+            final String operandSql = operand.sql(metadata, dbVersion);
             return format("((DATEPART(DW, %s) + @@DATEFIRST - 1) %% 8 + (DATEPART(DW, %s) + @@DATEFIRST - 1) / 8)", operandSql, operandSql);
         case POSTGRESQL:
             // need to typecast explicitly to allow usage of date literals
             // TODO differentiate between date literals and date columns – only date literals need to be typecasted explicitly. 
-            return format("CAST(EXTRACT(ISODOW FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata));
+            return format("CAST(EXTRACT(ISODOW FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
         default:
-            return super.sql(metadata);
+            return super.sql(metadata, dbVersion);
         }   
     }
 
