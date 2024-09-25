@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -48,18 +47,18 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final FinalValidator[] persistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(true, false)};
     protected final FinalValidator[] persistedOnlyAndNullIsValueFinalValidator = new FinalValidator[]{new FinalValidator(true, true)};
     protected final Cache<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = CacheBuilder.newBuilder().weakKeys().initialCapacity(300).concurrencyLevel(50).build();
-    protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new ConcurrentHashMap<>();
-    protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new ConcurrentHashMap<>();
-    protected final Map<Integer, MaxValueValidator> maxValueValidators = new ConcurrentHashMap<>();
-    protected final Map<Class<?>, Map<String, RangePropertyValidator>> geRangeValidators = new ConcurrentHashMap<>();
-    protected final Map<Class<?>, Map<String, RangePropertyValidator>> leRangeValidators = new ConcurrentHashMap<>();
+    protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new HashMap<>();
+    protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new HashMap<>();
+    protected final Map<Integer, MaxValueValidator> maxValueValidators = new HashMap<>();
+    protected final Map<Class<?>, Map<String, RangePropertyValidator>> geRangeValidators = new HashMap<>();
+    protected final Map<Class<?>, Map<String, RangePropertyValidator>> leRangeValidators = new HashMap<>();
     // type, property, array of handlers
-    protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = new ConcurrentHashMap<>();
-    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = new HashMap<>();
+    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = new HashMap<>();
 
     // *** INJECTABLE FIELDS
     private Injector injector;
-    protected DomainValidationConfig domainConfig;
+    protected DomainValidationConfig domainValidationConfig;
     protected DomainMetaPropertyConfig domainMetaConfig;
     private IDates dates;
     // ***
@@ -67,8 +66,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected AbstractMetaPropertyFactory() {}
 
     @Inject
-    void setDomainConfig(final DomainValidationConfig domainConfig) {
-        this.domainConfig = domainConfig;
+    void setDomainValidationConfig(final DomainValidationConfig domainValidationConfig) {
+        this.domainValidationConfig = domainValidationConfig;
     }
 
     @Inject
@@ -127,7 +126,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             }
             throw new RuntimeException("Property " + propertyName + " of type " + propertyType.getName() + " does not support Max validation.");
         case DOMAIN:
-            return new IBeforeChangeEventHandler[] { domainConfig.getValidator(entity.getType(), propertyName) };
+            return new IBeforeChangeEventHandler[] { domainValidationConfig.getValidator(entity.getType(), propertyName) };
         case BEFORE_CHANGE:
             return createBeforeChange(entity, propertyName, (BeforeChange) annotation);
         case UNIQUE:
@@ -444,13 +443,13 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty, final IDates dates) {
         return geRangeValidators
-                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(entity.getType(), key -> new HashMap<>())
                 .computeIfAbsent(upperBoundaryProperty, key -> new RangePropertyValidator(lowerBoundaryProperties, true, dates));
     }
 
     private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties, final IDates dates) {
         return leRangeValidators
-                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(entity.getType(), key -> new HashMap<>())
                 .computeIfAbsent(lowerBoundaryProperty, key -> new RangePropertyValidator(upperBoundaryProperties, false, dates));
 
     }
