@@ -13,9 +13,18 @@ import java.util.Optional;
  *
  * @param javaType could be useful for determining if the FK constraint is applicable
  */
-public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMemberOrder, boolean nullable, String name,
-                               Class<?> javaType, int sqlType, int length, int scale, int precision,
-                               String defaultValue, boolean requiresIndex) {
+public record ColumnDefinition(boolean unique,
+                               Optional<Integer> compositeKeyMemberOrder,
+                               boolean nullable,
+                               String name,
+                               Class<?> javaType,
+                               int sqlType,
+                               int length,
+                               int scale,
+                               int precision,
+                               String defaultValue,
+                               boolean requiresIndex)
+{
     public static final int DEFAULT_STRING_LENGTH = 255;
     public static final int DEFAULT_NUMERIC_PRECISION = 18;
     public static final int DEFAULT_NUMERIC_SCALE = 2;
@@ -50,7 +59,7 @@ public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMem
     }
 
     /**
-     * Generates DDL statement for a column based on provided RDBMS dialect.
+     * Generates a DDL statement for a column based on provided RDBMS dialect.
      *
      * @param dialect
      * @return
