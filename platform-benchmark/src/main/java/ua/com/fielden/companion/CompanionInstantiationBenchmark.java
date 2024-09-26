@@ -22,7 +22,7 @@ import static ua.com.fielden.companion.BenchmarkIocModule.newBenchmarkModule;
  * The following command should be used to run this benchmark, assuming the current working directory is this module (platform-benchmark).
  * <pre>
 java -jar target/benchmarks.jar \
-    -p propertiesFile="src/main/resources/CompanionInstantiationBenchmark.properties" \
+    -p propertiesFile="src/main/resources/benchmark-application.properties" \
     -prof gc \
     "ua.com.fielden.companion.CompanionInstantiationBenchmark"
  </pre>

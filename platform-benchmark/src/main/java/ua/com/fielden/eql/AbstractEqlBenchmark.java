@@ -30,7 +30,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  * is this module (platform-benchmark).
  * <pre>
  java -jar target/benchmarks.jar \
- -p propertiesFile="src/main/resources/AbstractEqlBenchmark.properties" \
+ -p propertiesFile="src/main/resources/benchmark-application.properties" \
  -prof gc \
  "ua.com.fielden.eql.$SPECIFIC_BENCHMARK"
  </pre>
