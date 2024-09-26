@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.meta;
 
-import ua.com.fielden.platform.persistence.types.MoneyUserType;
-import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountUserType;
+import ua.com.fielden.platform.persistence.types.MoneyType;
+import ua.com.fielden.platform.persistence.types.MoneyWithTaxAmountType;
 import ua.com.fielden.platform.types.Money;
 
 import java.util.List;
@@ -22,25 +22,26 @@ public interface PropertyMetadataUtils {
     }
 
     /**
-     * Returns sub-properties of a property. The result depends on the property's type and nature.
+     * Returns sub-properties of a property.
+     * The result depends on the property's type and nature.
      *
      * <ul>
      *   <li> Union Entity - all natures are supported and the following sub-properties are included:
      *     <ul>
-     *       <li> Union members.
-     *       <li> Implicitly calculated properties of the union entity.
+     *       <li> Union properties (aka union members).
+     *       <li> Implicitly calculated properties of the union entity (e.g., common properties).
      *     </ul>
-     *   <li> Composite Type - depending on the property's nature:
+     *   <li> Component Type - depending on the property's nature:
      *     <ul>
      *       <li> Persistent - nature is inherited.
-     *       <li> Calculated - nature is inherited, the same expression is used (the effects are unspecified when there
-     *            are multiple components).
-     *       <li> Other natures - makes sense only if the property has a Hibernate type. Nature is inherited.
+     *       <li> Calculated - nature is inherited, the same expression is used (the effects are unspecified when there are multiple components).
+     *       <li> Other natures - makes sense only if the property has a Hibernate type.
+     *            Nature is inherited.
      *     </ul>
-     *     Note that a composite type may have several representations. Thus, which component properties are included
-     *     depends on the representation used by the property. For example, {@link Money} can be represented as:
-     *     {@link MoneyUserType}, {@link MoneyWithTaxAmountUserType}, etc. Each of these representations is free to
-     *     decide which properties of {@link Money} are included.
+     *     Note that a component type may have several representations.
+     *     Thus, which component properties are included depends on the representation used by the property.
+     *     For example, {@link Money} can be represented as: {@link MoneyType}, {@link MoneyWithTaxAmountType}, etc.
+     *     Each of these representations is free to decide which properties of {@link Money} are included.
      *   <li> Other types - nothing is included.
      * </ul>
      */

@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
+import ua.com.fielden.platform.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
@@ -23,7 +23,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.test_entities.*;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
@@ -55,7 +55,7 @@ public class AbstractEntityTest {
     private boolean observedForIncorrectAttempt = false; // used
 
     private final Injector injector = new ApplicationInjectorFactory()
-            .add(new CommonTestEntityModuleWithPropertyFactory())
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
             .add(new AbstractModule() {
                 @Override
                 protected void configure() {

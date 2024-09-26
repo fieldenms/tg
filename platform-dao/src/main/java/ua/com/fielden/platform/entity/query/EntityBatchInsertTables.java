@@ -55,7 +55,7 @@ final class EntityBatchInsertTables {
                 .filter(prop -> !ID.equals(prop.name()) && !VERSION.equals(prop.name()))
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                 .flatMap(prop -> {
-                    if (prop.type().isComposite()) {
+                    if (prop.type().isComponent()) {
                         final var subColumnNames = pmUtils.subProperties(prop).stream()
                                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                                 .map(p -> p.data().column().name)

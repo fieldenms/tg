@@ -31,8 +31,8 @@ import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.io.ByteArrayInputStream;
@@ -59,7 +59,7 @@ public class DynamicQueryBuilderSqlTest {
     private final static IDates dates = injector.getInstance(IDates.class);
 
     private static Injector createInjector() {
-        final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+        final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
         return new ApplicationInjectorFactory().add(module).getInjector();
     }
 

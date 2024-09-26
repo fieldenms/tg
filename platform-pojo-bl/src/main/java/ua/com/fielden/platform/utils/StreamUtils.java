@@ -275,43 +275,55 @@ public class StreamUtils {
     }
 
     /**
-     * If the stream is empty, returns an empty optional. Otherwise, equivalent to {@link #foldLeft(BaseStream, Object, BiFunction)}
-     * where the initial result value is the first element of the stream and folding is performed on the rest of the stream.
+     * Applies a binary operator to all elements of the {@code stream}, going left to right.
      */
-    public static <T> Optional<T> foldLeft(final BaseStream<T, ?> stream,
-                                           final BiFunction<? super T, ? super T, T> fn) {
-        var iter = stream.iterator();
-
-        if (!iter.hasNext())
+    public static <T> Optional<T> reduceLeft(final BaseStream<T, ?> stream,
+                                             final BiFunction<? super T, ? super T, T> fn) {
+        final var iter = stream.iterator();
+        if (!iter.hasNext()) {
             return Optional.empty();
+        }
 
         return Optional.of(foldLeft_(iter, iter.next(), fn));
     }
 
     /**
-     * Sequential reduction of the stream from left to right.
+     * Applies a binary function to a start value and all elements of a stream, going left to right.
      *
-     * @param fn  function that folds an element into the result
-     * @param init  initial result value
+     * @param stream the stream to be folded.
+     * @param fn  the binary function that folds an element into the result
+     * @param z  the start value
+     * @return the result of applying {@code fn} to consecutive elements of the {@code stream}, going left to right with the start value {@code z} on the left:
+     *         {@code fn(...fn(z, x1), x2, ..., xn)} where {@code x1}, ..., {@code xn} are the elements of the stream. Returns {@code z} if the stream is empty.
      */
     public static <A, B> B foldLeft(final BaseStream<A, ?> stream,
-                                    final B init,
-                                    final BiFunction<? super B, ? super A, B> fn) {
-        return foldLeft_(stream.iterator(), init, fn);
+                                      final B z,
+                                      final BiFunction<? super B, ? super A, B> fn) {
+        return foldLeft_(stream.iterator(), z, fn);
     }
 
+    /**
+     * Helper function that actually performs folding.
+     *
+     * @param iter
+     * @param z
+     * @param fn
+     * @return
+     */
     private static <A, B> B foldLeft_(final Iterator<A> iter,
-                                      final B init,
+                                      final B z,
                                       final BiFunction<? super B, ? super A, B> fn) {
-        if (!iter.hasNext())
-            return init;
+        if (!iter.hasNext()) {
+            return z;
+        }
 
-        B acc = init;
-        while (iter.hasNext())
+        B acc = z;
+        while (iter.hasNext()) {
             acc = fn.apply(acc, iter.next());
-
+        }
         return acc;
     }
+
 
     /**
      * Sometimes there are situations where it is required to identify whether a stream is empty, and if it is empty, supply an alternative stream.

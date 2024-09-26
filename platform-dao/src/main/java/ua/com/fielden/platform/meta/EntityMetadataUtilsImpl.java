@@ -10,7 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.UNION_MEMBER;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
@@ -32,7 +32,7 @@ final class EntityMetadataUtilsImpl implements EntityMetadataUtils {
     public List<PropertyMetadata> keyMembers(final EntityMetadata entityMetadata) {
         final var compKeyMembers = compositeKeyMembers(entityMetadata);
         return compKeyMembers.isEmpty()
-                ? ImmutableList.of(entityMetadata.property("key"))
+                ? ImmutableList.of(entityMetadata.property(KEY))
                 : compKeyMembers;
     }
 
@@ -43,9 +43,9 @@ final class EntityMetadataUtilsImpl implements EntityMetadataUtils {
                 .toList();
     }
 
-    private static List<PropertyMetadataWithKey<KCompositeKeyMember, CompositeKeyMember>> validateCompositeKeyMembers
-            (final List<PropertyMetadataWithKey<KCompositeKeyMember, CompositeKeyMember>> members,
-             final EntityMetadata entityMetadata)
+    private static List<PropertyMetadataWithKey<KCompositeKeyMember, CompositeKeyMember>> validateCompositeKeyMembers(
+            final List<PropertyMetadataWithKey<KCompositeKeyMember, CompositeKeyMember>> members,
+            final EntityMetadata entityMetadata)
     {
         if (members.size() <= 1) {
             return members;
@@ -63,9 +63,7 @@ final class EntityMetadataUtilsImpl implements EntityMetadataUtils {
             zip(seenMembers.stream(), seenOrders.stream(), (seenMemb, seenOrder) -> {
                 // protect against mistakes with boxed Integer
                 if (Integer.compare(order, seenOrder) == 0) {
-                    throw new EntityDefinitionException(
-                            format(ERR_DUPLICATE_COMPOSITE_KEY_ORDER,
-                                   entityMetadata.javaType().getTypeName(), memb.unwrap().name(), seenMemb.name()));
+                    throw new EntityDefinitionException(ERR_DUPLICATE_COMPOSITE_KEY_ORDER.formatted(entityMetadata.javaType().getTypeName(), memb.unwrap().name(), seenMemb.name()));
                 }
                 return "ok"; // return anything
             }).close();
@@ -77,7 +75,6 @@ final class EntityMetadataUtilsImpl implements EntityMetadataUtils {
         return members;
     }
     // where
-    private static final String ERR_DUPLICATE_COMPOSITE_KEY_ORDER = """
-Duplicate CompositeKeyMember order detected in entity [%s], conflicting properties: [%s] and [%s].""";
+    private static final String ERR_DUPLICATE_COMPOSITE_KEY_ORDER = "Duplicate CompositeKeyMember order detected in entity [%s], conflicting properties: [%s] and [%s].";
 
 }

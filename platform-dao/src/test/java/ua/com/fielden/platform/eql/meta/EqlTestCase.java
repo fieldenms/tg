@@ -5,7 +5,7 @@ import com.google.inject.Injector;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
+import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
@@ -57,7 +57,7 @@ public abstract class EqlTestCase {
     protected static final Type H_BIG_DECIMAL = StandardBasicTypes.BIG_DECIMAL;
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
 
-    private static final Injector injector = Guice.createInjector(new HelperIocModule());
+    private static final Injector injector = Guice.createInjector(new HelperTestIocModule());
     protected static final IDates dates = injector.getInstance(IDates.class);
     protected static final IFilter filter = new SimpleUserFilter();
 

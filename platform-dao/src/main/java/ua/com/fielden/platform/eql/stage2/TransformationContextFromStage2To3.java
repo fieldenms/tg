@@ -35,13 +35,15 @@ public class TransformationContextFromStage2To3 {
         this(treeResultBySources, domainMetadata, eqlTables, emptyMap(), emptyMap(), emptyMap(), 0, 1);
     }
 
-    private TransformationContextFromStage2To3(final TreeResultBySources treeResultBySources,
-                                               final IDomainMetadata domainMetadata,
-                                               final EqlTables eqlTables,
-                                               final Map<Integer, ISource3> sourcesByIds,
-                                               final Map<String, Object> sqlParamValuesByNames,
-                                               final Map<Object, String> sqlParamNamesByValues,
-                                               final int sqlId, final int paramId) {
+    private TransformationContextFromStage2To3(
+            final TreeResultBySources treeResultBySources,
+            final IDomainMetadata domainMetadata,
+            final EqlTables eqlTables,
+            final Map<Integer, ISource3> sourcesByIds,
+            final Map<String, Object> sqlParamValuesByNames,
+            final Map<Object, String> sqlParamNamesByValues,
+            final int sqlId, final int paramId)
+    {
         this.treeResultBySources = treeResultBySources;
         this.domainMetadata = domainMetadata;
         this.eqlTables = eqlTables;
@@ -78,7 +80,7 @@ public class TransformationContextFromStage2To3 {
 
     public List<HelperNodeForImplicitJoins> getHelperNodesForSource(final Integer sourceId) {
         final List<HelperNodeForImplicitJoins> result = treeResultBySources.helperNodesMap().get(sourceId);
-        // result may be null due to count(*) or yield const only queries
+        // the result may be null due to count(*) or yield const only queries
         return result != null ? result : emptyList();
     }
 

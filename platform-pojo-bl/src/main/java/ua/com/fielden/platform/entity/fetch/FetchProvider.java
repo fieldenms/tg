@@ -21,7 +21,7 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.Finder.streamProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotExpression;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -100,7 +100,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     @Override
     public boolean shouldFetch(final CharSequence dotNotationProperty) {
         validate(dotNotationProperty.toString());
-        if (PropertyTypeDeterminator.isDotNotation(dotNotationProperty)) {
+        if (PropertyTypeDeterminator.isDotExpression(dotNotationProperty)) {
             final Pair<String, String> firstAndRest = PropertyTypeDeterminator.firstAndRest(dotNotationProperty);
             return propertyProviders.containsKey(firstAndRest.getKey())
                     && providerForFirstLevel(firstAndRest.getKey()).shouldFetch(firstAndRest.getValue());
@@ -139,7 +139,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private FetchProvider<AbstractEntity<?>> providerForAllLevels(final String dotNotationProperty) {
-        if (PropertyTypeDeterminator.isDotNotation(dotNotationProperty)) {
+        if (PropertyTypeDeterminator.isDotExpression(dotNotationProperty)) {
             final Pair<String, String> firstAndRest = PropertyTypeDeterminator.firstAndRest(dotNotationProperty);
             return providerForFirstLevel(firstAndRest.getKey()).providerForAllLevels(firstAndRest.getValue());
         } else {
@@ -361,7 +361,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private FetchProvider<T> enhanceWith0(final String dotNotationProperty, final FetchProvider<AbstractEntity<?>> propertyProvider, final FetchCategory defaultFetchCategory) {
-        if (isDotNotation(dotNotationProperty)) {
+        if (isDotExpression(dotNotationProperty)) {
             final Pair<String, String> firstAndRest = firstAndRest(dotNotationProperty);
             final String firstName = firstAndRest.getKey();
             final String restDotNotation = firstAndRest.getValue();
@@ -389,7 +389,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             }
         }
         // enhance fetch provider with common property for each union type; if dotNotationProperty === "" then it is not present in common properties
-        if (isUnionEntityType(entityType) && commonProperties((Class<AbstractUnionEntity>) entityType).contains(isDotNotation(dotNotationProperty) ? firstAndRest(dotNotationProperty).getKey() : dotNotationProperty)) {
+        if (isUnionEntityType(entityType) && commonProperties((Class<AbstractUnionEntity>) entityType).contains(isDotExpression(dotNotationProperty) ? firstAndRest(dotNotationProperty).getKey() : dotNotationProperty)) {
             unionProperties((Class<AbstractUnionEntity>) entityType).stream()
                 .forEach(unionPropField -> enhanceWith0(unionPropField.getName() + "." + dotNotationProperty, propertyProvider, defaultFetchCategory));
         }
@@ -425,7 +425,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private FetchProvider<T> removeIfExists0(final String dotNotationProperty) {
-        if (PropertyTypeDeterminator.isDotNotation(dotNotationProperty)) {
+        if (PropertyTypeDeterminator.isDotExpression(dotNotationProperty)) {
             final Pair<String, String> firstAndRest = PropertyTypeDeterminator.firstAndRest(dotNotationProperty);
             final String firstName = firstAndRest.getKey();
             final String restDotNotation = firstAndRest.getValue();
@@ -596,15 +596,15 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private FetchProvider<T> addKeysTo(final String dotNotationProperty, final boolean withDesc) {
-        if (isDotNotation(dotNotationProperty) || !"".equals(dotNotationProperty)) { // is dot-notation or simple property (not "" aka 'this')
-            final Pair<String, String> firstAndRest = isDotNotation(dotNotationProperty) ? firstAndRest(dotNotationProperty) : pair(dotNotationProperty, "");
+        if (isDotExpression(dotNotationProperty) || !"".equals(dotNotationProperty)) { // is dot-notation or simple property (not "" aka 'this')
+            final Pair<String, String> firstAndRest = isDotExpression(dotNotationProperty) ? firstAndRest(dotNotationProperty) : pair(dotNotationProperty, "");
             final String firstName = firstAndRest.getKey();
             final String restDotNotation = firstAndRest.getValue();
             final boolean shouldFetch = propertyProviders.containsKey(firstName);
             if (shouldFetch) {
                 final FetchProvider<AbstractEntity<?>> provider = propertyProviders.get(firstName);
                 if (provider == null) {
-                    if (isDotNotation(dotNotationProperty)) {
+                    if (isDotExpression(dotNotationProperty)) {
                         throw new FetchProviderException(format("Property provider for %s is somehow empty.", firstName));
                     }
                     // otherwise, nothing to add here (regular property)

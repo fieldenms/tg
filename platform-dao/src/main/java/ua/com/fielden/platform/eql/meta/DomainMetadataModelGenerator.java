@@ -63,7 +63,7 @@ public final class DomainMetadataModelGenerator {
 
             final Stream<H> propsS = props.stream().map(prop -> {
                 final Optional<Class<?>> optPropJavaType = switch (prop.type()) {
-                    case PropertyTypeMetadata.Composite it -> Optional.of(it.javaType());
+                    case PropertyTypeMetadata.Component it -> Optional.of(it.javaType());
                     case PropertyTypeMetadata.Primitive it -> Optional.of(it.javaType());
                     // inherited from old code, not sure why entities with metadata are filtered
                     case PropertyTypeMetadata.Entity it when domainMetadata.forType(it.javaType()).isEmpty()
@@ -74,7 +74,7 @@ public final class DomainMetadataModelGenerator {
                 return optPropJavaType.map(propJavaType -> new H(propJavaType, id -> {
                     final int propsCount = prop.asPersistent().flatMap(propertyInliner::inline)
                             // ignore single-component composite types; not sure why, but this has been in the old code
-                            .filter(props_ -> !prop.type().isComposite() || props_.size() > 1)
+                            .filter(props_ -> !prop.type().isComponent() || props_.size() > 1)
                             .map(Collection::size)
                             .orElse(0);
                     final var subTypeTitleAndDesc = isUnionEntityType(propJavaType)
@@ -150,7 +150,7 @@ public final class DomainMetadataModelGenerator {
                     final var ppm = pm.asPersistent().orElseThrow();
                     final var optSubProps = propertyInliner.inline(ppm)
                             // ignore single-component composite types, they are treated as primitive types
-                            .filter(props -> !ppm.type().isComposite() || props.size() > 1);
+                            .filter(props -> !ppm.type().isComponent() || props.size() > 1);
                     if (optSubProps.isPresent()) {
                         int subItemPosition = 0;
                         for (final var subProp : optSubProps.get().stream().flatMap(spm -> spm.asPersistent().stream()).toList()) {

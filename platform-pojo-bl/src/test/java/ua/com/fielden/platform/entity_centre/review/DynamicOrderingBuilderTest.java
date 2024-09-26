@@ -21,9 +21,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
 
 @SuppressWarnings({ "unchecked", "serial" })
@@ -32,7 +33,7 @@ public class DynamicOrderingBuilderTest {
     private final static EntityFactory factory = createFactory();
 
     private static EntityFactory createFactory() {
-        final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+        final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
         final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
         return injector.getInstance(EntityFactory.class);
     }
@@ -60,28 +61,24 @@ public class DynamicOrderingBuilderTest {
     }
 
     @Test
-    public void test_that_ordering_builder_throws_NullPointerException_if_ordering_list_is_null() {
-        try {
-            DynamicOrderingBuilder.createOrderingModel(masterKlass, null);
-            fail("There should be null pointer exception");
-        } catch (final NullPointerException e) {
-
-        } catch (final Exception e) {
-            fail("There can not be any other exception then null pointer exception");
-        }
-    }
-
-    @Test
-    public void test_that_ordering_builder_throws_NullPointerException_if_root_type_is_null() {
+    public void root_cannot_be_null_for_ordering_builder() {
         final List<Pair<String, Ordering>> orderingPairs = new ArrayList<>();
         orderingPairs.add(new Pair<>("integerProp", Ordering.ASCENDING));
         try {
             DynamicOrderingBuilder.createOrderingModel(null, orderingPairs);
             fail("There should be null pointer exception");
-        } catch (final NullPointerException e) {
+        } catch (final EntityCentreExecutionException ex) {
+            assertEquals(EntityCentreExecutionException.ERR_NULL_ARGUMENT.formatted("root"), ex.getMessage());
+        }
+    }
 
-        } catch (final Exception e) {
-            fail("There can not be any other exception then null pointer exception");
+    @Test
+    public void ordering_list_cannot_be_null_for_ordering_builder() {
+        try {
+            DynamicOrderingBuilder.createOrderingModel(masterKlass, null);
+            fail("There should be null pointer exception");
+        } catch (final EntityCentreExecutionException ex) {
+            assertEquals(EntityCentreExecutionException.ERR_NULL_ARGUMENT.formatted("orderedPairs"), ex.getMessage());
         }
     }
 

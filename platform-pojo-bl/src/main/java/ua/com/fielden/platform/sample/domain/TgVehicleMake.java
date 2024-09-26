@@ -14,7 +14,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(String.class)
 @MapEntityTo
 @DescTitle("Description")
-@Ignore
 @CompanionObject(ITgVehicleMake.class)
 public class TgVehicleMake extends AbstractEntity<String> {
     @IsProperty

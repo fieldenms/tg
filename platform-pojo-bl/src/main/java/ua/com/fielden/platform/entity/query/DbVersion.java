@@ -109,7 +109,7 @@ public enum DbVersion {
     }
 
     /**
-     * Processes the operand value to ensure case insensitive affect if required.
+     * Processes the operand value to ensure a case-insensitive effect if required.
      *
      * @param value
      * @param caseInsensitive
