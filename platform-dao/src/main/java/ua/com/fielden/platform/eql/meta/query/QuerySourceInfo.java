@@ -62,6 +62,10 @@ public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable
         return unmodifiableSortedMap(propsMap);
     }
 
+    public boolean hasProp(final String name) {
+        return propsMap.containsKey(name);
+    }
+
     @Override
     public String toString() {
         return javaType.getSimpleName();
