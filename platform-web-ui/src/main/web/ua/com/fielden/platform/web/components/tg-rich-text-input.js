@@ -86,7 +86,7 @@ function mouseOverHandler(e) {
 
 function findLinkParent(element) {
     let parent = element;
-    while (parent && parent !== this._editor.getEditorElements().wwEditor.children[0] && !parent.hasAttribute('href')) {
+    while (parent && parent !== this._editor.getEditorElements().wwEditor.children[0] && (!parent.hasAttribute || !parent.hasAttribute('href'))) {
         parent = parent.parentElement;
     }
     return parent;
@@ -130,6 +130,33 @@ function mouseUpHandler(e) {
         longPress = false;
         shortPress = false;
         mouseTimer = null;
+    }
+}
+
+function getLink() {
+    if (this._prevSelection) {
+        if (this._prevSelection[0] === this._prevSelection[1]) {
+            //It means that only caret postion was set (no selection). Then take text and url from dom at caret position if it exists
+            const node = this._editor.wwEditor.view.domAtPos(this._prevSelection[0], 1).node;
+            const link = findLinkParent.bind(this)(node);
+            if (link && link.pmViewDesc && link.hasAttribute("href")) {
+                const text = this._editor.getSelectedText(link.pmViewDesc.posAtStart, link.pmViewDesc.posAtEnd);
+                return {pos: [link.pmViewDesc.posAtStart, link.pmViewDesc.posAtEnd], text: text, url: link.getAttribute("href")};
+            }
+        } else {
+            //This branch indicates that user has selected some text or even nodes, therefore the text should be taken from selection
+            // and url from the first <a> tag in selection
+            const text = this._editor.getSelectedText(this._prevSelection[0], this._prevSelection[1]);
+            const nodes = [];
+            for (let i = this._prevSelection[0]; i <= this._prevSelection[1]; i++) {
+                const node = this._editor.wwEditor.view.domAtPos(i, this._prevSelection[1] - i).node;
+                if (node) {
+                    nodes.push(node);
+                }
+            }
+            const link = nodes.map(node => findLinkParent.bind(this)(node)).find(a => a && a.hasAttribute('href'));
+            return (link && {text: text, url: link.getAttribute("href")}) || {text: text, url: ''};
+        }
     }
 }
 
@@ -262,8 +289,22 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, TgTooltipBe
         this._editor.exec('redo');
     }
 
-    insertLink(url, text) {
-        this._editor.exec('addLink', { linkText: text, linkUrl: url });
+    initLinkEditing() {
+        const link = getLink.bind(this)();
+        if (link) {
+            if (link.pos) {
+                this._editor.setSelection(link.pos[0], link.pos[1]);
+            }
+            return link;
+        }
+    }
+
+    toggleLink(url, text) {
+        if (this._prevSelection && this._prevSelection[0] !== this._prevSelection[1] && !url) {
+            this._editor.exec('toggleLink');
+        } else {
+            this._editor.exec('addLink', { linkUrl: url, linkText: text });
+        }
     }
 
     applyColor(selectedColor) {

@@ -78,7 +78,7 @@ const customLabelTemplate = html`
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, Meta+Z" on-tap="_undo"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Shift+Z, Meta+Shift+Z" on-tap="_redo"></iron-icon>
         <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-tap="_changeTextColor"></iron-icon>
-        <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-tap="_insertLink"></iron-icon>
+        <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-tap="_toggleLink"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-indent-increase" action-title="Increase Indent" tooltip-text="Move your paragraph further away from the margin, Tab" on-tap="_indent"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-indent-decrease" action-title="Decrease Indent" tooltip-text="Move your paragraph closer to the margin, Shift+Tab" on-tap="_outdent"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, Meta+U" on-tap="_createBulletedList"></iron-icon>
@@ -141,7 +141,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             this.$.linkDropdown.cancel();
         }.bind(this);
         this._acceptLink = function () {
-            this.$.input.insertLink(this.$.linkDialog.url, this.$.linkDialog.linkText);
+            this.$.input.toggleLink(this.$.linkDialog.url, this.$.linkDialog.linkText || this.$.linkDialog.url);
             this.$.linkDropdown.close();
         }.bind(this);
         this.$.colorDropdown.positionTarget = this.$.colorAction;
@@ -214,8 +214,12 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         }
     }
 
-    _insertLink(e) {
-        this.$.linkDialog.linkText = this.$.input.getSelectedText();
+    _toggleLink(e) {
+        const link = this.$.input.initLinkEditing();
+        if (link) {
+            this.$.linkDialog.url = link.url;
+            this.$.linkDialog.linkText = link.text;
+        }
         this.$.linkDropdown.open();
     }
 

@@ -26,10 +26,6 @@ const template = html`
         current-state="EDIT" prop-title="URL" prop-desc="Page URL to insert"
         action="null" validation-callback="[[validationCallback]]">
     </tg-hyperlink-editor>
-    <tg-singleline-text-editor id="linkTextEditor" entity="[[_entity]]" property-name="linkTextProp"
-        current-state="EDIT" prop-title="URL Text" prop-desc="The description of the URL to insert"
-        action="null" validation-callback="[[validationCallback]]">
-    </tg-singleline-text-editor>
     <div class="actions">
         <paper-button raised roll="button" on-tap="_cancleLink" style="width:80px;" tooltip-text="Do not insert a link">
             <span>Cancel</span>
@@ -55,7 +51,6 @@ const createEntity = function(reflector) {
     fullEntity.id = -1;
     fullEntity.version = 0;
     fullEntity.urlProp = {value: ''};
-    fullEntity.linkTextProp = '';
     
     const bindingView = reflector.newEntityEmpty();
     bindingView['id'] = -1;
@@ -68,10 +63,6 @@ const createEntity = function(reflector) {
     bindingView['@@origin'] = fullEntity;
     bindingView['urlProp'] = {value: ''};
     bindingView['@urlProp_editable'] = true;
-    bindingView['@urlProp_required'] = true;
-    bindingView['linkTextProp'] = '';
-    bindingView['@linkTextProp_editable'] = true;
-    bindingView['@linkTextProp_required'] = true;
     bindingView.get = prop => {
         if (prop === '') { // empty property name means 'entity itself'
             return bindingView;
@@ -81,7 +72,7 @@ const createEntity = function(reflector) {
     const bindingViewType = reflector.getEntityPrototype();
     bindingViewType.prop = (name) => {
         return {
-            type: () => name === 'linkTextProp' ? 'string' : 'object'
+            type: () => 'object'
         }
     };
     bindingView._type = bindingViewType;
@@ -99,13 +90,13 @@ export class TgLinkDialog extends PolymerElement {
             //public properties
             url: {
                 type: String,
-                value: ''
+                value: '',
+                observer: "_urlChanged"
             },
 
             linkText: {
                 type: String,
                 value: '',
-                observer: "_linkTextChanged"
             },
 
             validationCallback: Function,
@@ -136,61 +127,20 @@ export class TgLinkDialog extends PolymerElement {
     }
 
     _okLink() {
-        let hasError = false;
         this.$.urlEditor.commitIfChanged();
-        this.$.linkTextEditor.commitIfChanged();
-        if (!this._entity['urlProp'] || !this._entity['urlProp'].value) {
-            this._entity['@urlProp_error'] = {
-                '@resultType': 'ua.com.fielden.platform.error.Result',
-                //'ex': {message: 'The URL should not be empty'},
-                'message' : 'The URL should not be empty'
-            }
-            this.$.urlEditor._updateMessagesForEntity(this._entity);
-            this.$.urlEditor.$.input.focus();
-            hasError = true;
-        } else {
-            delete this._entity['@urlProp_error'];
-            this.$.urlEditor._updateMessagesForEntity(this._entity);
-        }
-        if (!this._entity['linkTextProp']) {
-            this._entity['@linkTextProp_error'] = {
-                '@resultType': 'ua.com.fielden.platform.error.Result',
-                //'ex': {message: 'The link description should not be empty'},
-                'message' : 'The link description should not be empty'
-            }
-            this.$.linkTextEditor._updateMessagesForEntity(this._entity);
-            if (!hasError) {
-                this.$.linkTextEditor.$.input.focus();
-            }
-            hasError = true;
-        } else {
-            delete this._entity['@linkTextProp_error'];
-            this.$.linkTextEditor._updateMessagesForEntity(this._entity);
-        }
-        if (!hasError) {
-            this.url = this._entity['urlProp'].value;
-            this.linkText = this._entity['linkTextProp'];
-            this.okCallback && this.okCallback();
-        }
+        this.url = this._entity['urlProp'] ? this._entity['urlProp'].value : '';
+        this.okCallback && this.okCallback();
     }
 
     resetState() {
         this.url = '';
         this.linkText = '';
-        this.$.urlEditor.assignConcreteValue({value: ''}, this._reflector.tg_convert.bind(this._reflector));
-        this.$.urlEditor.commit();
-        this.$.linkTextEditor.assignConcreteValue('', this._reflector.tg_convert.bind(this._reflector));
-        this.$.linkTextEditor.commit();
     }
 
-    _linkTextChanged(newText) {
-        if (newText !== this._entity['linkTextProp']) {
-            this.$.linkTextEditor.assignConcreteValue(this.linkText, this._reflector.tg_convert.bind(this._reflector));
-            this.$.linkTextEditor.commit();
-            this._entity['@linkTextProp_editable'] = !newText;
-            //Next two rows needed to trigger recalculation of _disabled property
-            this.$.linkTextEditor.currentState="VIEW";
-            this.$.linkTextEditor.currentState="EDIT";
+    _urlChanged(newUrl) {
+        if (!this._entity['urlProp'] || this._entity['urlProp'].value !== newUrl) {
+            this.$.urlEditor.assignConcreteValue({value: newUrl}, this._reflector.tg_convert.bind(this._reflector));
+            this.$.urlEditor.commit();
         }
     }
 
