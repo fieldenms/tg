@@ -218,7 +218,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     public void strategy_DEFAULT_for_synthetic_entity() {
         final IRetrievalModel<TgAverageFuelUsage> fetchModel = produceRetrievalModel(TgAverageFuelUsage.class, DEFAULT);
         // FIXME: datePeriod is not yielded and therefore should not be included into the fetch model
-        assertPropsAreFetched(fetchModel, Set.of("key", "qty", "cost", "datePeriod"));
+        assertPropsAreFetched(fetchModel, Set.of("key", "qty", "cost"));
         assertPropsAreNotFetched(fetchModel, Set.of("id", "version"));
     }
 
