@@ -29,9 +29,9 @@ public final class TypeSet implements Set<Object> {
     /**
      * <b>WARNING</b>: builders must not be reused because they are mutable.
      * <p>
-     * Builders are accessed through {@link TypeSet#build(Function)}.
+     * Builders are accessed through {@link TypeSet#build(Consumer)}.
      */
-    public static final class Builder {
+    static final class Builder {
         private final HashSet<String> names = new HashSet<>();
         private final HashSet<Object> elements = new HashSet<>();
 
@@ -40,8 +40,8 @@ public final class TypeSet implements Set<Object> {
         public Builder add(final TypeMirror typeMirror) {
             final String name = getCanonicalName(typeMirror);
             if (name == null) {
-                throw new IllegalArgumentException("TypeMirror [%s] has no canonical name, cannot be added to [%s]".formatted(
-                        typeMirror, TypeSet.class.getTypeName()));
+                throw new IllegalArgumentException("TypeMirror [%s] has no canonical name, cannot be added to [%s]"
+                                                   .formatted(typeMirror, TypeSet.class.getTypeName()));
             }
             final boolean added = names.add(name);
             if (added) {
@@ -213,7 +213,7 @@ public final class TypeSet implements Set<Object> {
             return classForPrimitiveType(t).getCanonicalName();
         }
 
-        // handle void type
+        // handle the Void type
         @Override
         public String visitNoType(final NoType t, final Void ignore) {
             if (t.getKind() == TypeKind.VOID) {
