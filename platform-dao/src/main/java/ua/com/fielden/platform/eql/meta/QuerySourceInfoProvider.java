@@ -32,26 +32,27 @@ import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
 
+/**
+ * An abstraction for EQL-specific metadata about query sources (i.e., entity types).
+ * </p>
+ * The term for this metadata is "query source info", and it is organised using 2 categories:
+ * <li> <b>Declared</b> - contains a subset of properties present in the corresponding {@linkplain ua.com.fielden.platform.reflection.EntityMetadata entity metadata}.
+ *      Only properties that are relevant to EQL are included.
+ * <li> <b>Modelled</b> - depends on the entity's nature:
+ *      <ul>
+ *        <li> Persistent, Union - equal to the declared query source info.
+ *        <li> Synthetic - contains neither a superset, nor a subset of properties present in the entity's metadata.
+ *             Instead, it includes only those properties that are yielded in the underlying models.
+ *      </ul>
+ */
 @Singleton
 public class QuerySourceInfoProvider {
     private static final Logger LOGGER = getLogger(QuerySourceInfoProvider.class);
 
-    /**
-     * Association between an entity type and its <i>declared</i> query source info, which contains a subset of properties
-     * present in the corresponding {@linkplain ua.com.fielden.platform.reflection.EntityMetadata entity metadata}.
-     * Only properties that are relevant to EQL are included.
-     */
+    /** Association between an entity type and its declared query source info. */
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> declaredQuerySourceInfoMap;
 
-    /**
-     * Association between an entity type and its <i>modelled</i> query source info, contents of which depend on the
-     * entity's nature:
-     * <ul>
-     *   <li> Persistent, union - equal to the declared query source info.
-     *   <li> Synthetic - contains a superset of properties present in the entity's metadata. Additional properties include
-     *        those that can be inferred from the yields of the underlying models.
-     * </ul>
-     */
+    /** Association between an entity type and its modelled query source info. */
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> modelledQuerySourceInfoMap;
 
     /** Association between a synthetic entity type (SE) and its underlying models transformed to stage 1. */
