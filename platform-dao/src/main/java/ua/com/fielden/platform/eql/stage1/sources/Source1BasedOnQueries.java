@@ -124,13 +124,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     }
 
     private static boolean allGenerated(final List<SourceQuery2> models) {
-        final boolean allGenerated = true;
-        for (SourceQuery2 sourceQuery2 : models) {
-            if (!sourceQuery2.yields.allGenerated) {
-                return false;
-            }
-        }
-        return allGenerated;
+        return models.stream().allMatch(model -> model.yields.allGenerated);
     }
 
     @Override
