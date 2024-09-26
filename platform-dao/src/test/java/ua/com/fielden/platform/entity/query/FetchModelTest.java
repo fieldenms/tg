@@ -20,7 +20,7 @@ import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 public class FetchModelTest extends BaseEntQueryTCase1 {
 
     private static <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
-        return IRetrievalModel.createRetrievalModel(fetchModel, DOMAIN_METADATA);
+        return IRetrievalModel.createRetrievalModel(fetchModel, DOMAIN_METADATA, QUERY_SOURCE_INFO_PROVIDER);
     }
     
     private static <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final Class<T> entityType, final FetchCategory fetchCategory) {

@@ -46,9 +46,11 @@ public class BaseEntQueryTCase1 {
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
 
     protected static final IDomainMetadata DOMAIN_METADATA;
+    protected static final QuerySourceInfoProvider QUERY_SOURCE_INFO_PROVIDER;
 
     static {
         DOMAIN_METADATA = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, entityTypes, constantDbVersion(H2)).build();
+        QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
     }
 
 }

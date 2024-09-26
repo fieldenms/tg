@@ -5,6 +5,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
 /**
@@ -51,11 +52,11 @@ public sealed interface IRetrievalModel<T extends AbstractEntity<?>> permits Ent
      * Creates a retrieval model that corresponds to the entity type that the fetch model is associated with.
      */
     static <E extends AbstractEntity<?>> IRetrievalModel<E> createRetrievalModel(
-            final fetch<E> fetch, final IDomainMetadata domainMetadata)
+            final fetch<E> fetch, final IDomainMetadata domainMetadata, final QuerySourceInfoProvider qsip)
     {
         return fetch.getEntityType() == EntityAggregates.class
-                ? (IRetrievalModel<E>) new EntityAggregatesRetrievalModel((fetch<EntityAggregates>) fetch, domainMetadata)
-                : new EntityRetrievalModel<>(fetch, domainMetadata);
+                ? (IRetrievalModel<E>) new EntityAggregatesRetrievalModel((fetch<EntityAggregates>) fetch, domainMetadata, qsip)
+                : new EntityRetrievalModel<>(fetch, domainMetadata, qsip);
     }
 
 }

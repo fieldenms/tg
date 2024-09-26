@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.HashMap;
@@ -36,11 +37,15 @@ public final class EntityAggregatesRetrievalModel implements IRetrievalModel<Ent
     private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps;
     private final fetch<EntityAggregates> originalFetch;
 
-    public EntityAggregatesRetrievalModel(final fetch<EntityAggregates> originalFetch, final IDomainMetadata domainMetadata) {
+    public EntityAggregatesRetrievalModel(
+            final fetch<EntityAggregates> originalFetch,
+            final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider qsip)
+    {
         validateFetch(originalFetch);
         this.originalFetch = originalFetch;
         this.primProps = ImmutableSet.copyOf(originalFetch.getIncludedProps());
-        this.entityProps = buildEntityModels(originalFetch.getIncludedPropsWithModels(), domainMetadata);
+        this.entityProps = buildEntityModels(originalFetch.getIncludedPropsWithModels(), domainMetadata, qsip);
     }
 
     @Override
@@ -121,8 +126,10 @@ public final class EntityAggregatesRetrievalModel implements IRetrievalModel<Ent
         return sb.toString();
     }
 
-    private static Map<String, EntityRetrievalModel<?>> buildEntityModels(final Map<String, fetch<? extends AbstractEntity<?>>> models,
-                                                                          final IDomainMetadata domainMetadata)
+    private static Map<String, EntityRetrievalModel<?>> buildEntityModels(
+            final Map<String, fetch<? extends AbstractEntity<?>>> models,
+            final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider qsip)
     {
         if (models.isEmpty()) {
             return ImmutableMap.of();
@@ -131,7 +138,7 @@ public final class EntityAggregatesRetrievalModel implements IRetrievalModel<Ent
             models.forEach((prop, model) -> {
                 final var existingModel = map.get(prop);
                 final var finalFetch = existingModel != null ? existingModel.getOriginalFetch().unionWith(model) : model;
-                map.put(prop, new EntityRetrievalModel<>(finalFetch, domainMetadata, false));
+                map.put(prop, new EntityRetrievalModel<>(finalFetch, domainMetadata, qsip, false));
             });
             return unmodifiableMap(map);
         }

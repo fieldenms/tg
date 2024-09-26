@@ -101,23 +101,30 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     private final Set<String> primProps;
     private final Set<String> proxiedProps;
 
-    public EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata) {
-        this(originalFetch, domainMetadata, true);
+    public EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata, final QuerySourceInfoProvider qsip) {
+        this(originalFetch, domainMetadata, qsip, true);
     }
 
-    EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata, final boolean topLevel) {
+    EntityRetrievalModel(final fetch<T> originalFetch,
+                         final IDomainMetadata domainMetadata,
+                         final QuerySourceInfoProvider qsip,
+                         final boolean topLevel) {
         this.originalFetch = originalFetch;
         this.topLevel = topLevel;
 
-        final var builder = buildModel(originalFetch, domainMetadata);
+        final var builder = buildModel(originalFetch, domainMetadata, qsip);
         this.primProps = unmodifiableSet(builder.primProps);
         this.entityProps = unmodifiableMap(builder.entityProps);
         this.proxiedProps = unmodifiableSet(builder.proxiedProps);
         this.onlyTotals = builder.containsOnlyTotals();
     }
 
-    private static <T extends AbstractEntity<?>> Builder buildModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata) {
-        final var builder = new Builder(originalFetch.getEntityType(), domainMetadata);
+    private static <T extends AbstractEntity<?>> Builder buildModel(
+            final fetch<T> originalFetch,
+            final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider qsip)
+    {
+        final var builder = new Builder(originalFetch.getEntityType(), domainMetadata, qsip);
 
         switch (originalFetch.getFetchCategory()) {
             case ALL_INCL_CALC -> builder.includeAllFirstLevelPropsInclCalc();
@@ -219,6 +226,11 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
      * Mutable builder that assists with initialisation of {@link EntityRetrievalModel}.
      * Its output is stored in {@link #primProps}, {@link #entityProps}, and {@link #proxiedProps}.
      * There is also {@link #containsOnlyTotals()}.
+     * </p>
+     * Both {@link IDomainMetadata} and {@link QuerySourceInfoProvider} are required to correctly build a retrieval model.
+     * <li> {@link IDomainMetadata} is required because of the richness of information it provides about entity types and their properties.
+     * <li> {@link QuerySourceInfoProvider} is required because it contains EQL-specific information that is not provided
+     * by {@link IDomainMetadata} (e.g., properties that are present in the yields of synthetic entity models).
      */
     private static final class Builder {
         final Class<? extends AbstractEntity<?>> entityType;
@@ -226,6 +238,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         final EntityMetadataUtils entityMetadataUtils;
         final PropertyMetadataUtils propMetadataUtils;
         final EntityMetadata entityMetadata;
+        final QuerySourceInfoProvider qsip;
+        final QuerySourceInfo<?> querySourceInfo;
 
         // Mutable components that are being built
 
@@ -233,8 +247,13 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps;
         final Set<String> proxiedProps;
 
-        Builder(final Class<? extends AbstractEntity<?>> entityType, final IDomainMetadata domainMetadata) {
+        Builder(final Class<? extends AbstractEntity<?>> entityType,
+                final IDomainMetadata domainMetadata,
+                final QuerySourceInfoProvider qsip)
+        {
             this.domainMetadata = domainMetadata;
+            this.qsip = qsip;
+            this.querySourceInfo = qsip.getModelledQuerySourceInfo(entityType);
             this.entityType = entityType;
             this.entityMetadata = domainMetadata.forEntity(entityType);
             this.entityMetadataUtils = domainMetadata.entityMetadataUtils();
@@ -248,21 +267,59 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             return primProps.contains(propName) || entityProps.containsKey(propName);
         }
 
+        /**
+         * Performs an action for each <i>modelled</i> property (see {@link QuerySourceInfoProvider}) of the entity type.
+         * </p>
+         * The action is supplied with an optional {@link PropertyMetadata} that may be absent.
+         * Refer to {@link QuerySourceInfoProvider} for a description of when such cases may occur.
+         */
+        private void forEachProperty(final BiConsumer<? super AbstractQuerySourceItem<?>, ? super Optional<PropertyMetadata>> fn) {
+            querySourceInfo.getProps().values()
+                    .forEach(prop -> fn.accept(prop, entityMetadata.propertyOpt(prop.name)));
+        }
+
         private void populateProxies() {
-            for (final PropertyMetadata pm : entityMetadata.properties()) {
-                // FIXME the following condition needs to be revisited as part of EQL 3 implementation
-                final String name = pm.name();
-                if (!ID.equals(name) &&
-                        (!KEY.equals(name) || pm.isPersistent()) &&
-                        !pm.type().isCollectional() &&
-                        !pm.isCritOnly() &&
-                        !name.contains(".") &&
-                        !containsProp(name) &&
-                        (entityMetadata.isSynthetic() || !pm.isPlain()))
-                {
-                    proxiedProps.add(name);
-                }
-            }
+            // Collect properties from both QSIP and metadata. QSIP may include properties not present in metadata, which
+            // is often the case for synthetic entities. Without considering properties from metadata, we wouldn't be able
+            // to proxy non-yielded properties of synthetic entities (which are absent in QSIP).
+            Stream.concat(querySourceInfo.getProps().values().stream().map(prop -> prop.name),
+                          entityMetadata.properties().stream().map(PropertyMetadata::name))
+                    .distinct()
+                    // A common filter for all properties.
+                    .filter(propName -> {
+                        // id is never proxied.
+                        if (ID.equals(propName)) {
+                            return false;
+                        }
+                        else if (containsProp(propName)) {
+                            return false;
+                        }
+                        else if (propName.contains(".")) {
+                            return false;
+                        }
+                        else return true;
+                    })
+                    // Special filter for properties that have metadata.
+                    .filter(propName -> entityMetadata.propertyOpt(propName)
+                            .map(propMetadata -> {
+                                if (propMetadata.isCritOnly()) {
+                                    return false;
+                                }
+                                else if (propMetadata.type().isCollectional()) {
+                                    return false;
+                                }
+                                // Proxying of plain properties makes sense only for synthetic entities.
+                                else if (propMetadata.isPlain() && !entityMetadata.isSynthetic()) {
+                                    return false;
+                                }
+                                // Non-persitent key is never proxied.
+                                else if (KEY.equals(propMetadata.name()) && !propMetadata.isPersistent()) {
+                                    return false;
+                                }
+                                else return true;
+                            })
+                            .orElse(TRUE))
+                    .forEach(proxiedProps::add);
         }
 
         private void includeAllCompositeKeyMembers() {
@@ -277,23 +334,25 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeAllFirstLevelPrimPropsAndKey() {
-            entityMetadata.properties().stream()
-                    .filter(pm -> !pm.type().isCollectional() && isRetrievable(pm))
-                    // calculated components are included (legacy EQL2 behaviour)
-                    // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour
-                    .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
-                    .forEach(pm -> {
-                        // FIXME: Union-entity typed keys or key members are not supported at this stage.
-                        //        However, there is nothing preventing such definitions, which leads to StackOverflowErrors during fetch model construction.
-                        //        To support such definitions, it would be necessary to take into account recursive definitions,
-                        //        where a key or key member that is of a union type may have a union-property of the same type as the enclosing entity.
-                        //        We would need to ensure that such union-properties are not explored to prevent StackOverflowErrors during fetch model construction.
-                        //        For now, let's simply skip the whole union-typed key and key-members from exploration.
-                        final boolean exploreEntities = pm.type().isEntity()
-                                && !propMetadataUtils.isPropEntityType(pm, EntityMetadata::isUnion)
-                                && (KEY.equals(pm.name()) || pm.has(KEY_MEMBER));
-                        with(pm.name(), !exploreEntities);
-                    });
+            forEachProperty((prop, optPropMetadata) -> {
+                // Exclude all calculated properties except for components (legacy EQL2 behaviour).
+                // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour
+                if (optPropMetadata.filter(it -> it.isCalculated() && !it.type().isComponent()).isPresent()) {} // skip
+                else {
+                    // FIXME: Union-entity typed keys or key members are not supported at this stage.
+                    //        However, there is nothing preventing such definitions, which leads to StackOverflowErrors during fetch model construction.
+                    //        To support such definitions, it would be necessary to take into account recursive definitions,
+                    //        where a key or key member that is of a union type may have a union-property of the same type as the enclosing entity.
+                    //        We would need to ensure that such union-properties are not explored to prevent StackOverflowErrors during fetch model construction.
+                    //        For now, let's simply skip the whole union-typed key and key-members from exploration.
+                    final boolean exploreEntities = optPropMetadata
+                            .map(it -> it.type().isEntity()
+                                       && !propMetadataUtils.isPropEntityType(it, EntityMetadata::isUnion)
+                                       && (KEY.equals(it.name()) || it.has(KEY_MEMBER)))
+                            .orElse(TRUE);
+                    with(prop.name, !exploreEntities);
+                }
+            });
         }
 
         private void includeLastUpdatedByGroupOfProperties() {
@@ -305,11 +364,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeKeyAndDescOnly() {
-            if (entityMetadata.isPersistent()) {
-                includeIdAndVersionOnly();
-            } else if (isSyntheticBasedOnPersistentEntityType(entityType)) {
-                primProps.add(ID);
-            }
+            includeIdAndVersionOnly();
 
             with(KEY, true);
 
@@ -319,18 +374,18 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeAllFirstLevelProps() {
-            entityMetadata.properties().stream()
-                    .filter(pm -> !pm.type().isCollectional() && isRetrievable(pm))
-                    // calculated components are included (legacy EQL2 behaviour)
-                    // TODO don't treat calculated components specially once TG applications no longer rely on this behaviour
-                    .filter(pm -> !pm.isCalculated() || pm.type().isComponent())
-                    .forEach(pm -> with(pm.name(), false));
+            forEachProperty((prop, optPropMetadata) -> {
+                // Exclude all calculated properties except for components (legacy EQL2 behaviour).
+                // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour
+                if (optPropMetadata.filter(it -> it.isCalculated() && !it.type().isComponent()).isPresent()) {} // skip
+                else {
+                    with(prop.name, false);
+                }
+            });
         }
 
         private void includeAllFirstLevelPropsInclCalc() {
-            entityMetadata.properties().stream()
-                    .filter(pm -> !pm.type().isCollectional() && isRetrievable(pm))
-                    .forEach(pm -> with(pm.name(), false));
+            forEachProperty((prop, optPropMetadata) -> with(prop.name, false));
         }
 
         private void includeIdOnly() {
@@ -339,19 +394,16 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
         private void includeIdAndVersionOnly() {
             // NOTE: Shouldn't this category produce a superset of ID_ONLY? It doesn't always include ID, unlike ID_ONLY.
-            if (entityMetadata.isPersistent()) {
+            if (querySourceInfo.hasProp(ID)) {
                 primProps.add(ID);
+            }
+            if (entityMetadata.isPersistent()) {
                 primProps.add(VERSION);
                 if (isActivatableEntityType(entityType)) {
                     primProps.add(ACTIVE);
                     primProps.add(REF_COUNT);
                 }
                 includeLastUpdatedByGroupOfProperties();
-            }
-            // NOTE: This should probably be reconciled with KEY_AND_DESC category, which includes ID for synthetic-based-on-persistent,
-            //       but not for other entities with an entity-typed key like it is done here.
-            else if (isEntityType(getKeyType(entityType))) {
-                primProps.add(ID);
             }
         }
 
@@ -408,7 +460,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
             final var existingFetch = entityProps.get(propName);
             final var finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
-            entityProps.put(propName, new EntityRetrievalModel<>(finalFetch, domainMetadata, false));
+            entityProps.put(propName, new EntityRetrievalModel<>(finalFetch, domainMetadata, qsip, false));
         }
 
         private void without(final String propName) {
@@ -475,8 +527,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         private Optional<PropertyMetadata> getPropMetadata(final String propName) {
             final var optPm = entityMetadata.propertyOpt(propName);
             if (optPm.isEmpty()) {
-                // allow only IDs and VERSIONs to have missing PropertyMetadata; this is sometimes useful for pure synthetic entities that yield these props
-                if (ID.equals(propName) || VERSION.equals(propName)) {
+                // The case of a modelled property with absent metadata.
+                if (querySourceInfo.hasProp(propName)) {
                     return Optional.empty();
                 }
                 throw new EqlException(format("Trying to fetch entity of type [%s] with non-existing property [%s]", entityType, propName));
