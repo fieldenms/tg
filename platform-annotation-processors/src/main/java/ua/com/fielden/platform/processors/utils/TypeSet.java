@@ -55,10 +55,10 @@ public final class TypeSet implements Set<Object> {
             return this;
         }
 
-        public Builder add(final Class<?> clazz) {
-            final boolean added = names.add(clazz.getCanonicalName());
+        public Builder add(final Class<?> type) {
+            final boolean added = names.add(type.getCanonicalName());
             if (added) {
-                elements.add(clazz);
+                elements.add(type);
             }
             return this;
         }
@@ -108,7 +108,7 @@ public final class TypeSet implements Set<Object> {
     @Override
     public boolean contains(final Object o) {
         return switch (o) {
-            case Class<?> clazz -> contains(clazz);
+            case Class<?> type -> contains(type);
             case TypeMirror tm -> contains(tm);
             case null, default -> false;
         };
@@ -119,8 +119,8 @@ public final class TypeSet implements Set<Object> {
         return collection.stream().allMatch(this::contains);
     }
 
-    public boolean contains(final Class<?> clazz) {
-        return names.contains(clazz.getCanonicalName());
+    public boolean contains(final Class<?> type) {
+        return names.contains(type.getCanonicalName());
     }
 
     public boolean contains(final TypeMirror typeMirror) {
@@ -138,7 +138,7 @@ public final class TypeSet implements Set<Object> {
     }
 
     public interface Converter<T> {
-        T convert(Class<?> clazz);
+        T convert(Class<?> type);
         T convert(TypeMirror typeMirror);
     }
 
@@ -162,7 +162,7 @@ public final class TypeSet implements Set<Object> {
         throw new UnsupportedOperationException("Instances of [%s] are immutable.".formatted(this.getClass().getTypeName()));
     }
 
-    public boolean add(final Class<?> clazz) {
+    public boolean add(final Class<?> type) {
         throw new UnsupportedOperationException("Instances of [%s] are immutable.".formatted(this.getClass().getTypeName()));
     }
 
