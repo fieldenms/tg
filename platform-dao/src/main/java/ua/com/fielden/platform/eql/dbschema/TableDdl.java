@@ -191,7 +191,7 @@ public class TableDdl {
      * @return
      */
     public String createPkSchema(final Dialect dialect) {
-        // This statement should be suitable for the majority of SQL dialogs
+        // This statement should be suitable for the majority of SQL dialects
         final String tableName = tableName(entityType);
         return """
                ALTER TABLE %1$s
@@ -206,7 +206,7 @@ public class TableDdl {
      * @return
      */
     public List<String> createFkSchema(final Dialect dialect) {
-        // This statement should be suitable for the majority of SQL dialogs
+        // This statement should be suitable for the majority of SQL dialects
         final String thisTableName = tableName(entityType);
         final List<String> ddl = columns.stream()
                 .filter(cd -> isPersistedEntityType(cd.javaType()))
