@@ -1,5 +1,21 @@
 package ua.com.fielden.platform.eql.dbschema;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.hibernate.dialect.Dialect;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+
+import java.lang.reflect.Field;
+import java.sql.Types;
+import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -9,30 +25,7 @@ import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
-import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-
-import java.lang.reflect.Field;
-import java.sql.Types;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.hibernate.dialect.Dialect;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.Unique;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.persistence.HibernateHelpers;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * Generates DDL to create a table, primary key, indices (including unique) and foreign keys for the specified persistent type.
@@ -138,7 +131,7 @@ public class TableDdl {
                 .filter(col -> {
                     if (!isIndexApplicable(col, dbVersion)) {
                         LOGGER.warn("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
-                                    .formatted(col.sqlType(), dbVersion, col.name(), entityType.getSimpleName()));
+                                    .formatted(col.sqlTypeName(dialect), dbVersion, col.name(), entityType.getSimpleName()));
                         return false;
                     } else {
                         return true;
@@ -166,7 +159,7 @@ public class TableDdl {
                 .filter(col -> {
                     if (!isIndexApplicable(col, dbVersion)) {
                         LOGGER.warn("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
-                                    .formatted(col.sqlType(), dbVersion, col.name(), entityType.getSimpleName()));
+                                    .formatted(col.sqlTypeName(dialect), dbVersion, col.name(), entityType.getSimpleName()));
                         return false;
                     } else {
                         return true;

@@ -69,7 +69,7 @@ public record ColumnDefinition(boolean unique,
         sb.append(name);
         sb.append(" ");
 
-        sb.append(sqlTypeName(sqlType, dialect, javaType, length, precision, scale));
+        sb.append(sqlTypeName(dialect));
 
         if (!nullable) {
             sb.append(" NOT NULL");
@@ -83,9 +83,24 @@ public record ColumnDefinition(boolean unique,
         return sb.toString();
     }
 
-    private static String sqlTypeName(final int sqlType, final Dialect dialect,
-                                      final Class<?> javaType,
-                                      final int length, final int precision, final int scale) {
+    public String sqlTypeName(final Dialect dialect) {
+        return sqlTypeName(sqlType, dialect, javaType, length, precision, scale);
+    }
+
+    /**
+     * Converts a number that represents an SQL type to a human-readable descriptive text.
+     * For example, MSSQL type {@code 12} becomes {@code "varchar(max)"}.
+     *
+     * @return
+     */
+    private static String sqlTypeName(
+            final int sqlType,
+            final Dialect dialect,
+            final Class<?> javaType,
+            final int length,
+            final int precision,
+            final int scale)
+    {
         if (length == Integer.MAX_VALUE && String.class == javaType) {
             return switch (dbVersion(dialect)) {
                 case POSTGRESQL -> "text";
