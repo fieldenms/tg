@@ -66,10 +66,10 @@ public class EntityMetadataTest {
     }
 
     @Test
-    public void id_is_generated_as_persistent_for_synthetic_based_on_persistent_entities() {
+    public void id_is_generated_as_plain_for_synthetic_based_on_persistent_entities() {
         EntityA.of(generator.forEntity(TgReVehicleModel.class))
                 .assertProperty(ID, p -> p
-                        .assertIs(PropertyMetadata.Persistent.class)
+                        .assertIs(PropertyMetadata.Plain.class)
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(Long.class)));
     }
 
@@ -116,10 +116,10 @@ public class EntityMetadataTest {
     }
 
     @Test
-    public void version_is_generated_as_persistent_for_synthetic_based_on_persistent_entities() {
+    public void version_is_generated_as_plain_for_synthetic_based_on_persistent_entities() {
         EntityA.of(generator.forEntity(TgReVehicleModel.class))
                 .assertProperty(VERSION, p -> p
-                        .assertIs(PropertyMetadata.Persistent.class)
+                        .assertIs(PropertyMetadata.Plain.class)
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(Long.class)));
     }
 
