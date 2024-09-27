@@ -49,6 +49,7 @@ public class EntityContainerEnhancer {
 
     /**
      * Enhances a list of entity containers.
+     * The entity type should be either a domain entity or {@link EntityAggregates}.
      */
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> enhance(
             final Session session,
