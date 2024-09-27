@@ -31,6 +31,8 @@ import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+
 
 /**
  * Represents retrieval models specialised for entity types.
@@ -289,6 +291,10 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                     .filter(propName -> {
                         // id is never proxied.
                         if (ID.equals(propName)) {
+                            return false;
+                        }
+                        // version is never proxied for synthetic-based-on-persistent entities.
+                        else if (VERSION.equals(propName) && entityMetadata.isSynthetic() && isSyntheticBasedOnPersistentEntityType(entityMetadata.javaType())) {
                             return false;
                         }
                         else if (containsProp(propName)) {

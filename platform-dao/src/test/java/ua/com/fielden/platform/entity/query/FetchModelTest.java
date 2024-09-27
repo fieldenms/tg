@@ -8,12 +8,15 @@ import ua.com.fielden.platform.entity.query.test_entities.Circular_EntityWithCom
 import ua.com.fielden.platform.entity.query.test_entities.Circular_UnionEntity;
 import ua.com.fielden.platform.eql.meta.BaseEntQueryTCase1;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.util.Set;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 
@@ -302,6 +305,19 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     public void default_strategy_implicitly_includes_calculated_properties_with_a_composite_type() {
         var model = produceRetrievalModel(TgVehicle.class, DEFAULT);
         assertPropsAreFetched(model, Set.of("sumOfPrices"));
+    }
+
+    @Test
+    public void version_is_never_proxied_for_synthetic_based_on_persistent_entities() {
+        final var entityType = TgReVehicleModel.class;
+        assertTrue(EntityUtils.isSyntheticBasedOnPersistentEntityType(entityType));
+        assertPropsAreNotProxied(produceRetrievalModel(entityType, NONE), Set.of(VERSION));
+        assertPropsAreNotProxied(produceRetrievalModel(entityType, ID_ONLY), Set.of(VERSION));
+        assertPropsAreNotProxied(produceRetrievalModel(entityType, ID_AND_VERSION), Set.of(VERSION));
+        assertPropsAreNotProxied(produceRetrievalModel(entityType, DEFAULT), Set.of(VERSION));
+        assertPropsAreNotProxied(produceRetrievalModel(entityType, KEY_AND_DESC), Set.of(VERSION));
+        assertPropsAreNotProxied(produceRetrievalModel(entityType, ALL_INCL_CALC), Set.of(VERSION));
+        assertPropsAreNotProxied(produceRetrievalModel(entityType, ALL), Set.of(VERSION));
     }
 
     /*----------------------------------------------------------------------------
