@@ -6,13 +6,16 @@ import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
 
 /**
  * The default implementation of {@link IDomainMetadata}.
@@ -77,10 +80,27 @@ final class DomainMetadataImpl implements IDomainMetadata {
     @Override
     public Optional<PropertyMetadata> forPropertyOpt(final Class<?> enclosingType, final CharSequence propPath) {
         return forType(enclosingType).flatMap(tm -> {
-            final Pair<String, String> head_tail = EntityUtils.splitPropByFirstDot(propPath.toString());
-            final var optHeadPm = propertyFromType(tm, head_tail.getKey());
-            final @Nullable String tail = head_tail.getValue();
-            return tail == null ? optHeadPm : optHeadPm.flatMap(h -> forProperty_(h, tail));
+            final String[] names = splitPropPathToArray(propPath);
+            // Optimise for the most common cases.
+            switch (names.length) {
+                case 1 -> {
+                    return propertyFromType(tm, names[0]);
+                }
+                case 2 -> {
+                    return propertyFromType(tm, names[0]).flatMap(pm0 -> forProperty_(pm0, names[1]));
+                }
+                default -> {
+                    var optPm = propertyFromType(tm, names[0]);
+                    for (int i = 1; i < names.length; i++) {
+                        if (optPm.isEmpty()) {
+                            break;
+                        }
+                        final var name = names[i];
+                        optPm = forProperty_(optPm.get(), name);
+                    }
+                    return optPm;
+                }
+            }
         });
     }
 
