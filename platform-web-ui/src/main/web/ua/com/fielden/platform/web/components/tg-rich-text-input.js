@@ -85,12 +85,16 @@ function mouseOverHandler(e) {
 };
 
 function findLinkParent(element) {
+    return findParentBy.bind(this)(element, parent => parent.hasAttribute && parent.hasAttribute('href'));
+};
+
+function findParentBy(element, predicate) {
     let parent = element;
-    while (parent && parent !== this._editor.getEditorElements().wwEditor.children[0] && (!parent.hasAttribute || !parent.hasAttribute('href'))) {
+    while (parent && parent !== this._editor.getEditorElements().wwEditor.children[0] && !predicate(parent)) {
         parent = parent.parentElement;
     }
     return parent;
-};
+}
 
 let mouseTimer = null;
 let longPress = false;
@@ -99,8 +103,7 @@ let shortPress = false;
 function runLinkIfPossible(el) {
     const a = findLinkParent.bind(this)(el);
     if (a && a.hasAttribute('href')) {
-        const w = window.open(a.getAttribute('href'));
-
+        const w = window.open(a.getAttribute('href'));W
         w.focus();
     }
 }
@@ -159,6 +162,28 @@ function getLink() {
         }
     }
 }
+
+function handleTaskListItemStatusChange (e) {
+    const pos = this._editor.wwEditor.view.posAtCoords({left:e.clientX, top:e.clientY});
+    const node = pos && this._editor.wwEditor.view.domAtPos(pos.pos, pos.inside);
+    if (node && node.node.hasAttribute && node.node.hasAttribute('data-task')) {
+        const style = getComputedStyle(node.node, ':before');
+        if (isPositionInBox(style, e.offsetX, e.offsetY)) {
+            this._editor.focus();
+        }
+    }
+}
+
+function isPositionInBox(style, offsetX, offsetY) {
+    const left = parseInt(style.left, 10);
+    const top = parseInt(style.top, 10);
+    const width =
+      parseInt(style.width, 10) + parseInt(style.paddingLeft, 10) + parseInt(style.paddingRight, 10);
+    const height =
+      parseInt(style.height, 10) + parseInt(style.paddingTop, 10) + parseInt(style.paddingBottom, 10);
+  
+    return offsetX >= left && offsetX <= left + width && offsetY >= top && offsetY <= top + height;
+  }
 
 const template = html`
     <link rel="stylesheet" href="/resources/toastui-editor/toastui-editor.min.css" />
@@ -246,6 +271,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, TgTooltipBe
         this._editor.wwEditor.schema.cached.domParser.rules.forEach(r => r.preserveWhitespace = "full");
         //Add event listeners for tooltips on editor
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("mouseover", mouseOverHandler.bind(this));
+        //Add event listener to handle case when clicking on task list checkbox
+        this._editor.getEditorElements().wwEditor.children[0].addEventListener("mousedown", handleTaskListItemStatusChange.bind(this));
         //Add event listeners to make link clickable and with proper cursor
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("mousedown", mouseDownHandler.bind(this));
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("mouseup", mouseUpHandler.bind(this));
