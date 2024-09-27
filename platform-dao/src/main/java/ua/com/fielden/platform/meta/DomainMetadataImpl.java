@@ -60,7 +60,8 @@ final class DomainMetadataImpl implements IDomainMetadata {
     @Override
     public EntityMetadata forEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return forEntityOpt(entityType)
-                .orElseThrow(() -> new DomainMetadataGenerationException("Could not generate metadata for entity [%s].".formatted(entityType.getTypeName())));
+                .orElseThrow(() -> new DomainMetadataGenerationException(
+                        "Entity type [%s] cannot be subject to metadata generation.".formatted(entityType.getTypeName())));
     }
 
     @Override
