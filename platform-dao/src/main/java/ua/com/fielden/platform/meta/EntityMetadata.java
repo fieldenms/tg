@@ -35,6 +35,8 @@ public sealed interface EntityMetadata extends TypeMetadata {
      * Retrieves metadata for a property if it exists in this entity type, otherwise throws an exception.
      * </p>
      * {@link #propertyOpt(String)} is a non-throwing alternative.
+     *
+     * @param name  simple property name
      */
     PropertyMetadata property(String name);
 
