@@ -13,8 +13,6 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
-import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ServerAuthorisationModel;
@@ -34,14 +32,15 @@ import java.util.Properties;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
+
 /**
- * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
+ * Basic IoC module for server web applications, which should be extended by an application-specific IoC module.
  *
  * This IoC provides all the necessary bindings for:
  * <ul>
  * <li>Applications settings (refer {@link IApplicationSettings});
  * <li>Serialisation mechanism;
- * <li>Essential DAO interfaces {@link IValueMatcherFactory}, {@link IUser}, {@link IAuthorisationModel} and more;
+ * <li>Essential DAO interfaces {@link IUser}, {@link IAuthorisationModel}, and more;
  * <li>Provides application main menu configuration related DAO bindings.
  * </ul>
  * <p>
@@ -55,7 +54,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
     private static final Logger LOGGER = getLogger(BasicWebServerIocModule.class);
 
     private final Properties props;
-    private final IApplicationDomainProvider applicationDomainProvider;
+    protected final IApplicationDomainProvider applicationDomainProvider;
     private final Class<? extends IAuthorisationModel> authorisationModelType;
 
     public BasicWebServerIocModule(
@@ -86,7 +85,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
     @Override
     protected void configure() {
         super.configure();
-        // bind application specific constants
+        // bind application-specific constants
         bindConstant().annotatedWith(Names.named("app.name")).to(props.getProperty("app.name"));
         bindConstant().annotatedWith(Names.named("help.defaultUri")).to(props.getProperty("help.defaultUri", ""));
         bindConstant().annotatedWith(Names.named("reports.path")).to("");
@@ -99,8 +98,8 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("email.smtp")).to(props.getProperty("email.smtp"));
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to(props.getProperty("email.fromAddress"));
         bindConstant().annotatedWith(Names.named("independent.time.zone")).to(Boolean.valueOf(props.getProperty("independent.time.zone")));
-        final boolean webApiPresent = Boolean.valueOf(props.getProperty("web.api"));
-        bindConstant().annotatedWith(Names.named("web.api")).to(webApiPresent);
+        final boolean enableWebApi = Boolean.valueOf(props.getProperty("web.api"));
+        bindConstant().annotatedWith(Names.named("web.api")).to(enableWebApi);
         final var maxQueryDepthKey = "web.api.maxQueryDepth";
         final var maxQueryDepth = Integer.valueOf(props.getProperty(maxQueryDepthKey, DEFAULT_MAX_QUERY_DEPTH + ""));
         final var insufficientMaxQueryDepth = maxQueryDepth < DEFAULT_MAX_QUERY_DEPTH;
@@ -132,11 +131,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bind(IAuthorisationModel.class).to(authorisationModelType);
         install(new AuthorisationIocModule());
 
-        // bind value matcher factory to support autocompleters
-        // TODO is this binding really needed for the server side???
-        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class);
-
-        if (webApiPresent) { // in case where Web API has been turned-on in application.properties ...
+        if (enableWebApi) { // in case where Web API has been turned on in application.properties ...
             // ... bind Web API to platform-dao GraphQL-based implementation
             bind(IWebApi.class).to(GraphQLService.class);
         }
@@ -145,4 +140,5 @@ public class BasicWebServerIocModule extends CompanionIocModule {
     public Properties getProps() {
         return props;
     }
+
 }

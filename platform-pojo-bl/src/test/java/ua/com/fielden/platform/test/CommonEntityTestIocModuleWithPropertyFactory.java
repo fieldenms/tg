@@ -3,7 +3,7 @@ package ua.com.fielden.platform.test;
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.ioc.EntityIocModule;
+import ua.com.fielden.platform.ioc.EntityIocModule;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesDaoStub;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.ioc;
+package ua.com.fielden.platform.ioc;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matcher;

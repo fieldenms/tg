@@ -8,15 +8,15 @@ import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
-import static ua.com.fielden.platform.utils.Lazy.lazyP;
-import static ua.com.fielden.platform.utils.Lazy.lazyS;
+import static ua.com.fielden.platform.utils.Lazy.lazyProvider;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 
 public class LazyTest {
 
     @Test
-    public void lazyS_calls_the_supplier_only_once_and_remembers_the_value() {
+    public void lazySupplier_calls_the_supplier_only_once_and_remembers_the_value() {
         final Supplier<List<Object>> supplier = () -> List.of(1);
-        final Lazy<List<Object>> lazyValue = lazyS(supplier);
+        final Lazy<List<Object>> lazyValue = lazySupplier(supplier);
 
         final var value = lazyValue.get();
         assertEquals(List.of(1), value);
@@ -24,9 +24,9 @@ public class LazyTest {
     }
 
     @Test
-    public void lazyP_calls_the_provider_only_once_and_remembers_the_value() {
+    public void lazyProvider_calls_the_provider_only_once_and_remembers_the_value() {
         final Provider<List<Object>> provider = () -> List.of(1);
-        final Lazy<List<Object>> lazyValue = lazyP(provider);
+        final Lazy<List<Object>> lazyValue = lazyProvider(provider);
 
         final var value = lazyValue.get();
         assertEquals(List.of(1), value);

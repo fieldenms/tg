@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
-import ua.com.fielden.platform.entity.ioc.AbstractPlatformIocModule;
+import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.entity.query.IFilter;
 
 class DataFilterTestIocModule extends AbstractPlatformIocModule {

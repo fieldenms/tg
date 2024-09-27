@@ -6,6 +6,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
 import jakarta.inject.Singleton;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -43,6 +45,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
+    private static final Logger LOGGER = LogManager.getLogger(PlatformTestServerIocModule.class);
+
     public PlatformTestServerIocModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
@@ -68,13 +72,6 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
     @Override
     protected void bindDomainCompanionObjects(final List<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
-        //	bind(IWheelsetDao.class).to(WheelsetDao.class);
-        //	bind(IWorkshopDao2.class).to(WorkshopDao2.class);
-        //	bind(IWheelsetClassDao.class).to(WheelsetClassDao.class);
-        //	bind(IWorkorderDao.class).to(WorkorderDao.class);
-        //	bind(IWorkorderableDao.class).to(WorkorderableDao.class);
-        //	bind(IAdviceDao.class).to(AdviceDao.class);
-
         bind(ITgOrgUnit1.class).to(TgOrgUnit1Dao.class);
         bind(ITgOrgUnit2.class).to(TgOrgUnit2Dao.class);
         bind(ITgOrgUnit3.class).to(TgOrgUnit3Dao.class);
@@ -180,9 +177,10 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         //       however, not all test domain entities actually have companions, hence manual binding...
         //       this should really be corrected at some stage
         // dynamically bind DAO implementations for all companion objects
-        // for (final Class<? extends AbstractEntity<?>> entityType : appDomainProvider.domainTypes()) {
-        //     CompanionObjectAutobinder.bindCo(entityType, binder());
-        // }
+        //for (final Class<? extends AbstractEntity<?>> entityType : applicationDomainProvider.entityTypes()) {
+        //    CompanionObjectAutobinder.bindCo(entityType, binder());
+        //}
+
     }
 
     @Provides

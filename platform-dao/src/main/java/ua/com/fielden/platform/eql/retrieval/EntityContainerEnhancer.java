@@ -51,7 +51,8 @@ public class EntityContainerEnhancer {
      * Enhances a list of entity containers.
      */
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> enhance(
-            final Session session, final List<EntityContainer<E>> entities,
+            final Session session,
+            final List<EntityContainer<E>> entities,
             final IRetrievalModel<E> fetchModel, final Map<String, Object> paramValues)
     {
         if (entities.isEmpty() || fetchModel == null) {

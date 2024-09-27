@@ -3,7 +3,7 @@ package ua.com.fielden.platform.migration;
 import java.sql.Connection;
 
 import com.google.inject.Provider;
-import ua.com.fielden.platform.entity.ioc.AbstractPlatformIocModule;
+import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 
 /**
  * A module used purely for providing JDBC connection in a configurable manner during data migration between two different databases.

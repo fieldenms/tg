@@ -1,39 +1,8 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.buildParametersMap;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
-import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createParamValuesMap;
-import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.separateFetchAndTotalProperties;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotExpression;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
-import static ua.com.fielden.platform.utils.Pair.pair;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
-
+import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
-
-import com.google.inject.Inject;
-
-import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.criteria.enhanced.CriteriaProperty;
 import ua.com.fielden.platform.criteria.enhanced.SecondParam;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -51,7 +20,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -72,6 +40,25 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.*;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.buildParametersMap;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createParamValuesMap;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.separateFetchAndTotalProperties;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 @KeyType(String.class)
 public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndEnhancer, T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends AbstractEntity<String> {
@@ -94,7 +81,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
-    public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IDates dates) {
+    public EntityQueryCriteria(final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IDates dates) {
         this.generatedEntityController = generatedEntityController;
         this.serialiser = serialiser;
         this.controllerProvider = controllerProvider;
@@ -148,15 +135,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             final Class<T> root = getEntityClass();
             set(propertyField.getName(), secondParam == null ? ftr.getValueByDefault(root, critProperty.propertyName()) : ftr.getValue2ByDefault(root, critProperty.propertyName()));
         }
-    }
-
-    @Deprecated
-    public IValueMatcher<?> getValueMatcher(final String propertyName) {
-        throw new UnsupportedOperationException("This is an old Swing related code, which should not be called.");
-        //        if (valueMatchers.get(propertyName) == null) {
-        //            valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher(getType(), propertyName));
-        //        }
-        //        return valueMatchers.get(propertyName);
     }
 
     /**
@@ -521,7 +499,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * Exports the data, which is retrieved with {@code qem}, to a file with {@code filename}.
      *
      * @param fileName
-     * @param query
+     * @param qem
      * @param propertyNames
      * @param propertyTitles
      * @throws IOException
@@ -587,9 +565,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns the entity for specified id
+     * Returns an entity instance by its {@code id}, or {@code null} is none found.
      *
-     * @param entity
+     * @param id
      * @return
      */
     public T getEntityById(final Long id) {
@@ -638,10 +616,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Converts existing properties model (which has separate properties for from/to, is/isNot and so on) into new properties model (which has single abstraction for one
-     * criterion).
+     * Converts existing properties model (which has separate properties for from/to, is/isNot, and so on) into a new properties model, with a single abstraction for every criterion.
      *
-     * @param properties
      * @return
      */
     public final List<QueryProperty> createQueryProperties() {
@@ -655,7 +631,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns the first result page for query model. The page size is specified with the second parameter.
+     * Returns the first result page for a query model. The page size is specified with the second parameter.
      *
      * @param queryModel
      *            - query model for which the first result page must be returned.
@@ -776,10 +752,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Converts existing properties model, which has separate properties for from/to, is/isNot and so on, into a new properties model, which has a single abstraction for one
-     * criterion.
+     * Converts an existing property model (which has separate properties for from/to, is/isNot, and so on) into a new property model, with a single abstraction for a criterion.
      *
-     * @param properties
+     * @param actualProperty
      * @return
      */
     private QueryProperty createQueryProperty(final String actualProperty) {

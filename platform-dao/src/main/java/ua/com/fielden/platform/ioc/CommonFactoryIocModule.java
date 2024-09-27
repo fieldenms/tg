@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.ioc;
 
-import ua.com.fielden.platform.entity.query.EntityQueryIocModule;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
+import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 
 import java.util.Properties;
 
@@ -14,7 +15,7 @@ public class CommonFactoryIocModule extends PropertyFactoryIocModule {
     protected void configure() {
         super.configure();
 
-        install(new EntityQueryIocModule());
+        install(new FactoryModuleBuilder().build(EntityBatchInsertOperation.Factory.class));
     }
 
 }
