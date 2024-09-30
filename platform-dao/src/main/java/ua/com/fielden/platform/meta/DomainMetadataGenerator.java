@@ -399,7 +399,7 @@ final class DomainMetadataGenerator {
                                             .required(true).build());
                 case EntityMetadataBuilder.Synthetic s ->
                         isSyntheticBasedOnPersistentEntityType(s.getJavaType())
-                                ? Optional.of(persistentProp(KEY, propTypeMd, getHibType.get(), PropertyNature.Persistent.data(keyColumn))
+                                ? Optional.of(plainProp(KEY, propTypeMd, getHibType.get())
                                                       .required(true).build())
                                 : Optional.of(plainProp(KEY, propTypeMd, getHibType.getOpt().orElse(null))
                                                       .required(true).build());
@@ -430,7 +430,7 @@ final class DomainMetadataGenerator {
                                 "This is not supported.",
                                 s.getJavaType().getTypeName()));
                     }
-                    yield Optional.of(propId);
+                    yield Optional.of(plainProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY).build());
                 } else if (isEntityType(getKeyType(s.getJavaType()))) {
                     yield Optional.of(calculatedProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY,
                                                      PropertyNature.Calculated.data(expr().prop(KEY).model(), true, false))
