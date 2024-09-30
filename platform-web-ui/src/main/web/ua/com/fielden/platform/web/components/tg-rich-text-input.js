@@ -1,11 +1,13 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
-import '/resources/toastui-editor/toastui-editor-all.js';
+import '/resources/toastui-editor/toastui-editor-all.min.js';
 
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
+import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 function createSelection(tr, selection, SelectionClass, openTag, closeTag) {
     const { mapping, doc } = tr;
@@ -177,13 +179,11 @@ function handleTaskListItemStatusChange (e) {
 function isPositionInBox(style, offsetX, offsetY) {
     const left = parseInt(style.left, 10);
     const top = parseInt(style.top, 10);
-    const width =
-      parseInt(style.width, 10) + parseInt(style.paddingLeft, 10) + parseInt(style.paddingRight, 10);
-    const height =
-      parseInt(style.height, 10) + parseInt(style.paddingTop, 10) + parseInt(style.paddingBottom, 10);
+    const width = parseInt(style.width, 10) + parseInt(style.paddingLeft, 10) + parseInt(style.paddingRight, 10);
+    const height = parseInt(style.height, 10) + parseInt(style.paddingTop, 10) + parseInt(style.paddingBottom, 10);
   
     return offsetX >= left && offsetX <= left + width && offsetY >= top && offsetY <= top + height;
-  }
+}
 
 const template = html`
     <link rel="stylesheet" href="/resources/toastui-editor/toastui-editor.min.css" />
@@ -213,7 +213,7 @@ const template = html`
     </style>
     <div id="editor"></div>`; 
 
-class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, TgTooltipBehavior], PolymerElement) {
+class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKeysBehavior, TgTooltipBehavior], PolymerElement) {
 
     static get template() { 
         return template;
@@ -260,7 +260,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, TgTooltipBe
                 caretChange: this._saveSelection.bind(this)
             },
             plugins: [colorTextPlugin],
-            useCommandShortcut: true,
+            useCommandShortcut: false,
             usageStatistics: false,
             toolbarItems: [],
             hideModeSwitch: true
@@ -278,42 +278,66 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, TgTooltipBe
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("mouseup", mouseUpHandler.bind(this));
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("touchstart", mouseDownHandler.bind(this));
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("touchend", mouseUpHandler.bind(this));
+        //Initiate key binding and key event target
+        this.addOwnKeyBinding('ctrl+b meta+b', 'applyBold');
+        this.addOwnKeyBinding('ctrl+i meta+i', 'applyItalic');
+        this.addOwnKeyBinding('ctrl+s meta+s', 'applyStrikethough');
+        this.addOwnKeyBinding('ctrl+z meta+z', 'undo');
+        this.addOwnKeyBinding('ctrl+y meta+y', 'redo');
+        this.addOwnKeyBinding('tab', 'applyIndent');
+        this.addOwnKeyBinding('shift+tab', 'applyOutdent');
+        this.addOwnKeyBinding('ctrl+u meta+u', 'createBulletList');
+        this.addOwnKeyBinding('ctrl+o meta+o', 'createOrderedList');
+        this.keyEventTarget = this._editor.getEditorElements().wwEditor.children[0];
+        //Adjust key event handler to be able to process events from _editor when event was prevented
+        const prevKeyBindingHandler = this._onKeyBindingEvent.bind(this);
+        this._onKeyBindingEvent = function (keyBindings, event) {
+            Object.defineProperty(event, 'defaultPrevented', {value: false})
+            prevKeyBindingHandler(keyBindings, event);
+        };
     }
 
-    applyHeader1() {
+    applyHeader1(event) {
         this._editor.exec('heading', { level: 1 });
     }
 
-    applyHeader2() {
+    applyHeader2(event) {
         this._editor.exec('heading', { level: 2 });
     }
 
-    applyHeader3() {
+    applyHeader3(event) {
         this._editor.exec('heading', { level: 3 });
     }
 
-    applyParagraph() {
+    applyParagraph(event) {
         this._editor.exec('heading', { level: 0 });
     }
 
-    applyBold() {
+    applyBold(event) {
         this._editor.exec('bold');
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    applyItalic() {
+    applyItalic(event) {
         this._editor.exec('italic');
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    applyStrikethough() {
+    applyStrikethough(event) {
         this._editor.exec('strike');
+        if (this._prevSelection && this._prevSelection[0] !== this._prevSelection[1]) {
+            tearDownEvent(event.detail && event.detail.keyboardEvent);
+        }
     }
 
-    undo() {
+    undo(event) {
         this._editor.exec('undo');
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    redo() {
+    redo(event) {
         this._editor.exec('redo');
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     initLinkEditing() {
@@ -340,23 +364,27 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, TgTooltipBe
         this._editor.setSelection(this._prevSelection[0], this._prevSelection[1]);
     }
 
-    applyIndent() {
+    applyIndent(event) {
         this._editor.exec('indent');
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    applyOutdent() {
+    applyOutdent(event) {
         this._editor.exec('outdent');
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    createBulletList(e) {
+    createBulletList(event) {
         this._editor.exec('bulletList');
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    createOrderedList(e) {
+    createOrderedList(event) {
         this._editor.exec('orderedList');
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    createTaskList(e) {
+    createTaskList(event) {
         this._editor.exec('taskList');
     }
 

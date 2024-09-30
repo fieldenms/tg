@@ -76,7 +76,7 @@ const customLabelTemplate = html`
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text, Ctrl+I, Meta+I" on-tap="_makeItalic"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it, Ctrl+S, Meta+S" on-tap="_makeStrike"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, Meta+Z" on-tap="_undo"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Shift+Z, Meta+Shift+Z" on-tap="_redo"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, Meta+Y" on-tap="_redo"></iron-icon>
         <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-tap="_changeTextColor"></iron-icon>
         <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-tap="_toggleLink"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-indent-increase" action-title="Increase Indent" tooltip-text="Move your paragraph further away from the margin, Tab" on-tap="_indent"></iron-icon>
@@ -169,39 +169,39 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _makeHeader1(e) {
-        this.$.input.applyHeader1();
+        this.$.input.applyHeader1(e);
     }
 
     _makeHeader2(e) {
-        this.$.input.applyHeader2();
+        this.$.input.applyHeader2(e);
     }
 
     _makeHeader3(e) {
-        this.$.input.applyHeader3();
+        this.$.input.applyHeader3(e);
     }
 
     _makeParagraph(e) {
-        this.$.input.applyParagraph();
+        this.$.input.applyParagraph(e);
     }
 
     _makeBold(e) {
-        this.$.input.applyBold();
+        this.$.input.applyBold(e);
     }
     
     _makeItalic(e) {
-        this.$.input.applyItalic();
+        this.$.input.applyItalic(e);
     }
 
     _makeStrike(e) {
-        this.$.input.applyStrikethough();
+        this.$.input.applyStrikethough(e);
     }
 
-    _undo() {
-        this.$.input.undo();
+    _undo(e) {
+        this.$.input.undo(e);
     }
 
-    _redo() {
-        this.$.input.redo();
+    _redo(e) {
+        this.$.input.redo(e);
     }
 
     _changeTextColor(e) {
@@ -224,23 +224,23 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _indent(e) {
-        this.$.input.applyIndent();
+        this.$.input.applyIndent(e);
     }
 
     _outdent(e) {
-        this.$.input.applyOutdent();
+        this.$.input.applyOutdent(e);
     }
 
     _createBulletedList(e) {
-        this.$.input.createBulletList();
+        this.$.input.createBulletList(e);
     }
 
     _createNumberedList(e) {
-        this.$.input.createOrderedList();
+        this.$.input.createOrderedList(e);
     }
 
     _createTaskList(e) {
-        this.$.input.createTaskList();
+        this.$.input.createTaskList(e);
     }
 
     _calcHeight(height, entityType, propertyName) {
