@@ -92,6 +92,8 @@ const customInputTemplate = html`
         disabled$="[[_disabled]]" 
         value="{{_editingValue}}"
         change-event-handler="[[_onChange]]"
+        on-focus="_onFocus"
+        on-blur="_outFocus"
         min-height="[[minHeight]]"
         height="[[_calcHeight(height, entityType, propertyName)]]">
     </tg-rich-text-input>
