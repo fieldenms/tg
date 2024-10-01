@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
@@ -87,6 +88,11 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  * <h4> Processing of property {@code key} </h4>
  * <ul>
  *   <li> If an entity has a composite key, it is expanded into its key members, which are always explored further.
+ *        Property {@code key} itself is never included in such case. This is due to it having different types at Java
+ *        and EQL levels. In Java it is {@link DynamicEntityKey}, in EQl - a string, because it's an implicitly calculated
+ *        property that represents a concatenation of key members. If {@code key} was to be retrieved, then it would
+ *        be required to parse its string value into a {@link DynamicEntityKey}. Instead, a composite {@code key} is never
+ *        included in a retrieval model, and the constructor of {@link AbstractEntity} takes care of initialising its value.
  *   <li> If an entity is a union, {@code key} is included, as well as all of the union members, which are always explored further.
  * </ul>
  *
@@ -455,6 +461,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         private void with(final String propName, final boolean skipEntities) {
             getPropMetadata(propName).ifPresentOrElse(pm -> {
                 if (pm.type().isCompositeKey()) {
+                    // Don't include the key itself. See the documentation of this class.
                     includeAllCompositeKeyMembers();
                 } else if (propName.equals(KEY) && entityMetadata.isUnion()) {
                     primProps.add(KEY);
