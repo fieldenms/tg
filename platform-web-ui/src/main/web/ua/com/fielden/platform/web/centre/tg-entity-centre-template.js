@@ -114,6 +114,22 @@ const entityCentreTemplate = html`
                 require-master-entity='false'
                 hidden>
             </tg-ui-action>
+            <tg-ui-action
+                slot="richTextPropEditAction"
+                ui-role='ICON'
+                component-uri = '/resources/master/tg-rich-text-prop-edit-master.js'
+                element-name = 'tg-rich-text-prop-edit-master'
+                short-desc="Edit rich text property"
+                show-dialog='[[_showDialog]]'
+                toaster='[[toaster]]'
+                create-context-holder='[[_createContextHolder]]'
+                attrs='[[_richTextPropEditActionAttrs]]'
+                pre-action='[[navigationPreAction]]'
+                require-selection-criteria='false'
+                require-selected-entities='ONE'
+                require-master-entity='false'
+                hidden>
+            </tg-ui-action>
             <!--@primary_action-->
             <!--@secondary_actions-->
             <!--@insertion_point_actions-->
