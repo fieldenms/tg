@@ -11,6 +11,7 @@ import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.meta.*;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -234,17 +235,30 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append("Fetch model:\n------------------------------------------------\n");
-        sb.append("\t original:\n" + originalFetch + "\n\n");
-        sb.append(primProps);
-        if (entityProps.size() > 0) {
-            sb.append("\n------------------------------------------------");
-            for (final Entry<String, EntityRetrievalModel<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
-                sb.append("\n" + fetchEntry.getKey() + " <<< " + fetchEntry.getValue());
-                sb.append("\n------------------------------------------------");
-            }
+        return this.getClass().getSimpleName() + " " + toString(1, "  ");
+    }
+
+    String toString(final int level, final String indentElt) {
+        final var indent = indentElt.repeat(level);
+        final var sb = new StringBuilder();
+
+        sb.append("{\n");
+        sb.append(indent).append(format("original: %s\n", originalFetch.toString(level + 1, indentElt)));
+        if (!primProps.isEmpty()) {
+            sb.append(indent).append(format("primitives: [%s]\n", CollectionUtil.toString(primProps, ",")));
         }
+        if (!proxiedProps.isEmpty()) {
+            sb.append(indent).append(format("proxied: [%s]\n", CollectionUtil.toString(proxiedProps, ",")));
+        }
+        if (!entityProps.isEmpty()) {
+            sb.append(indent).append("entities: {\n");
+            final var entitiesIndent = indentElt.repeat(level + 1);
+            entityProps.forEach((name, model) -> sb
+                    .append(entitiesIndent)
+                    .append(format("\"%s\": %s\n", name, model.toString(level + 2, indentElt))));
+            sb.append(indent).append("}\n");
+        }
+        sb.append(indentElt.repeat(level - 1)).append("}");
 
         return sb.toString();
     }

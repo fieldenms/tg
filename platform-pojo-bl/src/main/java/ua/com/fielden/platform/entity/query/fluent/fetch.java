@@ -18,6 +18,7 @@ import java.util.*;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * Represents an entity graph that describes the shape of an entity to be fetched.
@@ -321,27 +322,33 @@ public class fetch<T extends AbstractEntity<?>> {
                   && Objects.equals(includedPropsWithModels, that.includedPropsWithModels);
     }
 
-    private static final String offset = "    ";
-
     @Override
     public String toString() {
-        return getString(offset);
+        return toString(1, "  ");
     }
 
-    private String getString(final String currOffset) {
-        final StringBuffer sb = new StringBuffer();
-        sb.append("\n" + currOffset + entityType.getSimpleName() + " [" + fetchCategory + "]" + (isInstrumented() ? " instrumented" : ""));
+    public String toString(final int level, final String indentElt) {
+        final var sb = new StringBuilder();
+
+        sb.append("fetch {\n");
+        final var indent = indentElt.repeat(level);
+        sb.append(indent).append("entity: ").append(entityType.getSimpleName()).append("\n");
+        sb.append(indent).append("category: ").append(fetchCategory).append("\n");
+        sb.append(indent).append("instrumented: ").append(instrumented).append("\n");
         if (!includedProps.isEmpty()) {
-            sb.append("\n" + currOffset + "+ " + includedProps);
+            sb.append(indent).append(format("included: [%s]", CollectionUtil.toString(includedProps, ","))).append('\n');
         }
         if (!excludedProps.isEmpty()) {
-            sb.append("\n" + currOffset + "- " + excludedProps);
+            sb.append(indent).append(format("excluded: [%s]", CollectionUtil.toString(excludedProps, ","))).append('\n');
         }
         if (!includedPropsWithModels.isEmpty()) {
-            for (final Map.Entry<String, fetch<?>> fetchModel : includedPropsWithModels.entrySet()) {
-                sb.append("\n" + currOffset + "+ " + fetchModel.getKey() + fetchModel.getValue().getString(currOffset + offset));
-            }
+            sb.append(indent).append("entities: {/n");
+            final var entitiesIndent = " ".repeat(level + 1);
+            includedPropsWithModels.forEach((name, model) -> sb.append(entitiesIndent).append("\"%s\": %s".formatted(name, model.toString(level + 2, indentElt))));
+            sb.append('\n').append(indentElt).append("}\n");
         }
+        sb.append(indentElt.repeat(level - 1)).append('}');
+
         return sb.toString();
     }
 
