@@ -3,6 +3,7 @@ package ua.com.fielden.platform.test_utils;
 import org.junit.Assert;
 import org.junit.function.ThrowingRunnable;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -108,6 +109,34 @@ public final class TestUtils {
     {
         final T throwable = Assert.assertThrows(throwableType, runnable);
         action.accept(throwable);
+    }
+
+    public static <E, C extends Collection<E>> C assertNotEmpty(final C collection) {
+        if (collection.isEmpty()) {
+            fail("Collection is empty.");
+        }
+        return collection;
+    }
+
+    public static <E, C extends Collection<E>> C assertNotEmpty(final String message, final C collection) {
+        if (collection.isEmpty()) {
+            fail(message);
+        }
+        return collection;
+    }
+
+    public static <E, C extends Collection<E>> C assertEmpty(final C collection) {
+        if (!collection.isEmpty()) {
+            fail("Collection is not empty.");
+        }
+        return collection;
+    }
+
+    public static <E, C extends Collection<E>> C assertEmpty(final String message, final C collection) {
+        if (!collection.isEmpty()) {
+            fail(message);
+        }
+        return collection;
     }
 
 }
