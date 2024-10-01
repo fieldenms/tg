@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -27,6 +28,22 @@ public sealed interface IRetrievalModel<T extends AbstractEntity<?>> permits Ent
     boolean isInstrumented();
 
     Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels();
+
+    /**
+     * Returns a retrieval model located at the given path.
+     * <p>
+     * It is an error if there is no retrieval model at the given path.
+     *
+     * @param path  property path
+     * @see #getRetrievalModelOpt(CharSequence)
+     */
+    IRetrievalModel<? extends AbstractEntity<?>> getRetrievalModel(CharSequence path);
+
+    /**
+     * An alternative to {@link #getRetrievalModel(CharSequence)} that returns an empty optional if there is no retrieval
+     * model at the given path.
+     */
+    Optional<IRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModelOpt(CharSequence path);
 
     Set<String> getPrimProps();
 

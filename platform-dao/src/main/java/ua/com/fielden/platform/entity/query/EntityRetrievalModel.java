@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
@@ -11,6 +12,7 @@ import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.meta.*;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
@@ -29,9 +31,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
-import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 
 /**
@@ -175,6 +175,31 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     @Override
     public Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels() {
         return entityProps;
+    }
+
+    @Override
+    public IRetrievalModel<? extends AbstractEntity<?>> getRetrievalModel(final CharSequence path) {
+        final var model = getRetrievalModelOrNull(path);
+        if (model == null) {
+            throw new EqlException(format("No such property [%s] in retrieval model:\n%s", path, this));
+        }
+        return model;
+    }
+
+    @Override
+    public Optional<IRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModelOpt(final CharSequence path) {
+        return Optional.ofNullable(getRetrievalModelOrNull(path));
+    }
+
+    private @Nullable EntityRetrievalModel<?> getRetrievalModelOrNull(final CharSequence path) {
+        final var names = splitPropPathToArray(path);
+
+        EntityRetrievalModel<?> model = this;
+        for (int i = 0; i < names.length && model != null; i++) {
+            model = model.entityProps.get(names[i]);
+        }
+
+        return model;
     }
 
     @Override
@@ -431,7 +456,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                             if (propMetadataUtils.isPropEntityType(propType, EntityMetadata::isUnion)) {
                                 with(propName, fetchAll(et.javaType()));
                             } else {
-                                with(propName, fetch(et.javaType()));
+                                with(propName, EntityQueryUtils.fetch(et.javaType()));
                             }
                         } else if (pm.isPersistent()) {
                             with(propName, fetchIdOnly(et.javaType()));

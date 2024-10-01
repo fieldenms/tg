@@ -9,12 +9,16 @@ import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
+import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.NONE;
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
 
 /**
  * Represents a retrieval model specialised for {@link EntityAggregates}.
@@ -61,6 +65,31 @@ public final class EntityAggregatesRetrievalModel implements IRetrievalModel<Ent
     @Override
     public Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels() {
         return entityProps;
+    }
+
+    @Override
+    public IRetrievalModel<? extends AbstractEntity<?>> getRetrievalModel(final CharSequence path) {
+        final var model = getRetrievalModelOrNull(path);
+        if (model == null) {
+            throw new EqlException(format("No such property [%s] in retrieval model:\n%s", path, this));
+        }
+        return model;
+    }
+
+    @Override
+    public Optional<IRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModelOpt(final CharSequence path) {
+        return Optional.ofNullable(getRetrievalModelOrNull(path));
+    }
+
+    private @Nullable IRetrievalModel<?> getRetrievalModelOrNull(final CharSequence path) {
+        final var names = splitPropPathToArray(path);
+
+        IRetrievalModel<?> model = this;
+        for (int i = 0; i < names.length && model != null; i++) {
+            model = model.getRetrievalModels().get(names[i]);
+        }
+
+        return model;
     }
 
     @Override
