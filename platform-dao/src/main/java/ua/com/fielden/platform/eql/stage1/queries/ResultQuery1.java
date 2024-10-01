@@ -100,7 +100,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
                                       (!fetchOnlyTotals && ID.equals(level1Prop.name) && synResulType))
                 // prop -> stream of prop path components
                 .flatMap(level1Prop -> {
-                    final var level1PropFetchModel = fetchModel == null ? null : fetchModel.getRetrievalModels().get(level1Prop.name);
+                    final var level1PropFetchModel = fetchModel == null ? null : fetchModel.getRetrievalModelOpt(level1Prop.name).orElse(null);
                     if (isNotTopFetch && level1PropFetchModel != null && level1Prop instanceof QuerySourceItemForEntityType<?> level1EntityProp) {
                         // yielding sub-properties
                         return level1EntityProp.querySourceInfo.getProps().values().stream()
