@@ -14,7 +14,6 @@ import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
 import java.util.*;
-import java.util.Map.Entry;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -144,12 +143,19 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Should be used to indicate a name of the first level property that should be initialised in the retrieved entity instances.
+     * Adds the property to this fetch model.
+     * </p>
+     * It is an error if the property is already included in or excluded from this fetch model.
+     * It is an error if the property doesn't exist in the entity type associated with this fetch model.
      *
-     * @param propName
-     *            this could be a name of a primitive property (e.g. "desc", "numberOfPages"), entity property ("station"), composite type property ("cost", "cost.amount"), union
-     *            entity property ("location", "location.workshop"), collectional property ("slots"), one-to-one association property ("financialDetails").
-     * @return
+     * @param propName this could be the name of a:
+     *                 primitive property (e.g. {@code desc}, {@code numberOfPages}),
+     *                 entity property ({@code station}),
+     *                 composite type property ({@code cost}, {@code cost.amount}),
+     *                 union entity property ({@code location}, {@code location.workshop}),
+     *                 collectional property ({@code slots}),
+     *                 one-to-one association property ({@code financialDetails}).
+     * @return a new fetch model that includes the given property
      */
     public fetch<T> with(final CharSequence propName) {
         validate(propName.toString());
@@ -159,12 +165,51 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Should be used to indicate a name of the first level property that should not be initialised in the retrieved entity instances.
+     * Adds all given properties to this fetch model.
      *
-     * @param propName
-     *            this could be a name of a primitive property (e.g. "desc", "numberOfPages"), entity property ("station"), composite type property ("cost", "cost.amount"), union
-     *            entity property ("location", "location.workshop"), collectional property ("slots"), one-to-one association property ("financialDetails").
-     * @return
+     * @return a new fetch model that includes the given properties
+     * @see #with(CharSequence)
+     */
+    public fetch<T> with(final CharSequence propName, final CharSequence... propNames) {
+        validate(propName.toString());
+        for (final var name : propNames) {
+            validate(name.toString());
+        }
+        final fetch<T> result = copy(this);
+        result.includedProps.add(propName.toString());
+        for (final var name : propNames) {
+            result.includedProps.add(name.toString());
+        }
+        return result;
+    }
+
+    /**
+     * Adds all given properties to this fetch model.
+     *
+     * @return a new fetch model that includes the given properties
+     * @see #with(CharSequence)
+     */
+    public fetch<T> with(final Iterable<? extends CharSequence> propNames) {
+        propNames.forEach(p -> validate(p.toString()));
+        final fetch<T> result = copy(this);
+        propNames.forEach(p -> result.includedProps.add(p.toString()));
+        return result;
+    }
+
+    /**
+     * Excludes the property from this fetch model.
+     * <p>
+     * It is an error if the property is already included in or excluded from this fetch model.
+     * It is an error if the property doesn't exist in the entity type associated with this fetch model.
+     *
+     * @param propName this could be the name of a:
+     *                 primitive property (e.g. {@code desc}, {@code numberOfPages}),
+     *                 entity property ({@code station}),
+     *                 composite type property ({@code cost}, {@code cost.amount}),
+     *                 union entity property ({@code location}, {@code location.workshop}),
+     *                 collectional property ({@code slots}),
+     *                 one-to-one association property ({@code financialDetails}).
+     * @return a new fetch model that excludes the given property
      */
     public fetch<T> without(final CharSequence propName) {
         validate(propName.toString());
@@ -174,8 +219,45 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Used to indicate a name of the first level entity property that should be initialised in the retrieved entity instances and the model to indicate which
-     * subproperties of a given property should also be initialised.
+     * Excludes all given properties from this fetch model.
+     *
+     * @return a new fetch model that excludes the given properties
+     * @see #without(CharSequence)
+     */
+    public fetch<T> without(final CharSequence propName, final CharSequence... propNames) {
+        validate(propName.toString());
+        for (final var name : propNames) {
+            validate(name.toString());
+        }
+        final fetch<T> result = copy(this);
+        result.excludedProps.add(propName.toString());
+        for (final var name : propNames) {
+            result.excludedProps.add(name.toString());
+        }
+        return result;
+    }
+
+    /**
+     * Excludes all given properties from this fetch model.
+     *
+     * @return a new fetch model that excludes the given properties
+     * @see #without(CharSequence)
+     */
+    public fetch<T> without(final Iterable<? extends CharSequence> propNames) {
+        propNames.forEach(p -> validate(p.toString()));
+        final fetch<T> result = copy(this);
+        propNames.forEach(p -> result.excludedProps.add(p.toString()));
+        return result;
+    }
+
+    /**
+     * Adds the property to this fetch model and associates the given fetch model with it.
+     * <p>
+     * It is an error if the property's type does not match the entity type associated with the given fetch model.
+     * <p>
+     * The resulting fetch model represents a graph that contains the given fetch model as a subgraph.
+     *
+     * @return a new fetch model that contains the given property
      */
     public fetch<T> with(final CharSequence propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
         validate(propName.toString());
@@ -183,7 +265,8 @@ public class fetch<T extends AbstractEntity<?>> {
         if (entityType != EntityAggregates.class) {
             final Class<?> propType = determinePropertyType(entityType, propName);
             if (propType != fetchModel.entityType) {
-                throw new EqlException(format(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, propType, propName, entityType, fetchModel.getEntityType()));
+                throw new EqlException(format(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES,
+                                              propType, propName, entityType.getSimpleName(), fetchModel.getEntityType().getSimpleName()));
             }
         }
 
