@@ -7,18 +7,23 @@ import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.test_entities.Circular_EntityWithCompositeKeyMemberUnionEntity;
 import ua.com.fielden.platform.entity.query.test_entities.Circular_UnionEntity;
 import ua.com.fielden.platform.eql.meta.BaseEntQueryTCase1;
+import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertNotEmpty;
 
 public class FetchModelTest extends BaseEntQueryTCase1 {
 
@@ -29,31 +34,43 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     private static <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final Class<T> entityType, final FetchCategory fetchCategory) {
         return produceRetrievalModel(new fetch<T>(entityType, fetchCategory));
     }
-    
-    private static <T extends AbstractEntity<?>> void assertPropsAreFetched(final IRetrievalModel<T> fetchModel, final Set<String> props) {
+
+    private static <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(
+            final Class<T> entityType,
+            final FetchCategory fetchCategory,
+            final Function<? super fetch<T>, fetch<T>> finisher)
+    {
+        return produceRetrievalModel(finisher.apply(new fetch<T>(entityType, fetchCategory)));
+    }
+
+    private static <T extends AbstractEntity<?>> void assertPropsAreFetched(final IRetrievalModel<T> fetchModel, final Iterable<String> props) {
         for (final String propName : props) {
             assertTrue(format("Property [%s] should be contained within fetch model:\n%s", propName, fetchModel), fetchModel.containsProp(propName));
         }
     }
 
-    private static <T extends AbstractEntity<?>> void assertPropsAreNotFetched(final IRetrievalModel<T> fetchModel, final Set<String> props) {
+    private static <T extends AbstractEntity<?>> void assertPropsAreNotFetched(final IRetrievalModel<T> fetchModel, final Iterable<String> props) {
         for (final String prop : props) {
             assertFalse(format("Property [%s] should not be contained within fetch model:\n%s", prop, fetchModel),
                         fetchModel.containsProp(prop));
         }
     }
 
-    private static <T extends AbstractEntity<?>> void assertPropsAreProxied(final IRetrievalModel<T> fetchModel, final Set<String> proxiedProps) {
+    private static <T extends AbstractEntity<?>> void assertPropsAreProxied(final IRetrievalModel<T> fetchModel, final Iterable<String> proxiedProps) {
         for (final String propName : proxiedProps) {
             assertTrue(format("Property [%s] should be proxied within fetch model:\n%s", propName, fetchModel), fetchModel.containsProxy(propName));
         }
     }
 
-    private static <T extends AbstractEntity<?>> void assertPropsAreNotProxied(final IRetrievalModel<T> fetchModel, final Set<String> props) {
+    private static <T extends AbstractEntity<?>> void assertPropsAreNotProxied(final IRetrievalModel<T> fetchModel, final Iterable<String> props) {
         for (final String prop : props) {
             assertFalse(format("Property [%s] should not be proxied within fetch model:\n%s", prop, fetchModel),
                         fetchModel.containsProxy(prop));
         }
+    }
+
+    private static Stream<FetchCategory> allFetchCategories() {
+        return Arrays.stream(FetchCategory.values());
     }
 
     @Test
@@ -318,6 +335,36 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
         assertPropsAreNotProxied(produceRetrievalModel(entityType, KEY_AND_DESC), Set.of(VERSION));
         assertPropsAreNotProxied(produceRetrievalModel(entityType, ALL_INCL_CALC), Set.of(VERSION));
         assertPropsAreNotProxied(produceRetrievalModel(entityType, ALL), Set.of(VERSION));
+    }
+
+    @Test
+    public void critOnly_properties_are_never_included_implicitly() {
+        final var entityType = TgVehicle.class;
+        final var critOnlyPropNames = DOMAIN_METADATA.forEntity(entityType).properties().stream()
+                .map(PropertyMetadata::asCritOnly)
+                .flatMap(Optional::stream)
+                .map(PropertyMetadata::name)
+                .toList();
+        assertNotEmpty(critOnlyPropNames);
+
+        allFetchCategories()
+                .map(cat -> produceRetrievalModel(entityType, cat))
+                .forEach(model -> assertPropsAreNotFetched(model, critOnlyPropNames));
+    }
+
+    @Test
+    public void critOnly_properties_are_included_if_specified_explicitly() {
+        final var entityType = TgVehicle.class;
+        final var critOnlyPropNames = DOMAIN_METADATA.forEntity(entityType).properties().stream()
+                .map(PropertyMetadata::asCritOnly)
+                .flatMap(Optional::stream)
+                .map(PropertyMetadata::name)
+                .toList();
+        assertNotEmpty(critOnlyPropNames);
+
+        allFetchCategories()
+                .map(cat -> produceRetrievalModel(entityType, cat, fetch -> fetch.with(critOnlyPropNames)))
+                .forEach(model -> assertPropsAreFetched(model, critOnlyPropNames));
     }
 
     /*----------------------------------------------------------------------------
