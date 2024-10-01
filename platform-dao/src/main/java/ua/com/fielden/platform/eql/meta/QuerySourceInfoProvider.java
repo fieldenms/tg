@@ -113,7 +113,8 @@ public class QuerySourceInfoProvider {
         } catch (final TopologicalSortException $) {
             final var msg = "There are cyclic dependencies between synthetic entities. All dependencies:\n" +
                             seDependencies.entrySet().stream()
-                                    .map(entry -> "%s depends on %s".formatted(entry.getKey(), CollectionUtil.toString(entry.getValue(), Class::getSimpleName, ", ")))
+                                    .map(entry -> "%s depends on [%s]".formatted(entry.getKey().getSimpleName(),
+                                                                                 CollectionUtil.toString(entry.getValue(), Class::getSimpleName, ", ")))
                                     .collect(joining("\n"));
             LOGGER.error(msg);
             throw new EqlMetadataGenerationException(msg);
