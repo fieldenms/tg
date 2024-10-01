@@ -16,7 +16,6 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -541,29 +540,6 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                             .flatMap(PropertyMetadata::asCalculated)
                             .map(pm -> pm.data().forTotals())
                             .orElse(FALSE));
-        }
-
-        /**
-         * Indicates whether property belongs to a persistent entity and is meaningful from the persistence perspective.
-         * In other words, values for such properties can be retrieved from a database.
-         * <p>
-         * Effectively, for persistent entities, only calculated and persistent properties can be retrieved.
-         * Properties of any other nature are considered such that do not have anything to do with persistence.
-         * <p>
-         * For synthetic entities, properties of any nature can be retrieved as long as they are yielded or can be calculated.
-         * This is why it is considered that such entities do not have "pure" properties that cannot be retrieved.
-         * Although, it is possible to declare a plain property and not use it in the model for yielding.
-         * Attempts to specify such properties in a fetch model when retrieving a synthetic entity, should result in a runtime exception.
-         */
-        private boolean isRetrievable(final PropertyMetadata pm) {
-            return switch (entityMetadata.nature()) {
-                case EntityNature.Persistent $ -> switch (pm.nature()) {
-                    case PropertyNature.Persistent $$ -> true;
-                    case PropertyNature.Calculated $$ -> true;  // is Transient, but has an expression, so can be retrieved
-                    case PropertyNature.Transient  $$ -> false; // covers the cases of CritOnly and Plain, which cannot be retrieved
-                };
-                default -> true;
-            };
         }
 
         private Optional<String> getSinglePropertyOfComponentType(final PropertyMetadata pm) {

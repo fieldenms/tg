@@ -146,8 +146,16 @@ public class QuerySourceInfoProvider {
         final var pmUtils = domainMetadata.propertyMetadataUtils();
         final var entityMetadata = domainMetadata.forEntity(entityType);
 
-        // Exclude properties that are irrelevant to EQL.
-        // TODO: Formally define the set of EQL-relevant properties and define a corresponding predicate.
+        /*
+         * Exclude properties that have no meaning from the persistence perspective.
+         * In other words, values for such properties can be retrieved from a database.
+         * Effectively, for persistent entities, only calculated and persistent properties can be retrieved.
+         * Properties of any other nature are considered such that do not have anything to do with persistence.
+         * For synthetic entities, properties of any nature can be retrieved as long as they are yielded or can be calculated.
+         * This is why it is considered that such entities do not have "pure" properties that cannot be retrieved.
+         * Although, it is possible to declare a plain property and not use it in the model for yielding.
+         * Attempts to specify such properties in a fetch model when retrieving a synthetic entity, should result in a runtime exception.
+         */
         return entityMetadata.properties().stream()
             .filter(pm -> !pm.isCritOnly())
             .filter(pm -> !(pm.isPlain() && entityMetadata.isPersistent()))
