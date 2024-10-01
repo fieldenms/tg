@@ -2,10 +2,13 @@ package ua.com.fielden.platform.entity.query;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.test_entities.Circular_EntityWithCompositeKeyMemberUnionEntity;
 import ua.com.fielden.platform.entity.query.test_entities.Circular_UnionEntity;
+import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithYieldId;
+import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithoutYieldId;
 import ua.com.fielden.platform.eql.meta.BaseEntQueryTCase1;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.sample.domain.*;
@@ -73,19 +76,251 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
         return Arrays.stream(FetchCategory.values());
     }
 
+    /*----------------------------------------------------------------------------
+     | Fetching of composite key members
+     -----------------------------------------------------------------------------*/
+
     @Test
-    public void test_nested_fetching_of_composite_key() {
-        final IRetrievalModel<TgAuthorship> fetchModel = produceRetrievalModel(TgAuthorship.class, DEFAULT);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "title", "author", "year"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("author"),
-                              Set.of("id", "version", "name", "surname", "patronymic", "dob", "utcDob", "webpage"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("author.name"),
-                              Set.of("id", "version", "key", "desc"));
-        assertPropsAreNotFetched(fetchModel.getRetrievalModel("author"), Set.of("pseudonym"));
-        assertPropsAreNotFetched(fetchModel.getRetrievalModel("author"), Set.of("honorarium"));
-        assertPropsAreNotFetched(fetchModel.getRetrievalModel("author"), Set.of("honorarium.amount"));
+    public void strategy_ALL_composite_key_members_are_included_recursively() {
+        _composite_key_members_are_included_recursively(ALL);
     }
-    
+
+    @Test
+    public void strategy_ALL_INCL_CALC_composite_key_members_are_included_recursively() {
+        _composite_key_members_are_included_recursively(ALL_INCL_CALC);
+    }
+
+    @Test
+    public void strategy_DEFAULT_composite_key_members_are_included_recursively() {
+        _composite_key_members_are_included_recursively(DEFAULT);
+    }
+
+    @Test
+    public void strategy_KEY_AND_DESC_composite_key_members_are_included_recursively() {
+        _composite_key_members_are_included_recursively(KEY_AND_DESC);
+    }
+
+    @Test
+    public void strategy_ID_AND_VERSION_composite_key_members_are_not_included() {
+        _composite_key_members_are_not_included(ID_AND_VERSION);
+    }
+
+    @Test
+    public void strategy_ID_ONLY_composite_key_members_are_not_included() {
+        _composite_key_members_are_not_included(ID_ONLY);
+    }
+
+    @Test
+    public void strategy_NONE_composite_key_members_are_not_included() {
+        _composite_key_members_are_not_included(NONE);
+    }
+
+    private static void _composite_key_members_are_included_recursively(final FetchCategory category) {
+        final var fetchModel = produceRetrievalModel(TgAuthorship.class, category);
+        assertPropsAreFetched(fetchModel, Set.of("title", "author"));
+        assertPropsAreFetched(fetchModel.getRetrievalModel("author"), Set.of("name", "surname", "patronymic"));
+        assertPropsAreFetched(fetchModel.getRetrievalModel("author.name"), Set.of("key"));
+    }
+
+    private static void _composite_key_members_are_not_included(final FetchCategory category) {
+        final var fetchModel = produceRetrievalModel(TgAuthorship.class, category);
+        assertPropsAreNotFetched(fetchModel, Set.of("author", "title"));
+    }
+
+    /*----------------------------------------------------------------------------
+     | Fetching of composite key
+     -----------------------------------------------------------------------------*/
+
+    @Test
+    public void strategy_ALL_composite_key_itself_is_not_included() {
+        _composite_key_itself_is_not_included(TgFuelUsage.class, ALL);
+    }
+
+    @Test
+    public void strategy_ALL_INCL_CALC_composite_key_itself_is_not_included() {
+        _composite_key_itself_is_not_included(TgFuelUsage.class, ALL_INCL_CALC);
+    }
+
+    @Test
+    public void strategy_DEFAULT_composite_key_itself_is_not_included() {
+        _composite_key_itself_is_not_included(TgFuelUsage.class, DEFAULT);
+    }
+
+    @Test
+    public void strategy_KEY_AND_DESC_composite_key_itself_is_not_included() {
+        _composite_key_itself_is_not_included(TgFuelUsage.class, KEY_AND_DESC);
+    }
+
+    @Test
+    public void strategy_ID_AND_VERSION_composite_key_itself_is_not_included() {
+        _composite_key_itself_is_not_included(TgFuelUsage.class, ID_AND_VERSION);
+    }
+
+    @Test
+    public void strategy_ID_ONLY_composite_key_itself_is_not_included() {
+        _composite_key_itself_is_not_included(TgFuelUsage.class, ID_ONLY);
+    }
+
+    @Test
+    public void composite_key_itself_is_not_included_if_specified_explicitly() {
+        final var entityType = TgFuelUsage.class;
+        assertTrue(DOMAIN_METADATA.forProperty(entityType, "key").type().isCompositeKey());
+
+        final var fetchModel = produceRetrievalModel(fetchNone(entityType).with("key"));
+        assertPropsAreNotFetched(fetchModel, Set.of("key"));
+    }
+
+    private static void _composite_key_itself_is_not_included(
+            final Class<? extends AbstractEntity<DynamicEntityKey>> entityType,
+            final FetchCategory category)
+    {
+        final var fetchModel = produceRetrievalModel(entityType, category);
+        assertPropsAreNotFetched(fetchModel, Set.of("key"));
+    }
+
+    /*----------------------------------------------------------------------------
+     | Fetching of calculated properties
+     -----------------------------------------------------------------------------*/
+
+    @Test
+    public void strategy_ALL_only_those_calculated_properties_that_have_component_type_are_included() {
+        _only_those_calculated_properties_that_have_component_type_are_included(TgVehicle.class, ALL);
+    }
+
+    @Test
+    public void strategy_DEFAULT_only_those_calculated_properties_that_have_component_type_are_included() {
+        _only_those_calculated_properties_that_have_component_type_are_included(TgVehicle.class, DEFAULT);
+    }
+
+    @Test
+    public void strategy_ALL_INCL_CALC_all_calculated_properties_are_included() {
+        _all_calculated_properties_are_included(TgAuthor.class, ALL_INCL_CALC);
+    }
+
+    @Test
+    public void strategy_KEY_AND_DESC_all_calculated_properties_are_excluded() {
+        _all_calculated_properties_are_excluded(TgAuthor.class, KEY_AND_DESC);
+    }
+
+    @Test
+    public void strategy_ID_ONLY_all_calculated_properties_are_excluded() {
+        _all_calculated_properties_are_excluded(TgAuthor.class, ID_ONLY);
+    }
+
+    @Test
+    public void strategy_NONE_all_calculated_properties_are_excluded() {
+        _all_calculated_properties_are_excluded(TgAuthor.class, NONE);
+    }
+
+    private static void _only_those_calculated_properties_that_have_component_type_are_included(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final FetchCategory category)
+    {
+        final var fetchModel = produceRetrievalModel(entityType, category);
+        DOMAIN_METADATA.forEntity(entityType).properties().stream()
+                .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
+                .forEach(prop -> {
+                    if (prop.type().isComponent()) {
+                        assertPropsAreFetched(fetchModel, Set.of(prop.name()));
+                    } else {
+                        assertPropsAreNotFetched(fetchModel, Set.of(prop.name()));
+                    }
+                });
+    }
+
+    private static void _all_calculated_properties_are_included(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final FetchCategory category)
+    {
+        final var fetchModel = produceRetrievalModel(entityType, category);
+        final var calculatedProps = DOMAIN_METADATA.forEntity(entityType).properties().stream()
+                .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
+                // Composite key itself is never included. See the documentation of EntityRetrievalModel.
+                .filter(prop -> !prop.type().isCompositeKey())
+                .map(PropertyMetadata::name)
+                .toList();
+        assertPropsAreFetched(fetchModel, calculatedProps);
+    }
+
+    private static void _all_calculated_properties_are_excluded(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final FetchCategory category)
+    {
+        final var fetchModel = produceRetrievalModel(entityType, category);
+        final var calculatedProps = DOMAIN_METADATA.forEntity(entityType).properties().stream()
+                .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
+                .map(PropertyMetadata::name)
+                .toList();
+        assertPropsAreNotFetched(fetchModel, calculatedProps);
+    }
+
+    /*----------------------------------------------------------------------------
+     | Fetching of property "id" in synthetic entities
+     -----------------------------------------------------------------------------*/
+
+    @Test
+    public void strategy_ALL_id_is_included_if_synthetic_model_yields_into_it() {
+        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, ALL), Set.of("id"));
+    }
+
+    @Test
+    public void strategy_ALL_INCL_CALC_id_is_included_if_synthetic_model_yields_into_it() {
+        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, ALL_INCL_CALC), Set.of("id"));
+    }
+
+    @Test
+    public void strategy_DEFAULT_id_is_included_if_synthetic_model_yields_into_it() {
+        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, DEFAULT), Set.of("id"));
+    }
+
+    @Test
+    public void strategy_KEY_AND_DESC_id_is_included_if_synthetic_model_yields_into_it() {
+        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, KEY_AND_DESC), Set.of("id"));
+    }
+
+    @Test
+    public void strategy_ID_ONLY_id_is_included_if_synthetic_model_yields_into_it() {
+        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, ID_ONLY), Set.of("id"));
+    }
+
+    // ID_ONLY uncoditionally includes ID
+    @Test
+    public void strategy_ID_ONLY_id_is_included_if_synthetic_model_does_not_yield_into_it() {
+        assertPropsAreFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, ID_ONLY), Set.of("id"));
+    }
+
+    @Test
+    public void strategy_ID_AND_VERSION_id_is_included_if_synthetic_model_yields_into_it() {
+        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, ID_AND_VERSION), Set.of("id"));
+    }
+
+    @Test
+    public void strategy_ALL_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
+        assertPropsAreNotFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, ALL), Set.of("id"));
+    }
+
+    @Test
+    public void strategy_ALL_INCL_CALC_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
+        assertPropsAreNotFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, ALL_INCL_CALC), Set.of("id"));
+    }
+
+    @Test
+    public void strategy_DEFAULT_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
+        assertPropsAreNotFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, DEFAULT), Set.of("id"));
+    }
+
+    @Test
+    public void strategy_KEY_AND_DESC_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
+        assertPropsAreNotFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, KEY_AND_DESC), Set.of("id"));
+    }
+
+    @Test
+    public void strategy_ID_AND_VERSION_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
+        assertPropsAreNotFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, ID_AND_VERSION), Set.of("id"));
+    }
+
+    // END SECTION
+
     @Test
     public void test_all_fetching_of_make() {
         final IRetrievalModel<TgVehicleMake> fetchModel = produceRetrievalModel(TgVehicleMake.class, ALL);
@@ -234,7 +469,6 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     @Test
     public void strategy_DEFAULT_for_synthetic_entity() {
         final IRetrievalModel<TgAverageFuelUsage> fetchModel = produceRetrievalModel(TgAverageFuelUsage.class, DEFAULT);
-        // FIXME: datePeriod is not yielded and therefore should not be included into the fetch model
         assertPropsAreFetched(fetchModel, Set.of("key", "qty", "cost"));
         assertPropsAreNotFetched(fetchModel, Set.of("id", "version"));
     }
@@ -274,17 +508,6 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     }
 
     @Test
-    public void all_calc_fetching_works() {
-        final IRetrievalModel<TgAuthor> fetchModel = produceRetrievalModel(TgAuthor.class, ALL_INCL_CALC);
-        assertPropsAreFetched(fetchModel,
-                              Set.of("id", "version", "name", "surname", "patronymic", "dob", "utcDob", "webpage",
-                                    "lastRoyalty", "hasMultiplePublications"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("name"), Set.of("id", "version", "key", "desc"));
-        assertPropsAreNotFetched(fetchModel, Set.of("pseudonym", "honorarium", "honorarium.amount"));
-    }
-
-    
-    @Test
     public void fetch_id_only_works() {
         final IRetrievalModel<TgAuthorship> fetchModel = produceRetrievalModel(TgAuthorship.class, ID_ONLY);
         assertPropsAreFetched(fetchModel, Set.of("id"));
@@ -313,12 +536,6 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
                               Set.of("id", "version", "key", "desc"));
         assertPropsAreNotFetched(fetchModel.getRetrievalModel("author"),
                                  Set.of("pseudonym", "honorarium", "honorarium.amount"));
-    }
-
-    @Test
-    public void default_strategy_implicitly_includes_calculated_properties_with_a_composite_type() {
-        var model = produceRetrievalModel(TgVehicle.class, DEFAULT);
-        assertPropsAreFetched(model, Set.of("sumOfPrices"));
     }
 
     @Test

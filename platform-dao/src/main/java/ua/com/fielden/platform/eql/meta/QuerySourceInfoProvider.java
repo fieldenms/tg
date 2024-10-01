@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.eql.meta;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.query.*;
 import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
@@ -14,10 +16,7 @@ import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
-import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.PropertyTypeMetadata;
+import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -25,6 +24,8 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
@@ -49,6 +50,9 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
 public class QuerySourceInfoProvider {
     private static final Logger LOGGER = getLogger(QuerySourceInfoProvider.class);
 
+    /** Used to obtain models for synthetic entities. */
+    private static final QueryModelToStage1Transformer QUERY_MODEL_TO_STAGE_1_TRANSFORMER = new QueryModelToStage1Transformer();
+
     /** Association between an entity type and its declared query source info. */
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> declaredQuerySourceInfoMap;
 
@@ -64,7 +68,6 @@ public class QuerySourceInfoProvider {
     @Inject
     public QuerySourceInfoProvider(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
-        final var qmToS1Transformer = new QueryModelToStage1Transformer();
 
         // Declared query source infos are created for all entities.
         declaredQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class)
@@ -87,7 +90,7 @@ public class QuerySourceInfoProvider {
         seModels = domainMetadata.allTypes(EntityMetadata.class)
                 .map(EntityMetadata::asSynthetic).flatMap(Optional::stream)
                 .collect(toConcurrentMap(EntityMetadata::javaType,
-                                         em -> em.data().models().stream().map(qmToS1Transformer::generateAsUncorrelatedSourceQuery).toList()));
+                                         em -> em.data().models().stream().map(QUERY_MODEL_TO_STAGE_1_TRANSFORMER::generateAsUncorrelatedSourceQuery).toList()));
         // Compute dependencies between synthetic entities.
         final var seDependencies = mapValues(seModels,
                                              (type, queries) -> queries.stream()
@@ -119,7 +122,7 @@ public class QuerySourceInfoProvider {
 
         entityTypesDependentCalcPropsOrder = modelledQuerySourceInfoMap.values().stream()
                 .collect(toConcurrentMap(querySourceInfo -> querySourceInfo.javaType().getName(),
-                                         querySourceInfo -> DependentCalcPropsOrder.orderDependentCalcProps(this, qmToS1Transformer, querySourceInfo)));
+                                         querySourceInfo -> DependentCalcPropsOrder.orderDependentCalcProps(this, QUERY_MODEL_TO_STAGE_1_TRANSFORMER, querySourceInfo)));
     }
 
     /**
@@ -288,9 +291,24 @@ public class QuerySourceInfoProvider {
         }
 
         if (domainMetadata.forEntity(type) instanceof EntityMetadata.Synthetic) {
-            return generateModelledQuerySourceInfoForSyntheticType(type, seModels.get(getOriginalType(type)));
+            return generateModelledQuerySourceInfoForSyntheticType(type, getSeModels(getOriginalType(type)));
         }
         return generateModelledQuerySourceInfoForPersistentType(type);
+    }
+
+    private List<SourceQuery1> getSeModels(final Class<? extends AbstractEntity<?>> entityType) {
+        final var models = seModels.get(getOriginalType(entityType));
+        if (models != null) {
+            return models;
+        } else {
+            // This branch is intended to be executed by platform tests, allowing to use entity types without registering them in the application domain.
+            LOGGER.warn(format("Generating models for synthetic entity [%s] on demand. This may affect performance if attempted frequently.",
+                               entityType.getSimpleName()));
+            final var entityMetadata = domainMetadata.forEntity(entityType);
+            return entityMetadata.asSynthetic()
+                    .map(em -> em.data().models().stream().map(QUERY_MODEL_TO_STAGE_1_TRANSFORMER::generateAsUncorrelatedSourceQuery).collect(toImmutableList()))
+                    .orElseThrow(() -> new EqlMetadataGenerationException(format("Expected a synthetic entity type, but was: %s", entityMetadata)));
+        }
     }
 
     private static CalcPropInfo toCalcPropInfo(final PropertyMetadata.Calculated pm) {
