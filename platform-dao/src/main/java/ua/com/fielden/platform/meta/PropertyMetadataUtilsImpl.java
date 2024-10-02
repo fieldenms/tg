@@ -33,8 +33,8 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
     public boolean isPropEntityType(final PropertyTypeMetadata propType, final Predicate<EntityMetadata> predicate) {
         return propType.asEntity()
                 .flatMap(et -> domainMetadata.forEntityOpt(et.javaType()))
-                .map(predicate::test)
-                .orElse(FALSE);
+                .filter(predicate)
+                .isPresent();
     }
 
     @Override

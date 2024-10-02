@@ -114,7 +114,7 @@ public class YieldInfoNodesGenerator {
 
                     return new YieldInfoNode(firstName,
                             optSimpleYield.map(y -> y.propType).orElse(null),
-                            optSimpleYield.map(y -> y.nonnullable).orElse(false),
+                            optSimpleYield.filter(y -> y.nonnullable).isPresent(),
                             group(nonEmptyTails));
                 }
         );
