@@ -152,7 +152,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         for (final String propName : originalFetch.getIncludedProps()) {
-            builder.with(propName, false);
+            builder.with(propName);
         }
 
         originalFetch.getIncludedPropsWithModels().forEach(builder::with);
@@ -370,13 +370,13 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
         private void includeAllCompositeKeyMembers() {
             entityMetadataUtils.compositeKeyMembers(entityMetadata)
-                    .forEach(pm -> with(pm.name(), !pm.type().isEntity()));
+                    .forEach(pm -> with(pm.name()));
         }
 
         private void includeAllUnionEntityKeyMembers() {
             entityMetadata.properties().stream()
                     .filter(pm -> propMetadataUtils.isPropEntityType(pm.type(), EntityMetadata::isPersistent))
-                    .forEach(pm -> with(pm.name(), false));
+                    .forEach(pm -> with(pm.name()));
         }
 
         private void includeAllFirstLevelPrimPropsAndKey() {
@@ -425,13 +425,13 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour
                 if (optPropMetadata.filter(it -> it.isCalculated() && !it.type().isComponent()).isPresent()) {} // skip
                 else {
-                    with(prop.name, false);
+                    with(prop.name);
                 }
             });
         }
 
         private void includeAllFirstLevelPropsInclCalc() {
-            forEachProperty((prop, optPropMetadata) -> with(prop.name, false));
+            forEachProperty((prop, optPropMetadata) -> with(prop.name));
         }
 
         private void includeIdOnly() {
@@ -451,6 +451,13 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 }
                 includeLastUpdatedByGroupOfProperties();
             }
+        }
+
+        /**
+         * Includes the property and explores it further if it is entity-typed.
+         */
+        private void with(final String propName) {
+            with(propName, false);
         }
 
         private void with(final String propName, final boolean skipEntities) {
