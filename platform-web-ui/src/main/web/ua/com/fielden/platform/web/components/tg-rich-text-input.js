@@ -185,6 +185,12 @@ function isPositionInBox(style, offsetX, offsetY) {
     return offsetX >= left && offsetX <= left + width && offsetY >= top && offsetY <= top + height;
 }
 
+function dumpToastUiErrors (e) {
+    if (e.filename && e.filename.includes("toastui-editor-all") && e.error && e.error.name === 'TransformError') {
+        tearDownEvent(e);
+    }
+}
+
 const template = html`
     <link rel="stylesheet" href="/resources/toastui-editor/toastui-editor.min.css" />
     <style>
@@ -278,6 +284,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("mouseup", mouseUpHandler.bind(this));
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("touchstart", mouseDownHandler.bind(this));
         this._editor.getEditorElements().wwEditor.children[0].addEventListener("touchend", mouseUpHandler.bind(this));
+        //Handle uncaught errors to dump them
+        window.addEventListener("error", dumpToastUiErrors.bind(this), true);
         //Initiate key binding and key event target
         this.addOwnKeyBinding('ctrl+b meta+b', 'applyBold');
         this.addOwnKeyBinding('ctrl+i meta+i', 'applyItalic');
