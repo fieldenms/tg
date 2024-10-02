@@ -61,11 +61,6 @@ public sealed interface IRetrievalModel<T extends AbstractEntity<?>> permits Ent
     boolean topLevel();
 
     /**
-     * Indicates whether this fetch model includes only such properties that are calculated and "for totals".
-     */
-    boolean containsOnlyTotals();
-
-    /**
      * Creates a retrieval model that corresponds to the entity type that the fetch model is associated with.
      */
     static <E extends AbstractEntity<?>> IRetrievalModel<E> createRetrievalModel(

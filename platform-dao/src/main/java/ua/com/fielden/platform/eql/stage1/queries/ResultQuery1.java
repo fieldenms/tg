@@ -27,7 +27,8 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
-import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 /**
  * Represents a top-level query that produces results.
@@ -90,14 +91,9 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
 
     private Yields2 enhanceAll(final ISource2<? extends ISource3> mainSource) {
         final boolean isNotTopFetch = fetchModel != null && !fetchModel.topLevel();
-        final boolean fetchOnlyTotals = fetchModel != null && fetchModel.containsOnlyTotals();
-        final boolean synResulType = isSyntheticEntityType(resultType);
         final var enhancedYields = mainSource.querySourceInfo().getProps().values().stream()
-                // FIXME: Condition for {@code id} should be removed once default fetch strategies are adjusted
-                //        to recognise the presence of {@code id} in synthetic entities.
-                .filter(level1Prop -> fetchModel == null ||
-                                      fetchModel.containsProp(level1Prop.name) ||
-                                      (!fetchOnlyTotals && ID.equals(level1Prop.name) && synResulType))
+                // Narrow down the set of yields to those included in the fetch model.
+                .filter(level1Prop -> fetchModel == null || fetchModel.containsProp(level1Prop.name))
                 // prop -> stream of prop path components
                 .flatMap(level1Prop -> {
                     final var level1PropFetchModel = fetchModel == null ? null : fetchModel.getRetrievalModelOpt(level1Prop.name).orElse(null);

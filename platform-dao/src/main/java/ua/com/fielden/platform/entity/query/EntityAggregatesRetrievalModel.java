@@ -134,11 +134,6 @@ public final class EntityAggregatesRetrievalModel implements IRetrievalModel<Ent
     }
 
     @Override
-    public boolean containsOnlyTotals() {
-        return false;
-    }
-
-    @Override
     public String toString() {
         final StringBuffer sb = new StringBuffer();
         sb.append("Fetch model:\n------------------------------------------------\n");

@@ -104,7 +104,6 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
     private final fetch<T> originalFetch;
     private final boolean topLevel;
-    private final boolean onlyTotals;
     private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps;
     private final Set<String> primProps;
     private final Set<String> proxiedProps;
@@ -124,7 +123,6 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         this.primProps = unmodifiableSet(builder.primProps);
         this.entityProps = unmodifiableMap(builder.entityProps);
         this.proxiedProps = unmodifiableSet(builder.proxiedProps);
-        this.onlyTotals = builder.containsOnlyTotals();
     }
 
     private static <T extends AbstractEntity<?>> Builder buildModel(
@@ -234,11 +232,6 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     }
 
     @Override
-    public boolean containsOnlyTotals() {
-        return onlyTotals;
-    }
-
-    @Override
     public String toString() {
         return this.getClass().getSimpleName() + " " + toString(1, "  ");
     }
@@ -271,7 +264,6 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     /**
      * Mutable builder that assists with initialisation of {@link EntityRetrievalModel}.
      * Its output is stored in {@link #primProps}, {@link #entityProps}, and {@link #proxiedProps}.
-     * There is also {@link #containsOnlyTotals()}.
      * </p>
      * Both {@link IDomainMetadata} and {@link QuerySourceInfoProvider} are required to correctly build a retrieval model.
      * <li> {@link IDomainMetadata} is required because of the richness of information it provides about entity types and their properties.
@@ -528,18 +520,6 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                     throw new EqlException(format("Couldn't find property [%s] to be excluded from fetched primitive properties of entity type [%s]", propName, entityType));
                 }
             }
-        }
-
-        private boolean containsOnlyTotals() {
-            return primProps.stream()
-                    // Need to filter out sub-props for components such as Money.amount, which are not recognised as being for totals.
-                    // The filtering condition relies on the fact that both a component typed property and its sub-props are present among prim props,
-                    // so that after filtering the component typed properties would remain for further totals-only identification.
-                    .filter(prop -> !prop.contains("."))
-                    .allMatch(prop -> entityMetadata.propertyOpt(prop)
-                            .flatMap(PropertyMetadata::asCalculated)
-                            .map(pm -> pm.data().forTotals())
-                            .orElse(FALSE));
         }
 
         private Optional<String> getSinglePropertyOfComponentType(final PropertyMetadata pm) {
