@@ -103,9 +103,13 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
 
     private final fetch<T> originalFetch;
+    /** Indicates whether this fetch is the top-most (graph root) or a nested one (subgraph). */
     private final boolean topLevel;
+    /** Association between an entity-typed property and its nested fetch model. */
     private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps;
+    /** Primitive properties that should be retrieved. */
     private final Set<String> primProps;
+    /** Properties that should be proxied in the resulting entity proxy instance. */
     private final Set<String> proxiedProps;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata, final QuerySourceInfoProvider qsip) {
@@ -163,7 +167,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     }
 
     public boolean isFetchIdOnly() {
-        return getPrimProps().size() == 1 && getRetrievalModels().size() == 0 && containsProp(ID);
+        return entityProps.isEmpty() && primProps.size() == 1 && primProps.contains(ID);
     }
 
     @Override
@@ -387,11 +391,11 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                     //        where a key or key member that is of a union type may have a union-property of the same type as the enclosing entity.
                     //        We would need to ensure that such union-properties are not explored to prevent StackOverflowErrors during fetch model construction.
                     //        For now, let's simply skip the whole union-typed key and key-members from exploration.
-                    final boolean exploreEntities = optPropMetadata
-                            .map(it -> it.type().isEntity()
-                                       && !propMetadataUtils.isPropEntityType(it, EntityMetadata::isUnion)
-                                       && (KEY.equals(it.name()) || it.has(KEY_MEMBER)))
-                            .orElse(TRUE);
+                    final boolean exploreEntities = optPropMetadata.isEmpty() ||
+                                                    optPropMetadata.filter(it -> it.type().isEntity()
+                                                                                 && !propMetadataUtils.isPropEntityType(it, EntityMetadata::isUnion)
+                                                                                 && (KEY.equals(it.name()) || it.has(KEY_MEMBER)))
+                                                            .isPresent();
                     with(prop.name, !exploreEntities);
                 }
             });
@@ -509,15 +513,17 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         private void without(final String propName) {
             final Optional<PropertyMetadata> optPm = getPropMetadata(propName);
 
-            if (optPm.map(pm -> pm.type().isEntity()).orElse(FALSE)) {
-                final Object removalResult = entityProps.remove(propName);
+            if (optPm.filter(pm -> pm.type().isEntity()).isPresent()) {
+                final var removalResult = entityProps.remove(propName);
                 if (removalResult == null) {
-                    throw new EqlException(format("Couldn't find property [%s] to be excluded from fetched entity properties of entity type [%s]", propName, entityType));
+                    throw new EqlException(format("Couldn't find entity-typed property [%s] to be excluded from fetched properties of entity [%s].",
+                                                  propName, entityType.getSimpleName()));
                 }
             } else {
-                final boolean removalResult = primProps.remove(propName);
+                final var removalResult = primProps.remove(propName);
                 if (!removalResult) {
-                    throw new EqlException(format("Couldn't find property [%s] to be excluded from fetched primitive properties of entity type [%s]", propName, entityType));
+                    throw new EqlException(format("Couldn't find property [%s] to be excluded from fetched properties of entity type [%s].",
+                                                  propName, entityType.getSimpleName()));
                 }
             }
         }
@@ -539,7 +545,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 if (querySourceInfo.hasProp(propName)) {
                     return Optional.empty();
                 }
-                throw new EqlException(format("Trying to fetch entity of type [%s] with non-existing property [%s]", entityType, propName));
+                throw new EqlException(format("Trying to fetch entity [%s] with non-existing property [%s]",
+                                              entityType.getSimpleName(), propName));
             }
             return optPm;
         }
