@@ -22,6 +22,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -78,13 +79,17 @@ public class QuerySourceInfoProvider {
         // Modelled query source infos require a bit more work for synthetic entities, but for other entities are the same
         // as the declared ones. Models of union entities are implicitly generated and have no interdependencies, thus
         // don't require the extra work like synthetic models do.
+        // modelledQuerySourceInfoMap needs to be mutable so that it can be used while we are populating it.
+        // This constructor is quite complex, passing "this" to other parts of the system.
+        modelledQuerySourceInfoMap = new ConcurrentHashMap<>(declaredQuerySourceInfoMap.size());
         // 1. Reuse declared query source infos for non-synthetic entities.
-        modelledQuerySourceInfoMap = declaredQuerySourceInfoMap.entrySet().stream()
-                .filter(entry -> {
-                    final var entityType = entry.getKey();
-                    return !domainMetadata.forEntity(entityType).isSynthetic();
-                })
-                .collect(toConcurrentMap(Map.Entry::getKey, Map.Entry::getValue));
+        // These must be created first so that they can be used during processing of synthetic types.
+        declaredQuerySourceInfoMap.forEach((entityType, declaredQsi) -> {
+            if (!domainMetadata.forEntity(entityType).isSynthetic()) {
+                modelledQuerySourceInfoMap.put(entityType, declaredQsi);
+            }
+        });
+
         // 2. Create modelled query source infos for synthetic entities by analysing their underlying models.
         // Transform underlying models of synthetic entities to stage 1.
         seModels = domainMetadata.allTypes(EntityMetadata.class)
