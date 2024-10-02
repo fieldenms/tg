@@ -491,7 +491,7 @@ final class DomainMetadataGenerator {
         // old code: last 2 conditions are to overcome incorrect metadata combinations
         // TODO: Should an exception be thrown for incorrect definitions?
         //       It is probably best to delegate verification of property declarations to the compile time verifier.
-        else if (atMapTo != null && !isSyntheticEntityType(enclosingEntityType) && atCalculated == null) {
+        else if (atMapTo != null && !entityBuilder.getNature().isSynthetic() && atCalculated == null) {
             final String columnName = mkColumnName(field.getName(), atMapTo);
             final var propTypeMd = mkPropertyTypeOrThrow(field);
             builder = Optional.of(
