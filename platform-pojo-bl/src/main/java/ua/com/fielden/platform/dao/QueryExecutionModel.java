@@ -29,8 +29,8 @@ import static org.apache.logging.log4j.LogManager.getLogger;
  *   <li> Via a fetch model ({@link Builder#with(fetch)}). See {@link fetch#isInstrumented()}.
  *        If a fetch model is instrumented, then entity instances are instrumented.
  * </ol>
- * <b>A fetch model's instrumentation setting is preferred over the QEM's lightweightedness</b>. That is, if a QEM is
- * lightweight but its fetch model is instrumented, then the resulting entities will be instrumented.
+ * <b>A fetch model's instrumentation setting has higher precedence than the QEM's lightweightedness</b>.
+ * That is, if a QEM is lightweight but its fetch model is instrumented, then the resulting entities will be instrumented.
  * <hr><br>
  *
  * {@linkplain ua.com.fielden.platform.companion.IEntityReader Entity companion methods} that retrieve entities from a
