@@ -64,6 +64,11 @@ Polymer({
         return false;
     },
 
+    editRichTextProp: function(currentEntityFunction, richTextPropEditAction) {
+        if (richTextPropEditAction) {
+        }
+    },
+
     /**
      * Returns the property name of collectional entity or property name of simple property value.
      * 

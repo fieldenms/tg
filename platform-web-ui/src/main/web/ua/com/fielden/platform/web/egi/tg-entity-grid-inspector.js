@@ -432,6 +432,7 @@ const template = html`
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <slot id="default_property_action" name="defaultPropertyAction" hidden></slot>
+    <slot id="rich_text_prop_edit_action" name="richTextPropEditAction" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
@@ -912,6 +913,8 @@ Polymer({
         _secondaryActions: Array,
         //Default action for property columns. It is invoked only if there were no other action specified for specific property column.
         _defaultPropertyAction: Object,
+        //Action for editing rich text properties in any entity. It is invoked only if there were no other action specified for specific property column.
+        _richTextPropEditAction: Object,
         //The callback to open drop down for secondary action.
         _openDropDown: Function,
 
@@ -963,6 +966,9 @@ Polymer({
 
         //Initialising the default property action
         this._defaultPropertyAction = this.$.default_property_action.assignedNodes()[0];
+
+        //Initialising the rich-text property edit action
+        this._richTextPropEditAction = this.$.rich_text_prop_edit_action.assignedNodes()[0];
 
         //Initialising event listeners.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
@@ -1404,9 +1410,15 @@ Polymer({
                     this.downloadAttachment(attachment);
                 } else if (this.hasDefaultAction(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
+                } else if (column.type === 'RichText' && this._canEditRichText(entity, column)) {
+                    column.editRichTextProp(this._currentEntity(entity), this._richTextPropEditAction);
                 }
             } 
         }
+    },
+
+    _canEditRichText: function (entity, column) {
+        
     },
 
     //Entities changed related functions
