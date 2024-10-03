@@ -28,6 +28,10 @@ Polymer({
         editable: {
             type: Boolean,
             value: false
+        },
+        editViaSinglePropMaster: {
+            type: Boolean,
+            value: false
         }
     },
 

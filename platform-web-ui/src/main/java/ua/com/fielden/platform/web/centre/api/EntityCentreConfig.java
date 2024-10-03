@@ -282,28 +282,33 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<AbstractWidget> widget;
         public final int width;
         public final boolean isFlexible;
+        //Indicates whether property is editable via the single property master like RichText property edit master
+        //Single property master get opened by default action for property of type other than Entity.
+        //Yet, only rich text property supports single property master, for properties with other types this option won't have any effect.
+        public final boolean isEditable;
 
         private Optional<EntityMultiActionConfig> propAction = empty();
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final boolean presentByDefault, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
-            return new ResultSetProp<>(propName, presentByDefault, empty(), empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final boolean presentByDefault, final boolean isEditable, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
+            return new ResultSetProp<>(propName, presentByDefault, isEditable, empty(), empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final boolean presentByDefault, final int width, final boolean isFlexible, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
-            return new ResultSetProp<>(null, presentByDefault, empty(), empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
+            return new ResultSetProp<>(null, presentByDefault, false, empty(), empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final CharSequence collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName.toString(), true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), of(renderingHintsProvider), 0, false, empty(), null, null, empty());
+            return new ResultSetProp<>(collectionalPropertyName.toString(), true, false, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), of(renderingHintsProvider), 0, false, empty(), null, null, empty());
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final CharSequence collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName.toString(), true, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), empty(), 0, false, empty(), null, null, empty());
+            return new ResultSetProp<>(collectionalPropertyName.toString(), true, false, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), empty(), 0, false, empty(), null, null, empty());
         }
 
         private ResultSetProp(
                 final String propName,
                 final boolean presentByDefault,
+                final boolean isEditable,
                 final Optional<Class<? extends IDynamicColumnBuilder<T>>> dynColBuilderType,
                 final Optional<CentreContextConfig> contextConfig,
                 final Optional<BiConsumer<T, Optional<CentreContext<T, ?>>>> entityPreProcessor,
@@ -329,6 +334,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
             this.propName = Optional.ofNullable(propName);
             this.presentByDefault = presentByDefault;
+            this.isEditable = isEditable;
             this.width = width;
             this.isFlexible = isFlexible;
             this.widget = widget;
