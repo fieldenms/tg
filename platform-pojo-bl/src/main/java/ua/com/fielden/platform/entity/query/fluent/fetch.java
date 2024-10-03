@@ -1,27 +1,37 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import static java.lang.String.format;
-import static java.util.Collections.unmodifiableMap;
-import static java.util.Collections.unmodifiableSet;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.DEFAULT;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_AND_VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
-import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-
-import java.util.*;
-
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.ImmutableMapUtils;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
+import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.ImmutableCollectionUtil.concatSet;
+import static ua.com.fielden.platform.utils.ImmutableCollectionUtil.setAppend;
 
 /**
  * Represents an entity graph that describes the shape of an entity to be fetched.
+ * <p>
+ * This class provides a fluent API to build fetch models.
+ * Methods {@link #with(CharSequence)}, {@link #without(CharSequence)} and their corresponding overloads return a new fetch model instance.
+ * This representation is <b>immutable</b>.
+ * <p>
+ * Unlike {@link IFetchProvider}, this class <b>does not support dot-expression in property paths</b>, only simple property names are allowed.
+ * To specify a fetch model for a sub-property, use {@link #with(CharSequence, fetch)}.
  *
  * @param <T> entity type
  * @see FetchCategory
@@ -92,11 +102,26 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     private final Class<T> entityType;
-    private final Map<String, fetch<? extends AbstractEntity<?>>> includedPropsWithModels = new HashMap<>();
-    private final Set<String> includedProps = new HashSet<>();
-    private final Set<String> excludedProps = new HashSet<>();
+    private final Map<String, fetch<? extends AbstractEntity<?>>> includedPropsWithModels;
+    private final Set<String> includedProps;
+    private final Set<String> excludedProps;
     private final FetchCategory fetchCategory;
     private final boolean instrumented;
+
+    private fetch(final Class<T> entityType,
+                  final FetchCategory fetchCategory,
+                  final boolean instrumented,
+                  final Map<String, fetch<? extends AbstractEntity<?>>> includedPropsWithModels,
+                  final Set<String> includedProps,
+                  final Set<String> excludedProps)
+    {
+        this.entityType = entityType;
+        this.fetchCategory = fetchCategory;
+        this.instrumented = instrumented;
+        this.includedPropsWithModels = includedPropsWithModels;
+        this.includedProps = includedProps;
+        this.excludedProps = excludedProps;
+    }
 
     /**
      * Used mainly for serialisation.
@@ -106,9 +131,7 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     public fetch(final Class<T> entityType, final FetchCategory fetchCategory, final boolean instrumented) {
-        this.entityType = entityType;
-        this.fetchCategory = fetchCategory;
-        this.instrumented = instrumented;
+        this(entityType, fetchCategory, instrumented, ImmutableMap.of(), ImmutableSet.of(), ImmutableSet.of());
     }
 
     public fetch(final Class<T> entityType, final FetchCategory fetchCategory) {
@@ -135,14 +158,6 @@ public class fetch<T extends AbstractEntity<?>> {
         }
     }
 
-    private static <T extends AbstractEntity<?>> fetch<T> copy(final fetch<T> fromFetch) {
-        final fetch<T> result = new fetch<>(fromFetch.entityType, fromFetch.fetchCategory, fromFetch.isInstrumented());
-        result.includedPropsWithModels.putAll(fromFetch.includedPropsWithModels);
-        result.includedProps.addAll(fromFetch.includedProps);
-        result.excludedProps.addAll(fromFetch.excludedProps);
-        return result;
-    }
-
     /**
      * Adds the property to this fetch model.
      * </p>
@@ -160,9 +175,12 @@ public class fetch<T extends AbstractEntity<?>> {
      */
     public fetch<T> with(final CharSequence propName) {
         validate(propName.toString());
-        final fetch<T> result = copy(this);
-        result.includedProps.add(propName.toString());
-        return result;
+        return new fetch<>(entityType,
+                           fetchCategory,
+                           instrumented,
+                           includedPropsWithModels,
+                           setAppend(includedProps, propName.toString()),
+                           excludedProps);
     }
 
     /**
@@ -176,12 +194,24 @@ public class fetch<T extends AbstractEntity<?>> {
         for (final var name : propNames) {
             validate(name.toString());
         }
-        final fetch<T> result = copy(this);
-        result.includedProps.add(propName.toString());
-        for (final var name : propNames) {
-            result.includedProps.add(name.toString());
+
+        final Set<String> newIncludedProps;
+        {
+            final var builder = ImmutableSet.<String>builderWithExpectedSize(includedProps.size() + 1 + propNames.length)
+                    .addAll(this.includedProps)
+                    .add(propName.toString());
+            for (final var name : propNames) {
+                builder.add(name.toString());
+            }
+            newIncludedProps = builder.build();
         }
-        return result;
+
+        return new fetch<>(entityType,
+                           fetchCategory,
+                           instrumented,
+                           includedPropsWithModels,
+                           newIncludedProps,
+                           excludedProps);
     }
 
     /**
@@ -191,10 +221,18 @@ public class fetch<T extends AbstractEntity<?>> {
      * @see #with(CharSequence)
      */
     public fetch<T> with(final Iterable<? extends CharSequence> propNames) {
-        propNames.forEach(p -> validate(p.toString()));
-        final fetch<T> result = copy(this);
-        propNames.forEach(p -> result.includedProps.add(p.toString()));
-        return result;
+        if (Iterables.isEmpty(propNames)) {
+            return this;
+        }
+        else {
+            propNames.forEach(p -> validate(p.toString()));
+            return new fetch<>(entityType,
+                               fetchCategory,
+                               instrumented,
+                               includedPropsWithModels,
+                               concatSet(includedProps, Iterables.transform(propNames, CharSequence::toString)),
+                               excludedProps);
+        }
     }
 
     /**
@@ -214,9 +252,12 @@ public class fetch<T extends AbstractEntity<?>> {
      */
     public fetch<T> without(final CharSequence propName) {
         validate(propName.toString());
-        final fetch<T> result = copy(this);
-        result.excludedProps.add(propName.toString());
-        return result;
+        return new fetch<>(entityType,
+                           fetchCategory,
+                           instrumented,
+                           includedPropsWithModels,
+                           includedProps,
+                           setAppend(excludedProps, propName.toString()));
     }
 
     /**
@@ -230,12 +271,24 @@ public class fetch<T extends AbstractEntity<?>> {
         for (final var name : propNames) {
             validate(name.toString());
         }
-        final fetch<T> result = copy(this);
-        result.excludedProps.add(propName.toString());
-        for (final var name : propNames) {
-            result.excludedProps.add(name.toString());
+
+        final Set<String> newExcludedProps;
+        {
+            final var builder = ImmutableSet.<String>builderWithExpectedSize(excludedProps.size() + 1 + propNames.length)
+                    .addAll(this.excludedProps)
+                    .add(propName.toString());
+            for (final var name : propNames) {
+                builder.add(name.toString());
+            }
+            newExcludedProps = builder.build();
         }
-        return result;
+
+        return new fetch<>(entityType,
+                           fetchCategory,
+                           instrumented,
+                           includedPropsWithModels,
+                           includedProps,
+                           newExcludedProps);
     }
 
     /**
@@ -245,10 +298,18 @@ public class fetch<T extends AbstractEntity<?>> {
      * @see #without(CharSequence)
      */
     public fetch<T> without(final Iterable<? extends CharSequence> propNames) {
-        propNames.forEach(p -> validate(p.toString()));
-        final fetch<T> result = copy(this);
-        propNames.forEach(p -> result.excludedProps.add(p.toString()));
-        return result;
+        if (Iterables.isEmpty(propNames)) {
+            return this;
+        }
+        else {
+            propNames.forEach(p -> validate(p.toString()));
+            return new fetch<>(entityType,
+                               fetchCategory,
+                               instrumented,
+                               includedPropsWithModels,
+                               includedProps,
+                               concatSet(excludedProps, Iterables.transform(propNames, CharSequence::toString)));
+        }
     }
 
     /**
@@ -271,9 +332,12 @@ public class fetch<T extends AbstractEntity<?>> {
             }
         }
 
-        final fetch<T> result = copy(this);
-        result.includedPropsWithModels.put(propName.toString(), fetchModel);
-        return result;
+        return new fetch<>(entityType,
+                           fetchCategory,
+                           instrumented,
+                           ImmutableMapUtils.insert(includedPropsWithModels, propName.toString(), fetchModel),
+                           includedProps,
+                           excludedProps);
     }
 
     public Class<T> getEntityType() {
@@ -285,15 +349,15 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     public Map<String, fetch<? extends AbstractEntity<?>>> getIncludedPropsWithModels() {
-        return unmodifiableMap(includedPropsWithModels);
+        return includedPropsWithModels;
     }
 
     public Set<String> getIncludedProps() {
-        return unmodifiableSet(includedProps);
+        return includedProps;
     }
 
     public Set<String> getExcludedProps() {
-        return unmodifiableSet(excludedProps);
+        return excludedProps;
     }
 
     public FetchCategory getFetchCategory() {
@@ -373,22 +437,18 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     public fetch<?> unionWith(final fetch<?> second) {
-        if (second == null) {
+        if (second == null || second == this) {
             return this;
         }
 
-        final FetchCategory resultCategory = getMergedFetchCategory(second);
-        final fetch<T> result = new fetch<>(getEntityType(), resultCategory, (isInstrumented() || second.isInstrumented()));
-        result.includedProps.addAll(includedProps);
-        result.includedProps.addAll(second.includedProps);
-        result.excludedProps.addAll(excludedProps);
-        result.excludedProps.addAll(second.excludedProps);
-        includedPropsWithModels.forEach((prop, fetch) -> result.includedPropsWithModels.put(prop, fetch.unionWith(second.getIncludedPropsWithModels().get(prop))));
-
-        second.includedPropsWithModels.entrySet().stream()
-                .filter(entry -> !result.includedPropsWithModels.containsKey(entry.getKey()))
-                .forEach(entry -> result.includedPropsWithModels.put(entry.getKey(), entry.getValue().unionWith(getIncludedPropsWithModels().get(entry.getKey()))));
-
-        return result;
+        return new fetch<>(entityType,
+                           getMergedFetchCategory(second),
+                           (isInstrumented() || second.isInstrumented()),
+                           ImmutableMapUtils.union((k, fetch1, fetch2) -> fetch1.unionWith(fetch2),
+                                                   includedPropsWithModels,
+                                                   second.includedPropsWithModels),
+                           concatSet(includedProps, second.includedProps),
+                           concatSet(excludedProps, second.excludedProps));
     }
+
 }
