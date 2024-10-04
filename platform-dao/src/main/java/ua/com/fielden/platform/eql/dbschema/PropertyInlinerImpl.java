@@ -6,7 +6,9 @@ import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.types.either.Either;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +28,16 @@ public final class PropertyInlinerImpl implements PropertyInliner {
 
     @Override
     public Optional<List<PropertyMetadata.Persistent>> inline(final PropertyMetadata.Persistent property) {
+        return Optional.ofNullable(inline_(property));
+    }
+
+    @Override
+    public Either<PropertyMetadata.Persistent, List<PropertyMetadata.Persistent>> inlineOrGet(final PropertyMetadata.Persistent property) {
+        final var inlined = inline_(property);
+        return inlined == null ? Either.left(property) : Either.right(inlined);
+    }
+
+    private @Nullable List<PropertyMetadata.Persistent> inline_(final PropertyMetadata.Persistent property) {
         final var pmUtils = domainMetadata.propertyMetadataUtils();
 
         final var subProps = pmUtils.subProperties(property).stream()
@@ -35,10 +47,10 @@ public final class PropertyInlinerImpl implements PropertyInliner {
             if (subProps.isEmpty()) {
                 throw new DbSchemaException(format("Invalid property: sub-properties must not be empty. Property: %s", property));
             }
-            return Optional.of(subProps);
+            return subProps;
         }
         else {
-            return Optional.empty();
+            return null;
         }
     }
 
