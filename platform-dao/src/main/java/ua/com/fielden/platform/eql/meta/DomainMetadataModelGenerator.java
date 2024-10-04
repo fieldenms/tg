@@ -8,6 +8,8 @@ import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
+import ua.com.fielden.platform.types.either.Left;
+import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.utils.Pair;
 
 import javax.annotation.Nullable;
@@ -177,14 +179,21 @@ public final class DomainMetadataModelGenerator {
         return result;
     }
 
+    /**
+     * Determines the column name of the specified property.
+     * <p>
+     * Properties that have a component type are handles specially.
+     * If the component type has a single component, that component's column name is returned; otherwise, null is returned.
+     */
     private @Nullable String determinePropColumn(final PropertyMetadata pm) {
         return switch (pm) {
             case PropertyMetadata.CritOnly $ -> CRITERION;
-            case PropertyMetadata.Persistent it -> propertyInliner.inline(it)
-                    .filter(ps -> ps.size() == 1)
-                    .map(List::getFirst)
-                    .map(prop -> prop.data().column().name)
-                    .orElse(null);
+            case PropertyMetadata.Persistent it ->
+                    propertyInliner.inlineOrGet(it)
+                            .fold(it_ -> it_.data().column().name,
+                                  inlined -> inlined.size() == 1
+                                          ? inlined.getFirst().data().column().name
+                                          : null);
             default -> null;
         };
     }
