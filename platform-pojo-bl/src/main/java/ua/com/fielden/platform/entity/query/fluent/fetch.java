@@ -41,7 +41,7 @@ public class fetch<T extends AbstractEntity<?>> {
     public static final String ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
 
     /**
-     * Standard fetch categories.
+     * Standard fetch categories, ordered by richness, descendingly.
      */
     public enum FetchCategory {
         /**
@@ -50,44 +50,34 @@ public class fetch<T extends AbstractEntity<?>> {
          */
         ALL_INCL_CALC,
         /**
+         * Includes all retrievable properties, except the following:
          * <ul>
          *   <li> collectional properties are excluded;
          *   <li> non-retrievable properties are excluded;
-         *   <li> calculated properties are excluded (unless they have a component type);
-         *   <li> everything else is included.
+         *   <li> calculated properties are excluded (unless they have a component type).
          * </ul>
          */
         ALL,
         /**
-         * Equivalent to {@link #ALL} but with narrower sub-fetch models - only simple keys and key members may have
+         * Equivalent to {@link #ALL} but with narrower sub-fetch models - only simple keys and key members will have
          * a sub-fetch model other than {@link #ID_ONLY}.
          */
         DEFAULT,
         /**
          * <ul>
-         *   <li> if entity is persistent, includes {@link #ID_AND_VERSION};
-         *   <li> if entity is synthetic-based-on-persistent, includes {@code id};
-         *   <li> if entity has property {@code desc}, includes it;
-         *   <li> includes {@code key};
+         *   <li> {@code key} is included;
+         *   <li> {@code desc} is included if it belongs to the entity type.
+         *   <li> all of {@link #ID_AND_VERSION} are included if the entity type is persistent;
          * </ul>
          */
         KEY_AND_DESC,
         /**
          * A slightly broader fetch model than {@link #ID_ONLY}.
-         * If entity's nature is
          * <ul>
-         *   <li> persistent
-         *     <ul>
-         *       <li> {@code id} and {@code version} are included;
-         *       <li> if entity is activatable, {@code refCount} and {@code active} are included;
-         *       <li> if entity has a group of "last updated by" properties (see {@link ua.com.fielden.platform.entity.AbstractPersistentEntity}),
-         *            they are included;
-         *     </ul>
-         *   <li> other
-         *     <ul>
-         *       <li> if entity has an entity-typed key, {@code id} is included (it is not clearly understood why, but,
-         *            most likely, to support synthetic entities with entity-typed keys).
-         *     </ul>
+         *   <li> {@code id} is included if it belongs to the entity type;
+         *   <li> {@code version} is included if the entity type is persistent;
+         *   <li> {@code refCount} and {@code active} are included if entity type is activatable;
+         *   <li> the group of "last updated by" properties is included if the entity type is persistent and has those properties.
          * </ul>
          */
         ID_AND_VERSION,
@@ -96,7 +86,7 @@ public class fetch<T extends AbstractEntity<?>> {
          */
         ID_ONLY,
         /**
-         * No properties are included.
+         * Nothing is included.
          */
         NONE
     }
