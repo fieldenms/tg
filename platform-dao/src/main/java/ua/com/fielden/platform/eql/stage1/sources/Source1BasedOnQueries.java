@@ -13,6 +13,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.*;
@@ -27,6 +28,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries> {
     public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine the type for property [%s] of a query source based on queries with result type [%s].\n"
             + "Declared type is [%s].\nActual yield type is [%s].";
+
+    public static final String ERR_YIELD_INTO_NON_EXISTENT_PROPERTY =
+            "Cannot yield into non-existing property [%s] in entity type [%s], which is being used as a query source.";
 
     private final List<SourceQuery1> models;
     private final boolean isSyntheticEntity;
@@ -60,12 +64,13 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     @Override
     public Source2BasedOnQueries transform(final TransformationContextFromStage1To2 context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toImmutableList());
-        final QuerySourceInfo<?> ei = obtainQuerySourceInfo(context.querySourceInfoProvider, transformedQueries, sourceType(), isSyntheticEntity);
+        final QuerySourceInfo<?> ei = obtainQuerySourceInfo(context, transformedQueries, sourceType(), isSyntheticEntity);
         return new Source2BasedOnQueries(transformedQueries, alias, id, ei, isSyntheticEntity, true, context.isForCalcProp);
     }
 
     public static <T extends AbstractEntity<?>> QuerySourceInfo<T> produceQuerySourceInfoForEntityType(
             final QuerySourceInfoProvider querySourceInfoProvider,
+            final IDomainMetadata domainMetadata,
             final List<SourceQuery2> models,
             final Class<T> sourceType,
             final boolean isComprehensive)
@@ -97,8 +102,21 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
                     // TODO need actual (based on yield) rather than declared info (similar to not declared props section below).
                     createdProps.put(declaredProp.name, declaredProp.hasExpression() ? declaredProp.cloneWithoutExpression() : declaredProp);
                 }
-            } else {
-                // adding not declared props
+            }
+            else {
+                // This yield is using a non-declared property as an alias.
+                // Most likely this is the case of EntityAggregates. Otherwise, this could indicate an invalid query.
+
+                if (sourceType != EntityAggregates.class) {
+                    // Verify that the property exists in the entity type.
+                    // This could be valid if a non-retrievable property (e.g., crit-only) is yielded into.
+                    if (!domainMetadata.forEntity(sourceType).hasProperty(yield.name())) {
+                        throw new EqlStage1ProcessingException(
+                                format(ERR_YIELD_INTO_NON_EXISTENT_PROPERTY, yield.name(), sourceType.getSimpleName()));
+                    }
+                }
+
+                // FIXME: yield.propType() can be null if the yield uses a dot-expression as an alias (e.g., "price.amount")
                 createdProps.put(yield.name(), yield.propType().isNotNull() && isEntityType(yield.propType().javaType())
                         ? new QuerySourceItemForEntityType<>(yield.name(), querySourceInfoProvider.getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType().javaType()), H_ENTITY, yield.nonnullable())
                         : new QuerySourceItemForPrimType<>(yield.name(), yield.propType().isNotNull() ? yield.propType().javaType() : null, yield.propType().isNotNull() ? yield.propType().hibType() : null));
@@ -115,11 +133,16 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
         return new QuerySourceInfo<>(sourceType, isComprehensive, createdProps.values());
     }
 
-    private static QuerySourceInfo<?> obtainQuerySourceInfo(final QuerySourceInfoProvider querySourceInfoProvider, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType, final boolean isSyntheticEntity) {
+    private static QuerySourceInfo<?> obtainQuerySourceInfo(
+            final TransformationContextFromStage1To2 context,
+            final List<SourceQuery2> models,
+            final Class<? extends AbstractEntity<?>> sourceType,
+            final boolean isSyntheticEntity)
+    {
         if (isSyntheticEntity || allGenerated(models)) {
-            return querySourceInfoProvider.getModelledQuerySourceInfo(sourceType);
+            return context.querySourceInfoProvider.getModelledQuerySourceInfo(sourceType);
         } else {
-            return produceQuerySourceInfoForEntityType(querySourceInfoProvider, models, sourceType, false);
+            return produceQuerySourceInfoForEntityType(context.querySourceInfoProvider, context.domainMetadata, models, sourceType, false);
         }
     }
 

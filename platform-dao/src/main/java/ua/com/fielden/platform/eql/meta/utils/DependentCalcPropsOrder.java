@@ -15,6 +15,7 @@ import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PropChunk;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.CollectionUtil;
@@ -44,7 +45,12 @@ public class DependentCalcPropsOrder {
 
     private DependentCalcPropsOrder() {}
 
-    public static List<String> orderDependentCalcProps(final QuerySourceInfoProvider querySourceInfoProvider, final QueryModelToStage1Transformer gen, final QuerySourceInfo<?> querySourceInfo) {
+    public static List<String> orderDependentCalcProps(
+            final QuerySourceInfoProvider querySourceInfoProvider,
+            final IDomainMetadata domainMetadata,
+            final QueryModelToStage1Transformer gen,
+            final QuerySourceInfo<?> querySourceInfo)
+    {
 
         // TODO provide more explicit way to determine dependencies between calc props for different kinds of SEs
         //      currently it works for persistent entities and may work for SE types
@@ -61,7 +67,7 @@ public class DependentCalcPropsOrder {
                             calcPropChunk.data().expression.expressionModel().getTokenSource(),
                             EqlCompilationResult.StandaloneExpression.class)
                     .model();
-            final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider).cloneWithAdded(source);
+            final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(source);
             try {
                 final Expression2 exp2 = exp1.transform(prc);
                 final Set<Prop2> expProps = exp2.collectProps();

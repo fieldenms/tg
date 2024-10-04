@@ -128,7 +128,7 @@ public class QuerySourceInfoProvider {
 
         entityTypesDependentCalcPropsOrder = modelledQuerySourceInfoMap.values().stream()
                 .collect(toConcurrentMap(querySourceInfo -> querySourceInfo.javaType().getName(),
-                                         querySourceInfo -> DependentCalcPropsOrder.orderDependentCalcProps(this, QUERY_MODEL_TO_STAGE_1_TRANSFORMER, querySourceInfo)));
+                                         querySourceInfo -> DependentCalcPropsOrder.orderDependentCalcProps(this, domainMetadata, QUERY_MODEL_TO_STAGE_1_TRANSFORMER, querySourceInfo)));
     }
 
     /**
@@ -137,9 +137,9 @@ public class QuerySourceInfoProvider {
      * @return
      */
     private <T extends AbstractEntity<?>> QuerySourceInfo<?> generateModelledQuerySourceInfoForSyntheticType(final Class<? extends AbstractEntity<?>> entityType, final List<SourceQuery1> queries) {
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(this);
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(this, domainMetadata);
         final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
-        return Source1BasedOnQueries.produceQuerySourceInfoForEntityType(this, transformedQueries, entityType, true /*isComprehensive*/);
+        return Source1BasedOnQueries.produceQuerySourceInfoForEntityType(this, domainMetadata, transformedQueries, entityType, true /*isComprehensive*/);
     }
 
     public List<String> getCalcPropsOrder(final Class<? extends AbstractEntity<?>> entityType) {

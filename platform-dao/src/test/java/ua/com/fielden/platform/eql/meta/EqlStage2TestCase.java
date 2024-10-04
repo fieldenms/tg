@@ -81,13 +81,13 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider());
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider(), metadata());
         return qb(paramValues).generateAsResultQuery(countQry, null, null).transform(context);
     }
 
     protected static <T extends AbstractEntity<?>> T2<QueryModelToStage1Transformer, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider());
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider(), metadata());
         final QueryModelToStage1Transformer qb = qb(paramValues);
         return t2(qb, qb.generateAsResultQuery(countQry, null, null).transform(context));
     }
@@ -97,17 +97,17 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider());
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider(), metadata());
         return qb().generateAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), metadata(), querySourceInfoProvider())).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry, final OrderingModel order) {
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider());
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider(), metadata());
         return qb().generateAsResultQuery(qry, order, null).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
-        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider());
+        final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider(), metadata());
         return qb().generateAsResultQuery(qry, null, null).transform(context);
     }
 

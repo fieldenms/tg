@@ -54,15 +54,16 @@ public class EqlQueryTransformer {
             final Optional<String> username,
             final IDates dates,
             final EqlTables eqlTables,
-            final QuerySourceInfoProvider querySourceInfoProvider)
+            final QuerySourceInfoProvider querySourceInfoProvider,
+            final IDomainMetadata domainMetadata)
     {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 
-        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider);
+        final TransformationContextFromStage1To2 context1 = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider, domainMetadata);
         final ResultQuery2 query2 = query1.transform(context1);
 
-        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, gen);
+        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, domainMetadata, gen);
         final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlTables);
         return query2.transform(context2);
     }
@@ -77,8 +78,8 @@ public class EqlQueryTransformer {
             final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider)
     {
-        final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates,
-                                                                             eqlTables, querySourceInfoProvider);
+        final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates, 
+                                                                             eqlTables, querySourceInfoProvider, domainMetadata);
         final ResultQuery3 entQuery3 = tr.item;
         final String sql = entQuery3.sql(domainMetadata, dbVersion);
         return new QueryModelResult<E>((Class<E>) entQuery3.resultType, sql, getYieldedColumns(entQuery3.yields), tr.updatedContext.getSqlParamValues(), qem.fetchModel);
