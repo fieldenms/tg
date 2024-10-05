@@ -13,6 +13,7 @@ import ua.com.fielden.platform.commonmark.CommonMark;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.jsoup.NodeVisitor;
 import ua.com.fielden.platform.owasp.html.SimpleHtmlChangeListener;
@@ -60,10 +61,12 @@ public sealed class RichText permits RichText.Persisted {
     @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
     @PersistentType("nstring")
+    @Title(value = "Formatted Text", desc = "A text in HTML format, containing supported tags and CSS. This text is editable by users.")
     private final String formattedText;
 
     @IsProperty
     @MapTo
+    @Title(value = "Core Text", desc = "A text field with all HTML tags removed, intended for use in search functions and inline display, such as in EGI.")
     private final String coreText;
 
     /**
