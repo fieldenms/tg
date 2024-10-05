@@ -29,17 +29,17 @@ public class DomainPropertyTreeEntity extends DomainTreeEntity {
     private boolean isRequired;
 
     @IsProperty
-    @Title("Is Union?")
-    private boolean union;
+    @Title("Is Union or Component?")
+    private boolean unionEntityOrComponentWithMoreThanOneAttribute;
 
     @Observable
-    public DomainPropertyTreeEntity setUnion(final boolean union) {
-        this.union = union;
+    public DomainPropertyTreeEntity setUnionEntityOrComponentWithMoreThanOneAttribute(final boolean unionEntityOrComponentWithMoreThanOneAttribute) {
+        this.unionEntityOrComponentWithMoreThanOneAttribute = unionEntityOrComponentWithMoreThanOneAttribute;
         return this;
     }
 
-    public boolean isUnion() {
-        return union;
+    public boolean isUnionEntityOrComponentWithMoreThanOneAttribute() {
+        return unionEntityOrComponentWithMoreThanOneAttribute;
     }
 
     @Observable
