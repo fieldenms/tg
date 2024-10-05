@@ -12,7 +12,7 @@ import '/resources/centre/tg-selection-view.js';
 import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, localStorageKeyForCentre } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, localStorageKeyForCentre, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/actions/tg-ui-action.js';
 import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -880,16 +880,18 @@ Polymer({
 
     /************************* Insertion point drag & drop related events ******************************/
     _insertionPointCustomLayoutEnabledChanged: function (newValue) {
-        if (newValue) {
-            this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
-            this.$.centreResultContainer.addEventListener("dragend", this._endDrag);
-            this.$.centreResultContainer.addEventListener("drop", this._dragDrop);
-            this.$.centreResultContainer.addEventListener("dragover", this._dragOver);
-        } else {
-            this.$.centreResultContainer.removeEventListener("dragstart", this._startDrag);
-            this.$.centreResultContainer.removeEventListener("dragend", this._endDrag);
-            this.$.centreResultContainer.removeEventListener("drop", this._dragDrop);
-            this.$.centreResultContainer.removeEventListener("dragover", this._dragOver);
+        if (!isTouchEnabled()) { // TODO remove this check in #2323
+            if (newValue) {
+                this.$.centreResultContainer.addEventListener("dragstart", this._startDrag);
+                this.$.centreResultContainer.addEventListener("dragend", this._endDrag);
+                this.$.centreResultContainer.addEventListener("drop", this._dragDrop);
+                this.$.centreResultContainer.addEventListener("dragover", this._dragOver);
+            } else {
+                this.$.centreResultContainer.removeEventListener("dragstart", this._startDrag);
+                this.$.centreResultContainer.removeEventListener("dragend", this._endDrag);
+                this.$.centreResultContainer.removeEventListener("drop", this._dragDrop);
+                this.$.centreResultContainer.removeEventListener("dragover", this._dragOver);
+            }
         }
     },
 
