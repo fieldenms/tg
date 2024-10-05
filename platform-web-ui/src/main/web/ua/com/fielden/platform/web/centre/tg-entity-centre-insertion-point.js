@@ -30,7 +30,7 @@ import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-s
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
-import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKeyForCentre } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getKeyEventTarget, getRelativePos, localStorageKeyForCentre, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 /**
@@ -469,7 +469,7 @@ Polymer({
         this.horizontalAlign = 'center';
         this.verticalAlign = 'middle';
         // 'z-index' management related settings:
-        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = isTouchEnabled() ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
         // Add title bar event to identify whether element is draggable or not.
         //  Use 'useCapture = true' (capturing phase, not bubbling, see https://www.quirksmode.org/js/events_order.html) as a parameter to ensure event dispatching before

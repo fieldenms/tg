@@ -27,7 +27,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
-import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
@@ -580,14 +580,14 @@ Polymer({
     },
 
     attached: function() {
-        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = isTouchEnabled() ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
         this.addEventListener('focus', this._onCaptureFocus, true);
         this.addEventListener('keydown', this._onCaptureKeyDown);
     },
 
     detached: function() {
-        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = isTouchEnabled() ? 'touchstart' : 'mousedown';
         this.removeEventListener(clickEvent, this._onCaptureClick, true);
         this.removeEventListener('focus', this._onCaptureFocus, true);
         this.removeEventListener('keydown', this._onCaptureKeyDown);
