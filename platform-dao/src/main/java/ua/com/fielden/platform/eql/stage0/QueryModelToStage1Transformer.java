@@ -15,7 +15,6 @@ import ua.com.fielden.platform.eql.stage1.queries.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SubQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SubQueryForExists1;
-import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
 
