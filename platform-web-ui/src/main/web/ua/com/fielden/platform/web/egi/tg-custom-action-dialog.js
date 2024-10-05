@@ -841,8 +841,7 @@ Polymer({
      * Dialog resizing handler assigned to resizing button in bottom right corner of the dialog.
      */
     resizeDialog: function(event) {
-        const target = event.target || event.srcElement;
-        if (target === this.$.resizer) {
+        if (event.target === this.$.resizer) {
             switch (event.detail.state) {
                 case 'start':
                     document.styleSheets[0].insertRule('* { cursor: nwse-resize !important; }', 0); // override custom cursors in all application with resizing cursor

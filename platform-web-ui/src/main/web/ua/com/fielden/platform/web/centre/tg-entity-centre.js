@@ -780,8 +780,7 @@ Polymer({
      * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view.
      */
     _pageSelectionChanged: function (event) {
-        const target = event.target || event.srcElement;
-        if (target === this.$.views) {
+        if (event.target === this.$.views) {
             const prevView = this._allViews[this._previousView];
             const currentView = this._allViews[this._selectedView];
             this._configViewBindings(prevView, currentView);

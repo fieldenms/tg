@@ -1498,14 +1498,13 @@ Polymer({
     },
 
     _allSelectionChanged: function (e) {
-        const target = e.target || e.srcElement;
-        this.selectAll(target.checked);
+        this.selectAll(e.target.checked);
     },
 
     _selectionChanged: function (e) {
         if (this.egiModel) {
             const index = e.model.entityIndex;
-            var target = e.target || e.srcElement;
+            const target = e.target;
             //Perform selection range selection or single selection.
             if (target.checked && this._rangeSelection && this._lastSelectedIndex >= 0) {
                 this._selectRange(this._lastSelectedIndex, index);

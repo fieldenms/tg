@@ -69,8 +69,7 @@ export const TgResizableMovableBehavior = {
     },
 
     moveComponent: function (e) {
-        const target = e.target || e.srcElement;
-        if (target === this.$.titleBar && this.allowMove()) {
+        if (e.target === this.$.titleBar && this.allowMove()) {
             switch (e.detail.state) {
                 case 'start':
                     this.$.titleBar.style.cursor = 'move';
