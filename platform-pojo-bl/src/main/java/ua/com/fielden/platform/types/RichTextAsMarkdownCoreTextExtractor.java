@@ -9,13 +9,23 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Renders nodes into <i>core text</i> for {@link RichText}.
+ * Extracts a <i>core text</i> from Markdown nodes for {@link RichText}.
  */
-final class CoreTextRenderer implements Renderer {
+final class RichTextAsMarkdownCoreTextExtractor implements Renderer {
 
-    public static final CoreTextRenderer INSTANCE = new CoreTextRenderer();
+    private static final RichTextAsMarkdownCoreTextExtractor INSTANCE = new RichTextAsMarkdownCoreTextExtractor();
 
-    private CoreTextRenderer() {}
+    /**
+     * Extracts the core text.
+     *
+     * @param node
+     * @return
+     */
+    public static String toCoreText(final Node node) {
+        return INSTANCE.render(node);
+    }
+
+    private RichTextAsMarkdownCoreTextExtractor() {}
 
     @Override
     public void render(final Node node, final Appendable output) {
@@ -87,12 +97,12 @@ final class CoreTextRenderer implements Renderer {
         public void visit(final HtmlInline htmlInline) {}
 
         /**
-         * In general, HTML blocks are excluded from core text, but there is an exception to this rule: if a block begins
-         * with a {@code br} tag, then the text that follows it gets included in core text. This is necessitated by an
-         * idiosyncrasy on part of the client-side Markdown editor, which represents blank lines with {@code br} tags and
-         * appends a single newline character after them. If it were to append 2 newline characters after a {@code br},
-         * then the resulting HTML block would consist solely of the {@code br} tag. Instead, it incorporates any text
-         * that might follow it into its block. This is illustrated below.
+         * In general, HTML blocks are excluded from a core text, but there is an exception to this rule:
+         * if a block begins with a {@code br} tag, then the text that follows it gets included in core text.
+         * This is necessitated by an idiosyncrasy on part of the client-side Markdown editor, which represents blank lines with {@code br} tags and appends a single newline character after them.
+         * If it were to append 2 newline characters after a {@code br}, then the resulting HTML block would consist solely of the {@code br} tag.
+         * Instead, it incorporates any text that might follow it into its block.
+         * This is illustrated below.
          * <p>
          * The following Markdown produces an HTML block that contains {@code "<br>\nworld"} (line numbers are not part of the Markdown).
          * <pre>
@@ -123,8 +133,8 @@ final class CoreTextRenderer implements Renderer {
         }
 
         /**
-         * Matches an HTML block starting with a {@code <br>} tag. The first capture group will contain text after the
-         * {@code <br>} tag.
+         * Matches an HTML block starting with a {@code <br>} tag.
+         * The first capture group will contain text after the {@code <br>} tag.
          * <p>
          * {@link Pattern#DOTALL} flag is required for {@code .} to match any character, including line terminators.
          */
