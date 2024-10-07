@@ -18,12 +18,12 @@ import static ua.com.fielden.platform.types.RichText._coreText;
 import static ua.com.fielden.platform.types.RichText._formattedText;
 
 /**
- * Hibernate type mapping for composite type {@link RichText}.
+ * Hibernate type mapping for component type {@link RichText}.
  * <p>
  * Users of this class should not instantiate it directly, but use {@link #getInstance(DbVersion)}.
  * The constructor is made public to satisfy the requirements for Hibernate custom types.
  * <p>
- * {@link RichTextType} has subtypes for those databases whose JDBC drivers require special handling:
+ * {@link RichTextType} has subtypes for the databases where JDBC drivers require special handling:
  * <ul>
  *   <li> PostgreSQL - {@link RichTextPostgresqlType}.
  * </ul>
@@ -60,9 +60,54 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
     }
 
     /**
-     * <b>Do not use this contructor directly</b>! Use {@link #getInstance(DbVersion)}.
+     * Defines a type for text values, which influences how text values are read from a result set and assigned to statement parameters.
      */
-    public RichTextType() {}
+    private final Type textType;
+
+    /**
+     * <b>Do not use this constructor directly</b>! Use {@link #getInstance(DbVersion)}.
+     */
+    public RichTextType() {
+        this.textType = StringNVarcharType.INSTANCE;
+    }
+
+    protected RichTextType(final Type textType) {
+        this.textType = textType;
+    }
+
+    /**
+     * Defines how text values are read from {@code rs}.
+     *
+     * @param rs
+     * @param columnLabel
+     * @return
+     * @throws SQLException
+     */
+    protected String getText(final ResultSet rs, final String columnLabel) throws SQLException {
+        if (textType instanceof StringNVarcharType) {
+            return rs.getNString(columnLabel);
+        }
+        else {
+            return rs.getString(columnLabel);
+        }
+    }
+
+    /**
+     * Defines how text parameters are assigned to {@code pst}.
+     *
+     * @param pst
+     * @param parameterIndex
+     * @param value
+     * @throws SQLException
+     */
+    protected void setText(final PreparedStatement pst, final int parameterIndex, final String value) throws SQLException {
+        if (textType instanceof StringNVarcharType) {
+            pst.setNString(parameterIndex, value);
+        }
+        else {
+            pst.setString(parameterIndex, value);;
+        }
+    }
 
     @Override
     public Class<RichText> returnedClass() {
@@ -77,11 +122,11 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
             final Object owner)
             throws SQLException
     {
-        final String formattedText = resultSet.getNString(names[0]);
+        final String formattedText = getText(resultSet, names[0]);
         if (resultSet.wasNull()) {
             return null;
         }
-        final String coreText = resultSet.getNString(names[1]);
+        final String coreText = getText(resultSet, names[1]);
         if (resultSet.wasNull()) {
             throw new UserTypeException("Core text is null when formatted text is present. Formatted text:\n%s".formatted(formattedText));
         }
@@ -109,8 +154,8 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
             statement.setNull(index + 1, StringType.INSTANCE.sqlType());
         } else {
             final var richText = (RichText) value;
-            statement.setNString(index, richText.formattedText());
-            statement.setNString(index + 1, richText.coreText());
+            setText(statement, index, richText.formattedText());
+            setText(statement,index + 1, richText.coreText());
         }
     }
 
@@ -121,7 +166,7 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
 
     @Override
     public Type[] getPropertyTypes() {
-        return new Type[] { StringNVarcharType.INSTANCE, StringNVarcharType.INSTANCE };
+        return new Type[] { textType, textType };
     }
 
     @Override
