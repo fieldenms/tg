@@ -151,13 +151,11 @@ public sealed class RichText permits RichText.Persisted {
     }
 
     /**
-     * Type-insensitive {@link #equals(Object)}: {@link RichText} can be compared to {@link Persisted}.
+     * Type-insensitive {@link #equals(Object)}, where {@link RichText} can be compared to {@link Persisted} by comparing their formatted and core text values.
      */
-    public final boolean iEquals(final Object obj) {
-        return obj == this ||
-               obj instanceof RichText that
-               && Objects.equals(this.formattedText, that.formattedText)
-               && Objects.equals(this.coreText, that.coreText);
+    public final boolean equalsByText(final RichText that) {
+        return that == this ||
+               Objects.equals(this.formattedText, that.formattedText) && Objects.equals(this.coreText, that.coreText);
     }
 
     @Override
