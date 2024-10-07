@@ -62,6 +62,7 @@ public sealed class RichText permits RichText.Persisted {
 
     @IsProperty
     @MapTo
+    @PersistentType("nstring")
     @Title(value = "Core Text", desc = "A text field with all HTML tags removed, intended for use in search functions and inline display, such as in EGI.")
     private final String coreText;
 
