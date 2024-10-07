@@ -255,7 +255,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
             disabled: {
                 type: Boolean,
-                value: false
+                value: false,
+                reflectToAttribute: true
             },
 
             _editor: Object,
