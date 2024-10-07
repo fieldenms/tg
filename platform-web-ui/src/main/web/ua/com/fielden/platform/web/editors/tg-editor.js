@@ -568,13 +568,12 @@ export class TgEditor extends PolymerElement {
                         if (event.keyCode === 13) { // 'Enter' has been pressed
                             this._checkBuiltInValidation();
                             this.commitIfChanged();
-                        } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
-                            this.commitIfChanged();
-                            this._copyTap();
                         } else if ((event.keyCode === 38 || event.keyCode === 40) 
                                     && (event.altKey || event.ctlKey || event.metaKey || event.shiftKey)) {
                             tearDownEvent(event);
                         }
+                        this._handleCopy(event);
+
                     }).bind(this);
                 }
             },
@@ -656,6 +655,13 @@ export class TgEditor extends PolymerElement {
 
     decorator () {
         return this.$.decorator;
+    }
+
+    _handleCopy (event) {
+        if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
+            this.commitIfChanged();
+            this._copyTap();
+        }
     }
     
     _isMultilineText (editorKind) {

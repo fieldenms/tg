@@ -106,17 +106,7 @@ export class TgMultilineTextEditor extends TgEditor {
             _onKeydown: {
                 type: Function,
                 value: function () {
-                    return (function (event) {
-                        if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
-                            this.commitIfChanged();
-                            this._copyTap();
-                        }
-                        // need to invoke base function-property? Just do it like this:
-                        //   var parentFunction = TgEditorBehaviorImpl.properties._onKeydown.value.call(this);
-                        //   parentFunction.call(this, event);
-                        //console.log("_onKeydown (for text area):", event);
-                        // TODO potentially, commit on CTRL+Enter?
-                    }).bind(this);
+                    return this._handleCopy.bind(this);
                 }
             }
         };

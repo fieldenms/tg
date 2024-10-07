@@ -232,6 +232,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
                 value: null
             },
 
+            keyDownHandler: {
+                type:Function,
+                value: null
+            },
+
             height: {
                 type: String,
                 observer: "_heightChanged"
@@ -265,8 +270,9 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             initialEditType: 'wysiwyg',
             events: {
                 change: this._htmlContetnChanged.bind(this),
-                blur: this.changeEventHandler.bind(this),
-                caretChange: this._saveSelection.bind(this)
+                blur: this.changeEventHandler,
+                caretChange: this._saveSelection.bind(this),
+                keydown: (viewType, event) => this.keyDownHandler(event)
             },
             plugins: [colorTextPlugin],
             useCommandShortcut: false,

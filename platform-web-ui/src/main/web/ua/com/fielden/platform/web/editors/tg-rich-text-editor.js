@@ -92,6 +92,7 @@ const customInputTemplate = html`
         disabled="[[_disabled]]" 
         value="{{_editingValue}}"
         change-event-handler="[[_onChange]]"
+        key-down-handler="[[_onKeydown]]" 
         on-focus="_onFocus"
         on-blur="_outFocus"
         min-height="[[minHeight]]"
@@ -126,6 +127,17 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             withoutResizing: {
                 type: Boolean,
                 value: false
+            },
+
+            /**
+             * OVERRIDDEN FROM TgEditor: this specific event is invoked after some key has been pressed.
+             *
+             */
+            _onKeydown: {
+                type: Function,
+                value: function () {
+                    return this._handleCopy.bind(this);
+                }
             },
 
             _cancelLinkInsertion: Function,
@@ -317,13 +329,13 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _makeInputUnselectable () {
         this.$.input.classList.toggle("noselect", true);
-        this.$.input.makeEditable(false && !this._disabled);
+        this.$.input.makeEditable(false);
         document.styleSheets[0].insertRule('* { cursor: ns-resize !important; }', 0); // override custom cursors in all application with resizing cursor
     }
 
     _makeInputSelectable () {
         this.$.input.classList.toggle("noselect", false);
-        this.$.input.makeEditable(true && !this._disabled);
+        this.$.input.makeEditable(!this._disabled);
         if (document.styleSheets.length > 0 && document.styleSheets[0].cssRules.length > 0) {
             document.styleSheets[0].deleteRule(0);
         }
