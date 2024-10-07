@@ -5,18 +5,23 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyMetadata.Calculated;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 
 import java.util.List;
 
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class UnionEntityMetadataTest {
 
-    private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
-            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, constantDbVersion(DbVersion.MSSQL)));
+    private final TestDomainMetadataGenerator generator;
+
+    public UnionEntityMetadataTest() {
+        final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+        generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+                                                                                 dbVersionProvider));
+    }
 
     @Test
     public void union_entity_gets_union_nature() {

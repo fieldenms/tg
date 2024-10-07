@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
@@ -21,12 +22,16 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.hasHibType;
 import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.noHibType;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class PropertyHibernateTypeTest {
 
-    private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
-            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, constantDbVersion(DbVersion.MSSQL)));
+    private final TestDomainMetadataGenerator generator;
+
+    public PropertyHibernateTypeTest() {
+        final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+        generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+                                                                                 dbVersionProvider));
+    }
 
     @Test
     public void hibernate_type_is_attached() {

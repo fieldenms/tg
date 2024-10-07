@@ -11,6 +11,8 @@ import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgUnionHolder;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -20,9 +22,15 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class MappingGenerationTest {
+
+    private HibernateTypeMappings hibernateTypeMappings;
+
+    public MappingGenerationTest() {
+        final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+        hibernateTypeMappings = new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get();
+    }
 
     @Test
     public void hibernate_mappings_are_generated() {
@@ -32,7 +40,7 @@ public class MappingGenerationTest {
                 EntityWithMoney.class, TgUnionHolder.class);
         final var dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-                PLATFORM_HIBERNATE_TYPE_MAPPINGS, domainTypes, dbVersionProvider)
+                hibernateTypeMappings, domainTypes, dbVersionProvider)
                 .build();
 
         final String actualMappings = new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata),
