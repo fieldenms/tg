@@ -89,7 +89,7 @@ const customLabelTemplate = html`
 const customInputTemplate = html`
     <tg-rich-text-input id="input" 
         class="custom-input paper-input-input"
-        disabled$="[[_disabled]]" 
+        disabled="[[_disabled]]" 
         value="{{_editingValue}}"
         change-event-handler="[[_onChange]]"
         on-focus="_onFocus"
@@ -317,13 +317,13 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _makeInputUnselectable () {
         this.$.input.classList.toggle("noselect", true);
-        this.$.input.makeReadOnly();
+        this.$.input.makeEditable(false && !this._disabled);
         document.styleSheets[0].insertRule('* { cursor: ns-resize !important; }', 0); // override custom cursors in all application with resizing cursor
     }
 
     _makeInputSelectable () {
         this.$.input.classList.toggle("noselect", false);
-        this.$.input.makeEditable();
+        this.$.input.makeEditable(true && !this._disabled);
         if (document.styleSheets.length > 0 && document.styleSheets[0].cssRules.length > 0) {
             document.styleSheets[0].deleteRule(0);
         }

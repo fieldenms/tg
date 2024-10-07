@@ -242,9 +242,18 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
                 observer: "_minHeightChanged"
             },
 
+            disabled: {
+                type: Boolean,
+                value: false
+            },
+
             _editor: Object,
             _prevSelection: Array
         }
+    }
+
+    static get observers() {
+        return ["_disabledChanged(disabled, _editor)"]
     }
 
     ready () {
@@ -388,12 +397,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._editor.exec('taskList');
     }
 
-    makeReadOnly() {
-        this._editor.getEditorElements().wwEditor.children[0].setAttribute("contenteditable", "false");
-    }
-    
-    makeEditable() {
-        this._editor.getEditorElements().wwEditor.children[0].setAttribute("contenteditable", "true");
+    makeEditable(editable) {
+        this._editor.getEditorElements().wwEditor.children[0].setAttribute("contenteditable", editable + "");
     }
 
     getHeight() {
@@ -444,6 +449,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     _minHeightChanged(newMinHeight) {
         if (this._editor) {
             this._editor.setMinHeight(newMinHeight);
+        }
+    }
+
+    _disabledChanged(newDisabled, _editor) {
+        if (_editor) {
+            this.makeEditable(!newDisabled);
         }
     }
 }
