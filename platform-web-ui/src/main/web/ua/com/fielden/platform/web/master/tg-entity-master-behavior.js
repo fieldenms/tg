@@ -23,7 +23,13 @@ import { enhanceStateRestoration } from '/resources/components/tg-global-error-h
 const findFirstInputToFocus = (preferredOnly, editors) => {
     const selectEnabledEditor = editor => {
         const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
-        return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
+        if (selectedElement && selectedElement.shadowRoot) {
+            const textArea = selectedElement.shadowRoot.querySelector('textarea');
+            if (textArea.offsetParent !== null) {
+                return textArea;
+            }
+        }
+        return selectedElement;
     };
     
     let firstInput, firstPreferredInput, firstInvalidInput;

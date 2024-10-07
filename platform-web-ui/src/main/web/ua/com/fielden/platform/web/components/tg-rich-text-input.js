@@ -217,7 +217,7 @@ const template = html`
             cursor: pointer !important;
         }
     </style>
-    <div tabindex='0' id="editor"></div>`; 
+    <div id="editor"></div>`; 
 
 class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKeysBehavior, TgTooltipBehavior], PolymerElement) {
 
@@ -319,8 +319,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             Object.defineProperty(event, 'defaultPrevented', {value: false})
             prevKeyBindingHandler(keyBindings, event);
         };
-
-        this.$.editor.addEventListener('keydown', focusEditor.bind(this));
+        this.addEventListener('keydown', focusEditor.bind(this));
     }
 
     applyHeader1(event) {

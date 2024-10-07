@@ -96,7 +96,8 @@ const customInputTemplate = html`
         on-focus="_onFocus"
         on-blur="_outFocus"
         min-height="[[minHeight]]"
-        height="[[_calcHeight(height, entityType, propertyName)]]">
+        height="[[_calcHeight(height, entityType, propertyName)]]"
+        tabindex='0'>
     </tg-rich-text-input>
     <iron-icon id="resizer" icon="tg-icons:resize-bottom-right" on-tap="_resetHeight" on-down="_makeInputUnselectable" on-up="_makeInputSelectable" on-track="_resizeInput" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
