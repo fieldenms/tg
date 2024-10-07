@@ -47,7 +47,7 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
                 .collect(toMap(Entry::getKey, Entry::getValue));
     }
 
-    private Class<? extends AbstractEntity<?>> produceIdOnlyProxiedResultType(EntityMetadata entity) {
+    private Class<? extends AbstractEntity<?>> produceIdOnlyProxiedResultType(final EntityMetadata entity) {
         final Set<String> proxiedProps = entity.properties().stream()
                 .filter(pm -> !ID.equals(pm.name()) && !pm.type().isCompositeKey() && !pm.isCritOnly()
                               && !pm.type().isCollectional()

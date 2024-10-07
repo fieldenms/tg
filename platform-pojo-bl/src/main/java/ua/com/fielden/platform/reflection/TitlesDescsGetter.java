@@ -152,7 +152,7 @@ public class TitlesDescsGetter {
      * @return
      */
     private static Optional<Pair<String, String>> processSubtitles(final String propPath, final Class<?> entityType) {
-        if (isDotNotation(propPath)) {
+        if (isDotExpression(propPath)) {
             final String propName = firstAndRest(propPath).getKey();
             final Optional<Subtitles> subtitles = getPropertyAnnotationOptionally(Subtitles.class, entityType, propName);
             return subtitles.flatMap(sub -> Stream.of(sub.value()).filter(pt -> (propName + "." + pt.path()).equals(propPath)).findFirst().map(pt -> Pair.pair(pt.title(), pt.desc())));
@@ -175,7 +175,7 @@ public class TitlesDescsGetter {
             final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) propertyType;
             return of(getEntityTitleAndDesc(type));
         }
-        final String propName = isDotNotation(dotNotationExp) ? penultAndLast(dotNotationExp).getValue() : dotNotationExp;
+        final String propName = isDotExpression(dotNotationExp) ? penultAndLast(dotNotationExp).getValue() : dotNotationExp;
         final String readablePropertyName = join(asList(splitByCharacterTypeCamelCase(capitalize(propName))), " ");
         return of(pair(readablePropertyName, readablePropertyName));
     }

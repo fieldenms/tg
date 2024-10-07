@@ -5,7 +5,7 @@ import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import static org.openjdk.jmh.annotations.Threads.MAX;
-import static ua.com.fielden.companion.BenchmarkModule.newBenchmarkModule;
+import static ua.com.fielden.companion.BenchmarkIocModule.newBenchmarkModule;
 
 /**
  * <h3> Running this benchmark </h3>
@@ -22,7 +22,7 @@ import static ua.com.fielden.companion.BenchmarkModule.newBenchmarkModule;
  * The following command should be used to run this benchmark, assuming the current working directory is this module (platform-benchmark).
  * <pre>
 java -jar target/benchmarks.jar \
-    -p propertiesFile="src/main/resources/CompanionInstantiationBenchmark.properties" \
+    -p propertiesFile="src/main/resources/benchmark-application.properties" \
     -prof gc \
     "ua.com.fielden.companion.CompanionInstantiationBenchmark"
  </pre>
@@ -52,7 +52,7 @@ public class CompanionInstantiationBenchmark {
 
         injector = new ApplicationInjectorFactory(Workflows.development)
                 .add(newBenchmarkModule(properties))
-                .add(new NewUserNotifierMockBindingModule())
+                .add(new NewUserEmailNotifierTestIocModule())
                 .getInjector();
 
         // Need to initialise singleton dependencies of companions. Can't enable eager singletons for the whole injector

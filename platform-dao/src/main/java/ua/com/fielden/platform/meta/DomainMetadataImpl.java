@@ -14,6 +14,9 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 
+/**
+ * The default implementation of {@link IDomainMetadata}.
+ */
 final class DomainMetadataImpl implements IDomainMetadata {
 
     private final DomainMetadataGenerator generator;
@@ -51,14 +54,13 @@ final class DomainMetadataImpl implements IDomainMetadata {
         if (AbstractEntity.class.isAssignableFrom(javaType)) {
             return forEntityOpt((Class<? extends AbstractEntity<?>>) javaType);
         }
-        return forComposite(javaType);
+        return forComponent(javaType);
     }
 
     @Override
     public EntityMetadata forEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return forEntityOpt(entityType)
-                .orElseThrow(() -> new DomainMetadataGenerationException(
-                        format("Could not generate metadata for entity [%s]", entityType.getTypeName())));
+                .orElseThrow(() -> new DomainMetadataGenerationException("Could not generate metadata for entity [%s].".formatted(entityType.getTypeName())));
     }
 
     @Override
@@ -67,8 +69,8 @@ final class DomainMetadataImpl implements IDomainMetadata {
     }
 
     @Override
-    public Optional<TypeMetadata.Composite> forComposite(final Class<?> javaType) {
-        return generator.forComposite(javaType);
+    public Optional<TypeMetadata.Component> forComponent(final Class<?> javaType) {
+        return generator.forComponent(javaType);
     }
 
     @Override
@@ -95,7 +97,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
 
     private Optional<PropertyMetadata> forProperty_(final PropertyMetadata pm, final String propPath) {
         return switch (pm.type()) {
-            case PropertyTypeMetadata.Composite ct -> forPropertyOpt(ct.javaType(), propPath);
+            case PropertyTypeMetadata.Component ct -> forPropertyOpt(ct.javaType(), propPath);
             case PropertyTypeMetadata.Entity et -> forPropertyOpt(et.javaType(), propPath);
             default -> Optional.empty();
         };
@@ -104,7 +106,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
     private Optional<PropertyMetadata> propertyFromType(final TypeMetadata tm, final String simpleProp) {
         return switch (tm) {
             case EntityMetadata em -> em.propertyOpt(simpleProp);
-            case TypeMetadata.Composite cm -> cm.propertyOpt(simpleProp);
+            case TypeMetadata.Component cm -> cm.propertyOpt(simpleProp);
         };
     }
 

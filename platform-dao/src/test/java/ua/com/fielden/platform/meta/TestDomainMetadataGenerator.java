@@ -2,7 +2,6 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-import static java.lang.String.format;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -22,18 +21,22 @@ class TestDomainMetadataGenerator {
 
     /**
      * Forwards to {@link DomainMetadataGenerator#forEntity(Class)} and asserts the result's presence.
+     * <p>
+     * A raw {@link AbstractEntity} is used as a parameter for {@code entityType} to make the compiler happy in accepting generic types.
      */
-    // raw AbstractEntity is used to accept generic types
     public EntityMetadata forEntity(final Class<? extends AbstractEntity> entityType) {
         // cast is required to type-check...
         return generator.forEntity((Class<? extends AbstractEntity<?>>) entityType)
-                .orElseThrow(() -> new AssertionError(format("Expected metadata to be generated for entity [%s]",
-                                                             entityType.getTypeName())));
+                .orElseThrow(() -> new AssertionError("Expected metadata to be generated for entity [%s].".formatted(entityType.getTypeName())));
     }
 
-    // raw AbstractEntity is used to accept generic types
+    /**
+     * Forwards to {@link DomainMetadataGenerator#forEntity(Class)} and asserts the result's absence.
+     * <p>
+     * A raw {@link AbstractEntity} is used as a parameter for {@code entityType} to make the compiler happy in accepting generic types.
+     */
     public TestDomainMetadataGenerator assertNotGenerated(final Class<? extends AbstractEntity> entityType) {
-        assertTrue(format("Did not expected metadata to be generated for entity [%s]", entityType.getTypeName()),
+        assertTrue("Did not expected metadata to be generated for entity [%s].".formatted(entityType.getTypeName()),
                    // cast is required to type-check...
                    generator.forEntity((Class<? extends AbstractEntity<?>>) entityType).isEmpty());
         return this;

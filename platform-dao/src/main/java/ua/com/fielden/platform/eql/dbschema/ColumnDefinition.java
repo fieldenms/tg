@@ -13,9 +13,18 @@ import java.util.Optional;
  *
  * @param javaType could be useful for determining if the FK constraint is applicable
  */
-public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMemberOrder, boolean nullable, String name,
-                               Class<?> javaType, int sqlType, int length, int scale, int precision,
-                               String defaultValue, boolean requiresIndex) {
+public record ColumnDefinition(boolean unique,
+                               Optional<Integer> compositeKeyMemberOrder,
+                               boolean nullable,
+                               String name,
+                               Class<?> javaType,
+                               int sqlType,
+                               int length,
+                               int scale,
+                               int precision,
+                               String defaultValue,
+                               boolean requiresIndex)
+{
     public static final int DEFAULT_STRING_LENGTH = 255;
     public static final int DEFAULT_NUMERIC_PRECISION = 18;
     public static final int DEFAULT_NUMERIC_SCALE = 2;
@@ -50,7 +59,7 @@ public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMem
     }
 
     /**
-     * Generates DDL statement for a column based on provided RDBMS dialect.
+     * Generates a DDL statement for a column based on provided RDBMS dialect.
      *
      * @param dialect
      * @return
@@ -60,7 +69,7 @@ public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMem
         sb.append(name);
         sb.append(" ");
 
-        sb.append(sqlTypeName(sqlType, dialect, javaType, length, precision, scale));
+        sb.append(sqlTypeName(dialect));
 
         if (!nullable) {
             sb.append(" NOT NULL");
@@ -74,9 +83,24 @@ public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMem
         return sb.toString();
     }
 
-    private static String sqlTypeName(final int sqlType, final Dialect dialect,
-                                      final Class<?> javaType,
-                                      final int length, final int precision, final int scale) {
+    public String sqlTypeName(final Dialect dialect) {
+        return sqlTypeName(sqlType, dialect, javaType, length, precision, scale);
+    }
+
+    /**
+     * Converts a number that represents an SQL type to a human-readable descriptive text.
+     * For example, MSSQL type {@code 12} becomes {@code "varchar(max)"}.
+     *
+     * @return
+     */
+    private static String sqlTypeName(
+            final int sqlType,
+            final Dialect dialect,
+            final Class<?> javaType,
+            final int length,
+            final int precision,
+            final int scale)
+    {
         if (length == Integer.MAX_VALUE && String.class == javaType) {
             return switch (dbVersion(dialect)) {
                 case POSTGRESQL -> "text";

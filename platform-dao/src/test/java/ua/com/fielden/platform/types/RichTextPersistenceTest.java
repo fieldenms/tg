@@ -17,7 +17,7 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
         co.save(new_(EntityWithRichText.class, "abc").setText(richText));
         final var fetchedEntity = co.findByKey("abc");
         assertInstanceOf(RichText.Persisted.class, fetchedEntity.getText());
-        assertTrue(fetchedEntity.getText().iEquals(richText));
+        assertTrue(fetchedEntity.getText().equalsByText(richText));
 
         assertEquals(fetchedEntity.getText(), co.save(fetchedEntity.setKey("cba")).getText());
     }
@@ -41,7 +41,7 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
         final var co = co(EntityWithRichText.class);
         co.save(entity);
         final var fetchedEntity = co.findByKey("one");
-        assertTrue(fetchedEntity.getText().iEquals(richText));
+        assertTrue(fetchedEntity.getText().equalsByText(richText));
     }
 
     @Override

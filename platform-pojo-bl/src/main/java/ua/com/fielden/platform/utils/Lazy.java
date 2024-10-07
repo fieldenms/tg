@@ -15,16 +15,16 @@ public interface Lazy<T> extends Supplier<T>, Provider<T> {
 
     /**
      * This method exists solely to prevent this interface from being used as a result of a lambda expression.
-     * That is because such a lambda expression will lack the <i>memoization</i> property, and will act as an ordinary
-     * {@link Supplier} instead.
+     * That is because such a lambda expression will lack the <i>memoization</i> property,
+     * and will act as an ordinary {@link Supplier} instead.
      */
     void lambdasAreProhibited();
 
-    static <T> Lazy<T> lazyS(Supplier<T> supplier) {
+    static <T> Lazy<T> lazySupplier(final Supplier<T> supplier) {
         return new LazySupplier<>(supplier);
     }
 
-    static <T> Lazy<T> lazyP(Provider<T> provider) {
+    static <T> Lazy<T> lazyProvider(final Provider<T> provider) {
         return new LazyProvider<>(provider);
     }
 

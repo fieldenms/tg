@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotExpression;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 
 import java.lang.reflect.Field;
@@ -228,7 +228,7 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
          * @param property
          */
         private void loadParent(final Class<?> root, final String property) {
-            final String propToWarm = isDotNotation(property) ? penultAndLast(property).getKey() : "";
+            final String propToWarm = isDotExpression(property) ? penultAndLast(property).getKey() : "";
             if (!warmedProps.contains(propToWarm)) {
                 dtr.warmUp(root, propToWarm);
                 warmedProps.add(propToWarm);

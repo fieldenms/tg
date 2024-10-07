@@ -21,7 +21,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 /**
  * Test case for {@link Finder}'s functionality for finding <code>linkProperty</code> and determining association type in generated types.
@@ -31,7 +31,7 @@ import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
  */
 public class FindLinkPropertyInGeneratedTypeTest {
 
-    private final Module module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Module module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.dbschema;
 
 import com.google.inject.ImplementedBy;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.types.either.Either;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +21,20 @@ import java.util.Optional;
 @ImplementedBy(PropertyInlinerImpl.class)
 public interface PropertyInliner {
 
+    /**
+     * If the property is inlinable, returns an optional containing the result of inlining.
+     * Otherwise, returns an empty optional.
+     */
     Optional<List<PropertyMetadata.Persistent>> inline(PropertyMetadata.Persistent property);
+
+    /**
+     * If the property is inlinable, returns a right value containing the result of inlining.
+     * Otherwise, returns a left value containing the specified property.
+     */
+    default Either<PropertyMetadata.Persistent, List<PropertyMetadata.Persistent>> inlineOrGet(PropertyMetadata.Persistent property) {
+        return inline(property)
+                .<Either<PropertyMetadata.Persistent, List<PropertyMetadata.Persistent>>> map(Either::right)
+                .orElseGet(() -> Either.left(property));
+    }
 
 }

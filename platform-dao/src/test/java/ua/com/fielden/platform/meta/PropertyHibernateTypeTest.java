@@ -36,10 +36,10 @@ public class PropertyHibernateTypeTest {
                          hasHibType("transientPrimitive", PropertyMetadata.Transient.class, Primitive.class),
                          hasHibType("critOnlyPrimitive", PropertyMetadata.CritOnly.class, Primitive.class),
 
-                         hasHibType("persistentComposite", PropertyMetadata.Persistent.class, PropertyTypeMetadata.Composite.class),
-                         hasHibType("calculatedComposite", PropertyMetadata.Calculated.class, PropertyTypeMetadata.Composite.class),
-                         hasHibType("transientComposite", PropertyMetadata.Transient.class, PropertyTypeMetadata.Composite.class),
-                         hasHibType("critOnlyComposite", PropertyMetadata.CritOnly.class, PropertyTypeMetadata.Composite.class),
+                         hasHibType("persistentComponent", PropertyMetadata.Persistent.class, PropertyTypeMetadata.Component.class),
+                         hasHibType("calculatedComponent", PropertyMetadata.Calculated.class, PropertyTypeMetadata.Component.class),
+                         hasHibType("transientComponent", PropertyMetadata.Transient.class, PropertyTypeMetadata.Component.class),
+                         hasHibType("critOnlyComponent", PropertyMetadata.CritOnly.class, PropertyTypeMetadata.Component.class),
 
                          hasHibType("persistentEntity", PropertyMetadata.Persistent.class, PropertyTypeMetadata.Entity.class),
                          hasHibType("calculatedEntity", PropertyMetadata.Calculated.class, PropertyTypeMetadata.Entity.class),
@@ -107,19 +107,19 @@ public class PropertyHibernateTypeTest {
 
         @IsProperty
         @MapTo
-        private Money persistentComposite;
+        private Money persistentComponent;
 
         @IsProperty
         @Calculated("1")
         @PersistentType(userType = ISimpleMoneyType.class)
-        private Money calculatedComposite;
+        private Money calculatedComponent;
 
         @IsProperty
-        private Money transientComposite;
+        private Money transientComponent;
 
         @IsProperty
         @CritOnly
-        private Money critOnlyComposite;
+        private Money critOnlyComponent;
 
         @IsProperty
         @MapTo

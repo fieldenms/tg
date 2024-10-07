@@ -102,18 +102,18 @@ public class RichTextHtmlSanitizationTest {
     }
 
     private void assertSanitizationFailure(final String input) {
-        assertFalse(RichText.sanitizeMarkdown(input).isSuccessful());
+        assertFalse(RichText.sanitiseMarkdown(input).isSuccessful());
     }
 
     private void assertSanitizationSuccess(final String input) {
-        final Result result = RichText.sanitizeMarkdown(input);
+        final Result result = RichText.sanitiseMarkdown(input);
         if (!result.isSuccessful()) {
             fail(result.getMessage());
         }
     }
 
     private void assertAfterSanitization(final String expected, final String input) {
-        final Result result = RichText.sanitizeMarkdown(input);
+        final Result result = RichText.sanitiseMarkdown(input);
         if (!result.isSuccessful()) {
             fail(result.getMessage());
         } else {

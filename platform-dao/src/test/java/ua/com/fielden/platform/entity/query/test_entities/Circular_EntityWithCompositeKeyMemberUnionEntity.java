@@ -12,15 +12,15 @@ public class Circular_EntityWithCompositeKeyMemberUnionEntity extends AbstractEn
     @IsProperty
     @MapTo
     @CompositeKeyMember(1)
-    private UnionEntity union;
+    private Circular_UnionEntity union;
 
     @Observable
-    public Circular_EntityWithCompositeKeyMemberUnionEntity setUnion(final UnionEntity union) {
+    public Circular_EntityWithCompositeKeyMemberUnionEntity setUnion(final Circular_UnionEntity union) {
         this.union = union;
         return this;
     }
 
-    public UnionEntity get() {
+    public Circular_UnionEntity get() {
         return union;
     }
 

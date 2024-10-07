@@ -8,7 +8,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.security.AuthorisationException;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 import com.google.inject.Injector;
 
@@ -20,7 +20,7 @@ import com.google.inject.Injector;
  */
 public class AuthorisationProcessTest {
 
-    private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).add(new AuthBindingModule()).getInjector();
+    private final Injector injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).add(new AuthenticationTestIocModule()).getInjector();
 
     @Test
     public void test_that_method_with_no_authorisation_cannot_be_invoked() {
