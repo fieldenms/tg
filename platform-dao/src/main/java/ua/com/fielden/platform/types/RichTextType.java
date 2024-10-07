@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.types;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.StringNVarcharType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.persistence.types.AbstractCompositeUserType;
 import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
 import ua.com.fielden.platform.types.markers.IRichTextType;
@@ -18,9 +20,14 @@ import static ua.com.fielden.platform.types.RichText._formattedText;
 /**
  * Hibernate type mapping for composite type {@link RichText}.
  * <p>
- * {@link RichText#formattedText()} is mapped to a regular {@link StringType}, but its corresponding column type in the DB schema may be different.
- * For SQL Server it is {@code nvarchar}, for PostgreSQL - {@code text}.
- * This difference does not prevent Hibernate from correctly converting values to and from a database as {@link StringType} works correctly with both {@code nvarchar} and {@code text}.
+ * Users of this class should not instantiate it directly, but use {@link #getInstance(DbVersion)}.
+ * The constructor is made public to satisfy the requirements for Hibernate custom types.
+ * <p>
+ * {@link RichTextType} has subtypes for those databases whose JDBC drivers require special handling:
+ * <ul>
+ *   <li> PostgreSQL - {@link RichTextPostgresqlType}.
+ * </ul>
+ * For all other databases {@link RichTextType} is used.
  * <p>
  * <b>Implementation remark:</b>
  * <i>
@@ -34,9 +41,28 @@ import static ua.com.fielden.platform.types.RichText._formattedText;
  *  The only way to persist a dangerous {@link RichText} value is to write to the DB directly, which would indicate a compromise of a much greater scale.
  *  </i>
  */
-public final class RichTextType extends AbstractCompositeUserType implements IRichTextType {
+public sealed class RichTextType extends AbstractCompositeUserType implements IRichTextType
+        permits RichTextPostgresqlType
+{
 
-    public static final RichTextType INSTANCE = new RichTextType();
+    private static final RichTextType INSTANCE = new RichTextType();
+
+    /**
+     * Returns an instance of {@link RichTextType} that is supported for the specified database.
+     * <p>
+     * See the documentation of {@link RichTextType} for an overview of supported databases.
+     */
+    public static RichTextType getInstance(final DbVersion dbVersion) {
+        return switch (dbVersion) {
+            case POSTGRESQL -> RichTextPostgresqlType.INSTANCE;
+            default -> INSTANCE;
+        };
+    }
+
+    /**
+     * <b>Do not use this contructor directly</b>! Use {@link #getInstance(DbVersion)}.
+     */
+    public RichTextType() {}
 
     @Override
     public Class<RichText> returnedClass() {
@@ -51,11 +77,11 @@ public final class RichTextType extends AbstractCompositeUserType implements IRi
             final Object owner)
             throws SQLException
     {
-        final String formattedText = resultSet.getString(names[0]);
+        final String formattedText = resultSet.getNString(names[0]);
         if (resultSet.wasNull()) {
             return null;
         }
-        final String coreText = resultSet.getString(names[1]);
+        final String coreText = resultSet.getNString(names[1]);
         if (resultSet.wasNull()) {
             throw new UserTypeException("Core text is null when formatted text is present. Formatted text:\n%s".formatted(formattedText));
         }
@@ -83,8 +109,8 @@ public final class RichTextType extends AbstractCompositeUserType implements IRi
             statement.setNull(index + 1, StringType.INSTANCE.sqlType());
         } else {
             final var richText = (RichText) value;
-            statement.setString(index, richText.formattedText());
-            statement.setString(index + 1, richText.coreText());
+            statement.setNString(index, richText.formattedText());
+            statement.setNString(index + 1, richText.coreText());
         }
     }
 
@@ -95,7 +121,7 @@ public final class RichTextType extends AbstractCompositeUserType implements IRi
 
     @Override
     public Type[] getPropertyTypes() {
-        return new Type[] { StringType.INSTANCE, StringType.INSTANCE };
+        return new Type[] { StringNVarcharType.INSTANCE, StringNVarcharType.INSTANCE };
     }
 
     @Override
