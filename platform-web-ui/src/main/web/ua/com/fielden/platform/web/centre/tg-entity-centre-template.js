@@ -122,12 +122,8 @@ const entityCentreTemplate = html`
                 short-desc="Edit rich text property"
                 show-dialog='[[_showDialog]]'
                 toaster='[[toaster]]'
-                create-context-holder='[[_createContextHolder]]'
+                create-context-holder='[[_createContextHolderForRichTextPropEditMaster]]'
                 attrs='[[_richTextPropEditActionAttrs]]'
-                pre-action='[[navigationPreAction]]'
-                require-selection-criteria='false'
-                require-selected-entities='ONE'
-                require-master-entity='false'
                 hidden>
             </tg-ui-action>
             <!--@primary_action-->

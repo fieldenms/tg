@@ -915,6 +915,8 @@ const TgEntityCentreBehaviorImpl = {
             return context;
         }).bind(self);
 
+        self._createContextHolderForRichTextPropEditMaster = () => undefined;
+
         self._createDiscardPromise = function (customObject) { // very similar to tg-entity-binder-behavior._createRetrievalPromise
             const slf = this;
             this._ajaxDiscarder().body = JSON.stringify(customObject);

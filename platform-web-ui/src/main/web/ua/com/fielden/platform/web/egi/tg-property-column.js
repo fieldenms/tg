@@ -70,6 +70,16 @@ Polymer({
 
     editRichTextProp: function(currentEntityFunction, richTextPropEditAction) {
         if (richTextPropEditAction) {
+            const typeAndProperty = getFirstEntityTypeAndProperty(currentEntityFunction.bind(richTextPropEditAction)(), this.getActualProperty());
+            const propertyName = typeAndProperty[1] ? this.getActualProperty().replace(typeAndProperty[1] + ".", "") : this.getActualProperty();
+            const actualCurrentEntityFunc = () => {return typeAndProperty[1] ? currentEntityFunction.bind(richTextPropEditAction)().get(typeAndProperty[1]) : currentEntityFunction.bind(richTextPropEditAction)()};
+            richTextPropEditAction.attrs.entityType = typeAndProperty[0].notEnhancedFullClassName();
+            richTextPropEditAction.attrs.entityId = actualCurrentEntityFunc.bind(richTextPropEditAction)().get('id');
+            richTextPropEditAction.attrs.propName = propertyName;
+            richTextPropEditAction.attrs.propTitle = typeAndProperty[0].prop(propertyName).title();
+            richTextPropEditAction.attrs.propDesc = typeAndProperty[0].prop(propertyName).desc();
+            //richTextPropEditAction.currentEntity = actualCurrentEntityFunc.bind(richTextPropEditAction);
+            richTextPropEditAction._run();
         }
     },
 

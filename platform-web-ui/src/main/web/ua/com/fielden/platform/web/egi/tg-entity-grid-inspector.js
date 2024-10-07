@@ -1138,6 +1138,7 @@ Polymer({
             || this.isHyperlinkProp(entity, column) === true
             || this.getAttachmentIfPossible(entity, column)
             || this.hasDefaultAction(entity, column)
+            || this.hasRichTextEditAction(entity, column)
         );
     },
 
@@ -1156,6 +1157,10 @@ Polymer({
             }
         }
         return false;
+    },
+
+    hasRichTextEditAction: function (entity, column) {
+        return column.type === 'RichText';
     },
 
     isVisible: function (entity) {
@@ -1410,15 +1415,11 @@ Polymer({
                     this.downloadAttachment(attachment);
                 } else if (this.hasDefaultAction(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
-                } else if (column.type === 'RichText' && this._canEditRichText(entity, column)) {
+                } else if (this.hasRichTextEditAction(entity, column)) {
                     column.editRichTextProp(this._currentEntity(entity), this._richTextPropEditAction);
                 }
             } 
         }
-    },
-
-    _canEditRichText: function (entity, column) {
-        
     },
 
     //Entities changed related functions
@@ -2185,6 +2186,8 @@ Polymer({
             });
         } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
             return this._generateActionTooltip(this.hasDefaultAction(entity, column));
+        } else if (this.hasRichTextEditAction(entity, column)) {
+            return this._generateActionTooltip(this._richTextPropEditAction);
         }
         return "";
     },

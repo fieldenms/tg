@@ -642,8 +642,9 @@ Polymer({
                     self.restoreActionState();
                 }
             };
-
-            master.entityId = master.savingContext.get('id') === null ? "new" : (+(master.savingContext.get('id')));
+            if (master.savingContext) {
+                master.entityId = master.savingContext.get('id') === null ? "new" : (+(master.savingContext.get('id')));
+            }
             // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
             return master.retrieve(master.savingContext)
                 .then(function (ironRequest) {

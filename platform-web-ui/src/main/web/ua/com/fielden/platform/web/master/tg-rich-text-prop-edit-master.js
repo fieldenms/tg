@@ -10,6 +10,7 @@ import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behav
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
 
 import '/resources/master/tg-entity-master-styles.js';
+import '/resources/editors/tg-rich-text-editor.js';
 
 const template = html`
     <style include="tg-entity-master-styles"></style> <!-- imported as part of tg-entity-master-template-behavior to reduce the size of resultant generated file -->
@@ -92,6 +93,10 @@ Polymer({
             return () => this._currEntity;
         };
         
+    },
+
+    attached: function () {
+        this._masterDom().setAttribute('with-dimensions', 'true');
     },
 
     //Entity master related functions
