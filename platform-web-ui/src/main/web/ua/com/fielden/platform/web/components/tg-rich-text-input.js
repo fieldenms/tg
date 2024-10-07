@@ -276,7 +276,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             minHeight: this.minHeight,
             initialEditType: 'wysiwyg',
             events: {
-                change: this._htmlContetnChanged.bind(this),
+                change: this._htmlContentChanged.bind(this),
                 blur: this.changeEventHandler,
                 caretChange: this._saveSelection.bind(this),
                 keydown: (viewType, event) => this.keyDownHandler(event)
@@ -445,7 +445,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }
     }
 
-    _htmlContetnChanged(e) {
+    _htmlContentChanged(e) {
         const htmlText = this._editor.getHTML();
         if (this.value !== htmlText) {
             this.value = htmlText;
