@@ -97,9 +97,9 @@ public class TgEntityWithRichTextPropWebUiConfig {
             FLEXIBLE_LAYOUT_WITH_PADDING).toString();
 
         final IMaster<TgEntityWithRichTextProp> masterConfig = new SimpleMasterBuilder<TgEntityWithRichTextProp>().forEntity(TgEntityWithRichTextProp.class)
+                .addProp("richTextProp").asRichText().withHeight(350).also()
                 .addProp("key").asSinglelineText().also()
                 .addProp("desc").asSinglelineText().also()
-                .addProp("richTextProp").asRichText().withHeight(350).also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkActionLayoutForMaster())

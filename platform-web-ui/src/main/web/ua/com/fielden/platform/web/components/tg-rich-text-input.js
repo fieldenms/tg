@@ -20,7 +20,7 @@ function createSelection(tr, selection, SelectionClass, openTag, closeTag) {
         : SelectionClass.create(doc, mappedFrom, mappedTo);
 }
 
-function colorTextPlugin (context, options) {
+function colorTextPlugin(context, options) {
     const { pmState } = context;
 
 
@@ -92,7 +92,7 @@ function findLinkParent(element) {
 
 function findParentBy(element, predicate) {
     let parent = element;
-    while (parent && parent !== this._editor.getEditorElements().wwEditor.children[0] && !predicate(parent)) {
+    while (parent && parent !== this._getEditableContent() && !predicate(parent)) {
         parent = parent.parentElement;
     }
     return parent;
@@ -165,7 +165,7 @@ function getLink() {
     }
 }
 
-function handleTaskListItemStatusChange (e) {
+function handleTaskListItemStatusChange(e) {
     const pos = this._editor.wwEditor.view.posAtCoords({left:e.clientX, top:e.clientY});
     const node = pos && this._editor.wwEditor.view.domAtPos(pos.pos, pos.inside);
     if (node && node.node.hasAttribute && node.node.hasAttribute('data-task')) {
@@ -183,6 +183,12 @@ function isPositionInBox(style, offsetX, offsetY) {
     const height = parseInt(style.height, 10) + parseInt(style.paddingTop, 10) + parseInt(style.paddingBottom, 10);
   
     return offsetX >= left && offsetX <= left + width && offsetY >= top && offsetY <= top + height;
+}
+
+function focusEditor(event) {
+    if (event.keyCode === 13) {
+        this._editor.moveCursorToStart(true);
+    }
 }
 
 const template = html`
@@ -211,7 +217,7 @@ const template = html`
             cursor: pointer !important;
         }
     </style>
-    <div id="editor"></div>`; 
+    <div tabindex='0' id="editor"></div>`; 
 
 class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKeysBehavior, TgTooltipBehavior], PolymerElement) {
 
@@ -261,7 +267,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         return ["_disabledChanged(disabled, _editor)"]
     }
 
-    ready () {
+    ready() {
         super.ready();
         this._editor = new toastui.Editor({
             el: this.$.editor,
@@ -284,15 +290,17 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.triggerManual = true;
         //The following code is nedded to preserve whitespaces after loading html into editor.
         this._editor.wwEditor.schema.cached.domParser.rules.forEach(r => r.preserveWhitespace = "full");
+        //Make editable container not tabbable. It will remain focusable with mouse pointer. 
+        this._getEditableContent().setAttribute('tabindex', '-1');
         //Add event listeners for tooltips on editor
-        this._editor.getEditorElements().wwEditor.children[0].addEventListener("mouseover", mouseOverHandler.bind(this));
+        this._getEditableContent().addEventListener("mouseover", mouseOverHandler.bind(this));
         //Add event listener to handle case when clicking on task list checkbox
-        this._editor.getEditorElements().wwEditor.children[0].addEventListener("mousedown", handleTaskListItemStatusChange.bind(this));
+        this._getEditableContent().addEventListener("mousedown", handleTaskListItemStatusChange.bind(this));
         //Add event listeners to make link clickable and with proper cursor
-        this._editor.getEditorElements().wwEditor.children[0].addEventListener("mousedown", mouseDownHandler.bind(this));
-        this._editor.getEditorElements().wwEditor.children[0].addEventListener("mouseup", mouseUpHandler.bind(this));
-        this._editor.getEditorElements().wwEditor.children[0].addEventListener("touchstart", mouseDownHandler.bind(this));
-        this._editor.getEditorElements().wwEditor.children[0].addEventListener("touchend", mouseUpHandler.bind(this));
+        this._getEditableContent().addEventListener("mousedown", mouseDownHandler.bind(this));
+        this._getEditableContent().addEventListener("mouseup", mouseUpHandler.bind(this));
+        this._getEditableContent().addEventListener("touchstart", mouseDownHandler.bind(this));
+        this._getEditableContent().addEventListener("touchend", mouseUpHandler.bind(this));
         //Initiate key binding and key event target
         this.addOwnKeyBinding('ctrl+b meta+b', 'applyBold');
         this.addOwnKeyBinding('ctrl+i meta+i', 'applyItalic');
@@ -303,13 +311,15 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.addOwnKeyBinding('shift+tab', 'applyOutdent');
         this.addOwnKeyBinding('ctrl+u meta+u', 'createBulletList');
         this.addOwnKeyBinding('ctrl+o meta+o', 'createOrderedList');
-        this.keyEventTarget = this._editor.getEditorElements().wwEditor.children[0];
+        this.keyEventTarget = this._getEditableContent();
         //Adjust key event handler to be able to process events from _editor when event was prevented
         const prevKeyBindingHandler = this._onKeyBindingEvent.bind(this);
         this._onKeyBindingEvent = function (keyBindings, event) {
             Object.defineProperty(event, 'defaultPrevented', {value: false})
             prevKeyBindingHandler(keyBindings, event);
         };
+
+        this.$.editor.addEventListener('keydown', focusEditor.bind(this));
     }
 
     applyHeader1(event) {
@@ -404,7 +414,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     makeEditable(editable) {
-        this._editor.getEditorElements().wwEditor.children[0].setAttribute("contenteditable", editable + "");
+        this._getEditableContent().setAttribute("contenteditable", editable + "");
     }
 
     getHeight() {
@@ -435,14 +445,14 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }
     }
 
-    _htmlContetnChanged (e) {
+    _htmlContetnChanged(e) {
         const htmlText = this._editor.getHTML();
         if (this.value !== htmlText) {
             this.value = htmlText;
         }
     }
 
-    _heightChanged (newHeight) {
+    _heightChanged(newHeight) {
         if (this._editor) {
             this._editor.setHeight(newHeight);
             this.fire("iron-resize", {
@@ -462,6 +472,10 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         if (_editor) {
             this.makeEditable(!newDisabled);
         }
+    }
+
+    _getEditableContent() {
+        return this._editor.getEditorElements().wwEditor.children[0];
     }
 }
 
