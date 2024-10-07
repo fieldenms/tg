@@ -256,7 +256,7 @@ public sealed class RichText permits RichText.Persisted {
         };
 
         public String sanitise(final String input) {
-            return listener.sanitize(POLICY_FACTORY, input);
+            return listener.sanitise(POLICY_FACTORY, input);
         }
 
         public List<String> violations() {

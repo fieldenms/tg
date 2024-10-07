@@ -7,33 +7,37 @@ import static graphql.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public class RichTextMarkdownSanitizationTest {
+public class RichTextHtmlSanitisationTest {
 
     @Test
-    public void blank_lines_are_preserved() {
-        assertSanitizationSuccess("""
-        first
-        
-        \t\t
-        
-        second
-        """);
-        assertSanitizationSuccess("""
-        first
-        
-        \t\r
-        second
+    public void toast_ui_HTML_entities_are_allowed() {
+        assertSameAfterSanitization("""
+        <ul>
+          <li data-task> one </li>
+          <li data-task-checked> two </li>
+          <li data-task-disabled> three </li>
+        </ul>
         """);
     }
 
     @Test
-    public void empty_text() {
-        assertSameAfterSanitization("");
+    public void attribute_class_is_allowed_globally() {
+        assertSameAfterSanitization("<p class='abc'> text </p>");
+        assertSameAfterSanitization("<img class='abc' />");
+        assertSameAfterSanitization("<h1 class='abc'> text </h1>");
+        assertSameAfterSanitization("<i class=''> text </i>");
     }
 
     @Test
-    public void empty_lines_are_preserved() {
-        assertSameAfterSanitization("\n\n\n");
+    public void attribute_target_is_allowed_for_link_element() {
+        assertSameAfterSanitization("<link href='resource' target='window' />");
+    }
+
+    @Test
+    public void empty_elements_are_preserved() {
+        assertSameAfterSanitization("<img />");
+        assertSameAfterSanitization("<span>text</span>");
+        assertSameAfterSanitization("<a>text</a>");
     }
 
     @Test
@@ -87,11 +91,6 @@ public class RichTextMarkdownSanitizationTest {
         assertSameAfterSanitization("the <b>big</B> bang");
         assertSameAfterSanitization("the <B>big</b> bang");
         assertSameAfterSanitization("the <B>big</B> bang");
-        // NOTE: The following assertions are irrelevant for sanitization in validation mode, and can be removed if no
-        //       longer needed.
-        // assertAfterSanitization("the <b>big</b> bang", "the <b>big</B> bang");
-        // assertAfterSanitization("the <b>big</b> bang", "the <B>big</b> bang");
-        // assertAfterSanitization("the <b>big</b> bang", "the <B>big</B> bang");
     }
 
     @Test
@@ -100,45 +99,6 @@ public class RichTextMarkdownSanitizationTest {
         assertSameAfterSanitization("the <I>big</i> bang");
         assertSameAfterSanitization("the <i>big</I> bang");
         assertSameAfterSanitization("the <I>big</I> bang");
-        // NOTE: The following assertions are irrelevant for sanitization in validation mode, and can be removed if no
-        //       longer needed.
-        // assertAfterSanitization("the <i>big</i> bang", "the <I>big</i> bang");
-        // assertAfterSanitization("the <i>big</i> bang", "the <i>big</I> bang");
-        // assertAfterSanitization("the <i>big</i> bang", "the <I>big</I> bang");
-    }
-
-    @Test
-    public void non_html_contents_are_not_modified_by_sanitization() {
-        assertSameAfterSanitization("the *big* `bang` in [the universe](link)");
-        assertSameAfterSanitization("""
-        And Hagrid said:
-        > You're a Wizard, Harry.
-        
-        Abc""");
-        assertSameAfterSanitization("""
-        ### Heading
-        * a
-          * b - definition
-        ---""");
-        assertSameAfterSanitization("""
-        Example:
-        ```lisp
-        (apply '+ '(1 2 3))
-        ```
-        End.
-        """);
-    }
-
-    @Test
-    public void non_html_contents_in_one_line_with_html_are_not_modified_by_sanitization() {
-        assertAfterSanitization("the *big* <b>bang</b> in [the universe](link)",
-                                "the *big* <b>bang</b> in [the universe](link)");
-        // NOTE: The following assertion doesn't hold with sanitization in validation mode, which has been enabled for now.
-        //       Remove this assertion if validation mode becomes the norm.
-        // *bang* is parsed as strong emphasis Node, not as Text inside <b> tags, thus <b> tags are sanitized separately
-        // assertAfterSanitization("the *big* <b></b>*bang* in [the universe](link)",
-        //                         "the *big* <b>*bang*</b> in [the universe](link)");
-        assertSameAfterSanitization("the *big* <b></b>*bang* in [the universe](link)");
     }
 
     private void assertSanitizationFailure(final String input) {
