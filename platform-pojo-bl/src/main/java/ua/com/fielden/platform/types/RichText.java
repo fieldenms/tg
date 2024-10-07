@@ -133,8 +133,11 @@ public sealed class RichText permits RichText.Persisted {
 
     @Override
     public final boolean equals(final Object obj) {
-        if (obj instanceof Persisted that) {
-            return this.equalsByText(that);
+        if (this == obj) {
+            return true;
+        }
+        if (obj != null && obj.getClass() == this.getClass()) {
+            return this.equalsByText((RichText) obj);
         }
         return false;
     }
