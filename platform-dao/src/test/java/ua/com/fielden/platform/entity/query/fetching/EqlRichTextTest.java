@@ -53,8 +53,6 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         assertEquals(entityAgg.get("x"), "true");
     }
 
-    // SQL Server requirements:
-    // * sendStringParametersAsUnicode=true
     @Test
     public void utf8_formattedText_can_be_used_as_search_criteria() {
         final var richText = RichText.fromHtml("привіт world");
@@ -69,9 +67,6 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
                              .getText().formattedText());
     }
 
-    // SQL Server requirements:
-    // * sendStringParametersAsUnicode=true
-    // * UTF8 collation
     @Test
     public void utf8_coreText_can_be_used_as_search_criteria() {
         final var richText = RichText.fromHtml("привіт world");
