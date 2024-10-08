@@ -59,6 +59,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.distinct;
  */
 @Singleton
 public class QuerySourceInfoProvider {
+
     private static final Logger LOGGER = getLogger(QuerySourceInfoProvider.class);
 
     public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE =
@@ -69,6 +70,12 @@ public class QuerySourceInfoProvider {
 
     private static final String ERR_NON_RETRIEVABLE_PROP_YIELDED_WITH_DOT_EXPRESSION =
     "Non-retrievable property [%s] cannot be used as a dot-notated yield alias (in a source query with source type [%s]).\n";
+
+    private static final String ERR_MISSING_CALC_PROPS_ORDER =
+    """
+    Analysis of dependent calculated properties wasn't performed for entity type [%s]. \
+    This could indicate either an unregistered domain type or a generated type with added dependent calculated properties, which isn't supported.\
+    """;
 
     /** Used to obtain models for synthetic entities. */
     private static final QueryModelToStage1Transformer QUERY_MODEL_TO_STAGE_1_TRANSFORMER = new QueryModelToStage1Transformer();
@@ -257,7 +264,12 @@ public class QuerySourceInfoProvider {
     public List<String> getCalcPropsOrder(final Class<? extends AbstractEntity<?>> entityType) {
         // TODO: It is assumed that there would be no generated types with newly added dependent calc props.
         //       This assumption needs to be revisited when implementing support for user-definable calculated properties.
-        return entityTypesDependentCalcPropsOrder.get(getOriginalType(entityType).getName());
+        final var order = entityTypesDependentCalcPropsOrder.get(getOriginalType(entityType).getName());
+        if (order == null) {
+            throw new EqlMetadataGenerationException(ERR_MISSING_CALC_PROPS_ORDER.formatted(entityType.getSimpleName()));
+        } else {
+            return order;
+        }
     }
 
     private List<AbstractQuerySourceItem<?>> generateQuerySourceItems(
