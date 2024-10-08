@@ -24,7 +24,6 @@ import java.util.Optional;
 
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.EMPTY_CONDITIONS;
-import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.EMPTY_ORDER_BYS;
 
 /**
  * Transforms EQL models in the form of fluent API tokens to the stage 1 representation.
@@ -85,12 +84,18 @@ public class QueryModelToStage1Transformer {
 
     private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
         final EqlCompilationResult.Select result = new EqlCompiler(this).compile(qryModel.getTokenSource(), EqlCompilationResult.Select.class);
+
+        if (orderModel != null && !result.orderBys().isEmpty()) {
+            throw new OrderingModelConflictException("Ordering model cannot be specified both as standalone and as part of a query.");
+        }
+        final OrderBys1 orderBys = orderModel != null ? produceOrderBys(orderModel) : result.orderBys();
+
         final Conditions1 udfModel = result.joinRoot() == null
                 ? EMPTY_CONDITIONS
                 : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, result.joinRoot().mainSource());
         return new QueryComponents1(
                 result.joinRoot(), result.whereConditions(), udfModel, result.yields(), result.groups(),
-                orderModel == null ? EMPTY_ORDER_BYS : produceOrderBys(orderModel),
+                orderBys,
                 qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery());
     }
 
@@ -113,7 +118,7 @@ public class QueryModelToStage1Transformer {
     }
 
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {
-        final EqlCompilationResult.OrderBy result = new EqlCompiler(this).compile(orderModel.getTokenSource(), EqlCompilationResult.OrderBy.class);
+        final EqlCompilationResult.StandaloneOrderBy result = new EqlCompiler(this).compile(orderModel.getTokenSource(), EqlCompilationResult.StandaloneOrderBy.class);
         return result.model();
     }
 

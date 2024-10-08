@@ -1,14 +1,14 @@
-// This grammar was generated. Timestamp: 2024-08-12T13:27:50.096302183+03:00[Europe/Kyiv]
+// This grammar was generated. Timestamp: 2024-08-16T09:09:23.035716004+03:00[Europe/Kyiv]
 
 grammar EQL;
 
 start : query EOF;
 
 query :
-      select=SELECT alias=AS? join? where? groupBy? selectEnd # Select
+      select=SELECT alias=AS? join? where? groupBy? orderBy? selectEnd # Select
     | EXPR first=yieldOperand (operators+=arithmeticalOperator rest+=yieldOperand)* MODEL # StandaloneExpression
     | COND standaloneCondition MODEL # StandaloneCondExpr
-    | ORDERBY operands+=orderByOperand+ MODEL # OrderBy
+    | ORDERBY operands+=orderByOperand+ limit=LIMIT? offset=OFFSET? MODEL # StandaloneOrderBy
 ;
 
 selectEnd :
@@ -237,6 +237,10 @@ standaloneCondition :
     | left=standaloneCondition OR right=standaloneCondition # OrStandaloneCondition
 ;
 
+orderBy :
+      ORDERBY operands+=orderByOperand+ limit=LIMIT? offset=OFFSET?
+;
+
 orderByOperand :
       singleOperand order # OrderByOperand_Single
     | yield=YIELD order # OrderByOperand_Yield
@@ -322,6 +326,7 @@ LE : 'le' ;
 LEFTJOIN : 'leftJoin' ;
 LIKE : 'like' ;
 LIKEWITHCAST : 'likeWithCast' ;
+LIMIT : 'limit' ;
 LOWERCASE : 'lowerCase' ;
 LT : 'lt' ;
 MAXOF : 'maxOf' ;
@@ -348,6 +353,7 @@ NOTIN : 'notIn' ;
 NOTLIKE : 'notLike' ;
 NOTLIKEWITHCAST : 'notLikeWithCast' ;
 NOW : 'now' ;
+OFFSET : 'offset' ;
 ON : 'on' ;
 OR : 'or' ;
 ORDER : 'order' ;

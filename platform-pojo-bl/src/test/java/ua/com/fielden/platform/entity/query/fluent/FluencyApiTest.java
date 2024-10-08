@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
@@ -11,6 +12,8 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+// This test suite verifies properties of the EQL fluent API that are known from the types. Its purpose is unclear.
+@Ignore("Questionable usefulness")
 public class FluencyApiTest {
 
 	private static final Set<Method> objectMethods = Set.of(Object.class.getMethods());

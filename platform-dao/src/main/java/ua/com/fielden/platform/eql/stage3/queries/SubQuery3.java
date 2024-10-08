@@ -49,21 +49,7 @@ public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof SubQuery3)) {
-            return false;
-        }
-        
-        final SubQuery3 other = (SubQuery3) obj;
-        
-        return Objects.equals(type, other.type);
+        return this == obj || obj instanceof SubQuery3 that && super.equals(that) && Objects.equals(type, that.type);
     }
     
 }

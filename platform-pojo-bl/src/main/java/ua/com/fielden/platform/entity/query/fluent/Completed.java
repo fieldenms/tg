@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem1;
 
 class Completed<ET extends AbstractEntity<?>> //
         extends CompletedAndYielded<ET> //
@@ -15,6 +16,11 @@ class Completed<ET extends AbstractEntity<?>> //
     @Override
     public IFunctionLastArgument<ICompleted<ET>, ET> groupBy() {
         return createFunctionLastArgument(builder.groupBy());
+    }
+
+    @Override
+    public IOrderingItem1<ET> orderBy() {
+        return new OrderingItem1<>(builder.orderBy());
     }
 
     private FunctionLastArgument<ICompleted<ET>, ET> createFunctionLastArgument(final EqlSentenceBuilder builder) {

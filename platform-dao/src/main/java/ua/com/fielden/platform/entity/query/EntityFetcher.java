@@ -73,7 +73,7 @@ final class EntityFetcher implements IEntityFetcher {
             return result;
         } catch (final Exception e) {
             LOGGER.error(e);
-            throw new IllegalStateException(e);
+            throw e;
         }
     }
     

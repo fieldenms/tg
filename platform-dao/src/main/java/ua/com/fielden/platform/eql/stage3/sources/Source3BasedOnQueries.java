@@ -53,12 +53,18 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         if (dbVersion == POSTGRESQL) {
+            // 1. Issue #2313 - PostgreSQL requires explicit type casts
+            // 2. a SELECT with an ORDER BY inside a UNION must be enclosed in parentheses, although this inner ordering
+            // is not guaranteed to have an effect on the results of UNION
+            // https://www.postgresql.org/docs/16/sql-select.html#SQL-UNION
             final List<PropType> types = expectedYieldTypes();
-            return models.stream().map(m -> m.sql(metadata, dbVersion, types)).collect(joining("\n UNION ALL \n", "(", ")"))
-                    + "AS " + sqlAlias;
+            return "("
+                  + models.stream().map(m -> '(' + m.sql(metadata, dbVersion, types) + ')').collect(joining("\n UNION ALL \n"))
+                  + ") AS " + sqlAlias;
         } else {
-            return models.stream().map(m -> m.sql(metadata, dbVersion)).collect(joining("\n UNION ALL \n", "(", ")"))
-                    + "AS " + sqlAlias;
+            return "("
+            + models.stream().map(m -> m.sql(metadata, dbVersion)).collect(joining("\n UNION ALL \n"))
+            + ") AS " + sqlAlias;
         }
     }
 
