@@ -21,8 +21,8 @@ import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 
 /**
  * A test case to ensure correct concurrent generation of entity type using {@link TypeMaker#endModification()}.
@@ -31,7 +31,7 @@ import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
  *
  */
 public class TypeMakerConcurrentGenerationTest {
-    private static final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private static final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
     private static final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private static EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
 

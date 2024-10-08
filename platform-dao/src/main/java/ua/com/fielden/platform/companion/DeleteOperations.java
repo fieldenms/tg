@@ -269,7 +269,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     }
 
     // This factory must be implemented by hand since com.google.inject.assistedinject.FactoryModuleBuilder
-    // doesn't support generic factory methods.
+    // does not support generic factory methods.
     static final class FactoryImpl implements Factory {
         private final IDomainMetadata domainMetadata;
         private final IDbVersionProvider dbVersionProvider;

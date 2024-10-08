@@ -5,9 +5,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
@@ -21,12 +23,11 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.hasHibType;
 import static ua.com.fielden.platform.meta.PropertyHibernateTypeTest.Case.noHibType;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class PropertyHibernateTypeTest {
 
-    private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
-            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, constantDbVersion(DbVersion.MSSQL)));
+    private static final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+    private static final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), dbVersionProvider));
 
     @Test
     public void hibernate_type_is_attached() {
@@ -36,10 +37,10 @@ public class PropertyHibernateTypeTest {
                          hasHibType("transientPrimitive", PropertyMetadata.Transient.class, Primitive.class),
                          hasHibType("critOnlyPrimitive", PropertyMetadata.CritOnly.class, Primitive.class),
 
-                         hasHibType("persistentComposite", PropertyMetadata.Persistent.class, PropertyTypeMetadata.Composite.class),
-                         hasHibType("calculatedComposite", PropertyMetadata.Calculated.class, PropertyTypeMetadata.Composite.class),
-                         hasHibType("transientComposite", PropertyMetadata.Transient.class, PropertyTypeMetadata.Composite.class),
-                         hasHibType("critOnlyComposite", PropertyMetadata.CritOnly.class, PropertyTypeMetadata.Composite.class),
+                         hasHibType("persistentComponent", PropertyMetadata.Persistent.class, PropertyTypeMetadata.Component.class),
+                         hasHibType("calculatedComponent", PropertyMetadata.Calculated.class, PropertyTypeMetadata.Component.class),
+                         hasHibType("transientComponent", PropertyMetadata.Transient.class, PropertyTypeMetadata.Component.class),
+                         hasHibType("critOnlyComponent", PropertyMetadata.CritOnly.class, PropertyTypeMetadata.Component.class),
 
                          hasHibType("persistentEntity", PropertyMetadata.Persistent.class, PropertyTypeMetadata.Entity.class),
                          hasHibType("calculatedEntity", PropertyMetadata.Calculated.class, PropertyTypeMetadata.Entity.class),
@@ -107,19 +108,19 @@ public class PropertyHibernateTypeTest {
 
         @IsProperty
         @MapTo
-        private Money persistentComposite;
+        private Money persistentComponent;
 
         @IsProperty
         @Calculated("1")
         @PersistentType(userType = ISimpleMoneyType.class)
-        private Money calculatedComposite;
+        private Money calculatedComponent;
 
         @IsProperty
-        private Money transientComposite;
+        private Money transientComponent;
 
         @IsProperty
         @CritOnly
-        private Money critOnlyComposite;
+        private Money critOnlyComponent;
 
         @IsProperty
         @MapTo

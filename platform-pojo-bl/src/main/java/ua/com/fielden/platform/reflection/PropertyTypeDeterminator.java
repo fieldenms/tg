@@ -37,9 +37,24 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.*;
+import java.util.Map;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
- * Contains methods for property type determination. Methods traverses through 1. class hierarchy 2. dot-notation expression.
+ * Contains methods for property type determination.
+ * Methods travers through:
+ * <ol>
+ *   <li>type hierarchies,</li>
+ *   <li>dot-expressions that represent property paths.</li>
+ * </ol>
  *
  * @author TG Team
  *
@@ -49,31 +64,30 @@ public class PropertyTypeDeterminator {
     public static final String ERR_TYPE_AND_PROP_REQUIRED = "Property type cannot be determined without both property name and owning type specified.";
 
     /**
-     * Let's hide default constructor, which is not needed for a static class.
+     * Hide default constructor for a utility class.
      */
-    private PropertyTypeDeterminator() {
-    }
+    private PropertyTypeDeterminator() { }
 
     /**
-     * Determines the type of property / method defined by a dot-notation.
+     * Determines the type of property / method defined by a dot-expression.
      * <p>
-     * If dot-notation is {@code "this"}, {@code type} is returned (stripped if needed).
+     * If dot-expression is {@code "this"}, {@code type} is returned (stripped if needed).
      *
-     * @param type  type that should contain property/method defined by the dot-notation (e.g. {@code Vehicle} contains {@code "status.isGeneratePmWo()"})
-     * @param dotNotationExp methods / properties joined by {@code "."} (e.g. {@code "vehicle.getKey().getStatus().generatePmWo.getWorkOrder().key"})
+     * @param type  type that should contain property/method defined by the dot-expression (e.g. {@code Vehicle} contains {@code "status.isGeneratePmWo()"})
+     * @param dotExpr methods / properties joined by {@code "."} (e.g. {@code "vehicle.getKey().getStatus().generatePmWo.getWorkOrder().key"})
      *
      * @return  property type / method return type
      */
-    public static Class<?> determinePropertyType(final Class<?> type, final CharSequence dotNotationExp) {
-        if (type == null || StringUtils.isEmpty(dotNotationExp)) {
+    public static Class<?> determinePropertyType(final Class<?> type, final CharSequence dotExpr) {
+        if (type == null || StringUtils.isEmpty(dotExpr)) {
             throw new ReflectionException(ERR_TYPE_AND_PROP_REQUIRED);
         }
         
-        if ("this".contentEquals(dotNotationExp)) {
+        if ("this".contentEquals(dotExpr)) {
             return stripIfNeeded(type);
         }
 
-        final String[] propertiesOrFunctions = splitPropPathToArray(dotNotationExp);
+        final String[] propertiesOrFunctions = splitPropPathToArray(dotExpr);
         Class<?> result = type;
         for (final String propertyOrFunction : propertiesOrFunctions) {
             result = determineClass(result, propertyOrFunction, true, true);
@@ -83,46 +97,42 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Determines class of property/function that should be inside <code>clazz</code> hierarchy.
+     * Determines class of property/function that should be inside <code>type</code> hierarchy.
      *
-     * If <code>clazz</code> doesn't have desired property or function -- {@link ReflectionException} will be thrown.
+     * If <code>type</code> doesn't have desired property or function -- {@link ReflectionException} will be thrown.
      *
-     * @param clazz
-     *            -- the class that should contain "propertyOrFunction" (property or function)
-     * @param propertyOrFunction
-     *            -- the name of property or function (e.g. "isObservable()", "vehicle", "key", "getKey()") -- no dot-notation!
-     * @param determineKeyType
-     *            -- true => then correct "key"/"getKey()" class is returned, otherwise {@link Comparable} is returned.
-     * @param determineElementType
-     *            -- true => then correct element type of collectional property is returned, otherwise a type of collection (list, set etc.) is returned.
+     * @param type  the class that should contain {@code propertyOrFunction} (property or function)
+     * @param propertyOrFunction  the name of property or function (e.g., "isObservable()", "vehicle", "key", "getKey()"), not a dot-expression.
+     * @param determineKeyType  true => then a correct "key"/"getKey()" class is returned, otherwise {@link Comparable} is returned.
+     * @param determineElementType  true => then a correct element type of a collectional property is returned, otherwise a type of collection (list, set, etc.) is returned.
      *
      * @return
      */
-    public static Class<?> determineClass(final Class<?> clazz, final String propertyOrFunction, final boolean determineKeyType, final boolean determineElementType) {
+    public static Class<?> determineClass(final Class<?> type, final String propertyOrFunction, final boolean determineKeyType, final boolean determineElementType) {
         if (StringUtils.isEmpty(propertyOrFunction)) {
-            throw new ReflectionException("Empty string should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
+            throw new ReflectionException("Empty string is not expected here. type = " + type + ", propertyOrFunction = " + propertyOrFunction);
         }
-        if (isDotNotation(propertyOrFunction)) {
-            throw new ReflectionException("Dot-notation should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
+        if (isDotExpression(propertyOrFunction)) {
+            throw new ReflectionException("Dot-expression is not expected here. type = " + type + ", propertyOrFunction = " + propertyOrFunction);
         }
-        if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.equals(clazz)) {
+        if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.equals(type)) {
             return Comparable.class;
-        } else if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.isAssignableFrom(clazz)) {
+        } else if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.isAssignableFrom(type)) {
             ////////////////// Key property or getKey() method type determination //////////////////
-            return AnnotationReflector.getKeyType(clazz);
+            return AnnotationReflector.getKeyType(type);
         } else {
             if (propertyOrFunction.endsWith("()")) { // parameterless function -- assuming "propertyOrFunction" is name of parameterless method (because propertyName ends with '()')
                 try {
                     ////////////////// Parameterless Function return type determination //////////////////
-                    final Method method = Reflector.getMethod(clazz, propertyOrFunction.substring(0, propertyOrFunction.length() - 2));
+                    final Method method = Reflector.getMethod(type, propertyOrFunction.substring(0, propertyOrFunction.length() - 2));
                     final Class<?> theType = method.getReturnType();
                     return determineElementType && isParameterizedType(theType) ? determineElementClassForMethod(method) : theType; // property element type should be retrieved if determineElementType == true
                 } catch (final Exception e) {
-                    throw new ReflectionException("No " + propertyOrFunction + " method in " + clazz.getSimpleName() + " class.");
+                    throw new ReflectionException("No " + propertyOrFunction + " method in " + type.getSimpleName() + " class.");
                 }
             } else { // property -- assuming that "propertyOrFunction" is a name of a property (because its name contains no braces)
                 ////////////////// Property class determination using property field. //////////////////
-                final Field field = Finder.getFieldByName(clazz, propertyOrFunction);
+                final Field field = Finder.getFieldByName(type, propertyOrFunction);
                 final Class<?> theType = field.getType();
                 return determineElementType && isParameterizedType(theType) ? determineElementClass(field) : theType; // property element type should be retrieved if determineElementType == true
             }
@@ -207,55 +217,49 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Determines a type ({@link Type}) of property/function defined by "dotNotationExp".
+     * Determines a type ({@link Type}) for a property/function that is defined by {@code dotExpr}.
      *
-     * @param type
-     *            -- the class that should contain property/function defined by dot-notation expression. (e.g. "Vehicle" contains "status.isGeneratePmWo()")
-     * @param dotNotationExp
-     *            - a couple of functions/properties joined by ".". (e.g. "vehicle.getKey().getStatus().generatePmWo.getWorkOrder().key")
-     * @return -- property/function type
+     * @param type  a class that should contain property/function defined by a dot-expression (e.g., "Vehicle" contains "status.isGeneratePmWo()")
+     * @param dotExpr  a dot-expression of functions and properties (e.g., "vehicle.getKey().getStatus().generatePmWo.getWorkOrder().key").
+     * @return  a property/function type
      */
-    public static Type determinePropertyTypeWithCorrectTypeParameters(final Class<?> type, final String dotNotationExp) {
-        final Pair<Class<?>, String> transformed = transform(type, dotNotationExp);
+    public static Type determinePropertyTypeWithCorrectTypeParameters(final Class<?> type, final String dotExpr) {
+        final Pair<Class<?>, String> transformed = transform(type, dotExpr);
         final Type resultType = determineType(transformed.getKey(), transformed.getValue());
         return (resultType instanceof Class) ? stripIfNeeded((Class<?>) resultType) : resultType;
     }
 
     /**
-     * Determines type ({@link Type}) of property/function that should be inside <code>clazz</code> hierarchy.
+     * Determines a type ({@link Type}) of a property/function, defined in the {@code type} hierarchy.
      *
-     * If <code>clazz</code> doesn't have desired property or function -- {@link ReflectionException} will be thrown.
+     * If {@code type} doesn't have desired property or function -- {@link ReflectionException} will be thrown.
      *
-     * @param clazz
-     *            -- the class that should contain "propertyOrFunction" (property or function)
-     * @param propertyOrFunction
-     *            -- the name of property or function (e.g. "isObservable()", "vehicle", "key", "getKey()") -- no dot-notation!
-     * @param determineKeyType
-     *            -- true => then correct "key"/"getKey()" class is returned, otherwise {@link Comparable} is returned.
+     * @param type  a class containing {@code propertyOrFunction} (property or function)
+     * @param propertyOrFunction  a name of a property or function (e.g., "isObservable()", "vehicle", "key", "getKey()"), not a dot-expression.
      *
      * @return
      */
-    private static Type determineType(final Class<?> clazz, final String propertyOrFunction) {
-        if (StringUtils.isEmpty(propertyOrFunction) || isDotNotation(propertyOrFunction)) {
-            throw new ReflectionException("Dot-notation or empty string should not be used here.");
+    private static Type determineType(final Class<?> type, final String propertyOrFunction) {
+        if (StringUtils.isEmpty(propertyOrFunction) || isDotExpression(propertyOrFunction)) {
+            throw new ReflectionException("Neither dot-expression nor empty string is expected here.");
         }
-        if ((AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.isAssignableFrom(clazz)) {
-            return AnnotationReflector.getKeyType(clazz);
+        if ((AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.isAssignableFrom(type)) {
+            return AnnotationReflector.getKeyType(type);
             //////////////////Key property or getKey() method type determination //////////////////
         } else if (propertyOrFunction.endsWith("()")) { // parameterless function -- assuming "propertyOrFunction" is name of parameterless method (because propertyName ends with '()')
             try {
                 ////////////////// Parameterless Function return type determination //////////////////
-                return Reflector.getMethod(clazz, propertyOrFunction.substring(0, propertyOrFunction.length() - 2)).getGenericReturnType(); // getReturnType();
+                return Reflector.getMethod(type, propertyOrFunction.substring(0, propertyOrFunction.length() - 2)).getGenericReturnType(); // getReturnType();
             } catch (final Exception e) {
-                throw new ReflectionException("No " + propertyOrFunction + " method in " + clazz.getSimpleName() + " class.");
+                throw new ReflectionException("No " + propertyOrFunction + " method in " + type.getSimpleName() + " class.");
             }
         } else { // property -- assuming that "propertyOrFunction" is a name of a property (because its name contains no braces)
-            //	    return Reflector.getFieldByName(clazz, propertyOrFunction).getType();
+            //	    return Reflector.getFieldByName(type, propertyOrFunction).getType();
             ////////////////// Property class determination using property accessor. //////////////////
             try {
-                return Reflector.obtainPropertyAccessor(clazz, propertyOrFunction).getGenericReturnType();
+                return Reflector.obtainPropertyAccessor(type, propertyOrFunction).getGenericReturnType();
             } catch (final ReflectionException e) {
-                throw new ReflectionException(format("No [%s] property in type [%s].", propertyOrFunction, clazz.getName()), e);
+                throw new ReflectionException(format("No [%s] property in type [%s].", propertyOrFunction, type.getName()), e);
             }
         }
     }
@@ -264,13 +268,13 @@ public class PropertyTypeDeterminator {
      * If the given type is non-structurally enhanced, recursively finds its base type, otherwise returns the type itself.
      * The base type is determined recursively, so the returned type may be more than one superclass away from the given one.
      */
-    public static Class<?> stripIfNeeded(final Class<?> clazz) {
-        if (clazz == null) {
+    public static Class<?> stripIfNeeded(final Class<?> type) {
+        if (type == null) {
             throw new ReflectionException("Class stripping is not applicable to null values.");
-        } else if (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz) || isMockNotFoundType(clazz)) {
-            return stripIfNeeded(clazz.getSuperclass());
+        } else if (isInstrumented(type) || isProxied(type) || isLoadedByHibernate(type) || isMockNotFoundType(type)) {
+            return stripIfNeeded(type.getSuperclass());
         }
-        return clazz;
+        return type;
     }
 
     /**
@@ -292,34 +296,40 @@ public class PropertyTypeDeterminator {
         }
     }
 
-    private static boolean isLoadedByHibernate(final Class<?> clazz) {
-        final String name = clazz.getName();
+    private static boolean isLoadedByHibernate(final Class<?> type) {
+        final String name = type.getName();
         return name.contains("$HibernateProxy") || name.contains("$$_javassist") || name.contains("_$$_");
     }
 
     /**
      * Returns {@code true} if the specified class is proxied, {@code false} otherwise.
      *
-     * @param clazz
+     * @param type
      * @return
      */
-    public static boolean isProxied(final Class<?> clazz) {
-        return IProxyEntity.class.isAssignableFrom(clazz);
+    public static boolean isProxied(final Class<?> type) {
+        return IProxyEntity.class.isAssignableFrom(type);
     }
 
-    public static boolean isIdOnlyProxy(final Class<?> clazz) {
-        return IIdOnlyProxyEntity.class.isAssignableFrom(clazz);
+    /**
+     * Returns {@code true} if the specified class represents an id-only proxy.
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isIdOnlyProxy(final Class<?> type) {
+        return IIdOnlyProxyEntity.class.isAssignableFrom(type);
     }
 
     /**
      * Returns {@code true} if the specified class is instrumented by Guice, and thus instances of this type should be fully initialised
      * from TG perspective (having meta-properties, fitted with ACE/BCE interceptors, etc.).
      *
-     * @param clazz
+     * @param type
      * @return
      */
-    public static boolean isInstrumented(final Class<?> clazz) {
-        return clazz.getName().contains("$$EnhancerByGuice");
+    public static boolean isInstrumented(final Class<?> type) {
+        return type.getName().contains("$$EnhancerByGuice");
     }
 
     /**
@@ -332,15 +342,15 @@ public class PropertyTypeDeterminator {
         return entityType.getName().endsWith(MockNotFoundEntityMaker.MOCK_TYPE_ENDING);
     }
 
-    public static boolean isDotNotation(final CharSequence exp) {
-        return exp.toString().contains(PROPERTY_SPLITTER);
+    public static boolean isDotExpression(final CharSequence expr) {
+        return expr.toString().contains(PROPERTY_SPLITTER);
     }
 
-    public static Pair<String, String> penultAndLast(final CharSequence dotNotationExp) {
-        if (!isDotNotation(dotNotationExp)) {
-            throw new ReflectionException("Should be dot-notation.");
+    public static Pair<String, String> penultAndLast(final CharSequence dotExpr) {
+        if (!isDotExpression(dotExpr)) {
+            throw new ReflectionException("A dot-expression is expected.");
         }
-        final String dotNotationStr = dotNotationExp.toString();
+        final String dotNotationStr = dotExpr.toString();
         final int indexOfLastDot = dotNotationStr.lastIndexOf(PROPERTY_SPLITTER);
         final String penultPart = dotNotationStr.substring(0, indexOfLastDot);
         final String lastPart = dotNotationStr.substring(indexOfLastDot + 1);
@@ -348,8 +358,8 @@ public class PropertyTypeDeterminator {
     }
 
     public static Pair<String, String> firstAndRest(final CharSequence dotNotationExp) {
-        if (!isDotNotation(dotNotationExp)) {
-            throw new ReflectionException("Should be dot-notation.");
+        if (!isDotExpression(dotNotationExp)) {
+            throw new ReflectionException("A dot-expression is expected.");
         }
         final String dotNotationStr = dotNotationExp.toString();
         final int indexOfFirstDot = dotNotationStr.indexOf(PROPERTY_SPLITTER);
@@ -359,30 +369,30 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Transforms "type/dotNotationExp" pair into form of "penultPropertyType/lastPropertyName".
+     * Transforms "type/dotExpr" pair into a form of "penultPropertyType/lastPropertyName".
      *
      * @param type
-     * @param dotNotationExp
+     * @param dotExpr
      * @return
      */
-    public static Pair<Class<?>, String> transform(final Class<?> type, final CharSequence dotNotationExp) {
-        if (isDotNotation(dotNotationExp)) { // dot-notation expression defines property/function.
-            final Pair<String, String> pl = penultAndLast(dotNotationExp);
+    public static Pair<Class<?>, String> transform(final Class<?> type, final CharSequence dotExpr) {
+        if (isDotExpression(dotExpr)) { // dot-expression that defines a path to a property or a function
+            final Pair<String, String> pl = penultAndLast(dotExpr);
             return pair(determinePropertyType(type, pl.getKey()), pl.getValue());
         } else { // empty or first level property/function.
-            return pair(type, dotNotationExp.toString());
+            return pair(type, dotExpr.toString());
         }
     }
 
     /**
-     * Identifies whether property <code>doNotationExp</code> in type <code>entityType</code> is collectional.
+     * Identifies whether property dot-expression {@code dotExpr} in type {@code entityType} is collectional.
      *
      * @param entityType
-     * @param doNotationExp
+     * @param dotExpr
      * @return
      */
-    public static boolean isCollectional(final Class<?> entityType, final String doNotationExp) {
-        final Field field = Finder.findFieldByName(entityType, doNotationExp);
+    public static boolean isCollectional(final Class<?> entityType, final String dotExpr) {
+        final Field field = Finder.findFieldByName(entityType, dotExpr);
         return EntityUtils.isCollectional(field.getType());
     }
 
@@ -505,7 +515,7 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * A convenient helper method for {@link #isRequiredByDefinition(Field)}, which identifies whether a given field represent a non-optional composite key member.
+     * A convenient helper method for {@link #isRequiredByDefinition(Field, Class)}, which identifies whether a given field represent a non-optional composite key member.
      * This method could be useful elsewhere.
      *
      * @param propField
@@ -516,8 +526,9 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * A convenient helper method for {@link #isRequiredByDefinition(Field)}, which identifies whether a given field represent a required entity description.
-     * It is unlikely to be useful outside of the current context. Hence, declared as <code>private</code>.
+     * A convenient helper method for {@link #isRequiredByDefinition(Field, Class)}, which identifies whether a given field represents a required entity description.
+     * It is unlikely to be useful outside the current context.
+     * Hence, declared as <code>private</code>.
      *
      * @param propName
      * @param entityType

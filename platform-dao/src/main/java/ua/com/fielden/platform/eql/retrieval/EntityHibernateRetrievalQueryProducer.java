@@ -1,35 +1,51 @@
 package ua.com.fielden.platform.eql.retrieval;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.base.CharMatcher;
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-
+import org.hibernate.type.StringNVarcharType;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
 import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public class EntityHibernateRetrievalQueryProducer {
     //private static final Logger LOGGER = getLogger(EntityHibernateRetrievalQueryProducer.class);
 
     private EntityHibernateRetrievalQueryProducer() {}
 
-    public static Query<?> produceQueryWithPagination(final Session session, final String sql, final List<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams, final Integer pageNumber, final Integer pageCapacity) {
+    public static Query<?> produceQueryWithPagination(
+            final Session session,
+            final String sql,
+            final List<HibernateScalar> retrievedColumns,
+            final Map<String, Object> queryParams,
+            final Integer pageNumber,
+            final Integer pageCapacity,
+            final DbVersion dbVersion)
+    {
         // LOGGER.debug("\nSQL:\n   " + sql + "\n");
         final NativeQuery<?> sqlQuery = session.createNativeQuery(sql);
         specifyResultingFieldsToHibernateQuery(sqlQuery, retrievedColumns);
-        specifyParamValuesToHibernateQuery(sqlQuery, queryParams);
+        specifyParamValuesToHibernateQuery(sqlQuery, queryParams, dbVersion);
         specifyPaginationToHibernateQuery(sqlQuery, pageNumber, pageCapacity);
 
         return sqlQuery.setReadOnly(true).setCacheable(false).setCacheMode(CacheMode.IGNORE);
     }
 
-    public static Query<?> produceQueryWithoutPagination(final Session session, final String sql, final List<HibernateScalar> retrievedColumns, final Map<String, Object> queryParams) {
-        return produceQueryWithPagination(session, sql, retrievedColumns, queryParams, null, null);
+    public static Query<?> produceQueryWithoutPagination(
+            final Session session,
+            final String sql,
+            final List<HibernateScalar> retrievedColumns,
+            final Map<String, Object> queryParams,
+            final DbVersion dbVersion)
+    {
+        return produceQueryWithPagination(session, sql, retrievedColumns, queryParams, null, null, dbVersion);
     }
 
     private static void specifyResultingFieldsToHibernateQuery(final NativeQuery<?> query, final List<HibernateScalar> retrievedColumns) {
@@ -39,14 +55,28 @@ public class EntityHibernateRetrievalQueryProducer {
         }
     }
 
-    private static void specifyParamValuesToHibernateQuery(final NativeQuery<?> query, final Map<String, Object> queryParams) {
+    private static void specifyParamValuesToHibernateQuery(
+            final NativeQuery<?> query,
+            final Map<String, Object> queryParams,
+            final DbVersion dbVersion)
+    {
         // LOGGER.debug("\nPARAMS:\n   " + queryParams + "\n");
         for (final Map.Entry<String, Object> paramEntry : queryParams.entrySet()) {
             if (paramEntry.getValue() instanceof Collection) {
                 throw new EntityRetrievalException("Should not have collectional param at this level: [" + paramEntry + "]");
             } else if (!(paramEntry.getValue() instanceof DynamicQueryBuilder.QueryProperty)){
-                // LOGGER.debug("setting param: name = [" + paramEntry.getKey() + "] value = [" + paramEntry.getValue() + "]");
-                query.setParameter(paramEntry.getKey(), paramEntry.getValue());
+                // UTF encoded (non-ASCII) String parameters need to be bound using the "national strings", usually represented by NVARCHAR type at the database level to preserve the encoding.
+                // Remark on PostgreSQL:
+                //    PostgreSQL JDBC drivers do not support {@code setNString(param, value)} and there is no type NVARCHAR at the database level.
+                //    And so specifying type StringNVarcharType for PostgreSQL leads to a runtime error.
+                //    Instead, the UTF encoding should be defined at the database level where it pertains to all VARCHAR columns.
+                if (dbVersion != DbVersion.POSTGRESQL && paramEntry.getValue() instanceof String str && !CharMatcher.ascii().matchesAllOf(str)) {
+                    query.setParameter(paramEntry.getKey(), str, StringNVarcharType.INSTANCE);
+                }
+                // Non-String, non-UTF string, and UTF string parameters in case of PostgreSQL
+                else {
+                    query.setParameter(paramEntry.getKey(), paramEntry.getValue());
+                }
             }
         }
     }

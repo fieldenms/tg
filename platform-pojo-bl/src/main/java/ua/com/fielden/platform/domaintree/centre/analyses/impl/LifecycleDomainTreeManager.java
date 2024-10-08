@@ -195,7 +195,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
             final Class<?> managedType = managedType(root);
             final List<String> allCats = new ArrayList<>();
             for (final String property : includedProperties) {
-                if (!PropertyTypeDeterminator.isDotNotation(property) && LifecycleAddToCategoriesTickRepresentation.isCategoryProperty(managedType, property)) { // categories at this stage are located in root type
+                if (!PropertyTypeDeterminator.isDotExpression(property) && LifecycleAddToCategoriesTickRepresentation.isCategoryProperty(managedType, property)) { // categories at this stage are located in root type
                     allCats.add(property);
                 }
             }

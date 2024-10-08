@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -789,18 +790,18 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     @Test
     public void test_fetch_with_sorted_collection() {
         final EntityResultQueryModel<TgWagon> qry = select(TgWagon.class).where().prop("key").eq().val("WAGON1").model();
-        // final List<TgWagon> models = wagonDao.getAllEntities(from(qry).with(fetch(TgWagon.class).with("slots", fetch(TgWagonSlot.class).with("bogie", fetchAll(TgBogie.class)))).model());
-        final List<TgWagon> models = wagonDao.getAllEntities(from(qry).with(fetch(TgWagon.class).with("slots", fetch(TgWagonSlot.class).with("bogie"))).model());
-        assertEquals("Incorrect key", 1, models.size());
-        assertEquals("Incorrect key", 8, models.get(0).getSlots().size());
-        assertEquals("Incorrect slot position", Integer.valueOf("1"), models.get(0).getSlots().iterator().next().getPosition());
-        assertNotNull("Bogie should be present", models.get(0).getSlots().iterator().next().getBogie());
-        assertEquals("Incorrect key", "BOGIE4", models.get(0).getSlots().iterator().next().getBogie().getKey());
+        // final List<TgWagon> wagons = wagonDao.getAllEntities(from(qry).with(fetch(TgWagon.class).with("slots", fetch(TgWagonSlot.class).with("bogie", fetchAll(TgBogie.class)))).model());
+        final List<TgWagon> wagons = wagonDao.getAllEntities(from(qry).with(fetch(TgWagon.class).with("slots", fetch(TgWagonSlot.class).with("bogie"))).model());
+        assertEquals("Incorrect number of wagons found.", 1, wagons.size());
+        assertEquals("Incorrect number of slots for a wagon.", 8, wagons.get(0).getSlots().size());
+        assertEquals("Incorrect slot position.", Integer.valueOf("1"), wagons.get(0).getSlots().iterator().next().getPosition());
+        assertNotNull("Bogie should be present.", wagons.get(0).getSlots().iterator().next().getBogie());
+        assertEquals("Incorrect bogie in a slot.", "BOGIE4", wagons.get(0).getSlots().iterator().next().getBogie().getKey());
     }
 
     @Test
-    public void test_sql_injection() {
-        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("desc").eq().val("x'; DROP TABLE members; --").model();
+    public void sql_injection_is_not_possible() {
+        final var qry = select(TgVehicle.class).where().prop("desc").eq().val("x'; DROP TABLE members; --").model();
         final List<TgVehicle> models = coVehicle.getAllEntities(from(qry).with(fetch(TgVehicle.class)).model());
         assertEquals("Incorrect key", 0, models.size());
     }
@@ -808,8 +809,9 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     @Test
     public void test_yielding_const_value() {
         final AggregatedResultQueryModel makeModel = select(TgVehicleMake.class).where().prop("key").eq().val("MERC").yield().prop("key").as("key").yield().val("MERC").as("konst").modelAsAggregate();
-        final List<EntityAggregates> models = aggregateDao.getAllEntities(from(makeModel).model());
-        assertEquals("Incorrect key", 1, models.size());
+        final List<EntityAggregates> data = aggregateDao.getAllEntities(from(makeModel).model());
+        assertEquals(1, data.size());
+        assertEquals("MERC", data.getFirst().get("konst"));
     }
 
     @Test

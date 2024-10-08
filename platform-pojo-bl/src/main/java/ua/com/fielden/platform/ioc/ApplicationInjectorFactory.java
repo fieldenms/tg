@@ -7,7 +7,6 @@ import com.google.inject.*;
 
 import com.google.inject.Module;
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
 
 /**
  * A factory for instantiation of Guice injector with correctly initialised TG applications modules, which support contract {@link IModuleWithInjector}.

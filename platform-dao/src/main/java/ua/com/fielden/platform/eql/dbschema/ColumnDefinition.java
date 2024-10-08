@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.dbschema;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
@@ -8,17 +10,39 @@ import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import java.sql.Types;
 import java.util.Optional;
 
+import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+
 /**
  * A data structure to capture the information required to generate column DDL statement.
  *
- * @param javaType could be useful for determining if the FK constraint is applicable
  */
-public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMemberOrder, boolean nullable, String name,
-                               Class<?> javaType, SqlType sqlType, int length, int scale, int precision,
-                               String defaultValue, boolean requiresIndex) {
+public class ColumnDefinition {
     public static final int DEFAULT_STRING_LENGTH = 255;
     public static final int DEFAULT_NUMERIC_PRECISION = 18;
     public static final int DEFAULT_NUMERIC_SCALE = 2;
+
+    private static final Logger LOGGER = LogManager.getLogger();
+    public static final String WARN_NVARCHAR_NOT_SUPPORTED_POSTGRESQL =
+    """
+    NVARCHAR is not supported by PostgreSQL. Using VARCHAR instead for column [%s]. \
+    The database must have a multi-byte encoding (e.g., UTF-8) for this to work as expected.""";
+
+    public static final String WARN_NVARCHAR_SIZE = "The size of NVARCHAR column [%s] was changed from [%s] to [MAX]. SQL Server uses MAX for size above 4000.";
+
+    public final boolean unique;
+    public final Optional<Integer> compositeKeyMemberOrder;
+    public final boolean nullable;
+    public final String name;
+    public final Class<?> javaType;
+    public final int sqlType;
+    public final String sqlTypeName;
+    public final int length;
+    public final int scale;
+    public final int precision;
+    public final String defaultValue;
+    public final boolean requiresIndex;
+    public final boolean indexApplicable;
 
     public ColumnDefinition(
             final boolean unique,
@@ -26,15 +50,16 @@ public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMem
             final boolean nullable,
             final String name,
             final Class<?> javaType,
-            final SqlType sqlType,
+            final int sqlType,
             final int length,
             final int scale,
             final int precision,
             final String defaultValue,
-            final boolean requiresIndex)
+            final boolean requiresIndex,
+            final Dialect dialect)
     {
         if (StringUtils.isEmpty(name)) {
-            throw new DbSchemaException("Column name can not be empty!");
+            throw new DbSchemaException("Column name cannot be empty!");
         }
         this.unique = unique;
         this.compositeKeyMemberOrder = compositeKeyMemberOrder;
@@ -47,10 +72,20 @@ public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMem
         this.precision = precision <= -1 ? DEFAULT_NUMERIC_PRECISION : precision;
         this.defaultValue = defaultValue;
         this.requiresIndex = requiresIndex;
+        this.sqlTypeName = sqlTypeName(dialect);
+        this.indexApplicable = switch (dbVersion(dialect)) {
+            // Not all columns can be indexable.
+            // Refer to https://learn.microsoft.com/en-us/sql/t-sql/statements/create-index-transact-sql for more details.
+            case MSSQL -> switch (sqlType) {
+                case Types.VARCHAR, Types.VARBINARY, Types.NVARCHAR -> length != Integer.MAX_VALUE && !sqlTypeName.toLowerCase().contains("max");
+                default -> true;
+            };
+            default -> true;
+        };
     }
 
     /**
-     * Generates DDL statement for a column based on provided RDBMS dialect.
+     * Generates a DDL statement for a column based on provided RDBMS dialect.
      *
      * @param dialect
      * @return
@@ -60,7 +95,7 @@ public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMem
         sb.append(name);
         sb.append(" ");
 
-        sb.append(sqlTypeName(sqlType, dialect, javaType, length, precision, scale));
+        sb.append(sqlTypeName);
 
         if (!nullable) {
             sb.append(" NOT NULL");
@@ -74,35 +109,46 @@ public record ColumnDefinition(boolean unique, Optional<Integer> compositeKeyMem
         return sb.toString();
     }
 
-    private static String sqlTypeName(final SqlType sqlType, final Dialect dialect,
-                                      final Class<?> javaType,
-                                      final int length, final int precision, final int scale) {
-        return switch (sqlType) {
-            case SqlType.Named (var name) -> name;
-            case SqlType.TypeCode (var code) -> {
-                if (length == Integer.MAX_VALUE && String.class == javaType) {
-                    yield switch (dbVersion(dialect)) {
-                        case POSTGRESQL -> "text";
-                        case MSSQL -> {
-                            if (code == Types.NVARCHAR) yield "nvarchar(max)";
-                            else yield "varchar(max)";
-                        }
-                        default -> dialect.getTypeName(code, length, precision, scale);
-                    };
+    /**
+     * Converts a number that represents an SQL type to a human-readable descriptive text.
+     * For example, MSSQL type {@code 12} becomes {@code "varchar(max)"}.
+     */
+    private String sqlTypeName(final Dialect dialect) {
+        if (length == Integer.MAX_VALUE && String.class == javaType) {
+            return switch (dbVersion(dialect)) {
+                case POSTGRESQL -> "text";
+                case MSSQL -> sqlType == Types.NVARCHAR ?  "nvarchar(max)" : "varchar(max)";
+                default -> dialect.getTypeName(sqlType, length, precision, scale);
+            };
+        }
+        else if (sqlType == Types.NVARCHAR) {
+            return switch(dbVersion(dialect)) {
+                case POSTGRESQL -> {
+                    // Alternatively, "text" could be used, but it would disregard the length constraint.
+                    LOGGER.warn(WARN_NVARCHAR_NOT_SUPPORTED_POSTGRESQL.formatted(name));
+                    yield dialect.getTypeName(Types.VARCHAR, length, precision, scale);
                 }
-                else {
-                    yield dialect.getTypeName(code, length, precision, scale);
+                case MSSQL -> {
+                    final var typeName = dialect.getTypeName(sqlType, length, precision, scale);
+                    if (typeName.toLowerCase().contains("max")) {
+                        LOGGER.warn(WARN_NVARCHAR_SIZE.formatted(name, length));
+                    }
+                    yield typeName;
                 }
-            }
-        };
+                default -> dialect.getTypeName(sqlType, length, precision, scale);
+            };
+        }
+        else {
+            return dialect.getTypeName(sqlType, length, precision, scale);
+        }
     }
 
     private static DbVersion dbVersion(final Dialect dialect) {
         if (dialect.getClass().getSimpleName().startsWith("Postgre")) {
-            return DbVersion.POSTGRESQL;
+            return POSTGRESQL;
         }
         else if (dialect.getClass().getSimpleName().startsWith("SQLServer")) {
-            return DbVersion.MSSQL;
+            return MSSQL;
         }
         throw new DbSchemaException("Unrecognised Hibernate dialect: %s".formatted(dialect));
     }

@@ -67,11 +67,9 @@ public sealed interface PropertyNature {
     }
 
     /**
-     * Transient nature is a general nature attributed to properties that are not persistent.
-     * <p>
-     * No data is associated with properties of this particular nature (but may be for more specific ones).
+     * Transient nature is a general nature attributed to properties that aren't persistent.
      */
-    sealed interface Transient extends PropertyNature {}
+    sealed interface Transient extends PropertyNature permits Calculated, CritOnly, Plain {}
 
     /**
      * Calculated nature is attributed to properties that are transient and have an associated expression that is used
@@ -98,7 +96,7 @@ public sealed interface PropertyNature {
     }
 
     /**
-     * Crit-only nature is attributed to properties that are transient and serve the purpose of criterion.
+     * Crit-only nature is attributed to properties that are transient and serve the purpose of selection criteria in Entity Centres.
      * <p>
      * No data is associated with properties of this nature.
      *
@@ -120,7 +118,7 @@ public sealed interface PropertyNature {
 
         @Override
         public String toString() {
-            return "Crit-only Property";
+            return "CritOnly Property";
         }
     }
 

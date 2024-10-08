@@ -29,7 +29,7 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
  * @param <T> entity type
  */
 public class fetch<T extends AbstractEntity<?>> {
-    public static final String MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
+    public static final String ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
 
     public enum FetchCategory {
         ALL_INCL_CALC,
@@ -133,7 +133,7 @@ public class fetch<T extends AbstractEntity<?>> {
         if (entityType != EntityAggregates.class) {
             final Class<?> propType = determinePropertyType(entityType, propName);
             if (propType != fetchModel.entityType) {
-                throw new EqlException(format(MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, propType, propName, entityType, fetchModel.getEntityType()));
+                throw new EqlException(format(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES, propType, propName, entityType, fetchModel.getEntityType()));
             }
         }
 

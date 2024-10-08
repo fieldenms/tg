@@ -5,26 +5,21 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationInHierarchy;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentInHierarchy;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
 
 import java.util.Optional;
 
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.test_utils.TestUtils;
 
 /**
  * Test case for {@link AnnotationReflector}.
@@ -99,19 +94,25 @@ public class AnnotationReflectorTest {
 
     @Test
     public void testPropertyAnnotationRetrieval() {
-        // ordinary property tests
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(Title.class, FirstLevelEntity.class, "property"));
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "property"));
-        assertEquals("Incorrect property annotation value", "Property", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "property").value());
+        // ordinary property
+        assertOptEquals("Property", getPropertyAnnotationOptionally(Title.class, FirstLevelEntity.class, "property").map(Title::value));
+        assertOptEquals("Property", getPropertyAnnotationOptionally(Title.class, SecondLevelEntity.class, "property").map(Title::value));
         // key property
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(KeyTitle.class, SecondLevelEntity.class, "key"));
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(KeyType.class, SecondLevelEntity.class, "key"));
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(IsProperty.class, SecondLevelEntity.class, "key"));
-        assertEquals("Incorrect property annotation value", "Leveled Entity No", AnnotationReflector.getPropertyAnnotation(KeyTitle.class, SecondLevelEntity.class, "key").value());
-        // dot-notated property
-        // ordinary property tests
-        assertNotNull("Property annotation should have been determined", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property"));
-        assertEquals("Incorrect property annotation value", "Property", AnnotationReflector.getPropertyAnnotation(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property").value());
+        assertOptEquals("Leveled Entity No", getPropertyAnnotationOptionally(KeyTitle.class, SecondLevelEntity.class, "key").map(KeyTitle::value));
+        assertOptEquals(DynamicEntityKey.class, getPropertyAnnotationOptionally(KeyType.class, SecondLevelEntity.class, "key").map(KeyType::value));
+        assertOptEquals("Leveled Entity No", getPropertyAnnotationOptionally(KeyTitle.class, SecondLevelEntity.class, "key").map(KeyTitle::value));
+        // desc property
+        assertOptEquals("Description", getPropertyAnnotationOptionally(DescTitle.class, FirstLevelEntity.class, "desc").map(DescTitle::value));
+        assertOptEquals("Description", getPropertyAnnotationOptionally(DescTitle.class, SecondLevelEntity.class, "desc").map(DescTitle::value));
+
+        // dot-notated ordinary property
+        assertOptEquals("Property", getPropertyAnnotationOptionally(Title.class, SecondLevelEntity.class, "propertyOfSelfType.property").map(Title::value));
+        // dot-notated key property
+        assertOptEquals("Leveled Entity No", getPropertyAnnotationOptionally(KeyTitle.class, SecondLevelEntity.class, "propertyOfSelfType.key").map(KeyTitle::value));
+        assertOptEquals(DynamicEntityKey.class, getPropertyAnnotationOptionally(KeyType.class, SecondLevelEntity.class, "propertyOfSelfType.key").map(KeyType::value));
+        assertOptEquals("Leveled Entity No", getPropertyAnnotationOptionally(KeyTitle.class, SecondLevelEntity.class, "propertyOfSelfType.key").map(KeyTitle::value));
+        // dot-notated desc property
+        assertOptEquals("Description", getPropertyAnnotationOptionally(DescTitle.class, SecondLevelEntity.class, "propertyOfSelfType.desc").map(DescTitle::value));
     }
 
     @Test
