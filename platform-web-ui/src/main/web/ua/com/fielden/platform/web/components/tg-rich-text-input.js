@@ -8,6 +8,9 @@ import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { excludeErrors } from '/resources/components/tg-global-error-handler.js';
+
+excludeErrors( e => e.filename && e.filename.includes("toastui-editor-all") && e.error && e.error.name === 'TransformError');
 
 function createSelection(tr, selection, SelectionClass, openTag, closeTag) {
     const { mapping, doc } = tr;
