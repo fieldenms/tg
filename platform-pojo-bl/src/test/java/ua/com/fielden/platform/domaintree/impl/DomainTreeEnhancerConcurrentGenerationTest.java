@@ -20,8 +20,8 @@ import ua.com.fielden.platform.criteria.generator.impl.ConcurrentGenerationTestU
 import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 
 /**
  * A test case to ensure correct concurrent generation of entity type using {@link DomainTreeEnhancer#createFrom(EntityFactory, java.util.Set, java.util.Map, java.util.Map)}.
@@ -30,7 +30,7 @@ import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
  *
  */
 public class DomainTreeEnhancerConcurrentGenerationTest {
-    private static final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private static final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
     private static final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private static EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
 

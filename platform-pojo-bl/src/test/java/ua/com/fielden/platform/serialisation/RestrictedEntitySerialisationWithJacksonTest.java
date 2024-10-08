@@ -24,7 +24,7 @@ import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithUserSecret;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntitySerialisationException;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 /**
  * Unit tests to ensure correct serialisation of {@link UserSecret} instances or instances that have properties of ths type is not permitted using the Jackson engine.
@@ -33,7 +33,7 @@ import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
  *
  */
 public class RestrictedEntitySerialisationWithJacksonTest {
-    private final Module module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Module module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     

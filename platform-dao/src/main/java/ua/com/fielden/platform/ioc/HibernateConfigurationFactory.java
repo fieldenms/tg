@@ -16,16 +16,32 @@ import java.util.Properties;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
- * Hibernate configuration factory. All Hibernate specific properties should be passed as {@link Properties} values. The following list of properties is supported:
+ * Hibernate configuration factory.
+ * All Hibernate specific properties should be passed as {@link Properties} values.
+ * <h4>DB connection</h4>
  * <ul>
- * <li><i><font color="981515">hibernate.connection.url</font></i> -- required;
- * <li><i><font color="981515">hibernate.connection.driver_class</font></i> -- required;
- * <li><i><font color="981515">hibernate.dialect</font></i> -- required;
- * <li><i><font color="981515">hibernate.connection.username</font></i> -- required;
- * <li><i><font color="981515">hibernate.connection.password</font></i> -- required;
- * <li><i>hibernate.show_sql</i> -- defaults to "true";
- * <li><i>hibernate.format_sql</i> -- defaults to "true";
- * <li><i>hibernate.connection.provider_class</i> -- if provided value org.hibernate.connection.C3P0ConnectionProvider is expected; other types of pulls are not yet supported;
+ * <li><i><font color="981515">hibernate.connection.url</font></i> – required;
+ * <li><i><font color="981515">hibernate.connection.driver_class</font></i> – required;
+ * <li><i><font color="981515">hibernate.dialect</font></i> – required;
+ * <li><i><font color="981515">hibernate.connection.username</font></i> – required;
+ * <li><i><font color="981515">hibernate.connection.password</font></i> – required;
+ * <li><i>hibernate.show_sql</i> – defaults to {@code false};
+ * <li><i>hibernate.format_sql</i> – defaults to {@code false};
+ * </ul>
+ * <h4>DB connection pool providers and their properties</h4>
+ * <i>hibernate.connection.provider_class</i> – HikariCP {@code org.hibernate.hikaricp.internal.HikariCPConnectionProvider} is used by default; c3p0 {@code org.hibernate.connection.C3P0ConnectionProvider} is also supported;
+ *
+ * <h5>HikariCP configuration properties</h5>
+ * Refer to the official <a href='https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#gear-configuration-knobs-baby'>Gear Configuration</a> for more details.
+ * <ul>
+ * <li><i>hibernate.hikari.connectionTimeout</i> – a maximum waiting time in millis for a connection from the pool; defaults to 3000 (30 seconds);
+ * <li><i>hibernate.hikari.minimumIdle</i> -- a minimum number of ideal connections in the pool; defaults to the same value as maximumPoolSize;
+ * <li><i>hibernate.hikari.maximumPoolSize</i> -- a maximum number of actual connections in the pool; defaults to 10 (refer <a href='https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing">About Pool Sizing</a> for more information);
+ * <li><i>hibernate.hikari.idleTimeout</i> -- a maximum time in millis that a connection is allowed to sit idle in the pool; defaults to 240000 (4 minutes), which is suitable for Azure SQL;
+ * <li><i>hibernate.hikari.maxLifetime</i> -- a maximum lifetime in millis of a connection in the pool; defaults to 270000 (4:30 minutes).
+ * </ul>
+ * <h5>c3p0 configuration properties</h5>
+ * <ul>
  * <li><i>hibernate.c3p0.min_size</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
  * <li><i>hibernate.c3p0.max_size</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
  * <li><i>hibernate.c3p0.timeout</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
@@ -104,7 +120,7 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, FORMAT_SQL, "true");
         setSafely(cfg, JDBC_USE_GET_GENERATED_KEYS, "true");
 
-        setSafely(cfg, CONNECTION_PROVIDER_CLASS);
+        setSafely(cfg, CONNECTION_PROVIDER_CLASS, "org.hibernate.hikaricp.internal.HikariCPConnectionProvider");
 
         setSafely(cfg, C3P0_NUM_HELPER_THREADS);
         setSafely(cfg, C3P0_MIN_SIZE);
@@ -114,11 +130,11 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, C3P0_ACQUIRE_INCREMENT);
         setSafely(cfg, C3P0_IDLE_TEST_PERIOD);
 
-        setSafely(cfg, HIKARI_CONNECTION_TIMEOUT);
-        setSafely(cfg, HIKARI_MIN_SIZE);
-        setSafely(cfg, HIKARI_MAX_SIZE);
-        setSafely(cfg, HIKARI_IDLE_TIMEOUT);
-        setSafely(cfg, HIKARI_MAX_LIFETIME);
+        setSafely(cfg, HIKARI_CONNECTION_TIMEOUT, "3000"); // 30 seconds
+        setSafely(cfg, HIKARI_MIN_SIZE); // nothing, allowing HikariCP to do its thing
+        setSafely(cfg, HIKARI_MAX_SIZE, "10"); // 10 connections are plenty in most cases
+        setSafely(cfg, HIKARI_IDLE_TIMEOUT, "240000"); // 4 minutes
+        setSafely(cfg, HIKARI_MAX_LIFETIME, "270000"); // 4 minutes and 30 seconds
 
         setSafely(cfg, HBM2DDL_AUTO);
 

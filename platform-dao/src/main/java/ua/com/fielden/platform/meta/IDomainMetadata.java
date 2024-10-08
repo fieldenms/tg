@@ -41,9 +41,9 @@ public interface IDomainMetadata {
     EntityMetadata forEntity(Class<? extends AbstractEntity<?>> entityType);
 
     /**
-     * Empty optional is returned if the given type is not composite or not a known composite type.
+     * Empty optional is returned if the given type is not a component or not a known component type.
      */
-    Optional<TypeMetadata.Composite> forComposite(Class<?> javaType);
+    Optional<TypeMetadata.Component> forComponent(Class<?> javaType);
 
     /**
      * A non-throwing alternative to {@link #forProperty(Class, CharSequence)}.
@@ -52,15 +52,15 @@ public interface IDomainMetadata {
 
     /**
      * Provides access to property metadata.
-     * An exception will be thrown if either of the following holds:
+     * An exception is thrown if either of the following holds:
      * <ul>
-     *   <li>a property with the given name cannot be found in the given type's metadata
-     *   <li>the given type is not part of the domain, hence there is no metadata associated with it
+     *   <li>a property with a given name cannot be found in the metadata for {@code enclosingType};
+     *   <li>{@code enclosingType} is not part of the domain, hence there is no metadata associated with it.
      * </ul>
      *
      * {@link #forPropertyOpt(Class, CharSequence)} is a non-throwing alternative.
      *
-     * @param propPath  property path (dot-notation supported)
+     * @param propPath  property path (dot-expression is supported)
      */
     PropertyMetadata forProperty(Class<?> enclosingType, CharSequence propPath);
 

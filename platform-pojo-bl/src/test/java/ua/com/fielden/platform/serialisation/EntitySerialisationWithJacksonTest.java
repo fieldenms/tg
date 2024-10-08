@@ -67,7 +67,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingE
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.DefinersExecutor;
@@ -80,7 +80,7 @@ import ua.com.fielden.platform.web.utils.PropertyConflict;
  *
  */
 public class EntitySerialisationWithJacksonTest {
-    private final Module module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Module module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final Date testingDate = new Date();
     private final FactoryForTestingEntities factory = new FactoryForTestingEntities(injector.getInstance(EntityFactory.class), testingDate);

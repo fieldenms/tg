@@ -122,8 +122,10 @@ public sealed interface Either<L, R> permits Left, Right {
      * @return
      * @param <T>
      */
-    default <T> T fold(final Function<? super L, ? extends T> leftF,
-            final Function<? super R, ? extends T> rightF) {
+    default <T> T fold(
+            final Function<? super L, ? extends T> leftF,
+            final Function<? super R, ? extends T> rightF)
+    {
         requireNonNull(leftF);
         requireNonNull(rightF);
         return isLeft() ? leftF.apply(asLeft().value()) : rightF.apply(asRight().value());

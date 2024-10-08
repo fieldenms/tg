@@ -29,8 +29,12 @@ public record ComparisonPredicate3 (ISingleOperand3 leftOperand,
         }
     }
 
-    private static String operandToSqlWithCast(final ISingleOperand3 operand, final ISingleOperand3 other,
-                                               final IDomainMetadata metadata, final DbVersion dbVersion) {
+    private static String operandToSqlWithCast(
+            final ISingleOperand3 operand,
+            final ISingleOperand3 other,
+            final IDomainMetadata metadata,
+            final DbVersion dbVersion)
+    {
         if (operand.type().isNull() && other.type().isNotNull()) {
             final var dialect = HibernateHelpers.getDialect(dbVersion);
             return dbVersion.castSql(operand.sql(metadata, dbVersion),

@@ -78,10 +78,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  *
  */
 public class EntityResourceUtils {
-    private static final String CONFLICT_WARNING = "This property has been recently changed.";
-    public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
+    private static final String WARN_CONFLICT = "This property has been recently changed.";
+    public static final String WARN_CENTRE_CONFIG_CONFLICT = "Configuration with this title already exists.";
     public static final String ERR_MORE_THEN_ONE_ENTITY_FOUND = "Please choose a specific value explicitly from a drop-down.";
-    private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
+    private static final String INFO_RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
     /**
      * Used to indicate the start of 'not found mock' serialisation sequence.
      */
@@ -121,7 +121,7 @@ public class EntityResourceUtils {
      * Returns {@code true} if the warning does not represent special 'conflicting' warning, {@code false} otherwise.
      */
     public static boolean isNonConflicting(final Warning warning) {
-        return !CONFLICT_WARNING.equals(warning.getMessage()) && !CENTRE_CONFIG_CONFLICT_WARNING.equals(warning.getMessage());
+        return !WARN_CONFLICT.equals(warning.getMessage()) && !WARN_CENTRE_CONFIG_CONFLICT.equals(warning.getMessage());
     }
 
     /**
@@ -129,17 +129,20 @@ public class EntityResourceUtils {
      * (simple and composite) and 'desc' (if 'desc' exists in domain entity).
      */
     private static <V extends AbstractEntity<?>> IFetchProvider<V> fetchForPropertyOrDefault(
-            final ICompanionObjectFinder coFinder, final Class<? extends AbstractEntity<?>> entityType, final String propertyName)
+            final ICompanionObjectFinder coFinder,
+            final Class<? extends AbstractEntity<?>> entityType,
+            final String propertyName)
     {
         return fetchForPropertyOrDefault(coFinder.find(entityType).getFetchProvider(), propertyName);
     }
 
     /**
      * Returns fetch provider for property or, if the property should not be fetched according to default strategy, returns the 'default' property fetch provider with 'keys'
-     * (simple an composite) and 'desc' (if 'desc' exists in domain entity).
+     * (simple composite) and 'desc' (if 'desc' exists in domain entity).
      */
     public static <V extends AbstractEntity<?>> IFetchProvider<V> fetchForPropertyOrDefault(
-            final IFetchProvider<? extends AbstractEntity<?>> fetchProvider, final String propertyName)
+            final IFetchProvider<? extends AbstractEntity<?>> fetchProvider,
+            final String propertyName)
     {
         return fetchProvider.shouldFetch(propertyName)
                 ? fetchProvider.fetchFor(propertyName)
@@ -158,8 +161,11 @@ public class EntityResourceUtils {
      * Applies the values from {@code modifiedPropertiesHolder} to {@code entity} by converting the values from client-side
      * component-specific form into values that can be assigned to the entity's properties.
      */
-    public static <M extends AbstractEntity<?>> M apply(final Map<String, Object> modifiedPropertiesHolder, final M entity,
-                                                        final ICompanionObjectFinder coFinder) {
+    public static <M extends AbstractEntity<?>> M apply(
+            final Map<String, Object> modifiedPropertiesHolder,
+            final M entity,
+            final ICompanionObjectFinder coFinder)
+    {
         final Class<M> type = (Class<M>) entity.getType();
         final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
         final boolean isCriteriaEntity = EntityQueryCriteria.class.isAssignableFrom(type);
@@ -220,12 +226,14 @@ public class EntityResourceUtils {
      * @param properties  specifies what properties are interested
      */
     @SuppressWarnings("unused")
-    private static <M extends AbstractEntity<?>> void logPropertyApplication(final String actionCaption, final boolean apply,
-                                                                             final boolean shortLog, final Class<M> type,
-                                                                             final String name, final boolean isEntityStale,
-                                                                             final Map<String, Object> valAndOrigVal,
-                                                                             final M entity,
-                                                                             final String... properties) {
+    private static <M extends AbstractEntity<?>> void logPropertyApplication(
+            final String actionCaption, final boolean apply,
+            final boolean shortLog, final Class<M> type,
+            final String name, final boolean isEntityStale,
+            final Map<String, Object> valAndOrigVal,
+            final M entity,
+            final String... properties)
+    {
         final Set<String> propertiesToLog = new LinkedHashSet<>(Arrays.asList(properties));
         if (propertiesToLog.contains(name)) {
             final StringBuilder builder = new StringBuilder(actionCaption);
@@ -255,12 +263,14 @@ public class EntityResourceUtils {
      * @param apply  indicates whether property application should be performed; if {@code false} then only validation will be performed
      * @param applyOriginalValue  indicates whether the 'origVal' should be applied or 'val'
      */
-    private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean apply, final boolean applyOriginalValue,
-                                                                           final Class<M> type, final String name,
-                                                                           final Map<String, Object> valAndOrigVal,
-                                                                           final M entity,
-                                                                           final ICompanionObjectFinder coFinder,
-                                                                           final boolean isEntityStale, final boolean isCriteriaEntity) {
+    private static <M extends AbstractEntity<?>> void processPropertyValue(
+            final boolean apply, final boolean applyOriginalValue,
+            final Class<M> type, final String name,
+            final Map<String, Object> valAndOrigVal,
+            final M entity,
+            final ICompanionObjectFinder coFinder,
+            final boolean isEntityStale, final boolean isCriteriaEntity)
+    {
         final Optional<String> optActiveProp = ofNullable((String)valAndOrigVal.get("activeProperty"));
         if (apply) {
             // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
@@ -282,7 +292,7 @@ public class EntityResourceUtils {
             validateAnd(() -> {
                 // Value application should be enforced.
                 // This is necessary not only for 'touched unmodified' properties (made earlier), but also for 'touched modified' and 'untouched modified' (new logic, 2017-12).
-                // This is necessary because without enforcement property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
+                // This is necessary because without enforcement, property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
                 // This is due to the fact that 'modified' property value is always different from original value, but could be equal to the actual value of the property immediately before application.
                 // This situation occurs where the property was modified indirectly from definers of other properties in method 'apply'.
                 // 'enforce == true' guarantees that property application with validators / definers will always be actioned.
@@ -386,13 +396,15 @@ public class EntityResourceUtils {
      * @param calculateStaleNewValue  function to lazily calculate 'staleNewValue' (heavy operation)
      * @param calculateStaleOriginalValue  function to lazily calculate 'staleOriginalValue' (heavy operation)
      */
-    private static <M extends AbstractEntity<?>> void validateAnd(final Runnable performAction,
-                                                                  final Supplier<Object> calculateStaleNewValue,
-                                                                  final Supplier<Object> calculateStaleOriginalValue,
-                                                                  final Class<M> type, final String name,
-                                                                  final Map<String, Object> valAndOrigVal,
-                                                                  final M entity, final ICompanionObjectFinder coFinder,
-                                                                  final boolean isEntityStale, final boolean isCriteriaEntity) {
+    private static <M extends AbstractEntity<?>> void validateAnd(
+            final Runnable performAction,
+            final Supplier<Object> calculateStaleNewValue,
+            final Supplier<Object> calculateStaleOriginalValue,
+            final Class<M> type, final String name,
+            final Map<String, Object> valAndOrigVal,
+            final M entity, final ICompanionObjectFinder coFinder,
+            final boolean isEntityStale, final boolean isCriteriaEntity)
+    {
         if (!isEntityStale) {
             performAction.run();
         } else {
@@ -404,10 +416,10 @@ public class EntityResourceUtils {
                 // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
                 if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
                     logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
-                    entity.getProperty(name).setDomainValidationResult(Result.warning(entity, CONFLICT_WARNING));
+                    entity.getProperty(name).setDomainValidationResult(Result.warning(entity, WARN_CONFLICT));
                 } else {
                     logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
-                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, CONFLICT_WARNING + " " + format(RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
+                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, WARN_CONFLICT + " " + format(INFO_RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
                 }
             } else {
                 performAction.run();
@@ -430,36 +442,42 @@ public class EntityResourceUtils {
     /**
      * Applies the modified (touched / untouched) property value ('val') against the entity.
      */
-    private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Class<M> type, final String name,
-                                                                                 final Map<String, Object> valAndOrigVal,
-                                                                                 final M entity,
-                                                                                 final ICompanionObjectFinder coFinder,
-                                                                                 final boolean isEntityStale,
-                                                                                 final boolean isCriteriaEntity) {
+    private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(
+            final Class<M> type, final String name,
+            final Map<String, Object> valAndOrigVal,
+            final M entity,
+            final ICompanionObjectFinder coFinder,
+            final boolean isEntityStale,
+            final boolean isCriteriaEntity)
+    {
         processPropertyValue(true, false, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
     }
 
     /**
      * Applies the unmodified (touched) property value ('origVal') against the entity (using 'enforced mutation').
      */
-    private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name,
-                                                                                   final Map<String, Object> valAndOrigVal,
-                                                                                   final M entity,
-                                                                                   final ICompanionObjectFinder coFinder,
-                                                                                   final boolean isEntityStale,
-                                                                                   final boolean isCriteriaEntity) {
+    private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(
+            final Class<M> type, final String name,
+            final Map<String, Object> valAndOrigVal,
+            final M entity,
+            final ICompanionObjectFinder coFinder,
+            final boolean isEntityStale,
+            final boolean isCriteriaEntity)
+    {
         processPropertyValue(true, true, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
     }
 
     /**
-     * Validates the unmodified (untouched) property value for 'changed by other user' warning.
+     * Validates the unmodified (untouched) property value for 'changed by another user' warning.
      */
-    private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name,
-                                                                                      final Map<String, Object> valAndOrigVal,
-                                                                                      final M entity,
-                                                                                      final ICompanionObjectFinder coFinder,
-                                                                                      final boolean isEntityStale,
-                                                                                      final boolean isCriteriaEntity) {
+    private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(
+            final Class<M> type, final String name,
+            final Map<String, Object> valAndOrigVal,
+            final M entity,
+            final ICompanionObjectFinder coFinder,
+            final boolean isEntityStale,
+            final boolean isCriteriaEntity)
+    {
         processPropertyValue(false, true, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
     }
 
@@ -468,9 +486,11 @@ public class EntityResourceUtils {
      *
      * @param touchedProps  properties for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      */
-    public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(final M entity,
-                                                                                       final Set<String> touchedProps,
-                                                                                       final boolean isCriteriaEntity) {
+    public static <M extends AbstractEntity<?>> M disregardUntouchedRequiredProperties(
+            final M entity,
+            final Set<String> touchedProps,
+            final boolean isCriteriaEntity)
+    {
         // both criteria and simple entities will be affected
         entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !touchedProps.contains(mp.getName())).forEach(mp -> {
             mp.setRequiredValidationResult(successful(entity));
@@ -490,9 +510,11 @@ public class EntityResourceUtils {
      *
      * @param touchedProps properties for which editing has occurred during validation lifecycle (maybe returning to original value thus making them unmodified)
      */
-    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValue(final M entity,
-                                                                                                    final Set<String> touchedProps,
-                                                                                                    final boolean isCriteriaEntity) {
+    private static <M extends AbstractEntity<?>> M disregardTouchedRequiredPropertiesWithEmptyValue(
+            final M entity,
+            final Set<String> touchedProps,
+            final boolean isCriteriaEntity)
+    {
         // both criteria and simple non-persisted (new) entities will be affected
         if (!entity.isPersisted() || isCriteriaEntity) {
             entity.nonProxiedProperties().filter(mp -> mp.isRequired() && touchedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
@@ -526,7 +548,7 @@ public class EntityResourceUtils {
     }
 
     /**
-     * Determines property type.
+     * Determines a property type.
      * <p>
      * The exception from standard logic is only for "collection modification func action", where the type of <code>chosenIds</code>, <code>addedIds</code> and <code>removedIds</code> properties
      * is determined from the second type parameter of the func action type. This is required due to the generic nature of those types (see ID_TYPE parameter in {@link AbstractFunctionalEntityForCollectionModification}).
@@ -555,13 +577,15 @@ public class EntityResourceUtils {
      *
      * @param type  type that owns the property
      * @param reflectedValue  raw reflected value to be converted
-     * @param reflectedValueId  if property is entity-typed, represent an ID of the entity-typed value returned from the client application
-     * @param optActiveProp  if property has union entity type, represents the active property's name in the entity-typed valule
+     * @param reflectedValueId  if a property is entity-typed, represent an ID of the entity-typed value returned from the client application
+     * @param optActiveProp  if a property has a union entity type, represents the active property's name in the entity-typed value
      */
-    private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName,
-                                                                final Object reflectedValue, final Optional<Long> reflectedValueId,
-                                                                final Optional<String> optActiveProp,
-                                                                final ICompanionObjectFinder companionFinder) {
+    private static <M extends AbstractEntity<?>> Object convert(
+            final Class<M> type, final String propertyName,
+            final Object reflectedValue, final Optional<Long> reflectedValueId,
+            final Optional<String> optActiveProp,
+            final ICompanionObjectFinder companionFinder)
+    {
         if (reflectedValue == null) {
             return null;
         }
@@ -664,7 +688,7 @@ public class EntityResourceUtils {
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
             // in a modified RichText value we care only about formatted text
             final String formattedText = (String) map.get(RichText._formattedText);
-            return formattedText == null ? null : RichText.fromMarkdown(formattedText);
+            return formattedText == null ? null : RichText.fromHtml(formattedText);
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else if (Class.class.isAssignableFrom(propertyType)) {
@@ -687,9 +711,11 @@ public class EntityResourceUtils {
      * @param fetch  fetch model for resultant entity
      * @param companion  companion for the entity being looked for
      */
-    public static AbstractEntity<?> findAndFetchBy(final String searchString, final Class<AbstractEntity<?>> entityType,
-                                                   final Optional<String> optActiveProp, final fetch<AbstractEntity<?>> fetch,
-                                                   final IEntityDao<AbstractEntity<?>> companion) {
+    public static AbstractEntity<?> findAndFetchBy(
+            final String searchString, final Class<AbstractEntity<?>> entityType,
+            final Optional<String> optActiveProp, final fetch<AbstractEntity<?>> fetch,
+            final IEntityDao<AbstractEntity<?>> companion)
+    {
         if (isCompositeEntity(entityType)) {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
             final String compositeKeyAsString = MiscUtilities.prepare(prepSearchStringForCompositeKey(entityType, searchString));
@@ -756,8 +782,12 @@ public class EntityResourceUtils {
      * <p>
      * The main purpose of this behaviour is to support ad hoc creation of entities with composite keys, similar as for entities with simple keys.
      */
-    private static AbstractEntity<?> orElseFindByKey(final AbstractEntity<?> converted, final IEntityDao<AbstractEntity<?>> propertyCompanion,
-                                                     final fetch<AbstractEntity<?>> fetchModel, final String compositeKeyAsString) {
+    private static AbstractEntity<?> orElseFindByKey(
+            final AbstractEntity<?> converted,
+            final IEntityDao<AbstractEntity<?>> propertyCompanion,
+            final fetch<AbstractEntity<?>> fetchModel,
+            final String compositeKeyAsString)
+    {
         if (converted == null) {
             try {
                 return propertyCompanion.findByKeyAndFetch(true, fetchModel, compositeKeyAsString);
@@ -789,11 +819,11 @@ public class EntityResourceUtils {
      * </ul>
      */
     private static String prepSearchStringForCompositeKey(final Class<AbstractEntity<?>> entityPropertyType, final String compositeKeyAsString) {
-        // if one or more composite key members are of type ProperyDescriptor then those values need to be converted to a DB aware representation
-        // regrettable this process is error prone due to a potential use of the key member separator as part of property titles...
+        // If one or more composite key members are of type PropertyDescriptor then those values need to be converted to a DB-aware representation.
+        // Regrettable this process is error-prone due to a potential use of the key member separator as part of property titles...
         final List<Field> keyMembers = Finder.getKeyMembers(entityPropertyType);
         final boolean hasPropDescKeyMembers = keyMembers.stream().anyMatch(f -> EntityUtils.isPropertyDescriptor(f.getType()));
-        // do we have key members of type PropertyDescriptor
+        // Do we have key members of type PropertyDescriptor?
         if (!hasPropDescKeyMembers) {
             return compositeKeyAsString;
         } else {
@@ -879,4 +909,5 @@ public class EntityResourceUtils {
     public static String tabs(final int tabCount) {
         return "  ".repeat(Math.max(0, tabCount));
     }
+
 }

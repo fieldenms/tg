@@ -21,7 +21,6 @@ import ua.com.fielden.platform.types.tuples.T3;
 import java.util.*;
 import java.util.Map.Entry;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.isHeaderProperty;
@@ -71,10 +70,8 @@ public class DependentCalcPropsOrder {
                     }
                 }
                 propDependencies.put(calcPropChunk.name(), determineCalcPropChunksSets(externalProps));
-            } catch (final Exception e) {
-                throw new EqlException(format("There is an error in expression of calculated property [%s.%s]",
-                                              querySourceInfo.javaType().getTypeName(), calcPropChunk.name()),
-                                       e);
+            } catch (final Exception ex) {
+                throw new EqlException("There is an error in the expression for calculated property [%s.%s].".formatted(querySourceInfo.javaType().getTypeName(), calcPropChunk.name()), ex);
             }
         }
 

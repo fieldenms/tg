@@ -20,9 +20,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -459,7 +457,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                                                         ? NewProperty.fromField(field).changeType(enhancedType)
                                                         : NewProperty.fromField(field).setTypeArguments(enhancedType);
             final Class<?> nextEnhancedType = modifiedClass(typeToAdapt, typeMaker -> typeMaker.modifyProperties(propertyToBeModified));
-            final String nextProp = PropertyTypeDeterminator.isDotNotation(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
+            final String nextProp = PropertyTypeDeterminator.isDotExpression(path) ? PropertyTypeDeterminator.penultAndLast(path).getKey() : "";
             return propagateEnhancedTypeToRoot(nextEnhancedType, root, nextProp);
         } catch (final Exception ex) {
             final var typeGenEx = new DomainTreeException(ERR_COULD_NOT_PROPAGATE_ENHANCED_TYPE_TO_ROOT.formatted(enhancedType.getSimpleName(), root.getSimpleName(), path), ex);

@@ -26,7 +26,7 @@ import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.EMPTY_CONDITIONS;
 
 /**
- * Transforms EQL models in form of fluent API tokens to the stage 1 representation.
+ * Transforms EQL models in the form of fluent API tokens to the stage 1 representation.
  *
  */
 public class QueryModelToStage1Transformer {
@@ -99,8 +99,12 @@ public class QueryModelToStage1Transformer {
                 qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery());
     }
 
-    private Conditions1 generateUserDataFilteringCondition(final boolean filterable, final IFilter filter,
-                                                           final Optional<String> username, final ISource1<?> mainSource) {
+    private Conditions1 generateUserDataFilteringCondition(
+            final boolean filterable,
+            final IFilter filter,
+            final Optional<String> username,
+            final ISource1<?> mainSource)
+    {
         if (filterable && filter != null) {
             // now there is no need to rely on the main source alias while processing UDF (that's why null can be used until alias parameter is removed from the enhance() method.
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), null, username.orElse(null));

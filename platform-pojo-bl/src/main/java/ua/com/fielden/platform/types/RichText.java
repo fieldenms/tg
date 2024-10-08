@@ -1,37 +1,24 @@
 package ua.com.fielden.platform.types;
 
-import org.commonmark.node.AbstractVisitor;
-import org.commonmark.node.HtmlBlock;
-import org.commonmark.node.HtmlInline;
-import org.commonmark.node.Node;
-import org.commonmark.parser.Parser;
-import org.commonmark.renderer.markdown.MarkdownRenderer;
-import org.commonmark.renderer.text.TextContentRenderer;
-import org.owasp.html.HtmlPolicyBuilder;
-import org.owasp.html.PolicyFactory;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.owasp.html.SimpleHtmlChangeListener;
+import ua.com.fielden.platform.entity.annotation.Title;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
-import static org.owasp.html.Sanitizers.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
 
 /**
- * Rich text is text which has attributes beyond those of plain text (e.g., styles such as color, boldface, italic), and
- * is expressed in some markup language (e.g., Markdown).
+ * Rich text is text which has attributes beyond those of plain text (e.g., styles such as colour, boldface, italic),
+ * and is expressed in some markup language (e.g., Markdown, HTML).
  * <p>
- * This representation does not commit to a fixed markup language, values can be created for arbitrary markup languages.
+ * This representation does not commit to a fixed markup language, values can be created for arbitrary markup languages,
+ * provided that there exists a corresponding static factory method in this class (e.g., {@link RichText#fromHtml(String)}.
  * It also does not contain information about the markup language used in the formatted text.
  * <p>
  * This representation is immutable.
@@ -40,6 +27,8 @@ import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
  * <ul>
  *   <li> {@link IsProperty#length()} applies to {@link #coreText}.
  * </ul>
+ * All newly created instances must go through validation, which performs sanitisation (e.g., {@linkplain RichTextSanitiser#sanitiseHtml(String)}).
+ * Persistent values are considered valid, and their instances are created using type {@link Persisted}, which bypasses validation.
  */
 public sealed class RichText permits RichText.Persisted {
 
@@ -49,38 +38,51 @@ public sealed class RichText permits RichText.Persisted {
     @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
     @PersistentType("nstring")
+    @Title(value = "Formatted Text", desc = "A text in HTML format, containing supported tags and CSS. This text is editable by users.")
     private final String formattedText;
 
     @IsProperty
     @MapTo
+    @PersistentType("nstring")
+    @Title(value = "Core Text", desc = "A text field with all HTML tags removed, intended for use in search functions and inline display, such as in EGI.")
     private final String coreText;
 
     /**
-     * This constructor does not validate its arguments, thus <b>IT MUST BE KEPT PRIVATE</b>.
+     * This constructor does not validate its arguments, thus <b>IT MUST BE KEPT PACKAGE PRIVATE</b>.
      *
      * @param formattedText text with markup
      * @param coreText      text without markup (its length is always less than or equal to that of formatted text)
      */
-    // !!! KEEP THIS CONSTRUCTOR PRIVATE !!!
-    private RichText(final String formattedText, final String coreText) {
+    // !!! KEEP THIS CONSTRUCTOR PACKAGE PRIVATE !!!
+    RichText(final String formattedText, final String coreText) {
         requireNonNull(formattedText);
         requireNonNull(coreText);
         this.formattedText = formattedText;
         this.coreText = coreText;
     }
 
+    // NOTE: If RichText with HTML as markup is accepted completely, Markdown support can potentially be removed.
     /**
-     * Creates {@link RichText} by parsing the input as Markdown and sanitizing all embedded HTML.
+     * Creates {@link RichText} by parsing the input as Markdown and sanitising all embedded HTML.
      * Throws an exception if embedded HTML is deemed to be unsafe.
      */
     public static RichText fromMarkdown(final String input) {
-        final RichText richText = sanitizeMarkdown(input).getInstanceOrElseThrow();
+        final RichText richText = RichTextSanitiser.sanitiseMarkdown(input).getInstanceOrElseThrow();
         return richText;
     }
 
     /**
-     * Represents persisted values. <b>The constructor must be used only when retrieving values from a database</b>
-     * because it doesn't perform validation.
+     * Creates {@link RichText} by parsing the input as HTML and sanitising it.
+     * Throws an exception if the HTML is deemed to be unsafe.
+     */
+    public static RichText fromHtml(final String input) {
+        final RichText richText = RichTextSanitiser.sanitiseHtml(input).getInstanceOrElseThrow();
+        return richText;
+    }
+
+    /**
+     * Represents persisted values.
+     * <b>The constructor must be used only when retrieving values from a database</b>, because it doesn't perform validation.
      */
     static final class Persisted extends RichText {
         /**
@@ -113,27 +115,21 @@ public sealed class RichText permits RichText.Persisted {
 
     @Override
     public final boolean equals(final Object obj) {
-        if (obj == this) {
+        if (this == obj) {
             return true;
         }
-
         if (obj != null && obj.getClass() == this.getClass()) {
-            final RichText that = (RichText) obj;
-            return Objects.equals(this.formattedText, that.formattedText)
-                   && Objects.equals(this.coreText, that.coreText);
+            return this.equalsByText((RichText) obj);
         }
-
         return false;
     }
 
     /**
-     * Type-insensitive {@link #equals(Object)}: {@link RichText} can be compared to {@link RichText.Persisted}.
+     * Polymorphic {@link #equals(Object)}, where {@link RichText} can be compared to {@link Persisted} by comparing their formatted and core text values.
      */
-    public final boolean iEquals(final Object obj) {
-        return obj == this ||
-               obj instanceof RichText that
-               && Objects.equals(this.formattedText, that.formattedText)
-               && Objects.equals(this.coreText, that.coreText);
+    public final boolean equalsByText(final RichText that) {
+        return that == this ||
+               Objects.equals(this.formattedText, that.formattedText) && Objects.equals(this.coreText, that.coreText);
     }
 
     @Override
@@ -145,84 +141,5 @@ public sealed class RichText permits RichText.Persisted {
     public final String toString() {
         return "RichText[\n%s\n]".formatted(formattedText);
     }
-
-    /**
-     * Sanitizes the input and returns a successful result if the input is safe, otherwise returns a failure.
-     * <p>
-     * Sanitization is performed only for those parts of the input that contain HTML:
-     * <a href="https://spec.commonmark.org/0.31.2/#html-blocks">HTML Blocks</a> and
-     * <a href="https://spec.commonmark.org/0.31.2/#raw-html">Raw HTML (Inline HTML)</a>.
-     * This selective sanitization avoids messing up other, non-HTML parts of the input.
-     *
-     * @return Result of RichText
-     */
-    static Result sanitizeMarkdown(final String input) {
-        // consider invalid if there are policy violations
-        final var sanitizer = new Sanitizer();
-        final Node root = Parser.builder().build().parse(input);
-
-        root.accept(new AbstractVisitor() {
-            @Override
-            public void visit(HtmlBlock htmlBlock) {
-                htmlBlock.setLiteral(sanitizer.sanitize(htmlBlock.getLiteral()));
-                // this kind of node does not have children, so we need not process them, but let's do it just in case of parser bugs
-                visitChildren(htmlBlock);
-            }
-
-            @Override
-            public void visit(HtmlInline htmlInline) {
-                htmlInline.setLiteral(sanitizer.sanitize(htmlInline.getLiteral()));
-                // this kind of node does not have children, so we need not process them, but let's do it just in case of parser bugs
-                visitChildren(htmlInline);
-            }
-        });
-
-        final var violations = sanitizer.violations();
-        if (!violations.isEmpty()) {
-            return failure(input, "Input contains unsafe HTML:\n" +
-                                  enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
-                                          .collect(joining("\n")));
-        }
-
-        // reconstruct from sanitized parse tree
-        // NOTE MarkdownRenderer is lossy, it is unable to reconstruct some nodes correctly (see its javadoc)
-        final String formattedText = MARKDOWN_RENDERER.render(root);
-        final String coreText = CoreTextRenderer.INSTANCE.render(root);
-        return successful(new RichText(formattedText, coreText));
-    }
-
-    private static final MarkdownRenderer MARKDOWN_RENDERER = MarkdownRenderer.builder().build();
-
-    private static final class Sanitizer {
-        private final List<String> violations = new ArrayList<>();
-
-        private final SimpleHtmlChangeListener listener = new SimpleHtmlChangeListener() {
-            @Override
-            public void discardedTag(String elementName) {
-                violations.add("Violating tag: %s".formatted(elementName));
-            }
-
-            @Override
-            public void discardedAttributes(String tagName, String... attributeNames) {
-                violations.add("Tag [%s] has violating attributes: %s".formatted(tagName, String.join(", ", attributeNames)));
-            }
-        };
-
-        public String sanitize(final String input) {
-            return listener.sanitize(POLICY_FACTORY, input);
-        }
-
-        public List<String> violations() {
-            return unmodifiableList(violations);
-        }
-    }
-
-    // @formatter:off
-    private static final PolicyFactory POLICY_FACTORY =
-        LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS)
-        .and(new HtmlPolicyBuilder()
-                .allowElements("b", "i", "pre")
-                .toFactory());
-    // @formatter:on
 
 }
