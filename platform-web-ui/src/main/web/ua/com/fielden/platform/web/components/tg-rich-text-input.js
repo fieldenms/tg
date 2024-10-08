@@ -108,7 +108,7 @@ let shortPress = false;
 function runLinkIfPossible(el) {
     const a = findLinkParent.bind(this)(el);
     if (a && a.hasAttribute('href')) {
-        const w = window.open(a.getAttribute('href'));W
+        const w = window.open(a.getAttribute('href'));
         w.focus();
     }
 }
@@ -189,7 +189,7 @@ function isPositionInBox(style, offsetX, offsetY) {
 }
 
 function focusEditor(event) {
-    if (event.keyCode === 13) {
+    if (event.keyCode === 13 && !this.shadowRoot.activeElement) {
         this._editor.moveCursorToStart(true);
     }
 }
@@ -315,7 +315,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.addOwnKeyBinding('shift+tab', 'applyOutdent');
         this.addOwnKeyBinding('ctrl+u meta+u', 'createBulletList');
         this.addOwnKeyBinding('ctrl+o meta+o', 'createOrderedList');
-        this.addOwnKeyBinding('enter', 'tearEventDown');
         this.addOwnKeyBinding('esc', 'stopEditing');
         this.keyEventTarget = this._getEditableContent();
         //Adjust key event handler to be able to process events from _editor when event was prevented
@@ -416,10 +415,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     createTaskList(event) {
         this._editor.exec('taskList');
-    }
-
-    tearEventDown(event) {
-        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     stopEditing(event) {
