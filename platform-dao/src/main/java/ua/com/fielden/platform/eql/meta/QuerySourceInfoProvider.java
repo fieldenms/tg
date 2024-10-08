@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.eql.meta;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.query.*;
 import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
 import ua.com.fielden.platform.eql.meta.utils.TopologicalSortException;
@@ -15,6 +15,8 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
+import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNode;
+import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.utils.CollectionUtil;
@@ -27,12 +29,15 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
+import static java.util.Collections.emptySortedMap;
 import static java.util.stream.Collectors.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 /**
  * An abstraction for EQL-specific metadata about query sources (i.e., entity types).
@@ -50,6 +55,9 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapValues;
 @Singleton
 public class QuerySourceInfoProvider {
     private static final Logger LOGGER = getLogger(QuerySourceInfoProvider.class);
+
+    public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine the type for property [%s] of a query source based on queries with result type [%s].\n"
+                                                                                     + "Declared type is [%s].\nActual yield type is [%s].";
 
     /** Used to obtain models for synthetic entities. */
     private static final QueryModelToStage1Transformer QUERY_MODEL_TO_STAGE_1_TRANSFORMER = new QueryModelToStage1Transformer();
@@ -131,6 +139,69 @@ public class QuerySourceInfoProvider {
                                          querySourceInfo -> DependentCalcPropsOrder.orderDependentCalcProps(this, domainMetadata, QUERY_MODEL_TO_STAGE_1_TRANSFORMER, querySourceInfo)));
     }
 
+    public <T extends AbstractEntity<?>> QuerySourceInfo<T> produceQuerySourceInfoForEntityType(
+            final List<SourceQuery2> models,
+            final Class<T> sourceType,
+            final boolean isComprehensive)
+    {
+        final Map<String, AbstractQuerySourceItem<?>> declaredProps = EntityAggregates.class == sourceType
+                ? emptySortedMap()
+                : getDeclaredQuerySourceInfo(sourceType).getProps();
+        final Collection<YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(models);
+        final Map<String, AbstractQuerySourceItem<?>> createdProps = new HashMap<>();
+        for (final YieldInfoNode yield : yieldInfoNodes) {
+            final AbstractQuerySourceItem<?> declaredProp = declaredProps.get(yield.name());
+            if (declaredProp != null) {
+                // The only thing that has to be taken from declared is its structure (in case of UE or complex value)
+                if (declaredProp instanceof QuerySourceItemForEntityType<?> declaredEntityTypeQuerySourceInfoItem) { // here we assume that yield is of ET (this will help to handle the case of yielding ID, which currently is just long only.
+                    if (yield.propType().isNull() ||
+                        yield.propType().javaType() == declaredEntityTypeQuerySourceInfoItem.javaType() ||
+                        yield.propType().javaType() == Long.class
+                    ) {
+                        createdProps.put(yield.name(), new QuerySourceItemForEntityType<>(yield.name(), getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) declaredProp.javaType()), declaredEntityTypeQuerySourceInfoItem.hibType, yield.nonnullable()));
+                    } else {
+                        throw new EqlStage1ProcessingException(
+                                String.format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE,
+                                              declaredEntityTypeQuerySourceInfoItem.name, sourceType.getName(),
+                                              declaredEntityTypeQuerySourceInfoItem.javaType().getName(),
+                                              yield.propType().javaType().getName()));
+                    }
+                } else {
+                    // TODO need to ensure that in case of UE or complex value all declared subprops match yielded ones.
+                    // TODO need actual (based on yield) rather than declared info (similar to not declared props section below).
+                    createdProps.put(declaredProp.name, declaredProp.hasExpression() ? declaredProp.cloneWithoutExpression() : declaredProp);
+                }
+            }
+            else {
+                // This yield is using a non-declared property as an alias.
+                // Most likely this is the case of EntityAggregates. Otherwise, this could indicate an invalid query.
+
+                if (sourceType != EntityAggregates.class) {
+                    // Verify that the property exists in the entity type.
+                    // This could be valid if a non-retrievable property (e.g., crit-only) is yielded into.
+                    if (!domainMetadata.forEntity(sourceType).hasProperty(yield.name())) {
+                        throw new EqlStage1ProcessingException(
+                                String.format(Source1BasedOnQueries.ERR_YIELD_INTO_NON_EXISTENT_PROPERTY, yield.name(), sourceType.getSimpleName()));
+                    }
+                }
+
+                // FIXME: yield.propType() can be null if the yield uses a dot-expression as an alias (e.g., "price.amount")
+                createdProps.put(yield.name(), yield.propType().isNotNull() && isEntityType(yield.propType().javaType())
+                        ? new QuerySourceItemForEntityType<>(yield.name(), getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType().javaType()), H_ENTITY, yield.nonnullable())
+                        : new QuerySourceItemForPrimType<>(yield.name(), yield.propType().isNotNull() ? yield.propType().javaType() : null, yield.propType().isNotNull() ? yield.propType().hibType() : null));
+            }
+        }
+
+        // include all calc-props, which haven't been yielded explicitly
+        for (final AbstractQuerySourceItem<?> prop : declaredProps.values()) {
+            if (prop.hasExpression() && !createdProps.containsKey(prop.name)) {
+                createdProps.put(prop.name, prop);
+            }
+        }
+
+        return new QuerySourceInfo<>(sourceType, isComprehensive, createdProps.values());
+    }
+
     /**
      * Only properties that are present in SE yields are preserved.
      *
@@ -139,7 +210,7 @@ public class QuerySourceInfoProvider {
     private <T extends AbstractEntity<?>> QuerySourceInfo<?> generateModelledQuerySourceInfoForSyntheticType(final Class<? extends AbstractEntity<?>> entityType, final List<SourceQuery1> queries) {
         final TransformationContextFromStage1To2 context = TransformationContextFromStage1To2.forMainContext(this, domainMetadata);
         final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
-        return Source1BasedOnQueries.produceQuerySourceInfoForEntityType(this, domainMetadata, transformedQueries, entityType, true /*isComprehensive*/);
+        return produceQuerySourceInfoForEntityType(transformedQueries, entityType, true /*isComprehensive*/);
     }
 
     public List<String> getCalcPropsOrder(final Class<? extends AbstractEntity<?>> entityType) {
