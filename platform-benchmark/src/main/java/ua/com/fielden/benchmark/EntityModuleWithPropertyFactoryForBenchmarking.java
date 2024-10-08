@@ -3,19 +3,19 @@ package ua.com.fielden.benchmark;
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.ioc.EntityModule;
+import ua.com.fielden.platform.ioc.EntityIocModule;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
- * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityModule}, this module binds {@link IMetaPropertyFactory}.
+ * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityIocModule}, this module binds {@link IMetaPropertyFactory}.
  * <p>
  * This was a result of EntityModuleWithPropertyFactory merging with CommonTestEntityModuleWithPropertyFactory (they both reside in src/test/java and can not be used).
  * 
  * @author TG Team
  */
-public class EntityModuleWithPropertyFactoryForBenchmarking extends EntityModule {
+public class EntityModuleWithPropertyFactoryForBenchmarking extends EntityIocModule {
 
     public EntityModuleWithPropertyFactoryForBenchmarking() {}
 

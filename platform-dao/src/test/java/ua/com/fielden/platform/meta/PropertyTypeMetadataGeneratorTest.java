@@ -50,7 +50,7 @@ public class PropertyTypeMetadataGeneratorTest {
     @Test
     public void composite_property_types_are_generated_as_Composite() {
         PropertyTypeA.of(generator.generate(Money.class))
-                .assertIs(PropertyTypeMetadata.Composite.class)
+                .assertIs(PropertyTypeMetadata.Component.class)
                 .assertJavaType(Money.class);
     }
 

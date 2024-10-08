@@ -2,8 +2,8 @@ package ua.com.fielden.platform.test;
 
 import com.google.inject.Injector;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
-import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
+import ua.com.fielden.platform.test.ioc.PlatformTestServerIocModule;
 
 import java.util.Properties;
 
@@ -20,11 +20,11 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         try {
             final var appDomainProvider = new PlatformTestDomainTypes();
             injector = new ApplicationInjectorFactory()
-                    .add(new PlatformTestServerModule(
+                    .add(new PlatformTestServerIocModule(
                             appDomainProvider,
                             appDomainProvider.entityTypes(),
                             getProperties(properties)))
-                    .add(new NewUserNotifierMockBindingModule())
+                    .add(new NewUserEmailNotifierTestIocModule())
                     .getInjector();
 
         } catch (final Exception e) {

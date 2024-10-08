@@ -14,11 +14,15 @@ import java.util.stream.Stream;
 public interface IEntityContainerFetcher {
 
     <E extends AbstractEntity<?>> List<EntityContainer<E>> listAndEnhanceContainers(
-            final Session session, final QueryProcessingModel<E, ?> queryModel,
-            final Integer pageNumber, final Integer pageCapacity);
+            final Session session,
+            final QueryProcessingModel<E, ?> queryModel,
+            final Integer pageNumber,
+            final Integer pageCapacity);
 
 
     <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(
-            final Session session, final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize);
+            final Session session,
+            final QueryProcessingModel<E, ?> queryModel,
+            final Optional<Integer> fetchSize);
 
 }

@@ -364,9 +364,17 @@ public final class CollectionUtil {
         return Optional.ofNullable(elt);
     }
 
-    public static <X> ImmutableList<X> append1(final Iterable<? extends X> xs, final X x) {
-        final var builder = ImmutableList.<X> builderWithExpectedSize(
-                (xs instanceof Collection<?> c ? c.size() : 0) + 1);
+    /**
+     * Produces an immutable list with all elements from {@code xs} and {@code x} appended at the end.
+     *
+     * @param xs
+     * @param x
+     * @return
+     * @param <X>
+     */
+    public static <X> ImmutableList<X> append(final Iterable<? extends X> xs, final X x) {
+        final int xsSize = xs instanceof Collection<?> c ? c.size() : 0;
+        final var builder = ImmutableList.<X> builderWithExpectedSize(xsSize + 1);
         return builder.addAll(xs).add(x).build();
     }
 

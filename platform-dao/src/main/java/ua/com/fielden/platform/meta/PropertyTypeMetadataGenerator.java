@@ -11,7 +11,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Optional;
 
-import static ua.com.fielden.platform.meta.TypeRegistry.COMPOSITE_TYPES;
+import static ua.com.fielden.platform.meta.TypeRegistry.COMPONENT_TYPES;
 import static ua.com.fielden.platform.meta.TypeRegistry.PRIMITIVE_PROPERTY_TYPES;
 
 final class PropertyTypeMetadataGenerator {
@@ -28,16 +28,16 @@ final class PropertyTypeMetadataGenerator {
     }
 
     /**
-     * Prefer {@link #generate(Field)} if the property's {@link Field} is available. This method should be used only in
-     * special cases. It's uncapable of handling collectional types, for example, since that would require knowledge
-     * of property's annotations.
+     * Prefer {@link #generate(Field)} if the property's {@link Field} is available.
+     * This method should be used only in special cases.
+     * For example, it is incapable of handling collectional types, since that would require information about property's annotations.
      */
     public Optional<PropertyTypeMetadata> generate(final Type type) {
         // start with empty() to type-check
         return Optional.<PropertyTypeMetadata>empty()
                 .or(() -> asPrimitive(type))
                 .or(() -> asEntity(type))
-                .or(() -> asComposite(type))
+                .or(() -> asComponent(type))
                 .or(() -> DynamicEntityKey.class == type
                         ? Optional.of(PropertyTypeMetadata.COMPOSITE_KEY)
                         : Optional.empty())
@@ -58,9 +58,9 @@ final class PropertyTypeMetadataGenerator {
                 .map(klass -> new EntityPropertyTypeMetadata((Class<? extends AbstractEntity<?>>) klass));
     }
 
-    private Optional<PropertyTypeMetadata.Composite> asComposite(final Type type) {
-        return type instanceof Class<?> klass && COMPOSITE_TYPES.contains(klass)
-                ? Optional.of(new CompositePropertyTypeMetadata(klass))
+    private Optional<PropertyTypeMetadata.Component> asComponent(final Type type) {
+        return type instanceof Class<?> klass && COMPONENT_TYPES.contains(klass)
+                ? Optional.of(new ComponentPropertyTypeMetadata(klass))
                 : Optional.empty();
     }
 
@@ -68,7 +68,6 @@ final class PropertyTypeMetadataGenerator {
         return generate(elementType)
                 .filter(PropertyTypeMetadataGenerator::isValidCollectionalElementType)
                 .map(eltTypeMd -> new CollectionalPropertyTypeMetadata(rawType, eltTypeMd));
-        // new EqlMetadataGenerationException("Failed to generate metadata for element type of collectional property type [%s].".formatted(type));
     }
 
     private static boolean isValidCollectionalElementType(final PropertyTypeMetadata eltTypeMetadata) {

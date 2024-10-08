@@ -11,7 +11,7 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.UNDEFINED_CONFIG_TITLE;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.CENTRE_CONFIG_CONFLICT_WARNING;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.WARN_CENTRE_CONFIG_CONFLICT;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -66,9 +66,9 @@ public class CentreConfigCommitActionTitleValidator implements IBeforeChangeEven
             
             final Optional<LoadableCentreConfig> inheritedIntersection = possibleIntersections.get(true).stream().filter(config -> config.getKey().equalsIgnoreCase(newTitle)).findAny();
             if (inheritedIntersection.isPresent()) { // inherited configuration conflict should fail title editing
-                return failure((inheritedIntersection.get().isShared() ? "Shared" : "Base") + " " + uncapitalize(CENTRE_CONFIG_CONFLICT_WARNING));
+                return failure((inheritedIntersection.get().isShared() ? "Shared" : "Base") + " " + uncapitalize(WARN_CENTRE_CONFIG_CONFLICT));
             } else if (possibleIntersections.get(false).stream().anyMatch(config -> config.getKey().equalsIgnoreCase(newTitle))) { // owned configuration should provide warning and, if saved, there should be a prompt about 'configuration override'
-                return warning(CENTRE_CONFIG_CONFLICT_WARNING);
+                return warning(WARN_CENTRE_CONFIG_CONFLICT);
             }
         }
         return successful("ok");

@@ -3,9 +3,11 @@ package ua.com.fielden.platform.meta;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.Assertions.SubPropertiesA;
 import ua.com.fielden.platform.meta.test_entities.Entity_VariousMoney;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
@@ -16,14 +18,12 @@ import java.util.Currency;
 import java.util.List;
 
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class PropertyMetadataUtilsTest {
 
-    private final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-            PLATFORM_HIBERNATE_TYPE_MAPPINGS, List.of(), constantDbVersion(DbVersion.MSSQL))
-            .build();
-    private final PropertyMetadataUtils pmUtils = domainMetadata.propertyMetadataUtils();
+    private static final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+    private static final IDomainMetadata domainMetadata = new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), List.of(), dbVersionProvider).build();
+    private static final PropertyMetadataUtils pmUtils = domainMetadata.propertyMetadataUtils();
 
     @Test
     public void subProperties_for_composite_type_Money_depend_on_its_representation() {
@@ -98,8 +98,9 @@ public class PropertyMetadataUtilsTest {
                         .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(String.class));
     }
 
-    // ****************************************
-    // * Utils
+    ///////////////////////////////////////////
+    /////////////// Utils /////////////////////
+    ///////////////////////////////////////////
 
     private SubPropertiesA subPropertiesOf(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
         final var entityMetadata = domainMetadata.forEntity(entityType);

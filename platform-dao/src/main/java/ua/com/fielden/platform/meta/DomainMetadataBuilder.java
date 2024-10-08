@@ -7,7 +7,7 @@ import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import java.util.Collection;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static ua.com.fielden.platform.meta.TypeRegistry.COMPOSITE_TYPES;
+import static ua.com.fielden.platform.meta.TypeRegistry.COMPONENT_TYPES;
 
 public class DomainMetadataBuilder {
 
@@ -25,7 +25,7 @@ public class DomainMetadataBuilder {
     public IDomainMetadata build() {
         // pre-populate generator's cache
         entityTypes.parallelStream().forEach(generator::forEntity);
-        COMPOSITE_TYPES.parallelStream().forEach(generator::forComposite);
+        COMPONENT_TYPES.parallelStream().forEach(generator::forComponent);
 
         return new DomainMetadataImpl(generator);
     }

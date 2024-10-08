@@ -20,7 +20,7 @@ class HibernateTypeMappingsImpl implements HibernateTypeMappings {
 
     @Override
     public Map<Class<?>, Object> allMappings() {
-        return Map.of();
+        return map;
     }
 
 }
