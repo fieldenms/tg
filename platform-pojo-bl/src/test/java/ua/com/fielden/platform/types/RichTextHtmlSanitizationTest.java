@@ -10,6 +10,37 @@ import static org.junit.Assert.fail;
 public class RichTextHtmlSanitizationTest {
 
     @Test
+    public void toast_ui_HTML_entities_are_allowed() {
+        assertSameAfterSanitization("""
+        <ul>
+          <li data-task> one </li>
+          <li data-task-checked> two </li>
+          <li data-task-disabled> three </li>
+        </ul>
+        """);
+    }
+
+    @Test
+    public void attribute_class_is_allowed_globally() {
+        assertSameAfterSanitization("<p class='abc'> text </p>");
+        assertSameAfterSanitization("<img class='abc' />");
+        assertSameAfterSanitization("<h1 class='abc'> text </h1>");
+        assertSameAfterSanitization("<i class=''> text </i>");
+    }
+
+    @Test
+    public void attribute_target_is_allowed_for_link_element() {
+        assertSameAfterSanitization("<link href='resource' target='window' />");
+    }
+
+    @Test
+    public void empty_elements_are_preserved() {
+        assertSameAfterSanitization("<img />");
+        assertSameAfterSanitization("<span>text</span>");
+        assertSameAfterSanitization("<a>text</a>");
+    }
+
+    @Test
     public void script_tag_is_prohibited() {
         assertSanitizationFailure("""
         hello
