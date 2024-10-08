@@ -30,9 +30,6 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
         assertEquals(entity2.getText(), save(entity1).getText());
     }
 
-    // SQL Server requirements:
-    // * sendStringParametersAsUnicode=true
-    // * UTF8 collation
     @Test
     public void utf8_text_can_be_saved_and_retrieved() {
         final var richText = RichText.fromHtml("привіт <b> world </b>");

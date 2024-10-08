@@ -2,6 +2,7 @@ package ua.com.fielden.platform.meta;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
@@ -12,13 +13,18 @@ import java.util.List;
 
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.meta.TestDomainMetadata.wrap;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class DomainMetadataTest {
 
-    private final TestDomainMetadata domainMetadata = wrap(
-            new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, List.of(), constantDbVersion(DbVersion.MSSQL))
-                    .build());
+    private final TestDomainMetadata domainMetadata;
+
+    public DomainMetadataTest() {
+        final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+        domainMetadata = wrap(new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+                                                        List.of(),
+                                                        dbVersionProvider)
+                                      .build());
+    }
 
     @Test
     public void entity_property_metadata_can_be_retrieved_using_dot_expression() {

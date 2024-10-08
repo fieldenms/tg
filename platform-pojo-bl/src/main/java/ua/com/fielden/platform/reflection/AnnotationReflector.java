@@ -307,8 +307,8 @@ public final class AnnotationReflector {
     // //////////////////////////////////PROPERTY RELATED ////////////////////////////////////////
 
     /**
-     * If an annotation of the given type is present on a property at the given location, returns the annotation, otherwise
-     * returns {@code null}.
+     * If an annotation of the given type is present on a property at the given location, returns the annotation,
+     * otherwise returns {@code null}.
      * <p>
      * Property location interpretation takes into account the following special cases:
      * <ol>

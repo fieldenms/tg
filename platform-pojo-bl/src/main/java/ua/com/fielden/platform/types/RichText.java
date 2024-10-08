@@ -62,6 +62,7 @@ public sealed class RichText permits RichText.Persisted {
 
     @IsProperty
     @MapTo
+    @PersistentType("nstring")
     @Title(value = "Core Text", desc = "A text field with all HTML tags removed, intended for use in search functions and inline display, such as in EGI.")
     private final String coreText;
 
@@ -255,7 +256,7 @@ public sealed class RichText permits RichText.Persisted {
         };
 
         public String sanitise(final String input) {
-            return listener.sanitize(POLICY_FACTORY, input);
+            return listener.sanitise(POLICY_FACTORY, input);
         }
 
         public List<String> violations() {

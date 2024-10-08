@@ -7,8 +7,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.RichText;
 
 import static java.lang.String.join;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.types.RichText._coreText;
@@ -53,37 +52,26 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         assertEquals(entityAgg.get("x"), "true");
     }
 
-    // SQL Server requirements:
-    // * sendStringParametersAsUnicode=true
     @Test
     public void utf8_formattedText_can_be_used_as_search_criteria() {
         final var richText = RichText.fromHtml("привіт world");
         save(new_(EntityWithRichText.class, "1").setText(richText));
 
         final var co = co(EntityWithRichText.class);
-        assertEquals(richText.formattedText(),
-                     co.getEntity(from(select(EntityWithRichText.class).where()
-                                               .prop(join(".", "text", _formattedText)).like().val("привіт%")
-                                               .model())
-                                          .model())
-                             .getText().formattedText());
+        final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop(join(".", "text", _formattedText)).like().val("привіт%").model()).model());
+        assertNotNull(entity);
+        assertEquals(richText.formattedText(), entity.getText().formattedText());
     }
 
-    // SQL Server requirements:
-    // * sendStringParametersAsUnicode=true
-    // * UTF8 collation
     @Test
     public void utf8_coreText_can_be_used_as_search_criteria() {
         final var richText = RichText.fromHtml("привіт world");
         save(new_(EntityWithRichText.class, "1").setText(richText));
 
         final var co = co(EntityWithRichText.class);
-        assertEquals(richText.coreText(),
-                     co.getEntity(from(select(EntityWithRichText.class).where()
-                                               .prop(join(".", "text", _coreText)).like().val("привіт%")
-                                               .model())
-                                          .model())
-                             .getText().coreText());
+        final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop(join(".", "text", _coreText)).like().val("привіт%").model()).model());
+        assertNotNull(entity);
+        assertEquals(richText.coreText(), entity.getText().coreText());
     }
 
 }
