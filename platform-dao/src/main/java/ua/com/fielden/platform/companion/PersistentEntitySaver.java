@@ -29,7 +29,11 @@ import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.FillModel;
+import ua.com.fielden.platform.entity.query.model.FillModels;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -41,7 +45,10 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -55,6 +62,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.model.FillModels.emptyFillModel;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
@@ -84,6 +92,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final Class<T> entityType;
     private final Class<? extends Comparable<?>> keyType;
     private final ICompanionObjectFinder coFinder;
+    private final IDomainMetadata domainMetadata;
     private final IEntityFetcher entityFetcher;
     private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
@@ -91,7 +100,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final BiConsumer<T, List<String>> processAfterSaveEvent;
     private final Consumer<MetaProperty<?>> assignBeforeSave;
 
-    private final BiFunction<Long, fetch<T>, T> findById;
+    private final FindEntityById<T> findById;
     private final Function<EntityResultQueryModel<T>, Boolean> entityExists;
 
     private Boolean targetEntityTypeHasValidateOverridden;
@@ -106,14 +115,15 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             @Assisted final Class<? extends Comparable<?>> keyType,
             @Assisted final BiConsumer<T, List<String>> processAfterSaveEvent,
             @Assisted final Consumer<MetaProperty<?>> assignBeforeSave,
-            @Assisted final BiFunction<Long, fetch<T>, T> findById,
+            @Assisted final FindEntityById<T> findById,
             @Assisted final Function<EntityResultQueryModel<T>, Boolean> entityExists,
             @Assisted final Logger logger,
             final IDbVersionProvider dbVersionProvider,
             final IEntityFetcher entityFetcher,
             final IUserProvider userProvider,
             final IUniversalConstants universalConstants,
-            final ICompanionObjectFinder coFinder)
+            final ICompanionObjectFinder coFinder,
+            final IDomainMetadata domainMetadata)
     {
         this.session = session;
         this.transactionGuid = transactionGuid;
@@ -129,6 +139,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.userProvider = userProvider;
         this.now = universalConstants::now;
         this.coFinder = coFinder;
+        this.domainMetadata = domainMetadata;
     }
 
     @ImplementedBy(FactoryImpl.class)
@@ -140,7 +151,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Class<? extends Comparable<?>> keyType,
                 final BiConsumer<E, List<String>> processAfterSaveEvent,
                 final Consumer<MetaProperty<?>> assignBeforeSave,
-                final BiFunction<Long, fetch<E>, E> findById,
+                final FindEntityById<E> findById,
                 final Function<EntityResultQueryModel<E>, Boolean> entityExists,
                 final Logger logger);
     }
@@ -172,7 +183,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final Result isValid = validateEntity(entity);
             if (isValid.isSuccessful()) {
                 //logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
-                return t2(entity.getId(), skipRefetching ? entity : findById.apply(entity.getId(), maybeFetch.orElseGet(() -> FetchModelReconstructor.reconstruct(entity))));
+                return t2(entity.getId(), skipRefetching ? entity : findById.find(entity.getId(), maybeFetch.orElseGet(() -> FetchModelReconstructor.reconstruct(entity))));
             } else {
                 throw isValid;
             }
@@ -184,7 +195,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // this is needed for executing after save event handler
         final List<String> dirtyProperties = entity.getDirtyProperties().stream().map(MetaProperty::getName).collect(toList());
 
-        final T2<Long, T> result;
+        final T2<Long, T> savedEntityAndId;
         // let's try to save entity
         try {
             // firstly validate the entity
@@ -192,21 +203,44 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             if (!isValid.isSuccessful()) {
                 throw isValid;
             }
+            final Supplier<FillModel> fillModel = () -> buildFillModel(entity, dirtyProperties);
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                result = saveNewEntity(entity, skipRefetching, maybeFetch, session.get());
+                savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
             } else { // so, this is a modified entity
-                result = saveModifiedEntity(entity, skipRefetching, maybeFetch, session.get());
+                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
+        final T savedEntity = savedEntityAndId._2;
         // this call never throws any exceptions
-        processAfterSaveEvent.accept(result._2, dirtyProperties);
+        processAfterSaveEvent.accept(savedEntity, dirtyProperties);
 
-        return result;
+        return savedEntityAndId;
+    }
+
+    private FillModel buildFillModel(final T entity, final Collection<String> dirtyProperties) {
+        // now that we saved, restore values for dirty plain properties and reset their meta-state so that they are not
+        // dirty in the returned saved instance
+        if (!dirtyProperties.isEmpty()) {
+            final var entityMetadata = domainMetadata.forEntity(entity.getType());
+            return FillModels.fill(builder -> {
+                for (final String prop : dirtyProperties) {
+                    final Optional<PropertyMetadata> propMetadata = entityMetadata.property(entity.getProperty(prop)).orElseThrow(Function.identity());
+                    if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
+                        final var value = entity.get(prop);
+                        if (value != null) {
+                            builder.set(prop, value);
+                        }
+                    }
+                }
+            });
+        } else {
+            return emptyFillModel();
+        }
     }
 
     /**
@@ -243,12 +277,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     /**
      * Saves previously persisted and now modified entity.
      *
-     * @param entity
-     * @param skipRefetching
-     * @param maybeFetch
-     * @param session
+     * @param maybeFetch  fetch model to apply to an entity instance after saving
+     * @param fillModel  will be applied only in presence of a fetch model
      */
-    private T2<Long, T> saveModifiedEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch, final Session session) {
+    private T2<Long, T> saveModifiedEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch,
+                                           final Supplier<FillModel> fillModel, final Session session) {
         // let's first prevent not permissibly modifications that could not be checked any earlier than this,
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
@@ -271,17 +304,24 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
+        final var entityMetadata = domainMetadata.forEntity(entity.getType());
+
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
         // the easiest way to do that is to load entity by id using the current session
         for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
-            final Object value = prop.getValue();
-            if (shouldProcessAsActivatable(entity, prop)) {
-                handleDirtyActivatableProperty(entity, persistedEntity, prop, value, session);
-            } else if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
-                persistedEntity.set(prop.getName(), session.load(((AbstractEntity<?>) value).getType(), ((AbstractEntity<?>) value).getId()));
-            } else {
-                persistedEntity.set(prop.getName(), value);
+            // set of meta-properties and set of properties with metadata may be different, but persistent properties
+            // must always be present in both sets
+            final Optional<PropertyMetadata> propMetadata = entityMetadata.property(prop).orElseThrow(Function.identity());
+            if (propMetadata.filter(PropertyMetadata::isPersistent).isPresent()) {
+                final Object value = prop.getValue();
+                if (shouldProcessAsActivatable(entity, prop)) {
+                    handleDirtyActivatableProperty(entity, persistedEntity, prop, value, session);
+                } else if (value instanceof AbstractEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
+                    persistedEntity.set(prop.getName(), session.load(((AbstractEntity<?>) value).getType(), ((AbstractEntity<?>) value).getId()));
+                } else {
+                    persistedEntity.set(prop.getName(), value);
+                }
             }
         } // end of processing dirty properties
 
@@ -315,7 +355,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
         }
 
-        return t2(persistedEntity.getId(), entityFetchOption.map(fetch -> findById.apply(persistedEntity.getId(), fetch)).orElse(persistedEntity));
+        return t2(persistedEntity.getId(),
+                  entityFetchOption.map(fetch -> findById.find(persistedEntity.getId(), fetch, fillModel.get())).orElse(persistedEntity));
     }
 
     /**
@@ -493,12 +534,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * values. Unless there is a special case of skipping entity exists validation, but then the developer would need to take case of that somehow specifically for each specific
      * case.
      *
-     * @param entity
-     * @param skipRefetching
-     * @param maybeFetch
-     * @param session
+     * @param maybeFetch  fetch model to apply to an entity instance after saving
+     * @param fillModel  will be applied only in presence of a fetch model
      */
-    private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch, final Session session) {
+    private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch,
+                                      final Supplier<FillModel> fillModel, final Session session) {
         // let's make sure that entity is not a duplicate
         if (entityExists.apply(createQueryByKey(dbVersionProvider.dbVersion(), entityType, keyType, false, entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", getEntityTitleAndDesc(entity.getType()).getKey(), entity));
@@ -569,7 +609,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             entity.set(ID, null);
         }
         
-        return t2(newEntityId, entityFetchOption.map(fetch -> findById.apply(newEntityId, fetch)).orElse(entity));
+        return t2(newEntityId,
+                  entityFetchOption.map(fetch -> findById.find(newEntityId, fetch, fillModel.get())).orElse(entity));
     }
 
     /**
@@ -674,18 +715,21 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         private final IUserProvider userProvider;
         private final IUniversalConstants universalConstants;
         private final ICompanionObjectFinder coFinder;
+        private final IDomainMetadata domainMetadata;
 
         @Inject
         FactoryImpl(final IDbVersionProvider dbVersionProvider,
                     final IEntityFetcher entityFetcher,
                     final IUserProvider userProvider,
                     final IUniversalConstants universalConstants,
-                    final ICompanionObjectFinder coFinder) {
+                    final ICompanionObjectFinder coFinder,
+                    final IDomainMetadata domainMetadata) {
             this.dbVersionProvider = dbVersionProvider;
             this.entityFetcher = entityFetcher;
             this.userProvider = userProvider;
             this.universalConstants = universalConstants;
             this.coFinder = coFinder;
+            this.domainMetadata = domainMetadata;
         }
 
         public <E extends AbstractEntity<?>> PersistentEntitySaver<E> create(
@@ -695,14 +739,26 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Class<? extends Comparable<?>> keyType,
                 final BiConsumer<E, List<String>> processAfterSaveEvent,
                 final Consumer<MetaProperty<?>> assignBeforeSave,
-                final BiFunction<Long, fetch<E>, E> findById,
+                final FindEntityById<E> findById,
                 final Function<EntityResultQueryModel<E>, Boolean> entityExists,
                 final Logger logger)
         {
             return new PersistentEntitySaver<>(session, transactionGuid, entityType, keyType, processAfterSaveEvent,
                                                assignBeforeSave, findById, entityExists, logger,
-                                               dbVersionProvider, entityFetcher, userProvider, universalConstants, coFinder);
+                                               dbVersionProvider, entityFetcher, userProvider, universalConstants,
+                                               coFinder, domainMetadata);
         }
+    }
+
+    @FunctionalInterface
+    public interface FindEntityById<E extends AbstractEntity<?>> {
+
+        E find(Long id, fetch<E> fetchModel, FillModel fillModel);
+
+        default E find(Long id, fetch<E> fetchModel) {
+            return find(id, fetchModel, emptyFillModel());
+        }
+
     }
 
 }

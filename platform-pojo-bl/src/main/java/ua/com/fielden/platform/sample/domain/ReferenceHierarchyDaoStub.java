@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.FillModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;
@@ -63,7 +64,7 @@ public class ReferenceHierarchyDaoStub implements IReferenceHierarchy, ICanReadU
     }
 
     @Override
-    public ReferenceHierarchy findById(final boolean filtered, final Long id, final fetch<ReferenceHierarchy> fetchModel) {
+    public ReferenceHierarchy findById(final boolean filtered, final Long id, final fetch<ReferenceHierarchy> fetchModel, final FillModel fillModel) {
         return null;
     }
 

@@ -12,6 +12,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.FillModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
 
@@ -60,7 +61,7 @@ public class TgPersistentEntityWithPropertiesDaoStub implements ITgPersistentEnt
     }
 
     @Override
-    public TgPersistentEntityWithProperties findById(final boolean filtered, final Long id, final fetch<TgPersistentEntityWithProperties> fetchModel) {
+    public TgPersistentEntityWithProperties findById(final boolean filtered, final Long id, final fetch<TgPersistentEntityWithProperties> fetchModel, final FillModel fillModel) {
         return null;
     }
 

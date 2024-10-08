@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -676,7 +677,7 @@ public class EntitySerialisationWithJacksonTest {
         final AbstractEntity<?> entity = factory.createEntityMetaPropWithIdOnlyProxyValues();
         entity.beginInitialising();
         entity.set("prop", createIdOnlyProxy(10L));
-        DefinersExecutor.execute(entity);
+        definersExecutor().execute(entity);
 
         entity.beginInitialising().set("prop", createIdOnlyProxy(11L)).endInitialising();
 

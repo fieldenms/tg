@@ -1,8 +1,32 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
+import java.util.Map;
+import java.util.Optional;
+
 import org.apache.commons.lang3.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.DescRequired;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.IProxyEntity;
 import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
@@ -241,10 +265,8 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * Returns class without enhancements if present.
-     *
-     * @param type
-     * @return
+     * If the given type is non-structurally enhanced, recursively finds its base type, otherwise returns the type itself.
+     * The base type is determined recursively, so the returned type may be more than one superclass away from the given one.
      */
     public static Class<?> stripIfNeeded(final Class<?> type) {
         if (type == null) {
@@ -256,11 +278,9 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * A convenient function to identify the closest real type (i.e. not dynamically generated) that is the bases for the specified entity type.
-     * It is simular to {@link #stripIfNeeded(Class)}, but in addition it handles generated types that have suffix {@link DynamicTypeNamingService#APPENDIX} in their name.
-     *
-     * @param type
-     * @return
+     * If the type is enhanced, recursively finds its base type, otherwise returns the type itself.
+     * This method is similar to {@link #stripIfNeeded(Class)}, but also removes structural enhancements (indicated by
+     * suffix {@link DynamicTypeNamingService#APPENDIX} in the type name).
      */
     public static Class<? extends AbstractEntity<?>> baseEntityType(final Class<? extends AbstractEntity<?>> type) {
         final Class<? extends AbstractEntity<?>> strippedType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(type);
