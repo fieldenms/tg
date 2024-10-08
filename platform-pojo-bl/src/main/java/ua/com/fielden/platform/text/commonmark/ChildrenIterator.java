@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.commonmark;
+package ua.com.fielden.platform.text.commonmark;
 
 import org.commonmark.node.Node;
 

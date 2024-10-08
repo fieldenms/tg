@@ -2,7 +2,7 @@ package ua.com.fielden.platform.types;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
-import ua.com.fielden.platform.jsoup.NodeVisitor;
+import ua.com.fielden.platform.text.jsoup.NodeVisitor;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
