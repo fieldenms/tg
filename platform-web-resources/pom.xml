@@ -155,7 +155,7 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${posgresql.version}</version>
-            <scope>runtime</scope>
+            <scope>provided</scope>
         </dependency>
         <!--
         https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc -->
@@ -163,7 +163,7 @@
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>10.2.1.jre17</version>
-            <scope>runtime</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.owasp.html;
+package ua.com.fielden.platform.text.owasp.html;
 
 import org.owasp.html.HtmlChangeListener;
 import org.owasp.html.PolicyFactory;

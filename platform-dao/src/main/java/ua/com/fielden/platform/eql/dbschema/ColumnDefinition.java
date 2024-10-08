@@ -28,7 +28,7 @@ public class ColumnDefinition {
     NVARCHAR is not supported by PostgreSQL. Using VARCHAR instead for column [%s]. \
     The database must have a multi-byte encoding (e.g., UTF-8) for this to work as expected.""";
 
-    public static final String WARN_NVARCHAR_SIZE = "The size of NVARCHAR column [%s] is doubled from [%s] to [%s] due to UTF encoding. SQL Server uses MAX for size above 4000.";
+    public static final String WARN_NVARCHAR_SIZE = "The size of NVARCHAR column [%s] was changed from [%s] to [MAX]. SQL Server uses MAX for size above 4000.";
 
     public final boolean unique;
     public final Optional<Integer> compositeKeyMemberOrder;
@@ -117,22 +117,26 @@ public class ColumnDefinition {
         if (length == Integer.MAX_VALUE && String.class == javaType) {
             return switch (dbVersion(dialect)) {
                 case POSTGRESQL -> "text";
-                case MSSQL -> {
-                    if (sqlType == Types.NVARCHAR) yield "nvarchar(max)";
-                    else yield "varchar(max)";
-                }
+                case MSSQL -> sqlType == Types.NVARCHAR ?  "nvarchar(max)" : "varchar(max)";
                 default -> dialect.getTypeName(sqlType, length, precision, scale);
             };
         }
-        else if (sqlType == Types.NVARCHAR && dbVersion(dialect) == POSTGRESQL) {
-                // Alternatively, "text" could be used, but it would disregard the length constraint.
-                LOGGER.warn(WARN_NVARCHAR_NOT_SUPPORTED_POSTGRESQL.formatted(name));
-                return dialect.getTypeName(Types.VARCHAR, length, precision, scale);
-        }
         else if (sqlType == Types.NVARCHAR) {
-            final int columnSize = length * 2;
-            LOGGER.warn(WARN_NVARCHAR_SIZE.formatted(name, length, columnSize));
-            return dialect.getTypeName(sqlType, columnSize, precision, scale);
+            return switch(dbVersion(dialect)) {
+                case POSTGRESQL -> {
+                    // Alternatively, "text" could be used, but it would disregard the length constraint.
+                    LOGGER.warn(WARN_NVARCHAR_NOT_SUPPORTED_POSTGRESQL.formatted(name));
+                    yield dialect.getTypeName(Types.VARCHAR, length, precision, scale);
+                }
+                case MSSQL -> {
+                    final var typeName = dialect.getTypeName(sqlType, length, precision, scale);
+                    if (typeName.toLowerCase().contains("max")) {
+                        LOGGER.warn(WARN_NVARCHAR_SIZE.formatted(name, length));
+                    }
+                    yield typeName;
+                }
+                default -> dialect.getTypeName(sqlType, length, precision, scale);
+            };
         }
         else {
             return dialect.getTypeName(sqlType, length, precision, scale);
