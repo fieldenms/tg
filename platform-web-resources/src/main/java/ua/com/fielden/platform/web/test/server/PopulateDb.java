@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.types.RichText.fromHtml;
 import static ua.com.fielden.platform.types.RichText.fromMarkdown;
 
 import java.io.FileInputStream;
@@ -274,11 +275,11 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             throw new IllegalStateException(e);
         }
 
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY1").setRichTextProp(fromMarkdown("Rich text for entity with RICH TEXT KEY1")).setDesc("rich text desc 1"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY2").setRichTextProp(fromMarkdown("Rich text for entity with RICH TEXT KEY2")).setDesc("rich text desc 2"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY3").setRichTextProp(fromMarkdown("Rich text for entity with RICH TEXT KEY3")).setDesc("rich text desc 3"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY4").setRichTextProp(fromMarkdown("Rich text for entity with RICH TEXT KEY4")).setDesc("rich text desc 4"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromMarkdown("Rich text for entity with RICH TEXT KEY5")).setDesc("rich text desc 5"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY1").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY1</p>")).setDesc("rich text desc 1"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY2").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY2</p>")).setDesc("rich text desc 2"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY3").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY3</p>")).setDesc("rich text desc 3"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY4").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY4</p>")).setDesc("rich text desc 4"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY5</p>")).setDesc("rich text desc 5"));
     }
 
     private void populateGraphQlData() {
