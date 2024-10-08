@@ -157,7 +157,7 @@ public class QuerySourceInfoProvider {
 
         /*
          * Exclude properties that have no meaning from the persistence perspective.
-         * In other words, values for such properties can be retrieved from a database.
+         * In other words, values for such properties cannot be retrieved from a database.
          * Effectively, for persistent entities, only calculated and persistent properties can be retrieved.
          * Properties of any other nature are considered such that do not have anything to do with persistence.
          * For synthetic entities, properties of any nature can be retrieved as long as they are yielded or can be calculated.
