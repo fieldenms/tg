@@ -14,10 +14,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -64,7 +61,7 @@ public class CompositeKeyEqlExpressionGenerator {
     }
     
     private static ExpressionModel generateExpressionForCompositeKeyWithSingleMember(final KeyMemberInfo keyMember) {
-        final ExpressionModel resultExpression = keyMember.typeInfo == NON_STRING 
+        final ExpressionModel resultExpression = keyMember.typeInfo == NON_STRING
                                                  ? expr().concat().prop(keyMember.name).with().val(EMPTY_STRING).end().model()
                                                  : adoptPropName(keyMember.name, keyMember.typeInfo);
         return !keyMember.optional ? resultExpression : expr().caseWhen().prop(keyMember.name).isNotNull().then().expr(resultExpression).end().model();
@@ -94,9 +91,9 @@ public class CompositeKeyEqlExpressionGenerator {
 
     private static KeyMemberInfo getKeyMemberInfo(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType, final Field keyMemberField) {
         final boolean optional = getPropertyAnnotation(Optional.class, entityType, keyMemberField.getName()) != null;
-        final TypeInfo typeInfo = Integer.class.equals(keyMemberField.getType()) ? NON_STRING
-                : (!PropertyDescriptor.class.equals(keyMemberField.getType()) && isEntityType(keyMemberField.getType()) ? ENTITY : STRING);
-
+        final TypeInfo typeInfo = String.class.equals(keyMemberField.getType())
+                                  ? STRING
+                                  : (!PropertyDescriptor.class.equals(keyMemberField.getType()) && isEntityType(keyMemberField.getType()) ? ENTITY : NON_STRING);
         return new KeyMemberInfo(keyMemberField.getName(), typeInfo, optional);
     }
 

@@ -35,8 +35,11 @@ public class ComparisonPredicate3 implements ICondition3 {
         }
     }
 
-    private static String operandToSqlWithCast(final ISingleOperand3 operand, final ISingleOperand3 other,
-                                               final IDomainMetadata metadata, final DbVersion dbVersion)
+    private static String operandToSqlWithCast(
+            final ISingleOperand3 operand,
+            final ISingleOperand3 other,
+            final IDomainMetadata metadata,
+            final DbVersion dbVersion)
     {
         if (operand.type().isNull() && other.type().isNotNull()) {
             final var dialect = HibernateHelpers.getDialect(dbVersion);

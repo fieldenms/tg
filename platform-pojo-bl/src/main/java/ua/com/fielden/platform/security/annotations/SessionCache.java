@@ -11,12 +11,14 @@ import com.google.inject.BindingAnnotation;
 
 /**
  * Annotations to mark those constructor arguments representing a session cache of type {@link Cache}.
+ * <p>
+ * Note: target {@link ElementType#METHOD} is specified to support a provider method binding in IoC modules.
  *
  * @author TG Team
  *
  */
 @Retention(RUNTIME)
-@Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD})
+@Target({ElementType.PARAMETER, ElementType.METHOD})
 @BindingAnnotation
 public @interface SessionCache {
 }

@@ -120,7 +120,7 @@ class HibernateTypeGenerator {
         private boolean isHibTypeApplicable(final PropertyTypeMetadata typeMetadata) {
             return (   typeMetadata.isPrimitive()
                     || typeMetadata.isCompositeKey() // mkPropKey handles composite keys
-                    || typeMetadata.isComposite()
+                    || typeMetadata.isComponent()
                     || typeMetadata.isEntity());
         }
     }

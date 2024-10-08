@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 /**
  * Base class for {@link HtmlChangeListener}s that require no context.
  * <p>
- * {@link #sanitize(PolicyFactory, String)} is the preferred way of using this listener.
+ * {@link #sanitise(PolicyFactory, String)} is the preferred way of using this listener.
  */
 public abstract class SimpleHtmlChangeListener implements HtmlChangeListener<Void> {
 
@@ -26,7 +26,7 @@ public abstract class SimpleHtmlChangeListener implements HtmlChangeListener<Voi
         discardedAttributes(tagName, attributeNames);
     }
 
-    public String sanitize(final PolicyFactory policyFactory, final String html) {
+    public String sanitise(final PolicyFactory policyFactory, final String html) {
         return policyFactory.sanitize(html, this, null);
     }
 

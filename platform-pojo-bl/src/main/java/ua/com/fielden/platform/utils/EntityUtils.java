@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -54,6 +55,8 @@ import static org.apache.commons.lang3.StringUtils.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.*;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
@@ -377,12 +380,12 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.after(finish)) {
-                    throw Result.failure(finishSetter
+                    throw failure(finishSetter
                     ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), dates.toString(finish) , startProperty.getTitle(), dates.toString(start))
                     : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), dates.toString(start), finishProperty.getTitle(), dates.toString(finish)));
                 }
             } else {
-                throw Result.failure(finishSetter
+                throw failure(finishSetter
                 ? format("Property [%s] (value [%s]) cannot be specified without property [%s].", finishProperty.getTitle(), finish, startProperty.getTitle())
                 : format("Property [%s] cannot be empty if property [%s] (value [%s]) if specified.", startProperty.getTitle(), finishProperty.getTitle(), finish));
 
@@ -404,12 +407,12 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.isAfter(finish)) {
-                    throw Result.failure(finishSetter
+                    throw failure(finishSetter
                     ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), dates.toString(finish) , startProperty.getTitle(), dates.toString(start))
                     : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), dates.toString(start), finishProperty.getTitle(), dates.toString(finish)));
                 }
             } else {
-                throw Result.failure(finishSetter
+                throw failure(finishSetter
                 ? format("Property [%s] (value [%s]) cannot be specified without property [%s].", finishProperty.getTitle(), finish, startProperty.getTitle())
                 : format("Property [%s] cannot be empty if property [%s] (value [%s]) if specified.", startProperty.getTitle(), finishProperty.getTitle(), finish));
             }
@@ -419,7 +422,7 @@ public class EntityUtils {
     /**
      * A convenient method for validating two integer properties that form a range [from;to].
      * <p>
-     * Note, the use use Of Number is not possible because it does not implement interface Comparable due to valid reasons. See
+     * Note, the use Of Number is not possible because it does not implement interface Comparable due to valid reasons. See
      * http://stackoverflow.com/questions/480632/why-doesnt-java-lang-number-implement-comparable from more.
      *
      * @param start
@@ -433,14 +436,14 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
-                    throw new Result("", new Exception(finishSetter ? //
-                    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
-                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                    throw failure(finishSetter
+                                  ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
+                                  : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + ".");
                 }
             } else {
-                throw new Result("", new Exception(finishSetter ? //
-                /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw failure(finishSetter
+                              ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
+                              : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified.");
             }
         }
     }
@@ -459,14 +462,14 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
-                    throw new Result("", new Exception(finishSetter ? //
-                    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
-                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                    throw failure(finishSetter
+                                  ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
+                                  : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + ".");
                 }
             } else {
-                throw new Result("", new Exception(finishSetter ? //
-                /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw failure(finishSetter
+                              ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
+                              : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified.");
             }
         }
     }
@@ -481,16 +484,14 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
-                    throw new Result("", new Exception(
-                            finishSetter
-                                    ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
-                                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                    throw failure(finishSetter
+                                  ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
+                                  : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + ".");
                 }
             } else {
-                throw new Result("", new Exception(
-                        finishSetter
-                                ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
-                                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw failure(finishSetter
+                              ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
+                              : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified.");
             }
         }
     }
@@ -509,14 +510,14 @@ public class EntityUtils {
         if (finish != null) {
             if (start != null) {
                 if (start.compareTo(finish) > 0) { //  after(finish)
-                    throw new Result("", new Exception(finishSetter ? //
-                    /*      */finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "." //
-                    : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + "."));
+                    throw failure(finishSetter
+                                  ? finishProperty.getTitle() + " cannot be less than " + startProperty.getTitle() + "."
+                                  : startProperty.getTitle() + " cannot be greater than " + finishProperty.getTitle() + ".");
                 }
             } else {
-                throw new Result("", new Exception(finishSetter ? //
-                /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw failure(finishSetter
+                              ? finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle()
+                              : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified.");
             }
         }
     }
@@ -656,7 +657,7 @@ public class EntityUtils {
     }
 
     /**
-     * Identifies whether the entity type represent a composite entity.
+     * Identifies whether an entity type represents a composite entity.
      *
      * @param entityType
      * @return
@@ -763,7 +764,7 @@ public class EntityUtils {
                     }
                 }
             }
-            klass = klass.getSuperclass(); // move to the next super class in the hierarchy in search for more declared fields
+            klass = klass.getSuperclass(); // move to the next superclass in the hierarchy in search for more declared fields
         }
         return null;
     }
@@ -1223,7 +1224,7 @@ public class EntityUtils {
             return (T) copy;
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             logger.error(e.getMessage(), e);
-            throw Result.failure(String.format("Collection copying has been failed. Type [%s]. Exception [%s].", value.getClass(), e.getMessage())); // throw result indicating the failure of copying
+            throw failuref("Collection copying has been failed. Type [%s]. Exception [%s].", value.getClass(), e.getMessage()); // throw result indicating the failure of copying
         }
     }
 

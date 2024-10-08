@@ -23,7 +23,7 @@ public @interface PersistentType {
     /**
      * Name of a Hibernate Type that should be used to map the annotated property's type.
      * <p>
-     * The name is interpreted as if returned by {@link org.hibernate.type.Type#getName()} (e.g. LongType - "long",
+     * The name is interpreted as if returned by {@code org.hibernate.type.Type#getName()} (e.g. LongType - "long",
      * YesNoType - "yes_no", BigDecimalType - "big_decimal").
      * <p>
      * Empty string indicates value absence.

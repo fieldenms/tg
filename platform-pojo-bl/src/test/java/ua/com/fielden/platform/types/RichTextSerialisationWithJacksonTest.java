@@ -13,7 +13,7 @@ import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClass
 import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 import java.util.Date;
 
@@ -28,7 +28,7 @@ import static ua.com.fielden.platform.serialisation.api.impl.Serialiser.createSe
 public class RichTextSerialisationWithJacksonTest {
 
     private final Injector injector = new ApplicationInjectorFactory()
-            .add(new CommonTestEntityModuleWithPropertyFactory())
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
             .getInjector();
     private final FactoryForTestingEntities factory = new FactoryForTestingEntities(injector.getInstance(EntityFactory.class), new Date());
     private final ISerialiserEngine jacksonSerialiser = createSerialiserWithJackson(
@@ -58,7 +58,7 @@ public class RichTextSerialisationWithJacksonTest {
 
         assertNotNull(restoredEntity);
         assertNotSame(entity, restoredEntity);
-        assertTrue(entity.getText().iEquals(restoredEntity.getText()));
+        assertTrue(entity.getText().equalsByText(restoredEntity.getText()));
         assertFalse(restoredEntity.getProperty("text").isChangedFromOriginal());
         assertFalse(restoredEntity.getProperty("text").isDirty());
     }
@@ -71,7 +71,7 @@ public class RichTextSerialisationWithJacksonTest {
 
         assertNotNull(restoredEntity);
         assertNotSame(entity, restoredEntity);
-        assertTrue(entity.getText().iEquals(restoredEntity.getText()));
+        assertTrue(entity.getText().equalsByText(restoredEntity.getText()));
         assertFalse(restoredEntity.getProperty("text").isChangedFromOriginal());
         assertFalse(restoredEntity.getProperty("text").isDirty());
     }

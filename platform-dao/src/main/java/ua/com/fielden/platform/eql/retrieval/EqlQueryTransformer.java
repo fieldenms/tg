@@ -66,9 +66,14 @@ public class EqlQueryTransformer {
     }
 
     protected static <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(
-            final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter,
-            final Optional<String> username, final IDates dates, final IDomainMetadata domainMetadata,
-            final EqlTables eqlTables, final QuerySourceInfoProvider querySourceInfoProvider)
+            final QueryProcessingModel<E, ?> qem,
+            final DbVersion dbVersion,
+            final IFilter filter,
+            final Optional<String> username,
+            final IDates dates,
+            final IDomainMetadata domainMetadata,
+            final EqlTables eqlTables,
+            final QuerySourceInfoProvider querySourceInfoProvider)
     {
         final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates,
                                                                              domainMetadata, eqlTables, querySourceInfoProvider);

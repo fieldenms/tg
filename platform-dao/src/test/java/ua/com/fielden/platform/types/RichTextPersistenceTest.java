@@ -17,7 +17,7 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
         co.save(new_(EntityWithRichText.class, "abc").setText(richText));
         final var fetchedEntity = co.findByKey("abc");
         assertInstanceOf(RichText.Persisted.class, fetchedEntity.getText());
-        assertTrue(fetchedEntity.getText().iEquals(richText));
+        assertTrue(fetchedEntity.getText().equalsByText(richText));
 
         assertEquals(fetchedEntity.getText(), co.save(fetchedEntity.setKey("cba")).getText());
     }
@@ -30,9 +30,6 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
         assertEquals(entity2.getText(), save(entity1).getText());
     }
 
-    // SQL Server requirements:
-    // * sendStringParametersAsUnicode=true
-    // * UTF8 collation
     @Test
     public void utf8_text_can_be_saved_and_retrieved() {
         final var richText = RichText.fromHtml("привіт <b> world </b>");
@@ -41,7 +38,7 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
         final var co = co(EntityWithRichText.class);
         co.save(entity);
         final var fetchedEntity = co.findByKey("one");
-        assertTrue(fetchedEntity.getText().iEquals(richText));
+        assertTrue(fetchedEntity.getText().equalsByText(richText));
     }
 
     @Override

@@ -5,7 +5,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotExpression;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
@@ -307,8 +307,8 @@ public final class AnnotationReflector {
     // //////////////////////////////////PROPERTY RELATED ////////////////////////////////////////
 
     /**
-     * If an annotation of the given type is present on a property at the given location, returns the annotation, otherwise
-     * returns {@code null}.
+     * If an annotation of the given type is present on a property at the given location, returns the annotation,
+     * otherwise returns {@code null}.
      * <p>
      * Property location interpretation takes into account the following special cases:
      * <ol>
@@ -387,7 +387,7 @@ public final class AnnotationReflector {
     public static boolean isAnnotationPresentInHierarchy(final Class<? extends Annotation> annotationType, final Class<?> forType, final String dotNotationExp) {
         if (isPropertyAnnotationPresent(annotationType, forType, dotNotationExp)) {
             return true;
-        } else if (PropertyTypeDeterminator.isDotNotation(dotNotationExp)) {
+        } else if (PropertyTypeDeterminator.isDotExpression(dotNotationExp)) {
             return isAnnotationPresentInHierarchy(annotationType, forType, PropertyTypeDeterminator.penultAndLast(dotNotationExp).getKey());
         } else {
             return false;
@@ -406,7 +406,7 @@ public final class AnnotationReflector {
         final T annotation = getPropertyAnnotation(annotationType, forType, dotNotationExp);
         if (annotation != null) {
             return of(annotation);
-        } else if (isDotNotation(dotNotationExp)) {
+        } else if (isDotExpression(dotNotationExp)) {
             return getPropertyAnnotationInHierarchy(annotationType, forType, penultAndLast(dotNotationExp).getKey());
         }
         return empty();
