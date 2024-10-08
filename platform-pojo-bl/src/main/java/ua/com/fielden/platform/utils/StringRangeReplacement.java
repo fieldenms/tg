@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.joining;
-import static ua.com.fielden.platform.utils.IteratorUtils.headedIterator;
+import static ua.com.fielden.platform.utils.IteratorUtils.iteratorWithCurrentElement;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
@@ -119,7 +119,7 @@ public final class StringRangeReplacement {
             throw new InvalidArgumentException("There is nothing to replace (no lines).");
         }
 
-        final var linesIter = headedIterator(lines);
+        final var linesIter = iteratorWithCurrentElement(lines);
         final var cursor = foldLeft(replacements.stream(), new Cursor(0, 0),
                                     (cur, replac) -> replaceRange(cur, linesIter, replac._1, replac._2, sink));
 

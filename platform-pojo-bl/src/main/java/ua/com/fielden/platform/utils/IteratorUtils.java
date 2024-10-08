@@ -170,7 +170,7 @@ public final class IteratorUtils {
     /**
      * @see IteratorWithCurrentElement
      */
-    public static <E> IteratorWithCurrentElement<E> headedIterator(final Iterator<E> iterator) {
+    public static <E> IteratorWithCurrentElement<E> iteratorWithCurrentElement(final Iterator<E> iterator) {
         return new IteratorWithCurrentElement<>(iterator);
     }
 
