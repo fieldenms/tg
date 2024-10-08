@@ -56,8 +56,11 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 public class QuerySourceInfoProvider {
     private static final Logger LOGGER = getLogger(QuerySourceInfoProvider.class);
 
-    public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine the type for property [%s] of a query source based on queries with result type [%s].\n"
-                                                                                     + "Declared type is [%s].\nActual yield type is [%s].";
+    public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE =
+    """
+    Could not determine type for property [%s] in a source query with source type [%s].
+    Declared type: [%s]. Actual yield type: [%s]."\
+    """;
 
     /** Used to obtain models for synthetic entities. */
     private static final QueryModelToStage1Transformer QUERY_MODEL_TO_STAGE_1_TRANSFORMER = new QueryModelToStage1Transformer();
