@@ -67,6 +67,9 @@ public class QuerySourceInfoProvider {
     Declared type: [%s]. Actual yield type: [%s]."\
     """;
 
+    private static final String ERR_NON_RETRIEVABLE_PROP_YIELDED_WITH_DOT_EXPRESSION =
+    "Non-retrievable property [%s] cannot be used as a dot-notated yield alias (in a source query with source type [%s]).\n";
+
     /** Used to obtain models for synthetic entities. */
     private static final QueryModelToStage1Transformer QUERY_MODEL_TO_STAGE_1_TRANSFORMER = new QueryModelToStage1Transformer();
 
@@ -209,15 +212,24 @@ public class QuerySourceInfoProvider {
                             }
                         }
 
-                        // FIXME: yield.propType() can be null if the yield uses a dot-expression as an alias (e.g., "price.amount")
-                        return yield.propType().isNotNull() && isEntityType(yield.propType().javaType())
-                                ? new QuerySourceItemForEntityType<>(yield.name(),
-                                                                     getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType().javaType()),
-                                                                     H_ENTITY,
-                                                                     yield.nonnullable())
-                                : new QuerySourceItemForPrimType<>(yield.name(),
-                                                                   yield.propType().isNotNull() ? yield.propType().javaType() : null,
-                                                                   yield.propType().isNotNull() ? yield.propType().hibType() : null);
+                        if (yield.propType() == null) {
+                            // yield.propType() can be null if the yield uses a dot-expression as an alias (e.g., "price.amount").
+                            // Effectively, this disables the use of such aliases in a source query with modelAsAggregate().
+                            // The source type could also be an entity type other than EntityAggregates, which would indicate
+                            // an invalid yield that uses a non-retrievable (sub-)property as an alias.
+                            // TODO: Support this if necessary.
+                            throw new EqlStage1ProcessingException(
+                                    format(ERR_NON_RETRIEVABLE_PROP_YIELDED_WITH_DOT_EXPRESSION, yield.name(), sourceType.getSimpleName()));
+                        } else {
+                            return yield.propType().isNotNull() && isEntityType(yield.propType().javaType())
+                                    ? new QuerySourceItemForEntityType<>(yield.name(),
+                                                                         getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) yield.propType().javaType()),
+                                                                         H_ENTITY,
+                                                                         yield.nonnullable())
+                                    : new QuerySourceItemForPrimType<>(yield.name(),
+                                                                       yield.propType().isNotNull() ? yield.propType().javaType() : null,
+                                                                       yield.propType().isNotNull() ? yield.propType().hibType() : null);
+                        }
                     }
                 });
 
