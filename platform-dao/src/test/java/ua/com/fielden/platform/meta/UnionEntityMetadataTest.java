@@ -2,6 +2,7 @@ package ua.com.fielden.platform.meta;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.PropertyMetadata.Calculated;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata.Primitive;
@@ -15,13 +16,8 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 
 public class UnionEntityMetadataTest {
 
-    private final TestDomainMetadataGenerator generator;
-
-    public UnionEntityMetadataTest() {
-        final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-        generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
-                                                                                 dbVersionProvider));
-    }
+    private static final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+    private static final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), dbVersionProvider));
 
     @Test
     public void union_entity_gets_union_nature() {

@@ -5,14 +5,15 @@ import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgUnionHolder;
 import ua.com.fielden.platform.security.user.User;
@@ -26,12 +27,8 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 
 public class MappingGenerationTest {
 
-    private HibernateTypeMappings hibernateTypeMappings;
-
-    public MappingGenerationTest() {
-        final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-        hibernateTypeMappings = new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get();
-    }
+    private static final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+    private static final HibernateTypeMappings hibernateTypeMappings = new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get();
 
     @Test
     public void hibernate_mappings_are_generated() {

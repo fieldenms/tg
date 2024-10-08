@@ -3,6 +3,7 @@ package ua.com.fielden.platform.meta;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.Assertions.SubPropertiesA;
 import ua.com.fielden.platform.meta.test_entities.Entity_VariousMoney;
@@ -20,16 +21,9 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 
 public class PropertyMetadataUtilsTest {
 
-    private final IDomainMetadata domainMetadata;
-    private final PropertyMetadataUtils pmUtils;
-
-    public PropertyMetadataUtilsTest() {
-        final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
-        domainMetadata = new DomainMetadataBuilder(
-                new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), List.of(), dbVersionProvider)
-                .build();
-        pmUtils =  domainMetadata.propertyMetadataUtils();
-    }
+    private static final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+    private static final IDomainMetadata domainMetadata = new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), List.of(), dbVersionProvider).build();
+    private static final PropertyMetadataUtils pmUtils = domainMetadata.propertyMetadataUtils();
 
     @Test
     public void subProperties_for_composite_type_Money_depend_on_its_representation() {
@@ -104,8 +98,9 @@ public class PropertyMetadataUtilsTest {
                         .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(String.class));
     }
 
-    // ****************************************
-    // * Utils
+    ///////////////////////////////////////////
+    /////////////// Utils /////////////////////
+    ///////////////////////////////////////////
 
     private SubPropertiesA subPropertiesOf(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
         final var entityMetadata = domainMetadata.forEntity(entityType);
