@@ -312,6 +312,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.addOwnKeyBinding('shift+tab', 'applyOutdent');
         this.addOwnKeyBinding('ctrl+u meta+u', 'createBulletList');
         this.addOwnKeyBinding('ctrl+o meta+o', 'createOrderedList');
+        this.addOwnKeyBinding('esc', 'stopEditing');
         this.keyEventTarget = this._getEditableContent();
         //Adjust key event handler to be able to process events from _editor when event was prevented
         const prevKeyBindingHandler = this._onKeyBindingEvent.bind(this);
@@ -411,6 +412,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     createTaskList(event) {
         this._editor.exec('taskList');
+    }
+
+    stopEditing(event) {
+        this.focus();
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     makeEditable(editable) {
