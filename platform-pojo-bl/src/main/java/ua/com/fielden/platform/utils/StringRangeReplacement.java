@@ -3,7 +3,7 @@ package ua.com.fielden.platform.utils;
 import com.google.common.collect.Streams;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.IteratorUtils.HeadedIterator;
+import ua.com.fielden.platform.utils.IteratorUtils.IteratorWithCurrentElement;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -125,7 +125,7 @@ public final class StringRangeReplacement {
 
         // copy text after last range
         if (!replacements.isEmpty()) {
-            sink.append(linesIter.head().substring(cursor.column));
+            sink.append(linesIter.current().substring(cursor.column));
             if (lines.hasNext()) {
                 sink.append(lineTerminator);
             }
@@ -141,7 +141,7 @@ public final class StringRangeReplacement {
     }
 
     private Cursor replaceRange(final Cursor cursor,
-                                final HeadedIterator<String> lines,
+                                final IteratorWithCurrentElement<String> lines,
                                 final Range range, final CharSequence newText,
                                 final UncheckedAppendable sink)
     {
@@ -155,7 +155,7 @@ public final class StringRangeReplacement {
                 throw new InvalidArgumentException("Range out of bounds: %s".formatted(range));
             }
             // handle this line, which may have been part of a previous range
-            appendLine(lines.head().substring(cursor.column), sink);
+            appendLine(lines.current().substring(cursor.column), sink);
             // handle the rest of the lines before range starts
             IteratorUtils.forNextN(lines, range.firstLineIndex - cursor.line - 1, ln -> appendLine(ln, sink));
             // advance the iterator to the first line of the range
@@ -166,7 +166,7 @@ public final class StringRangeReplacement {
         // cursor is on the line where this range starts
         else {
             // copy text before range start
-            sink.append(lines.head().substring(cursor.column, range.firstColumn));
+            sink.append(lines.current().substring(cursor.column, range.firstColumn));
 
             sink.append(newText);
 
