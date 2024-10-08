@@ -29,10 +29,11 @@ import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.io.ByteArrayInputStream;
@@ -44,7 +45,6 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -59,7 +59,7 @@ public class DynamicQueryBuilderSqlTest {
     private final static IDates dates = injector.getInstance(IDates.class);
 
     private static Injector createInjector() {
-        final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+        final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
         return new ApplicationInjectorFactory().add(module).getInjector();
     }
 
@@ -111,7 +111,7 @@ public class DynamicQueryBuilderSqlTest {
 
         final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-                PLATFORM_HIBERNATE_TYPE_MAPPINGS, domainTypes, dbVersionProvider)
+                new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), domainTypes, dbVersionProvider)
                 .build();
         try {
             hibConf.addInputStream(new ByteArrayInputStream(

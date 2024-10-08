@@ -51,7 +51,8 @@ public class EntityContainerEnhancer {
      * Enhances a list of entity containers.
      */
     protected <E extends AbstractEntity<?>> List<EntityContainer<E>> enhance(
-            final Session session, final List<EntityContainer<E>> entities,
+            final Session session,
+            final List<EntityContainer<E>> entities,
             final IRetrievalModel<E> fetchModel, final Map<String, Object> paramValues)
     {
         if (entities.isEmpty() || fetchModel == null) {
@@ -90,7 +91,7 @@ public class EntityContainerEnhancer {
                                  }
                              }
                          },
-                         // TODO Why is absence of property metadata a valid condition? Platform tests show no such occurences
+                         // TODO Why is absence of property metadata a valid condition? Platform tests show no such occurrences?
                          () -> enhanceCollectional(session, entities, fetchModel, paramValues, propName, propFetchModel));
                     // @formatter:on
                 } else {
@@ -132,9 +133,9 @@ public class EntityContainerEnhancer {
     }
 
     private <T extends AbstractEntity<?>> Class<? extends T> determineProxiedResultTypeFromFetchModel(final IRetrievalModel<T> fetchModel) {
-//        final DateTime st = new DateTime();
+        // final DateTime st = new DateTime();
         final Class<? extends T> proxiedType = EntityProxyContainer.proxy(fetchModel.getEntityType(), fetchModel.getProxiedProps());
-//        final Period pd = new Period(st, new DateTime());
+        // final Period pd = new Period(st, new DateTime());
         // logger.debug(format("Constructing proxy type [" + fetchModel.getEntityType().getSimpleName() + "] duration: %s m %s s %s ms.", pd.getMinutes(), pd.getSeconds(), pd.getMillis()));
         return proxiedType;
     }
@@ -144,7 +145,7 @@ public class EntityContainerEnhancer {
     {
         if (fetchModel.getEntityType() != EntityAggregates.class) {
             final Class<? extends E> proxiedResultType = determineProxiedResultTypeFromFetchModel(fetchModel);
-            entities.forEach(e -> e.setProxiedResultType(proxiedResultType));
+            entities.forEach(entity -> entity.setProxiedResultType(proxiedResultType));
         }
     }
 
@@ -210,7 +211,8 @@ public class EntityContainerEnhancer {
         if (!propertyValuesIds.isEmpty()) {
             // Constructing model for retrieving property instances based on the provided fetch model and list of instances ids
             final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
-            // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
+            // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once.
+            //            Such assumption relies on the fact that once a join to a property has been made, all its columns are yielded automatically.
             final List<EntityContainer<T>> enhancedPropInstances = retrievedPropertyInstances.isEmpty()
                     ? getDataInBatches(session, propertyValuesIds.keySet(), ID, fetchModel, paramValues)
                     : enhance(session, retrievedPropertyInstances, fetchModel, paramValues);
@@ -270,13 +272,13 @@ public class EntityContainerEnhancer {
      * Enhances entity containers by populating collectional property {@code collPropName}.
      * This method mutates the containers it is given.
      * <p>
-     * There are 2 entities at play here:
+     * There are two entities at play here:
      * <ol>
-     * <li> master entity (<i>ME</i>) -- the one being enhanced and owning the collectional property;
+     * <li> main entity (<i>ME</i>) -- the one being enhanced and owning the collectional property;
      * <li> detail entity (<i>DE</i>) -- the type of the collectional property's elements;
      * </ol>
      *
-     * Both ME and DE containers are enhanced by populating the respective sides of their one-to-many relationhsip.
+     * Both ME and DE containers are enhanced by populating the respective sides of their one-2-many relationship.
      *
      * @param masterEntities  ME containers that will be enhanced
      * @param collPropName  name of the collectional property
@@ -285,7 +287,7 @@ public class EntityContainerEnhancer {
      * @param fetchModel  fetch model for DE
      * @param paramValues  query parameters for DE
      *
-     * @return  ME containers enhanced with collectional property by populating it with DE containers which are also
+     * @return  ME containers enhanced with collectional property by populating it with DE containers, which are also
      *          enhanced by populating the link property with the corresponding ME
      */
     private <E extends AbstractEntity<?>, T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(
@@ -307,7 +309,7 @@ public class EntityContainerEnhancer {
         masterIdToDetails.forEach((masterId, dets) ->
                                     dets.forEach(det -> det.getEntities().put(linkPropName, idToMaster.get(masterId))));
 
-        if (!(SortedSet.class.equals(collPropType) || Set.class.equals(collPropType))) {
+        if (!SortedSet.class.equals(collPropType) && !Set.class.equals(collPropType)) {
             throw new EntityRetrievalException(
                     "Fetching of collectional property type [%s] is not supported.".formatted(collPropType.getTypeName()));
         }
@@ -323,18 +325,21 @@ public class EntityContainerEnhancer {
      * Retrieves and enhances entity containers that match given entity IDs.
      * The type of retrieved entities is derived from the fetch model.
      *
-     * @param idProp  name of the property against which IDs should be matched
-     * @param fetchModel  fetch model to apply during retrieval
+     * @param ids  ID values for entities to be retrieved.
+     * @param idProp  name of the property against which IDs should be matched.
+     * @param fetchModel  fetch model to apply during retrieval.
+     * @param paramValues  query parameters.
      */
     private <T extends AbstractEntity<?>> List<EntityContainer<T>> getDataInBatches(
             final Session session,
-            final Collection<Long> ids, final String idProp, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues)
+            final Collection<Long> ids,
+            final String idProp,
+            final EntityRetrievalModel<T> fetchModel,
+            final Map<String, Object> paramValues)
     {
         // TODO need to optimise -- WagonClass in WagonClassCompatibility is re-retrieved, while already available
-        // this ceremony with spliterators is needed to accept any Collection
+        // This ceremony with spliterators is needed to accept any Collection
         return StreamSupport.stream(spliterator(partition(ids, BATCH_SIZE).iterator(), BATCH_SIZE, NONNULL), false)
-                // TODO remove once Collections are supported by EQL fluent API
-                .map(batch -> batch.toArray(Long[]::new))
                 .flatMap(batch -> {
                     final var model = select(fetchModel.getEntityType()).where().prop(idProp).in().values(batch).model();
                     final var qpm = new QueryProcessingModel<>(model, null, fetchModel, paramValues, false);

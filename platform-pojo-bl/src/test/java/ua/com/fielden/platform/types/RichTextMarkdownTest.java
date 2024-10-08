@@ -282,6 +282,59 @@ public class RichTextMarkdownTest {
         assertCoreTextId("[foo bar]: /url");
     }
 
+    @Test
+    public void contents_of_html_block_beginning_with_br_tag_is_included_in_core_text() {
+        assertCoreText("first second last",
+                       """
+                       first
+                       
+                       <br>
+                       second
+                       last""");
+        assertCoreText("first second last",
+                       """
+                       first
+                       
+                       <br  >
+                       second
+                       last""");
+        assertCoreText("first second last",
+                       """
+                       first
+                       
+                       <br  />
+                       second
+                       last""");
+        assertCoreText("first second last",
+                       """
+                       first
+                       
+                       </br>
+                       second
+                       last""");
+        assertCoreText("first second last",
+                       """
+                       first
+                       
+                       </br  >
+                       second
+                       last""");
+        assertCoreText("first second last",
+                       """
+                       first
+                       
+                          </br  >
+                       second
+                       last""");
+        assertCoreText("first second last",
+                       """
+                       first
+                       
+                         <br  >
+                       second
+                       last""");
+    }
+
     private static void assertCoreText(final String expected, final String input) {
         assertEquals(expected, RichText.fromMarkdown(input).coreText());
     }

@@ -1,24 +1,23 @@
 package ua.com.fielden.platform.entity.validation;
 
-import static java.lang.Math.min;
-import static java.lang.String.format;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-
-import java.lang.annotation.Annotation;
-import java.util.Optional;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.RichText;
+
+import java.lang.annotation.Annotation;
+import java.util.Optional;
+import java.util.Set;
+
+import static java.lang.Math.min;
+import static java.lang.String.format;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 
 /**
  * This validator implements a check for the length of a string property.
@@ -81,7 +80,6 @@ public class MaxLengthValidator implements IBeforeChangeEventHandler<Object> {
      * Choosing the smaller limit is considered to be a safer option.
      *
      * @param property
-     * @param limit
      * @return
      */
     private Optional<Integer> determineMaxLength(final MetaProperty<Object> property) {

@@ -5,12 +5,16 @@ import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithRichText;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgUnionHolder;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -20,19 +24,26 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class MappingGenerationTest {
+
+    private static final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+    private static final HibernateTypeMappings hibernateTypeMappings = new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get();
 
     @Test
     public void hibernate_mappings_are_generated() {
         final List<Class<? extends AbstractEntity<?>>> domainTypes = List.of(
-                User.class, MainMenuItem.class, DashboardRefreshFrequency.class,
-                DashboardRefreshFrequencyUnit.class, EntityCentreConfig.class,
-                EntityWithMoney.class, TgUnionHolder.class);
+                User.class,
+                MainMenuItem.class,
+                DashboardRefreshFrequency.class,
+                DashboardRefreshFrequencyUnit.class,
+                EntityCentreConfig.class,
+                EntityWithMoney.class,
+                TgUnionHolder.class,
+                EntityWithRichText.class);
         final var dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-                PLATFORM_HIBERNATE_TYPE_MAPPINGS, domainTypes, dbVersionProvider)
+                hibernateTypeMappings, domainTypes, dbVersionProvider)
                 .build();
 
         final String actualMappings = new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata),
@@ -96,6 +107,19 @@ public class MappingGenerationTest {
 \t<property name="money" column="MONEY" type="ua.com.fielden.platform.persistence.types.SimpleMoneyType" precision="18" scale="2"/>
 \t<property name="shortComment" column="SHORTCOMMENT_" type="org.hibernate.type.StringType" length="5"/>
 \t<property name="transDate" column="TRANS_DATE_TIME" type="ua.com.fielden.platform.persistence.types.DateTimeType"/>
+</class>
+
+<class name="ua.com.fielden.platform.persistence.types.EntityWithRichText" table="ENTITYWITHRICHTEXT_">
+\t<id name="id" column="_ID" type="org.hibernate.type.LongType" access="property">
+\t</id>
+\t<version name="version" type="org.hibernate.type.LongType" access="field" insert="false">
+\t\t<column name="_VERSION" default="0" />
+\t</version>
+\t<property name="key" column="KEY_" type="org.hibernate.type.StringType"/>
+\t<property name="text" type="ua.com.fielden.platform.types.RichTextType">
+\t\t<column name="TEXT_FORMATTEDTEXT"/>
+\t\t<column name="TEXT_CORETEXT"/>
+\t</property>
 </class>
 
 <class name="ua.com.fielden.platform.ui.config.MainMenuItem" table="MAIN_MENU">

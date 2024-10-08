@@ -12,7 +12,7 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 /**
  * A structure to describe where an EQL query gets the data from, which is the query source (entity type or another query/s).
- * It is essential for dot-notation processing within a query.
+ * It is essential for dot-expression processing within a query.
  *
  * @param <T> -- an entity type, represented be the structure.
  *

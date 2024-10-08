@@ -6,7 +6,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.sample.domain.*;
 
 import java.io.FileInputStream;
@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 import java.util.Random;
 
-import static ua.com.fielden.eql.BenchmarkModule.newBenchmarkModule;
+import static ua.com.fielden.eql.BenchmarkIocModule.newBenchmarkModule;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -30,7 +30,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  * is this module (platform-benchmark).
  * <pre>
  java -jar target/benchmarks.jar \
- -p propertiesFile="src/main/resources/AbstractEqlBenchmark.properties" \
+ -p propertiesFile="src/main/resources/benchmark-application.properties" \
  -prof gc \
  "ua.com.fielden.eql.$SPECIFIC_BENCHMARK"
  </pre>
@@ -327,7 +327,7 @@ public abstract class AbstractEqlBenchmark {
 
         injector = new ApplicationInjectorFactory(Workflows.development)
                 .add(newBenchmarkModule(properties))
-                .add(new NewUserNotifierMockBindingModule())
+                .add(new NewUserEmailNotifierTestIocModule())
                 .getInjector();
 
         afterSetup(injector);

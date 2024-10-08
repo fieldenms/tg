@@ -20,7 +20,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
@@ -32,7 +32,7 @@ import com.google.inject.Injector;
  * 
  */
 public class EntityPropertyLifecycleTest {
-    private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+    private final Injector injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     private EntityPropertyLifecycle<Entity> epl;

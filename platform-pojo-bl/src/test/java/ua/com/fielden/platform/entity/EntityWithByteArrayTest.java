@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 public class EntityWithByteArrayTest {
 
     private final Injector injector = new ApplicationInjectorFactory()
-            .add(new CommonTestEntityModuleWithPropertyFactory())
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
             .add(new AbstractModule() {
                 @Override
                 protected void configure() {

@@ -8,6 +8,8 @@ import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
+import ua.com.fielden.platform.types.either.Left;
+import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.utils.Pair;
 
 import javax.annotation.Nullable;
@@ -63,7 +65,7 @@ public final class DomainMetadataModelGenerator {
 
             final Stream<H> propsS = props.stream().map(prop -> {
                 final Optional<Class<?>> optPropJavaType = switch (prop.type()) {
-                    case PropertyTypeMetadata.Composite it -> Optional.of(it.javaType());
+                    case PropertyTypeMetadata.Component it -> Optional.of(it.javaType());
                     case PropertyTypeMetadata.Primitive it -> Optional.of(it.javaType());
                     // inherited from old code, not sure why entities with metadata are filtered
                     case PropertyTypeMetadata.Entity it when domainMetadata.forType(it.javaType()).isEmpty()
@@ -74,7 +76,7 @@ public final class DomainMetadataModelGenerator {
                 return optPropJavaType.map(propJavaType -> new H(propJavaType, id -> {
                     final int propsCount = prop.asPersistent().flatMap(propertyInliner::inline)
                             // ignore single-component composite types; not sure why, but this has been in the old code
-                            .filter(props_ -> !prop.type().isComposite() || props_.size() > 1)
+                            .filter(props_ -> !prop.type().isComponent() || props_.size() > 1)
                             .map(Collection::size)
                             .orElse(0);
                     final var subTypeTitleAndDesc = isUnionEntityType(propJavaType)
@@ -150,7 +152,7 @@ public final class DomainMetadataModelGenerator {
                     final var ppm = pm.asPersistent().orElseThrow();
                     final var optSubProps = propertyInliner.inline(ppm)
                             // ignore single-component composite types, they are treated as primitive types
-                            .filter(props -> !ppm.type().isComposite() || props.size() > 1);
+                            .filter(props -> !ppm.type().isComponent() || props.size() > 1);
                     if (optSubProps.isPresent()) {
                         int subItemPosition = 0;
                         for (final var subProp : optSubProps.get().stream().flatMap(spm -> spm.asPersistent().stream()).toList()) {
@@ -177,14 +179,21 @@ public final class DomainMetadataModelGenerator {
         return result;
     }
 
+    /**
+     * Determines the column name of the specified property.
+     * <p>
+     * Properties that have a component type are handles specially.
+     * If the component type has a single component, that component's column name is returned; otherwise, null is returned.
+     */
     private @Nullable String determinePropColumn(final PropertyMetadata pm) {
         return switch (pm) {
             case PropertyMetadata.CritOnly $ -> CRITERION;
-            case PropertyMetadata.Persistent it -> propertyInliner.inline(it)
-                    .filter(ps -> ps.size() == 1)
-                    .map(List::getFirst)
-                    .map(prop -> prop.data().column().name)
-                    .orElse(null);
+            case PropertyMetadata.Persistent it ->
+                    propertyInliner.inlineOrGet(it)
+                            .fold(it_ -> it_.data().column().name,
+                                  inlined -> inlined.size() == 1
+                                          ? inlined.getFirst().data().column().name
+                                          : null);
             default -> null;
         };
     }

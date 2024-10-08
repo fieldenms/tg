@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.dbschema;
 
 import com.google.common.collect.ImmutableSet;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
@@ -43,20 +44,22 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  *
  */
 public class ColumnDefinitionExtractor {
-    private final HibernateTypeDeterminer hibernateTypeDeterminer;
     private static final IsProperty defaultIsPropertyAnnotation = new IsPropertyAnnotation().newInstance();
+    private final HibernateTypeDeterminer hibernateTypeDeterminer;
+    private final Dialect dialect;
     
-    public ColumnDefinitionExtractor(final HibernateTypeMappings hibernateTypeMappings) {
+    public ColumnDefinitionExtractor(final HibernateTypeMappings hibernateTypeMappings, final Dialect dialect) {
         this.hibernateTypeDeterminer = new HibernateTypeDeterminer(hibernateTypeMappings);
+        this.dialect = dialect;
     }
 
     /**
      * Generates column definition for the provided entity property.
      * <p>
-     * In the majority of cases the resultant set would contain a single instance. 
+     * In the majority of cases, the resultant set would contain a single instance.
      * However, in case of custom user types consisting of more than one field such as {@link Money} the resultant set would contain column definitions for each field.
      * <p>
-     * Also properties of union types result in multiple column definitions -- one per each property in the union type.
+     * Also, properties of union types result in multiple column definitions -- one per each property in the union type.
      */
     public Set<ColumnDefinition> extractFromProperty(
             final String propName, 
@@ -88,21 +91,21 @@ public class ColumnDefinitionExtractor {
 
                 final String sColumnName = columnName + "_" + (isEmpty(sMapTo.value()) ? sField.getName().toUpperCase() : sMapTo.value());
                 return new ColumnDefinition(unique, compositeKeyMemberOrder, true, sColumnName,
-                                            sField.getType(), new SqlType.TypeCode(jdbcSqlTypeFor((Type) hibType)),
+                                            sField.getType(), jdbcSqlTypeFor((Type) hibType),
                                             sIsProperty.length(), sIsProperty.scale(), sIsProperty.precision(),
-                                            sMapTo.defaultValue(), false);
+                                            sMapTo.defaultValue(), false, dialect);
             }).collect(toImmutableSet());
         } else {
             if (hibType instanceof Type t) {
                 return ImmutableSet.of(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
-                                                            new SqlType.TypeCode(jdbcSqlTypeFor(t)),
-                                                            length, scale, precision, mapTo.defaultValue(), false));
+                                                            jdbcSqlTypeFor(t),
+                                                            length, scale, precision, mapTo.defaultValue(), false, dialect));
             } else if (hibType instanceof UserType t) {
                 return ImmutableSet.of(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
-                                                            new SqlType.TypeCode(jdbcSqlTypeFor(t)),
-                                                            length, scale, precision, mapTo.defaultValue(), false));
+                                                            jdbcSqlTypeFor(t),
+                                                            length, scale, precision, mapTo.defaultValue(), false, dialect));
             } else if (hibType instanceof CompositeUserType compositeUserType) {
                 final List<Pair<String, Integer>> subProps = jdbcSqlTypeFor(compositeUserType);
                 return subProps.stream().map(pair -> {
@@ -115,9 +118,9 @@ public class ColumnDefinitionExtractor {
                     final String sColumnNameSuggestion = sMapTo.value();
                     final Object sHibType = hibernateTypeDeterminer.getHibernateType(sField.getType(),
                                                                                            getAnnotation(sField, PersistentType.class));
-                    final SqlType sSqlType = switch (sHibType) {
-                        case UserType t -> new SqlType.TypeCode(jdbcSqlTypeFor(t));
-                        case Type t -> new SqlType.TypeCode(jdbcSqlTypeFor(t));
+                    final var sSqlType = switch (sHibType) {
+                        case UserType t -> jdbcSqlTypeFor(t);
+                        case Type t -> jdbcSqlTypeFor(t);
                         default -> throw new DbSchemaException("Property [%s] has unsupported Hibernate type: %s".formatted(
                                 "%s.%s".formatted(propType.getTypeName(), sName),
                                 sHibType));
@@ -159,7 +162,7 @@ public class ColumnDefinitionExtractor {
                     return new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                 sColumnName, sField.getType(), sSqlType,
                                                 sLength, sScale, sPrecision,
-                                                sMapTo.defaultValue(), sRequiresIndex);
+                                                sMapTo.defaultValue(), sRequiresIndex, dialect);
                 }).collect(toImmutableSet());
             } else {
                 throw new DbSchemaException(format("Unexpected Hibernate type [%s] for property [%s.%s].", hibType, propType.getTypeName(), propName));
