@@ -32,8 +32,12 @@ public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable
     private final SortedMap<String, AbstractQuerySourceItem<?>> propsMap = new TreeMap<>();
 
     /**
-     * If {@code true} indicates that all data-backed props from PE/SE are present in this query source info.
-     * In other words, it is a canonical representation (all properties) of the data source for a persistent entity (PE) or a synthetic entity (SE).
+     * Indicates whether this query source info is <i>comprehensive</i>, the meaning of which depends on the entity type:
+     * <ul>
+     *   <li> For a persistent entity - all retrievable properties are represented by this query source info.
+     *   <li> For a synthetic entity - all properties present in the underlying model are represented by this query source info.
+     * </ul>
+     * In other words, if a query source info is comprehensive, then it is a canonical representation of the respective data source.
      */
     public final boolean isComprehensive;
 
