@@ -13,7 +13,7 @@ import ua.com.fielden.platform.eql.stage3.operands.functions.CountAll3;
 
 public class CountAll2 extends AbstractFunction2<CountAll3> {
 
-    public static CountAll2 INSTANCE = new CountAll2();
+    public static final CountAll2 INSTANCE = new CountAll2();
     
     private CountAll2() {
         super(INTEGER_PROP_TYPE);

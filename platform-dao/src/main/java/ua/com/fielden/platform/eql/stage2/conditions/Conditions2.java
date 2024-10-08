@@ -7,20 +7,19 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
-public class Conditions2 implements ICondition2<Conditions3> {
+public record Conditions2 (boolean negated, List<List<? extends ICondition2<?>>> dnf)
+        implements ICondition2<Conditions3>, ToString.IFormattable
+{
     public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, ImmutableList.of());
-
-    private final List<List<? extends ICondition2<?>>> dnf;
-    private final boolean negated;
 
     public static Conditions2 conditions(final boolean negated, final List<List<? extends ICondition2<?>>> dnf) {
         if (dnf.isEmpty()) {
@@ -41,6 +40,10 @@ public class Conditions2 implements ICondition2<Conditions3> {
 
     private Conditions2 withNegated(final boolean negated) {
         return negated == this.negated ? this : new Conditions2(negated, dnf);
+    }
+
+    public boolean isEmpty() {
+        return dnf.isEmpty();
     }
 
     @Override
@@ -104,26 +107,16 @@ public class Conditions2 implements ICondition2<Conditions3> {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + dnf.hashCode();
-        result = prime * result + (negated ? 1231 : 1237);
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Conditions2)) {
-            return false;
-        }
-
-        final Conditions2 other = (Conditions2) obj;
-
-        return Objects.equals(dnf, other.dnf) && (negated == other.negated);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("negated", negated)
+                .add("dnf", dnf)
+                .$();
     }
+
 }

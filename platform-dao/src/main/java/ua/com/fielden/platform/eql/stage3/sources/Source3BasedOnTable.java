@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage3.sources;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.EqlTable;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
@@ -20,12 +21,6 @@ public class Source3BasedOnTable extends AbstractSource3 {
     }
 
     @Override
-    public String toString() {
-        // TODO Auto-generated method stub
-        return "QrySource3BasedOnTable [" + tableName +"]";
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
@@ -35,20 +30,15 @@ public class Source3BasedOnTable extends AbstractSource3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof Source3BasedOnTable)) {
-            return false;
-        }
-
-        final Source3BasedOnTable other = (Source3BasedOnTable) obj;
-
-        return Objects.equals(tableName, other.tableName);
+        return this == obj
+               || obj instanceof Source3BasedOnTable that
+                  && Objects.equals(this.tableName, that.tableName)
+                  && super.equals(that);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("tableName", tableName);
+    }
+
 }

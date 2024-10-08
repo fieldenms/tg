@@ -1,24 +1,19 @@
 package ua.com.fielden.platform.eql.stage2.conditions;
 
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.NullPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
 
-public class NullPredicate2 implements ICondition2<NullPredicate3> {
-    public final ISingleOperand2<? extends ISingleOperand3> operand;
-    private final boolean negated;
+import java.util.Set;
 
-    public NullPredicate2(final ISingleOperand2<? extends ISingleOperand3> operand, final boolean negated) {
-        this.operand = operand;
-        this.negated = negated;
-    }
+public record NullPredicate2 (ISingleOperand2<? extends ISingleOperand3> operand, boolean negated)
+        implements ICondition2<NullPredicate3>, ToString.IFormattable
+{
 
     @Override
     public boolean ignore() {
@@ -42,26 +37,16 @@ public class NullPredicate2 implements ICondition2<NullPredicate3> {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + operand.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof NullPredicate2)) {
-            return false;
-        }
-
-        final NullPredicate2 other = (NullPredicate2) obj;
-
-        return (negated == other.negated) && Objects.equals(operand, other.operand);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("negated", negated)
+                .add("operand", operand)
+                .$();
     }
+
 }

@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.queries;
 
-import static ua.com.fielden.platform.eql.stage2.sundries.Yields2.nullYields;
-
 import ua.com.fielden.platform.eql.stage1.ITransformableFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -9,6 +7,8 @@ import ua.com.fielden.platform.eql.stage2.queries.SubQueryForExists2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+
+import static ua.com.fielden.platform.eql.stage2.sundries.Yields2.nullYields;
 
 /**
  * A structure used for representing queries in the EXISTS statement.
@@ -25,7 +25,9 @@ public class SubQueryForExists1 extends AbstractQuery1 implements ITransformable
 
     @Override
     public SubQueryForExists2 transform(final TransformationContextFromStage1To2 context) {
-        return new SubQueryForExists2(joinRoot == null ? transformSourceless(context) : transformQueryComponents(context));
+        final var queryComponents2 = maybeJoinRoot.map(joinRoot -> transformQueryComponents(context, joinRoot))
+                .orElseGet(() -> transformSourceless(context));
+        return new SubQueryForExists2(queryComponents2);
     }
 
     @Override

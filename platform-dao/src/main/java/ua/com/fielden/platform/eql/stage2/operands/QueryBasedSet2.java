@@ -1,21 +1,16 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage3.operands.QueryBasedSet3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
+import ua.com.fielden.platform.utils.ToString;
 
-public class QueryBasedSet2 implements ISetOperand2<QueryBasedSet3> {
-    private final SubQuery2 model;
+import java.util.Set;
 
-    public QueryBasedSet2(final SubQuery2 model) {
-        this.model = model;
-    }
+public record QueryBasedSet2 (SubQuery2 model) implements ISetOperand2<QueryBasedSet3>, ToString.IFormattable {
 
     @Override
     public TransformationResultFromStage2To3<QueryBasedSet3> transform(final TransformationContextFromStage2To3 context) {
@@ -34,25 +29,15 @@ public class QueryBasedSet2 implements ISetOperand2<QueryBasedSet3> {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + model.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof QueryBasedSet2)) {
-            return false;
-        }
-        
-        final QueryBasedSet2 other = (QueryBasedSet2) obj;
-        
-        return Objects.equals(model, other.model);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("model", model)
+                .$();
     }
+
 }

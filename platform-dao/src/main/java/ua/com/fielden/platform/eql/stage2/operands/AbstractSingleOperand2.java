@@ -14,8 +14,9 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.ToString;
 
-public abstract class AbstractSingleOperand2 {
+public abstract class AbstractSingleOperand2 implements ToString.IFormattable {
     public final PropType type;
 
     public AbstractSingleOperand2(final PropType type) {
@@ -53,4 +54,22 @@ public abstract class AbstractSingleOperand2 {
     public PropType type() {
         return type;
     }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("type", type)
+                .pipe(this::addToString)
+                .$();
+    }
+
+    protected ToString addToString(final ToString toString) {
+        return toString;
+    }
+
 }

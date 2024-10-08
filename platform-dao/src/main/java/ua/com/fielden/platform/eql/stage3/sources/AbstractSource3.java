@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
-import static java.lang.String.format;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Map;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import static java.lang.String.format;
 
-public abstract class AbstractSource3 implements ISource3 {
+public abstract class AbstractSource3 implements ISource3, ToString.IFormattable {
     public final String sqlAlias;
     private final Integer id;
     private final Map<String, String> columns;
@@ -31,7 +32,7 @@ public abstract class AbstractSource3 implements ISource3 {
         if (column != null) {
             return sqlAlias + "." + column;
         } else {
-            throw new EqlStage3ProcessingException(format("Query source doesn't contain column for property [%s]", propName));
+            throw new EqlStage3ProcessingException("Query source doesn't contain column for property [%s]".formatted(propName));
         }
     }
 
@@ -62,18 +63,30 @@ public abstract class AbstractSource3 implements ISource3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof AbstractSource3)) {
-            return false;
-        }
-
-        final AbstractSource3 other = (AbstractSource3) obj;
-
-        return
-                Objects.equals(sqlAlias, other.sqlAlias) &&
-                Objects.equals(id, other.id) && Objects.equals(columns, other.columns);
+        return this == obj
+               || obj instanceof AbstractSource3 that
+                  && Objects.equals(sqlAlias, that.sqlAlias)
+                  && Objects.equals(id, that.id)
+                  && Objects.equals(columns, that.columns);
     }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("id", id)
+                .addIfNotNull("sqlAlias", sqlAlias)
+                .add("columns", columns)
+                .pipe(this::addToString)
+                .$();
+    }
+
+    protected ToString addToString(final ToString toString) {
+        return toString;
+    }
+
 }

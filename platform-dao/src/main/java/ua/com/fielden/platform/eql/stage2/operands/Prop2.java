@@ -1,20 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.propType;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
@@ -28,6 +13,22 @@ import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ToString;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 /**
  * A structure to represent a dot-notated property, resolved to its respective source. This information is used at Stage 3 to build up table joins to retrieve the information expressed by the property.
@@ -138,16 +139,18 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Prop2)) {
-            return false;
-        }
-
-        final Prop2 other = (Prop2) obj;
-
-        return Objects.equals(path, other.path) && Objects.equals(source.id(), other.source.id());
+        return this == obj ||
+               obj instanceof Prop2 that
+               && Objects.equals(path, that.path)
+               && Objects.equals(source.id(), that.source.id());
     }
+
+    @Override
+    public ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("source", source)
+                .add("propPath", propPath)
+                .add("path", path);
+    }
+
 }

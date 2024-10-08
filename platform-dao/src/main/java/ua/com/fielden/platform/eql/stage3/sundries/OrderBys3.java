@@ -5,19 +5,15 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.NO_OFFSET;
 import static ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3.isSubQuery;
 
-public class OrderBys3 {
-
-    private final List<OrderBy3> models;
-    private final Limit limit;
-    private final long offset;
+public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implements ToString.IFormattable {
 
     public OrderBys3(final List<OrderBy3> models) {
         this(models, Limit.all(), NO_OFFSET);
@@ -29,16 +25,8 @@ public class OrderBys3 {
         this.offset = offset;
     }
 
-    public List<OrderBy3> getModels() {
-        return models;
-    }
-
-    public long offset() {
-        return offset;
-    }
-
-    public Limit limit() {
-        return limit;
+    public boolean isEmpty() {
+        return models.isEmpty();
     }
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final AbstractQuery3 enclosingQuery) {
@@ -87,16 +75,17 @@ public class OrderBys3 {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(models, limit, offset);
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        return this == obj || obj instanceof OrderBys3 that
-                              && offset == that.offset
-                              && limit.equals(that.limit)
-                              && models.equals(that.models);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("limit", limit)
+                .add("offset", offset)
+                .add("models", models)
+                .$();
     }
 
 }
