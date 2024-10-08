@@ -102,6 +102,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
+    //Indicates whether property is editable via the single property master like RichText property edit master
+    //Single property master get opened by default action for property of type other than Entity.
+    //Yet, only rich text property supports single property master, for properties with other types this option won't have any effect.
+    private boolean isEditable = false;
 
     public ResultSetBuilder(final EntityCentreBuilder<T> builder) {
         this.builder = builder;
@@ -175,6 +179,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
                     DefaultValueContract.getTimePortionToDisplay(root, propName)));
         } else if (isCollectional(propertyType)) {
             return of(new CollectionalRepresentorWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()),propName));
+        } else if (isRichText(propertyType)) {
+            this.isEditable = true;
         }
         return empty();
     }
@@ -447,7 +453,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), presentByDefault, width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), presentByDefault, isEditable, width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.addToResultSet(prop);
         } else if (propDef.isPresent()) {
             final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), presentByDefault, width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
@@ -457,6 +463,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         // clear things up for the next property to be added if any
         this.propName = empty();
         this.presentByDefault = true;
+        this.isEditable = false;
         this.tooltipProp = empty();
         this.propDef = empty();
         this.orderSeq = null;

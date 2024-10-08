@@ -53,14 +53,17 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     public final int width;
     public final boolean isFlexible;
+    //Indicates whether property is editable via the single property master like RichText property edit master
+    //Single property master get opened by default action for property of type other than Entity.
+    //Yet, only rich text property supports single property master, for properties with other types this option won't have any effect.
+    private boolean isEditable = false;
 
     /**
      * Creates {@link PropertyColumnElement} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
      *
-     * @param criteriaType
      * @param propertyName
      */
-    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final List<FunctionalActionElement> actions) {
+    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean isFlexible, final boolean isEditable, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final List<FunctionalActionElement> actions) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
@@ -71,6 +74,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         this.width = width;
         this.growFactor = growFactor;
         this.isFlexible = isFlexible;
+        this.isEditable = isEditable;
         this.propertyType = propertyType;
         this.titleDesc = titleDesc;
         this.actions.addAll(actions);
@@ -155,6 +159,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         attrs.put("column-desc", descBinding());
         attrs.put("sortable", isSortable);
         attrs.put("editable", widget.isPresent());
+        attrs.put("edit-via-single-prop-master", this.isEditable);
         return attrs;
     }
 

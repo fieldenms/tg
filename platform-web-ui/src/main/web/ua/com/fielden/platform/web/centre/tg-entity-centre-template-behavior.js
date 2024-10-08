@@ -17,6 +17,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
         staleCriteriaMessage: String,
         _centreDirtyOrEdited: Boolean,
         _defaultPropertyActionAttrs: Object,
+        _richTextPropEditActionAttrs: Object,
         _pendingRefresh : {
             type: Boolean,
             value: false
@@ -105,6 +106,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
     ready: function () {
         this.classList.add("canLeave");
         this._defaultPropertyActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
+        this._richTextPropEditActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
+        
         this.navigationPreAction = this.navigationPreAction.bind(this);
 
         //////////////////Event handler to determine centre visibility///////////////////
