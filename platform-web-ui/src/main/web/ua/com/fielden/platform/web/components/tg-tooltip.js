@@ -2,13 +2,16 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 
+import '/resources/components/rich-text/tg-rich-text-input-styles.js';
+
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import {NeonAnimationRunnerBehavior} from '/resources/polymer/@polymer/neon-animation/neon-animation-runner-behavior.js';
 
 const template = html`
-    <style>
+    <style include='rich-text-styles'>
         :host {
+            overflow: hidden;
             display: block;
             position: absolute;
             outline: none;
@@ -116,15 +119,19 @@ Polymer({
         this.cancelAnimation();
         this.toggleClass('hidden', false, this.$.tooltip);
         this._clearPositionStyles();
-        if (x + 100 >= w) {
-            this.style.right = w - x + 'px';
+        if (x > w / 2) {
+            this.style.right = `${w - x}px`;
+            this.style.maxWidth = `${x}px`
         } else {
-            this.style.left = x + 'px';
+            this.style.left = `${x}px`;
+            this.style.maxWidth = `${w - x}px`;
         }
-        if (y + 100 >= h) {
-            this.style.bottom =  h - y + 14 + 'px';
+        if (y > h / 2) {
+            this.style.bottom = `${h - y + 14}px`;
+            this.style.maxHeight = `${y - 14}px`;
         } else {
-            this.style.top = y + 14 + 'px';
+            this.style.top = `${y + 14}px`;
+            this.style.maxHeight = `${h - y - 14}px`
         }
         this._showing = true;
 

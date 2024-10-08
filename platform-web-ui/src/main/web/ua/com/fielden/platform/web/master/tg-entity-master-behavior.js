@@ -25,7 +25,7 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
         const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
         if (selectedElement && selectedElement.shadowRoot) {
             const textArea = selectedElement.shadowRoot.querySelector('textarea');
-            if (textArea.offsetParent !== null) {
+            if (textArea && textArea.offsetParent !== null) {
                 return textArea;
             }
         }

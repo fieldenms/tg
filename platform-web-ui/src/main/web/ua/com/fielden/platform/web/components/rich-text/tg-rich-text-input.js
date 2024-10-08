@@ -6,6 +6,8 @@ import '/resources/toastui-editor/toastui-editor-all.min.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 
+import '/resources/components/rich-text/tg-rich-text-input-styles.js';
+
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { excludeErrors } from '/resources/components/tg-global-error-handler.js';
@@ -195,8 +197,7 @@ function focusEditor(event) {
 }
 
 const template = html`
-    <link rel="stylesheet" href="/resources/toastui-editor/toastui-editor.min.css" />
-    <style>
+    <style include='rich-text-styles'>
         :host {
             position: relative
             @apply --layout-vertical;
