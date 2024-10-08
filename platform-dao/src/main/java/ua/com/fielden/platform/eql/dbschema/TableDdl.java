@@ -10,7 +10,6 @@ import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 import java.lang.reflect.Field;
-import java.sql.Types;
 import java.util.Optional;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -103,7 +102,7 @@ public class TableDdl {
      * @return
      */
     public List<String> createIndicesSchema(final Dialect dialect) {
-        final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columns.stream().collect(Collectors.partitioningBy(ColumnDefinition::unique));
+        final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columns.stream().collect(Collectors.partitioningBy(col -> col.unique));
         final List<String> result = new LinkedList<>();
         if (isCompositeEntity(entityType)) {
             result.add(createUniqueCompositeIndicesSchema(columns.stream(), dialect));
@@ -116,9 +115,9 @@ public class TableDdl {
     private String createUniqueCompositeIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         final String tableName = tableName(entityType);
         final String keyMembersStr = cols
-                .filter(col -> col.compositeKeyMemberOrder().isPresent())
-                .sorted(Comparator.comparingInt(col -> col.compositeKeyMemberOrder().get()))
-                .map(ColumnDefinition::name)
+                .filter(col -> col.compositeKeyMemberOrder.isPresent())
+                .sorted(Comparator.comparingInt(col -> col.compositeKeyMemberOrder.get()))
+                .map(col -> col.name)
                 .collect(Collectors.joining(", "));
         return "CREATE UNIQUE INDEX KUI_%1$s ON %1$s(%2$s);%n".formatted(tableName, keyMembersStr);
     }
@@ -127,11 +126,11 @@ public class TableDdl {
         final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
         return cols
                 // We know how to create unique indexes for nullable columns in case of SQL Server and PostgreSQL.
-                .filter(col -> col.nullable() ? MSSQL == dbVersion || POSTGRESQL == dbVersion : true)
+                .filter(col -> col.nullable ? MSSQL == dbVersion || POSTGRESQL == dbVersion : true)
                 .filter(col -> {
-                    if (!isIndexApplicable(col, dbVersion)) {
+                    if (!col.indexApplicable) {
                         LOGGER.warn("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
-                                    .formatted(col.sqlTypeName(dialect), dbVersion, col.name(), entityType.getSimpleName()));
+                                    .formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
                         return false;
                     } else {
                         return true;
@@ -140,11 +139,11 @@ public class TableDdl {
                 .map(col -> {
                     // otherwise, let's create unique index with the nullable clause if required
                     final String tableName = tableName(entityType);
-                    final String indexName = "KEY_".equals(col.name()) ? "KUI_%s".formatted(tableName) : "UI_%s_%s".formatted(tableName, col.name());
+                    final String indexName = "KEY_".equals(col.name) ? "KUI_%s".formatted(tableName) : "UI_%s_%s".formatted(tableName, col.name);
                     final StringBuilder sb = new StringBuilder();
-                    sb.append("CREATE UNIQUE INDEX %s ON %s(%s)".formatted(indexName, tableName, col.name()));
-                    if (col.nullable()) {
-                        sb.append(" WHERE (%s IS NOT NULL)".formatted(col.name()));
+                    sb.append("CREATE UNIQUE INDEX %s ON %s(%s)".formatted(indexName, tableName, col.name));
+                    if (col.nullable) {
+                        sb.append(" WHERE (%s IS NOT NULL)".formatted(col.name));
                     }
                     sb.append(";");
                     return sb.toString();
@@ -155,11 +154,11 @@ public class TableDdl {
     private List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
         return cols
-                .filter(col -> col.requiresIndex() || isPersistedEntityType(col.javaType()))
+                .filter(col -> col.requiresIndex || isPersistedEntityType(col.javaType))
                 .filter(col -> {
-                    if (!isIndexApplicable(col, dbVersion)) {
+                    if (!col.indexApplicable) {
                         LOGGER.warn("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
-                                    .formatted(col.sqlTypeName(dialect), dbVersion, col.name(), entityType.getSimpleName()));
+                                    .formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
                         return false;
                     } else {
                         return true;
@@ -167,21 +166,9 @@ public class TableDdl {
                 })
                 .map(col -> {
                     final String tableName = tableName(entityType);
-                    return "CREATE INDEX I_%1$s_%2$s ON %1$s(%2$s);%n".formatted(tableName, col.name());
+                    return "CREATE INDEX I_%1$s_%2$s ON %1$s(%2$s);%n".formatted(tableName, col.name);
                 })
                 .collect(toList());
-    }
-
-    private static boolean isIndexApplicable(final ColumnDefinition column, final DbVersion dbVersion) {
-        return switch (dbVersion) {
-            // Not all columns can be indexable.
-            // Refer to https://learn.microsoft.com/en-us/sql/t-sql/statements/create-index-transact-sql for more details.
-            case MSSQL -> switch (column.sqlType()) {
-                case Types.VARCHAR, Types.VARBINARY, Types.NVARCHAR -> column.length() != Integer.MAX_VALUE;
-                default -> true;
-            };
-            default -> true;
-        };
     }
 
     /**
@@ -209,10 +196,10 @@ public class TableDdl {
         // This statement should be suitable for the majority of SQL dialects
         final String thisTableName = tableName(entityType);
         final List<String> ddl = columns.stream()
-                .filter(cd -> isPersistedEntityType(cd.javaType()))
+                .filter(cd -> isPersistedEntityType(cd.javaType))
                 .map(cd -> {
-                    final String thatTableName = tableName((Class<? extends AbstractEntity<?>>) cd.javaType());
-                    return fkConstraint(dialect, thisTableName, cd.name(), thatTableName);
+                    final String thatTableName = tableName((Class<? extends AbstractEntity<?>>) cd.javaType);
+                    return fkConstraint(dialect, thisTableName, cd.name, thatTableName);
                 }).collect(toList());
 
         // let's handle a situation where the entity type is a one-2-one entity.
