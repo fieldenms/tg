@@ -32,8 +32,8 @@ import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
  */
 public sealed class RichText permits RichText.Persisted {
 
-    public static final String _formattedText = "formattedText";
-    public static final String _coreText = "coreText";
+    public static final String FORMATTED_TEXT = "formattedText";
+    public static final String CORE_TEXT = "coreText";
 
     @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
