@@ -396,6 +396,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     stopEditing(event) {
+        const cursorPosition = this._prevSelection ? this._prevSelection[1] : 0;
+        this._editor.setSelection(cursorPosition, cursorPosition);
         this.focus();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
