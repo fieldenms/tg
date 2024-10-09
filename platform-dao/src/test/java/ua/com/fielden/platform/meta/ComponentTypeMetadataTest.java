@@ -48,10 +48,10 @@ public class ComponentTypeMetadataTest {
     @Test
     public void metadata_for_RichText() {
         ComponentA.of(generator.forComponent(RichText.class))
-                .assertProperty(RichText._coreText, p -> p
+                .assertProperty(RichText.CORE_TEXT, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(String.class))
-                .assertProperty(RichText._formattedText, p -> p
+                .assertProperty(RichText.FORMATTED_TEXT, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(String.class));
     }

@@ -61,7 +61,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
                 return append(originalPath, lastComponent.getSubitems().values().iterator().next());
             }
             else if (lastComponent.javaType() == RichText.class) {
-                return append(originalPath, lastComponent.getSubitems().get(RichText._coreText));
+                return append(originalPath, lastComponent.getSubitems().get(RichText.CORE_TEXT));
             }
         }
         return originalPath;
