@@ -10,8 +10,7 @@ import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import java.sql.Types;
 import java.util.Optional;
 
-import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
-import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.entity.query.DbVersion.*;
 
 /**
  * A data structure to capture the information required to generate column DDL statement.
@@ -149,6 +148,9 @@ public class ColumnDefinition {
         }
         else if (dialect.getClass().getSimpleName().startsWith("SQLServer")) {
             return MSSQL;
+        }
+        else if (dialect.getClass().getSimpleName().startsWith("H2Dialect")) {
+            return H2;
         }
         throw new DbSchemaException("Unrecognised Hibernate dialect: %s".formatted(dialect));
     }
