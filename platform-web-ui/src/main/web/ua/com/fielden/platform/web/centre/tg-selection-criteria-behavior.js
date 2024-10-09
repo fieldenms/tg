@@ -187,11 +187,13 @@ const TgSelectionCriteriaBehaviorImpl = {
         propertyModel: Object,
 
         /**
-         * Defines whether the criteria is stale, i.e. the pagination action (or Current Page or Refresh Individual Entities actions)
-         * was done againt previously Run criteria, not the fresh criteria that was changed by the user.
+         * Defines whether the criteria is
+         *  1. stale, i.e. the pagination action (or Current Page or Refresh Individual Entities actions) was done againt previously Run criteria, not the fresh criteria that was changed by the user
+         *  2. changed, i.e. fresh criteria is synchronised with result-set but changed from its default (saved) values
+         *  3. none, meaning none of the above
          */
-        staleCriteriaMessage: {
-            type: String,
+        criteriaIndication: {
+            type: Object,
             notify: true
         },
 
@@ -297,7 +299,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         this.propertyModel = null;
         this.currentState = "EDIT";
 
-        this.staleCriteriaMessage = null;
+        this.criteriaIndication = null;
 
         self._updateCentreDirty = newCentreDirty => {
             this._centreDirty = newCentreDirty;
@@ -317,7 +319,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                     renderingHints: customObject.renderingHints || [],
                     dynamicColumns: customObject.dynamicColumns || {},
                     summary: customObject.summary,
-                    staleCriteriaMessage: customObject.staleCriteriaMessage,
+                    criteriaIndication: customObject.criteriaIndication,
                     columnWidths: customObject.columnWidths,
                     resultConfig: customObject.resultConfig,
                     primaryActionIndices: customObject.primaryActionIndices,
@@ -339,8 +341,8 @@ const TgSelectionCriteriaBehaviorImpl = {
         self._postRunDefault = (function (criteriaEntity, result) {
             this.fire('egi-entities-appeared', result.resultEntities);
 
-            if (typeof result.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
-                this.staleCriteriaMessage = result.staleCriteriaMessage;
+            if (typeof result.criteriaIndication !== 'undefined') { // if criteriaIndication is defined -- then populate it into config button tooltip / colour
+                this.criteriaIndication = result.criteriaIndication;
             }
             if (typeof result.pageCount !== 'undefined') {
                 this.pageCount = result.pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
@@ -436,8 +438,8 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
 
     _setInfoFrom: function (customObject) {
-        if (typeof customObject.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
-            this.staleCriteriaMessage = customObject.staleCriteriaMessage;
+        if (typeof customObject.criteriaIndication !== 'undefined') { // if criteriaIndication is defined -- then populate it into config button tooltip / colour
+            this.criteriaIndication = customObject.criteriaIndication;
         }
         this._setPropertyModel(customObject.metaValues);
         this._centreDirty = customObject.centreDirty;
