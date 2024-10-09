@@ -15,6 +15,7 @@ import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.query.exceptions.EntityContainerInstantiationException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
@@ -110,9 +111,11 @@ public class EntityFromContainerInstantiator {
                 setPropertyToField(entity, propName, propValue, resultType);
             }
         } catch (final Exception e) {
-            throw new IllegalStateException(
-                    format("Can't set value [%s] of type [%s] for property [%s] of type [%s] due to: %s",
-                           propValue, propValue != null ? propValue.getClass() : "?", propName, determinePropertyType(resultType, propName) , e));
+            throw new EntityContainerInstantiationException(
+                    format("Cannot assign value of type [%s] to property [%s.%s] of type [%s]. Value: %s.",
+                           propValue != null ? propValue.getClass().getTypeName() : "null",
+                           resultType.getSimpleName(), propName, determinePropertyType(resultType, propName),
+                           propValue));
         }
     }
 
