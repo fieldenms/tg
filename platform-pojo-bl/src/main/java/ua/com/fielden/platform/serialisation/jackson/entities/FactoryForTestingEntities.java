@@ -28,6 +28,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
@@ -507,5 +508,9 @@ public class FactoryForTestingEntities {
         entity.endInitialising();
 
         return entity;
+    }
+
+    public EntityWithRichText createEntityWithRichText(final RichText richText) {
+        return finalise(createPersistedEntity(EntityWithRichText.class, 1L, "key", "description").setText(richText));
     }
 }

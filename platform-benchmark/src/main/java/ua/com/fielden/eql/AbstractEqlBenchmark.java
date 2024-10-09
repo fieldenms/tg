@@ -1,32 +1,52 @@
 package ua.com.fielden.eql;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
-import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.meta.SimpleUserFilter;
-import ua.com.fielden.platform.meta.DomainMetadataBuilder;
-import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.sample.domain.*;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
-import ua.com.fielden.platform.utils.IDates;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Properties;
 import java.util.Random;
 
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
-import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
+import static ua.com.fielden.eql.BenchmarkIocModule.newBenchmarkModule;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 /**
  * Base class for benchmarks. Contains EQL expressions of various kinds and complexity in their raw unparsed form.
  * It is up to subclasses to perform the desired transformation of those expressions via {@link #finish(QueryModel)}.
+ *
+ * <h3> Running benchmarks </h3>
+ *
+ * The following command should be used to run a benchmark based on this class, assuming the current working directory
+ * is this module (platform-benchmark).
+ * <pre>
+ java -jar target/benchmarks.jar \
+ -p propertiesFile="src/main/resources/benchmark-application.properties" \
+ -prof gc \
+ "ua.com.fielden.eql.$SPECIFIC_BENCHMARK"
+ </pre>
  */
+@State(Scope.Benchmark)
 public abstract class AbstractEqlBenchmark {
+
+    // required for correct initialisation of Guice modules
+    @Param("") String propertiesFile;
+
+    private Injector injector;
+    private EqlRandomGenerator eqlGenerator;
+
+    protected EqlRandomGenerator eqlRandomGenerator() {
+        return eqlGenerator;
+    }
 
     @Benchmark
     public void simple_query(final Blackhole blackhole) {
@@ -274,7 +294,7 @@ public abstract class AbstractEqlBenchmark {
 
     @Benchmark
     public void generated_conditions_x10(final Blackhole blackhole) {
-        final var model = ELQ_GENERATOR.conditions(
+        final var model = eqlGenerator.conditions(
                         select(TgPerson.class).where().val(1).isNotNull(),
                         10)
                 .model();
@@ -284,7 +304,7 @@ public abstract class AbstractEqlBenchmark {
 
     @Benchmark
     public void generated_conditions_x20(final Blackhole blackhole) {
-        final var model = ELQ_GENERATOR.conditions(
+        final var model = eqlGenerator.conditions(
                         select(TgPerson.class).where().val(1).isNotNull(),
                         20)
                 .model();
@@ -292,26 +312,36 @@ public abstract class AbstractEqlBenchmark {
         blackhole.consume(finish(model));
     }
 
+    @Setup(Level.Trial)
+    public void setup() throws IOException {
+        eqlGenerator = new EqlRandomGenerator(new Random(9375679861L));
+
+        if (!Files.isReadable(Path.of(propertiesFile))) {
+            throw new IllegalStateException("Can't read file: %s".formatted(propertiesFile));
+        }
+
+        final var properties = new Properties();
+        try (final var in = new FileInputStream(propertiesFile)) {
+            properties.load(in);
+        }
+
+        injector = new ApplicationInjectorFactory(Workflows.development)
+                .add(newBenchmarkModule(properties))
+                .add(new NewUserEmailNotifierTestIocModule())
+                .getInjector();
+
+        afterSetup(injector);
+    }
+
+    protected void afterSetup(final Injector injector) {}
+
+    private <T> T getInstance(final Class<T> type) {
+        return injector.getInstance(type);
+    }
+
     /**
      * Performs the last action in a benchmark method.
      */
     protected abstract Object finish(final QueryModel<?> queryModel);
-
-    // -------------------- SUPPORTING CODE --------------------
-
-    protected static final Injector injector = Guice.createInjector(new HelperTestIocModule());
-    protected static final IDates dates = injector.getInstance(IDates.class);
-    protected static final IFilter filter = new SimpleUserFilter();
-
-    protected static final IDomainMetadata DOMAIN_METADATA;
-
-    static {
-        DOMAIN_METADATA = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS,
-                                                    PlatformTestDomainTypes.entityTypes,
-                                                    constantDbVersion(H2))
-                .build();
-    }
-
-    protected static final EqlRandomGenerator ELQ_GENERATOR = new EqlRandomGenerator(new Random(9375679861L));
 
 }

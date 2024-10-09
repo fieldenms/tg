@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penult
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -40,9 +41,12 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Secrete;
 import ua.com.fielden.platform.entity.annotation.TransactionEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
+
+import javax.annotation.Nullable;
 
 /**
  * This is a helper class to provide methods related to {@link Annotation}s determination and related entity/property/method analysis based on them.
@@ -95,26 +99,22 @@ public final class AnnotationReflector {
     }
 
     /**
-     * Returns this element's annotation for the specified type if such an annotation is present, else null.
+     * Returns the element's annotation for the specified type if such an annotation is present, else {@code null}.
      *
-     * @param annotationClass
-     *            the Class object corresponding to the annotation type
-     * @return this element's annotation for the specified annotation type if present on this element, else null
-     * @throws NullPointerException
-     *             if the given annotation class is null
+     * @param annotationType  the annotation type
+     * @return  this element's annotation for the specified annotation type if present on this element, else {@code null}
+     * @throws NullPointerException  if the given annotation type is null
      */
-    public static <T extends Annotation> T getAnnotation(final AnnotatedElement annotatedElement, final Class<T> annotationClass) {
-        if (annotatedElement instanceof Class) {
-            return getAnnotationForClass(annotationClass, (Class<?>) annotatedElement);
-        } else if (annotatedElement instanceof Field) {
-            final Field field = (Field) annotatedElement;
-            return (T) getFieldAnnotations(field).get(annotationClass);
-        } else if (annotatedElement instanceof Method) {
-            final Method method = (Method) annotatedElement;
-            return (T) getMethodAnnotations(method).get(annotationClass);
-        } else {
-            throw new ReflectionException(format("Reflecting on annotations for [%s] is not supported.", annotatedElement));
+    public static <A extends Annotation> @Nullable A getAnnotation(final AnnotatedElement annotatedElement, final Class<A> annotationType) {
+        if (annotatedElement == null) {
+            throw new InvalidArgumentException("Argument [annotatedElement] cannot be null.");
         }
+        return switch (annotatedElement) {
+            case Class klass -> getAnnotationForClass(annotationType, klass);
+            case Field field -> (A) getFieldAnnotations(field).get(annotationType);
+            case Method method -> (A) getMethodAnnotations(method).get(annotationType);
+            default -> throw new ReflectionException(format("Reflecting on annotations for [%s] is not supported.", annotatedElement.getClass().getTypeName()));
+        };
     }
 
     private static Map<Class<? extends Annotation>, Annotation> getFieldAnnotations(final Field field) {
@@ -274,7 +274,7 @@ public final class AnnotationReflector {
      * @param forType
      * @return
      */
-    public static <T extends Annotation> T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
+    public static <T extends Annotation> @Nullable T getAnnotationForClass(final Class<T> annotationType, final Class<?> forType) {
         Class<?> runningType = forType;
         T annotation = null;
         while (annotation == null && runningType != null && runningType != Object.class) { // need to iterated thought entity hierarchy
@@ -307,38 +307,46 @@ public final class AnnotationReflector {
     // //////////////////////////////////PROPERTY RELATED ////////////////////////////////////////
 
     /**
-     *
-     * Searches for a property annotation of the specified entity type. Returns <code>null</code> if property or annotation is not found. Support don-notation for property name
-     * except the <code>key</code> and <code>desc</code> properties, which is not really a limitation.
+     * If an annotation of the given type is present on a property at the given location, returns the annotation,
+     * otherwise returns {@code null}.
      * <p>
-     * For example, <code>vehicle.eqClass</code> for WorkOrder will be recognised correctly, however <code>vehicle.eqClass.key</code> would not.
+     * Property location interpretation takes into account the following special cases:
+     * <ol>
+     *   <li> The last property in the path is {@code key} and the annotation type is {@link KeyType}.
+     *      <ul>
+     *        <li> Annotation {@link KeyType} will be located on the type that owns property {@code key}.
+     *      </ul>
+     *   <li> The last property in the path is {@code key} and the annotation type is {@link KeyTitle}.
+     *      <ul>
+     *        <li> Annotation {@link KeyTitle} will be located on the type that owns property {@code key}.
+     *      </ul>
+     *   <li> The last property in the path is {@code desc} and annotation type is {@link DescTitle}.
+     *      <ul>
+     *        <li> Annotation {@link DescTitle} will be located on the type that owns property {@code desc}.
+     *      </ul>
+     * </ol>
      *
-     *
-     * @param <T>
-     * @param annotationType
-     * @param forType
-     * @param dotNotationExp
-     * @return
+     * @param annotationType  annotation type
+     * @param forType  type that determines the property's location
+     * @param dotNotationExp  property path
+     * @return  the annotation, if found, otherwise {@code null}
      */
-    public static <T extends Annotation> T getPropertyAnnotation(final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
-        if (dotNotationExp.endsWith(AbstractEntity.KEY) && KeyType.class.equals(annotationType) ||
-            dotNotationExp.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) ||
-            dotNotationExp.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
+    public static <A extends Annotation> @Nullable A getPropertyAnnotation(final Class<A> annotationType, final Class<?> forType, final String dotNotationExp) {
+        final var lastProp = splitPropPath(dotNotationExp).getLast();
+        if (lastProp.equals(AbstractEntity.KEY) && KeyType.class == annotationType ||
+            lastProp.equals(AbstractEntity.KEY) && KeyTitle.class == annotationType ||
+            lastProp.equals(AbstractEntity.DESC) && DescTitle.class == annotationType) {
             return getAnnotationForClass(annotationType, transform(forType, dotNotationExp).getKey());
-        } else {
+        }
+        else {
             return findFieldByNameOptionally(forType, dotNotationExp).map(field -> getAnnotation(field, annotationType)).orElse(null);
         }
     }
 
     /**
-     * The same as {@link #getPropertyAnnotation(Class, Class, String)}, but with an {@link Optional} result;
-     *
-     * @param annotationType
-     * @param forType
-     * @param dotNotationExp
-     * @return
+     * The same as {@link #getPropertyAnnotation(Class, Class, String)}, but with an {@link Optional} result.
      */
-    public static <T extends Annotation> Optional<T> getPropertyAnnotationOptionally(final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
+    public static <A extends Annotation> Optional<A> getPropertyAnnotationOptionally(final Class<A> annotationType, final Class<?> forType, final String dotNotationExp) {
         return Optional.ofNullable(getPropertyAnnotation(annotationType, forType, dotNotationExp));
     }
 

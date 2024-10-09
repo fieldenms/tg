@@ -3,7 +3,9 @@ package ua.com.fielden.platform.utils;
 import org.junit.Test;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -178,7 +180,23 @@ public class StreamUtilsTest {
         assertEquals(List.of(pair("one", 1), pair("two", 2)), 
                 StreamUtils.distinct(elements.stream(), Pair::getKey).toList());
     }
-    
+
+    @Test
+    public void distinct_returns_a_stream_whose_spliterator_provides_distinct_elements() {
+        final var splitr = StreamUtils.distinct(Stream.of("fun", "proc", "function", "routine"), s -> s.charAt(0)).spliterator();
+        final var distinct = new ArrayList<String>();
+        splitr.forEachRemaining(distinct::add);
+        assertEquals(List.of("fun", "proc", "routine"), distinct);
+    }
+
+    @Test
+    public void distinct_returns_a_stream_whose_iterator_provides_distinct_elements() {
+        final var iter = StreamUtils.distinct(Stream.of("fun", "proc", "function", "routine"), s -> s.charAt(0)).iterator();
+        final var distinct = new ArrayList<String>();
+        iter.forEachRemaining(distinct::add);
+        assertEquals(List.of("fun", "proc", "routine"), distinct);
+    }
+
     @Test
     public void can_zip_streams_of_different_size() {
         assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).toList());
@@ -300,6 +318,30 @@ public class StreamUtilsTest {
     }
 
     @Test
+    public void collectToImmutableMap_terminates_upon_reaching_the_shorter_stream() {
+        assertEquals(Map.of("a", 1), collectToImmutableMap(Stream.of("a", "b"), Stream.of(1)));
+        assertEquals(Map.of(), collectToImmutableMap(Stream.of(), Stream.of(1)));
+    }
+
+    @Test
+    public void collectToImmutableMap_applies_given_functions_to_produce_keys_and_values() {
+        assertEquals(Map.of("", 0, "cdecde", 6),
+                     collectToImmutableMap(Stream.of("ab", "cde"), Stream.of(0, 2),
+                                           (s, i) -> s.repeat(i), (s, i) -> i * s.length()));
+    }
+
+    @Test
+    public void enumerate_pairs_each_stream_element_with_its_sequential_number_starting_from_0_by_default() {
+        assertEquals(List.of("0:a", "1:b"),
+                     enumerate(Stream.of("a", "b"), (x, i) -> "%s:%s".formatted(i, x)).toList());
+    }
+
+    @Test
+    public void enumerate_pairs_each_stream_element_with_its_sequential_number_starting_from_the_given_one() {
+        assertEquals(List.of("4:a", "5:b"),
+                     enumerate(Stream.of("a", "b"), 4, (x, i) -> "%s:%s".formatted(i, x)).toList());
+    }
+
     public void transpose_returns_MxN_matrix_given_NxM_matrix() {
         final var matrix = List.of(List.of(1, 2), List.of(3, 4), List.of(5, 6));
         assertEquals(

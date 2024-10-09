@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -246,6 +247,10 @@ interface Assertions {
 
         static ComponentA of(final TypeMetadata.Component typeMetadata) {
             return new ComponentA(typeMetadata);
+        }
+
+        static ComponentA of(final Optional<TypeMetadata.Component> typeMetadata) {
+            return new ComponentA(assertPresent("Expected metadata to be generated for a component type.", typeMetadata));
         }
 
         public TypeMetadata.Component get() { return typeMetadata; }

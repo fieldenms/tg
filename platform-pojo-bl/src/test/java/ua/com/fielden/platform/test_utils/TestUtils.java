@@ -67,7 +67,7 @@ public final class TestUtils {
      *
      * @return  value described by the Optional
      */
-    public static <T> T assertOptEquals(final T expected, final Optional<T> opt) {
+    public static <T> T assertOptEquals(final T expected, final Optional<? extends T> opt) {
         final T actual = assertPresent(opt);
         assertEquals(expected, actual);
         return actual;
