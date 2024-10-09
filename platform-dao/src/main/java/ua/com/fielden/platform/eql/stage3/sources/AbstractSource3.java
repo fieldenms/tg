@@ -17,7 +17,7 @@ public abstract class AbstractSource3 implements ISource3 {
     private final Map<String, String> columns;
     private static final String MONEY_TYPE_SUBPROP_ENDING = ".amount";
     private static final int MONEY_TYPE_SUBPROP_ENDING_LENGTH = MONEY_TYPE_SUBPROP_ENDING.length();
-    private static final String RICHTEXT_CORE_TEXT_SUFFIX = '.' + RichText._coreText;
+    private static final String RICHTEXT_CORE_TEXT_SUFFIX = '.' + RichText.CORE_TEXT;
     private static final int RICHTEXT_CORE_TEXT_SUFFIX_LENGTH = RICHTEXT_CORE_TEXT_SUFFIX.length();
 
     protected AbstractSource3(final String sqlAlias, final Integer id, final Map<String, String> columns) {
