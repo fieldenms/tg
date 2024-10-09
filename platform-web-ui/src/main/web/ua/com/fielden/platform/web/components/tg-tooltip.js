@@ -30,6 +30,9 @@ const template = html`
         .hidden {
             display: none !important;
         }
+        .toastui-editor-contents * {
+            color: white !important;
+        }
     </style>
     <div id="tooltip" class="hidden"></div>`;
 
