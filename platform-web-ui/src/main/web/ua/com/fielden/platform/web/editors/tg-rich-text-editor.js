@@ -264,6 +264,10 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         }
     }
 
+    _formatTooltipText(value) {
+        return '';
+    }
+
     /**
      * Returns tooltip for action
      */
