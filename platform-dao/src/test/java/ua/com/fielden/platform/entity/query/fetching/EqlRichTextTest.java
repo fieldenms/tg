@@ -91,14 +91,14 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         // yield().X.as("richText.coreText").
         // Although, ultimately, both "coreText" and "formattedText" would have to be yielded into in a top-level query.
         final var sourceQuery = select().
-                yield().val("hello").as("text").
+                yield().val("без унікодів капут").as("text").
                 modelAsEntity(EntityWithRichText.class);
         final var query = select(sourceQuery)
                 .yield().prop("text").as("str")
                 .modelAsAggregate();
         final var entity = co(EntityAggregates.class).getEntity(from(query).model());
         assertNotNull(entity);
-        assertEquals("hello", entity.get("str"));
+        assertEquals("без унікодів капут", entity.get("str"));
     }
 
     @Test
@@ -166,7 +166,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         // Fails due to absence of text.formattedText yield alias in the top-level query.
         // Error occurs during container instantiation, in RichText constructor, because formattedText is null.
         final var query = select().
-                yield().val("hello").as("text.coreText").
+                yield().val("без унікодів капут").as("text.coreText").
                 modelAsEntity(EntityWithRichText.class);
         assertThrows(InvalidArgumentException.class,
                      () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
@@ -177,7 +177,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         // Fails due to absence of text.coreText yield in the top-level query.
         // Error occurs during container instantiation, in RichText constructor, because coreText is null.
         final var query = select().
-                yield().val("hello").as("text.formattedText").
+                yield().val("без унікодів капут").as("text.formattedText").
                 modelAsEntity(EntityWithRichText.class);
         assertThrows(InvalidArgumentException.class,
                      () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
@@ -185,7 +185,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
 
     @Test
     public void resulting_entities_can_be_instantiated_if_top_level_query_yields_into_all_RichText_components() {
-        final var richText = RichText.fromHtml("<code>cons</code> <b>does not</b> evaluate its arguments in a <i>lazy</i> language.");
+        final var richText = RichText.fromHtml("<code>cons</code> без унікодів капут <b>does not</b> evaluate its arguments in a <i>lazy</i> language.");
         final var query = select().
                 yield().val(richText.formattedText()).as("text.formattedText").
                 yield().val(richText.coreText()).as("text.coreText").
