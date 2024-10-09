@@ -16,8 +16,8 @@ import static graphql.com.google.common.collect.ImmutableTable.toImmutableTable;
 import static java.lang.String.join;
 import static java.util.function.Function.identity;
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.types.RichText._coreText;
-import static ua.com.fielden.platform.types.RichText._formattedText;
+import static ua.com.fielden.platform.types.RichText.CORE_TEXT;
+import static ua.com.fielden.platform.types.RichText.FORMATTED_TEXT;
 
 public class DomainMetadataModelGeneratorTest extends AbstractDaoTestCase {
 
@@ -34,12 +34,12 @@ public class DomainMetadataModelGeneratorTest extends AbstractDaoTestCase {
                                        assertEquals(entity, prop.holderAsDomainType());
                                        assertNull(prop.dbColumn());
                                    });
-        asserts.assertProperty(EntityWithRichText.class, join(".", "text", _coreText),
+        asserts.assertProperty(EntityWithRichText.class, join(".", "text", CORE_TEXT),
                                    prop -> {
                                        assertNull(prop.holderAsDomainType());
                                        assertEquals(prop.holderAsDomainProperty(), propText);
                                    });
-        asserts.assertProperty(EntityWithRichText.class, join(".", "text", _formattedText),
+        asserts.assertProperty(EntityWithRichText.class, join(".", "text", FORMATTED_TEXT),
                                    prop -> {
                                        assertNull(prop.holderAsDomainType());
                                        assertEquals(prop.holderAsDomainProperty(), propText);
