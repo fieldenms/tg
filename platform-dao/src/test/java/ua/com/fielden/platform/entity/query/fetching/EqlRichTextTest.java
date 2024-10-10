@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
 import org.junit.Test;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.exceptions.EntityContainerInstantiationException;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.RichText;
@@ -72,6 +75,124 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop(join(".", "text", CORE_TEXT)).like().val("привіт%").model()).model());
         assertNotNull(entity);
         assertEquals(richText.coreText(), entity.getText().coreText());
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Yielding into RichText properties
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @Test
+    public void RichText_property_used_as_yield_alias_in_source_query_can_be_resolved_in_top_level_query() {
+        // In general, if P is a RichText property, then prop(P) is interepreted as P.coreText.
+        // In this test case, the source query yields into "text" instead of "text.coreText".
+        // Nevertheless, prop("text") in the top-level query (which gets interpreted as "text.coreText") can be resolved
+        // against "text" from the source query.
+        // This can be used in synthetic entity model definitions, enabling the use of yield().X.as("richText") instead of
+        // yield().X.as("richText.coreText").
+        // Although, ultimately, both "coreText" and "formattedText" would have to be yielded into in a top-level query.
+        final var sourceQuery = select().
+                yield().val("без унікодів капут").as("text").
+                modelAsEntity(EntityWithRichText.class);
+        final var query = select(sourceQuery)
+                .yield().prop("text").as("str")
+                .modelAsAggregate();
+        final var entity = co(EntityAggregates.class).getEntity(from(query).model());
+        assertNotNull(entity);
+        assertEquals("без унікодів капут", entity.get("str"));
+    }
+
+    @Test
+    public void yielding_null_into_RichText_property_results_in_it_being_assigned_null_value() {
+        final var query = select()
+                .yield().val(null).as("text")
+                .modelAsEntity(EntityWithRichText.class);
+        final var entity = co(EntityWithRichText.class).getEntity(from(query).model());
+        assertNotNull(entity);
+        assertNull(entity.getText());
+    }
+
+    @Test
+    public void RichText_property_cannot_be_used_as_a_yield_alias() {
+        // Entity instantiation fails due to an attempt to set value "hello" into property "text" that has type RichText.
+        // This happens because EQL doesn't know that the yield with alias "text" should be treated as a component-typed value,
+        // and treats it as a primitive.
+        final var query = select()
+                .yield().val("hello").as("text")
+                .modelAsEntity(EntityWithRichText.class);
+        assertThrows(EntityContainerInstantiationException.class,
+                     () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
+    }
+
+    @Test
+    public void top_level_query_fails_if_contains_implicitly_added_yield_for_RichText_property_when_source_query_doesnt_yield_all_RichText_components_01() {
+        // Implicitly added yields contain "text.coreText" and "text.formattedText", while the source query yields only
+        // "text.coreText", which causes an error during resolution of "text.formattedText".
+        final var sourceQuery = select().
+                yield().val("hello").as("text.coreText").
+                modelAsEntity(EntityWithRichText.class);
+        final var query = select(sourceQuery).modelAsEntity(EntityWithRichText.class);
+        assertThrows(EqlException.class,
+                     () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
+    }
+
+    @Test
+    public void top_level_query_fails_if_contains_implicitly_added_yield_for_RichText_property_when_source_query_doesnt_yield_all_RichText_components_02() {
+        // Implicitly added yields contain "text.coreText" and "text.formattedText", while the source query yields only
+        // "text.formattedText", which causes an error during resolution of "text.coreText".
+        final var sourceQuery = select().
+                yield().val("hello").as("text.formattedText").
+                modelAsEntity(EntityWithRichText.class);
+        final var query = select(sourceQuery)
+                .modelAsEntity(EntityWithRichText.class);
+        assertThrows(EqlException.class,
+                     () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
+    }
+
+    @Test
+    public void top_level_query_fails_if_it_contains_implicitly_added_yield_for_RichText_property_when_source_query_doesnt_yield_all_RichText_components_03() {
+        // Implicitly added yields contain "text.coreText" and "text.formattedText", while the source query yields only
+        // "text", which causes an error during resolution of both "text.coreText" and "text.formattedText".
+        final var sourceQuery = select().
+                yield().val("hello").as("text").
+                modelAsEntity(EntityWithRichText.class);
+        final var query = select(sourceQuery)
+                .modelAsEntity(EntityWithRichText.class);
+        assertThrows(EqlException.class,
+                     () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
+    }
+
+    @Test
+    public void resulting_entities_cannot_be_instantiated_if_top_level_query_doesnt_yield_into_all_RichText_components_01() {
+        // Fails due to absence of text.formattedText yield alias in the top-level query.
+        // Error occurs during container instantiation, in RichText constructor, because formattedText is null.
+        final var query = select().
+                yield().val("без унікодів капут").as("text.coreText").
+                modelAsEntity(EntityWithRichText.class);
+        assertThrows(InvalidArgumentException.class,
+                     () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
+    }
+
+    @Test
+    public void resulting_entities_cannot_be_instantiated_if_top_level_query_doesnt_yield_into_all_RichText_components_02() {
+        // Fails due to absence of text.coreText yield in the top-level query.
+        // Error occurs during container instantiation, in RichText constructor, because coreText is null.
+        final var query = select().
+                yield().val("без унікодів капут").as("text.formattedText").
+                modelAsEntity(EntityWithRichText.class);
+        assertThrows(InvalidArgumentException.class,
+                     () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
+    }
+
+    @Test
+    public void resulting_entities_can_be_instantiated_if_top_level_query_yields_into_all_RichText_components() {
+        final var richText = RichText.fromHtml("<code>cons</code> без унікодів капут <b>does not</b> evaluate its arguments in a <i>lazy</i> language.");
+        final var query = select().
+                yield().val(richText.formattedText()).as("text.formattedText").
+                yield().val(richText.coreText()).as("text.coreText").
+                modelAsEntity(EntityWithRichText.class);
+        final var entity = co(EntityWithRichText.class).getEntity(from(query).model());
+        assertNotNull(entity);
+        assertTrue(richText.equalsByText(entity.getText()));
     }
 
 }
