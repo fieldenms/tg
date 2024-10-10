@@ -54,7 +54,7 @@ function colorTextPlugin(context, options) {
             color: ({ selectedColor }, { tr, selection, schema }, dispatch) => {
                 if (selectedColor) {
                     const { from, to } = selection;
-                    const attrs = { htmlAttrs: { style: `color: ${selectedColor}` } };
+                    const attrs = { htmlAttrs: { style: `color: ${selectedColor} !important` } };
                     const mark = schema.marks.span.create(attrs);
 
                     tr.addMark(from, to, mark);
