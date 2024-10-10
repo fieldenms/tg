@@ -88,12 +88,6 @@ export class TgLinkDialog extends PolymerElement {
     static get properties() {
         return {
             //public properties
-            url: {
-                type: String,
-                value: '',
-                observer: "_urlChanged"
-            },
-
             linkText: {
                 type: String,
                 value: '',
@@ -122,28 +116,30 @@ export class TgLinkDialog extends PolymerElement {
         };
     }
 
+    set url(newUrl) {
+        this.$.urlEditor.assignConcreteValue({value: newUrl}, this._reflector.tg_convert.bind(this._reflector));
+        this.$.urlEditor.commitIfChanged();
+    }
+
+    get url() {
+        return this._entity['urlProp'] ? this._entity['urlProp'].value : '';
+    }
+
     _cancleLink() {
         this.cancelCallback && this.cancelCallback();
     }
 
     _okLink() {
         this.$.urlEditor.commitIfChanged();
-        this.url = this._entity['urlProp'] ? this._entity['urlProp'].value : '';
-        this.okCallback && this.okCallback();
+        if (!this.$.urlEditor._error) {
+            this.okCallback && this.okCallback();
+        }
     }
 
     resetState() {
         this.url = '';
         this.linkText = '';
     }
-
-    _urlChanged(newUrl) {
-        if (!this._entity['urlProp'] || this._entity['urlProp'].value !== newUrl) {
-            this.$.urlEditor.assignConcreteValue({value: newUrl}, this._reflector.tg_convert.bind(this._reflector));
-            this.$.urlEditor.commit();
-        }
-    }
-
 }
 
 customElements.define('tg-link-dialog', TgLinkDialog);

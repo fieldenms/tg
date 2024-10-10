@@ -220,19 +220,17 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _changeTextColor(e) {
-        // const element = this.$.input.getDomAtCaretPosition();
-        // if (element.style.color) {
-        //     this.$.colorDialog.color = element.style.color;
-        // }
-        if (this.$.input._prevSelection[0] != this.$.input._prevSelection[1]) {
-            this.$.colorDropdown.open();
+        const textColorObj = this.$.input.initColorEditing();
+        if (textColorObj) {
+            this.$.colorDialog.color = textColorObj.detail;
         }
+        this.$.colorDropdown.open();
     }
 
     _toggleLink(e) {
         const link = this.$.input.initLinkEditing();
         if (link) {
-            this.$.linkDialog.url = link.url;
+            this.$.linkDialog.url = link.detail;
             this.$.linkDialog.linkText = link.text;
         }
         this.$.linkDropdown.open();

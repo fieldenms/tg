@@ -26,10 +26,10 @@ const template = html`
         action="null" validation-callback="[[_validationCallback]]">
     </tg-colour-picker>
     <div class="actions">
-        <paper-button raised roll="button" on-tap="_cancleLink" style="width:80px;" tooltip-text="Cancel text color">
+        <paper-button raised roll="button" on-tap="_cancleColor" style="width:80px;" tooltip-text="Cancel text color">
             <span>Cancel</span>
         </paper-button>
-        <paper-button raised roll="button" on-tap="_okLink" style="width:80px;" tooltip-text="Color the selected text">
+        <paper-button raised roll="button" on-tap="_okColor" style="width:80px;" tooltip-text="Color the selected text">
             <span>OK</span>
         </paper-button>
     </div>`;
@@ -62,7 +62,6 @@ const createEntity = function(reflector) {
     bindingView['@@origin'] = fullEntity;
     bindingView['colorProp'] = {hashlessUppercasedColourValue: ''};
     bindingView['@colorProp_editable'] = true;
-    bindingView['@colorProp_required'] = true;
     bindingView.get = prop => {
         if (prop === '') { // empty property name means 'entity itself'
             return bindingView;
@@ -87,13 +86,7 @@ export class TgColorPickerDialog extends PolymerElement {
 
     static get properties() {
         return {
-            //public properties
-            color: {
-                type: String,
-                value: '',
-                observer: "_colorChanged"
-            },
-
+            
             cancelCallback: Function,
 
             okCallback: Function,
@@ -116,45 +109,29 @@ export class TgColorPickerDialog extends PolymerElement {
         };
     }
 
-    _cancleLink() {
+    set color(newColor) {
+        const hashlessColor = newColor ? (newColor.startsWith('#') ? newColor.substring(1) : newColor).toUpperCase() : '';
+        this.$.colorEditor.assignConcreteValue({hashlessUppercasedColourValue: hashlessColor}, this._reflector.tg_convert.bind(this._reflector));
+        this.$.colorEditor.commitIfChanged();
+    }
+
+    get color() {
+        return this._entity['colorProp'] ? `#${this._entity['colorProp'].hashlessUppercasedColourValue}` : '';
+    }
+
+    _cancleColor() {
         this.cancelCallback && this.cancelCallback();
     }
 
-    _okLink() {
-        let hasError = false;
+    _okColor() {
         this.$.colorEditor.commitIfChanged();
-        if (!this._entity['colorProp'] || !this._entity['colorProp'].hashlessUppercasedColourValue) {
-            this._entity['@colorProp_error'] = {
-                '@resultType': 'ua.com.fielden.platform.error.Result',
-                //'ex': {message: 'The URL should not be empty'},
-                'message' : 'The color should not be empty'
-            }
-            this.$.colorEditor._updateMessagesForEntity(this._entity);
-            this.$.colorEditor.$.input.focus();
-            hasError = true;
-        } else {
-            delete this._entity['@colorProp_error'];
-            this.$.colorEditor._updateMessagesForEntity(this._entity);
-            hasError = false;
-        }
-        if (!hasError) {
-            this.color = `#${this._entity['colorProp'].hashlessUppercasedColourValue}`;
+        if (!this.$.colorEditor._error) {
             this.okCallback && this.okCallback();
-        }
-    }
-
-    _colorChanged(newColor) {
-        const hashlessColor = (newColor.startsWith('#') ? newColor.substring(1) : newColor).toUpperCase();
-        if (this._entity['colorProp'] && this._entity['colorProp'].hashlessUppercasedColourValue !== hashlessColor) {
-            this.$.colorEditor.assignConcreteValue({hashlessUppercasedColourValue: hashlessColor}, this._reflector.tg_convert.bind(this._reflector));
-            this.$.colorEditor.commit();
         }
     }
 
     resetState() {
         this.color = '';
-        this.$.colorEditor.assignConcreteValue({hashlessUppercasedColourValue: ''}, this._reflector.tg_convert.bind(this._reflector));
-        this.$.colorEditor.commit();
     }
 
 }

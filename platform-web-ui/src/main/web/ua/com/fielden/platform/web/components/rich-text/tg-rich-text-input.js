@@ -14,42 +14,9 @@ import { excludeErrors } from '/resources/components/tg-global-error-handler.js'
 
 excludeErrors( e => e.filename && e.filename.includes("toastui-editor-all") && e.error && e.error.name === 'TransformError');
 
-function createSelection(tr, selection, SelectionClass, openTag, closeTag) {
-    const { mapping, doc } = tr;
-    const { from, to, empty } = selection;
-    const mappedFrom = mapping.map(from) + openTag.length;
-    const mappedTo = mapping.map(to) - closeTag.length;
-
-    return empty
-        ? SelectionClass.create(doc, mappedTo, mappedTo)
-        : SelectionClass.create(doc, mappedFrom, mappedTo);
-}
-
 function colorTextPlugin(context, options) {
-    const { pmState } = context;
-
 
     return {
-        markdownCommands: {
-            color: ({ selectedColor }, { tr, selection, schema }, dispatch) => {
-                if (selectedColor) {
-                    const slice = selection.content();
-                    const textContent = slice.content.textBetween(0, slice.content.size, '\n');
-                    const openTag = `<span style='color: ${selectedColor}'>`;
-                    const closeTag = `</span>`;
-                    const colored = `${openTag}${textContent}${closeTag}`;
-
-                    tr.replaceSelectionWith(schema.text(colored)).setSelection(
-                        createSelection(tr, selection, pmState.TextSelection, openTag, closeTag)
-                    );
-
-                    dispatch(tr);
-
-                    return true;
-                }
-                return false;
-            },
-        },
         wysiwygCommands: {
             color: ({ selectedColor }, { tr, selection, schema }, dispatch) => {
                 if (selectedColor) {
@@ -79,8 +46,8 @@ function colorTextPlugin(context, options) {
 
 let currentTooltipElement = null;
 function mouseOverHandler(e) {
-    const a = findLinkParent.bind(this)(e.target);
-    if (a && a.hasAttribute('href')) {
+    const a = findParentBy.bind(this)(e.target, isLink);
+    if (a) {
         if (currentTooltipElement !== a) {
             this._hideTooltip();
         }
@@ -91,16 +58,20 @@ function mouseOverHandler(e) {
     currentTooltipElement = a;
 };
 
-function findLinkParent(element) {
-    return findParentBy.bind(this)(element, parent => parent.hasAttribute && parent.hasAttribute('href'));
-};
+function isLink(element) {
+    return element.hasAttribute && element.hasAttribute('href')
+}
+
+function isColoredSpan(element) {
+    return element.tagName && element.tagName === 'SPAN' && element.style.color
+}
 
 function findParentBy(element, predicate) {
     let parent = element;
-    while (parent && parent !== this._getEditableContent() && !predicate(parent)) {
+    while (parent && !predicate(parent) && parent !== this._getEditableContent() ) {
         parent = parent.parentElement;
     }
-    return parent;
+    return parent && predicate(parent) ? parent : null;
 }
 
 let mouseTimer = null;
@@ -108,8 +79,8 @@ let longPress = false;
 let shortPress = false;
 
 function runLinkIfPossible(el) {
-    const a = findLinkParent.bind(this)(el);
-    if (a && a.hasAttribute('href')) {
+    const a = findParentBy.bind(this)(el, isLink);
+    if (a) {
         const w = window.open(a.getAttribute('href'));
         w.focus();
     }
@@ -143,15 +114,15 @@ function mouseUpHandler(e) {
     }
 }
 
-function getLink() {
+function getElementToEdit(predicate, extractor) {
     if (this._prevSelection) {
         if (this._prevSelection[0] === this._prevSelection[1]) {
             //It means that only caret postion was set (no selection). Then take text and url from dom at caret position if it exists
             const node = this._editor.wwEditor.view.domAtPos(this._prevSelection[0], 1).node;
-            const link = findLinkParent.bind(this)(node);
-            if (link && link.pmViewDesc && link.hasAttribute("href")) {
-                const text = this._editor.getSelectedText(link.pmViewDesc.posAtStart, link.pmViewDesc.posAtEnd);
-                return {pos: [link.pmViewDesc.posAtStart, link.pmViewDesc.posAtEnd], text: text, url: link.getAttribute("href")};
+            const element = findParentBy.bind(this)(node, predicate);
+            if (element && element.pmViewDesc) {
+                const text = this._editor.getSelectedText(element.pmViewDesc.posAtStart, element.pmViewDesc.posAtEnd);
+                return {pos: [element.pmViewDesc.posAtStart, element.pmViewDesc.posAtEnd], text: text, detail: extractor(element)};
             }
         } else {
             //This branch indicates that user has selected some text or even nodes, therefore the text should be taken from selection
@@ -164,8 +135,8 @@ function getLink() {
                     nodes.push(node);
                 }
             }
-            const link = nodes.map(node => findLinkParent.bind(this)(node)).find(a => a && a.hasAttribute('href'));
-            return (link && {text: text, url: link.getAttribute("href")}) || {text: text, url: ''};
+            const element = nodes.map(node => findParentBy.bind(this)(node, predicate)).find(a => a);
+            return (element && {text: text, detail: extractor(element)}) || {text: text, detail: ''};
         }
     }
 }
@@ -194,6 +165,28 @@ function focusEditor(event) {
     if (event.keyCode === 13 && !this.shadowRoot.activeElement) {
         this._editor.moveCursorToStart(true);
     }
+}
+
+function editElement(predicate, extractor) {
+    const element = getElementToEdit.bind(this)(predicate, extractor);
+    if (element) {
+        if (element.pos) {
+            this._editor.setSelection(element.pos[0], element.pos[1]);
+        }
+        return element;
+    }
+}
+
+function rgbToHex(rgbString) {
+    return "#" + rgbString
+        .split("(")[1]
+        .split(")")[0]
+        .split(",")
+        .map(colorComponent => {            
+            const parsedColor = parseInt(colorComponent).toString(16); //Convert to a base16 string
+            return (parsedColor.length === 1) ? "0" + parsedColor : parsedColor;
+        })
+        .join("");
 }
 
 const template = html`
@@ -348,13 +341,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     initLinkEditing() {
-        const link = getLink.bind(this)();
-        if (link) {
-            if (link.pos) {
-                this._editor.setSelection(link.pos[0], link.pos[1]);
-            }
-            return link;
-        }
+        return editElement.bind(this)(isLink, el => el.getAttribute('href'));
+    }
+
+    initColorEditing() {
+        return editElement.bind(this)(isColoredSpan, el => rgbToHex(el.style.color));
     }
 
     toggleLink(url, text) {
