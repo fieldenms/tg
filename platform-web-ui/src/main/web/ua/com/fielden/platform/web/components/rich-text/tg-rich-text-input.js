@@ -15,6 +15,23 @@ import { excludeErrors } from '/resources/components/tg-global-error-handler.js'
 excludeErrors( e => e.filename && e.filename.includes("toastui-editor-all") && e.error && e.error.name === 'TransformError');
 
 function colorTextPlugin(context, options) {
+    //The following method was copied from prosemirror-commands module
+    function markApplies(doc, ranges, type) {
+        for (let i = 0; i < ranges.length; i++) {
+            let { $from, $to } = ranges[i];
+            let can = $from.depth == 0 ? doc.type.allowsMarkType(type) : false;
+            doc.nodesBetween($from.pos, $to.pos, node => {
+                if (can) {
+                    return false;
+                }
+                can = node.inlineContent && node.type.allowsMarkType(type);
+            });
+            if (can) {
+                return true;
+            }
+        }
+        return false
+    }
 
     return {
         wysiwygCommands: {
@@ -30,6 +47,35 @@ function colorTextPlugin(context, options) {
                     return true;
                 }
                 return false;
+            },
+            clearColor: (payload, state, dispatch) => {
+                //The following logic was copied from prosemirror-commands module and tuned to requirements of this method
+                const markType = state.schema.marks.span;
+                let { empty, $cursor, ranges } = state.selection;
+                if ((empty && !$cursor) || !markApplies(state.doc, ranges, markType)) {
+                    return false;
+                } 
+                if (dispatch) {
+                    if ($cursor) {
+                        if (markType.isInSet(state.storedMarks || $cursor.marks())) {
+                            dispatch(state.tr.removeStoredMark(markType));
+                        } 
+                    } else {
+                        let has = false, tr = state.tr;
+                        for (let i = 0; !has && i < ranges.length; i++) {
+                            let { $from, $to } = ranges[i];
+                            has = state.doc.rangeHasMark($from.pos, $to.pos, markType);
+                        }
+                        for (let i = 0; i < ranges.length; i++) {
+                            let { $from, $to } = ranges[i]
+                            if (has) {
+                                tr.removeMark($from.pos, $to.pos, markType);
+                            }
+                        }
+                        dispatch(tr.scrollIntoView())
+                    }
+                }
+                return true;
             },
         },
         toHTMLRenderers: {
@@ -357,7 +403,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     applyColor(selectedColor) {
-        this._editor.exec("color", {selectedColor: selectedColor});
+        if (selectedColor) {
+            this._editor.exec("color", {selectedColor: selectedColor});
+        } else {
+            this._editor.exec('clearColor');
+        }
         this._editor.focus();
         this._editor.setSelection(this._prevSelection[0], this._prevSelection[1]);
     }
