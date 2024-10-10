@@ -27,7 +27,7 @@ const template = html`
         action="null" validation-callback="[[validationCallback]]">
     </tg-hyperlink-editor>
     <div class="actions">
-        <paper-button raised roll="button" on-tap="_cancleLink" style="width:80px;" tooltip-text="Do not insert a link">
+        <paper-button raised roll="button" on-tap="_cancelLink" style="width:80px;" tooltip-text="Do not insert a link">
             <span>Cancel</span>
         </paper-button>
         <paper-button raised roll="button" on-tap="_okLink" style="width:80px;" tooltip-text="Insert a link">
@@ -125,7 +125,7 @@ export class TgLinkDialog extends PolymerElement {
         return this._entity['urlProp'] ? this._entity['urlProp'].value : '';
     }
 
-    _cancleLink() {
+    _cancelLink() {
         this.cancelCallback && this.cancelCallback();
     }
 

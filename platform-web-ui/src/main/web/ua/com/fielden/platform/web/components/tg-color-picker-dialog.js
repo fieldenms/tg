@@ -26,7 +26,7 @@ const template = html`
         action="null" validation-callback="[[_validationCallback]]">
     </tg-colour-picker>
     <div class="actions">
-        <paper-button raised roll="button" on-tap="_cancleColor" style="width:80px;" tooltip-text="Cancel text color">
+        <paper-button raised roll="button" on-tap="_cancelColor" style="width:80px;" tooltip-text="Cancel text color">
             <span>Cancel</span>
         </paper-button>
         <paper-button raised roll="button" on-tap="_okColor" style="width:80px;" tooltip-text="Color the selected text">
@@ -119,7 +119,7 @@ export class TgColorPickerDialog extends PolymerElement {
         return this._entity['colorProp'] ? `#${this._entity['colorProp'].hashlessUppercasedColourValue}` : '';
     }
 
-    _cancleColor() {
+    _cancelColor() {
         this.cancelCallback && this.cancelCallback();
     }
 
