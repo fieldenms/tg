@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @EntityTitle("TG Union")
-// @DescTitle should not be used here -- description is either common property from union types or can be present individually there; description can not be present on union type itself
+// @DescTitle should not be used here -- description is either common property from union types or can be present individually there; description cannot be present on union type itself
 @CompanionObject(TgUnionCo.class)
 public class TgUnion extends AbstractUnionEntity {
 

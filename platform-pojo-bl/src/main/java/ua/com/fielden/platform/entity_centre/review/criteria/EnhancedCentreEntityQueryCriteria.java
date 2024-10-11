@@ -18,12 +18,14 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
+
 
 /**
  * This class is the base class to enhance with criteria and resultant properties.
@@ -44,7 +46,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Boolean, Map<String, Object>> centreConfigurator;
     private Runnable centreDeleter;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
-    private Runnable freshCentreSaver;
+    private Supplier<BiFunction<Map<String, Object>, String, Map<String, Object>>> freshCentreSaver;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Runnable configDuplicateAction;
     private Consumer<String> inheritedFromBaseCentreUpdater;
@@ -61,6 +63,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Optional<String>, Optional<String>> centreConfigUuidGetter;
     private Supplier<Boolean> centreDirtyGetter;
     private Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator;
+    private Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>>> centreDirtyCalculatorWithSavedSupplier;
     private Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator;
     private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Function<Optional<Integer>, Function<Optional<Optional<String>>, Map<String, Object>>>>>> centreCustomObjectGetter;
     /**
@@ -235,15 +238,15 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
      * 
      * @param freshCentreSaver
      */
-    public void setFreshCentreSaver(final Runnable freshCentreSaver) {
+    public void setFreshCentreSaver(final Supplier<BiFunction<Map<String, Object>, String, Map<String, Object>>> freshCentreSaver) {
         this.freshCentreSaver = freshCentreSaver;
     }
     
     /**
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
      */
-    public void saveFreshCentre() {
-        freshCentreSaver.run();
+    public BiFunction<Map<String, Object>, String, Map<String, Object>> saveFreshCentre() {
+        return freshCentreSaver.get();
     }
 
     public void setCentreDeleter(final Runnable centreDeleter) {
@@ -348,6 +351,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator() {
         return centreDirtyCalculator;
+    }
+
+    public void setCentreDirtyCalculatorWithSavedSupplier(final Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>>> centreDirtyCalculatorWithSavedSupplier) {
+        this.centreDirtyCalculatorWithSavedSupplier = centreDirtyCalculatorWithSavedSupplier;
+    }
+
+    public Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>>> centreDirtyCalculatorWithSavedSupplier() {
+        return centreDirtyCalculatorWithSavedSupplier;
     }
 
     public void setCentreDirtyGetter(final Supplier<Boolean> centreDirtyGetter) {

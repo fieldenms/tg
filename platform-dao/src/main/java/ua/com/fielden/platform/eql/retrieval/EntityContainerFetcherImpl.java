@@ -145,7 +145,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
     {
         final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
 
-        final Query query = produceQueryWithPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity);
+        final Query query = produceQueryWithPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity, dbVersionProvider.dbVersion());
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(entityFactory);
 
@@ -165,7 +165,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
     {
         final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
         final int batchSize = fetchSize.orElse(100);
-        final Query query = produceQueryWithoutPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues())
+        final Query query = produceQueryWithoutPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), dbVersionProvider.dbVersion())
                 .setFetchSize(batchSize);
         final Stream<Object[]> stream = ScrollableResultStream.streamOf(query.scroll(ScrollMode.FORWARD_ONLY));
 

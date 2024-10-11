@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
@@ -7,14 +9,18 @@ import ua.com.fielden.platform.eql.stage2.conditions.NullPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.AbstractSingleOperand2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.*;
 import java.util.Map.Entry;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPath;
+import static ua.com.fielden.platform.utils.StreamUtils.enumerated;
 
 /**
  * Transforms yields from multiple source queries into <i>yield trees</i>.
@@ -42,6 +48,15 @@ import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPath;
  */
 public class YieldInfoNodesGenerator {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final String ERR_INVALID_YIELDS_MATRIX =
+    """
+    Invalid yields: [%s].
+    All source queries in a union must have the same number of yields and use the same set of aliases.
+    This union contains %s source queries. To correct the error, each reported yield must occur in all queries.\
+    """;
+
     private YieldInfoNodesGenerator() {}
 
     /**
@@ -66,7 +81,7 @@ public class YieldInfoNodesGenerator {
                     .toList();
         } else {
             final Map<String, List<YieldAndConditions>> yieldMatrix = generateYieldsMatrix(models);
-            validateYieldsMatrix(yieldMatrix, models.size());
+            validateYieldsMatrix(yieldMatrix, models);
             return yieldMatrix.entrySet().stream()
                     .map(yieldEntry -> new YieldInfo(yieldEntry.getKey(), determinePropType(yieldEntry.getValue()), determineNonnullability(yieldEntry.getValue())))
                     .toList();
@@ -96,11 +111,19 @@ public class YieldInfoNodesGenerator {
                 .collect(groupingBy(yac -> yac.yield.alias));
     }
 
-    private static void validateYieldsMatrix(final Map<String, List<YieldAndConditions>> yieldMatrix, final int modelsCount) {
-        for (final Entry<String, List<YieldAndConditions>> entry : yieldMatrix.entrySet()) {
-            if (entry.getValue().size() != modelsCount) {
-                throw new EqlStage1ProcessingException("Incorrect models used as query source - their result types are different! Alias [" + entry.getKey() + "] has been yielded only " + entry.getValue().size() + " but the models count is " + modelsCount);
-            }
+    private static void validateYieldsMatrix(final Map<String, List<YieldAndConditions>> yieldMatrix, final List<SourceQuery2> models) {
+        // Each tuple is of the form ("yield alias", "number of models where it occurs").
+        final Collection<T2<String, Integer>> invalidYields = yieldMatrix.entrySet().stream()
+                .filter(entry -> entry.getValue().size() != models.size())
+                .map(entry -> T2.t2(entry.getKey(), entry.getValue().size()))
+                .collect(toImmutableList());
+
+        if (!invalidYields.isEmpty()) {
+            final var exception = new EqlStage1ProcessingException(
+                    ERR_INVALID_YIELDS_MATRIX.formatted(invalidYields.stream().map(t2 -> t2.map("\"%s\" (occurs %s times)"::formatted)).collect(joining(", ")),
+                                                        models.size()));
+            LOGGER.error("Source queries:\n%s".formatted(enumerated(models.stream(), "%s. %s"::formatted)), exception);
+            throw exception;
         }
     }
 

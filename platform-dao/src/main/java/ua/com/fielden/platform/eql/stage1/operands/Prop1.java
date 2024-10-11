@@ -1,15 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.operands;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
-import static java.util.Collections.emptySet;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.utils.CollectionUtil.first;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-
-import java.util.*;
-
-import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
@@ -20,9 +10,18 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.types.RichText;
 
 import javax.annotation.Nullable;
+import java.util.*;
+
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.String.format;
+import static java.util.Collections.emptySet;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.utils.CollectionUtil.append;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 public class Prop1 implements ISingleOperand1<Prop2> {
 
@@ -49,7 +48,6 @@ public class Prop1 implements ISingleOperand1<Prop2> {
                 .findFirst()
                 .orElseThrow(() -> new EqlStage1ProcessingException(ERR_CANNOT_RESOLVE_PROPERTY.formatted(propPath)));
     }
-
     /**
      * If the given path ends with a component type that has a single property, appends that property onto the path.
      * Otherwise, returns the given path.
@@ -57,16 +55,15 @@ public class Prop1 implements ISingleOperand1<Prop2> {
      * @return a new enhanced path or the same path
      */
     public static List<AbstractQuerySourceItem<?>> enhancePath(final List<AbstractQuerySourceItem<?>> originalPath) {
-        if (originalPath.getLast() instanceof QuerySourceItemForComponentType<?> lastResolutionItemAsComponent && lastResolutionItemAsComponent.getSubitems().size() == 1) {
-            final var autoResolvedItem = first(lastResolutionItemAsComponent.getSubitems().values()).orElseThrow();
-            return ImmutableList. <AbstractQuerySourceItem<?>> builder()
-                    .addAll(originalPath)
-                    .add(autoResolvedItem)
-                    .build();
+        if (originalPath.getLast() instanceof QuerySourceItemForComponentType<?> lastComponent) {
+            if (lastComponent.getSubitems().size() == 1) {
+                return append(originalPath, first(lastComponent.getSubitems().values()).orElseThrow());
+            }
+            else if (lastComponent.javaType() == RichText.class) {
+                return append(originalPath, lastComponent.getSubitems().get(RichText.CORE_TEXT));
+            }
         }
-        else {
-            return originalPath;
-        }
+        return originalPath;
     }
 
     public static @Nullable PropResolution resolvePropAgainstSource(final ISource2<? extends ISource3> source, final Prop1 prop) {

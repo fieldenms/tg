@@ -4,6 +4,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.*;
 
 import java.math.BigDecimal;
@@ -12,7 +13,6 @@ import java.util.Date;
 
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 import static ua.com.fielden.platform.test.PlatformTestDomainTypes.entityTypes;
 
 public class BaseEntQueryTCase1 {
@@ -49,7 +49,11 @@ public class BaseEntQueryTCase1 {
     protected static final QuerySourceInfoProvider QUERY_SOURCE_INFO_PROVIDER;
 
     static {
-        DOMAIN_METADATA = new DomainMetadataBuilder(PLATFORM_HIBERNATE_TYPE_MAPPINGS, entityTypes, constantDbVersion(H2)).build();
+        final var dbVersionProvider = constantDbVersion(H2);
+        DOMAIN_METADATA = new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+                                                    entityTypes,
+                                                    dbVersionProvider)
+                .build();
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
     }
 

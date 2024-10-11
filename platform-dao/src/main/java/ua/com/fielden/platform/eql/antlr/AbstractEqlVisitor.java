@@ -14,6 +14,8 @@ import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.eql.stage1.operands.Value1.nullValue;
 import static ua.com.fielden.platform.eql.stage1.operands.Value1.value;
+import static ua.com.fielden.platform.persistence.HibernateConstants.N;
+import static ua.com.fielden.platform.persistence.HibernateConstants.Y;
 
 abstract class AbstractEqlVisitor<T> extends StrictEQLBaseVisitor<T> {
 

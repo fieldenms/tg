@@ -24,10 +24,12 @@ import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeSelectorEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
+import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
@@ -43,7 +45,6 @@ import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDb
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.*;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -110,11 +111,12 @@ public class DynamicQueryBuilderSqlTest {
 
         final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
-                PLATFORM_HIBERNATE_TYPE_MAPPINGS, domainTypes, dbVersionProvider)
+                new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), domainTypes, dbVersionProvider)
                 .build();
         try {
             hibConf.addInputStream(new ByteArrayInputStream(
-                    new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata))
+                    new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata),
+                                                   new PropertyInlinerImpl(domainMetadata))
                             .generateMappings().getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);

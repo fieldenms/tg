@@ -1,53 +1,22 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootTypes;
-import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.createFrom;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
 import ua.com.fielden.platform.domaintree.IRootTyped;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.*;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.centre.IOrderingManager;
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.domaintree.centre.IWidthManager;
-import ua.com.fielden.platform.domaintree.centre.IWidthRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.MultipleDecDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.analyses.impl.SentinelDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.centre.analyses.impl.*;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.impl.*;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
-import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
-import ua.com.fielden.platform.domaintree.impl.CustomProperty;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
@@ -57,6 +26,13 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootTypes;
+import static ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.createFrom;
 
 /**
  * Criteria (entity-centre) domain tree manager with "power" of managing domain with calculated properties. The calculated properties can be managed exactly as simple properties.<br>
@@ -82,10 +58,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     /**
      * A <i>manager with enhancer</i> constructor for instantiating with calculated / custom properties inside.
      *
-     * @param serialiser
      * @param rootTypes
      * @param calculatedAndCustomProperties
-     * @param miType
      */
     public CentreDomainTreeManagerAndEnhancer(
             final EntityFactory entityFactory,
@@ -166,7 +140,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
          * {@link AbstractDomainTreeRepresentation}.
          *
          * @param baseEnhancer
-         * @param dtr
          */
         protected CentreDomainTreeEnhancerWithPropertiesPopulation(final DomainTreeEnhancer baseEnhancer, final CentreDomainTreeManagerAndEnhancer mgrAndEnhancer) {
             super(baseEnhancer, (DomainTreeRepresentationAndEnhancer) mgrAndEnhancer.getRepresentation());
@@ -306,7 +279,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     /**
      * Enhances centre manager domain to include COUNT_OF_SELF_DASHBOARD property, which will be used for sentinel analyses.
      *
-     * @param rootType
+     * @param rootTypes
      */
     public void provideSentinelAnalysesAggregationProperty(final Set<Class<?>> rootTypes) {
         for (final Class<?> rootType : rootTypes) {
@@ -323,7 +296,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     /**
      * Enhances centre manager domain to include "Date Period" distribution properties, which will be used for lifecycle analyses.
      *
-     * @param rootType
+     * @param rootTypes
      */
     public void provideLifecycleAnalysesDatePeriodProperties(final Set<Class<?>> rootTypes) {
         for (final Class<?> rootType : rootTypes) {
@@ -434,7 +407,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     /**
      * Unfreezes the centre instance that is currently freezed.
      *
-     * @param root
      * @param name
      */
     protected void unfreeze(final String name) {
@@ -448,7 +420,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
      * Throws an error when the instance is <code>null</code> (not initialised).
      *
      * @param mgr
-     * @param root
      * @param name
      */
     private void notInitiliasedError(final IAbstractAnalysisDomainTreeManager mgr, final String name) {
@@ -726,6 +697,14 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             // inject an enhanced type into method implementation
             base().removeCheckedProperty(enhancer().getManagedType(root), property);
         }
+
+        @Override
+        public boolean selectionCriteriaEquals(final IAddToCriteriaTickManager obj) {
+            return this == obj ||
+                getClass() == obj.getClass()
+                && base().selectionCriteriaEquals(((AddToCriteriaTickManagerAndEnhancer) obj).base());
+        }
+
     }
 
     /**

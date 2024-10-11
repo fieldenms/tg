@@ -86,6 +86,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -751,7 +752,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
         }
 
-        if (!isString(type) && !isHyperlink(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
+        if (!isString(type) && !isHyperlink(type) && !RichText.class.isAssignableFrom(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
             final String error = format(INVALID_USE_OF_PARAM_LENGTH_MSG, propName, getType().getName());
             logger.error(error);
             throw new EntityDefinitionException(error);

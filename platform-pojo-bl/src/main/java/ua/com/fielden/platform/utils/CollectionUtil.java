@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -104,6 +105,62 @@ public final class CollectionUtil {
             result.addAll(collection);
         }
         return result;
+    }
+
+    /**
+     * Returns an immutable set that results from concatenating given iterables.
+     */
+    @SafeVarargs
+    public static <X> ImmutableSet<X> concatSet(final Iterable<? extends X>... iterables) {
+        if (iterables.length == 0) {
+            return ImmutableSet.of();
+        }
+        else if (iterables.length == 1) {
+            return ImmutableSet.copyOf(iterables[0]);
+        }
+
+        // don't Stream to be a little bit more efficient
+        int size = 0;
+        for (final var iter : iterables) {
+            if (iter instanceof Collection<?> c) {
+                size += c.size();
+            }
+        }
+
+        final var builder = ImmutableSet.<X>builderWithExpectedSize(size);
+        for (final var iter : iterables) {
+            builder.addAll(iter);
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Returns an immutable list that results from concatenating given iterables.
+     */
+    @SafeVarargs
+    public static <X> ImmutableList<X> concatList(final Iterable<? extends X>... iterables) {
+        if (iterables.length == 0) {
+            return ImmutableList.of();
+        }
+        else if (iterables.length == 1) {
+            return ImmutableList.copyOf(iterables[0]);
+        }
+
+        // don't Stream to be a little bit more efficient
+        int size = 0;
+        for (final var iter : iterables) {
+            if (iter instanceof Collection<?> c) {
+                size += c.size();
+            }
+        }
+
+        final var builder = ImmutableList.<X>builderWithExpectedSize(size);
+        for (final var iter : iterables) {
+            builder.addAll(iter);
+        }
+
+        return builder.build();
     }
 
     @SafeVarargs
@@ -302,10 +359,23 @@ public final class CollectionUtil {
         if (xs.isEmpty()) {
             return Optional.empty();
         }
-
         // creating a new iterator bears a cost, try to avoid it
         final E elt = xs instanceof SequencedCollection<E> seq ? seq.getFirst() : xs.iterator().next();
         return Optional.ofNullable(elt);
+    }
+
+    /**
+     * Produces an immutable list with all elements from {@code xs} and {@code x} appended at the end.
+     *
+     * @param xs
+     * @param x
+     * @return
+     * @param <X>
+     */
+    public static <X> ImmutableList<X> append(final Iterable<? extends X> xs, final X x) {
+        final int xsSize = xs instanceof Collection<?> c ? c.size() : 0;
+        final var builder = ImmutableList.<X> builderWithExpectedSize(xsSize + 1);
+        return builder.addAll(xs).add(x).build();
     }
 
     /**

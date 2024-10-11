@@ -1,17 +1,17 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableMap;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
-import java.util.stream.BaseStream;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.util.stream.*;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.Spliterators.spliteratorUnknownSize;
+import static ua.com.fielden.platform.utils.IteratorUtils.distinctIterator;
 
 /**
  * A set of convenient APIs for working with {@link Stream}.
@@ -57,8 +57,9 @@ public class StreamUtils {
     }
     
     /**
-     * Splits a stream into a <code>head</code> and <code>tail</code>. The head is optional as the passed in stream could be empty. The tail is a stream, which could be empty if
-     * the input stream is empty or contains only a single element.
+     * Splits a stream into a <code>head</code> and <code>tail</code>.
+     * The head is optional as the passed in stream could be empty.
+     * The tail is a stream, which could be empty if the input stream is empty or contains only a single element.
      * 
      * @param stream
      * @return
@@ -106,41 +107,17 @@ public class StreamUtils {
     }
 
     /**
-     * Returns a stream of distinct elements from {@code stream}, where unique identity of an element is determined by {@code uidMapper}.
-     * <p>
-     * It is required that the return type of {@code uidMapper} has proper implementation of {@code hashCode()} and {@code equals()}.
-     * <p>
-     * The order of the original stream's elements is preserved.
-     *
-     * @param stream
-     * @param uidMapper a function that maps the original element to its unique identity.
-     * @return
+     * Equivalent of {@link IteratorUtils#distinctIterator(Iterator, Function)} but for streams.
      */
-    public static <T, R> Stream<T> distinct(final Stream<T> stream, final Function<T, R> uidMapper) {
-        return StreamSupport.stream(distinct(stream.spliterator(), uidMapper), false);
-    }
-
-    private static <T, R> Spliterator<T> distinct(final Spliterator<T> splitr, final Function<T, R> uidMapper) {
-        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
-            final LinkedHashSet<R> uniqs = new LinkedHashSet<>();
-
-            @Override
-            public boolean tryAdvance(final Consumer<? super T> consumer) {
-                return splitr.tryAdvance(elem -> {
-                    final R uid = uidMapper.apply(elem);
-                    if (!uniqs.contains(uid)) {
-                        consumer.accept(elem);
-                        uniqs.add(uid);
-                    }
-                });
-            }
-        };
+    public static <T, U> Stream<T> distinct(final Stream<T> stream, final Function<T, U> classifier) {
+        return StreamSupport.stream(spliteratorUnknownSize(distinctIterator(stream.iterator(), classifier), 0),
+                                    false);
     }
 
     /**
      * Returns the longest prefix of the {@code stream} until (inclusive) an element that satisfies {@code predicate} is encountered.
      * <p>
-     * If no such element was encountered then the whole stream is returned.
+     * If no such element was encountered, then the whole stream is returned.
      *
      * @param stream
      * @param predicate
@@ -231,18 +208,25 @@ public class StreamUtils {
     }
 
     /**
-     * Performs an action for each pair of elements from given sources. Terminates upon reaching the end of the shorter source.
+     * Performs an action for each pair of elements from given sources.
+     * Terminates upon reaching the end of the shorter source.
      */
     public static <X, Y> void zipDo(
             final Collection<? extends X> xs, final Collection<? extends Y> ys,
             final BiConsumer<? super X, ? super Y> action)
     {
-        final Iterator<? extends X> xIt = xs.iterator();
-        final Iterator<? extends Y> yIt = ys.iterator();
+        IteratorUtils.zipDo(xs.iterator(), ys.iterator(), action);
+    }
 
-        while (xIt.hasNext() && yIt.hasNext()) {
-            action.accept(xIt.next(), yIt.next());
-        }
+    /**
+     * Performs an action for each pair of elements from given sources.
+     * Terminates upon reaching the end of the shorter source.
+     */
+    public static <X, Y> void zipDo(
+            final BaseStream<? extends X, ?> xs, final BaseStream<? extends Y, ?> ys,
+            final BiConsumer<? super X, ? super Y> action)
+    {
+        IteratorUtils.zipDo(xs.iterator(), ys.iterator(), action);
     }
 
     /**
@@ -270,19 +254,27 @@ public class StreamUtils {
      *     stream.mapMulti(typeFilter(Y.class))
      * }
      *
-     * <b>NOTE</b>: this method, unlike {@code instanceof}, can be used to test incompatible types. As such, it sacrifices
-     * the benefit of compile-time detection of "meaningless" filtering for succinctness.
-     * For example, {@code "a" instanceof List} is an illegal statement, while
-     * {@code Stream.of("a").mapMulti(typeFilter(List.class))} is allowed.
+     * <b>NOTE</b>: this method, unlike {@code instanceof}, can be used to test incompatible types.
+     * It sacrifices the benefit of compile-time detection of "meaningless" filtering for succinctness.
+     * For example, {@code "a" instanceof List} is an illegal statement,
+     * while {@code Stream.of("a").mapMulti(typeFilter(List.class))} is allowed.
      *
      * @param type  the type of elements that will be preserved in the resulting stream
      */
-    public static <T, R extends T> BiConsumer<T, Consumer<R>> typeFilter(Class<R> type) {
+    public static <T, R extends T> BiConsumer<T, Consumer<R>> typeFilter(final Class<R> type) {
         return (item, sink) -> {
             if (type.isInstance(item)) {
                 sink.accept(type.cast(item));
             }
         };
+    }
+
+    /**
+     * Returns a stream that is the result of concatenating given streams.
+     */
+    @SafeVarargs
+    public static <T> Stream<T> concat(final Stream<? extends T>... streams) {
+        return Stream.of(streams).flatMap(Function.identity());
     }
 
     /**
@@ -335,18 +327,12 @@ public class StreamUtils {
         return acc;
     }
 
-    /**
-     * Returns a stream that is the result of concatenating given streams.
-     */
-    @SafeVarargs
-    public static <T> Stream<T> concat(final Stream<? extends T>... streams) {
-        return Stream.of(streams).flatMap(Function.identity());
-    }
 
     /**
      * Sometimes there are situations where it is required to identify whether a stream is empty, and if it is empty, supply an alternative stream.
      * <p>
-     * There is no way to check if a stream is empty without invoking a terminal operation on it. This method returns either a stream with the elements of the original stream, if it was not empty,
+     * There is no way to check if a stream is empty without invoking a terminal operation on it.
+     * This method returns either a stream with the elements of the original stream, if it was not empty,
      * or an alternative infinite stream of elements generated by {@code supplier}.
      *
      * @param stream
@@ -368,12 +354,92 @@ public class StreamUtils {
     }
 
     /**
-     * Given a collection of streams, returns a stream of lists where each list is formed by consuming the next element
-     * from each input stream.
+     * Returns an infinite stream of integers starting from the given one.
+     */
+    public static IntStream integers(final int start) {
+        return IntStream.iterate(start, i -> i + 1);
+    }
+
+    /**
+     * Returns an infinite stream of longs starting from the given one.
+     */
+    public static LongStream longs(final long start) {
+        return LongStream.iterate(start, l -> l + 1);
+    }
+
+    /**
+     * Pairs each element of a stream with a number and applies the given function to get an element of the resulting stream.
+     * Numbers are drawn from an infinite stream starting from {@code start} and increasing by 1.
+     */
+    public static <X, Y> Stream<Y> enumerate(final BaseStream<X, ?> xs, final int start, final EnumerateF<? super X, Y> f) {
+        // construct an iterator by hand instead of using zip() to avoid boxing of integers
+        final Iterator<Y> ysIterator = new Iterator<Y>() {
+            final Iterator<X> xsIterator = xs.iterator();
+            int i = start;
+
+            @Override
+            public boolean hasNext() {
+                return xsIterator.hasNext();
+            }
+
+            @Override
+            public Y next() {
+                final Y y = f.apply(xsIterator.next(), i);
+                i += 1;
+                return y;
+            }
+        };
+        return StreamSupport.stream(spliteratorUnknownSize(ysIterator, 0), false);
+    }
+
+    /**
+     * {@link #enumerate(BaseStream, int, EnumerateF)} starting from 0.
+     */
+    public static <X, Y> Stream<Y> enumerate(final BaseStream<X, ?> xs, final EnumerateF<? super X, Y> f) {
+        return enumerate(xs, 0, f);
+    }
+
+    @FunctionalInterface
+    public interface EnumerateF<X, Y> {
+        Y apply(X x, int i);
+    }
+
+    /**
+     * Builds an immutable map from streams of keys and values.
+     * Terminates upon reaching the end of the shorter stream.
+     *
+     * @param ks  stream of keys
+     * @param vs  stream of values
+     */
+    public static <K, V> ImmutableMap<K, V> collectToImmutableMap(final BaseStream<? extends K, ?> ks,
+                                                                  final BaseStream<? extends V, ?> vs) {
+        final var builder = ImmutableMap.<K, V>builder();
+        zipDo(ks, vs, builder::put);
+        return builder.build();
+    }
+
+    /**
+     * Builds an immutable map from two streams by applying given functions to obtain keys and values.
+     * Terminates upon reaching the end of the shorter stream.
+     *
+     * @param kf  function that produces keys
+     * @param vf  function that produces values
+     */
+    public static <X, Y, K, V> ImmutableMap<K, V> collectToImmutableMap(final BaseStream<X, ?> xs,
+                                                                        final BaseStream<Y, ?> ys,
+                                                                        final BiFunction<? super X, ? super Y, K> kf,
+                                                                        final BiFunction<? super X, ? super Y, V> vf) {
+        final var builder = ImmutableMap.<K, V> builder();
+        zipDo(xs, ys, (x, y) -> builder.put(kf.apply(x, y), vf.apply(x, y)));
+        return builder.build();
+    }
+
+    /**
+     * Given a collection of streams, returns a stream of lists where each list is formed by consuming the next element from each input stream.
      * This operation can be thought of as matrix transposition where the input streams are rows and the output lists are columns.
      * <p>
-     * One caveat is that the resulting stream will be as long as the shortest input stream, which is possible only if
-     * the "input matrix" has "rows" of different length.
+     * One caveat is that the resulting stream will be as long as the shortest input stream,
+     * which is possible only if the "input matrix" has "rows" of different length.
      * <p>
      *
      * @see #transpose(Collection, Function)
@@ -396,7 +462,7 @@ public class StreamUtils {
 
                 for (final var spliterator : spliterators) {
                     final boolean advanced = spliterator.tryAdvance(elements::add);
-                    // shortest end reached
+                    // the shortest end reached
                     if (!advanced) {
                         return false;
                     }
@@ -457,8 +523,7 @@ public class StreamUtils {
     /**
      * Tests whether all integers in a stream are equal. If the stream is empty, returns an empty optional.
      * <p>
-     * This method is more efficient than the usage of {@link IntStream#distinct()} because the implementation of the latter
-     * uses boxing.
+     * This method is more efficient than the usage of {@link IntStream#distinct()} because the implementation of the latter uses boxing.
      */
     public static Optional<Boolean> areAllEqual(final IntStream stream) {
         final PrimitiveIterator.OfInt it = stream.iterator();
