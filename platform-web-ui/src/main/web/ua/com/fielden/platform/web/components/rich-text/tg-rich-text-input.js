@@ -72,6 +72,7 @@ function colorTextPlugin(context, options) {
                                 tr.removeMark($from.pos, $to.pos, markType);
                             }
                         }
+                        dispatch(tr);
                     }
                 }
                 return true;
@@ -235,7 +236,12 @@ function rgbToHex(rgbString) {
 }
 
 const template = html`
-    <style include='rich-text-enhanced-styles'></style>
+    <style include='rich-text-enhanced-styles'>
+        ::selection {
+            color: currentcolor;
+            background-color: Highlight;
+        }
+    </style>
     <div id="editor"></div>`; 
 
 class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKeysBehavior, TgTooltipBehavior], PolymerElement) {
