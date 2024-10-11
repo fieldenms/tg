@@ -11,6 +11,7 @@ public final class HibernateConstants {
     public static final Type H_INTEGER = IntegerType.INSTANCE;
     public static final Type H_BIGDECIMAL = BigDecimalType.INSTANCE;
     public static final Type H_STRING = StringType.INSTANCE;
+    public static final Type H_NSTRING = StringNVarcharType.INSTANCE;
     public static final Type H_DATE = DateType.INSTANCE;
     public static final Type H_DATETIME = DateTimeType.INSTANCE;
     public static final Type H_UTCDATETIME = UtcDateTimeType.INSTANCE;
