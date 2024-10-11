@@ -72,7 +72,6 @@ function colorTextPlugin(context, options) {
                                 tr.removeMark($from.pos, $to.pos, markType);
                             }
                         }
-                        dispatch(tr.scrollIntoView())
                     }
                 }
                 return true;
@@ -341,6 +340,10 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             prevKeyBindingHandler(keyBindings, event);
         };
         this.addEventListener('keydown', focusEditor.bind(this));
+    }
+
+    scrollIntoView() {
+        this._editor.wwEditor.view.dispatch(this._editor.wwEditor.view.state.tr.scrollIntoView());
     }
 
     applyHeader1(event) {

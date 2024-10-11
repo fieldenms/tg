@@ -220,6 +220,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _changeTextColor(e) {
+        this.$.input.scrollIntoView();
         const textColorObj = this.$.input.initColorEditing();
         const coordinates = this.$.input.getSelectionCoordinates();
         const x = (coordinates[0].left + coordinates[1].left) / 2;
@@ -233,6 +234,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _toggleLink(e) {
+        this.$.input.scrollIntoView();
         const link = this.$.input.initLinkEditing();
         const coordinates = this.$.input.getSelectionCoordinates();
         const x = (coordinates[0].left + coordinates[1].left) / 2;
@@ -256,14 +258,17 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _createBulletedList(e) {
         this.$.input.createBulletList(e);
+        this.$.input.scrollIntoView();
     }
 
     _createNumberedList(e) {
         this.$.input.createOrderedList(e);
+        this.$.input.scrollIntoView();
     }
 
     _createTaskList(e) {
         this.$.input.createTaskList(e);
+        this.$.input.scrollIntoView();
     }
 
     _calcHeight(height, entityType, propertyName) {
