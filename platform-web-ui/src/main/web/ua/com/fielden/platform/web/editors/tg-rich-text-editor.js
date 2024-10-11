@@ -58,10 +58,10 @@ const additionalTemplate = html`
             box-shadow: 0px 2px 6px #ccc;
         }
     </style>
-    <iron-dropdown id="linkDropdown" vertical-align="top" horizontal-align="left" vertical-offset="13.5" always-on-top on-iron-overlay-closed="_linkDialogClosed">
+    <iron-dropdown id="linkDropdown" style="width:300px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_linkDialogClosed">
         <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]"></tg-link-dialog>
     </iron-dropdown>
-    <iron-dropdown id="colorDropdown" vertical-align="top" horizontal-align="left" vertical-offset="13.5" always-on-top on-iron-overlay-closed="_colorDialogClosed">
+    <iron-dropdown id="colorDropdown" style="width:270px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_colorDialogClosed">
         <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]"></tg-color-picker-dialog>
     </iron-dropdown>`;
 const customLabelTemplate = html`
@@ -151,7 +151,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     ready() {
         super.ready();
-        this.$.linkDropdown.positionTarget = this.$.linkAction;
+        this.$.linkDropdown.positionTarget = document.body;
         this._cancelLinkInsertion = function () {
             this.$.linkDropdown.cancel();
         }.bind(this);
@@ -159,7 +159,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             this.$.input.toggleLink(this.$.linkDialog.url, this.$.linkDialog.linkText || this.$.linkDialog.url);
             this.$.linkDropdown.close();
         }.bind(this);
-        this.$.colorDropdown.positionTarget = this.$.colorAction;
+        this.$.colorDropdown.positionTarget = document.body;
         this._cancelColorAction = function() {
             this.$.colorDropdown.cancel();
         }.bind(this);
@@ -221,18 +221,28 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _changeTextColor(e) {
         const textColorObj = this.$.input.initColorEditing();
+        const coordinates = this.$.input.getSelectionCoordinates();
+        const x = (coordinates[0].left + coordinates[1].left) / 2;
+        const y = Math.max(coordinates[0].bottom, coordinates[1].bottom);
         if (textColorObj) {
             this.$.colorDialog.color = textColorObj.detail;
         }
+        this.$.colorDropdown.horizontalOffset =  x - parseInt(this.$.colorDropdown.style.width) / 2;
+        this.$.colorDropdown.verticalOffset = y;
         this.$.colorDropdown.open();
     }
 
     _toggleLink(e) {
         const link = this.$.input.initLinkEditing();
+        const coordinates = this.$.input.getSelectionCoordinates();
+        const x = (coordinates[0].left + coordinates[1].left) / 2;
+        const y = Math.max(coordinates[0].bottom, coordinates[1].bottom);
         if (link) {
             this.$.linkDialog.url = link.detail;
             this.$.linkDialog.linkText = link.text;
         }
+        this.$.linkDropdown.horizontalOffset =  x - parseInt(this.$.linkDropdown.style.width) / 2;
+        this.$.linkDropdown.verticalOffset = y;
         this.$.linkDropdown.open();
     }
 

@@ -451,6 +451,13 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         return this._editor && this._editor.getHeight();
     }
 
+    getSelectionCoordinates() {
+        if (this._editor && this._prevSelection) {
+            const view = this._editor.wwEditor.view;
+            return [view.coordsAtPos(this._prevSelection[0]), view.coordsAtPos(this._prevSelection[1])];
+        }
+    }
+
     getDomAtCaretPosition() {
         if (this._editor && this._prevSelection) {
             return this._editor.wwEditor.view.domAtPos(this._prevSelection[1]).node.parentElement;
