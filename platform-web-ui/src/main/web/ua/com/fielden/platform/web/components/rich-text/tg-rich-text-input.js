@@ -193,7 +193,7 @@ function handleTaskListItemStatusChange(e) {
     if (node && node.node.hasAttribute && node.node.hasAttribute('data-task')) {
         const style = getComputedStyle(node.node, ':before');
         if (isPositionInBox(style, e.offsetX, e.offsetY)) {
-            this._editor.focus();
+            this.changeEventHandler();
         }
     }
 }
