@@ -2,8 +2,8 @@ package ua.com.fielden.platform.eql.stage1.sources;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage1.sources.exceptions.InvalidYieldMatrixException;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.NullPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.AbstractSingleOperand2;
@@ -98,7 +98,7 @@ public class YieldInfoNodesGenerator {
                 .collect(toImmutableList());
 
         if (!invalidYields.isEmpty()) {
-            final var exception = new EqlStage1ProcessingException(
+            final var exception = new InvalidYieldMatrixException(
                     ERR_INVALID_YIELDS_MATRIX.formatted(invalidYields.stream().map(t2 -> t2.map("\"%s\" (occurs %s times)"::formatted)).collect(joining(", ")),
                                                         models.size()));
             LOGGER.error("Source queries:\n%s".formatted(enumerated(models.stream(), "%s. %s"::formatted)), exception);
