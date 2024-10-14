@@ -390,6 +390,16 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             this.$.colorDialog.resetState();
         }
     }
+
+    _copyTap() {
+        // copy to clipboard should happen only if there is something to copy
+        if (navigator.clipboard && this._editingValue) {
+            navigator.clipboard.writeText(this._editingValue);
+            this._showCheckIconAndToast(`<div class="toastui-editor-contents">${this._editingValue}</div>`);
+        } else if (this.toaster) {
+            this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);
+        }
+    }
 }
 
 customElements.define('tg-rich-text-editor', TgRichTextEditor);
