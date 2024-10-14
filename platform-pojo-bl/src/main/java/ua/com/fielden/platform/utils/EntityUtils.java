@@ -1250,11 +1250,7 @@ public class EntityUtils {
                 if (KEY.equals(propName) && toEntity.getKeyType().equals(fromEntity.getKeyType()) && DynamicEntityKey.class.isAssignableFrom(fromEntity.getKeyType())) {
                     toEntity.setKey(new DynamicEntityKey(toEntity));
                 } else {
-                    try {
-                        toEntity.set(propName, fromEntity.get(propName));
-                    } catch (final Exception e) {
-                        logger.trace(format("Setter for property %s did not succeed during copying.", propName), e);
-                    }
+                    toEntity.set(propName, fromEntity.get(propName));
                 }
             });
     }
