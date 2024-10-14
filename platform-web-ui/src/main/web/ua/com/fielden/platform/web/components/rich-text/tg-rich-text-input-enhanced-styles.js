@@ -28,11 +28,11 @@ styleElement.innerHTML = `
                 cursor: pointer !important;
             }
             .toastui-editor-contents .task-list-item:before {
-                top: calc(50% - 9px) !important;
+                top: calc(0.8em - 9px) !important;
             }
             .toastui-editor-contents ul>li:before {
                 margin-top: 0 !important;
-                top: calc(50% - 2.5px);
+                top: calc(0.8em - 2.5px);
             }
         </style>
     </template>
