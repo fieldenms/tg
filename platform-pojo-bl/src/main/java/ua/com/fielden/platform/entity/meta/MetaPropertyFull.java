@@ -19,13 +19,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -632,9 +627,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // the previous value setter is not used deliberately since it has some logic not needed here
         if (isCollectional()) {
             // set the shallow copy of collection into originalValue to be able to perform comparison between actual value and original value of the collection
-            originalValue = EntityUtils.copyCollectionalValue(value);
+            originalValue = (T) EntityUtils.copyCollectionalValue((Collection<?>) value);
             // set the shallow copy of collection into prevValue to be able to perform comparison between actual value and prevValue value of the collection
-            prevValue = EntityUtils.copyCollectionalValue(originalValue);
+            prevValue = (T) EntityUtils.copyCollectionalValue((Collection<?>) value);
         } else { // The single property (proxied or not!!!)
             originalValue = value;
             prevValue = originalValue;
@@ -701,7 +696,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         if (isCollectional()) {
             // set the shallow copy of collection into this.prevValue to be able to perform comparison between actual value and previous value of the collection
             incValueChangeCount();
-            this.prevValue = EntityUtils.copyCollectionalValue(value);
+            this.prevValue = (T) EntityUtils.copyCollectionalValue((Collection<?>) value);
         } else {
             if (!equalsEx(getValue(), value)) {
                 incValueChangeCount();

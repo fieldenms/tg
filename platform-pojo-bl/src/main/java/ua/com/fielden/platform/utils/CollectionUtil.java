@@ -73,6 +73,23 @@ public final class CollectionUtil {
     }
 
     /**
+     * Returns an immutable set that contains all elements of the specified collection which can contain nulls.
+     */
+    public static <T> Set<T> setCopy(final Collection<? extends /*@Nullable*/ T> collection) {
+        if (collection.isEmpty()) {
+            return ImmutableSet.of();
+        }
+        else if (collection instanceof ImmutableCollection<? extends T> immCol) {
+            return ImmutableSet.copyOf(immCol);
+        }
+        else {
+            final var set = new HashSet<T>(collection.size(), 1);
+            set.addAll(collection);
+            return unmodifiableSet(set);
+        }
+    }
+
+    /**
      * Returns a new list builder initialised with given elements.
      * @param xs  initial contents
      */
