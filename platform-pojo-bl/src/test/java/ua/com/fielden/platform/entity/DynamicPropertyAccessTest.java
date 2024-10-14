@@ -232,6 +232,7 @@ public class DynamicPropertyAccessTest {
         final var user = factory.newEntity(Entity.class);
         entity.set("key", user);
         assertEquals(user, entity.get("key"));
+        assertEquals(entity.getKey(), entity.get("key"));
     }
 
     @Test

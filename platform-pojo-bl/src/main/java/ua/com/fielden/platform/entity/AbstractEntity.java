@@ -236,6 +236,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String ERR_COULD_NOT_GET_PROP_VALUE = "Could not get the value for property [%s] in instance %s.";
     public static final String PROP_TEMPLATE_FOR_MESSAGES = "[%s]@[%s]";
     public static final String ERR_COULD_NOT_SET_PROP_VALUE = "Error setting value [%s] into property [%s] for entity " + PROP_TEMPLATE_FOR_MESSAGES + ".";
+    public static final String ERR_CANNOT_GET_VALUE_FOR_PROXIED_PROPERTY = "Cannot get value for proxied property [%s] of entity [%s].";
 
     protected final Logger logger;
 
@@ -511,7 +512,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public <T> T get(final String propertyName) {
         if (Reflector.isPropertyProxied(this, propertyName)) {
-            throw new StrictProxyException(format("Cannot get value for proxied property [%s] of entity [%s].", propertyName, getType().getName()));
+            throw new StrictProxyException(ERR_CANNOT_GET_VALUE_FOR_PROXIED_PROPERTY.formatted(propertyName, getType().getName()));
         }
         try {
             return (T) dynamicPropertyAccess.getProperty(this, propertyName);
