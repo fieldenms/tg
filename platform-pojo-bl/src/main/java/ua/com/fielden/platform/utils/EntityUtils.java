@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -28,10 +29,9 @@ import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -55,7 +55,6 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.*;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
@@ -1195,27 +1194,20 @@ public class EntityUtils {
     }
 
     /**
-     * Tries to perform shallow copy of collectional value. If unsuccessful, throws unsuccessful {@link Result} describing the error.
-     *
-     * @param value
-     * @return
+     * Returns an immutable shallow copy of the specified collectional value, if it is of a supported collectional type.
+     * Otherwise, throws an exception.
+     * If the specified collection is {@code null}, returns {@code null}.
+     * <p>
+     * The type of the returned collection will be a subtype of the same <i>specific collectional interface</i> as the
+     * specified collection. Currently supported collectional interfaces are: {@link List}, {@link Set}.
      */
-    public static <T> T copyCollectionalValue(final T value) {
-        if (value == null) {
-            return null; // return (null) copy
-        }
-        try {
-            final Collection<?> collection = (Collection<?>) value;
-            // try to obtain empty constructor to perform shallow copying of collection
-            final Constructor<? extends Collection> constructor = collection.getClass().getConstructor();
-            final Collection copy = constructor.newInstance();
-            copy.addAll(collection);
-            // return non-empty copy
-            return (T) copy;
-        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            logger.error(e.getMessage(), e);
-            throw failuref("Collection copying has been failed. Type [%s]. Exception [%s].", value.getClass(), e.getMessage()); // throw result indicating the failure of copying
-        }
+    public static @Nullable Collection<?> copyCollectionalValue(final @Nullable Collection<?> value) {
+        return switch (value) {
+            case null -> null;
+            case List<?> list -> CollectionUtil.listCopy(list);
+            case Set<?> set -> CollectionUtil.setCopy(set);
+            default -> throw new InvalidArgumentException("Unexpected collectional type: [%s]".formatted(value.getClass().getTypeName()));
+        };
     }
 
     /**
