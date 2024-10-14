@@ -31,7 +31,7 @@ public class KeyNumber extends AbstractPersistentEntity<String> {
     private String value;
 
     public String getValue() {
-        return value.trim();
+        return value == null ? null : value.trim();
     }
 
     @Observable

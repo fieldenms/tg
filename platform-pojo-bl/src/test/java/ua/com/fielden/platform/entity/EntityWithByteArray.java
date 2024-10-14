@@ -28,7 +28,7 @@ public class EntityWithByteArray extends AbstractEntity<String> {
     private byte[] byteArray = null;
 
     public byte[] getByteArray() {
-        return Arrays.copyOf(byteArray, byteArray.length);
+        return byteArray == null ? null : Arrays.copyOf(byteArray, byteArray.length);
     }
 
     @Observable
