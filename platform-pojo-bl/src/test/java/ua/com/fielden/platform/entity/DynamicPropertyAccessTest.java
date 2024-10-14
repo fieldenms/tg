@@ -2,6 +2,10 @@ package ua.com.fielden.platform.entity;
 
 import com.google.inject.Injector;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.*;
@@ -241,6 +245,55 @@ public class DynamicPropertyAccessTest {
         assertEquals(0, entity.getWitness());
         entity.set("active", true);
         assertEquals(1, entity.getWitness());
+    }
+
+    @Test
+    public void property_accessor_is_invoked_to_access_the_value() {
+        final var entity = factory.newEntity(Entity_PropertyAccessorsTest.class);
+
+        entity.setStr("abc");
+        entity.actualStr = "hello";
+        assertEquals(entity.actualStr, entity.getStr());
+        assertEquals(entity.actualStr, entity.get("str"));
+
+        entity.setBlue(false);
+        entity.actualBlue = true;
+        assertEquals(entity.actualBlue, entity.isBlue());
+        assertEquals(entity.actualBlue, entity.get("blue"));
+    }
+
+    @KeyType(String.class)
+    public static class Entity_PropertyAccessorsTest extends AbstractEntity<String> {
+
+        @IsProperty
+        @MapTo
+        private String str;
+
+        @IsProperty
+        @MapTo
+        private boolean blue;
+
+        public boolean isBlue() {
+            return actualBlue;
+        }
+        private boolean actualBlue = false;
+
+        @Observable
+        public Entity_PropertyAccessorsTest setBlue(final boolean blue) {
+            this.blue = blue;
+            return this;
+        }
+
+        public String getStr() {
+            return actualStr;
+        }
+        private String actualStr = "none";
+
+        @Observable
+        public Entity_PropertyAccessorsTest setStr(final String str) {
+            this.str = str;
+            return this;
+        }
     }
 
 }

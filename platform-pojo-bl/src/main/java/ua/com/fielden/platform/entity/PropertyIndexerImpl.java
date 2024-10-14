@@ -10,7 +10,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -27,6 +26,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.PropertyIndexerImpl.StandardIndex.makeIndex;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamDeclaredProperties;
+import static ua.com.fielden.platform.reflection.Reflector.obtainPropertyAccessor;
 import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
 
 /**
@@ -37,16 +37,6 @@ import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
  * <p>
  * One benefit of this extensive reuse is that derived (generated) entity types, which have no additional/modified properties,
  * get property indices for free by reusing those of their original entity types.
- *
- * <h4> Accessors </h4>
- * <p>
- * Accessors in a property index are method handles that read directly from a {@linkplain VarHandle property's field}.
- * Although this violates encapsulation by ignoring the declared property accessor methods, no disadvantages are observed
- * in practice for the majority of property types due to the simplicity of their accessors.
- * The only exception is collectional properties, whose accessors return an unmodifiable view instead of the immediate property value.
- * <p>
- * This is subject to change, with the goal of actually using property accessors. However, currently the platform relies
- * on collectional values being read directly from the property's field, which poses a challenge for the implementation of the new approach.
  *
  * <h4> Overridden setters </h4>
  * <p>
@@ -91,7 +81,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                 ? Stream.concat(streamDeclaredProperties(entityType), Stream.of(idProperty, versionProperty))
                 : streamDeclaredProperties(entityType);
         return properties.collect(Collectors.teeing(
-                toImmutableMap(Field::getName, lookupProvider::unreflectAccessor),
+                toImmutableMap(Field::getName, prop -> lookupProvider.unreflectPropertyAccessor(entityType, prop)),
                 toImmutableMap(Field::getName, prop -> lookupProvider.unreflectPropertySetter(entityType, prop)),
                 StandardIndex::makeIndex));
     }
@@ -170,7 +160,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
         final var setters = ImmutableMap.<String, MethodHandle>builder();
 
         for (final Field unionProp : AbstractUnionEntity.unionProperties(entityType)) {
-            accessors.put(unionProp.getName(), lookupProvider.unreflectAccessor(unionProp));
+            accessors.put(unionProp.getName(), lookupProvider.unreflect(obtainPropertyAccessor(entityType, unionProp.getName())));
             setters.put(unionProp.getName(), lookupProvider.unreflect(obtainPropertySetter(entityType, unionProp.getName())));
         }
 
@@ -182,7 +172,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                     // accessors for this common property in all union members
                     final Map<Class<?>, MethodHandle> commonPropAccessors = unionMembers.stream()
                             .collect(toMap(Function.identity(),
-                                           ty -> lookupProvider.unreflectAccessor(getFieldByName(ty, commonPropName))));
+                                           ty -> lookupProvider.unreflect(obtainPropertyAccessor(ty, commonPropName))));
                     final Map<Class<?>, MethodHandle> commonPropSetters = unionMembers.stream()
                             .collect(toMap(Function.identity(),
                                            ty -> lookupProvider.unreflect(obtainPropertySetter(ty, commonPropName))));
@@ -288,20 +278,16 @@ class PropertyIndexerImpl implements PropertyIndexer {
             });
         }
 
-        public MethodHandle unreflectAccessor(final Field field) {
-            try {
-                return apply(field.getDeclaringClass()).unreflectGetter(field);
-            } catch (final IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
         public MethodHandle unreflect(final Method method) {
             try {
                 return apply(method.getDeclaringClass()).unreflect(method);
             } catch (final IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        public MethodHandle unreflectPropertyAccessor(final Class<? extends AbstractEntity<?>> entityType, final Field field) {
+            return unreflect(obtainPropertyAccessor(entityType, field.getName()));
         }
 
         public MethodHandle unreflectPropertySetter(final Class<? extends AbstractEntity<?>> entityType, final Field field) {
