@@ -1,15 +1,12 @@
 package ua.com.fielden.platform.associations.one2many.incorrect;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing assocaitons.
@@ -26,15 +23,17 @@ public class MasterEntity3 extends AbstractEntity<String> {
 
     @IsProperty(value = DetailsEntity3.class)
     @MapTo
-    private List<DetailsEntity3> one2manyAssociationCollectional;
+    private final List<DetailsEntity3> one2manyAssociationCollectional = new ArrayList<>();
 
     @Observable
     public MasterEntity3 setOne2manyAssociationCollectional(final List<DetailsEntity3> one2manyAssociationCollectional) {
-        this.one2manyAssociationCollectional = one2manyAssociationCollectional;
+        this.one2manyAssociationCollectional.clear();
+        this.one2manyAssociationCollectional.addAll(one2manyAssociationCollectional);
         return this;
     }
 
     public List<DetailsEntity3> getOne2manyAssociationCollectional() {
-        return one2manyAssociationCollectional;
+        return unmodifiableList(one2manyAssociationCollectional);
     }
+
 }

@@ -1,25 +1,27 @@
 package ua.com.fielden.platform.test.domain.entities;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import static java.util.Collections.unmodifiableSet;
+
 /**
  * Represents wagon class entity.
- * 
+ *
  * @author 01es
- * 
  */
 @KeyType(String.class)
 public class WagonClass extends AbstractEntity<String> {
+
     private static final long serialVersionUID = 1L;
 
     @IsProperty(WagonClassCompatibility.class)
-    private Set<WagonClassCompatibility> compatibles = new HashSet<WagonClassCompatibility>();
+    private final Set<WagonClassCompatibility> compatibles = new HashSet<>();
     @IsProperty
     private Integer numberOfBogies;
     @IsProperty
@@ -65,17 +67,19 @@ public class WagonClass extends AbstractEntity<String> {
     }
 
     public Set<WagonClassCompatibility> getCompatibles() {
-        return this.compatibles;
+        return unmodifiableSet(compatibles);
     }
 
     @Observable
-    protected void setCompatibles(final Set<WagonClassCompatibility> compatibles) {
-        this.compatibles = compatibles;
+    protected WagonClass setCompatibles(final Set<WagonClassCompatibility> compatibles) {
+        this.compatibles.clear();
+        this.compatibles.addAll(compatibles);
+        return this;
     }
 
     /**
      * Determines whether given bogie class is compatible with given wagon class
-     * 
+     *
      * @param bogieClass
      * @return
      */
@@ -87,4 +91,5 @@ public class WagonClass extends AbstractEntity<String> {
         }
         return false;
     }
+
 }

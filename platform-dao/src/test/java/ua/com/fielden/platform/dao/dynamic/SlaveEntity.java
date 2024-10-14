@@ -16,6 +16,8 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.types.Money;
 
+import static java.util.Collections.unmodifiableList;
+
 /**
  * Entity for "dynamic query" testing.
  * 
@@ -61,7 +63,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
 
     ///////// Collections /////////
     @IsProperty(EvenSlaverEntity.class)
-    private List<EvenSlaverEntity> collection = new ArrayList<>();
+    private final List<EvenSlaverEntity> collection = new ArrayList<>();
 
     public MasterEntity getMasterEntityProp() {
         return masterEntityProp;
@@ -127,12 +129,13 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     public List<EvenSlaverEntity> getCollection() {
-        return Collections.unmodifiableList(collection);
+        return unmodifiableList(collection);
     }
 
     @Observable
-    public void setCollection(final List<EvenSlaverEntity> collection) {
+    public SlaveEntity setCollection(final List<EvenSlaverEntity> collection) {
         this.collection.clear();
         this.collection.addAll(collection);
+        return this;
     }
 }

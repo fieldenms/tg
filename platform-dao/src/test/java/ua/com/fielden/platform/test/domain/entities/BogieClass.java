@@ -1,23 +1,25 @@
 package ua.com.fielden.platform.test.domain.entities;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 
+import static java.util.Collections.unmodifiableSet;
+
 /**
  * Represents bogie class entity.
- * 
+ *
  * @author TG Team
- * 
  */
 public class BogieClass extends RotableClass {
 
     private static final long serialVersionUID = 1L;
 
     @IsProperty(BogieClassCompatibility.class)
-    private Set<BogieClassCompatibility> compatibles = new HashSet<BogieClassCompatibility>();
+    private final Set<BogieClassCompatibility> compatibles = new HashSet<>();
 
     protected BogieClass() {
 
@@ -29,12 +31,14 @@ public class BogieClass extends RotableClass {
     }
 
     public Set<BogieClassCompatibility> getCompatibles() {
-        return this.compatibles;
+        return unmodifiableSet(compatibles);
     }
 
     @Observable
-    protected void setCompatibles(final Set<BogieClassCompatibility> compatibles) {
-        this.compatibles = compatibles;
+    public BogieClass setCompatibles(Set<BogieClassCompatibility> compatibles) {
+        this.compatibles.clear();
+        this.compatibles.addAll(compatibles);
+        return this;
     }
 
     public int getNumberOfWheelsets() {
@@ -43,7 +47,7 @@ public class BogieClass extends RotableClass {
 
     /**
      * Determines whether given wheelset class is compatible with given bogie class
-     * 
+     *
      * @param wheelsetClass
      * @return
      */
@@ -55,4 +59,5 @@ public class BogieClass extends RotableClass {
         }
         return false;
     }
+
 }

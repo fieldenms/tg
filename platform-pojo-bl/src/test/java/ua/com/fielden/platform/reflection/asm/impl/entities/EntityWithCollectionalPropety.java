@@ -1,13 +1,15 @@
 package ua.com.fielden.platform.reflection.asm.impl.entities;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * A test entity with collectional property
@@ -22,15 +24,17 @@ public class EntityWithCollectionalPropety extends AbstractEntity<String> {
     private Collection<EntityBeingEnhanced> prop1;
     
     @IsProperty(Double.class)
-    private List<Double> items = new ArrayList<>();
+    private final List<Double> items = new ArrayList<>();
 
     public Collection<EntityBeingEnhanced> getProp1() {
         return prop1;
     }
 
     @Observable
-    public void setProp1(final Collection<EntityBeingEnhanced> prop1) {
-        this.prop1 = prop1;
+    public EntityWithCollectionalPropety setProp1(final Collection<EntityBeingEnhanced> prop1) {
+        this.prop1.clear();
+        this.prop1.addAll(prop1);
+        return this;
     }
 
     @Observable
@@ -48,7 +52,7 @@ public class EntityWithCollectionalPropety extends AbstractEntity<String> {
     }
     
     public List<Double> getItems() {
-        return items;
+        return unmodifiableList(items);
     }
     
     @Observable

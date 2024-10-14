@@ -1,30 +1,26 @@
 package ua.com.fielden.platform.associations.one2many;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.types.Money;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.types.Money;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Type representing the details side of One-to-Many association.
- * 
+ *
  * @author TG Team
- * 
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key")
 @DescTitle(value = "Description")
 public class DetailsEntityForOneToManyAssociation extends AbstractEntity<DynamicEntityKey> {
+
     private static final long serialVersionUID = 1L;
 
     @IsProperty
@@ -48,7 +44,7 @@ public class DetailsEntityForOneToManyAssociation extends AbstractEntity<Dynamic
     // linkProperty="key1" is missing on purpose
     @MapTo
     @Title(value = "Collectional Property", desc = "Desc")
-    private List<DetailsEntityOfSecondLevelNestingWithOneToManyAssociation> one2manyAssociationCollectional;
+    private final List<DetailsEntityOfSecondLevelNestingWithOneToManyAssociation> one2manyAssociationCollectional = new ArrayList<>();
 
     @Observable
     public DetailsEntityForOneToManyAssociation setKey2(final Integer key2) {
@@ -117,12 +113,13 @@ public class DetailsEntityForOneToManyAssociation extends AbstractEntity<Dynamic
 
     @Observable
     public DetailsEntityForOneToManyAssociation setOne2manyAssociationCollectional(final List<DetailsEntityOfSecondLevelNestingWithOneToManyAssociation> one2manyAssociationCollectional) {
-        this.one2manyAssociationCollectional = one2manyAssociationCollectional;
+        this.one2manyAssociationCollectional.clear();
+        this.one2manyAssociationCollectional.addAll(one2manyAssociationCollectional);
         return this;
     }
 
     public List<DetailsEntityOfSecondLevelNestingWithOneToManyAssociation> getOne2manyAssociationCollectional() {
-        return one2manyAssociationCollectional;
+        return unmodifiableList(one2manyAssociationCollectional);
     }
 
     @Observable
@@ -134,4 +131,5 @@ public class DetailsEntityForOneToManyAssociation extends AbstractEntity<Dynamic
     public Date getDateProp() {
         return dateProp;
     }
+
 }
