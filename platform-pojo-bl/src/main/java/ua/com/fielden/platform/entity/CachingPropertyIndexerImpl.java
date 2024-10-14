@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.DynamicPropertyAccessModule.CacheConfig;
 
 import java.lang.invoke.MethodHandle;
 import java.time.Duration;
+import java.util.concurrent.ExecutionException;
 
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMockNotFoundType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isProxied;
@@ -55,16 +56,7 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
 
     @Override
     public StandardIndex indexFor(final Class<? extends AbstractEntity<?>> entityType) {
-        // performing a lookup in both caches first is faster than first determining which cache to use
-        final var cachedInMain = mainTypeCache.getIfPresent(entityType);
-        if (cachedInMain != null) {
-            return cachedInMain;
-        }
-        final var cachedInTmp = tmpTypeCache.getIfPresent(entityType);
-        if (cachedInTmp != null) {
-            return cachedInTmp;
-        }
-
+        // First determine which cache to use so that an atomic operation can be performed on it.
         final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> cache;
         if (isProxied(entityType) || isMockNotFoundType(entityType)) {
             cache = tmpTypeCache;
@@ -72,14 +64,15 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
         else {
             cache = mainTypeCache;
         }
-        return storeIndex(entityType, cache);
-    }
 
-    private StandardIndex storeIndex(final Class<? extends AbstractEntity<?>> entityType,
-                                     final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> cache) {
-        final var newIndex = super.indexFor(entityType);
-        cache.put(entityType, newIndex);
-        return newIndex;
+        try {
+            // super.indexFor may invoke this method recursively to build an index for the supertype of this entity type,
+            // causing a recursive load in the cache, which is ok as long as values are loaded for *different* keys
+            // (recursive loading of a value for the same key is unsupported by Guava Cache).
+            return cache.get(entityType, () -> super.indexFor(entityType));
+        } catch (final ExecutionException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
     }
 
 }
