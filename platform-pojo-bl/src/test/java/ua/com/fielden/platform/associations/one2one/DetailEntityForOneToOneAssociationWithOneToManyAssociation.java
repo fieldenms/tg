@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.associations.one2one;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -12,32 +14,35 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.types.Money;
 
+import static java.util.Collections.unmodifiableList;
+
 /**
  * Type representing the detail side of One-to-One association.
- * 
+ *
  * @author TG Team
- * 
  */
 @KeyType(MasterEntityWithOneToOneAssociation.class)
 @KeyTitle(value = "Key")
 @DescTitle(value = "Description")
 public class DetailEntityForOneToOneAssociationWithOneToManyAssociation extends AbstractEntity<MasterEntityWithOneToOneAssociation> {
+
     private static final long serialVersionUID = 1L;
 
     @IsProperty(DetailsEntityForOneToOneDetailTypeInOneToManyAssociation.class)
     // linkProperty = "key1" is omitted deliberately
     @MapTo
     @Title(value = "One 2 Many", desc = "Desc")
-    private List<DetailsEntityForOneToOneDetailTypeInOneToManyAssociation> one2ManyAssociation;
+    private final List<DetailsEntityForOneToOneDetailTypeInOneToManyAssociation> one2ManyAssociation = new ArrayList<>();
 
     @Observable
     public DetailEntityForOneToOneAssociationWithOneToManyAssociation setOne2ManyAssociation(final List<DetailsEntityForOneToOneDetailTypeInOneToManyAssociation> one2ManyAssociation) {
-        this.one2ManyAssociation = one2ManyAssociation;
+        this.one2ManyAssociation.clear();
+        this.one2ManyAssociation.addAll(one2ManyAssociation);
         return this;
     }
 
     public List<DetailsEntityForOneToOneDetailTypeInOneToManyAssociation> getOne2ManyAssociation() {
-        return one2ManyAssociation;
+        return unmodifiableList(one2ManyAssociation);
     }
 
     @IsProperty

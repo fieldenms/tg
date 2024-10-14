@@ -1,27 +1,20 @@
 package ua.com.fielden.platform.entity_centre.review;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.types.Money;
+import static java.util.Collections.unmodifiableList;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
 
 /**
  * Entity class used for {@link QueryProperty} testing.
@@ -139,23 +132,25 @@ public class EntityForQueryPropertyTesting extends AbstractEntity<String> {
     }
 
     public List<EntityForQueryPropertyTesting> getEntities() {
-        return entities;
+        return unmodifiableList(entities);
     }
 
     @Observable
-    public void setEntities(final List<EntityForQueryPropertyTesting> entities) {
+    public EntityForQueryPropertyTesting setEntities(final List<EntityForQueryPropertyTesting> entities) {
         this.entities.clear();
         this.entities.addAll(entities);
+        return this;
     }
 
     public List<CollectionParentEntity> getColl() {
-        return coll;
+        return unmodifiableList(coll);
     }
 
     @Observable
-    public void setColl(final List<CollectionParentEntity> coll) {
+    public EntityForQueryPropertyTesting setColl(final List<CollectionParentEntity> coll) {
         this.coll.clear();
         this.coll.addAll(coll);
+        return this;
     }
 
     public EntityForQueryPropertyTesting getEntity1() {

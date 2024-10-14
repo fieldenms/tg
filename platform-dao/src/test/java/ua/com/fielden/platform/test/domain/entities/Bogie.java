@@ -1,23 +1,24 @@
 package ua.com.fielden.platform.test.domain.entities;
 
-import java.util.List;
-
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Bogie rotable business entity
  *
  * @author nc
- *
  */
 public class Bogie extends Rotable {
 
     private static final long serialVersionUID = 1L;
 
     @IsProperty(BogieSlot.class)
-    private List<BogieSlot> slots;
+    private final List<BogieSlot> slots = new ArrayList<>();
 
     protected Bogie() {
     }
@@ -27,13 +28,16 @@ public class Bogie extends Rotable {
     }
 
     public List<BogieSlot> getSlots() {
-        return slots;
+        return unmodifiableList(slots);
     }
 
     @Observable
-    protected void setSlots(final List<BogieSlot> slots) {
-        this.slots = slots;
+    public Bogie setSlots(final List<BogieSlot> slots) {
+        this.slots.clear();
+        this.slots.addAll(slots);
+        return this;
     }
+
 
     /**
      * Gets slot by slot position.
@@ -93,4 +97,5 @@ public class Bogie extends Rotable {
             }
         }
     }
+
 }

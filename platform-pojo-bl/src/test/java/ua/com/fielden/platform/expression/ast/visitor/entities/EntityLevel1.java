@@ -1,15 +1,17 @@
 package ua.com.fielden.platform.expression.ast.visitor.entities;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.types.Money;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+
+import static java.util.Collections.unmodifiableList;
 
 @KeyType(String.class)
 public class EntityLevel1 extends AbstractEntity<String> {
@@ -73,12 +75,14 @@ public class EntityLevel1 extends AbstractEntity<String> {
     }
 
     public List<EntityLevel2> getCollectional() {
-        return collectional;
+        return unmodifiableList(collectional);
     }
 
     @Observable
-    public void setCollectional(final List<EntityLevel2> collectional) {
-        this.collectional = collectional;
+    public EntityLevel1 setCollectional(final List<EntityLevel2> collectional) {
+        this.collectional.clear();
+        this.collectional.addAll(collectional);
+        return this;
     }
 
     public Money getMoneyProperty() {

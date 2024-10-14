@@ -1,18 +1,12 @@
 package ua.com.platform.swing.review;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.Ignore;
-import ua.com.fielden.platform.entity.annotation.Invisible;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.ResultOnly;
-import ua.com.fielden.platform.entity.annotation.Title;
+import static java.util.Collections.unmodifiableList;
 
 @KeyType(String.class)
 @KeyTitle(value = "key entity", desc = "key entity description")
@@ -20,7 +14,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class KeyEntity extends AbstractEntity<String> {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -5321235058448207436L;
 
@@ -54,7 +48,7 @@ public class KeyEntity extends AbstractEntity<String> {
 
     @IsProperty(String.class)
     @Title(value = "list string property title", desc = "list string property desc")
-    private List<String> listPropertyString;
+    private final List<String> listPropertyString = new ArrayList<>();
 
     @IsProperty(String.class)
     @Title(value = "enum string property title", desc = "enum string property desc")
@@ -89,7 +83,7 @@ public class KeyEntity extends AbstractEntity<String> {
     }
 
     public List<String> getListPropertyString() {
-        return listPropertyString;
+        return unmodifiableList(listPropertyString);
     }
 
     public PropertyEnum getEnumPropertyString() {
@@ -131,8 +125,10 @@ public class KeyEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setListPropertyString(final List<String> listPropertyString) {
-        this.listPropertyString = listPropertyString;
+    public KeyEntity setListPropertyString(final List<String> listPropertyString) {
+        this.listPropertyString.clear();
+        this.listPropertyString.addAll(listPropertyString);
+        return this;
     }
 
     @Observable
@@ -144,4 +140,5 @@ public class KeyEntity extends AbstractEntity<String> {
     public void setKeyProperty(final String keyProperty) {
         this.keyProperty = keyProperty;
     }
+
 }

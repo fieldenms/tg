@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity_centre.review;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -19,17 +20,19 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.types.Money;
 
+import static java.util.Collections.unmodifiableList;
+
 /**
  * Entity class used for {@link QueryProperty} testing.
  *
  * @author 01es
- *
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
 @DescTitle(value = "Description", desc = "Description Property")
 @DescRequired
 public class CollectionParentEntity extends AbstractEntity<String> {
+
     private static final long serialVersionUID = 1L;
 
     public static final String NOT_NULL_MSG = "Missing value";
@@ -66,10 +69,10 @@ public class CollectionParentEntity extends AbstractEntity<String> {
     private String strProp;
 
     @IsProperty(CollectionParentEntity.class)
-    private List<CollectionParentEntity> entities = new ArrayList<CollectionParentEntity>();
+    private final List<CollectionParentEntity> entities = new ArrayList<>();
 
     @IsProperty(CollectionParentEntity.class)
-    private List<CollectionParentEntity> coll = new ArrayList<CollectionParentEntity>();
+    private final List<CollectionParentEntity> coll = new ArrayList<>();
 
     protected CollectionParentEntity() {
     }
@@ -95,23 +98,25 @@ public class CollectionParentEntity extends AbstractEntity<String> {
     }
 
     public List<CollectionParentEntity> getEntities() {
-        return entities;
+        return unmodifiableList(entities);
     }
 
     @Observable
-    public void setEntities(final List<CollectionParentEntity> entities) {
+    public CollectionParentEntity setEntities(final List<CollectionParentEntity> entities) {
         this.entities.clear();
         this.entities.addAll(entities);
+        return this;
     }
 
     public List<CollectionParentEntity> getColl() {
-        return coll;
+        return unmodifiableList(coll);
     }
 
     @Observable
-    public void setColl(final List<CollectionParentEntity> coll) {
+    public CollectionParentEntity setColl(final List<CollectionParentEntity> coll) {
         this.coll.clear();
         this.coll.addAll(coll);
+        return this;
     }
 
     public CollectionParentEntity getEntity1() {

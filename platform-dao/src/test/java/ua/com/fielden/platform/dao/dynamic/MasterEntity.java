@@ -1,17 +1,15 @@
 package ua.com.fielden.platform.dao.dynamic;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.types.Money;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.types.Money;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Entity for "dynamic query" testing.
@@ -57,7 +55,7 @@ public class MasterEntity extends AbstractEntity<String> {
 
     ///////// Collections /////////
     @IsProperty(SlaveEntity.class)
-    private List<SlaveEntity> collection = new ArrayList<SlaveEntity>();
+    private final List<SlaveEntity> collection = new ArrayList<>();
 
     public Integer getIntegerProp() {
         return integerProp;
@@ -123,12 +121,14 @@ public class MasterEntity extends AbstractEntity<String> {
     }
 
     public List<SlaveEntity> getCollection() {
-        return collection;
+        return unmodifiableList(collection);
     }
 
     @Observable
-    public void setCollection(final List<SlaveEntity> collection) {
+    public MasterEntity setCollection(final List<SlaveEntity> collection) {
         this.collection.clear();
         this.collection.addAll(collection);
+        return this;
     }
+
 }

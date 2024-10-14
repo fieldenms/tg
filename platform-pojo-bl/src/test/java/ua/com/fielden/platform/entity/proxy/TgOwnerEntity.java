@@ -1,14 +1,15 @@
 package ua.com.fielden.platform.entity.proxy;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import static java.util.Collections.unmodifiableSet;
 
 @KeyType(String.class)
 public class TgOwnerEntity extends AbstractEntity<String> {
@@ -27,7 +28,7 @@ public class TgOwnerEntity extends AbstractEntity<String> {
     private boolean booleanProp;
 
     @IsProperty(TgEntityForProxy.class)
-    private Set<TgEntityForProxy> children = new HashSet<TgEntityForProxy>();
+    private final Set<TgEntityForProxy> children = new HashSet<>();
 
     @Observable
     protected TgOwnerEntity setChildren(final Set<TgEntityForProxy> children) {
@@ -37,7 +38,7 @@ public class TgOwnerEntity extends AbstractEntity<String> {
     }
 
     public Set<TgEntityForProxy> getChildren() {
-        return Collections.unmodifiableSet(children);
+        return unmodifiableSet(children);
     }
     
     @Observable
@@ -50,9 +51,6 @@ public class TgOwnerEntity extends AbstractEntity<String> {
         return booleanProp;
     }
 
-    
-
-    
     @Observable
     public TgOwnerEntity setIntProp(final Integer intProp) {
         this.intProp = intProp;

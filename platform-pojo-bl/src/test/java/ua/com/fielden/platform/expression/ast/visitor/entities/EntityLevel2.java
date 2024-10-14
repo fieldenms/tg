@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.expression.ast.visitor.entities;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import static java.util.Collections.unmodifiableList;
 
 @KeyType(String.class)
 public class EntityLevel2 extends AbstractEntity<String> {
@@ -22,7 +21,7 @@ public class EntityLevel2 extends AbstractEntity<String> {
     private Integer intProperty;
 
     @IsProperty(EntityLevel3.class)
-    private List<EntityLevel3> collectional;
+    private final List<EntityLevel3> collectional = new ArrayList<>();
 
     @IsProperty
     @MapTo
@@ -74,11 +73,14 @@ public class EntityLevel2 extends AbstractEntity<String> {
     }
 
     public List<EntityLevel3> getCollectional() {
-        return collectional;
+        return unmodifiableList(collectional);
     }
 
     @Observable
-    public void setCollectional(final List<EntityLevel3> collectional) {
-        this.collectional = collectional;
+    public EntityLevel2 setCollectional(final List<EntityLevel3> collectional) {
+        this.collectional.clear();
+        this.collectional.addAll(collectional);
+        return this;
     }
+
 }

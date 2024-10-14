@@ -1,14 +1,11 @@
 package ua.com.fielden.platform.test.domain.entities;
 
+import ua.com.fielden.platform.entity.annotation.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Represents a wagon business entity.
@@ -30,7 +27,7 @@ public class Wagon extends Equipment<String> {
     private WagonClass wagonClass;
     @IsProperty(WagonSlot.class)
     @Title(value = "Wagon slots", desc = "A list of slots for the wagon")
-    private List<WagonSlot> slots = new ArrayList<WagonSlot>();
+    private final List<WagonSlot> slots = new ArrayList<>();
 
     /**
      * Constructor for Hibernate
@@ -67,12 +64,14 @@ public class Wagon extends Equipment<String> {
     }
 
     public List<WagonSlot> getSlots() {
-        return slots;
+        return unmodifiableList(slots);
     }
 
     @Observable
-    protected void setSlots(final List<WagonSlot> slots) {
-        this.slots = slots;
+    protected Wagon setSlots(final List<WagonSlot> slots) {
+        this.slots.clear();
+        this.slots.addAll(slots);
+        return this;
     }
 
     /**

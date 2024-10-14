@@ -1,17 +1,14 @@
 package ua.com.fielden.platform.associations.one2many;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.types.Money;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.types.Money;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * The master type in One-to-Many association with a collectional and single (special case) properties representing associations.
@@ -49,16 +46,17 @@ public class MasterEntityWithOneToManyAssociation extends AbstractEntity<String>
     @IsProperty(value = DetailsEntityForOneToManyAssociation.class)
     @MapTo
     @Title(value = "Collectional Property", desc = "Desc")
-    private List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional;
+    private final List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional = new ArrayList<>();
 
     @Observable
     public MasterEntityWithOneToManyAssociation setOne2manyAssociationCollectional(final List<DetailsEntityForOneToManyAssociation> one2manyAssociationCollectional) {
-        this.one2manyAssociationCollectional = one2manyAssociationCollectional;
+        this.one2manyAssociationCollectional.clear();
+        this.one2manyAssociationCollectional.addAll(one2manyAssociationCollectional);
         return this;
     }
 
     public List<DetailsEntityForOneToManyAssociation> getOne2manyAssociationCollectional() {
-        return one2manyAssociationCollectional;
+        return unmodifiableList(one2manyAssociationCollectional);
     }
 
     @Observable

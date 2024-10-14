@@ -16,13 +16,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * Entity class used for testing.
  *
  * @author TG Team
- *
  */
 @KeyType(value = String.class, descendingOrder = true)
 @KeyTitle(value = "Entity No", desc = "Key Property")
@@ -58,33 +58,33 @@ public class Entity extends AbstractEntity<String> {
     @Invisible
     @Final(persistedOnly = false)
     private BigDecimal finalProperty;
-    
+
     @IsProperty(value = BigDecimal.class, linkProperty = "--stub to pass tests--")
     @Required
-    private List<BigDecimal> bigDecimals = new ArrayList<>();
-    
+    private final List<BigDecimal> bigDecimals = new ArrayList<>();
+
     @IsProperty(Entity.class)
-    private List<Entity> entities = new ArrayList<Entity>();
-    
+    private final List<Entity> entities = new ArrayList<>();
+
     @IsProperty
     private Entity entity;
-    
+
     @IsProperty
     private Date date;
-    
+
     @IsProperty
     private Money money;
-    
+
     @IsProperty
     private Integer number;
-    
+
     @IsProperty
     @Dependent("dependent")
     private Integer main = 20;
-    
+
     @IsProperty
     private Integer dependent = 10;
-    
+
     @IsProperty
     private String strProp;
 
@@ -126,7 +126,7 @@ public class Entity extends AbstractEntity<String> {
     }
 
     public List<BigDecimal> getBigDecimals() {
-        return bigDecimals;
+        return unmodifiableList(bigDecimals);
     }
 
     @Observable
@@ -151,13 +151,14 @@ public class Entity extends AbstractEntity<String> {
     }
 
     public List<Entity> getEntities() {
-        return entities;
+        return unmodifiableList(entities);
     }
 
     @Observable
-    public void setEntities(final List<Entity> entities) {
+    public Entity setEntities(final List<Entity> entities) {
         this.entities.clear();
         this.entities.addAll(entities);
+        return this;
     }
 
     public BigDecimal getObservablePropertyInitialisedAsNull() {
@@ -273,12 +274,12 @@ public class Entity extends AbstractEntity<String> {
     public void setMonitoring(final String monitoring) {
         this.monitoring = monitoring;
     }
-    
+
     @Override
     public void setVersion(Long ver) {
         super.setVersion(ver);
     }
-    
+
     @Override
     public void setId(Long id) {
         super.setId(id);
