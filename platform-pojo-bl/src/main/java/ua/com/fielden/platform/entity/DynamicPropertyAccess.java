@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.entity;
 
 import com.google.inject.Inject;
-import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessGraveError;
+import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessCriticalError;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
@@ -15,16 +16,20 @@ import static ua.com.fielden.platform.utils.ArrayUtils.getLast;
  */
 final class DynamicPropertyAccess {
 
+    public static final String ERR_PROP_ACCESS_INDEX = "Failed to build an index for entity [%s]";
+    public static final String ERR_NO_PROP_SETTER = "Failed to resolve setter for property [%s] in entity [%s]";
+    public static final String ERR_NO_PROP_GETTER = "Failed to resolve property [%s] in entity [%s]";
+
     /**
-     * Returns the value of the named property in {@code entity}. Fails if the named property cannot be located.
+     * Returns the value of the named property in {@code entity}.
+     * Fails if the named property cannot be located.
      *
-     * @param prop  property path
+     * @param propPath  property path
      */
-    public Object getProperty(final AbstractEntity<?> entity, final CharSequence prop) throws Throwable {
-        // TODO use EntityUtils.splitPropPath() from #2223
-        final String[] propPath = DOT_SPLITTER_PATTERN.split(prop);
-        final AbstractEntity<?> lastPropOwner = lastPropOwner(entity, propPath);
-        return lastPropOwner == null ? null : getProperty_(lastPropOwner, getLast(propPath));
+    public Object getProperty(final AbstractEntity<?> entity, final CharSequence propPath) throws Throwable {
+        final String[] propsOnPath = EntityUtils.splitPropPathToArray(propPath);
+        final AbstractEntity<?> lastPropOwner = lastPropOwner(entity, propsOnPath);
+        return lastPropOwner == null ? null : getProperty_(lastPropOwner, getLast(propsOnPath));
     }
 
     /**
@@ -59,12 +64,12 @@ final class DynamicPropertyAccess {
         try {
             index = indexer.indexFor(entityType);
         } catch (final Exception e) {
-            throw new DynamicPropertyAccessGraveError("Failed to build an index for entity [%s]".formatted(entityType.getTypeName()), e);
+            throw new DynamicPropertyAccessCriticalError(ERR_PROP_ACCESS_INDEX.formatted(entityType.getTypeName()), e);
         }
 
         final var getter = index.getter(prop);
         if (getter == null) {
-            throw new EntityException("Failed to resolve property [%s] in entity [%s]".formatted(prop, entityType.getTypeName()));
+            throw new EntityException(ERR_NO_PROP_GETTER.formatted(prop, entityType.getTypeName()));
         }
 
         return getter.invoke(entity);
@@ -83,13 +88,13 @@ final class DynamicPropertyAccess {
         final PropertyIndexer.Index index;
         try {
             index = indexer.indexFor(entityType);
-        } catch (final Exception e) {
-            throw new DynamicPropertyAccessGraveError("Failed to build an index for entity [%s]".formatted(entityType.getTypeName()), e);
+        } catch (final Exception ex) {
+            throw new DynamicPropertyAccessCriticalError(ERR_PROP_ACCESS_INDEX.formatted(entityType.getTypeName()), ex);
         }
 
         final MethodHandle setter = index.setter(prop.toString());
         if (setter == null) {
-            throw new EntityException("Failed to resolve setter for property [%s] in entity [%s]".formatted(prop, entityType.getTypeName()));
+            throw new EntityException(ERR_NO_PROP_SETTER.formatted(prop, entityType.getTypeName()));
         }
 
         setter.invoke(entity, value);

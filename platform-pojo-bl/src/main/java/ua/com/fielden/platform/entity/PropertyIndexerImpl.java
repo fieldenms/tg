@@ -30,29 +30,30 @@ import static ua.com.fielden.platform.reflection.Finder.streamDeclaredProperties
 import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
 
 /**
- * Property indices are built by reusing method handles as much as possible. In general, for each property there will
- * be a single pair of method handles (for its getter and setter). This holds for inherited properties as well. For example,
- * all indices will share the same method handles for properties of {@link AbstractEntity}.
+ * Property indices are built by reusing method handles as much as possible.
+ * In general, there will be a single pair of method handles for each property (for its getter and setter).
+ * This holds for inherited properties as well.
+ * For example, all indices will share the same method handles for properties of {@link AbstractEntity}.
  * <p>
- * One benefit of this extensive reuse is that derived (generated) entity types that have no additional/modified properties
+ * One benefit of this extensive reuse is that derived (generated) entity types, which have no additional/modified properties,
  * get property indices for free by reusing those of their original entity types.
  *
- * <h4> Getters
+ * <h4> Getters </h4>
  * <p>
  * Getters in a property index are method handles that read directly from a {@linkplain VarHandle property's field}.
- * This is in accordance with the convention that all property getter methods are trivial: they return a property's value
- * without performing any other computations.
+ * This is in accordance with the convention that all property getter methods are trivial:
+ * they return the property's value without performing any other computations.
  * <p>
- * <b>Caveat</b>: getters of collectional properties wrap property values with unmodifiable collections, something that
- * is not performed by method handles stored in these indices.
+ * <b>Caveat</b>: getters of collectional properties wrap property values with unmodifiable collections.
+ * The same is not done by method handles stored in these indices.
  *
- * <h4> Overriden setters
+ * <h4> Overridden setters </h4>
  * <p>
- * No special effort is required to make sure that overriden setters are invoked. This is done automatically by 
- * {@linkplain MethodHandle#invoke(Object...) method handles}: similary to {@linkplain Method#invoke(Object, Object...) Reflection},
- * a dynamic lookup will be performed based on the receiver argument.
+ * No special effort is required to make sure that overridden setters are invoked.
+ * This is done automatically by {@linkplain MethodHandle#invoke(Object...) method handles}.
+ * Similarly to {@linkplain Method#invoke(Object, Object...) Reflection}, a dynamic lookup will be performed based on the receiver argument.
  * 
- * <h5> Glossary of terms:
+ * <h5> Glossary of terms: </h5>
  * <p>
  * <ul>
  *   <li> <i>Canonical entity type</i> - an entity type without bytecode enhancements.
@@ -72,10 +73,10 @@ class PropertyIndexerImpl implements PropertyIndexer {
     }
 
     private StandardIndex buildIndex(final Class<? extends AbstractEntity<?>> entityType) {
-        // We could use Finder.streamRealProperties but that would misalign with the old Reflection-based behaviour (primarily
-        // due to conditional inclusion of properties "key" and "desc"). The current approach is already more limiting than
-        // the old one, but reasonably so: it provides access only to properties, while the old approach provided access to
-        // all fields.
+        // We could use Finder.streamRealProperties but that would misalign with the old Reflection-based behaviour.
+        // Primarily, this is due to conditional inclusion of properties "key" and "desc".
+        // The current approach is already more limiting than the old one, but reasonably so.
+        // It provides access only to properties, while the old approach provided access to all fields.
         final var declaredPropsIndex = buildDeclaredPropertiesIndex(entityType);
         return ((Class<?>) entityType) == AbstractEntity.class
                 ? declaredPropsIndex
@@ -125,8 +126,9 @@ class PropertyIndexerImpl implements PropertyIndexer {
      * @param getters  for reading property values, keyed on property names
      * @param setters  for writing property values, keyed on property names
      */
-    record StandardIndex(Map<String, MethodHandle> getters,
-                         Map<String, MethodHandle> setters)
+    record StandardIndex(
+            Map<String, MethodHandle> getters,
+            Map<String, MethodHandle> setters)
             implements Index
     {
         private static final StandardIndex EMPTY_INDEX = new StandardIndex(ImmutableMap.of(), ImmutableMap.of());

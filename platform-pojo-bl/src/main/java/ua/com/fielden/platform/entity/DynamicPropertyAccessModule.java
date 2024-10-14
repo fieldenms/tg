@@ -23,29 +23,34 @@ import static ua.com.fielden.platform.parser.ValueParser.*;
  * This module binds {@link DynamicPropertyAccess} and its dependencies.
  * <p>
  * This module can optionally be configured with {@link #options()}, which produces another <i>configuration</i> module
- * that needs to be explicitly installed. Configuration is entirely optional.
+ * that needs to be explicitly installed.
+ * Configuration is entirely optional.
  * <p>
- * <h4> Configurable caching
+ * <h4>Configurable caching</h4>
  * <p>
- * Performance of {@link DynamicPropertyAccess} heavily relies on caching. This module supports cache configuration
- * with {@link Properties}. In practice, this means that {@code application.properties} file can be used to configure
- * {@linkplain CacheOptions cache parameters}.
+ * Performance of {@link DynamicPropertyAccess} heavily relies on caching.
+ * This module supports cache configuration with {@link Properties}.
+ * In practice, this means that {@code application.properties} file can be used to configure {@linkplain CacheOptions cache parameters}.
  * <p>
- * There are 2 caches: one for primary entity types (those that exist throughout the lifetime of the application)
- * and another one for temporary entity types (generated for a temporary purpose).
+ * There are two caches:
+ * <ul>
+ *     <li> one for primary entity types (those that exist throughout the lifetime of the application), and
+ *     <li> another one for temporary entity types (generated for a temporary purpose).
+ * </ul>
+ *
  * <p>
  * Supported options:
  * <ul>
- *   <li> {@code dynamicPropertyAccess.caching} - one of {@link Options.Caching}
- *   <li> {@code dynamicPropertyAccess.typeCache} - configures the main type cache (see cache parameters below)
- *   <li> {@code dynamicPropertyAccess.tempTypeCache} - configures the temporary type cache (see cache parameters below)
+ *   <li> {@code dynamicPropertyAccess.caching} - one of {@link Options.Caching};
+ *   <li> {@code dynamicPropertyAccess.typeCache} - configures the main type cache (see cache parameters below);
+ *   <li> {@code dynamicPropertyAccess.tempTypeCache} - configures the temporary type cache (see cache parameters below).
  * </ul>
  * Cache parameters:
  * <ul>
- *   <li> {@code concurrencyLevel} - a non-negative decimal, see {@link CacheBuilder#concurrencyLevel(int)}
- *   <li> {@code maxSize} - a non-negative decimal, see {@link CacheBuilder#maximumSize(long)}
- *   <li> {@code expireAfterAccess} - a {@linkplain DurationParser duration specifier}, see {@link CacheBuilder#expireAfterAccess(Duration)}
- *   <li> {@code expireAfterWrite} - a {@linkplain DurationParser duration specifier}, see {@link CacheBuilder#expireAfterWrite(Duration)}
+ *   <li> {@code concurrencyLevel} - a non-negative decimal, see {@link CacheBuilder#concurrencyLevel(int)};
+ *   <li> {@code maxSize} - a non-negative decimal, see {@link CacheBuilder#maximumSize(long)};
+ *   <li> {@code expireAfterAccess} - a {@linkplain DurationParser duration specifier}, see {@link CacheBuilder#expireAfterAccess(Duration)};
+ *   <li> {@code expireAfterWrite} - a {@linkplain DurationParser duration specifier}, see {@link CacheBuilder#expireAfterWrite(Duration)}.
  * </ul>
  *
  * Configuration example:
@@ -64,8 +69,7 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
         concurrencyLevel(intParser().and(i -> ok(cfg -> cfg.concurrencyLevel(i)))),
         maxSize(longParser().and(l -> ok(cfg -> cfg.maxSize(l)))),
         expireAfterAccess(new DurationParser().and(duration -> ok(cfg -> cfg.expireAfterAccess(duration)))),
-        expireAfterWrite(new DurationParser().and(duration -> ok(cfg -> cfg.expireAfterWrite(duration)))),
-        ;
+        expireAfterWrite(new DurationParser().and(duration -> ok(cfg -> cfg.expireAfterWrite(duration))));
 
         public final ValueParser<Object, Function<CacheConfig, CacheConfig>> parser;
 
@@ -115,7 +119,7 @@ public final class DynamicPropertyAccessModule extends AbstractModule {
                                CacheConfig.fromProperties(properties, TEMPORARY_CACHE_PROPERTY_PREFIX));
         }
 
-        public Options fromMap(final Map<?, ?> map) {
+        public Options fromMap(final Map<String, ?> map) {
             final var properties = new Properties();
             properties.putAll(map);
             return fromProperties(properties);

@@ -1,70 +1,20 @@
 package ua.com.fielden.platform.entity;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptySet;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_LINK_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_TYPE_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_FOR_PRECITION_AND_SCALE_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_NUMERIC_PARAMS_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
-import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
-import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
-import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
-import static ua.com.fielden.platform.reflection.Finder.isKeyOrKeyMember;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
-import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.removeFirst;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
-
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-
-import com.google.inject.Inject;
-
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessGraveError;
+import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessCriticalError;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.ioc.EntityIocModule;
-import ua.com.fielden.platform.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
@@ -79,18 +29,43 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.ioc.EntityIocModule;
+import ua.com.fielden.platform.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.EntityMetadata;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.Collections.emptySet;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.*;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.*;
+import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
+import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
+import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
+import static ua.com.fielden.platform.reflection.Finder.isKeyOrKeyMember;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
+import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
+import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 /**
  * <h3>General Info</h3>
@@ -258,6 +233,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     public static final String ERR_IS_EDITABLE_UNINSTRUMENTED = "Uninstrumented instance is not suitable for editing.";
     public static final String ERR_ENSURE_INSTRUMENTED = "Meta-properties for this instance of entity [%s] do not exist as it was not instrumented.";
+    public static final String ERR_COULD_NOT_GET_PROP_VALUE = "Could not get the value for property [%s] in instance %s.";
+    public static final String PROP_TEMPLATE_FOR_MESSAGES = "[%s]@[%s]";
+    public static final String ERR_COULD_NOT_SET_PROP_VALUE = "Error setting value [%s] into property [%s] for entity " + PROP_TEMPLATE_FOR_MESSAGES + ".";
 
     protected final Logger logger;
 
@@ -537,27 +515,24 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
         try {
             return (T) dynamicPropertyAccess.getProperty(this, propertyName);
-        } catch (final Throwable e) {
-            // There are cases where this.toString() may fail such as for non-initialized union entities. Need to degrade
-            // gracefully in order to to hide the original exception. Also, don't try toString() if dynamic property access
-            // fails gravely since toString() itself may require it (e.g., with DynamicEntityKey).
+        } catch (final Throwable ex) {
+            // There are cases where this.toString() may fail such as for non-initialized union entities.
+            // Need to degrade gracefully to hide the original exception.
+            // Also, do not try toString() if dynamic property access fails critically.
+            // This is because toString() itself may require access to that property (e.g., in case of DynamicEntityKey).
             @Nullable String thisToString;
-            if (e instanceof DynamicPropertyAccessGraveError) {
+            if (ex instanceof DynamicPropertyAccessCriticalError) {
                 thisToString = null;
             }
             else {
                 try {
                     thisToString = this.toString();
-                } catch (final Exception ex) {
+                } catch (final Throwable _$) {
                     thisToString = null;
                 }
             }
-            throw new EntityException(format("Could not get the value for property [%s] in instance %s.",
-                                             propertyName,
-                                             thisToString == null
-                                                     ? '[' + getType().getTypeName() + ']'
-                                                     : "[%s]@[%s]".formatted(thisToString, getType().getTypeName())),
-                                      e);
+            throw new EntityException(ERR_COULD_NOT_GET_PROP_VALUE.formatted(propertyName, thisToString == null ? '[' + getType().getTypeName() + ']' : PROP_TEMPLATE_FOR_MESSAGES.formatted(thisToString, getType().getTypeName())),
+                                      ex);
         }
     }
 
@@ -581,13 +556,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         try {
             dynamicPropertyAccess.setProperty(this, propertyName, value);
             return this;
-        } catch (final Throwable e) {
-            if (e instanceof Result result) {
+        } catch (final Throwable ex) {
+            if (ex instanceof Result result) {
                 throw result;
             }
             else {
-                throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].",
-                                                 value, propertyName, this, getType().getName()), e);
+                throw new EntityException(ERR_COULD_NOT_SET_PROP_VALUE.formatted(value, propertyName, this, getType().getName()), ex);
             }
         }
     }
