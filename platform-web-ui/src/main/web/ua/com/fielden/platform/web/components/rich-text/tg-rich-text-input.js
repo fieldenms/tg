@@ -484,7 +484,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _valueChanged(newValue) {
         if(this._editor && newValue !== this._editor.getHTML()) {
-            this._editor.setHTML(newValue);
+            this._editor.setHTML(newValue, false);
         }
     }
 
