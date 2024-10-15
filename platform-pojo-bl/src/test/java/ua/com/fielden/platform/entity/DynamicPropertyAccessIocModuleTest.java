@@ -8,13 +8,13 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static ua.com.fielden.platform.entity.DynamicPropertyAccessModule.CacheOptions.expireAfterAccess;
-import static ua.com.fielden.platform.entity.DynamicPropertyAccessModule.CacheOptions.expireAfterWrite;
-import static ua.com.fielden.platform.entity.DynamicPropertyAccessModule.Options.*;
-import static ua.com.fielden.platform.entity.DynamicPropertyAccessModule.Options.Caching.*;
-import static ua.com.fielden.platform.entity.DynamicPropertyAccessModule.options;
+import static ua.com.fielden.platform.entity.DynamicPropertyAccessIocModule.CacheOptions.expireAfterAccess;
+import static ua.com.fielden.platform.entity.DynamicPropertyAccessIocModule.CacheOptions.expireAfterWrite;
+import static ua.com.fielden.platform.entity.DynamicPropertyAccessIocModule.Options.*;
+import static ua.com.fielden.platform.entity.DynamicPropertyAccessIocModule.Options.Caching.*;
+import static ua.com.fielden.platform.entity.DynamicPropertyAccessIocModule.options;
 
-public class DynamicPropertyAccessModuleTest {
+public class DynamicPropertyAccessIocModuleTest {
 
     @Test
     public void caching_option_is_parsed_correctly() {

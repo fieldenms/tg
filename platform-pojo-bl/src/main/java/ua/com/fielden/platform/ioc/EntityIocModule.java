@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.ioc;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicPropertyAccessModule;
+import ua.com.fielden.platform.entity.DynamicPropertyAccessIocModule;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.web_api.GraphQLScalars;
 
@@ -42,8 +42,8 @@ public abstract class EntityIocModule extends AbstractPlatformIocModule {
         // this guarantees that different implementations of IDates will be injected based on IDates binding in IoC modules that define the binding configuration;
         requestStaticInjection(GraphQLScalars.class);
 
-        install(DynamicPropertyAccessModule.options().fromProperties(properties));
-        install(new DynamicPropertyAccessModule());
+        install(DynamicPropertyAccessIocModule.options().fromProperties(properties));
+        install(new DynamicPropertyAccessIocModule());
     }
 
 }

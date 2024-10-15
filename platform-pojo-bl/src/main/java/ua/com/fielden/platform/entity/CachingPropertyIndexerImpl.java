@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import ua.com.fielden.platform.entity.DynamicPropertyAccessModule.CacheConfig;
+import ua.com.fielden.platform.entity.DynamicPropertyAccessIocModule.CacheConfig;
 
 import java.lang.invoke.MethodHandle;
 import java.time.Duration;

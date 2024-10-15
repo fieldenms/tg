@@ -8,6 +8,7 @@ import com.google.inject.Provides;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.parser.ValueParser;
 
 import java.time.Duration;
@@ -62,7 +63,7 @@ import static ua.com.fielden.platform.parser.ValueParser.*;
  dynamicPropertyAccess.tempTypeCache.expireAfterWrite = 10m
  * </pre>
  */
-public final class DynamicPropertyAccessModule extends AbstractModule {
+public final class DynamicPropertyAccessIocModule extends AbstractPlatformIocModule {
 
     public enum CacheOptions {
 
