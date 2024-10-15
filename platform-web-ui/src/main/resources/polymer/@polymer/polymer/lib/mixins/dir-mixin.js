@@ -25,10 +25,10 @@ const DIR_INSTANCES = [];
 /** @type {?MutationObserver} */
 
 let observer = null;
-let DOCUMENT_DIR = '';
+let documentDir = '';
 
 function getRTL() {
-  DOCUMENT_DIR = document.documentElement.getAttribute('dir');
+  documentDir = document.documentElement.getAttribute('dir');
 }
 /**
  * @param {!Polymer_DirMixin} instance Instance to set RTL status on
@@ -40,13 +40,13 @@ function setRTL(instance) {
     const el =
     /** @type {!HTMLElement} */
     instance;
-    el.setAttribute('dir', DOCUMENT_DIR);
+    el.setAttribute('dir', documentDir);
   }
 }
 
 function updateDirection() {
   getRTL();
-  DOCUMENT_DIR = document.documentElement.getAttribute('dir');
+  documentDir = document.documentElement.getAttribute('dir');
 
   for (let i = 0; i < DIR_INSTANCES.length; i++) {
     setRTL(DIR_INSTANCES[i]);
@@ -80,6 +80,9 @@ function takeRecords() {
  * @mixinFunction
  * @polymer
  * @appliesMixin PropertyAccessors
+ * @template T
+ * @param {function(new:T)} superClass Class to apply mixin to.
+ * @return {function(new:T)} superClass with mixin applied.
  */
 
 
@@ -114,9 +117,12 @@ export const DirMixin = dedupingMixin(base => {
      * @param {string} baseURI .
      * @return {string} .
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
+     * @nocollapse
      */
     static _processStyleText(cssText, baseURI) {
-      cssText = super._processStyleText(cssText, baseURI);
+      // TODO(https://github.com/google/closure-compiler/issues/3240):
+      //     Change back to just super.methodCall()
+      cssText = elementBase._processStyleText.call(this, cssText, baseURI);
 
       if (!SHIM_SHADOW && DIR_CHECK.test(cssText)) {
         cssText = this._replaceDirInCssText(cssText);
@@ -130,6 +136,7 @@ export const DirMixin = dedupingMixin(base => {
      *
      * @param {string} text CSS text to replace DIR
      * @return {string} Modified CSS
+     * @nocollapse
      */
 
 

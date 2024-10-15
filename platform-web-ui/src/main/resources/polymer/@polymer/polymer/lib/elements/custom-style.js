@@ -92,6 +92,8 @@ export class CustomStyle extends HTMLElement {
 
     if (include) {
       style.removeAttribute(attr);
+      /** @suppress {deprecated} */
+
       style.textContent = cssFromModules(include) + style.textContent;
     }
     /*

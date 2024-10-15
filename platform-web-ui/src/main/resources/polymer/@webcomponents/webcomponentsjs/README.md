@@ -1,29 +1,31 @@
 [![Build Status](https://travis-ci.org/webcomponents/webcomponentsjs.svg?branch=master)](https://travis-ci.org/webcomponents/webcomponentsjs)
 
-webcomponents.js (v1 spec polyfills)
-================
+# webcomponents.js (v1 spec polyfills)
 
 > **Note**. For polyfills that work with the older Custom Elements and Shadow DOM v0 specs,
-see the [v0 branch](https://github.com/webcomponents/webcomponentsjs/tree/v0).
+> see the [v0 branch](https://github.com/webcomponents/webcomponentsjs/tree/v0).
 
 > **Note**. For polyfills that include HTML Imports,
-see the [v1 branch](https://github.com/webcomponents/webcomponentsjs/tree/v1).
+> see the [v1 branch](https://github.com/webcomponents/webcomponentsjs/tree/v1).
 
 A suite of polyfills supporting the [Web Components](http://webcomponents.org) specs:
 
-- **Custom Elements v1**: allows authors to define their own custom tags ([spec](https://w3c.github.io/webcomponents/spec/custom/), [tutorial](https://developers.google.com/web/fundamentals/getting-started/primers/customelements), [polyfill](https://github.com/webcomponents/custom-elements)).
+- **Custom Elements v1**: allows authors to define their own custom tags ([spec](https://w3c.github.io/webcomponents/spec/custom/), [tutorial](https://developers.google.com/web/fundamentals/getting-started/primers/customelements), [polyfill](https://github.com/webcomponents/polyfills/tree/master/packages/custom-elements)).
 - **Shadow DOM v1**: provides encapsulation by hiding DOM subtrees under shadow roots ([spec](https://w3c.github.io/webcomponents/spec/shadow/), [tutorial](https://developers.google.com/web/fundamentals/getting-started/primers/shadowdom),
-[shadydom polyfill](https://github.com/webcomponents/shadydom), [shadycss polyfill](https://github.com/webcomponents/shadycss)).
+  [shadydom polyfill](https://github.com/webcomponents/polyfills/tree/master/packages/shadydom), [shadycss polyfill](https://github.com/webcomponents/polyfills/tree/master/packages/shadycss)).
 
 For browsers that need it, there are also some minor polyfills included:
-- [`HTMLTemplateElement`](https://github.com/webcomponents/template)
+
+- [`HTMLTemplateElement`](https://github.com/webcomponents/polyfills/tree/master/packages/template)
 - [`Promise`](https://github.com/taylorhakes/promise-polyfill)
 - `Event`, `CustomEvent`, `MouseEvent` constructors and `Object.assign`, `Array.from`
-(see [webcomponents-platform](https://github.com/webcomponents/webcomponents-platform))
-- [`URL constructor`](https://github.com/webcomponents/URL)
+  (see [webcomponents-platform](https://github.com/webcomponents/webcomponents-platform))
+- [`URL constructor`](https://github.com/webcomponents/polyfills/tree/master/packages/url)
 
 ## How to use
+
 ### Install polyfills
+
 ```bash
 npm install @webcomponents/webcomponentsjs
 ```
@@ -75,7 +77,12 @@ For example:
 </script>
 ```
 
+This property is used to build the URL to the selected bundle, so you should
+only set it to values that are unable to be influenced by user-controlled data.
+If trusted types are enforced, this property should be a `TrustedScriptURL`.
+
 #### Synchronous
+
 When loaded synchronously, `webcomponents-loader.js` behaves similarly to `webcomponents-bundle.js`.
 
 The appropriate bundle will be loaded with `document.write()` to ensure that WebComponent polyfills are available for subsequent scripts and modules.
@@ -94,8 +101,9 @@ Here's an example:
 ```
 
 #### Asynchronous
+
 When loaded asychronously with the `defer` attribute, polyfill bundles will be loaded asynchronously,
-which means that scripts and modules that depend on webcomponents APIs *must* be loaded
+which means that scripts and modules that depend on webcomponents APIs _must_ be loaded
 using `WebComponents.waitFor` function.
 
 The `WebComponents.waitFor` function takes a callback function as an argument, and will evaluate that callback after the polyfill bundle has been loaded.
@@ -107,7 +115,10 @@ Here's an example:
 
 ```html
 <!-- Load polyfills; note that "loader" will load these async -->
-<script src="node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js" defer></script>
+<script
+  src="node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"
+  defer
+></script>
 
 <!-- Load a custom element definitions in `waitFor` and return a promise -->
 <script type="module">
@@ -133,7 +144,10 @@ Here's a more complicated example:
 
 ```html
 <!-- Load polyfills; note that "loader" will load these async -->
-<script src="node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js" defer></script>
+<script
+  src="node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"
+  defer
+></script>
 
 <script type="module">
   WebComponents.waitFor(async () => {
@@ -141,21 +155,30 @@ Here's a more complicated example:
       await import('node_modules/fetch-polyfill/fetch.js');
     }
     return import('my-element.js');
-  })
+  });
 </script>
 
-<script type="module">
-</script>
+<script type="module"></script>
 ```
+
+#### Trusted Types
+
+If you're using the loader on a page that enforces the `trusted-types` Content
+Security Policy, you'll need to allow the `webcomponents-loader` policy name so
+that the loader can dynamically create and insert a `<script>` for the polyfill
+bundle it selects based on feature detection. If you set `WebComponents.root`
+(which is rare), it should be set to a `TrustedScriptURL` for Trusted Types
+compatibility.
 
 ### WebComponentsReady event
 
 The `WebComponentsReady` event is fired when polyfills and user scripts have loaded and custom elements have been upgraded. This event is generally not needed; however, it may be useful in some cases like testing. If imperative code should wait until a specific custom element definition has loaded, it can use the platform `customElements.whenDefined` API.
 
 ### `custom-elements-es5-adapter.js`
-According to the spec, only ES6 classes (https://html.spec.whatwg.org/multipage/scripting.html#custom-element-conformance) may be passed to the _native_ `customElements.define` API. For best performnace, ES6 should be served to browsers that support it, and ES5 code should be serve to those that don't. Since this may not always be possible, it may make sense to compile and serve ES5 to all browsers. However, if you do so, ES5-style custom element classes will now **not** work on browsers with native Custom Elements because ES5-style classes cannot properly extend ES6 classes, like `HTMLElement`.
 
-As a workaround, if your project has been compiled to ES5, load `custom-elements-es5-adapter.js` before defining Custom Elements.  This adapter will automatically wrap ES5.
+According to the spec, only ES6 classes (https://html.spec.whatwg.org/multipage/scripting.html#custom-element-conformance) may be passed to the _native_ `customElements.define` API. For best performance, ES6 should be served to browsers that support it, and ES5 code should be serve to those that don't. Since this may not always be possible, it may make sense to compile and serve ES5 to all browsers. However, if you do so, ES5-style custom element classes will now **not** work on browsers with native Custom Elements because ES5-style classes cannot properly extend ES6 classes, like `HTMLElement`.
+
+As a workaround, if your project has been compiled to ES5, load `custom-elements-es5-adapter.js` before defining Custom Elements. This adapter will automatically wrap ES5.
 
 **The adapter must NOT be compiled.**
 
@@ -164,24 +187,50 @@ As a workaround, if your project has been compiled to ES5, load `custom-elements
 The polyfills are intended to work in the latest versions of evergreen browsers. See below
 for our complete browser support matrix:
 
-| Polyfill   | Edge | IE11+ | Chrome* | Firefox* | Safari 9+* | Chrome Android* | Mobile Safari* |
-| ---------- |:----:|:-----:|:-------:|:--------:|:----------:|:---------------:|:--------------:|
-| Custom Elements | ✓ | ✓ | ✓ | ✓ | ✓ | ✓| ✓ |
-| Shady CSS/DOM | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Polyfill        | Edge | IE11+ | Chrome\* | Firefox\* | Safari 9+\* | Chrome Android\* | Mobile Safari\* |
+| --------------- | :--: | :---: | :------: | :-------: | :---------: | :--------------: | :-------------: |
+| Custom Elements |  ✓   |   ✓   |    ✓     |     ✓     |      ✓      |        ✓         |        ✓        |
+| Shady CSS/DOM   |  ✓   |   ✓   |    ✓     |     ✓     |      ✓      |        ✓         |        ✓        |
 
 \*Indicates the current version of the browser
 
 The polyfills may work in older browsers, however require additional polyfills (such as classList, or other [platform](https://github.com/webcomponents/webcomponents-platform)
 polyfills) to be used. We cannot guarantee support for browsers outside of our compatibility matrix.
 
+## Known Issues
+
+- [Style encapsulation (inline styling in components) does not work out of the box](#shadycss)
+- [Custom element's constructor property is unreliable](#constructor)
+- [ShadyCSS: :host(.zot:not(.bar:nth-child(2))) doesn't work](#nestedparens)
+
+### Style encapsulation (inline styling in components) does not work out of the box. <a id="shadycss"></a>
+
+The ShadowDOM polyfill does not properly support CSS in ShadowDoM out of the box:
+
+- Any styles inside components have an effect on the whole document (instead of on the component only - the encapsulation is broken).
+- Any shadow-dom specific selectors (like `:host`) do not work.
+
+You can fix those issues by manually calling the `ShadyCSS` APIs. See [ShadyCSS usage](https://github.com/webcomponents/shadycss#usage).
+
+### Custom element's constructor property is unreliable <a id="constructor"></a>
+
+See [#215](https://github.com/webcomponents/webcomponentsjs/issues/215) for background.
+
+In Edge and IE, instances of Custom Elements have a `constructor` property of `HTMLUnknownElementConstructor` and `HTMLUnknownElement`, respectively. It's unsafe to rely on this property for checking element types.
+
+It's worth noting that `customElement.__proto__.__proto__.constructor` is `HTMLElementPrototype` and that the prototype chain isn't modified by the polyfills(onto `ElementPrototype`, etc.)
+
+### ShadyCSS: :host(.zot:not(.bar:nth-child(2))) doesn't work <a id="nestedparens"></a>
+
+ShadyCSS `:host()` rules can only have (at most) 1-level of nested parentheses in its argument selector under ShadyCSS. For example, `:host(.zot)` and `:host(.zot:not(.bar))` both work, but `:host(.zot:not(.bar:nth-child(2)))` does not.
 
 ### Manually Building
 
 If you wish to build the bundles yourself, you'll need `node` and `npm` on your system:
 
- * install [node.js](http://nodejs.org/) using the instructions on their website
- * use `npm` to install [gulp.js](http://gulpjs.com/): `npm install -g gulp`
- * make sure you have Java installed per https://www.npmjs.com/package/google-closure-compiler#java-version
+- install [node.js](http://nodejs.org/) using the instructions on their website
+- use `npm` to install [gulp.js](http://gulpjs.com/): `npm install -g gulp`
+- make sure you have Java installed per https://www.npmjs.com/package/google-closure-compiler#java-version
 
 Now you are ready to build the polyfills with:
 
@@ -204,33 +253,7 @@ Copyright (c) 2015 The Polymer Authors. All rights reserved.
 
 ## Changes in version 2.x
 
-* The HTML Imports polyfill has been removed. Given that ES modules have shipped in
-most browsers, the expectation is that web components code will be loaded via
-ES modules.
-* When using `webcomponents-loader.js` with the `defer` attribute, scripts that rely on the polyfills *must* be loaded using `WebComponents.waitFor(loadCallback)`.
-
-## Known Issues
-
-  * [ShadowDOM CSS is not encapsulated out of the box](#shadycss)
-  * [Custom element's constructor property is unreliable](#constructor)
-  * [ShadyCSS: :host(.zot:not(.bar:nth-child(2))) doesn't work](#nestedparens)
-
-### ShadowDOM CSS is not encapsulated out of the box <a id="shadycss"></a>
-The ShadowDOM polyfill is not able to encapsulate CSS in ShadowDOM out of the box. You need to use specific code from the ShadyCSS library, included with the polyfill. See [ShadyCSS instructions](https://github.com/webcomponents/shadycss).
-
-### Custom element's constructor property is unreliable <a id="constructor"></a>
-See [#215](https://github.com/webcomponents/webcomponentsjs/issues/215) for background.
-
-In Edge and IE, instances of Custom Elements have a `constructor` property of `HTMLUnknownElementConstructor` and `HTMLUnknownElement`, respectively. It's unsafe to rely on this property for checking element types.
-
-It's worth noting that `customElement.__proto__.__proto__.constructor` is `HTMLElementPrototype` and that the prototype chain isn't modified by the polyfills(onto `ElementPrototype`, etc.)
-
-### ShadyCSS: :host(.zot:not(.bar:nth-child(2))) doesn't work <a id="nestedparens"></a>
-ShadyCSS `:host()` rules can only have (at most) 1-level of nested parentheses in its argument selector under ShadyCSS. For example, `:host(.zot)` and `:host(.zot:not(.bar))` both work, but `:host(.zot:not(.bar:nth-child(2)))` does not.
-
-### Radio button groups are not isolated
-If two `<input type="radio">` elements share the same group `name`, but are
-inside two different shadow roots (or one is in the light DOM), then the
-ShadowDOM polyfill will not prevent them from being treated as part of the same
-group, which does not match the spec (see [related Chromium
-bug](https://bugs.chromium.org/p/chromium/issues/detail?id=394302)).
+- The HTML Imports polyfill has been removed. Given that ES modules have shipped in
+  most browsers, the expectation is that web components code will be loaded via
+  ES modules.
+- When using `webcomponents-loader.js` with the `defer` attribute, scripts that rely on the polyfills _must_ be loaded using `WebComponents.waitFor(loadCallback)`.

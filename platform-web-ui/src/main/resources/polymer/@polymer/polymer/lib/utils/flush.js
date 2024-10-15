@@ -8,16 +8,8 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import './boot.js';
-/* eslint-disable no-unused-vars */
-
-import { Debouncer } from "./debounce.js"; // used in type annotations
-
-/* eslint-enable no-unused-vars */
-
-import { flushDebouncers } from "./debounce.js"; // used in type annotations
-
-export { enqueueDebouncer } from "./debounce.js"; // used in type annotations
-
+import { enqueueDebouncer, flushDebouncers } from "./debounce.js";
+export { enqueueDebouncer };
 /**
  * Forces several classes of asynchronously queued tasks to flush:
  * - Debouncers added via `enqueueDebouncer`

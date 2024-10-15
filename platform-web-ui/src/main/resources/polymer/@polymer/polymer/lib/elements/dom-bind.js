@@ -13,6 +13,7 @@ import { OptionalMutableData } from '../mixins/mutable-data.js';
 import { GestureEventListeners } from '../mixins/gesture-event-listeners.js';
 import { strictTemplatePolicy } from '../utils/settings.js';
 import { wrap } from '../utils/wrap.js';
+import { hideElementsGlobally } from '../utils/hide-template-controls.js';
 /**
  * @constructor
  * @extends {HTMLElement}
@@ -59,13 +60,19 @@ export class DomBind extends domBindBase {
     this.$ = null;
     this.__children = null;
   }
+  /* eslint-disable no-unused-vars */
+
   /**
    * @override
+   * @param {string} name Name of attribute that changed
+   * @param {?string} old Old attribute value
+   * @param {?string} value New attribute value
+   * @param {?string} namespace Attribute namespace.
    * @return {void}
    */
 
 
-  attributeChangedCallback() {
+  attributeChangedCallback(name, old, value, namespace) {
     // assumes only one observed attribute
     this.mutableData = true;
   }
@@ -76,7 +83,10 @@ export class DomBind extends domBindBase {
 
 
   connectedCallback() {
-    this.style.display = 'none';
+    if (!hideElementsGlobally()) {
+      this.style.display = 'none';
+    }
+
     this.render();
   }
   /**
@@ -112,7 +122,7 @@ export class DomBind extends domBindBase {
 
     if (!this.__children) {
       template =
-      /** @type {HTMLTemplateElement} */
+      /** @type {?HTMLTemplateElement} */
       template || this.querySelector('template');
 
       if (!template) {

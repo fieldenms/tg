@@ -20,10 +20,11 @@ import { PropertyAccessors } from './property-accessors.js';
 /* for annotated effects */
 
 import { TemplateStamp } from './template-stamp.js';
-import { sanitizeDOMValue } from '../utils/settings.js'; // Monotonically increasing unique ID used for de-duping effects triggered
+import { sanitizeDOMValue, legacyUndefined, orderedComputed, removeNestedTemplates, fastDomIf } from '../utils/settings.js'; // Monotonically increasing unique ID used for de-duping effects triggered
 // from multiple properties in the same turn
 
 let dedupeId = 0;
+const NOOP = [];
 /**
  * Property effect types; effects are stored on the prototype using these keys
  * @enum {string}
@@ -37,6 +38,7 @@ const TYPES = {
   OBSERVE: '__observeEffects',
   READ_ONLY: '__readOnly'
 };
+const COMPUTE_INFO = '__computeInfo';
 /** @const {!RegExp} */
 
 const capitalAttributeRegex = /[A-Z]/;
@@ -79,11 +81,13 @@ let DataEffect; //eslint-disable-line no-unused-vars
  *
  * @param {Object} model Prototype or instance
  * @param {string} type Property effect type
+ * @param {boolean=} cloneArrays Clone any arrays assigned to the map when
+ *   extending a superclass map onto this subclass
  * @return {Object} The own-property map of effects for the given type
  * @private
  */
 
-function ensureOwnEffectMap(model, type) {
+function ensureOwnEffectMap(model, type, cloneArrays) {
   let effects = model[type];
 
   if (!effects) {
@@ -91,12 +95,15 @@ function ensureOwnEffectMap(model, type) {
   } else if (!model.hasOwnProperty(type)) {
     effects = model[type] = Object.create(model[type]);
 
-    for (let p in effects) {
-      let protoFx = effects[p];
-      let instFx = effects[p] = Array(protoFx.length);
+    if (cloneArrays) {
+      for (let p in effects) {
+        let protoFx = effects[p]; // Perf optimization over Array.slice
 
-      for (let i = 0; i < protoFx.length; i++) {
-        instFx[i] = protoFx[i];
+        let instFx = effects[p] = Array(protoFx.length);
+
+        for (let i = 0; i < protoFx.length; i++) {
+          instFx[i] = protoFx[i];
+        }
       }
     }
   }
@@ -122,13 +129,24 @@ function ensureOwnEffectMap(model, type) {
 function runEffects(inst, effects, props, oldProps, hasPaths, extraArgs) {
   if (effects) {
     let ran = false;
-    let id = dedupeId++;
+    const id = dedupeId++;
 
     for (let prop in props) {
-      if (runEffectsForProperty(inst,
-      /** @type {!Object} */
-      effects, id, prop, props, oldProps, hasPaths, extraArgs)) {
-        ran = true;
+      // Inline `runEffectsForProperty` for perf.
+      let rootProperty = hasPaths ? root(prop) : prop;
+      let fxs = effects[rootProperty];
+
+      if (fxs) {
+        for (let i = 0, l = fxs.length, fx; i < l && (fx = fxs[i]); i++) {
+          if ((!fx.info || fx.info.lastRun !== id) && (!hasPaths || pathMatchesTrigger(prop, fx.trigger))) {
+            if (fx.info) {
+              fx.info.lastRun = id;
+            }
+
+            fx.fn(inst, prop, props, oldProps, fx.info, hasPaths, extraArgs);
+            ran = true;
+          }
+        }
       }
     }
 
@@ -323,7 +341,12 @@ function dispatchNotifyEvent(inst, eventName, value, path) {
 
   if (path) {
     detail.path = path;
-  }
+  } // As a performance optimization, we could elide the wrap here since notifying
+  // events are non-bubbling and shouldn't need retargeting. However, a very
+  // small number of internal tests failed in obscure ways, which may indicate
+  // user code relied on timing differences resulting from ShadyDOM flushing
+  // as a result of the wrapped `dispatchEvent`.
+
 
   wrap(
   /** @type {!HTMLElement} */
@@ -450,19 +473,229 @@ function runComputedEffects(inst, changedProps, oldProps, hasPaths) {
   let computeEffects = inst[TYPES.COMPUTE];
 
   if (computeEffects) {
-    let inputProps = changedProps;
+    if (orderedComputed) {
+      // Runs computed effects in efficient order by keeping a topologically-
+      // sorted queue of compute effects to run, and inserting subsequently
+      // invalidated effects as they are run
+      dedupeId++;
+      const order = getComputedOrder(inst);
+      const queue = [];
 
-    while (runEffects(inst, computeEffects, inputProps, oldProps, hasPaths)) {
+      for (let p in changedProps) {
+        enqueueEffectsFor(p, computeEffects, queue, order, hasPaths);
+      }
+
+      let info;
+
+      while (info = queue.shift()) {
+        if (runComputedEffect(inst, '', changedProps, oldProps, info)) {
+          enqueueEffectsFor(info.methodInfo, computeEffects, queue, order, hasPaths);
+        }
+      }
+
       Object.assign(
       /** @type {!Object} */
       oldProps, inst.__dataOld);
       Object.assign(
       /** @type {!Object} */
       changedProps, inst.__dataPending);
-      inputProps = inst.__dataPending;
       inst.__dataPending = null;
+    } else {
+      // Original Polymer 2.x computed effects order, which continues running
+      // effects until no further computed properties have been invalidated
+      let inputProps = changedProps;
+
+      while (runEffects(inst, computeEffects, inputProps, oldProps, hasPaths)) {
+        Object.assign(
+        /** @type {!Object} */
+        oldProps, inst.__dataOld);
+        Object.assign(
+        /** @type {!Object} */
+        changedProps, inst.__dataPending);
+        inputProps = inst.__dataPending;
+        inst.__dataPending = null;
+      }
     }
   }
+}
+/**
+ * Inserts a computed effect into a queue, given the specified order. Performs
+ * the insert using a binary search.
+ *
+ * Used by `orderedComputed: true` computed property algorithm.
+ *
+ * @param {Object} info Property effects metadata
+ * @param {Array<Object>} queue Ordered queue of effects
+ * @param {Map<string,number>} order Map of computed property name->topological
+ *   sort order
+ */
+
+
+const insertEffect = (info, queue, order) => {
+  let start = 0;
+  let end = queue.length - 1;
+  let idx = -1;
+
+  while (start <= end) {
+    const mid = start + end >> 1; // Note `methodInfo` is where the computed property name is stored in
+    // the effect metadata
+
+    const cmp = order.get(queue[mid].methodInfo) - order.get(info.methodInfo);
+
+    if (cmp < 0) {
+      start = mid + 1;
+    } else if (cmp > 0) {
+      end = mid - 1;
+    } else {
+      idx = mid;
+      break;
+    }
+  }
+
+  if (idx < 0) {
+    idx = end + 1;
+  }
+
+  queue.splice(idx, 0, info);
+};
+/**
+ * Inserts all downstream computed effects invalidated by the specified property
+ * into the topologically-sorted queue of effects to be run.
+ *
+ * Used by `orderedComputed: true` computed property algorithm.
+ *
+ * @param {string} prop Property name
+ * @param {Object} computeEffects Computed effects for this element
+ * @param {Array<Object>} queue Topologically-sorted queue of computed effects
+ *   to be run
+ * @param {Map<string,number>} order Map of computed property name->topological
+ *   sort order
+ * @param {boolean} hasPaths True with `changedProps` contains one or more paths
+ */
+
+
+const enqueueEffectsFor = (prop, computeEffects, queue, order, hasPaths) => {
+  const rootProperty = hasPaths ? root(prop) : prop;
+  const fxs = computeEffects[rootProperty];
+
+  if (fxs) {
+    for (let i = 0; i < fxs.length; i++) {
+      const fx = fxs[i];
+
+      if (fx.info.lastRun !== dedupeId && (!hasPaths || pathMatchesTrigger(prop, fx.trigger))) {
+        fx.info.lastRun = dedupeId;
+        insertEffect(fx.info, queue, order);
+      }
+    }
+  }
+};
+/**
+ * Generates and retrieves a memoized map of computed property name to its
+ * topologically-sorted order.
+ *
+ * The map is generated by first assigning a "dependency count" to each property
+ * (defined as number properties it depends on, including its method for
+ * "dynamic functions"). Any properties that have no dependencies are added to
+ * the `ready` queue, which are properties whose order can be added to the final
+ * order map. Properties are popped off the `ready` queue one by one and a.) added as
+ * the next property in the order map, and b.) each property that it is a
+ * dependency for has its dep count decremented (and if that property's dep
+ * count goes to zero, it is added to the `ready` queue), until all properties
+ * have been visited and ordered.
+ *
+ * Used by `orderedComputed: true` computed property algorithm.
+ *
+ * @param {!Polymer_PropertyEffects} inst The instance to retrieve the computed
+ *   effect order for.
+ * @return {Map<string,number>} Map of computed property name->topological sort
+ *   order
+ */
+
+
+function getComputedOrder(inst) {
+  let ordered = inst.constructor.__orderedComputedDeps;
+
+  if (!ordered) {
+    ordered = new Map();
+    const effects = inst[TYPES.COMPUTE];
+    let {
+      counts,
+      ready,
+      total
+    } = dependencyCounts(inst);
+    let curr;
+
+    while (curr = ready.shift()) {
+      ordered.set(curr, ordered.size);
+      const computedByCurr = effects[curr];
+
+      if (computedByCurr) {
+        computedByCurr.forEach(fx => {
+          // Note `methodInfo` is where the computed property name is stored
+          const computedProp = fx.info.methodInfo;
+          --total;
+
+          if (--counts[computedProp] === 0) {
+            ready.push(computedProp);
+          }
+        });
+      }
+    }
+
+    if (total !== 0) {
+      const el =
+      /** @type {HTMLElement} */
+      inst;
+      console.warn(`Computed graph for ${el.localName} incomplete; circular?`);
+    }
+
+    inst.constructor.__orderedComputedDeps = ordered;
+  }
+
+  return ordered;
+}
+/**
+ * Generates a map of property-to-dependency count (`counts`, where "dependency
+ * count" is the number of dependencies a given property has assuming it is a
+ * computed property, otherwise 0).  It also returns a pre-populated list of
+ * `ready` properties that have no dependencies and a `total` count, which is
+ * used for error-checking the graph.
+ *
+ * Used by `orderedComputed: true` computed property algorithm.
+ *
+ * @param {!Polymer_PropertyEffects} inst The instance to generate dependency
+ *   counts for.
+ * @return {!Object} Object containing `counts` map (property-to-dependency
+ *   count) and pre-populated `ready` array of properties that had zero
+ *   dependencies.
+ */
+
+
+function dependencyCounts(inst) {
+  const infoForComputed = inst[COMPUTE_INFO];
+  const counts = {};
+  const computedDeps = inst[TYPES.COMPUTE];
+  const ready = [];
+  let total = 0; // Count dependencies for each computed property
+
+  for (let p in infoForComputed) {
+    const info = infoForComputed[p]; // Be sure to add the method name itself in case of "dynamic functions"
+
+    total += counts[p] = info.args.filter(a => !a.literal).length + (info.dynamicFn ? 1 : 0);
+  } // Build list of ready properties (that aren't themselves computed)
+
+
+  for (let p in computedDeps) {
+    if (!infoForComputed[p]) {
+      ready.push(p);
+    }
+  }
+
+  return {
+    counts,
+    ready,
+    total
+  };
 }
 /**
  * Implements the "computed property" effect by running the method with the
@@ -471,22 +704,29 @@ function runComputedEffects(inst, changedProps, oldProps, hasPaths) {
  *
  * @param {!Polymer_PropertyEffects} inst The instance the effect will be run on
  * @param {string} property Name of property
- * @param {?Object} props Bag of current property changes
+ * @param {?Object} changedProps Bag of current property changes
  * @param {?Object} oldProps Bag of previous values for changed properties
  * @param {?} info Effect metadata
- * @return {void}
+ * @return {boolean} True when the property being computed changed
  * @private
  */
 
 
-function runComputedEffect(inst, property, props, oldProps, info) {
-  let result = runMethodEffect(inst, property, props, oldProps, info);
+function runComputedEffect(inst, property, changedProps, oldProps, info) {
+  // Dirty check dependencies and run if any invalid
+  let result = runMethodEffect(inst, property, changedProps, oldProps, info); // Abort if method returns a no-op result
+
+  if (result === NOOP) {
+    return false;
+  }
+
   let computedProp = info.methodInfo;
 
   if (inst.__dataHasAccessor && inst.__dataHasAccessor[computedProp]) {
-    inst._setPendingProperty(computedProp, result, true);
+    return inst._setPendingProperty(computedProp, result, true);
   } else {
     inst[computedProp] = result;
+    return false;
   }
 }
 /**
@@ -655,9 +895,12 @@ function runBindingEffect(inst, path, props, oldProps, info, hasPaths, nodeList)
     }
   } else {
     let value = info.evaluator._evaluateBinding(inst, part, path, props, oldProps, hasPaths); // Propagate value to child
+    // Abort if value is a no-op result
 
 
-    applyBindingValue(inst, node, binding, part, value);
+    if (value !== NOOP) {
+      applyBindingValue(inst, node, binding, part, value);
+    }
   }
 }
 /**
@@ -697,6 +940,8 @@ function applyBindingValue(inst, node, binding, part, value) {
         }
       }
     } else {
+      // In legacy no-batching mode, bindings applied before dataReady are
+      // equivalent to the "apply config" phase, which only set managed props
       inst._setUnmanagedPropertyToNode(node, prop, value);
     }
   }
@@ -779,7 +1024,9 @@ function setupBindings(inst, templateInfo) {
           setupCompoundStorage(node, binding);
           addNotifyListener(node, inst, binding);
         }
-      }
+      } // This ensures all bound elements have a host set, regardless
+      // of whether they upgrade synchronous to creation
+
 
       node.__dataHost = inst;
     }
@@ -817,6 +1064,13 @@ function setupCompoundStorage(node, binding) {
     storage[target] = literals; // Configure properties with their literal parts
 
     if (binding.literal && binding.kind == 'property') {
+      // Note, className needs style scoping so this needs wrapping.
+      // We may also want to consider doing this for `textContent` and
+      // `innerHTML`.
+      if (target === 'className') {
+        node = wrap(node);
+      }
+
       node[target] = binding.literal;
     }
   }
@@ -856,7 +1110,7 @@ function addNotifyListener(node, inst, binding) {
  * @param {boolean|Object=} dynamicFn Boolean or object map indicating whether
  *   method names should be included as a dependency to the effect. Note,
  *   defaults to true if the signature is static (sig.static is true).
- * @return {void}
+ * @return {!Object} Effect metadata for this method effect
  * @private
  */
 
@@ -886,6 +1140,8 @@ function createMethodEffect(model, sig, type, effectFn, methodInfo, dynamicFn) {
       info: info
     });
   }
+
+  return info;
 }
 /**
  * Calls a method with arguments marshaled from properties on the instance
@@ -914,7 +1170,7 @@ function runMethodEffect(inst, property, props, oldProps, info) {
   if (fn) {
     let args = inst._marshalArgs(info.args, property, props);
 
-    return fn.apply(context, args);
+    return args === NOOP ? NOOP : fn.apply(context, args);
   } else if (!info.dynamicFn) {
     console.warn('method `' + info.methodName + '` not defined');
   }
@@ -1038,7 +1294,7 @@ function parseArg(rawArg) {
   .replace(/&comma;/g, ',') // repair extra escape sequences; note only commas strictly need
   // escaping, but we allow any other char to be escaped since its
   // likely users will do this
-  .replace(/\\(.)/g, '\$1'); // basic argument descriptor
+  .replace(/\\(.)/g, '$1'); // basic argument descriptor
 
   let a = {
     name: arg,
@@ -1116,10 +1372,21 @@ function getArgValue(data, props, path) {
 
 
 function notifySplices(inst, array, path, splices) {
-  inst.notifyPath(path + '.splices', {
+  const splicesData = {
     indexSplices: splices
-  });
-  inst.notifyPath(path + '.length', array.length);
+  }; // Legacy behavior stored splices in `__data__` so it was *not* ephemeral.
+  // To match this behavior, we store splices directly on the array.
+
+  if (legacyUndefined && !inst._overrideLegacyUndefined) {
+    array.splices = splicesData;
+  }
+
+  inst.notifyPath(path + '.splices', splicesData);
+  inst.notifyPath(path + '.length', array.length); // Clear splice data only when it's stored on the array.
+
+  if (legacyUndefined && !inst._overrideLegacyUndefined) {
+    splicesData.indexSplices = [];
+  }
 }
 /**
  * Creates a splice record and sends an array splice notification for
@@ -1220,12 +1487,6 @@ export const PropertyEffects = dedupingMixin(superClass => {
       // Used to identify users of this mixin, ala instanceof
 
       this.__isPropertyEffectsClient = true;
-      /** @type {number} */
-      // NOTE: used to track re-entrant calls to `_flushProperties`
-      // path changes dirty check against `__dataTemp` only during one "turn"
-      // and are cleared when `__dataCounter` returns to 0.
-
-      this.__dataCounter = 0;
       /** @type {boolean} */
 
       this.__dataClientsReady;
@@ -1267,6 +1528,9 @@ export const PropertyEffects = dedupingMixin(superClass => {
       this.__computeEffects;
       /** @type {Object} */
 
+      this.__computeInfo;
+      /** @type {Object} */
+
       this.__reflectEffects;
       /** @type {Object} */
 
@@ -1283,6 +1547,9 @@ export const PropertyEffects = dedupingMixin(superClass => {
       /** @type {!TemplateInfo} */
 
       this.__templateInfo;
+      /** @type {boolean} */
+
+      this._overrideLegacyUndefined;
     }
 
     get PROPERTY_EFFECT_TYPES() {
@@ -1297,7 +1564,8 @@ export const PropertyEffects = dedupingMixin(superClass => {
     _initializeProperties() {
       super._initializeProperties();
 
-      hostStack.registerHost(this);
+      this._registerHost();
+
       this.__dataClientsReady = false;
       this.__dataPendingClients = null;
       this.__dataToNotify = null;
@@ -1308,6 +1576,18 @@ export const PropertyEffects = dedupingMixin(superClass => {
       this.__dataHost = this.__dataHost || null;
       this.__dataTemp = {};
       this.__dataClientsInitialized = false;
+    }
+
+    _registerHost() {
+      if (hostStack.length) {
+        let host = hostStack[hostStack.length - 1];
+
+        host._enqueueClient(this); // This ensures even non-bound elements have a host set, as
+        // long as they upgrade synchronously
+
+
+        this.__dataHost = host;
+      }
     }
     /**
      * Overrides `PropertyAccessors` implementation to provide a
@@ -1365,7 +1645,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
       this._createPropertyAccessor(property, type == TYPES.READ_ONLY); // effects are accumulated into arrays per property based on type
 
 
-      let effects = ensureOwnEffectMap(this, type)[property];
+      let effects = ensureOwnEffectMap(this, type, true)[property];
 
       if (!effects) {
         effects = this[type][property] = [];
@@ -1385,7 +1665,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
 
 
     _removePropertyEffect(property, type, effect) {
-      let effects = ensureOwnEffectMap(this, type)[property];
+      let effects = ensureOwnEffectMap(this, type, true)[property];
       let idx = effects.indexOf(effect);
 
       if (idx >= 0) {
@@ -1574,6 +1854,13 @@ export const PropertyEffects = dedupingMixin(superClass => {
       // implement a whitelist of tag & property values that should never
       // be reset (e.g. <input>.value && <select>.value)
       if (value !== node[prop] || typeof value == 'object') {
+        // Note, className needs style scoping so this needs wrapping.
+        if (prop === 'className') {
+          node =
+          /** @type {!Node} */
+          wrap(node);
+        }
+
         node[prop] = value;
       }
     }
@@ -1700,22 +1987,6 @@ export const PropertyEffects = dedupingMixin(superClass => {
       if (client !== this) {
         this.__dataPendingClients.push(client);
       }
-    }
-    /**
-     * Overrides superclass implementation.
-     *
-     * @override
-     * @return {void}
-     * @protected
-     */
-
-
-    _flushProperties() {
-      this.__dataCounter++;
-
-      super._flushProperties();
-
-      this.__dataCounter--;
     }
     /**
      * Flushes any clients previously enqueued via `_enqueueClient`, causing
@@ -1869,12 +2140,13 @@ export const PropertyEffects = dedupingMixin(superClass => {
       // if (window.debug) { debugger; }
       // ----------------------------
       let hasPaths = this.__dataHasPaths;
-      this.__dataHasPaths = false; // Compute properties
+      this.__dataHasPaths = false;
+      let notifyProps; // Compute properties
 
       runComputedEffects(this, changedProps, oldProps, hasPaths); // Clear notify properties prior to possible reentry (propagate, observe),
       // but after computing effects have a chance to add to them
 
-      let notifyProps = this.__dataToNotify;
+      notifyProps = this.__dataToNotify;
       this.__dataToNotify = null; // Propagate properties to clients
 
       this._propagatePropertyChanges(changedProps, oldProps, hasPaths); // Flush clients
@@ -1917,11 +2189,24 @@ export const PropertyEffects = dedupingMixin(superClass => {
         runEffects(this, this[TYPES.PROPAGATE], changedProps, oldProps, hasPaths);
       }
 
-      let templateInfo = this.__templateInfo;
+      if (this.__templateInfo) {
+        this._runEffectsForTemplate(this.__templateInfo, changedProps, oldProps, hasPaths);
+      }
+    }
 
-      while (templateInfo) {
+    _runEffectsForTemplate(templateInfo, changedProps, oldProps, hasPaths) {
+      const baseRunEffects = (changedProps, hasPaths) => {
         runEffects(this, templateInfo.propertyEffects, changedProps, oldProps, hasPaths, templateInfo.nodeList);
-        templateInfo = templateInfo.nextTemplateInfo;
+
+        for (let info = templateInfo.firstChild; info; info = info.nextSibling) {
+          this._runEffectsForTemplate(info, changedProps, oldProps, hasPaths);
+        }
+      };
+
+      if (templateInfo.runEffects) {
+        templateInfo.runEffects(baseRunEffects, changedProps, hasPaths);
+      } else {
+        baseRunEffects(changedProps, hasPaths);
       }
     }
     /**
@@ -2149,7 +2434,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {number} start Index from which to start removing/inserting.
      * @param {number=} deleteCount Number of items to remove.
      * @param {...*} items Items to insert into array.
-     * @return {Array} Array of removed items.
+     * @return {!Array} Array of removed items.
      * @public
      */
 
@@ -2463,7 +2748,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
         throw new Error("Malformed computed expression '" + expression + "'");
       }
 
-      createMethodEffect(this, sig, TYPES.COMPUTE, runComputedEffect, property, dynamicFn);
+      const info = createMethodEffect(this, sig, TYPES.COMPUTE, runComputedEffect, property, dynamicFn); // Effects are normally stored as map of dependency->effect, but for
+      // ordered computation, we also need tree of computedProp->dependencies
+
+      ensureOwnEffectMap(this, COMPUTE_INFO)[property] = info;
     }
     /**
      * Gather the argument values for a method specified in the provided array
@@ -2475,7 +2763,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {!Array<!MethodArg>} args Array of argument metadata
      * @param {string} path Property/path name that triggered the method effect
      * @param {Object} props Bag of current property changes
-     * @return {Array<*>} Array of argument values
+     * @return {!Array<*>} Array of argument values
      * @private
      */
 
@@ -2505,6 +2793,12 @@ export const PropertyEffects = dedupingMixin(superClass => {
           } else {
             value = structured ? getArgValue(data, props, name) : data[name];
           }
+        } // When the `legacyUndefined` flag is enabled, pass a no-op value
+        // so that the observer, computed property, or compound binding is aborted.
+
+
+        if (legacyUndefined && !this._overrideLegacyUndefined && value === undefined && args.length > 1) {
+          return NOOP;
         }
 
         values[i] = value;
@@ -2548,6 +2842,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {Object=} effect Effect metadata object
      * @return {void}
      * @protected
+     * @nocollapse
      */
 
 
@@ -2563,6 +2858,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   a dependency to the effect.
      * @return {void}
      * @protected
+     * @nocollapse
      */
 
 
@@ -2581,6 +2877,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      *   whether method names should be included as a dependency to the effect.
      * @protected
+     * @nocollapse
      */
 
 
@@ -2594,6 +2891,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {string} property Property name
      * @return {void}
      * @protected
+     * @nocollapse
      */
 
 
@@ -2615,6 +2913,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   when `true`.
      * @return {void}
      * @protected
+     * @nocollapse
      */
 
 
@@ -2628,6 +2927,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {string} property Property name
      * @return {void}
      * @protected
+     * @nocollapse
      */
 
 
@@ -2647,6 +2947,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   method names should be included as a dependency to the effect.
      * @return {void}
      * @protected
+     * @nocollapse
      */
 
 
@@ -2664,6 +2965,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   bindings
      * @return {!TemplateInfo} Template metadata object
      * @protected
+     * @nocollapse
      */
 
 
@@ -2671,10 +2973,43 @@ export const PropertyEffects = dedupingMixin(superClass => {
       return this.prototype._bindTemplate(template);
     } // -- binding ----------------------------------------------
 
+    /*
+     * Overview of binding flow:
+     *
+     * During finalization (`instanceBinding==false`, `wasPreBound==false`):
+     *  `_bindTemplate(t, false)` called directly during finalization - parses
+     *  the template (for the first time), and then assigns that _prototypical_
+     *  template info to `__preboundTemplateInfo` _on the prototype_; note in
+     *  this case `wasPreBound` is false; this is the first time we're binding
+     *  it, thus we create accessors.
+     *
+     * During first stamping (`instanceBinding==true`, `wasPreBound==true`):
+     *   `_stampTemplate` calls `_bindTemplate(t, true)`: the `templateInfo`
+     *   returned matches the prebound one, and so this is `wasPreBound == true`
+     *   state; thus we _skip_ creating accessors, but _do_ create an instance
+     *   of the template info to serve as the start of our linked list (needs to
+     *   be an instance, not the prototypical one, so that we can add `nodeList`
+     *   to it to contain the `nodeInfo`-ordered list of instance nodes for
+     *   bindings, and so we can chain runtime-stamped template infos off of
+     *   it). At this point, the call to `_stampTemplate` calls
+     *   `applyTemplateInfo` for each nested `<template>` found during parsing
+     *   to hand prototypical `_templateInfo` to them; we also pass the _parent_
+     *   `templateInfo` to the `<template>` so that we have the instance-time
+     *   parent to link the `templateInfo` under in the case it was
+     *   runtime-stamped.
+     *
+     * During subsequent runtime stamping (`instanceBinding==true`,
+     *   `wasPreBound==false`): `_stampTemplate` calls `_bindTemplate(t, true)`
+     *   - here `templateInfo` is guaranteed to _not_ match the prebound one,
+     *   because it was either a different template altogether, or even if it
+     *   was the same template, the step above created a instance of the info;
+     *   in this case `wasPreBound == false`, so we _do_ create accessors, _and_
+     *   link a instance into the linked list.
+     */
+
     /**
-     * Equivalent to static `bindTemplate` API but can be called on
-     * an instance to add effects at runtime.  See that method for
-     * full API docs.
+     * Equivalent to static `bindTemplate` API but can be called on an instance
+     * to add effects at runtime.  See that method for full API docs.
      *
      * This method may be called on the prototype (for prototypical template
      * binding, to avoid creating accessors every instance) once per prototype,
@@ -2684,14 +3019,14 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *
      * @override
      * @param {!HTMLTemplateElement} template Template containing binding
-     *   bindings
+     * bindings
      * @param {boolean=} instanceBinding When false (default), performs
-     *   "prototypical" binding of the template and overwrites any previously
-     *   bound template for the class. When true (as passed from
-     *   `_stampTemplate`), the template info is instanced and linked into
-     *   the list of bound templates.
+     * "prototypical" binding of the template and overwrites any previously
+     * bound template for the class. When true (as passed from
+     * `_stampTemplate`), the template info is instanced and linked into the
+     * list of bound templates.
      * @return {!TemplateInfo} Template metadata object; for `runtimeBinding`,
-     *   this is an instance of the prototypical template info
+     * this is an instance of the prototypical template info
      * @protected
      * @suppress {missingProperties} go/missingfnprops
      */
@@ -2700,7 +3035,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
     _bindTemplate(template, instanceBinding) {
       let templateInfo = this.constructor._parseTemplate(template);
 
-      let wasPreBound = this.__templateInfo == templateInfo; // Optimization: since this is called twice for proto-bound templates,
+      let wasPreBound = this.__preBoundTemplateInfo == templateInfo; // Optimization: since this is called twice for proto-bound templates,
       // don't attempt to recreate accessors if this template was pre-bound
 
       if (!wasPreBound) {
@@ -2711,21 +3046,45 @@ export const PropertyEffects = dedupingMixin(superClass => {
 
       if (instanceBinding) {
         // For instance-time binding, create instance of template metadata
-        // and link into list of templates if necessary
+        // and link into tree of templates if necessary
         templateInfo =
         /** @type {!TemplateInfo} */
         Object.create(templateInfo);
         templateInfo.wasPreBound = wasPreBound;
 
-        if (!wasPreBound && this.__templateInfo) {
-          let last = this.__templateInfoLast || this.__templateInfo;
-          this.__templateInfoLast = last.nextTemplateInfo = templateInfo;
-          templateInfo.previousTemplateInfo = last;
-          return templateInfo;
+        if (!this.__templateInfo) {
+          // Set the info to the root of the tree
+          this.__templateInfo = templateInfo;
+        } else {
+          // Append this template info onto the end of its parent template's
+          // list, which will determine the tree structure via which property
+          // effects are run; if this template was not nested in another
+          // template, use the root template (the first stamped one) as the
+          // parent. Note, `parent` is the `templateInfo` instance for this
+          // template's parent (containing) template, which was set up in
+          // `applyTemplateInfo`.  While a given template's `parent` is set
+          // apriori, it is only added to the parent's child list at the point
+          // that it is being bound, since a template may or may not ever be
+          // stamped, and may be stamped more than once (in which case instances
+          // of the template info will be in the tree under its parent more than
+          // once).
+          const parent = template._parentTemplateInfo || this.__templateInfo;
+          const previous = parent.lastChild;
+          templateInfo.parent = parent;
+          parent.lastChild = templateInfo;
+          templateInfo.previousSibling = previous;
+
+          if (previous) {
+            previous.nextSibling = templateInfo;
+          } else {
+            parent.firstChild = templateInfo;
+          }
         }
+      } else {
+        this.__preBoundTemplateInfo = templateInfo;
       }
 
-      return this.__templateInfo = templateInfo;
+      return templateInfo;
     }
     /**
      * Adds a property effect to the given template metadata, which is run
@@ -2739,6 +3098,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {Object=} effect Effect metadata object
      * @return {void}
      * @protected
+     * @nocollapse
      */
 
 
@@ -2765,25 +3125,26 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * in the main element template.
      *
      * @param {!HTMLTemplateElement} template Template to stamp
+     * @param {TemplateInfo=} templateInfo Optional bound template info associated
+     *   with the template to be stamped; if omitted the template will be
+     *   automatically bound.
      * @return {!StampedTemplate} Cloned template content
      * @override
      * @protected
      */
 
 
-    _stampTemplate(template) {
-      // Ensures that created dom is `_enqueueClient`'d to this element so
-      // that it can be flushed on next call to `_flushProperties`
-      hostStack.beginHosting(this);
-
-      let dom = super._stampTemplate(template);
-
-      hostStack.endHosting(this);
-
-      let templateInfo =
+    _stampTemplate(template, templateInfo) {
+      templateInfo = templateInfo ||
       /** @type {!TemplateInfo} */
-      this._bindTemplate(template, true); // Add template-instance-specific data to instanced templateInfo
+      this._bindTemplate(template, true); // Ensures that created dom is `_enqueueClient`'d to this element so
+      // that it can be flushed on next call to `_flushProperties`
 
+      hostStack.push(this);
+
+      let dom = super._stampTemplate(template, templateInfo);
+
+      hostStack.pop(); // Add template-instance-specific data to instanced templateInfo
 
       templateInfo.nodeList = dom.nodeList; // Capture child nodes to allow unstamping of non-prototypical templates
 
@@ -2797,10 +3158,20 @@ export const PropertyEffects = dedupingMixin(superClass => {
 
       dom.templateInfo = templateInfo; // Setup compound storage, 2-way listeners, and dataHost for bindings
 
-      setupBindings(this, templateInfo); // Flush properties into template nodes if already booted
+      setupBindings(this, templateInfo); // Flush properties into template nodes; the check on `__dataClientsReady`
+      // ensures we don't needlessly run effects for an element's initial
+      // prototypical template stamping since they will happen as a part of the
+      // first call to `_propertiesChanged`. This flag is set to true
+      // after running the initial propagate effects, and immediately before
+      // flushing clients. Since downstream clients could cause stamping on
+      // this host (e.g. a fastDomIf `dom-if` being forced to render
+      // synchronously), this flag ensures effects for runtime-stamped templates
+      // are run at this point during the initial element boot-up.
 
-      if (this.__dataReady) {
-        runEffects(this, templateInfo.propertyEffects, this.__data, null, false, templateInfo.nodeList);
+      if (this.__dataClientsReady) {
+        this._runEffectsForTemplate(templateInfo, this.__data, null, false);
+
+        this._flushClients();
       }
 
       return dom;
@@ -2818,28 +3189,36 @@ export const PropertyEffects = dedupingMixin(superClass => {
 
 
     _removeBoundDom(dom) {
-      // Unlink template info
-      let templateInfo = dom.templateInfo;
+      // Unlink template info; Note that while the child is unlinked from its
+      // parent list, a template's `parent` reference is never removed, since
+      // this is is determined by the tree structure and applied at
+      // `applyTemplateInfo` time.
+      const templateInfo = dom.templateInfo;
+      const {
+        previousSibling,
+        nextSibling,
+        parent
+      } = templateInfo;
 
-      if (templateInfo.previousTemplateInfo) {
-        templateInfo.previousTemplateInfo.nextTemplateInfo = templateInfo.nextTemplateInfo;
+      if (previousSibling) {
+        previousSibling.nextSibling = nextSibling;
+      } else if (parent) {
+        parent.firstChild = nextSibling;
       }
 
-      if (templateInfo.nextTemplateInfo) {
-        templateInfo.nextTemplateInfo.previousTemplateInfo = templateInfo.previousTemplateInfo;
+      if (nextSibling) {
+        nextSibling.previousSibling = previousSibling;
+      } else if (parent) {
+        parent.lastChild = previousSibling;
       }
 
-      if (this.__templateInfoLast == templateInfo) {
-        this.__templateInfoLast = templateInfo.previousTemplateInfo;
-      }
-
-      templateInfo.previousTemplateInfo = templateInfo.nextTemplateInfo = null; // Remove stamped nodes
+      templateInfo.nextSibling = templateInfo.previousSibling = null; // Remove stamped nodes
 
       let nodes = templateInfo.childNodes;
 
       for (let i = 0; i < nodes.length; i++) {
         let node = nodes[i];
-        node.parentNode.removeChild(node);
+        wrap(wrap(node).parentNode).removeChild(node);
       }
     }
     /**
@@ -2857,11 +3236,14 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   metadata to `nodeInfo`
      * @protected
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
+     * @nocollapse
      */
 
 
     static _parseTemplateNode(node, templateInfo, nodeInfo) {
-      let noted = super._parseTemplateNode(node, templateInfo, nodeInfo);
+      // TODO(https://github.com/google/closure-compiler/issues/3240):
+      //     Change back to just super.methodCall()
+      let noted = propertyEffectsBase._parseTemplateNode.call(this, node, templateInfo, nodeInfo);
 
       if (node.nodeType === Node.TEXT_NODE) {
         let parts = this._parseBindings(node.textContent, templateInfo);
@@ -2895,6 +3277,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   metadata to `nodeInfo`
      * @protected
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
+     * @nocollapse
      */
 
 
@@ -2926,6 +3309,11 @@ export const PropertyEffects = dedupingMixin(superClass => {
           }
 
           node.setAttribute(name, literal);
+        } // support disable-upgrade
+
+
+        if (kind == 'attribute' && origName == 'disable-upgrade$') {
+          node.setAttribute(name, '');
         } // Clear attribute before removing, since IE won't allow removing
         // `value` attribute if it previously had a value (can't
         // unconditionally set '' before removing since attributes with `$`
@@ -2949,7 +3337,9 @@ export const PropertyEffects = dedupingMixin(superClass => {
         addBinding(this, templateInfo, nodeInfo, kind, name, parts, literal);
         return true;
       } else {
-        return super._parseTemplateNodeAttribute(node, templateInfo, nodeInfo, name, value);
+        // TODO(https://github.com/google/closure-compiler/issues/3240):
+        //     Change back to just super.methodCall()
+        return propertyEffectsBase._parseTemplateNodeAttribute.call(this, node, templateInfo, nodeInfo, name, value);
       }
     }
     /**
@@ -2964,23 +3354,65 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   metadata to `nodeInfo`
      * @protected
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
+     * @nocollapse
      */
 
 
     static _parseTemplateNestedTemplate(node, templateInfo, nodeInfo) {
-      let noted = super._parseTemplateNestedTemplate(node, templateInfo, nodeInfo); // Merge host props into outer template and add bindings
+      // TODO(https://github.com/google/closure-compiler/issues/3240):
+      //     Change back to just super.methodCall()
+      let noted = propertyEffectsBase._parseTemplateNestedTemplate.call(this, node, templateInfo, nodeInfo);
+
+      const parent = node.parentNode;
+      const nestedTemplateInfo = nodeInfo.templateInfo;
+      const isDomIf = parent.localName === 'dom-if';
+      const isDomRepeat = parent.localName === 'dom-repeat'; // Remove nested template and redirect its host bindings & templateInfo
+      // onto the parent (dom-if/repeat element)'s nodeInfo
+
+      if (removeNestedTemplates && (isDomIf || isDomRepeat)) {
+        parent.removeChild(node); // Use the parent's nodeInfo (for the dom-if/repeat) to record the
+        // templateInfo, and use that for any host property bindings below
+
+        nodeInfo = nodeInfo.parentInfo;
+        nodeInfo.templateInfo = nestedTemplateInfo; // Ensure the parent dom-if/repeat is noted since it now may have host
+        // bindings; it may not have been if it did not have its own bindings
+
+        nodeInfo.noted = true;
+        noted = false;
+      } // Merge host props into outer template and add bindings
 
 
-      let hostProps = nodeInfo.templateInfo.hostProps;
-      let mode = '{';
+      let hostProps = nestedTemplateInfo.hostProps;
 
-      for (let source in hostProps) {
-        let parts = [{
-          mode,
-          source,
-          dependencies: [source]
-        }];
-        addBinding(this, templateInfo, nodeInfo, 'property', '_host_' + source, parts);
+      if (fastDomIf && isDomIf) {
+        // `fastDomIf` mode uses runtime-template stamping to add accessors/
+        // effects to properties used in its template; as such we don't need to
+        // tax the host element with `_host_` bindings for the `dom-if`.
+        // However, in the event it is nested in a `dom-repeat`, it is still
+        // important that its host properties are added to the
+        // TemplateInstance's `hostProps` so that they are forwarded to the
+        // TemplateInstance.
+        if (hostProps) {
+          templateInfo.hostProps = Object.assign(templateInfo.hostProps || {}, hostProps); // Ensure the dom-if is noted so that it has a __dataHost, since
+          // `fastDomIf` uses the host for runtime template stamping; note this
+          // was already ensured above in the `removeNestedTemplates` case
+
+          if (!removeNestedTemplates) {
+            nodeInfo.parentInfo.noted = true;
+          }
+        }
+      } else {
+        let mode = '{';
+
+        for (let source in hostProps) {
+          let parts = [{
+            mode,
+            source,
+            dependencies: [source],
+            hostProp: true
+          }];
+          addBinding(this, templateInfo, nodeInfo, 'property', '_host_' + source, parts);
+        }
       }
 
       return noted;
@@ -3028,6 +3460,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {Object} templateInfo Current template metadata
      * @return {Array<!BindingPart>} Array of binding part metadata
      * @protected
+     * @nocollapse
      */
 
 
@@ -3134,6 +3567,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {boolean} hasPaths True with `props` contains one or more paths
      * @return {*} Value the binding part evaluated to
      * @protected
+     * @nocollapse
      */
 
 
@@ -3164,7 +3598,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
   return PropertyEffects;
 });
 /**
- * Helper api for enqueuing client dom created by a host element.
+ * Stack for enqueuing client dom created by a host element.
  *
  * By default elements are flushed via `_flushProperties` when
  * `connectedCallback` is called. Elements attach their client dom to
@@ -3187,46 +3621,4 @@ export const PropertyEffects = dedupingMixin(superClass => {
  * @private
  */
 
-class HostStack {
-  constructor() {
-    this.stack = [];
-  }
-  /**
-   * @param {*} inst Instance to add to hostStack
-   * @return {void}
-   */
-
-
-  registerHost(inst) {
-    if (this.stack.length) {
-      let host = this.stack[this.stack.length - 1];
-
-      host._enqueueClient(inst);
-    }
-  }
-  /**
-   * @param {*} inst Instance to begin hosting
-   * @return {void}
-   */
-
-
-  beginHosting(inst) {
-    this.stack.push(inst);
-  }
-  /**
-   * @param {*} inst Instance to end hosting
-   * @return {void}
-   */
-
-
-  endHosting(inst) {
-    let stackLen = this.stack.length;
-
-    if (stackLen && this.stack[stackLen - 1] == inst) {
-      this.stack.pop();
-    }
-  }
-
-}
-
-const hostStack = new HostStack();
+const hostStack = [];

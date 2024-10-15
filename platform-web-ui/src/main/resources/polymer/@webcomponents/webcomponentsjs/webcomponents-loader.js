@@ -8,7 +8,7 @@
  * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
  */
 
-(function() {
+(function () {
   'use strict';
 
   /**
@@ -47,7 +47,9 @@
 
   function fireEvent() {
     window.WebComponents.ready = true;
-    document.dispatchEvent(new CustomEvent('WebComponentsReady', { bubbles: true }));
+    document.dispatchEvent(
+      new CustomEvent('WebComponentsReady', {bubbles: true})
+    );
   }
 
   function batchCustomElements() {
@@ -77,43 +79,51 @@
 
   function runWhenLoadedFns() {
     allowUpgrades = false;
-    var fnsMap = whenLoadedFns.map(function(fn) {
+    var fnsMap = whenLoadedFns.map(function (fn) {
       return fn instanceof Function ? fn() : fn;
     });
     whenLoadedFns = [];
-    return Promise.all(fnsMap).then(function() {
-      allowUpgrades = true;
-      flushFn && flushFn();
-    }).catch(function(err) {
-      console.error(err);
-    });
+    return Promise.all(fnsMap)
+      .then(function () {
+        allowUpgrades = true;
+        flushFn && flushFn();
+      })
+      .catch(function (err) {
+        console.error(err);
+      });
   }
 
   window.WebComponents = window.WebComponents || {};
   window.WebComponents.ready = window.WebComponents.ready || false;
-  window.WebComponents.waitFor = window.WebComponents.waitFor || function(waitFn) {
-    if (!waitFn) {
-      return;
-    }
-    whenLoadedFns.push(waitFn);
-    if (polyfillsLoaded) {
-      runWhenLoadedFns();
-    }
-  };
+  window.WebComponents.waitFor =
+    window.WebComponents.waitFor ||
+    function (waitFn) {
+      if (!waitFn) {
+        return;
+      }
+      whenLoadedFns.push(waitFn);
+      if (polyfillsLoaded) {
+        runWhenLoadedFns();
+      }
+    };
   window.WebComponents._batchCustomElements = batchCustomElements;
 
   var name = 'webcomponents-loader.js';
   // Feature detect which polyfill needs to be imported.
   var polyfills = [];
-  if (!('attachShadow' in Element.prototype && 'getRootNode' in Element.prototype) ||
-    (window.ShadyDOM && window.ShadyDOM.force)) {
+  if (
+    !(
+      'attachShadow' in Element.prototype && 'getRootNode' in Element.prototype
+    ) ||
+    (window.ShadyDOM && window.ShadyDOM.force)
+  ) {
     polyfills.push('sd');
   }
   if (!window.customElements || window.customElements.forcePolyfill) {
     polyfills.push('ce');
   }
 
-  var needsTemplate = (function() {
+  var needsTemplate = (function () {
     // no real <template> because no `content` property (IE and older browsers)
     var t = document.createElement('template');
     if (!('content' in t)) {
@@ -128,27 +138,67 @@
     t2.content.appendChild(document.createElement('div'));
     t.content.appendChild(t2);
     var clone = t.cloneNode(true);
-    return (clone.content.childNodes.length === 0 ||
-        clone.content.firstChild.content.childNodes.length === 0);
+    return (
+      clone.content.childNodes.length === 0 ||
+      clone.content.firstChild.content.childNodes.length === 0
+    );
   })();
 
   // NOTE: any browser that does not have template or ES6 features
   // must load the full suite of polyfills.
-  if (!window.Promise || !Array.from || !window.URL || !window.Symbol || needsTemplate) {
+  if (
+    !window.Promise ||
+    !Array.from ||
+    !window.URL ||
+    !window.Symbol ||
+    needsTemplate
+  ) {
     polyfills = ['sd-ce-pf'];
   }
 
   if (polyfills.length) {
+    // When the Trusted Types API is available, `policy` is a
+    // `TrustedTypePolicy` with functions for creating trusted HTML, scripts,
+    // and script URLs. This policy is used below to (a) approve the bundle URL
+    // string created by the loader that is assigned to a `<script>`'s `src`
+    // attribute, (b) approve a constant script string that is assigned to that
+    // `<script>'s `onload` attribute, and (c) approve the string of HTML that
+    // the loader reads from that `<script>`'s `outerHTML`.
+    //
+    // If the Trusted Types API is not available, the returned object exposes a
+    // similar interface to a `TrustedTypePolicy`, but all of its functions are
+    // the identity function.
+    var policy = (function () {
+      var identity = function (x) {
+        return x;
+      };
+      var policyOptions = {
+        createHTML: identity,
+        createScript: identity,
+        createScriptURL: identity,
+      };
+      var policy =
+        window.trustedTypes &&
+        window.trustedTypes.createPolicy('webcomponents-loader', policyOptions);
+      return policy || policyOptions;
+    })();
+
     var url;
     var polyfillFile = 'bundles/webcomponents-' + polyfills.join('-') + '.js';
 
     // Load it from the right place.
     if (window.WebComponents.root) {
       url = window.WebComponents.root + polyfillFile;
+      if (
+        window.trustedTypes &&
+        window.trustedTypes.isScriptURL(window.WebComponents.root)
+      ) {
+        url = policy.createScriptURL(url);
+      }
     } else {
-      var script = document.querySelector('script[src*="' + name +'"]');
+      var script = document.querySelector('script[src*="' + name + '"]');
       // Load it from the right place.
-      url = script.src.replace(name, polyfillFile);
+      url = policy.createScriptURL(script.src.replace(name, polyfillFile));
     }
 
     var newScript = document.createElement('script');
@@ -156,8 +206,11 @@
     // if readyState is 'loading', this script is synchronous
     if (document.readyState === 'loading') {
       // make sure custom elements are batched whenever parser gets to the injected script
-      newScript.setAttribute('onload', 'window.WebComponents._batchCustomElements()');
-      document.write(newScript.outerHTML);
+      newScript.setAttribute(
+        'onload',
+        policy.createScript('window.WebComponents._batchCustomElements()')
+      );
+      document.write(policy.createHTML(newScript.outerHTML));
       document.addEventListener('DOMContentLoaded', ready);
     } else {
       newScript.addEventListener('load', function () {
@@ -176,10 +229,10 @@
     } else {
       // this script may come between DCL and load, so listen for both, and cancel load listener if DCL fires
       window.addEventListener('load', ready);
-      window.addEventListener('DOMContentLoaded', function() {
+      window.addEventListener('DOMContentLoaded', function () {
         window.removeEventListener('load', ready);
         ready();
-      })
+      });
     }
   }
 })();

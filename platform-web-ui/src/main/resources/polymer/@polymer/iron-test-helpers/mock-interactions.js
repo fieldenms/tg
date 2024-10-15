@@ -33,6 +33,7 @@ const HAS_NEW_TOUCH = (() => {
  * Returns the (x,y) coordinates representing the middle of a node.
  *
  * @param {!Element} node An element.
+ * @return {{x: number, y:number}}
  */
 
 
@@ -47,6 +48,7 @@ export function middleOfNode(node) {
  * Returns the (x,y) coordinates representing the top left corner of a node.
  *
  * @param {!Element} node An element.
+ * @return {{x: number, y:number}}
  */
 
 export function topLeftOfNode(node) {
@@ -64,6 +66,7 @@ export function topLeftOfNode(node) {
  * @param {!Array<{ x: number, y: number }>} xyList A list of (x,y) coordinate
  * objects.
  * @param {!Element} node A target element node.
+ * @return {!Array<!Touch>}
  */
 
 export function makeTouches(xyList, node) {
@@ -87,6 +90,7 @@ export function makeTouches(xyList, node) {
  * TouchEvent.
  * @param {!Element} node The target element node for the generated
  * TouchEvent to be dispatched on.
+ * @return {undefined}
  */
 
 export function makeSoloTouchEvent(type, xy, node) {
@@ -126,6 +130,7 @@ export function makeSoloTouchEvent(type, xy, node) {
  * @param {{ x: number, y: number }} xy The (x,y) coordinates the mouse event
  * should be fired from.
  * @param {!Element} node The node to fire the event on.
+ * @return {undefined}
  */
 
 export function makeMouseEvent(type, xy, node) {
@@ -180,6 +185,7 @@ export function makeMouseEvent(type, xy, node) {
  * @param {Object} toXY The (x,y) coordinates the dragging should end at.
  * @param {?number=} steps Optional. The numbers of steps in the move motion.
  *    If not specified, the default is 5.
+ * @return {undefined}
  */
 
 export function move(node, fromXY, toXY, steps) {
@@ -234,6 +240,7 @@ export function track(target, dx, dy, steps) {
  * @param {!Element} node The node to fire the event on.
  * @param {{ x: number, y: number }=} xy Optional. The (x,y) coordinates the
  * mouse event should be fired from.
+ * @return {undefined}
  */
 
 export function down(node, xy) {
@@ -259,6 +266,7 @@ export function up(node, xy) {
  * @param {!Element} node The node to fire the click event on.
  * @param {{ x: number, y: number }=} xy Optional. The (x,y) coordinates the
  * mouse event should be fired from.
+ * @return {undefined}
  */
 
 export function click(node, xy) {
@@ -271,6 +279,7 @@ export function click(node, xy) {
  * @param {!Element} node The node to fire the click event on.
  * @param {{ x: number, y: number }=} xy Optional. The (x,y) coordinates the
  * touch event should be fired from.
+ * @return {undefined}
  */
 
 export function touchstart(node, xy) {
@@ -282,6 +291,7 @@ export function touchstart(node, xy) {
  * @param {!Element} node The node to fire the click event on.
  * @param {{ x: number, y: number }=} xy Optional. The (x,y) coordinates the
  * touch event should be fired from.
+ * @return {undefined}
  */
 
 export function touchend(node, xy) {
@@ -299,6 +309,7 @@ export function touchend(node, xy) {
  * @param {?{
  *   emulateTouch: boolean
  * }=} options Optional. Configure the emulation fidelity of the mouse events.
+ * @return {undefined}
  */
 
 export function downAndUp(target, callback, options) {
@@ -322,6 +333,7 @@ export function downAndUp(target, callback, options) {
  * @param {?{
  *   emulateTouch: boolean
  * }=} options Optional. Configure the emulation fidelity of the mouse event.
+ * @return {undefined}
  */
 
 export function tap(node, options) {
@@ -357,6 +369,7 @@ export function focus(target) {
  * Blurs a node by firing a `blur` event. This event does not bubble.
  *
  * @param {!Element} target The node to fire the event on.
+ * @return {undefined}
  */
 
 export function blur(target) {
@@ -374,6 +387,7 @@ export function blur(target) {
  * @param {(string|Array<string>)=} modifiers The key modifiers for the event.
  *     Accepted values are shift, ctrl, alt, meta.
  * @param {string=} key The KeyboardEvent.key value for the event.
+ * @return {!Event}
  */
 
 export function keyboardEventFor(type, keyCode, modifiers, key) {
@@ -410,6 +424,7 @@ export function keyboardEventFor(type, keyCode, modifiers, key) {
  * @param {(string|Array<string>)=} modifiers The key modifiers for the event.
  *     Accepted values are shift, ctrl, alt, meta.
  * @param {string=} key The KeyboardEvent.key value for the event.
+ * @return {undefined}
  */
 
 export function keyEventOn(target, type, keyCode, modifiers, key) {
@@ -424,6 +439,7 @@ export function keyEventOn(target, type, keyCode, modifiers, key) {
  * @param {(string|Array<string>)=} modifiers The key modifiers for the event.
  *     Accepted values are shift, ctrl, alt, meta.
  * @param {string=} key The KeyboardEvent.key value for the event.
+ * @return {undefined}
  */
 
 export function keyDownOn(target, keyCode, modifiers, key) {
@@ -438,6 +454,7 @@ export function keyDownOn(target, keyCode, modifiers, key) {
  * @param {(string|Array<string>)=} modifiers The key modifiers for the event.
  *     Accepted values are shift, ctrl, alt, meta.
  * @param {string=} key The KeyboardEvent.key value for the event.
+ * @return {undefined}
  */
 
 export function keyUpOn(target, keyCode, modifiers, key) {
@@ -452,6 +469,7 @@ export function keyUpOn(target, keyCode, modifiers, key) {
  * @param {(string|Array<string>)=} modifiers The key modifiers for the event.
  *     Accepted values are shift, ctrl, alt, meta.
  * @param {string=} key The KeyboardEvent.key value for the event.
+ * @return {undefined}
  */
 
 export function pressAndReleaseKeyOn(target, keyCode, modifiers, key) {
@@ -465,6 +483,7 @@ export function pressAndReleaseKeyOn(target, keyCode, modifiers, key) {
  * followed by an asynchronous `keyup` event on a specific node.
  *
  * @param {!Element} target The node to fire the event on.
+ * @return {undefined}
  */
 
 export function pressEnter(target) {

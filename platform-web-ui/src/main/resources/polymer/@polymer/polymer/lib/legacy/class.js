@@ -163,7 +163,7 @@ function flattenBehaviors(behaviors, list, exclude) {
  * Copies property descriptors from source to target, overwriting all fields
  * of any previous descriptor for a property *except* for `value`, which is
  * merged in from the target if it does not exist on the source.
- * 
+ *
  * @param {*} target Target properties object
  * @param {*} source Source properties object
  */
@@ -183,6 +183,8 @@ function mergeProperties(target, source) {
     }
   }
 }
+
+const LegacyElement = LegacyElementMixin(HTMLElement);
 /* Note about construction and extension of legacy classes.
   [Changed in Q4 2018 to optimize performance.]
 
@@ -215,7 +217,6 @@ function mergeProperties(target, source) {
  * @private
  */
 
-
 function GenerateClassFromInfo(info, Base, behaviors) {
   // manages behavior and lifecycle processing (filled in after class definition)
   let behaviorList;
@@ -224,10 +225,14 @@ function GenerateClassFromInfo(info, Base, behaviors) {
 
   class PolymerGenerated extends Base {
     // explicitly not calling super._finalizeClass
+
+    /** @nocollapse */
     static _finalizeClass() {
       // if calling via a subclass that hasn't been generated, pass through to super
       if (!this.hasOwnProperty(JSCompiler_renameProperty('generatedFrom', this))) {
-        super._finalizeClass();
+        // TODO(https://github.com/google/closure-compiler/issues/3240):
+        //     Change back to just super.methodCall()
+        Base._finalizeClass.call(this);
       } else {
         // interleave properties and observers per behavior and `info`
         if (behaviorList) {
@@ -256,6 +261,8 @@ function GenerateClassFromInfo(info, Base, behaviors) {
         this._prepareTemplate();
       }
     }
+    /** @nocollapse */
+
 
     static get properties() {
       const properties = {};
@@ -269,6 +276,8 @@ function GenerateClassFromInfo(info, Base, behaviors) {
       mergeProperties(properties, info.properties);
       return properties;
     }
+    /** @nocollapse */
+
 
     static get observers() {
       let observers = [];
@@ -320,7 +329,7 @@ function GenerateClassFromInfo(info, Base, behaviors) {
       // only proceed if the generated class' prototype has not been registered.
       const generatedProto = PolymerGenerated.prototype;
 
-      if (!generatedProto.hasOwnProperty('__hasRegisterFinished')) {
+      if (!generatedProto.hasOwnProperty(JSCompiler_renameProperty('__hasRegisterFinished', generatedProto))) {
         generatedProto.__hasRegisterFinished = true; // ensure superclass is registered first.
 
         super._registered(); // copy properties onto the generated class lazily if we're optimizing,
@@ -573,7 +582,7 @@ export const Class = function (info, mixin) {
     console.warn('Polymer.Class requires `info` argument');
   }
 
-  let klass = mixin ? mixin(LegacyElementMixin(HTMLElement)) : LegacyElementMixin(HTMLElement);
+  let klass = mixin ? mixin(LegacyElement) : LegacyElement;
   klass = GenerateClassFromInfo(info, klass, info.behaviors); // decorate klass with registration info
 
   klass.is = klass.prototype.is = info.is;

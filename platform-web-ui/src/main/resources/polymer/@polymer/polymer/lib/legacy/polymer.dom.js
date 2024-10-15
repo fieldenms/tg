@@ -45,9 +45,13 @@ export const matchesSelector = function (node, selector) {
 
 class DomApiNative {
   /**
-   * @param {Node} node Node for which to create a Polymer.dom helper object.
+   * @param {!Node} node Node for which to create a Polymer.dom helper object.
    */
   constructor(node) {
+    if (window['ShadyDOM'] && window['ShadyDOM']['inUse']) {
+      window['ShadyDOM']['patch'](node);
+    }
+
     this.node = node;
   }
   /**
@@ -116,7 +120,7 @@ class DomApiNative {
   /**
    * Returns the root node of this node.  Equivalent to `getRootNode()`.
    *
-   * @return {Node} Top most element in the dom tree in which the node
+   * @return {!Node} Top most element in the dom tree in which the node
    * exists. If the node is connected to a document this is either a
    * shadowRoot or the document; otherwise, it may be the node
    * itself or a node or document fragment containing it.
@@ -446,9 +450,22 @@ if (window['ShadyDOM'] && window['ShadyDOM']['inUse'] && window['ShadyDOM']['noP
   forwardReadOnlyProperties(Wrapper.prototype, ['classList']);
   DomApiImpl = Wrapper;
   Object.defineProperties(EventApi.prototype, {
+    // Returns the "lowest" node in the same root as the event's currentTarget.
+    // When in `noPatch` mode, this must be calculated by walking the event's
+    // path.
     localTarget: {
       get() {
-        return this.event.currentTarget;
+        const current = this.event.currentTarget;
+        const currentRoot = current && dom(current).getOwnerRoot();
+        const p$ = this.path;
+
+        for (let i = 0; i < p$.length; i++) {
+          const e = p$[i];
+
+          if (dom(e).getOwnerRoot() === currentRoot) {
+            return e;
+          }
+        }
       },
 
       configurable: true
@@ -464,12 +481,12 @@ if (window['ShadyDOM'] && window['ShadyDOM']['inUse'] && window['ShadyDOM']['noP
 } else {
   // Methods that can provoke distribution or must return the logical, not
   // composed tree.
-  forwardMethods(DomApiNative.prototype, ['cloneNode', 'appendChild', 'insertBefore', 'removeChild', 'replaceChild', 'setAttribute', 'removeAttribute', 'querySelector', 'querySelectorAll']); // Properties that should return the logical, not composed tree. Note, `classList`
+  forwardMethods(DomApiNative.prototype, ['cloneNode', 'appendChild', 'insertBefore', 'removeChild', 'replaceChild', 'setAttribute', 'removeAttribute', 'querySelector', 'querySelectorAll', 'attachShadow']); // Properties that should return the logical, not composed tree. Note, `classList`
   // is here only for legacy compatibility since it does not trigger distribution
   // in v1 Shadow DOM.
 
-  forwardReadOnlyProperties(DomApiNative.prototype, ['parentNode', 'firstChild', 'lastChild', 'nextSibling', 'previousSibling', 'firstElementChild', 'lastElementChild', 'nextElementSibling', 'previousElementSibling', 'childNodes', 'children', 'classList']);
-  forwardProperties(DomApiNative.prototype, ['textContent', 'innerHTML']);
+  forwardReadOnlyProperties(DomApiNative.prototype, ['parentNode', 'firstChild', 'lastChild', 'nextSibling', 'previousSibling', 'firstElementChild', 'lastElementChild', 'nextElementSibling', 'previousElementSibling', 'childNodes', 'children', 'classList', 'shadowRoot']);
+  forwardProperties(DomApiNative.prototype, ['textContent', 'innerHTML', 'className']);
 }
 
 export const DomApi = DomApiImpl;

@@ -10,7 +10,7 @@
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 import '../utils/boot.js';
-import { rootPath, strictTemplatePolicy, allowTemplateFromDomModule, legacyOptimizations, syncInitialRender } from '../utils/settings.js';
+import { rootPath, strictTemplatePolicy, allowTemplateFromDomModule, legacyOptimizations, legacyWarnings, syncInitialRender, supportsAdoptingStyleSheets, useAdoptedStyleSheetsWithBuiltCSS } from '../utils/settings.js';
 import { dedupingMixin } from '../utils/mixin.js';
 import { stylesFromTemplate, stylesFromModuleImports } from '../utils/style-gather.js';
 import { pathFromUrl, resolveCss, resolveUrl } from '../utils/resolve-url.js';
@@ -23,8 +23,8 @@ import { wrap } from '../utils/wrap.js';
  * @type {string} Semver notation of the current version of Polymer.
  */
 
-export const version = '3.2.0';
-const builtCSS = window.ShadyCSS && window.ShadyCSS['cssBuild'];
+export const version = '3.5.2';
+export const builtCSS = window.ShadyCSS && window.ShadyCSS['cssBuild'];
 /**
  * Element class mixin that provides the core API for Polymer's meta-programming
  * features including template stamping, data-binding, attribute deserialization,
@@ -92,6 +92,9 @@ const builtCSS = window.ShadyCSS && window.ShadyCSS['cssBuild'];
  *   import strategies.
  * @summary Element class mixin that provides the core API for Polymer's
  * meta-programming features.
+ * @template T
+ * @param {function(new:T)} superClass Class to apply mixin to.
+ * @return {function(new:T)} superClass with mixin applied.
  */
 
 export const ElementMixin = dedupingMixin(base => {
@@ -301,6 +304,32 @@ export const ElementMixin = dedupingMixin(base => {
 
     if (window.ShadyCSS) {
       window.ShadyCSS.prepareTemplate(template, is);
+    } // Support for `adoptedStylesheets` relies on using native Shadow DOM
+    // and built CSS. Built CSS is required because runtime transformation of
+    // `@apply` is not supported. This is because ShadyCSS relies on being able
+    // to update a `style` element in the element template and this is
+    // removed when using `adoptedStyleSheets`.
+    // Note, it would be more efficient to allow style includes to become
+    // separate stylesheets; however, because of `@apply` these are
+    // potentially not shareable and sharing the ones that could be shared
+    // would require some coordination. To keep it simple, all the includes
+    // and styles are collapsed into a single shareable stylesheet.
+
+
+    if (useAdoptedStyleSheetsWithBuiltCSS && builtCSS && supportsAdoptingStyleSheets) {
+      // Remove styles in template and make a shareable stylesheet
+      const styles = template.content.querySelectorAll('style');
+
+      if (styles) {
+        let css = '';
+        Array.from(styles).forEach(s => {
+          css += s.textContent;
+          s.parentNode.removeChild(s);
+        });
+        klass._styleSheet = new CSSStyleSheet();
+
+        klass._styleSheet.replaceSync(css);
+      }
     }
   }
   /**
@@ -343,6 +372,7 @@ export const ElementMixin = dedupingMixin(base => {
     /**
      * Current Polymer version in Semver notation.
      * @type {string} Semver notation of the current version of Polymer.
+     * @nocollapse
      */
     static get polymerElementVersion() {
       return version;
@@ -353,11 +383,14 @@ export const ElementMixin = dedupingMixin(base => {
      * @return {void}
      * @protected
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
+     * @nocollapse
      */
 
 
     static _finalizeClass() {
-      super._finalizeClass();
+      // TODO(https://github.com/google/closure-compiler/issues/3240):
+      //     Change back to just super.methodCall()
+      polymerElementBase._finalizeClass.call(this);
 
       const observers = ownObservers(this);
 
@@ -367,6 +400,8 @@ export const ElementMixin = dedupingMixin(base => {
 
       this._prepareTemplate();
     }
+    /** @nocollapse */
+
 
     static _prepareTemplate() {
       // note: create "working" template that is finalized at instance time
@@ -382,6 +417,8 @@ export const ElementMixin = dedupingMixin(base => {
           template = template.cloneNode(true);
         }
       }
+      /** @override */
+
 
       this.prototype._template = template;
     }
@@ -391,12 +428,15 @@ export const ElementMixin = dedupingMixin(base => {
      * @param {!Object} props .
      * @return {void}
      * @protected
+     * @nocollapse
      */
 
 
     static createProperties(props) {
       for (let p in props) {
-        createPropertyFromConfig(this.prototype, p, props[p], props);
+        createPropertyFromConfig(
+        /** @type {?} */
+        this.prototype, p, props[p], props);
       }
     }
     /**
@@ -409,6 +449,7 @@ export const ElementMixin = dedupingMixin(base => {
      *   reference is changed
      * @return {void}
      * @protected
+     * @nocollapse
      */
 
 
@@ -422,9 +463,13 @@ export const ElementMixin = dedupingMixin(base => {
     /**
      * Returns the template that will be stamped into this element's shadow root.
      *
-     * If a `static get is()` getter is defined, the default implementation
-     * will return the first `<template>` in a `dom-module` whose `id`
-     * matches this element's `is`.
+     * If a `static get is()` getter is defined, the default implementation will
+     * return the first `<template>` in a `dom-module` whose `id` matches this
+     * element's `is` (note that a `_template` property on the class prototype
+     * takes precedence over the `dom-module` template, to maintain legacy
+     * element semantics; a subclass will subsequently fall back to its super
+     * class template if neither a `prototype._template` or a `dom-module` for
+     * the class's `is` was found).
      *
      * Users may override this getter to return an arbitrary template
      * (in which case the `is` getter is unnecessary). The template returned
@@ -454,6 +499,7 @@ export const ElementMixin = dedupingMixin(base => {
      *   }
      *
      * @return {!HTMLTemplateElement|string} Template to be stamped
+     * @nocollapse
      */
 
 
@@ -472,10 +518,21 @@ export const ElementMixin = dedupingMixin(base => {
       //     or set in registered(); once the static getter runs, a clone of it
       //     will overwrite it on the prototype as the working template.
       if (!this.hasOwnProperty(JSCompiler_renameProperty('_template', this))) {
+        let protoTemplate = this.prototype.hasOwnProperty(JSCompiler_renameProperty('_template', this.prototype)) ? this.prototype._template : undefined; // Accept a function for the legacy Polymer({_template:...}) field for
+        // lazy parsing
+
+        if (typeof protoTemplate === 'function') {
+          protoTemplate = protoTemplate();
+        }
+
         this._template = // If user has put template on prototype (e.g. in legacy via registered
-        // callback or info object), prefer that first
-        this.prototype.hasOwnProperty(JSCompiler_renameProperty('_template', this.prototype)) ? this.prototype._template : // Look in dom-module associated with this element's is
-        getTemplateFromDomModule(
+        // callback or info object), prefer that first. Note that `null` is
+        // used as a sentinel to indicate "no template" and can be used to
+        // override a super template, whereas `undefined` is used as a
+        // sentinel to mean "fall-back to default template lookup" via
+        // dom-module and/or super.template.
+        protoTemplate !== undefined ? protoTemplate : // Look in dom-module associated with this element's is
+        this.hasOwnProperty(JSCompiler_renameProperty('is', this)) && getTemplateFromDomModule(
         /** @type {PolymerElementConstructor}*/
         this.is) || // Next look for superclass template (call the super impl this
         // way so that `this` points to the superclass)
@@ -490,6 +547,7 @@ export const ElementMixin = dedupingMixin(base => {
      * Set the template.
      *
      * @param {!HTMLTemplateElement|string} value Template to set.
+     * @nocollapse
      */
 
 
@@ -514,6 +572,7 @@ export const ElementMixin = dedupingMixin(base => {
      *
      * @return {string} The import path for this element class
      * @suppress {missingProperties}
+     * @nocollapse
      */
 
 
@@ -592,11 +651,9 @@ export const ElementMixin = dedupingMixin(base => {
       }
 
       for (let p in p$) {
-        let info = p$[p]; // Don't set default value if there is already an own property, which
-        // happens when a `properties` property with default but no effects had
-        // a property set (e.g. bound) by its host before upgrade
+        let info = p$[p];
 
-        if (!this.hasOwnProperty(p)) {
+        if (this._canApplyPropertyDefault(p)) {
           let value = typeof info.value == 'function' ? info.value.call(this) : info.value; // Set via `_setProperty` if there is an accessor, to enable
           // initializing readOnly property defaults
 
@@ -609,12 +666,26 @@ export const ElementMixin = dedupingMixin(base => {
       }
     }
     /**
+     * Determines if a property dfeault can be applied. For example, this
+     * prevents a default from being applied when a property that has no
+     * accessor is overridden by its host before upgrade (e.g. via a binding).
+     * @override
+     * @param {string} property Name of the property
+     * @return {boolean} Returns true if the property default can be applied.
+     */
+
+
+    _canApplyPropertyDefault(property) {
+      return !this.hasOwnProperty(property);
+    }
+    /**
      * Gather style text for a style element in the template.
      *
      * @param {string} cssText Text containing styling to process
      * @param {string} baseURI Base URI to rebase CSS paths against
      * @return {string} The processed CSS text
      * @protected
+     * @nocollapse
      */
 
 
@@ -629,6 +700,7 @@ export const ElementMixin = dedupingMixin(base => {
     * @param {string} is Tag name (or type extension name) for this element
     * @return {void}
     * @protected
+    * @nocollapse
     */
 
 
@@ -732,14 +804,19 @@ export const ElementMixin = dedupingMixin(base => {
         if (dom) {
           if (!n.shadowRoot) {
             n.attachShadow({
-              mode: 'open'
+              mode: 'open',
+              shadyUpgradeFragment: dom
             });
+            n.shadowRoot.appendChild(dom); // When `adoptedStyleSheets` is supported a stylesheet is made
+            // available on the element constructor.
+
+            if (this.constructor._styleSheet) {
+              n.shadowRoot.adoptedStyleSheets = [this.constructor._styleSheet];
+            }
           }
 
-          n.shadowRoot.appendChild(dom);
-
           if (syncInitialRender && window.ShadyDOM) {
-            ShadyDOM.flushInitial(n.shadowRoot);
+            window.ShadyDOM.flushInitial(n.shadowRoot);
           }
 
           return n.shadowRoot;
@@ -818,12 +895,15 @@ export const ElementMixin = dedupingMixin(base => {
      * @param {!NodeInfo} nodeInfo Node metadata for current template.
      * @return {boolean} .
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
+     * @nocollapse
      */
 
 
     static _parseTemplateContent(template, templateInfo, nodeInfo) {
-      templateInfo.dynamicFns = templateInfo.dynamicFns || this._properties;
-      return super._parseTemplateContent(template, templateInfo, nodeInfo);
+      templateInfo.dynamicFns = templateInfo.dynamicFns || this._properties; // TODO(https://github.com/google/closure-compiler/issues/3240):
+      //     Change back to just super.methodCall()
+
+      return polymerElementBase._parseTemplateContent.call(this, template, templateInfo, nodeInfo);
     }
     /**
      * Overrides `PropertyEffects` to warn on use of undeclared properties in
@@ -835,6 +915,7 @@ export const ElementMixin = dedupingMixin(base => {
      * @return {void}
      * @protected
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
+     * @nocollapse
      */
 
 
@@ -847,11 +928,19 @@ export const ElementMixin = dedupingMixin(base => {
       // The warning is only enabled in `legacyOptimizations` mode, since
       // we don't want to spam existing users who might have adopted the
       // shorthand when attribute deserialization is not important.
-      if (legacyOptimizations && !(prop in this._properties)) {
+      if (legacyWarnings && !(prop in this._properties) && // Methods used in templates with no dependencies (or only literal
+      // dependencies) become accessors with template effects; ignore these
+      !(effect.info.part.signature && effect.info.part.signature.static) && // Warnings for bindings added to nested templates are handled by
+      // templatizer so ignore both the host-to-template bindings
+      // (`hostProp`) and TemplateInstance-to-child bindings
+      // (`nestedTemplate`)
+      !effect.info.part.hostProp && !templateInfo.nestedTemplate) {
         console.warn(`Property '${prop}' used in template but not declared in 'properties'; ` + `attribute will not be observed.`);
-      }
+      } // TODO(https://github.com/google/closure-compiler/issues/3240):
+      //     Change back to just super.methodCall()
 
-      return super._addTemplatePropertyEffect(templateInfo, prop, effect);
+
+      return polymerElementBase._addTemplatePropertyEffect.call(this, templateInfo, prop, effect);
     }
 
   }

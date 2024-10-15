@@ -26,6 +26,14 @@ while (proto) {
 
   proto = Object.getPrototypeOf(proto);
 }
+
+const isTrustedType = (() => {
+  if (!window.trustedTypes) {
+    return () => false;
+  }
+
+  return val => trustedTypes.isHTML(val) || trustedTypes.isScript(val) || trustedTypes.isScriptURL(val);
+})();
 /**
  * Used to save the value of a property that will be overridden with
  * an accessor. If the `model` is a prototype, the values will be saved
@@ -94,6 +102,9 @@ function saveAccessorValue(model, property) {
  * @appliesMixin PropertiesChanged
  * @summary Element class mixin for reacting to property changes from
  *   generated property accessors.
+ * @template T
+ * @param {function(new:T)} superClass Class to apply mixin to.
+ * @return {function(new:T)} superClass with mixin applied.
  */
 
 
@@ -122,9 +133,12 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * `camelCase` convention
      *
      * @return {void}
+     * @nocollapse
      */
     static createPropertiesForAttributes() {
-      let a$ = this.observedAttributes;
+      let a$ =
+      /** @type {?} */
+      this.observedAttributes;
 
       for (let i = 0; i < a$.length; i++) {
         this.prototype._createPropertyAccessor(dashToCamelCase(a$[i]));
@@ -137,6 +151,7 @@ export const PropertyAccessors = dedupingMixin(superClass => {
      * @return {string} Attribute name corresponding to the given property.
      *
      * @protected
+     * @nocollapse
      */
 
 
@@ -224,6 +239,18 @@ export const PropertyAccessors = dedupingMixin(superClass => {
           if (value instanceof Date) {
             return value.toString();
           } else if (value) {
+            if (isTrustedType(value)) {
+              /**
+               * Here `value` isn't actually a string, but it should be
+               * passed into APIs that normally expect a string, like
+               * elem.setAttribute.
+               */
+              return (
+                /** @type {?} */
+                value
+              );
+            }
+
             try {
               return JSON.stringify(value);
             } catch (x) {

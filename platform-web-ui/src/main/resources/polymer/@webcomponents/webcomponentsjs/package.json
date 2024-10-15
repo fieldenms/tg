@@ -1,8 +1,8 @@
 {
   "_from": "@webcomponents/webcomponentsjs@^2.0.0",
-  "_id": "@webcomponents/webcomponentsjs@2.2.10",
+  "_id": "@webcomponents/webcomponentsjs@2.8.0",
   "_inBundle": false,
-  "_integrity": "sha512-5dzhUhP+h0qMiK0IWb7VNb0OGBoXO3AuI6Qi8t9PoKT50s5L1jv0xnwnLq+cFgPuTB8FLTNP8xIDmyoOsKBy9Q==",
+  "_integrity": "sha512-loGD63sacRzOzSJgQnB9ZAhaQGkN7wl2Zuw7tsphI5Isa0irijrRo6EnJii/GgjGefIFO8AIO7UivzRhFaEk9w==",
   "_location": "/@webcomponents/webcomponentsjs",
   "_phantomChildren": {},
   "_requested": {
@@ -20,60 +20,41 @@
     "/",
     "/wct-browser-legacy"
   ],
-  "_resolved": "https://registry.npmjs.org/@webcomponents/webcomponentsjs/-/webcomponentsjs-2.2.10.tgz",
-  "_shasum": "6f6bee0277833ae98d7e5b46f1e0fdb48cd5ff44",
+  "_resolved": "https://registry.npmjs.org/@webcomponents/webcomponentsjs/-/webcomponentsjs-2.8.0.tgz",
+  "_shasum": "ab21f027594fa827c1889e8b646da7be27c7908a",
   "_spec": "@webcomponents/webcomponentsjs@^2.0.0",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
   "author": {
-    "name": "The Polymer Authors"
+    "name": "The Polymer Project Authors",
+    "url": "https://polymer.github.io/AUTHORS.txt"
   },
   "bugs": {
-    "url": "https://github.com/webcomponents/webcomponentsjs/issues"
+    "url": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+webcomponentsjs\""
   },
   "bundleDependencies": false,
   "deprecated": false,
   "description": "Web Components Polyfills",
   "devDependencies": {
-    "@gulp-sourcemaps/sources-content": "^1.1.0",
-    "@webcomponents/custom-elements": "^1.2.4",
-    "@webcomponents/shadycss": "^1.9.1",
-    "@webcomponents/shadydom": "^1.6.0",
-    "@webcomponents/template": "^1.4.0",
-    "@webcomponents/url": "^0.7.3",
-    "@webcomponents/webcomponents-platform": "^1.0.1",
-    "babel-core": "^6.26.3",
+    "@webcomponents/custom-elements": "^1.6.0",
+    "@webcomponents/shadycss": "^1.11.2",
+    "@webcomponents/shadydom": "^1.11.0",
+    "@webcomponents/template": "^1.5.1",
+    "@webcomponents/url": "^0.7.9",
     "babel-preset-minify": "^0.4.3",
-    "del": "^3.0.0",
-    "eslint": "^5.16.0",
-    "eslint-plugin-html": "^4.0.6",
     "get-own-property-symbols": "^0.9.2",
-    "google-closure-compiler": "^20180805.0.0",
-    "gulp": "^3.8.8",
-    "gulp-babel": "^7.0.1",
-    "gulp-rename": "^1.4.0",
-    "gulp-rollup": "^2.16.2",
-    "gulp-sourcemaps": "^2.6.5",
-    "promise-polyfill": "^8.0.0",
-    "rollup": "^0.60.7",
-    "rollup-plugin-babel": "^3.0.7",
-    "rollup-plugin-commonjs": "^9.3.4",
-    "rollup-plugin-license": "^0.6.0",
-    "run-sequence": "^2.2.1",
-    "wct-browser-legacy": "^1.0.2",
-    "web-component-tester": "^6.9.2"
-  },
-  "directories": {
-    "test": "tests"
+    "gulp-concat": "^2.6.1",
+    "promise-polyfill": "^8.0.0"
   },
   "files": [
     "bundles/**/*",
-    "entrypoints/**/*",
+    "CHANGELOG.md",
     "custom-elements-es5-adapter.js",
-    "webcomponents-bundle.js",
-    "webcomponents-bundle.js.map",
+    "src/**/*.js",
+    "webcomponents-bundle.d.ts",
+    "webcomponents-bundle.js*",
     "webcomponents-loader.js"
   ],
-  "homepage": "https://webcomponents.org/polyfills",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs",
   "keywords": [
     "webcomponents",
     "web-components",
@@ -88,14 +69,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/webcomponents/webcomponentsjs.git"
+    "url": "git+https://github.com/webcomponents/polyfills.git",
+    "directory": "packages/webcomponentsjs"
   },
   "scripts": {
-    "build": "gulp",
+    "build": "tsc && gulp",
+    "build:watch": "chokidar --initial --follow-symlinks 'src/entrypoints/**/*.js' 'ts_src/**/*.ts' 'node_modules/@webcomponents/**/*.js' -c 'npm run build'",
     "clean": "gulp clean",
     "prepack": "npm run build",
-    "regen-package-lock": "rm -rf node_modules package-lock.json; npm install",
-    "test": "wct"
+    "regen-package-lock": "rm -rf node_modules package-lock.json; npm install"
   },
-  "version": "2.2.10"
+  "version": "2.8.0"
 }

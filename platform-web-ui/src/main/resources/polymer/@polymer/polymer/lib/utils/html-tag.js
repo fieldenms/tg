@@ -9,14 +9,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 import './boot.js';
 /**
+ * Our TrustedTypePolicy for HTML which is declared using the Polymer html
+ * template tag function.
+ *
+ * That HTML is a developer-authored constant, and is parsed with innerHTML
+ * before any untrusted expressions have been mixed in. Therefor it is
+ * considered safe by construction.
+ *
+ * @type {!TrustedTypePolicy|undefined}
+ */
+
+const policy = window.trustedTypes && trustedTypes.createPolicy('polymer-html-literal', {
+  createHTML: s => s
+});
+/**
  * Class representing a static string value which can be used to filter
  * strings by asseting that they have been created via this class. The
  * `value` property returns the string passed to the constructor.
  */
 
 class LiteralString {
-  constructor(string) {
+  /**
+   * @param {!ITemplateArray} strings Constant parts of tagged template literal
+   * @param {!Array<*>} values Variable parts of tagged template literal
+   */
+  constructor(strings, values) {
+    assertValidTemplateStringParameters(strings, values);
+    const string = values.reduce((acc, v, idx) => acc + literalValue(v) + strings[idx + 1], strings[0]);
     /** @type {string} */
+
     this.value = string.toString();
   }
   /**
@@ -54,6 +75,12 @@ function literalValue(value) {
 
 function htmlValue(value) {
   if (value instanceof HTMLTemplateElement) {
+    // This might be an mXSS risk – mainly in the case where this template
+    // contains untrusted content that was believed to be sanitized.
+    // However we can't just use the XMLSerializer here because it misencodes
+    // `>` characters inside style tags.
+    // For an example of an actual case that hit this encoding issue,
+    // see b/198592167
     return (
       /** @type {!HTMLTemplateElement } */
       value.innerHTML
@@ -101,11 +128,34 @@ function htmlValue(value) {
 
 
 export const html = function html(strings, ...values) {
+  assertValidTemplateStringParameters(strings, values);
   const template =
   /** @type {!HTMLTemplateElement} */
   document.createElement('template');
-  template.innerHTML = values.reduce((acc, v, idx) => acc + htmlValue(v) + strings[idx + 1], strings[0]);
+  let value = values.reduce((acc, v, idx) => acc + htmlValue(v) + strings[idx + 1], strings[0]);
+
+  if (policy) {
+    value = policy.createHTML(value);
+  }
+
+  template.innerHTML = value;
   return template;
+};
+/**
+ * @param {!ITemplateArray} strings Constant parts of tagged template literal
+ * @param {!Array<*>} values Array of values from quasis
+ */
+
+const assertValidTemplateStringParameters = (strings, values) => {
+  // Note: if/when https://github.com/tc39/proposal-array-is-template-object
+  // is standardized, use that instead when available, as it can perform an
+  // unforgable check (though of course, the function itself can be forged).
+  if (!Array.isArray(strings) || !Array.isArray(strings.raw) || values.length !== strings.length - 1) {
+    // This is either caused by a browser bug, a compiler bug, or someone
+    // calling the html template tag function as a regular function.
+    //
+    throw new TypeError('Invalid call to the html template tag');
+  }
 };
 /**
  * An html literal tag that can be used with `html` to compose.
@@ -132,6 +182,7 @@ export const html = function html(strings, ...values) {
  * @return {!LiteralString} Constructed literal string
  */
 
+
 export const htmlLiteral = function (strings, ...values) {
-  return new LiteralString(values.reduce((acc, v, idx) => acc + literalValue(v) + strings[idx + 1], strings[0]));
+  return new LiteralString(strings, values);
 };

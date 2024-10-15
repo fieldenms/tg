@@ -71,6 +71,7 @@ function styleOutsideTemplateCheck(inst) {
 
 
 export class DomModule extends HTMLElement {
+  /** @override */
   static get observedAttributes() {
     return ['id'];
   }
@@ -136,7 +137,7 @@ export class DomModule extends HTMLElement {
     // Don't override existing assetpath.
     if (!this.__assetpath) {
       // note: assetpath set via an attribute must be relative to this
-      // element's location; accomodate polyfilled HTMLImports
+      // element's location; accommodate polyfilled HTMLImports
       const owner = window.HTMLImports && HTMLImports.importForElement ? HTMLImports.importForElement(this) || document : this.ownerDocument;
       const url = resolveUrl(this.getAttribute('assetpath') || '', owner.baseURI);
       this.__assetpath = pathFromUrl(url);

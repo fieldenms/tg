@@ -15,8 +15,8 @@ import { PropertiesChanged } from './properties-changed.js';
  * Creates a copy of `props` with each property normalized such that
  * upgraded it is an object with at least a type property { type: Type}.
  *
- * @param {Object} props Properties to normalize
- * @return {Object} Copy of input `props` with normalized properties that
+ * @param {!Object} props Properties to normalize
+ * @return {!Object} Copy of input `props` with normalized properties that
  * are in the form {type: Type}
  * @private
  */
@@ -49,6 +49,9 @@ function normalizeProperties(props) {
  * @appliesMixin PropertiesChanged
  * @summary Mixin that provides a minimal starting point for using
  * the PropertiesChanged mixin by providing a declarative `properties` object.
+ * @template T
+ * @param {function(new:T)} superClass Class to apply mixin to.
+ * @return {function(new:T)} superClass with mixin applied.
  */
 
 
@@ -118,12 +121,13 @@ export const PropertiesMixin = dedupingMixin(superClass => {
      * Implements standard custom elements getter to observes the attributes
      * listed in `properties`.
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
+     * @nocollapse
      */
     static get observedAttributes() {
-      if (!this.hasOwnProperty('__observedAttributes')) {
+      if (!this.hasOwnProperty(JSCompiler_renameProperty('__observedAttributes', this))) {
         register(this.prototype);
         const props = this._properties;
-        this.__observedAttributes = props ? Object.keys(props).map(p => this.attributeNameForProperty(p)) : [];
+        this.__observedAttributes = props ? Object.keys(props).map(p => this.prototype._addPropertyToAttributeMap(p)) : [];
       }
 
       return this.__observedAttributes;
@@ -134,6 +138,7 @@ export const PropertiesMixin = dedupingMixin(superClass => {
      * accessors exist on the element prototype. This method calls
      * `_finalizeClass` to finalize each constructor in the prototype chain.
      * @return {void}
+     * @nocollapse
      */
 
 
@@ -158,6 +163,7 @@ export const PropertiesMixin = dedupingMixin(superClass => {
      * `finalize` and finalizes the class constructor.
      *
      * @protected
+     * @nocollapse
      */
 
 
@@ -167,6 +173,7 @@ export const PropertiesMixin = dedupingMixin(superClass => {
       this);
 
       if (props) {
+        /** @type {?} */
         this.createProperties(props);
       }
     }
@@ -177,6 +184,7 @@ export const PropertiesMixin = dedupingMixin(superClass => {
      *
      * @return {Object} Object containing properties for this class
      * @protected
+     * @nocollapse
      */
 
 
@@ -199,6 +207,7 @@ export const PropertiesMixin = dedupingMixin(superClass => {
      * @return {*} Type to which to deserialize attribute
      *
      * @protected
+     * @nocollapse
      */
 
 

@@ -38,6 +38,11 @@ const Polymer = function (info) {
     klass = info;
   } else {
     klass = Polymer.Class(info);
+  } // Copy opt out for `legacyNoObservedAttributes` from info object to class.
+
+
+  if (info._legacyForceObservedAttributes) {
+    klass.prototype._legacyForceObservedAttributes = info._legacyForceObservedAttributes;
   }
 
   customElements.define(klass.is,

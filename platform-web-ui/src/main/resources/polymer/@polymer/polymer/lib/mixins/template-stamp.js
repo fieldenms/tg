@@ -8,8 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import '../utils/boot.js';
-import { dedupingMixin } from '../utils/mixin.js';
-const walker = document.createTreeWalker(document, NodeFilter.SHOW_ALL, null, false); // 1.x backwards-compatible auto-wrapper for template type extensions
+import { dedupingMixin } from '../utils/mixin.js'; // 1.x backwards-compatible auto-wrapper for template type extensions
 // This is a clear layering violation and gives favored-nation status to
 // dom-if and dom-repeat templates.  This is a conceit we're choosing to keep
 // a.) to ease 1.x backwards-compatibility due to loss of `is`, and
@@ -21,6 +20,95 @@ const templateExtensions = {
   'dom-if': true,
   'dom-repeat': true
 };
+let placeholderBugDetect = false;
+let placeholderBug = false;
+
+function hasPlaceholderBug() {
+  if (!placeholderBugDetect) {
+    placeholderBugDetect = true;
+    const t = document.createElement('textarea');
+    t.placeholder = 'a';
+    placeholderBug = t.placeholder === t.textContent;
+  }
+
+  return placeholderBug;
+}
+/**
+ * Some browsers have a bug with textarea, where placeholder text is copied as
+ * a textnode child of the textarea.
+ *
+ * If the placeholder is a binding, this can break template stamping in two
+ * ways.
+ *
+ * One issue is that when the `placeholder` attribute is removed when the
+ * binding is processed, the textnode child of the textarea is deleted, and the
+ * template info tries to bind into that node.
+ *
+ * With `legacyOptimizations` in use, when the template is stamped and the
+ * `textarea.textContent` binding is processed, no corresponding node is found
+ * because it was removed during parsing. An exception is generated when this
+ * binding is updated.
+ *
+ * With `legacyOptimizations` not in use, the template is cloned before
+ * processing and this changes the above behavior. The cloned template also has
+ * a value property set to the placeholder and textContent. This prevents the
+ * removal of the textContent when the placeholder attribute is removed.
+ * Therefore the exception does not occur. However, there is an extra
+ * unnecessary binding.
+ *
+ * @param {!Node} node Check node for placeholder bug
+ * @return {void}
+ */
+
+
+function fixPlaceholder(node) {
+  if (hasPlaceholderBug() && node.localName === 'textarea' && node.placeholder && node.placeholder === node.textContent) {
+    node.textContent = null;
+  }
+}
+/**
+ * Copies an attribute from one element to another, converting the value to a
+ * `TrustedScript` if it is named like a Polymer template event listener.
+ *
+ * @param {!Element} dest The element to set the attribute on
+ * @param {!Element} src The element to read the attribute from
+ * @param {string} name The name of the attribute
+ */
+
+
+const copyAttributeWithTemplateEventPolicy = (() => {
+  /**
+   * This `TrustedTypePolicy` is used to work around a Chrome bug in the Trusted
+   * Types API where any attribute that starts with `on` may only be set to a
+   * `TrustedScript` value, even if that attribute would not cause an event
+   * listener to be created. (See https://crbug.com/993268 for details.)
+   *
+   * Polymer's template system allows `<dom-if>` and `<dom-repeat>` to be
+   * written using the `<template is="...">` syntax, even if there is no UA
+   * support for custom element extensions of built-in elements. In doing so, it
+   * copies attributes from the original `<template>` to a newly created
+   * `<dom-if>` or `<dom-repeat>`, which can trigger the bug mentioned above if
+   * any of those attributes uses Polymer's `on-` syntax for event listeners.
+   * (Note, the value of these `on-` listeners is not evaluated as script: it is
+   * the name of a member function of a component that will be used as the event
+   * listener.)
+   *
+   * @type {!TrustedTypePolicy|undefined}
+   */
+  const polymerTemplateEventAttributePolicy = window.trustedTypes && window.trustedTypes.createPolicy('polymer-template-event-attribute-policy', {
+    createScript: x => x
+  });
+  return (dest, src, name) => {
+    const value = src.getAttribute(name);
+
+    if (polymerTemplateEventAttributePolicy && name.startsWith('on-')) {
+      dest.setAttribute(name, polymerTemplateEventAttributePolicy.createScript(value, name));
+      return;
+    }
+
+    dest.setAttribute(name, value);
+  };
+})();
 
 function wrapTemplateExtension(node) {
   let is = node.getAttribute('is');
@@ -33,8 +121,11 @@ function wrapTemplateExtension(node) {
     node.appendChild(t);
 
     while (t.attributes.length) {
-      node.setAttribute(t.attributes[0].name, t.attributes[0].value);
-      t.removeAttribute(t.attributes[0].name);
+      const {
+        name
+      } = t.attributes[0];
+      copyAttributeWithTemplateEventPolicy(node, t, name);
+      t.removeAttribute(name);
     }
   }
 
@@ -48,9 +139,7 @@ function findTemplateNode(root, nodeInfo) {
   if (parent) {
     // note: marginally faster than indexing via childNodes
     // (http://jsperf.com/childnodes-lookup)
-    walker.currentNode = parent;
-
-    for (let n = walker.firstChild(), i = 0; n; n = walker.nextSibling()) {
+    for (let n = parent.firstChild, i = 0; n; n = n.nextSibling) {
       if (nodeInfo.parentIndex === i++) {
         return n;
       }
@@ -77,9 +166,11 @@ function applyEventListener(inst, node, nodeInfo) {
 } // push configuration references at configure time
 
 
-function applyTemplateContent(inst, node, nodeInfo) {
+function applyTemplateInfo(inst, node, nodeInfo, parentTemplateInfo) {
   if (nodeInfo.templateInfo) {
+    // Give the node an instance of this templateInfo and set its parent
     node._templateInfo = nodeInfo.templateInfo;
+    node._parentTemplateInfo = parentTemplateInfo;
   }
 }
 
@@ -200,21 +291,38 @@ superClass => {
      * @param {TemplateInfo=} outerTemplateInfo Template metadata from the outer
      *   template, for parsing nested templates
      * @return {!TemplateInfo} Parsed template metadata
+     * @nocollapse
      */
     static _parseTemplate(template, outerTemplateInfo) {
       // since a template may be re-used, memo-ize metadata
       if (!template._templateInfo) {
-        let templateInfo = template._templateInfo = {};
+        // TODO(rictic): fix typing
+        let
+        /** ? */
+        templateInfo = template._templateInfo = {};
         templateInfo.nodeInfoList = [];
-        templateInfo.stripWhiteSpace = outerTemplateInfo && outerTemplateInfo.stripWhiteSpace || template.hasAttribute('strip-whitespace');
+        templateInfo.nestedTemplate = Boolean(outerTemplateInfo);
+        templateInfo.stripWhiteSpace = outerTemplateInfo && outerTemplateInfo.stripWhiteSpace || template.hasAttribute && template.hasAttribute('strip-whitespace'); // TODO(rictic): fix typing
 
-        this._parseTemplateContent(template, templateInfo, {
+        this._parseTemplateContent(template, templateInfo,
+        /** @type {?} */
+        {
           parent: null
         });
       }
 
       return template._templateInfo;
     }
+    /**
+     * See docs for _parseTemplateNode.
+     *
+     * @param {!HTMLTemplateElement} template .
+     * @param {!TemplateInfo} templateInfo .
+     * @param {!NodeInfo} nodeInfo .
+     * @return {boolean} .
+     * @nocollapse
+     */
+
 
     static _parseTemplateContent(template, templateInfo, nodeInfo) {
       return this._parseTemplateNode(template.content, templateInfo, nodeInfo);
@@ -231,13 +339,14 @@ superClass => {
      * @param {!NodeInfo} nodeInfo Node metadata for current template.
      * @return {boolean} `true` if the visited node added node-specific
      *   metadata to `nodeInfo`
+     * @nocollapse
      */
 
 
     static _parseTemplateNode(node, templateInfo, nodeInfo) {
-      let noted;
+      let noted = false;
       let element =
-      /** @type {Element} */
+      /** @type {!HTMLTemplateElement} */
       node;
 
       if (element.localName == 'template' && !element.hasAttribute('preserve-content')) {
@@ -247,17 +356,21 @@ superClass => {
         templateInfo.hasInsertionPoint = true;
       }
 
-      walker.currentNode = element;
+      fixPlaceholder(element);
 
-      if (walker.firstChild()) {
-        noted = this._parseTemplateChildNodes(element, templateInfo, nodeInfo) || noted;
+      if (element.firstChild) {
+        this._parseTemplateChildNodes(element, templateInfo, nodeInfo);
       }
 
       if (element.hasAttributes && element.hasAttributes()) {
         noted = this._parseTemplateNodeAttributes(element, templateInfo, nodeInfo) || noted;
-      }
+      } // Checking `nodeInfo.noted` allows a child node of this node (who gets
+      // access to `parentInfo`) to cause the parent to be noted, which
+      // otherwise has no return path via `_parseTemplateChildNodes` (used by
+      // some optimizations)
 
-      return noted;
+
+      return noted || nodeInfo.noted;
     }
     /**
      * Parses template child nodes for the given root node.
@@ -279,9 +392,7 @@ superClass => {
         return;
       }
 
-      walker.currentNode = root;
-
-      for (let node = walker.firstChild(), parentIndex = 0, next; node; node = next) {
+      for (let node = root.firstChild, parentIndex = 0, next; node; node = next) {
         // Wrap templates
         if (node.localName == 'template') {
           node = wrapTemplateExtension(node);
@@ -291,8 +402,7 @@ superClass => {
         // manually.
 
 
-        walker.currentNode = node;
-        next = walker.nextSibling();
+        next = node.nextSibling;
 
         if (node.nodeType === Node.TEXT_NODE) {
           let
@@ -301,7 +411,7 @@ superClass => {
 
           while (n && n.nodeType === Node.TEXT_NODE) {
             node.textContent += n.textContent;
-            next = walker.nextSibling();
+            next = n.nextSibling;
             root.removeChild(n);
             n = next;
           } // optionally strip whitespace
@@ -313,21 +423,19 @@ superClass => {
           }
         }
 
-        let childInfo = {
+        let childInfo =
+        /** @type {!NodeInfo} */
+        {
           parentIndex,
           parentInfo: nodeInfo
         };
 
         if (this._parseTemplateNode(node, templateInfo, childInfo)) {
-          childInfo.infoIndex = templateInfo.nodeInfoList.push(
-          /** @type {!NodeInfo} */
-          childInfo) - 1;
+          childInfo.infoIndex = templateInfo.nodeInfoList.push(childInfo) - 1;
         } // Increment if not removed
 
 
-        walker.currentNode = node;
-
-        if (walker.parentNode()) {
+        if (node.parentNode) {
           parentIndex++;
         }
       }
@@ -348,14 +456,20 @@ superClass => {
      * @param {!NodeInfo} nodeInfo Node metadata for current template.
      * @return {boolean} `true` if the visited node added node-specific
      *   metadata to `nodeInfo`
+     * @nocollapse
      */
 
 
     static _parseTemplateNestedTemplate(node, outerTemplateInfo, nodeInfo) {
-      let templateInfo = this._parseTemplate(node, outerTemplateInfo);
+      // TODO(rictic): the type of node should be non-null
+      let element =
+      /** @type {!HTMLTemplateElement} */
+      node;
 
-      let content = templateInfo.content = node.content.ownerDocument.createDocumentFragment();
-      content.appendChild(node.content);
+      let templateInfo = this._parseTemplate(element, outerTemplateInfo);
+
+      let content = templateInfo.content = element.content.ownerDocument.createDocumentFragment();
+      content.appendChild(element.content);
       nodeInfo.templateInfo = templateInfo;
       return true;
     }
@@ -364,10 +478,12 @@ superClass => {
      * for nodes of interest.
      *
      * @param {Element} node Node to parse
-     * @param {TemplateInfo} templateInfo Template metadata for current template
-     * @param {NodeInfo} nodeInfo Node metadata for current template.
+     * @param {!TemplateInfo} templateInfo Template metadata for current
+     *     template
+     * @param {!NodeInfo} nodeInfo Node metadata for current template.
      * @return {boolean} `true` if the visited node added node-specific
      *   metadata to `nodeInfo`
+     * @nocollapse
      */
 
 
@@ -397,6 +513,7 @@ superClass => {
      * @param {string} value Attribute value
      * @return {boolean} `true` if the visited node added node-specific
      *   metadata to `nodeInfo`
+     * @nocollapse
      */
 
 
@@ -427,6 +544,7 @@ superClass => {
      *
      * @param {HTMLTemplateElement} template Template to retrieve `content` for
      * @return {DocumentFragment} Content fragment
+     * @nocollapse
      */
 
 
@@ -456,19 +574,24 @@ superClass => {
      * is removed and stored in notes as well.
      *
      * @param {!HTMLTemplateElement} template Template to stamp
+     * @param {TemplateInfo=} templateInfo Optional template info associated
+     *   with the template to be stamped; if omitted the template will be
+     *   automatically parsed.
      * @return {!StampedTemplate} Cloned template content
      * @override
      */
 
 
-    _stampTemplate(template) {
+    _stampTemplate(template, templateInfo) {
       // Polyfill support: bootstrap the template if it has not already been
       if (template && !template.content && window.HTMLTemplateElement && HTMLTemplateElement.decorate) {
         HTMLTemplateElement.decorate(template);
-      }
+      } // Accepting the `templateInfo` via an argument allows for creating
+      // instances of the `templateInfo` by the caller, useful for adding
+      // instance-time information to the prototypical data
 
-      let templateInfo = this.constructor._parseTemplate(template);
 
+      templateInfo = templateInfo || this.constructor._parseTemplate(template);
       let nodeInfo = templateInfo.nodeInfoList;
       let content = templateInfo.content || template.content;
       let dom =
@@ -482,7 +605,7 @@ superClass => {
       for (let i = 0, l = nodeInfo.length, info; i < l && (info = nodeInfo[i]); i++) {
         let node = nodes[i] = findTemplateNode(dom, info);
         applyIdToMap(this, dom.$, node, info);
-        applyTemplateContent(this, node, info);
+        applyTemplateInfo(this, node, info, templateInfo);
         applyEventListener(this, node, info);
       }
 

@@ -23,7 +23,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 import './boot.js';
 import { timeOut, microTask } from './async.js';
 import { Debouncer } from './debounce.js';
-import { passiveTouchGestures } from './settings.js';
+import { passiveTouchGestures, cancelSyntheticClickEvents } from './settings.js';
 import { wrap } from './wrap.js'; // detect native touch action support
 
 let HAS_NATIVE_TA = typeof document.head.style.touchAction === 'string';
@@ -63,13 +63,13 @@ function isMouseEvent(name) {
 // check for passive event listeners
 
 
-let SUPPORTS_PASSIVE = false;
+let supportsPassive = false;
 
 (function () {
   try {
     let opts = Object.defineProperty({}, 'passive', {
       get() {
-        SUPPORTS_PASSIVE = true;
+        supportsPassive = true;
       }
 
     });
@@ -92,7 +92,7 @@ function PASSIVE_TOUCH(eventName) {
     return;
   }
 
-  if (HAS_NATIVE_TA && SUPPORTS_PASSIVE && passiveTouchGestures) {
+  if (HAS_NATIVE_TA && supportsPassive && passiveTouchGestures) {
     return {
       passive: true
     };
@@ -157,16 +157,23 @@ function matchingLabels(el) {
 
   if (!labels.length) {
     labels = [];
-    let root = el.getRootNode(); // if there is an id on `el`, check for all labels with a matching `for` attribute
 
-    if (el.id) {
-      let matching = root.querySelectorAll(`label[for = ${el.id}]`);
+    try {
+      let root = el.getRootNode(); // if there is an id on `el`, check for all labels with a matching `for` attribute
 
-      for (let i = 0; i < matching.length; i++) {
-        labels.push(
-        /** @type {!HTMLLabelElement} */
-        matching[i]);
+      if (el.id) {
+        let matching = root.querySelectorAll(`label[for = '${el.id}']`);
+
+        for (let i = 0; i < matching.length; i++) {
+          labels.push(
+          /** @type {!HTMLLabelElement} */
+          matching[i]);
+        }
       }
+    } catch (e) {// Either:
+      // 1. el.getRootNode() failed.
+      // 2. el.id cannot be used in `querySelectorAll`
+      // In both cases, do nothing.
     }
   }
 
@@ -255,6 +262,10 @@ function setupTeardownMouseCanceller(setup) {
 }
 
 function ignoreMouse(e) {
+  if (!cancelSyntheticClickEvents) {
+    return;
+  }
+
   if (!POINTERSTATE.mouse.mouseIgnoreJob) {
     setupTeardownMouseCanceller(true);
   }
@@ -375,18 +386,21 @@ function untrackDocument(stateObj) {
   document.removeEventListener('mouseup', stateObj.upfn);
   stateObj.movefn = null;
   stateObj.upfn = null;
-} // use a document-wide touchend listener to start the ghost-click prevention mechanism
-// Use passive event listeners, if supported, to not affect scrolling performance
+}
 
-
-document.addEventListener('touchend', ignoreMouse, SUPPORTS_PASSIVE ? {
-  passive: true
-} : false);
+if (cancelSyntheticClickEvents) {
+  // use a document-wide touchend listener to start the ghost-click prevention mechanism
+  // Use passive event listeners, if supported, to not affect scrolling performance
+  document.addEventListener('touchend', ignoreMouse, supportsPassive ? {
+    passive: true
+  } : false);
+}
 /**
  * Returns the composedPath for the given event.
  * @param {Event} event to process
  * @return {!Array<!EventTarget>} Path of the event
  */
+
 
 const getComposedPath = window.ShadyDOM && window.ShadyDOM.noPatch ? window.ShadyDOM.composedPath : event => event.composedPath && event.composedPath() || [];
 /** @type {!Object<string, !GestureRecognizer>} */

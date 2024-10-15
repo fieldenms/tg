@@ -8,7 +8,7 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 import "../../../../@webcomponents/shadycss/entrypoints/apply-shim.js";
-import { ElementMixin } from '../mixins/element-mixin.js';
+import { ElementMixin, builtCSS } from '../mixins/element-mixin.js';
 import { GestureEventListeners } from '../mixins/gesture-event-listeners.js';
 import { DirMixin } from '../mixins/dir-mixin.js';
 import { dedupingMixin } from '../utils/mixin.js';
@@ -20,6 +20,11 @@ import { Debouncer } from '../utils/debounce.js';
 import { timeOut, microTask } from '../utils/async.js';
 import { get } from '../utils/path.js';
 import { wrap } from '../utils/wrap.js';
+import { scopeSubtree } from '../utils/scope-subtree.js';
+import { legacyOptimizations, legacyNoObservedAttributes } from '../utils/settings.js';
+import { findObservedAttributesGetter } from '../mixins/disable-upgrade-mixin.js';
+import { register } from '../utils/telemetry.js';
+const DISABLED_ATTR = 'disable-upgrade';
 let styleInterface = window.ShadyCSS;
 /**
  * Element class mixin that provides Polymer's "legacy" API intended to be
@@ -31,12 +36,16 @@ let styleInterface = window.ShadyCSS;
  * @polymer
  * @appliesMixin ElementMixin
  * @appliesMixin GestureEventListeners
+ * @appliesMixin DirMixin
  * @property isAttached {boolean} Set to `true` in this element's
  *   `connectedCallback` and `false` in `disconnectedCallback`
  * @summary Element class mixin that provides Polymer's "legacy" API
  */
 
 export const LegacyElementMixin = dedupingMixin(base => {
+  // TODO(kschaaf): Note, the `@implements {Polymer_DirMixin}` is required here
+  // (rather than on legacyElementBase) for unknown reasons.
+
   /**
    * @constructor
    * @implements {Polymer_ElementMixin}
@@ -45,7 +54,17 @@ export const LegacyElementMixin = dedupingMixin(base => {
    * @extends {HTMLElement}
    * @private
    */
-  const legacyElementBase = DirMixin(GestureEventListeners(ElementMixin(base)));
+  const GesturesElement = GestureEventListeners(ElementMixin(base)); // Note, the DirMixin does nothing if css is built so avoid including it
+  // in that case.
+
+  /**
+   * @constructor
+   * @extends {GesturesElement}
+   * @private
+   */
+
+  const legacyElementBase = builtCSS ? GesturesElement : DirMixin(GesturesElement);
+  const observedAttributesGetter = findObservedAttributesGetter(legacyElementBase);
   /**
    * Map of simple names to touch action names
    * @dict
@@ -76,7 +95,17 @@ export const LegacyElementMixin = dedupingMixin(base => {
       this.__boundListeners;
       /** @type {?Object<string, ?Function>} */
 
-      this._debouncers;
+      this._debouncers; // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+
+      /** @type {boolean|undefined} */
+
+      this.__isUpgradeDisabled;
+      /** @type {boolean|undefined} */
+
+      this.__needsAttributesAtConnected;
+      /** @type {boolean|undefined} */
+
+      this._legacyForceObservedAttributes;
     }
     /**
      * Forwards `importMeta` from the prototype (i.e. from the info object
@@ -85,6 +114,7 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {!Object} The `import.meta` object set on the prototype
      * @suppress {missingProperties} `this` is always in the instance in
      *  closure for some reason even in a static method, rather than the class
+     * @nocollapse
      */
 
 
@@ -101,6 +131,91 @@ export const LegacyElementMixin = dedupingMixin(base => {
 
     created() {}
     /**
+     * Processes an attribute reaction when the `legacyNoObservedAttributes`
+     * setting is in use.
+     * @param {string} name Name of attribute that changed
+     * @param {?string} old Old attribute value
+     * @param {?string} value New attribute value
+     * @return {void}
+     */
+
+
+    __attributeReaction(name, old, value) {
+      if (this.__dataAttributes && this.__dataAttributes[name] || name === DISABLED_ATTR) {
+        this.attributeChangedCallback(name, old, value, null);
+      }
+    }
+    /**
+     * Sets the value of an attribute.
+     * @override
+     */
+
+
+    setAttribute(name, value) {
+      if (legacyNoObservedAttributes && !this._legacyForceObservedAttributes) {
+        const oldValue = this.getAttribute(name);
+        super.setAttribute(name, value); // value coerced to String for closure's benefit
+
+        this.__attributeReaction(name, oldValue, String(value));
+      } else {
+        super.setAttribute(name, value);
+      }
+    }
+    /**
+     * Removes an attribute.
+     * @override
+     */
+
+
+    removeAttribute(name) {
+      if (legacyNoObservedAttributes && !this._legacyForceObservedAttributes) {
+        const oldValue = this.getAttribute(name);
+        super.removeAttribute(name);
+
+        this.__attributeReaction(name, oldValue, null);
+      } else {
+        super.removeAttribute(name);
+      }
+    } // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+
+
+    static get observedAttributes() {
+      if (legacyNoObservedAttributes && !this.prototype._legacyForceObservedAttributes) {
+        // Ensure this element is property registered with the telemetry system.
+        if (!this.hasOwnProperty(JSCompiler_renameProperty('__observedAttributes', this))) {
+          this.__observedAttributes = [];
+          register(this.prototype);
+        }
+
+        return this.__observedAttributes;
+      } else {
+        return observedAttributesGetter.call(this).concat(DISABLED_ATTR);
+      }
+    } // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+    // Prevent element from enabling properties when it's upgrade disabled.
+    // Normally overriding connectedCallback would be enough, but dom-* elements
+
+    /** @override */
+
+
+    _enableProperties() {
+      if (!this.__isUpgradeDisabled) {
+        super._enableProperties();
+      }
+    } // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+    // If the element starts upgrade-disabled and a property is set for
+    // which an accessor exists, the default should not be applied.
+    // This additional check is needed because defaults are applied via
+    // `_initializeProperties` which is called after initial properties
+    // have been set when the element starts upgrade-disabled.
+
+    /** @override */
+
+
+    _canApplyPropertyDefault(property) {
+      return super._canApplyPropertyDefault(property) && !(this.__isUpgradeDisabled && this._isPropertyPending(property));
+    }
+    /**
      * Provides an implementation of `connectedCallback`
      * which adds Polymer legacy API's `attached` method.
      * @return {void}
@@ -109,9 +224,16 @@ export const LegacyElementMixin = dedupingMixin(base => {
 
 
     connectedCallback() {
-      super.connectedCallback();
-      this.isAttached = true;
-      this.attached();
+      if (this.__needsAttributesAtConnected) {
+        this._takeAttributes();
+      } // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+
+
+      if (!this.__isUpgradeDisabled) {
+        super.connectedCallback();
+        this.isAttached = true;
+        this.attached();
+      }
     }
     /**
      * Legacy callback called during `connectedCallback`, for overriding
@@ -131,9 +253,12 @@ export const LegacyElementMixin = dedupingMixin(base => {
 
 
     disconnectedCallback() {
-      super.disconnectedCallback();
-      this.isAttached = false;
-      this.detached();
+      // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+      if (!this.__isUpgradeDisabled) {
+        super.disconnectedCallback();
+        this.isAttached = false;
+        this.detached();
+      }
     }
     /**
      * Legacy callback called during `disconnectedCallback`, for overriding
@@ -158,8 +283,23 @@ export const LegacyElementMixin = dedupingMixin(base => {
 
     attributeChangedCallback(name, old, value, namespace) {
       if (old !== value) {
-        super.attributeChangedCallback(name, old, value, namespace);
-        this.attributeChanged(name, old, value);
+        // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+        if (name == DISABLED_ATTR) {
+          // When disable-upgrade is removed, intialize properties and
+          // provoke connectedCallback if the element is already connected.
+          if (this.__isUpgradeDisabled && value == null) {
+            this._initializeProperties();
+
+            this.__isUpgradeDisabled = false;
+
+            if (wrap(this).isConnected) {
+              this.connectedCallback();
+            }
+          }
+        } else {
+          super.attributeChangedCallback(name, old, value, namespace);
+          this.attributeChanged(name, old, value);
+        }
       }
     }
     /**
@@ -187,26 +327,52 @@ export const LegacyElementMixin = dedupingMixin(base => {
 
 
     _initializeProperties() {
-      let proto = Object.getPrototypeOf(this);
+      // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+      // Only auto-use disable-upgrade if legacyOptimizations is set.
+      if (legacyOptimizations && this.hasAttribute(DISABLED_ATTR)) {
+        this.__isUpgradeDisabled = true;
+      } else {
+        let proto = Object.getPrototypeOf(this);
 
-      if (!proto.hasOwnProperty('__hasRegisterFinished')) {
-        this._registered(); // backstop in case the `_registered` implementation does not set this
+        if (!proto.hasOwnProperty(JSCompiler_renameProperty('__hasRegisterFinished', proto))) {
+          this._registered(); // backstop in case the `_registered` implementation does not set this
 
 
-        proto.__hasRegisterFinished = true;
+          proto.__hasRegisterFinished = true;
+        }
+
+        super._initializeProperties();
+
+        this.root =
+        /** @type {HTMLElement} */
+        this;
+        this.created(); // Pull all attribute values 1x if `legacyNoObservedAttributes` is set.
+
+        if (legacyNoObservedAttributes && !this._legacyForceObservedAttributes) {
+          if (this.hasAttributes()) {
+            this._takeAttributes(); // Element created from scratch or parser generated
+
+          } else if (!this.parentNode) {
+            this.__needsAttributesAtConnected = true;
+          }
+        } // Ensure listeners are applied immediately so that they are
+        // added before declarative event listeners. This allows an element to
+        // decorate itself via an event prior to any declarative listeners
+        // seeing the event. Note, this ensures compatibility with 1.x ordering.
+
+
+        this._applyListeners();
       }
+    }
 
-      super._initializeProperties();
+    _takeAttributes() {
+      const a = this.attributes;
 
-      this.root =
-      /** @type {HTMLElement} */
-      this;
-      this.created(); // Ensure listeners are applied immediately so that they are
-      // added before declarative event listeners. This allows an element to
-      // decorate itself via an event prior to any declarative listeners
-      // seeing the event. Note, this ensures compatibility with 1.x ordering.
+      for (let i = 0, l = a.length; i < l; i++) {
+        const attr = a[i];
 
-      this._applyListeners();
+        this.__attributeReaction(attr.name, null, attr.value);
+      }
     }
     /**
      * Called automatically when an element is initializing.
@@ -573,6 +739,9 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * is contained. This is a shorthand for
      * `this.getRootNode().host`.
      * @this {Element}
+     * @return {?Node} The element whose local dom within which this element is
+     * contained.
+     * @override
      */
 
 
@@ -792,15 +961,16 @@ export const LegacyElementMixin = dedupingMixin(base => {
     /**
      * No-op for backwards compatibility. This should now be handled by
      * ShadyCss library.
-     * @param  {*} container Unused
-     * @param  {*} shouldObserve Unused
-     * @return {void}
+     * @param  {!Element} container Container element to scope
+     * @param  {boolean=} shouldObserve if true, start a mutation observer for added nodes to the container
+     * @return {?MutationObserver} Returns a new MutationObserver on `container` if `shouldObserve` is true.
      * @override
      */
 
 
-    scopeSubtree(container, shouldObserve) {} // eslint-disable-line no-unused-vars
-
+    scopeSubtree(container, shouldObserve = false) {
+      return scopeSubtree(container, shouldObserve);
+    }
     /**
      * Returns the computed style value for the given property.
      * @param {string} property The css property name.
@@ -1053,9 +1223,9 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * Cross-platform helper for setting an element's CSS `translate3d`
      * property.
      *
-     * @param {number} x X offset.
-     * @param {number} y Y offset.
-     * @param {number} z Z offset.
+     * @param {number|string} x X offset.
+     * @param {number|string} y Y offset.
+     * @param {number|string} z Z offset.
      * @param {Element=} node Element to apply the transform to.
      * Defaults to `this`.
      * @return {void}
@@ -1173,7 +1343,7 @@ export const LegacyElementMixin = dedupingMixin(base => {
      *
      * @param {string} methodName Method name to associate with message
      * @param {...*} args Array of strings or objects to log
-     * @return {Array} Array with formatting information for `console`
+     * @return {!Array} Array with formatting information for `console`
      *   logging.
      * @override
      */

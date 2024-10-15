@@ -31,6 +31,9 @@ const microtask = microTask;
  * @polymer
  * @summary Element class mixin for reacting to property changes from
  *   generated property accessors.
+ * @template T
+ * @param {function(new:T)} superClass Class to apply mixin to.
+ * @return {function(new:T)} superClass with mixin applied.
  */
 
 export const PropertiesChanged = dedupingMixin(
@@ -52,6 +55,7 @@ superClass => {
      * @param {!Object} props Object whose keys are names of accessors.
      * @return {void}
      * @protected
+     * @nocollapse
      */
     static createProperties(props) {
       const proto = this.prototype;
@@ -71,6 +75,7 @@ superClass => {
      * @return {string} Attribute name corresponding to the given property.
      *
      * @protected
+     * @nocollapse
      */
 
 
@@ -83,6 +88,7 @@ superClass => {
      * @param {string} name Name of property
      *
      * @protected
+     * @nocollapse
      */
 
 
@@ -110,7 +116,7 @@ superClass => {
     _createPropertyAccessor(property, readOnly) {
       this._addPropertyToAttributeMap(property);
 
-      if (!this.hasOwnProperty('__dataHasAccessor')) {
+      if (!this.hasOwnProperty(JSCompiler_renameProperty('__dataHasAccessor', this))) {
         this.__dataHasAccessor = Object.assign({}, this.__dataHasAccessor);
       }
 
@@ -131,14 +137,24 @@ superClass => {
 
 
     _addPropertyToAttributeMap(property) {
-      if (!this.hasOwnProperty('__dataAttributes')) {
+      if (!this.hasOwnProperty(JSCompiler_renameProperty('__dataAttributes', this))) {
         this.__dataAttributes = Object.assign({}, this.__dataAttributes);
-      }
+      } // This check is technically not correct; it's an optimization that
+      // assumes that if a _property_ name is already in the map (note this is
+      // an attr->property map), the property mapped directly to the attribute
+      // and it has already been mapped.  This would fail if
+      // `attributeNameForProperty` were overridden such that this was not the
+      // case.
 
-      if (!this.__dataAttributes[property]) {
-        const attr = this.constructor.attributeNameForProperty(property);
+
+      let attr = this.__dataAttributes[property];
+
+      if (!attr) {
+        attr = this.constructor.attributeNameForProperty(property);
         this.__dataAttributes[attr] = property;
       }
+
+      return attr;
     }
     /**
      * Defines a property accessor for the given property.
@@ -155,12 +171,16 @@ superClass => {
 
         /** @this {PropertiesChanged} */
         get() {
-          return this._getProperty(property);
+          // Inline for perf instead of using `_getProperty`
+          return this.__data[property];
         },
 
         /** @this {PropertiesChanged} */
         set: readOnly ? function () {} : function (value) {
-          this._setProperty(property, value);
+          // Inline for perf instead of using `_setProperty`
+          if (this._setPendingProperty(property, value, true)) {
+            this._invalidateProperties();
+          }
         }
         /* eslint-enable */
 
@@ -169,7 +189,7 @@ superClass => {
 
     constructor() {
       super();
-      /** @protected {boolean} */
+      /** @type {boolean} */
 
       this.__dataEnabled = false;
       this.__dataReady = false;
@@ -178,6 +198,10 @@ superClass => {
       this.__dataPending = null;
       this.__dataOld = null;
       this.__dataInstanceProps = null;
+      /** @type {number} */
+      // NOTE: used to track re-entrant calls to `_flushProperties`
+
+      this.__dataCounter = 0;
       this.__serializing = false;
 
       this._initializeProperties();
@@ -318,6 +342,15 @@ superClass => {
     /* eslint-enable */
 
     /**
+     * @param {string} property Name of the property
+     * @return {boolean} Returns true if the property is pending.
+     */
+
+
+    _isPropertyPending(property) {
+      return !!(this.__dataPending && this.__dataPending.hasOwnProperty(property));
+    }
+    /**
      * Marks the properties as invalid, and enqueues an async
      * `_propertiesChanged` callback.
      *
@@ -379,6 +412,7 @@ superClass => {
 
 
     _flushProperties() {
+      this.__dataCounter++;
       const props = this.__data;
       const changedProps = this.__dataPending;
       const old = this.__dataOld;
@@ -389,6 +423,8 @@ superClass => {
 
         this._propertiesChanged(props, changedProps, old);
       }
+
+      this.__dataCounter--;
     }
     /**
      * Called in `_flushProperties` to determine if `_propertiesChanged`
@@ -460,7 +496,7 @@ superClass => {
      * @param {string} name Name of attribute that changed
      * @param {?string} old Old attribute value
      * @param {?string} value New attribute value
-     * @param {?string=} namespace Attribute namespace.
+     * @param {?string} namespace Attribute namespace.
      * @return {void}
      * @suppress {missingProperties} Super may or may not implement the callback
      * @override
@@ -540,16 +576,20 @@ superClass => {
     _valueToNodeAttribute(node, value, attribute) {
       const str = this._serializeValue(value);
 
+      if (attribute === 'class' || attribute === 'name' || attribute === 'slot') {
+        node =
+        /** @type {?Element} */
+        wrap(node);
+      }
+
       if (str === undefined) {
         node.removeAttribute(attribute);
       } else {
-        if (attribute === 'class' || attribute === 'name' || attribute === 'slot') {
-          node =
-          /** @type {?Element} */
-          wrap(node);
-        }
-
-        node.setAttribute(attribute, str);
+        node.setAttribute(attribute, // Closure's type for `setAttribute`'s second parameter incorrectly
+        // excludes `TrustedScript`.
+        str === '' && window.trustedTypes ?
+        /** @type {?} */
+        window.trustedTypes.emptyScript : str);
       }
     }
     /**

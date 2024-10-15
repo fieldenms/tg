@@ -93,19 +93,24 @@ export let FlattenedNodesObserver = class {
         flatten: true
       });
     } else {
-      return Array.from(wrapped.childNodes).map(node => {
-        if (isSlot(node)) {
-          node =
-          /** @type {!HTMLSlotElement} */
-          node; // eslint-disable-line no-self-assign
+      const results = [];
 
-          return wrap(node).assignedNodes({
+      for (let i = 0; i < wrapped.childNodes.length; i++) {
+        const node = wrapped.childNodes[i];
+
+        if (isSlot(node)) {
+          const slotNode =
+          /** @type {!HTMLSlotElement} */
+          node;
+          results.push(...wrap(slotNode).assignedNodes({
             flatten: true
-          });
+          }));
         } else {
-          return [node];
+          results.push(node);
         }
-      }).reduce((a, b) => a.concat(b), []);
+      }
+
+      return results;
     }
   }
   /**
@@ -170,7 +175,7 @@ export let FlattenedNodesObserver = class {
       wrap(this._target).children);
 
       if (window.ShadyDOM) {
-        this._shadyChildrenObserver = ShadyDOM.observeChildren(this._target, mutations => {
+        this._shadyChildrenObserver = window.ShadyDOM.observeChildren(this._target, mutations => {
           this._processMutations(mutations);
         });
       } else {
@@ -206,7 +211,7 @@ export let FlattenedNodesObserver = class {
       wrap(this._target).children);
 
       if (window.ShadyDOM && this._shadyChildrenObserver) {
-        ShadyDOM.unobserveChildren(this._shadyChildrenObserver);
+        window.ShadyDOM.unobserveChildren(this._shadyChildrenObserver);
         this._shadyChildrenObserver = null;
       } else if (this._nativeChildrenObserver) {
         this._nativeChildrenObserver.disconnect();
