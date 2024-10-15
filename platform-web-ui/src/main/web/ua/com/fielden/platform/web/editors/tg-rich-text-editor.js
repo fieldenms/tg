@@ -75,13 +75,13 @@ const customLabelTemplate = html`
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Make your text bold, Ctrl+B, Meta+B" on-down="_preventEvent" on-tap="_makeBold"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text, Ctrl+I, Meta+I" on-down="_preventEvent" on-tap="_makeItalic"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it, Ctrl+S, Meta+S" on-down="_preventEvent" on-tap="_makeStrike"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, Meta+Z" on-down="_preventEvent" on-tap="_undo"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, Meta+Y" on-down="_preventEvent" on-tap="_redo"></iron-icon>
         <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-down="_preventEvent" on-tap="_changeTextColor"></iron-icon>
         <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_preventEvent" on-tap="_toggleLink"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, Meta+U" on-down="_preventEvent" on-tap="_createBulletedList"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Create a numbered list, Ctrl+O, Meta+O" on-down="_preventEvent" on-tap="_createNumberedList"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="tg-rich-text-editor:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_preventEvent" on-tap="_createTaskList"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, Meta+Z" on-down="_preventEvent" on-tap="_undo"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, Meta+Y" on-down="_preventEvent" on-tap="_redo"></iron-icon>
     </label>`;
 
 const customInputTemplate = html`
