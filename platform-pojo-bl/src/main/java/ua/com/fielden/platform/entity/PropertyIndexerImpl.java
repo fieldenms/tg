@@ -304,8 +304,9 @@ class PropertyIndexerImpl implements PropertyIndexer {
         }
 
         public MethodHandle unreflectPropertySetter(final Class<? extends AbstractEntity<?>> entityType, final Field field) {
-            // Reflector.obtainPropertySetter does not support property "key" overridden in an abstract type, thus we
-            // exercise finer control over the lookup
+            // Reflector.obtainPropertySetter does not support property "key" overridden in an abstract type, because
+            // PropertyTypeDeterminator.determineClass returns null in such cases (due to missing @KeyType), causing an NPE.
+            // Thus, we exercise finer controler over the lookup.
             try {
                 return unreflect(Reflector.getMethodForClass(entityType, Mutator.SETTER.getName(field.getName()), field.getType()));
             } catch (final NoSuchMethodException e) {
