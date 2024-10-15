@@ -239,7 +239,7 @@ const template = html`
     <style include='rich-text-enhanced-styles'>
         ::selection {
             color: currentcolor;
-            background-color: Highlight;
+            background-color: rgba(31,  176, 255, 0.3);
         }
     </style>
     <div id="editor"></div>`; 
