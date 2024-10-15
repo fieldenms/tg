@@ -97,7 +97,7 @@ function mouseOverHandler(e) {
         if (currentTooltipElement !== a) {
             this._hideTooltip();
         }
-        this.showTooltip(a.getAttribute('href'));
+        this.showTooltip(`${a.getAttribute('href')}<br>Ctrl+Click, &#x2318;+Click or long touch to open link`);
     } else {
         this._hideTooltip();
     }
@@ -313,6 +313,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
                 keydown: (viewType, event) => this.keyDownHandler(event)
             },
             plugins: [colorTextPlugin],
+            linkAttributes: {target: "_blank"},
             useCommandShortcut: false,
             usageStatistics: false,
             toolbarItems: [],
