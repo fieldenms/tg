@@ -38,14 +38,15 @@ import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
  * One benefit of this extensive reuse is that derived (generated) entity types, which have no additional/modified properties,
  * get property indices for free by reusing those of their original entity types.
  *
- * <h4> Getters </h4>
+ * <h4> Accessors </h4>
  * <p>
- * Getters in a property index are method handles that read directly from a {@linkplain VarHandle property's field}.
- * This is in accordance with the convention that all property getter methods are trivial:
- * they return the property's value without performing any other computations.
+ * Accessors in a property index are method handles that read directly from a {@linkplain VarHandle property's field}.
+ * Although this violates encapsulation by ignoring the declared property accessor methods, no disadvantages are observed
+ * in practice for the majority of property types due to the simplicity of their getters.
+ * The only exception is collectional properties, whose getters return an unmodifiable view instead of the immediate property value.
  * <p>
- * <b>Caveat</b>: getters of collectional properties wrap property values with unmodifiable collections.
- * The same is not done by method handles stored in these indices.
+ * This is subject to change, with the goal of actually using property accessors. However, currently the platform relies
+ * on collectional values being read directly from the property's field, which poses a challenge for the implementation of the new approach.
  *
  * <h4> Overridden setters </h4>
  * <p>
