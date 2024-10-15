@@ -49,14 +49,15 @@
     "@polymer/paper-toast": "^3.0.1",
     "@polymer/paper-toolbar": "^3.0.1",
     "@polymer/paper-tooltip": "^3.0.1",
-    "@polymer/polymer": "^3.0.0",
-    "@polymer/test-fixture": "^4.0.2",
     "@google-web-components/google-chart": "^3.0.4",
-    "@webcomponents/webcomponentsjs": "^2.0.0",
-    "chai": "^4.2.0",
-    "mocha": "^5.2.0",
+    "web-animations-js": "^2.3.1",
+    "@webcomponents/webcomponentsjs": "^2.8.0",
+    "@webcomponents/shadycss": "^1.11.2",
+    "@polymer/polymer": "^3.5.2",
+    "@polymer/test-fixture": "^4.0.2",
+    "chai": "^5.1.1",
+    "mocha": "^10.7.3",
     "wct-browser-legacy": "^1.0.2",
-    "wct-mocha": "^1.0.0-pre.3",
-    "web-animations-js": "^2.3.1"
+    "wct-mocha": "^1.1.0"
   }
 }
