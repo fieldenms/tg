@@ -91,12 +91,12 @@ final class DynamicPropertyAccess {
             throw new DynamicPropertyAccessCriticalError(ERR_PROP_ACCESS_INDEX.formatted(entityType.getTypeName()), ex);
         }
 
-        final MethodHandle setter = index.setter(prop.toString());
+        final var setter = index.setter(prop.toString());
         if (setter == null) {
             throw new EntityException(ERR_NO_PROP_SETTER.formatted(prop, entityType.getTypeName()));
         }
 
-        setter.invoke(entity, value);
+        setter.set(entity, value);
     }
 
     /**

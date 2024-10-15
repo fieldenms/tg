@@ -8,8 +8,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
+import java.lang.invoke.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -31,7 +30,7 @@ import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
 
 /**
  * Property indices are built by reusing method handles as much as possible.
- * In general, there will be a single pair of method handles for each property (for its accessor and setter).
+ * In general, there will be a single pair of method handles for each property (for its accessors and setter).
  * This holds for inherited properties as well.
  * For example, all indices will share the same method handles for properties of {@link AbstractEntity}.
  * <p>
@@ -82,7 +81,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                 : streamDeclaredProperties(entityType);
         return properties.collect(Collectors.teeing(
                 toImmutableMap(Field::getName, prop -> lookupProvider.unreflectPropertyAccessor(entityType, prop)),
-                toImmutableMap(Field::getName, prop -> lookupProvider.unreflectPropertySetter(entityType, prop)),
+                toImmutableMap(Field::getName, prop -> lookupProvider.createPropertySetter(entityType, prop)),
                 StandardIndex::makeIndex));
     }
 
@@ -119,13 +118,13 @@ class PropertyIndexerImpl implements PropertyIndexer {
      */
     record StandardIndex(
             Map<String, MethodHandle> accessors,
-            Map<String, MethodHandle> setters)
+            Map<String, PropertySetter> setters)
             implements Index
     {
         private static final StandardIndex EMPTY_INDEX = new StandardIndex(ImmutableMap.of(), ImmutableMap.of());
 
         public static StandardIndex makeIndex(final Map<String, MethodHandle> accessors,
-                                              final Map<String, MethodHandle> setters) {
+                                              final Map<String, PropertySetter> setters) {
             return (accessors.isEmpty() && setters.isEmpty()) ? EMPTY_INDEX : new StandardIndex(accessors, setters);
         }
 
@@ -136,7 +135,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
 
         @Nullable
         @Override
-        public MethodHandle setter(final String prop) {
+        public PropertySetter setter(final String prop) {
             return setters.get(prop);
         }
 
@@ -157,11 +156,11 @@ class PropertyIndexerImpl implements PropertyIndexer {
         final var lookupProvider = new CachingPrivateLookupProvider();
 
         final var accessors = ImmutableMap.<String, MethodHandle>builder();
-        final var setters = ImmutableMap.<String, MethodHandle>builder();
+        final var setters = ImmutableMap.<String, PropertySetter>builder();
 
         for (final Field unionProp : AbstractUnionEntity.unionProperties(entityType)) {
             accessors.put(unionProp.getName(), lookupProvider.unreflect(obtainPropertyAccessor(entityType, unionProp.getName())));
-            setters.put(unionProp.getName(), lookupProvider.unreflect(obtainPropertySetter(entityType, unionProp.getName())));
+            setters.put(unionProp.getName(), lookupProvider.createPropertySetter(entityType, unionProp));
         }
 
         final var unionMembers = Finder.streamUnionMembers(entityType).toList();
@@ -169,16 +168,17 @@ class PropertyIndexerImpl implements PropertyIndexer {
                       Stream.of(KEY, ID, DESC))
                 .distinct()
                 .forEach(commonPropName -> {
-                    // accessors for this common property in all union members
+                    final var commonPropType = Finder.getFieldByName(unionMembers.getFirst(), commonPropName).getType();
+                    // getters for this common property in all union members
                     final Map<Class<?>, MethodHandle> commonPropAccessors = unionMembers.stream()
                             .collect(toMap(Function.identity(),
                                            ty -> lookupProvider.unreflect(obtainPropertyAccessor(ty, commonPropName))));
-                    final Map<Class<?>, MethodHandle> commonPropSetters = unionMembers.stream()
+                    final Map<Class<?>, PropertySetter> commonPropSetters = unionMembers.stream()
                             .collect(toMap(Function.identity(),
-                                           ty -> lookupProvider.unreflect(obtainPropertySetter(ty, commonPropName))));
+                                           ty -> lookupProvider.createPropertySetter(ty, Finder.getFieldByName(ty, commonPropName))));
                     // this is where we create closures
                     accessors.put(commonPropName, MethodHandles.insertArguments(mh_getCommonProperty, 0, commonPropName, commonPropAccessors));
-                    setters.put(commonPropName, MethodHandles.insertArguments(mh_setCommonProperty, 0, commonPropName, commonPropSetters));
+                    setters.put(commonPropName, lookupProvider.createCommonPropertySetter(entityType, commonPropName, commonPropType, commonPropSetters));
                 });
 
         return makeIndex(accessors.buildOrThrow(), setters.buildOrThrow());
@@ -228,9 +228,9 @@ class PropertyIndexerImpl implements PropertyIndexer {
      * @param entity  union entity to set the value into (effectively, its active entity)
      * @param value  new property value
      */
-    private static Object setCommonProperty(final String prop,
-                                            final Map<Class<? extends AbstractEntity<?>>, MethodHandle> setters,
-                                            final AbstractUnionEntity entity, final Object value)
+    private static void setCommonProperty(final String prop,
+                                          final Map<Class<? extends AbstractEntity<?>>, PropertySetter> setters,
+                                          final AbstractUnionEntity entity, final Object value)
             throws Throwable
     {
         final var activeEntity = entity.activeEntity();
@@ -242,7 +242,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                             .formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
         }
 
-        return setter.invoke(activeEntity, value);
+        setter.set(activeEntity, value);
     }
 
     private static final MethodHandle mh_getCommonProperty;
@@ -255,7 +255,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                                 methodType(Object.class, String.class, Map.class, AbstractUnionEntity.class));
             mh_setCommonProperty = MethodHandles.lookup()
                     .findStatic(PropertyIndexerImpl.class, "setCommonProperty",
-                                methodType(Object.class, String.class, Map.class, AbstractUnionEntity.class, Object.class));
+                                methodType(void.class, String.class, Map.class, AbstractUnionEntity.class, Object.class));
         } catch (final NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -303,6 +303,79 @@ class PropertyIndexerImpl implements PropertyIndexer {
             }
         }
 
+        private <E extends AbstractEntity<?>, T> PropertySetter<E, T> createPropertySetter(final Class<E> entityType, final Field property) {
+            final CallSite callSite;
+            try {
+                final var lookup = apply(entityType);
+                final var mh_setter = unreflectPropertySetter(entityType, property);
+                callSite = LambdaMetafactory.metafactory(
+                        lookup,
+                        "set",  // Interface method
+                        MethodType.methodType(PropertySetter.class),  // Factory method signature
+                        MethodType.methodType(void.class, AbstractEntity.class, Object.class),  // Interface method signature
+                        mh_setter,  // Implementation
+                        MethodType.methodType(void.class, mh_setter.type().parameterType(0), boxed(mh_setter.type().parameterType(1)))  // Dynamic signature of the interface method
+                );
+            } catch (final LambdaConversionException e) {
+                throw new RuntimeException(e);
+            }
+
+            try {
+                return (PropertySetter<E, T>) callSite.getTarget().invoke();
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private static <E extends AbstractUnionEntity, T> PropertySetter<E, T> createCommonPropertySetter(
+                final Class<E> entityType,
+                final String property,
+                final Class<?> propertyType,
+                final Map<Class<?>, PropertySetter> setters)
+        {
+            final CallSite callSite;
+            try {
+                callSite = LambdaMetafactory.metafactory(
+                        MethodHandles.lookup(),
+                        "set",  // Interface method
+                        MethodType.methodType(PropertySetter.class, String.class, Map.class),  // Factory method signature
+                        MethodType.methodType(void.class, AbstractEntity.class, Object.class),  // Interface method signature
+                        mh_setCommonProperty,  // Implementation
+                        MethodType.methodType(void.class, entityType, boxed(propertyType))  // Dynamic signature of the interface method
+                );
+            } catch (final LambdaConversionException e) {
+                throw new RuntimeException(e);
+            }
+
+            try {
+                return (PropertySetter<E, T>) callSite.getTarget().invoke(property, setters);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private static Class<?> boxed(final Class<?> type) {
+            if (!type.isPrimitive()) {
+                return type;
+            }
+            else {
+                final var boxedType = boxedTypes.get(type);
+                if (boxedType == null) {
+                    throw new IllegalStateException("Boxed type doesn't exist for primitive type [%s]".formatted(type.getTypeName()));
+                }
+                return boxedType;
+            }
+        }
+
+        private static final Map<Class<?>, Class<?>> boxedTypes = Map.of(
+                boolean.class, Boolean.class
+                // other primitive types are not supported as property types
+        );
+
+    }
+
+    public interface PropertySetter<E extends AbstractEntity<?>, T> {
+        void set(E entity, T value);
     }
 
 }

@@ -10,7 +10,8 @@ interface PropertyIndexer {
     interface Index {
         @Nullable MethodHandle accessor(final String prop);
 
-        @Nullable MethodHandle setter(final String prop);
+        @Nullable
+        PropertyIndexerImpl.PropertySetter setter(final String prop);
 
     }
 
