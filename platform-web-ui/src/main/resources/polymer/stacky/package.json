@@ -4,7 +4,9 @@
   "_inBundle": false,
   "_integrity": "sha512-uLp/ewCpvB9asaw3FESagdZwo7wADkNdFK19d4qsY5oXk7523TRpgM/bGJZ7W54V1mTff7DuybRovP50VQTVDg==",
   "_location": "/stacky",
-  "_phantomChildren": {},
+  "_phantomChildren": {
+    "has-ansi": "2.0.0"
+  },
   "_requested": {
     "type": "range",
     "registry": true,

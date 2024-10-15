@@ -1,5 +1,5 @@
 {
-  "_from": "@webcomponents/shadycss@^1.9.1",
+  "_from": "@webcomponents/shadycss@^1.11.2",
   "_id": "@webcomponents/shadycss@1.11.2",
   "_inBundle": false,
   "_integrity": "sha512-vRq+GniJAYSBmTRnhCYPAPq6THYqovJ/gzGThWbgEZUQaBccndGTi1hdiUP15HzEco0I6t4RCtXyX0rsSmwgPw==",
@@ -8,21 +8,22 @@
   "_requested": {
     "type": "range",
     "registry": true,
-    "raw": "@webcomponents/shadycss@^1.9.1",
+    "raw": "@webcomponents/shadycss@^1.11.2",
     "name": "@webcomponents/shadycss",
     "escapedName": "@webcomponents%2fshadycss",
     "scope": "@webcomponents",
-    "rawSpec": "^1.9.1",
+    "rawSpec": "^1.11.2",
     "saveSpec": null,
-    "fetchSpec": "^1.9.1"
+    "fetchSpec": "^1.11.2"
   },
   "_requiredBy": [
+    "/",
     "/@polymer/polymer"
   ],
   "_resolved": "https://registry.npmjs.org/@webcomponents/shadycss/-/shadycss-1.11.2.tgz",
   "_shasum": "7539b0ad29598aa2eafee8b341059e20ac9e1006",
-  "_spec": "@webcomponents/shadycss@^1.9.1",
-  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/@polymer/polymer",
+  "_spec": "@webcomponents/shadycss@^1.11.2",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
   "author": {
     "name": "The Polymer Project Authors",
     "url": "https://polymer.github.io/AUTHORS.txt"

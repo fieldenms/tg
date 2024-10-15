@@ -1,5 +1,5 @@
 {
-  "_from": "wct-mocha@^1.0.0-pre.3",
+  "_from": "wct-mocha@^1.1.0",
   "_id": "wct-mocha@1.1.0",
   "_inBundle": false,
   "_integrity": "sha512-Wq7xtXFtsCs4bZxjjgRp1PKV3sx7NrSl1JqEVI4zF0/yavlYa9hRMO/+73u1ZScnHc5kIKNPT3KBsoCaQI3+MQ==",
@@ -8,19 +8,19 @@
   "_requested": {
     "type": "range",
     "registry": true,
-    "raw": "wct-mocha@^1.0.0-pre.3",
+    "raw": "wct-mocha@^1.1.0",
     "name": "wct-mocha",
     "escapedName": "wct-mocha",
-    "rawSpec": "^1.0.0-pre.3",
+    "rawSpec": "^1.1.0",
     "saveSpec": null,
-    "fetchSpec": "^1.0.0-pre.3"
+    "fetchSpec": "^1.1.0"
   },
   "_requiredBy": [
     "/"
   ],
   "_resolved": "https://registry.npmjs.org/wct-mocha/-/wct-mocha-1.1.0.tgz",
   "_shasum": "a03747162aa7c35e41e4659a9b09db10648d1889",
-  "_spec": "wct-mocha@^1.0.0-pre.3",
+  "_spec": "wct-mocha@^1.1.0",
   "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
   "author": {
     "name": "The Polymer Project Authors"

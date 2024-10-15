@@ -1,5 +1,5 @@
 {
-  "_from": "@webcomponents/webcomponentsjs@^2.0.0",
+  "_from": "@webcomponents/webcomponentsjs@^2.8.0",
   "_id": "@webcomponents/webcomponentsjs@2.8.0",
   "_inBundle": false,
   "_integrity": "sha512-loGD63sacRzOzSJgQnB9ZAhaQGkN7wl2Zuw7tsphI5Isa0irijrRo6EnJii/GgjGefIFO8AIO7UivzRhFaEk9w==",
@@ -8,13 +8,13 @@
   "_requested": {
     "type": "range",
     "registry": true,
-    "raw": "@webcomponents/webcomponentsjs@^2.0.0",
+    "raw": "@webcomponents/webcomponentsjs@^2.8.0",
     "name": "@webcomponents/webcomponentsjs",
     "escapedName": "@webcomponents%2fwebcomponentsjs",
     "scope": "@webcomponents",
-    "rawSpec": "^2.0.0",
+    "rawSpec": "^2.8.0",
     "saveSpec": null,
-    "fetchSpec": "^2.0.0"
+    "fetchSpec": "^2.8.0"
   },
   "_requiredBy": [
     "/",
@@ -22,7 +22,7 @@
   ],
   "_resolved": "https://registry.npmjs.org/@webcomponents/webcomponentsjs/-/webcomponentsjs-2.8.0.tgz",
   "_shasum": "ab21f027594fa827c1889e8b646da7be27c7908a",
-  "_spec": "@webcomponents/webcomponentsjs@^2.0.0",
+  "_spec": "@webcomponents/webcomponentsjs@^2.8.0",
   "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
   "author": {
     "name": "The Polymer Project Authors",

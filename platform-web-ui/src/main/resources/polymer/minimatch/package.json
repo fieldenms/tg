@@ -1,28 +1,27 @@
 {
-  "_from": "minimatch@3.0.4",
-  "_id": "minimatch@3.0.4",
+  "_from": "minimatch@^5.1.6",
+  "_id": "minimatch@5.1.6",
   "_inBundle": false,
-  "_integrity": "sha512-yJHVQEhyqPLUTgt9B83PXu6W3rx4MvvHvSUvToogpwoGDOUQ+yDrR0HRot+yOCdCO7u4hX3pWft6kWBBcqh0UA==",
+  "_integrity": "sha512-lKwV/1brpG6mBUFHtb7NUmtABCb2WZZmm2wNiOA5hAb8VdCS4B3dtMWyvcoViccwAW/COERjXLt0zP1zXUN26g==",
   "_location": "/minimatch",
   "_phantomChildren": {},
   "_requested": {
-    "type": "version",
+    "type": "range",
     "registry": true,
-    "raw": "minimatch@3.0.4",
+    "raw": "minimatch@^5.1.6",
     "name": "minimatch",
     "escapedName": "minimatch",
-    "rawSpec": "3.0.4",
+    "rawSpec": "^5.1.6",
     "saveSpec": null,
-    "fetchSpec": "3.0.4"
+    "fetchSpec": "^5.1.6"
   },
   "_requiredBy": [
     "/glob",
-    "/mocha",
-    "/wct-browser-legacy/glob"
+    "/mocha"
   ],
-  "_resolved": "https://registry.npmjs.org/minimatch/-/minimatch-3.0.4.tgz",
-  "_shasum": "5166e286457f03306064be5497e8dbb0c3d32083",
-  "_spec": "minimatch@3.0.4",
+  "_resolved": "https://registry.npmjs.org/minimatch/-/minimatch-5.1.6.tgz",
+  "_shasum": "1cfcb8cf5522ea69952cd2af95ae09477f122a96",
+  "_spec": "minimatch@^5.1.6",
   "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/mocha",
   "author": {
     "name": "Isaac Z. Schlueter",
@@ -34,32 +33,37 @@
   },
   "bundleDependencies": false,
   "dependencies": {
-    "brace-expansion": "^1.1.7"
+    "brace-expansion": "^2.0.1"
   },
   "deprecated": false,
   "description": "a glob matcher in javascript",
   "devDependencies": {
-    "tap": "^10.3.2"
+    "tap": "^16.3.2"
   },
   "engines": {
-    "node": "*"
+    "node": ">=10"
   },
   "files": [
-    "minimatch.js"
+    "minimatch.js",
+    "lib"
   ],
   "homepage": "https://github.com/isaacs/minimatch#readme",
   "license": "ISC",
   "main": "minimatch.js",
   "name": "minimatch",
+  "publishConfig": {
+    "tag": "legacy-v5"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/isaacs/minimatch.git"
   },
   "scripts": {
-    "postpublish": "git push origin --all; git push origin --tags",
     "postversion": "npm publish",
+    "prepublishOnly": "git push origin --follow-tags",
     "preversion": "npm test",
-    "test": "tap test/*.js --cov"
+    "snap": "tap",
+    "test": "tap"
   },
-  "version": "3.0.4"
+  "version": "5.1.6"
 }

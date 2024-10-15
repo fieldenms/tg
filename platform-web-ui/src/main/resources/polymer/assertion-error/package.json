@@ -1,27 +1,26 @@
 {
-  "_from": "assertion-error@^1.1.0",
-  "_id": "assertion-error@1.1.0",
+  "_from": "assertion-error@^2.0.1",
+  "_id": "assertion-error@2.0.1",
   "_inBundle": false,
-  "_integrity": "sha512-jgsaNduz+ndvGyFt3uSuWqvy4lCnIJiovtouQN5JZHOKCS2QuhEdbcQHFhVksz2N2U9hXJo8odG7ETyWlEeuDw==",
+  "_integrity": "sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==",
   "_location": "/assertion-error",
   "_phantomChildren": {},
   "_requested": {
     "type": "range",
     "registry": true,
-    "raw": "assertion-error@^1.1.0",
+    "raw": "assertion-error@^2.0.1",
     "name": "assertion-error",
     "escapedName": "assertion-error",
-    "rawSpec": "^1.1.0",
+    "rawSpec": "^2.0.1",
     "saveSpec": null,
-    "fetchSpec": "^1.1.0"
+    "fetchSpec": "^2.0.1"
   },
   "_requiredBy": [
-    "/chai",
-    "/wct-browser-legacy/chai"
+    "/chai"
   ],
-  "_resolved": "https://registry.npmjs.org/assertion-error/-/assertion-error-1.1.0.tgz",
-  "_shasum": "e60b6b0e8f301bd97e5375215bda406c85118c0b",
-  "_spec": "assertion-error@^1.1.0",
+  "_resolved": "https://registry.npmjs.org/assertion-error/-/assertion-error-2.0.1.tgz",
+  "_shasum": "f641a196b335690b1070bf00b6e7593fec190bf7",
+  "_spec": "assertion-error@^2.0.1",
   "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/chai",
   "author": {
     "name": "Jake Luer",
@@ -32,16 +31,14 @@
     "url": "https://github.com/chaijs/assertion-error/issues"
   },
   "bundleDependencies": false,
-  "dependencies": {},
   "deprecated": false,
   "description": "Error constructor for test and validation frameworks that implements standardized AssertionError specification.",
-  "devDependencies": {
-    "component": "*",
-    "typescript": "^2.6.1"
-  },
   "engines": {
-    "node": "*"
+    "node": ">=12"
   },
+  "files": [
+    "index.d.ts"
+  ],
   "homepage": "https://github.com/chaijs/assertion-error#readme",
   "keywords": [
     "test",
@@ -49,15 +46,20 @@
     "assertion-error"
   ],
   "license": "MIT",
-  "main": "./index",
+  "main": "index.js",
+  "module": "index.js",
   "name": "assertion-error",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/chaijs/assertion-error.git"
   },
   "scripts": {
-    "test": "make test"
+    "build": "deno bundle mod.ts > index.js",
+    "posttest": "deno coverage coverage --lcov > coverage/lcov.info && lcov --summary coverage/lcov.info",
+    "pretest": "rm -rf coverage/",
+    "test": "deno test --coverage=coverage"
   },
+  "type": "module",
   "types": "./index.d.ts",
-  "version": "1.1.0"
+  "version": "2.0.1"
 }
