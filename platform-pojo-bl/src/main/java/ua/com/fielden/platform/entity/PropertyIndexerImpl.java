@@ -26,7 +26,6 @@ import static ua.com.fielden.platform.entity.PropertyIndexerImpl.StandardIndex.m
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamDeclaredProperties;
 import static ua.com.fielden.platform.reflection.Reflector.obtainPropertyAccessor;
-import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
 
 /**
  * Property indices are built by reusing method handles as much as possible.
@@ -80,7 +79,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                 ? Stream.concat(streamDeclaredProperties(entityType), Stream.of(idProperty, versionProperty))
                 : streamDeclaredProperties(entityType);
         return properties.collect(Collectors.teeing(
-                toImmutableMap(Field::getName, prop -> lookupProvider.unreflectPropertyAccessor(entityType, prop)),
+                toImmutableMap(Field::getName, prop -> lookupProvider.createPropertyAccessor(entityType, prop)),
                 toImmutableMap(Field::getName, prop -> lookupProvider.createPropertySetter(entityType, prop)),
                 StandardIndex::makeIndex));
     }
@@ -117,19 +116,19 @@ class PropertyIndexerImpl implements PropertyIndexer {
      * @param setters  for writing property values, keyed on property names
      */
     record StandardIndex(
-            Map<String, MethodHandle> accessors,
+            Map<String, PropertyAccessor> accessors,
             Map<String, PropertySetter> setters)
             implements Index
     {
         private static final StandardIndex EMPTY_INDEX = new StandardIndex(ImmutableMap.of(), ImmutableMap.of());
 
-        public static StandardIndex makeIndex(final Map<String, MethodHandle> accessors,
+        public static StandardIndex makeIndex(final Map<String, PropertyAccessor> accessors,
                                               final Map<String, PropertySetter> setters) {
             return (accessors.isEmpty() && setters.isEmpty()) ? EMPTY_INDEX : new StandardIndex(accessors, setters);
         }
 
         @Override
-        public MethodHandle accessor(final String prop) {
+        public PropertyAccessor accessor(final String prop) {
             return accessors.get(prop);
         }
 
@@ -155,11 +154,11 @@ class PropertyIndexerImpl implements PropertyIndexer {
     private StandardIndex buildUnionEntityIndex(final Class<? extends AbstractUnionEntity> entityType) {
         final var lookupProvider = new CachingPrivateLookupProvider();
 
-        final var accessors = ImmutableMap.<String, MethodHandle>builder();
+        final var accessors = ImmutableMap.<String, PropertyAccessor>builder();
         final var setters = ImmutableMap.<String, PropertySetter>builder();
 
         for (final Field unionProp : AbstractUnionEntity.unionProperties(entityType)) {
-            accessors.put(unionProp.getName(), lookupProvider.unreflect(obtainPropertyAccessor(entityType, unionProp.getName())));
+            accessors.put(unionProp.getName(), lookupProvider.createPropertyAccessor(entityType, unionProp));
             setters.put(unionProp.getName(), lookupProvider.createPropertySetter(entityType, unionProp));
         }
 
@@ -169,15 +168,15 @@ class PropertyIndexerImpl implements PropertyIndexer {
                 .distinct()
                 .forEach(commonPropName -> {
                     final var commonPropType = Finder.getFieldByName(unionMembers.getFirst(), commonPropName).getType();
-                    // getters for this common property in all union members
-                    final Map<Class<?>, MethodHandle> commonPropAccessors = unionMembers.stream()
+                    // accessors for this common property in all union members
+                    final Map<Class<?>, PropertyAccessor> commonPropAccessors = unionMembers.stream()
                             .collect(toMap(Function.identity(),
-                                           ty -> lookupProvider.unreflect(obtainPropertyAccessor(ty, commonPropName))));
+                                           ty -> lookupProvider.createPropertyAccessor(ty, Finder.getFieldByName(ty, commonPropName))));
                     final Map<Class<?>, PropertySetter> commonPropSetters = unionMembers.stream()
                             .collect(toMap(Function.identity(),
                                            ty -> lookupProvider.createPropertySetter(ty, Finder.getFieldByName(ty, commonPropName))));
                     // this is where we create closures
-                    accessors.put(commonPropName, MethodHandles.insertArguments(mh_getCommonProperty, 0, commonPropName, commonPropAccessors));
+                    accessors.put(commonPropName, lookupProvider.createCommonPropertyAccessor(entityType, commonPropName, commonPropType, commonPropAccessors));
                     setters.put(commonPropName, lookupProvider.createCommonPropertySetter(entityType, commonPropName, commonPropType, commonPropSetters));
                 });
 
@@ -197,7 +196,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
      * @param entity  entity to retrieve the property value from
      */
     private static Object getCommonProperty(final String prop,
-                                            final Map<Class<? extends AbstractEntity<?>>, MethodHandle> accessors,
+                                            final Map<Class<? extends AbstractEntity<?>>, PropertyAccessor> accessors,
                                             final AbstractUnionEntity entity)
             throws Throwable
     {
@@ -214,7 +213,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                             .formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
         }
 
-        return accessor.invoke(activeEntity);
+        return accessor.get(activeEntity);
     }
 
     /**
@@ -286,8 +285,8 @@ class PropertyIndexerImpl implements PropertyIndexer {
             }
         }
 
-        public MethodHandle unreflectPropertyAccessor(final Class<? extends AbstractEntity<?>> entityType, final Field field) {
-            return unreflect(obtainPropertyAccessor(entityType, field.getName()));
+        public MethodHandle unreflectPropertyAccessor(final Class<? extends AbstractEntity<?>> entityType, final Field property) {
+            return unreflect(obtainPropertyAccessor(entityType, property.getName()));
         }
 
         public MethodHandle unreflectPropertySetter(final Class<? extends AbstractEntity<?>> entityType, final Field field) {
@@ -300,6 +299,30 @@ class PropertyIndexerImpl implements PropertyIndexer {
                 throw new ReflectionException(format("Missing setter for property [%s] in entity [%s]",
                                                      field.getName(), entityType.getTypeName()),
                                               e);
+            }
+        }
+
+        private <E extends AbstractEntity<?>, T> PropertyAccessor<E, T> createPropertyAccessor(final Class<E> entityType, final Field property) {
+            final CallSite callSite;
+            try {
+                final var lookup = apply(entityType);
+                final var mh_accessor = unreflectPropertyAccessor(entityType, property);
+                callSite = LambdaMetafactory.metafactory(
+                        lookup,
+                        "get",  // Interface method
+                        MethodType.methodType(PropertyAccessor.class),  // Factory method signature
+                        MethodType.methodType(Object.class, AbstractEntity.class),  // Interface method signature
+                        mh_accessor,  // Implementation
+                        MethodType.methodType(mh_accessor.type().returnType(), mh_accessor.type().parameterType(0))// Dynamic signature of the interface method
+                );
+            } catch (final LambdaConversionException e) {
+                throw new RuntimeException(e);
+            }
+
+            try {
+                return (PropertyAccessor<E, T>) callSite.getTarget().invoke();
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
             }
         }
 
@@ -322,6 +345,33 @@ class PropertyIndexerImpl implements PropertyIndexer {
 
             try {
                 return (PropertySetter<E, T>) callSite.getTarget().invoke();
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private static <E extends AbstractUnionEntity, T> PropertyAccessor<E, T> createCommonPropertyAccessor(
+                final Class<E> entityType,
+                final String property,
+                final Class<?> propertyType,
+                final Map<Class<?>, PropertyAccessor> accessors)
+        {
+            final CallSite callSite;
+            try {
+                callSite = LambdaMetafactory.metafactory(
+                        MethodHandles.lookup(),
+                        "get",  // Interface method
+                        MethodType.methodType(PropertyAccessor.class, String.class, Map.class),  // Factory method signature
+                        MethodType.methodType(Object.class, AbstractEntity.class),  // Interface method signature
+                        mh_getCommonProperty,  // Implementation
+                        MethodType.methodType(propertyType, entityType)  // Dynamic signature of the interface method
+                );
+            } catch (final LambdaConversionException e) {
+                throw new RuntimeException(e);
+            }
+
+            try {
+                return (PropertyAccessor<E, T>) callSite.getTarget().invoke(property, accessors);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
@@ -372,6 +422,10 @@ class PropertyIndexerImpl implements PropertyIndexer {
                 // other primitive types are not supported as property types
         );
 
+    }
+
+    public interface PropertyAccessor<E extends AbstractEntity<?>, T> {
+        T get(E entity);
     }
 
     public interface PropertySetter<E extends AbstractEntity<?>, T> {

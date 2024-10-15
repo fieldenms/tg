@@ -71,7 +71,7 @@ final class DynamicPropertyAccess {
             throw new EntityException(ERR_NO_PROP_ACCESSOR.formatted(prop, entityType.getTypeName()));
         }
 
-        return accessor.invoke(entity);
+        return accessor.get(entity);
     }
 
     /**
