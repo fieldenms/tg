@@ -7,6 +7,7 @@ import javax.swing.filechooser.FileFilter;
 import java.io.*;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -145,6 +146,15 @@ public class MiscUtilities {
 
             return props;
         }
+    }
+
+    /**
+     * Creates a {@link Properties} instance populated with entries from the given map.
+     */
+    public static Properties makeProperties(final Map<String, String> map) {
+        final var properties = new Properties();
+        properties.putAll(map);
+        return properties;
     }
     
     /**

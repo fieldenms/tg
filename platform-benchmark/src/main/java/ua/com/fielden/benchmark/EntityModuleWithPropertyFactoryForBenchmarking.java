@@ -8,6 +8,8 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
+import java.util.Properties;
+
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityIocModule}, this module binds {@link IMetaPropertyFactory}.
  * <p>
@@ -18,6 +20,10 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 public class EntityModuleWithPropertyFactoryForBenchmarking extends EntityIocModule {
 
     public EntityModuleWithPropertyFactoryForBenchmarking() {}
+
+    public EntityModuleWithPropertyFactoryForBenchmarking(final Properties properties) {
+        super(properties);
+    }
 
     /**
      * 

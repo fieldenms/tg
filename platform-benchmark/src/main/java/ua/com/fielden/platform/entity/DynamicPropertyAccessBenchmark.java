@@ -9,8 +9,10 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.*;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.openjdk.jmh.annotations.Threads.MAX;
+import static ua.com.fielden.platform.utils.MiscUtilities.makeProperties;
 
 @Fork(value = 3, jvmArgsAppend = "-Djmh.stack.lines=3")
 @Warmup(iterations = 3)
@@ -19,8 +21,7 @@ import static org.openjdk.jmh.annotations.Threads.MAX;
 public class DynamicPropertyAccessBenchmark {
 
     private static final Injector injector = new ApplicationInjectorFactory()
-            .add(new EntityModuleWithPropertyFactoryForBenchmarking())
-            .add(DynamicPropertyAccessIocModule.options().caching(DynamicPropertyAccessIocModule.Options.Caching.ENABLED))
+            .add(new EntityModuleWithPropertyFactoryForBenchmarking(makeProperties(Map.of("dynamicPropertyAccess.caching", "enabled"))))
             .getInjector();
     private static final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
@@ -105,6 +106,14 @@ public class DynamicPropertyAccessBenchmark {
     @Measurement(batchSize = 10_000)
     public void setLevel1_union_common_property(final Blackhole blackhole, final BenchmarkState state) {
         blackhole.consume(state.union.set("common", state.unionCommon));
+    }
+
+    /**
+     * Main method for testing purposes - to verify if the static state of this class is initialised correctly.
+     */
+    public static void main(String[] args) {
+        injector.getInstance(DynamicPropertyAccess.class);
+        System.out.println(DynamicPropertyAccessBenchmark.class.getTypeName() + " works!");
     }
 
 }
