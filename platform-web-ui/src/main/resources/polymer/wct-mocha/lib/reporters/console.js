@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 var util = require("../util.js");
+var stats_collector_js_1 = require("./stats-collector.js");
 // We capture console events when running tests; so make sure we have a
 // reference to the original one.
 var console = window.console;
@@ -77,6 +78,12 @@ var Console = /** @class */ (function () {
      * @param runner The runner that is being reported on.
      */
     function Console(runner) {
+        // Mocha 6 runner doesn't have stats at this point so we need to use
+        // the stats-collector from Mocha to add them before calling the base
+        // reporter.
+        if (!runner.stats) {
+            stats_collector_js_1.createStatsCollector(runner);
+        }
         Mocha.reporters.Base.call(this, runner);
         runner.on('suite', function (suite) { return suite.root && logGroup(suite.title, 'suite'); });
         runner.on('suite end', function (suite) { return suite.root && logGroupEnd(); });

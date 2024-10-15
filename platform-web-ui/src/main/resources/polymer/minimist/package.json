@@ -2,7 +2,7 @@
   "_from": "minimist@0.0.8",
   "_id": "minimist@0.0.8",
   "_inBundle": false,
-  "_integrity": "sha1-hX/Kv8M5fSYluCKCYuhqp6ARsF0=",
+  "_integrity": "sha512-miQKw5Hv4NS1Psg2517mV4e4dYNaO3++hjAvLOAzKqZ61rH8NS1SK+vbfBWZ5PY/Me/bEWhUwqMghEW5Fb9T7Q==",
   "_location": "/minimist",
   "_phantomChildren": {},
   "_requested": {
@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/minimist/-/minimist-0.0.8.tgz",
   "_shasum": "857fcabfc3397d2625b8228262e86aa7a011b05d",
   "_spec": "minimist@0.0.8",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/mkdirp",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/mkdirp",
   "author": {
     "name": "James Halliday",
     "email": "mail@substack.net",

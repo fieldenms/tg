@@ -2,7 +2,7 @@
   "_from": "json3@3.3.2",
   "_id": "json3@3.3.2",
   "_inBundle": false,
-  "_integrity": "sha1-PAQ0dD35Pi9cQq7nsZvLSDV19OE=",
+  "_integrity": "sha512-I5YLeauH3rIaE99EE++UeH2M2gSYo8/2TqDac7oZEH6D/DSQ4Woa628Qrfj1X9/OY5Mk5VvIDQaKCDchXaKrmA==",
   "_location": "/json3",
   "_phantomChildren": {},
   "_requested": {
@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/json3/-/json3-3.3.2.tgz",
   "_shasum": "3c0434743df93e2f5c42aee7b19bcb483575f4e1",
   "_spec": "json3@3.3.2",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy/node_modules/mocha",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy/node_modules/mocha",
   "author": {
     "name": "Kit Cambridge",
     "email": "github@kitcambridge.be",
@@ -53,7 +53,7 @@
       "url": "https://github.com/rma4ok"
     }
   ],
-  "deprecated": false,
+  "deprecated": "Please use the native JSON object instead of JSON 3",
   "description": "A modern JSON implementation compatible with nearly all JavaScript platforms.",
   "files": [
     "README.md",

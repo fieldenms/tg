@@ -2,7 +2,7 @@
   "_from": "samsam@1.1.2",
   "_id": "samsam@1.1.2",
   "_inBundle": false,
-  "_integrity": "sha1-vsEf3IOp/aBjQBIQ5AF2wwJNFWc=",
+  "_integrity": "sha512-iVL7LibpM3tl4rQPweOXXrmjGegxx27flTOjQEZD3PXe4oZNFzuz6Si4mgleK/JWU/hyCvtV01RUovjvBEpDmw==",
   "_location": "/samsam",
   "_phantomChildren": {},
   "_requested": {
@@ -22,7 +22,7 @@
   "_resolved": "https://registry.npmjs.org/samsam/-/samsam-1.1.2.tgz",
   "_shasum": "bec11fdc83a9fda063401210e40176c3024d1567",
   "_spec": "samsam@1.1.2",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/sinon",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/sinon",
   "author": {
     "name": "Christian Johansen"
   },

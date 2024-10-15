@@ -1,27 +1,29 @@
 {
-  "_from": "get-func-name@^2.0.0",
-  "_id": "get-func-name@2.0.0",
+  "_from": "get-func-name@^2.0.2",
+  "_id": "get-func-name@2.0.2",
   "_inBundle": false,
-  "_integrity": "sha1-6td0q+5y4gQJQzoGY2YCPdaIekE=",
+  "_integrity": "sha512-8vXOvuE167CtIc3OyItco7N/dpRtBbYOsPsXCz7X/PMnlGjYjSGuZJgM1Y7mmew7BKf9BqvLX2tnOVy1BBUsxQ==",
   "_location": "/get-func-name",
   "_phantomChildren": {},
   "_requested": {
     "type": "range",
     "registry": true,
-    "raw": "get-func-name@^2.0.0",
+    "raw": "get-func-name@^2.0.2",
     "name": "get-func-name",
     "escapedName": "get-func-name",
-    "rawSpec": "^2.0.0",
+    "rawSpec": "^2.0.2",
     "saveSpec": null,
-    "fetchSpec": "^2.0.0"
+    "fetchSpec": "^2.0.2"
   },
   "_requiredBy": [
-    "/chai"
+    "/chai",
+    "/check-error",
+    "/loupe"
   ],
-  "_resolved": "https://registry.npmjs.org/get-func-name/-/get-func-name-2.0.0.tgz",
-  "_shasum": "ead774abee72e20409433a066366023dd6887a41",
-  "_spec": "get-func-name@^2.0.0",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/chai",
+  "_resolved": "https://registry.npmjs.org/get-func-name/-/get-func-name-2.0.2.tgz",
+  "_shasum": "0d7cf20cd13fda808669ffa88f4ffc7a3943fc41",
+  "_spec": "get-func-name@^2.0.2",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/chai",
   "author": {
     "name": "Jake Luer",
     "email": "jake@alogicalparadox.com",
@@ -129,5 +131,5 @@
     "test:node": "istanbul cover _mocha",
     "upload-coverage": "lcov-result-merger 'coverage/**/lcov.info' | coveralls; exit 0"
   },
-  "version": "2.0.0"
+  "version": "2.0.2"
 }

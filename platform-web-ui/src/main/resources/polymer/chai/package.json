@@ -1,8 +1,8 @@
 {
   "_from": "chai@^4.2.0",
-  "_id": "chai@4.2.0",
+  "_id": "chai@4.5.0",
   "_inBundle": false,
-  "_integrity": "sha512-XQU3bhBukrOsQCuwZndwGcCVQHyZi53fQ6Ys1Fym7E4olpIqqZZhhoFJoaKVvV17lWQoXYwgWN2nF5crA8J2jw==",
+  "_integrity": "sha512-RITGBfijLkBddZvnn8jdqoTypxvqbOLYQkGGxXzeFjVHvudaPw0HNFD9x928/eUwYWd2dPCugVqspGALTZZQKw==",
   "_location": "/chai",
   "_phantomChildren": {},
   "_requested": {
@@ -18,10 +18,10 @@
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/chai/-/chai-4.2.0.tgz",
-  "_shasum": "760aa72cf20e3795e84b12877ce0e83737aa29e5",
+  "_resolved": "https://registry.npmjs.org/chai/-/chai-4.5.0.tgz",
+  "_shasum": "707e49923afdd9b13a8b0b47d33d732d13812fd8",
   "_spec": "chai@^4.2.0",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
   "author": {
     "name": "Jake Luer",
     "email": "jake@alogicalparadox.com"
@@ -51,28 +51,36 @@
   ],
   "dependencies": {
     "assertion-error": "^1.1.0",
-    "check-error": "^1.0.2",
-    "deep-eql": "^3.0.1",
-    "get-func-name": "^2.0.0",
-    "pathval": "^1.1.0",
-    "type-detect": "^4.0.5"
+    "check-error": "^1.0.3",
+    "deep-eql": "^4.1.3",
+    "get-func-name": "^2.0.2",
+    "loupe": "^2.3.6",
+    "pathval": "^1.1.1",
+    "type-detect": "^4.1.0"
   },
   "deprecated": false,
   "description": "BDD/TDD assertion library for node.js and the browser. Test framework agnostic.",
   "devDependencies": {
-    "browserify": "^16.0.0",
-    "bump-cli": "^1.1.3",
-    "codecov": "^3.0.0",
-    "istanbul": "^0.4.3",
-    "karma": "^2.0.0",
-    "karma-firefox-launcher": "^1.0.0",
-    "karma-mocha": "^1.0.1",
-    "karma-phantomjs-launcher": "^1.0.0",
-    "karma-sauce-launcher": "^1.2.0",
-    "mocha": "^5.0.0"
+    "browserify": "^16.5.2",
+    "bump-cli": "^2.7.1",
+    "codecov": "^3.8.3",
+    "istanbul": "^0.4.5",
+    "karma": "^6.4.2",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-firefox-launcher": "^1.3.0",
+    "karma-mocha": "^2.0.1",
+    "karma-sauce-launcher": "^4.1.4",
+    "mocha": "^10.2.0"
   },
   "engines": {
     "node": ">=4"
+  },
+  "exports": {
+    ".": {
+      "require": "./index.js",
+      "import": "./index.mjs"
+    },
+    "./*": "./*"
   },
   "homepage": "http://chaijs.com",
   "keywords": [
@@ -92,5 +100,5 @@
   "scripts": {
     "test": "make test"
   },
-  "version": "4.2.0"
+  "version": "4.5.0"
 }

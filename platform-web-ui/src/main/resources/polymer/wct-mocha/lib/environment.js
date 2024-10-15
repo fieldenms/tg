@@ -13,6 +13,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var config = require("./config.js");
 var reporters = require("./reporters.js");
 var util = require("./util.js");
+var policy = {
+    createHTML: function (v) {
+        return v;
+    }
+};
+if (window.trustedTypes) {
+    policy = window.trustedTypes.createPolicy('wct-mocha-init', policy);
+}
 /**
  * Loads all environment scripts ...synchronously ...after us.
  */
@@ -32,7 +40,7 @@ function loadSync() {
         var url = util.expandUrl(path, config.get('root'));
         util.debug('Loading environment script:', url);
         // Synchronous load.
-        document.write("<script src=\"" + encodeURI(url) + "\"></script>");
+        document.write(policy.createHTML("<script src=\"" + encodeURI(url) + "\"></script>"));
     });
     util.debug('Environment scripts loaded');
     var imports = config.get('environmentImports');
@@ -40,7 +48,7 @@ function loadSync() {
         var url = util.expandUrl(path, config.get('root'));
         util.debug('Loading environment import:', url);
         // Synchronous load.
-        document.write("<link rel=\"import\" href=\"" + encodeURI(url) + "\">");
+        document.write(policy.createHTML("<link rel=\"import\" href=\"" + encodeURI(url) + "\">"));
     });
     util.debug('Environment imports loaded');
 }

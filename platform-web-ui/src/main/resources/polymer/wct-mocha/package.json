@@ -1,8 +1,8 @@
 {
   "_from": "wct-mocha@^1.0.0-pre.3",
-  "_id": "wct-mocha@1.0.0",
+  "_id": "wct-mocha@1.1.0",
   "_inBundle": false,
-  "_integrity": "sha512-rvDjW4kJMV8/lpihKMDHMZwycT5ALtoLni/Q0Ggdg1rPRpIW5pjoslSR/UIl2gWRMYqAs9nFRVYxASwEYG6brA==",
+  "_integrity": "sha512-Wq7xtXFtsCs4bZxjjgRp1PKV3sx7NrSl1JqEVI4zF0/yavlYa9hRMO/+73u1ZScnHc5kIKNPT3KBsoCaQI3+MQ==",
   "_location": "/wct-mocha",
   "_phantomChildren": {},
   "_requested": {
@@ -18,10 +18,10 @@
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/wct-mocha/-/wct-mocha-1.0.0.tgz",
-  "_shasum": "2e83938572cb854740773cf1dc21f25358446c62",
+  "_resolved": "https://registry.npmjs.org/wct-mocha/-/wct-mocha-1.1.0.tgz",
+  "_shasum": "a03747162aa7c35e41e4659a9b09db10648d1889",
   "_spec": "wct-mocha@^1.0.0-pre.3",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
   "author": {
     "name": "The Polymer Project Authors"
   },
@@ -33,7 +33,8 @@
   "deprecated": false,
   "description": "Client-side library for testing web-components with Mocha.",
   "devDependencies": {
-    "@types/socket.io": "^1.4.36"
+    "@types/socket.io": "^1.4.36",
+    "@types/trusted-types": "^1.0.4"
   },
   "files": [
     "wct-mocha.js",
@@ -67,5 +68,5 @@
     "test": "npm run test:integration",
     "test:integration": "cd test && npm run test:wct"
   },
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

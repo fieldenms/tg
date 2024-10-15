@@ -663,7 +663,6 @@
             listener = _a.listener;
         return target.removeEventListener(type, listener);
       });
-      delete ChildRunner.byUrl[this.url];
     };
     /**
      * @return {ChildRunner} The `ChildRunner` that was registered for this
@@ -729,7 +728,6 @@
 
       var url = this.url = iframe.src;
       container.appendChild(iframe);
-      this.url = url;
       ChildRunner.byUrl[url] = this;
       this.timeoutId = setTimeout(function () {
         return _this.loaded(new Error('Timed out loading ' + url));

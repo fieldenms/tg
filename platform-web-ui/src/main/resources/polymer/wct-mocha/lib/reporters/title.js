@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
 var util = require("../util.js");
+var stats_collector_js_1 = require("./stats-collector.js");
 var ARC_OFFSET = 0; // start at the right.
 var ARC_WIDTH = 6;
 /**
@@ -21,6 +22,12 @@ var ARC_WIDTH = 6;
  */
 var Title = /** @class */ (function () {
     function Title(runner) {
+        // Mocha 6 runner doesn't have stats at this point so we need to use
+        // the stats-collector from Mocha to add them before calling the base
+        // reporter.
+        if (!runner.stats) {
+            stats_collector_js_1.createStatsCollector(runner);
+        }
         Mocha.reporters.Base.call(this, runner);
         runner.on('test end', this.report.bind(this));
     }

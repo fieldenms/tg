@@ -2,7 +2,7 @@
   "_from": "async@^1.5.2",
   "_id": "async@1.5.2",
   "_inBundle": false,
-  "_integrity": "sha1-7GphrlZIDAw8skHJVhjiCJL5Zyo=",
+  "_integrity": "sha512-nSVgobk4rv61R9PUSDtYt7mPVB2olxNR5RWJcAsH676/ef11bUZwvu7+RGYrYauVdDPcO519v68wRhXQtxsV9w==",
   "_location": "/async",
   "_phantomChildren": {},
   "_requested": {
@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/async/-/async-1.5.2.tgz",
   "_shasum": "ec6a61ae56480c0c3cb241c95618e20892f9672a",
   "_spec": "async@^1.5.2",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
   "author": {
     "name": "Caolan McMahon"
   },

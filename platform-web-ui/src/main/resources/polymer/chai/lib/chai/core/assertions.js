@@ -34,6 +34,7 @@ module.exports = function (chai, _) {
    * - but
    * - does
    * - still
+   * - also
    *
    * @name language chains
    * @namespace BDD
@@ -43,7 +44,7 @@ module.exports = function (chai, _) {
   [ 'to', 'be', 'been', 'is'
   , 'and', 'has', 'have', 'with'
   , 'that', 'which', 'at', 'of'
-  , 'same', 'but', 'does', 'still' ].forEach(function (chain) {
+  , 'same', 'but', 'does', 'still', "also" ].forEach(function (chain) {
     Assertion.addProperty(chain);
   });
 
@@ -477,7 +478,8 @@ module.exports = function (chai, _) {
       , negate = flag(this, 'negate')
       , ssfi = flag(this, 'ssfi')
       , isDeep = flag(this, 'deep')
-      , descriptor = isDeep ? 'deep ' : '';
+      , descriptor = isDeep ? 'deep ' : ''
+      , isEql = isDeep ? flag(this, 'eql') : SameValueZero;
 
     flagMsg = flagMsg ? flagMsg + ': ' : '';
 
@@ -501,7 +503,6 @@ module.exports = function (chai, _) {
         break;
 
       case 'map':
-        var isEql = isDeep ? _.eql : SameValueZero;
         obj.forEach(function (item) {
           included = included || isEql(item, val);
         });
@@ -510,7 +511,7 @@ module.exports = function (chai, _) {
       case 'set':
         if (isDeep) {
           obj.forEach(function (item) {
-            included = included || _.eql(item, val);
+            included = included || isEql(item, val);
           });
         } else {
           included = obj.has(val);
@@ -520,7 +521,7 @@ module.exports = function (chai, _) {
       case 'array':
         if (isDeep) {
           included = obj.some(function (item) {
-            return _.eql(item, val);
+            return isEql(item, val);
           })
         } else {
           included = obj.indexOf(val) !== -1;
@@ -533,8 +534,13 @@ module.exports = function (chai, _) {
         // objects with a custom `@@toStringTag`.
         if (val !== Object(val)) {
           throw new AssertionError(
-            flagMsg + 'object tested must be an array, a map, an object,'
-              + ' a set, a string, or a weakset, but ' + objType + ' given',
+            flagMsg + 'the given combination of arguments ('
+            + objType + ' and '
+            + _.type(val).toLowerCase() + ')'
+            + ' is invalid for this assertion. '
+            + 'You can use an array, a map, an object, a set, a string, '
+            + 'or a weakset instead of a '
+            + _.type(val).toLowerCase(),
             undefined,
             ssfi
           );
@@ -818,19 +824,25 @@ module.exports = function (chai, _) {
    *
    *     expect(null, 'nooo why fail??').to.exist;
    *
+   * The alias `.exists` can be used interchangeably with `.exist`.
+   *
    * @name exist
+   * @alias exists
    * @namespace BDD
    * @api public
    */
 
-  Assertion.addProperty('exist', function () {
+  function assertExist () {
     var val = flag(this, 'object');
     this.assert(
         val !== null && val !== undefined
       , 'expected #{this} to exist'
       , 'expected #{this} to not exist'
     );
-  });
+  }
+
+  Assertion.addProperty('exist', assertExist);
+  Assertion.addProperty('exists', assertExist);
 
   /**
    * ### .empty
@@ -939,7 +951,7 @@ module.exports = function (chai, _) {
    *
    * Add `.not` earlier in the chain to negate `.arguments`. However, it's often
    * best to assert which type the target is expected to be, rather than
-   * asserting that its not an `arguments` object.
+   * asserting that it’s not an `arguments` object.
    *
    *     expect('foo').to.be.a('string'); // Recommended
    *     expect('foo').to.not.be.arguments; // Not recommended
@@ -1081,8 +1093,9 @@ module.exports = function (chai, _) {
 
   function assertEql(obj, msg) {
     if (msg) flag(this, 'message', msg);
+    var eql = flag(this, 'eql');
     this.assert(
-        _.eql(obj, flag(this, 'object'))
+        eql(obj, flag(this, 'object'))
       , 'expected #{this} to deeply equal #{exp}'
       , 'expected #{this} to not deeply equal #{exp}'
       , obj
@@ -1230,10 +1243,12 @@ module.exports = function (chai, _) {
    *     expect(1).to.be.at.least(2, 'nooo why fail??');
    *     expect(1, 'nooo why fail??').to.be.at.least(2);
    *
-   * The alias `.gte` can be used interchangeably with `.least`.
+   * The aliases `.gte` and `.greaterThanOrEqual` can be used interchangeably with
+   * `.least`.
    *
    * @name least
    * @alias gte
+   * @alias greaterThanOrEqual
    * @param {Number} n
    * @param {String} msg _optional_
    * @namespace BDD
@@ -1299,6 +1314,7 @@ module.exports = function (chai, _) {
 
   Assertion.addMethod('least', assertLeast);
   Assertion.addMethod('gte', assertLeast);
+  Assertion.addMethod('greaterThanOrEqual', assertLeast);
 
   /**
    * ### .below(n[, msg])
@@ -1436,10 +1452,12 @@ module.exports = function (chai, _) {
    *     expect(2).to.be.at.most(1, 'nooo why fail??');
    *     expect(2, 'nooo why fail??').to.be.at.most(1);
    *
-   * The alias `.lte` can be used interchangeably with `.most`.
+   * The aliases `.lte` and `.lessThanOrEqual` can be used interchangeably with
+   * `.most`.
    *
    * @name most
    * @alias lte
+   * @alias lessThanOrEqual
    * @param {Number} n
    * @param {String} msg _optional_
    * @namespace BDD
@@ -1505,6 +1523,7 @@ module.exports = function (chai, _) {
 
   Assertion.addMethod('most', assertMost);
   Assertion.addMethod('lte', assertMost);
+  Assertion.addMethod('lessThanOrEqual', assertMost);
 
   /**
    * ### .within(start, finish[, msg])
@@ -1562,7 +1581,7 @@ module.exports = function (chai, _) {
       , errorMessage
       , shouldThrow = true
       , range = (startType === 'date' && finishType === 'date')
-          ? start.toUTCString() + '..' + finish.toUTCString()
+          ? start.toISOString() + '..' + finish.toISOString()
           : start + '..' + finish;
 
     if (doLength && objType !== 'map' && objType !== 'set') {
@@ -1844,7 +1863,8 @@ module.exports = function (chai, _) {
     var isDeep = flag(this, 'deep')
       , negate = flag(this, 'negate')
       , pathInfo = isNested ? _.getPathInfo(obj, name) : null
-      , value = isNested ? pathInfo.value : obj[name];
+      , value = isNested ? pathInfo.value : obj[name]
+      , isEql = isDeep ? flag(this, 'eql') : (val1, val2) => val1 === val2;;
 
     var descriptor = '';
     if (isDeep) descriptor += 'deep ';
@@ -1871,7 +1891,7 @@ module.exports = function (chai, _) {
 
     if (arguments.length > 1) {
       this.assert(
-          hasProperty && (isDeep ? _.eql(val, value) : val === value)
+          hasProperty && isEql(val, value)
         , 'expected #{this} to have ' + descriptor + _.inspect(name) + ' of #{exp}, but got #{act}'
         , 'expected #{this} to not have ' + descriptor + _.inspect(name) + ' of #{act}'
         , val
@@ -1921,7 +1941,7 @@ module.exports = function (chai, _) {
    * a `descriptor`. The problem is that it creates uncertain expectations by
    * asserting that the target either doesn't have a property descriptor with
    * the given key `name`, or that it does have a property descriptor with the
-   * given key `name` but its not deeply equal to the given `descriptor`. It's
+   * given key `name` but it’s not deeply equal to the given `descriptor`. It's
    * often best to identify the exact output that's expected, and then write an
    * assertion that only accepts that exact output.
    *
@@ -2019,9 +2039,10 @@ module.exports = function (chai, _) {
     if (msg) flag(this, 'message', msg);
     var obj = flag(this, 'object');
     var actualDescriptor = Object.getOwnPropertyDescriptor(Object(obj), name);
+    var eql = flag(this, 'eql');
     if (actualDescriptor && descriptor) {
       this.assert(
-          _.eql(descriptor, actualDescriptor)
+          eql(descriptor, actualDescriptor)
         , 'expected the own property descriptor for ' + _.inspect(name) + ' on #{this} to match ' + _.inspect(descriptor) + ', got ' + _.inspect(actualDescriptor)
         , 'expected the own property descriptor for ' + _.inspect(name) + ' on #{this} to not match ' + _.inspect(descriptor)
         , descriptor
@@ -2375,7 +2396,8 @@ module.exports = function (chai, _) {
     var len = keys.length
       , any = flag(this, 'any')
       , all = flag(this, 'all')
-      , expected = keys;
+      , expected = keys
+      , isEql = isDeep ? flag(this, 'eql') : (val1, val2) => val1 === val2;
 
     if (!any && !all) {
       all = true;
@@ -2385,11 +2407,7 @@ module.exports = function (chai, _) {
     if (any) {
       ok = expected.some(function(expectedKey) {
         return actual.some(function(actualKey) {
-          if (isDeep) {
-            return _.eql(expectedKey, actualKey);
-          } else {
-            return expectedKey === actualKey;
-          }
+          return isEql(expectedKey, actualKey);
         });
       });
     }
@@ -2398,11 +2416,7 @@ module.exports = function (chai, _) {
     if (all) {
       ok = expected.every(function(expectedKey) {
         return actual.some(function(actualKey) {
-          if (isDeep) {
-            return _.eql(expectedKey, actualKey);
-          } else {
-            return expectedKey === actualKey;
-          }
+          return isEql(expectedKey, actualKey);
         });
       });
 
@@ -2950,8 +2964,9 @@ module.exports = function (chai, _) {
     new Assertion(obj, flagMsg, ssfi, true).is.a('number');
     if (typeof expected !== 'number' || typeof delta !== 'number') {
       flagMsg = flagMsg ? flagMsg + ': ' : '';
+      var deltaMessage = delta === undefined ? ", and a delta is required" : "";
       throw new AssertionError(
-          flagMsg + 'the arguments to closeTo or approximately must be numbers',
+          flagMsg + 'the arguments to closeTo or approximately must be numbers' + deltaMessage,
           undefined,
           ssfi
       );
@@ -3089,7 +3104,7 @@ module.exports = function (chai, _) {
       failNegateMsg = 'expected #{this} to not have the same ' + subject + ' as #{exp}';
     }
 
-    var cmp = flag(this, 'deep') ? _.eql : undefined;
+    var cmp = flag(this, 'deep') ? flag(this, 'eql') : undefined;
 
     this.assert(
         isSubsetOf(subset, obj, cmp, contains, ordered)
@@ -3117,6 +3132,14 @@ module.exports = function (chai, _) {
    *     expect(1).to.equal(1); // Recommended
    *     expect(1).to.not.be.oneOf([2, 3, 4]); // Not recommended
    *
+   * It can also be chained with `.contain` or `.include`, which will work with
+   * both arrays and strings:
+   *
+   *     expect('Today is sunny').to.contain.oneOf(['sunny', 'cloudy'])
+   *     expect('Today is rainy').to.not.contain.oneOf(['sunny', 'cloudy'])
+   *     expect([1,2,3]).to.contain.oneOf([3,4,5])
+   *     expect([1,2,3]).to.not.contain.oneOf([4,5,6])
+   *
    * `.oneOf` accepts an optional `msg` argument which is a custom error message
    * to show when the assertion fails. The message can also be given as the
    * second argument to `expect`.
@@ -3135,16 +3158,39 @@ module.exports = function (chai, _) {
     if (msg) flag(this, 'message', msg);
     var expected = flag(this, 'object')
       , flagMsg = flag(this, 'message')
-      , ssfi = flag(this, 'ssfi');
+      , ssfi = flag(this, 'ssfi')
+      , contains = flag(this, 'contains')
+      , isDeep = flag(this, 'deep')
+      , eql = flag(this, 'eql');
     new Assertion(list, flagMsg, ssfi, true).to.be.an('array');
 
-    this.assert(
-        list.indexOf(expected) > -1
-      , 'expected #{this} to be one of #{exp}'
-      , 'expected #{this} to not be one of #{exp}'
-      , list
-      , expected
-    );
+    if (contains) {
+      this.assert(
+        list.some(function(possibility) { return expected.indexOf(possibility) > -1 })
+        , 'expected #{this} to contain one of #{exp}'
+        , 'expected #{this} to not contain one of #{exp}'
+        , list
+        , expected
+      );
+    } else {
+      if (isDeep) {
+        this.assert(
+          list.some(function(possibility) { return eql(expected, possibility) })
+          , 'expected #{this} to deeply equal one of #{exp}'
+          , 'expected #{this} to deeply equal one of #{exp}'
+          , list
+          , expected
+        );
+      } else {
+        this.assert(
+          list.indexOf(expected) > -1
+          , 'expected #{this} to be one of #{exp}'
+          , 'expected #{this} to not be one of #{exp}'
+          , list
+          , expected
+        );
+      }
+    }
   }
 
   Assertion.addMethod('oneOf', oneOf);

@@ -2,7 +2,7 @@
   "_from": "sinon@^1.17.1",
   "_id": "sinon@1.17.7",
   "_inBundle": false,
-  "_integrity": "sha1-RUKk9JugxFwF6y6d2dID4rjv4L8=",
+  "_integrity": "sha512-M9rtyQxKfcTTdB64rpPSRaTzOvunb+HHPv/3PxvNPrEDnFSny95Pi6/3VoD471ody0ay0IHyzT3BErfcLXj6NA==",
   "_location": "/sinon",
   "_phantomChildren": {},
   "_requested": {
@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/sinon/-/sinon-1.17.7.tgz",
   "_shasum": "4542a4f49ba0c45c05eb2e9dd9d203e2b8efe0bf",
   "_spec": "sinon@^1.17.1",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
   "author": {
     "name": "Christian Johansen"
   },
@@ -677,7 +677,7 @@
     "samsam": "1.1.2",
     "util": ">=0.10.3 <1"
   },
-  "deprecated": false,
+  "deprecated": "16.1.1",
   "description": "JavaScript test spies, stubs and mocks.",
   "devDependencies": {
     "buster": "0.7.18",

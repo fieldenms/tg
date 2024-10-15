@@ -19,7 +19,7 @@ import { default as ChildRunner, SharedState } from './childrunner.js';
 import { Config } from './config.js';
 import MultiReporter from './reporters/multi.js';
 import * as suites from './suites.js';
-type loadSuitesType = (typeof suites.loadSuites);
+declare type loadSuitesType = (typeof suites.loadSuites);
 declare global {
     interface Window {
         __wctUseNpm?: boolean;

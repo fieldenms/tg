@@ -2,7 +2,7 @@
   "_from": "lodash.isarray@^3.0.0",
   "_id": "lodash.isarray@3.0.4",
   "_inBundle": false,
-  "_integrity": "sha1-eeTriMNqgSKvhvhEqpvNhRtfu1U=",
+  "_integrity": "sha512-JwObCrNJuT0Nnbuecmqr5DgtuBppuCvGD9lxjFpAzwnVtdGoDQ1zig+5W8k5/6Gcn0gZ3936HDAlGd28i7sOGQ==",
   "_location": "/lodash.isarray",
   "_phantomChildren": {},
   "_requested": {
@@ -21,7 +21,7 @@
   "_resolved": "https://registry.npmjs.org/lodash.isarray/-/lodash.isarray-3.0.4.tgz",
   "_shasum": "79e4eb88c36a8122af86f844aa9bcd851b5fbb55",
   "_spec": "lodash.isarray@^3.0.0",
-  "_where": "/home/oleh/workspace/tg/platform-web-ui/src/main/resources/node_modules/lodash.keys",
+  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/lodash.keys",
   "author": {
     "name": "John-David Dalton",
     "email": "john.david.dalton@gmail.com",
