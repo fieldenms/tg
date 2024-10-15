@@ -235,6 +235,12 @@ function rgbToHex(rgbString) {
         .join("");
 }
 
+function preventListIdentation(event) {
+    if (event.keyCode === 9 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) {
+        event.preventDefault();
+    }
+}
+
 const template = html`
     <style include='rich-text-enhanced-styles'>
         ::selection {
@@ -327,14 +333,16 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._getEditableContent().addEventListener("mouseup", mouseUpHandler.bind(this));
         this._getEditableContent().addEventListener("touchstart", mouseDownHandler.bind(this));
         this._getEditableContent().addEventListener("touchend", mouseUpHandler.bind(this));
+        //Add key down to prevent tab key on list
+        this._getEditableContent().addEventListener("keydown", preventListIdentation.bind(this), true);
         //Initiate key binding and key event target
         this.addOwnKeyBinding('ctrl+b meta+b', 'applyBold');
         this.addOwnKeyBinding('ctrl+i meta+i', 'applyItalic');
         this.addOwnKeyBinding('ctrl+s meta+s', 'applyStrikethough');
         this.addOwnKeyBinding('ctrl+z meta+z', 'undo');
         this.addOwnKeyBinding('ctrl+y meta+y', 'redo');
-        this.addOwnKeyBinding('tab', 'applyIndent');
-        this.addOwnKeyBinding('shift+tab', 'applyOutdent');
+        this.addOwnKeyBinding('tab', 'stopEvent');
+        this.addOwnKeyBinding('shift+tab', 'stopEvent');
         this.addOwnKeyBinding('ctrl+u meta+u', 'createBulletList');
         this.addOwnKeyBinding('ctrl+o meta+o', 'createOrderedList');
         this.addOwnKeyBinding('esc', 'stopEditing');
@@ -350,6 +358,10 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     scrollIntoView() {
         this._editor.wwEditor.view.dispatch(this._editor.wwEditor.view.state.tr.scrollIntoView());
+    }
+
+    stopEvent(event) {
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     applyHeader1(event) {
@@ -419,16 +431,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }
         this._editor.focus();
         this._editor.setSelection(this._prevSelection[0], this._prevSelection[1]);
-    }
-
-    applyIndent(event) {
-        this._editor.exec('indent');
-        tearDownEvent(event.detail && event.detail.keyboardEvent);
-    }
-
-    applyOutdent(event) {
-        this._editor.exec('outdent');
-        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     createBulletList(event) {

@@ -79,8 +79,6 @@ const customLabelTemplate = html`
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, Meta+Y" on-down="_preventEvent" on-tap="_redo"></iron-icon>
         <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-down="_preventEvent" on-tap="_changeTextColor"></iron-icon>
         <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_preventEvent" on-tap="_toggleLink"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-indent-increase" action-title="Increase Indent" tooltip-text="Move your paragraph further away from the margin, Tab" on-down="_preventEvent" on-tap="_indent"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-indent-decrease" action-title="Decrease Indent" tooltip-text="Move your paragraph closer to the margin, Shift+Tab" on-down="_preventEvent" on-tap="_outdent"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, Meta+U" on-down="_preventEvent" on-tap="_createBulletedList"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Create a numbered list, Ctrl+O, Meta+O" on-down="_preventEvent" on-tap="_createNumberedList"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="tg-rich-text-editor:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_preventEvent" on-tap="_createTaskList"></iron-icon>
@@ -250,14 +248,6 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         this.$.linkDropdown.horizontalOffset =  x - parseInt(this.$.linkDropdown.style.width) / 2;
         this.$.linkDropdown.verticalOffset = y;
         this.$.linkDropdown.open();
-    }
-
-    _indent(e) {
-        this.$.input.applyIndent(e);
-    }
-
-    _outdent(e) {
-        this.$.input.applyOutdent(e);
     }
 
     _createBulletedList(e) {
