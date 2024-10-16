@@ -358,7 +358,10 @@ class ApplyShim {
       }
       let p, parts, f;
       const properties = mixinEntry.properties;
-      for (p in properties) {
+      /*TG #2329*/
+      const keys = Object.keys(properties); let len = keys.length; while (len--) { const p = keys[len];
+      //The following comment out code was replaced to improve performance.
+      //for (p in properties) {
         f = fallbacks && fallbacks[p];
         parts = [p, ': var(', mixinName, MIXIN_VAR_SEP, p];
         if (f) {
@@ -489,7 +492,10 @@ class ApplyShim {
     let p, v;
     // set variables defined by current mixin
     let needToInvalidate = false;
-    for (p in combinedProps) {
+    /*TG #2329*/
+    const keys = Object.keys(combinedProps); let len = keys.length; while (len--) { const p = keys[len];
+    //The following comment out code was replaced to improve performance.
+    //for (p in combinedProps) {
       v = mixinValues[p];
       // if property not defined by current mixin, set initial
       if (v === undefined) {
