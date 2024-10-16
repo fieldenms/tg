@@ -1,43 +1,18 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
-
+import com.google.inject.Injector;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.inject.Injector;
-
-import ua.com.fielden.platform.domaintree.Function;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import ua.com.fielden.platform.domaintree.*;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
-import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
-import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
-import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
-import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
-import ua.com.fielden.platform.domaintree.testing.MasterEntity;
-import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
-import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
+import ua.com.fielden.platform.domaintree.testing.*;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -48,6 +23,12 @@ import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory
 import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * A test for base TG domain tree representation.
@@ -64,7 +45,7 @@ public abstract class AbstractDomainTreeTest {
     private static final String ASSERT_INNER_CROSS_REFERENCES_FOR = "assertInnerCrossReferences_for_";
 
     /** A base types to be checked for its non-emptiness and non-emptiness of their children. */
-    private static final List<Class<?>> DOMAIN_TREE_TYPES = CollectionUtil.listOf(
+    private static final SequencedSet<Class<?>> DOMAIN_TREE_TYPES = CollectionUtil.linkedSetOf(
             AbstractEntity.class,
             ListenedArrayList.class,
             LinkedHashMap.class,
@@ -216,12 +197,12 @@ public abstract class AbstractDomainTreeTest {
         return allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(instance, null);
     }
 
-    private static List<Field> getDomainTreeFields(final Class<?> type) {
-        // A base types to be checked for its non-emptiness and non-emptiness of their children.
-        final List<Class<?>> types = new ArrayList<>(DOMAIN_TREE_TYPES);
-        // A base types to be checked for its non-emptiness.
-        // covered by EnhancementSetAndMaps? types.add(Set.class);
-        // covered by EnhancementSetAndMaps? types.add(Map.class);
+    private static SequencedSet<Field> getDomainTreeFields(final Class<?> type) {
+        // Base types to be checked for its non-emptiness and non-emptiness of their children.
+        final SequencedSet<Class<?>> types = new LinkedHashSet<>(DOMAIN_TREE_TYPES);
+        // Base types to be checked for its non-emptiness.
+        // Covered by EnhancementSetAndMaps? types.add(Set.class);
+        // Covered by EnhancementSetAndMaps? types.add(Map.class);
         types.add(Enum.class); // CalculatedProperty implementation
         types.add(String.class); // CalculatedProperty implementation
         types.add(Class.class); // CalculatedProperty implementation
@@ -235,7 +216,7 @@ public abstract class AbstractDomainTreeTest {
      * @return
      */
     protected final static boolean allDomainTreeFieldsAreInitialisedReferenceDistinctAndEqualToCopy(final Object instance, final Object originalInstance, final String... fieldWhichReferenceShouldNotBeDistictButShouldBeEqual) {
-        final List<Field> fields = getDomainTreeFields(instance.getClass());
+        final SequencedSet<Field> fields = getDomainTreeFields(instance.getClass());
         try {
             for (final Field field : fields) {
                 // System.err.println("Instance = [" + instance + "], field = [" + field + "].");
