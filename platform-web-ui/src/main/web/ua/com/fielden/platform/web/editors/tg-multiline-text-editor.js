@@ -132,6 +132,16 @@ export class TgMultilineTextEditor extends TgEditor {
         suffix.style.alignSelf = "flex-start";
         this.decoratedInput().textarea.addEventListener("change", this._onChange);
         this.decoratedInput().textarea.style.cursor = "text";
+        const _prevValueChanged = this.decoratedInput()._valueChanged.bind(this.decoratedInput());
+        this.decoratedInput()._valueChanged = (newValue, oldValue) => {
+            if (this.decoratedInput().bindValue === newValue) {
+                setTimeout(() => {
+                    this.decoratedInput().selectionStart = this.decoratedInput().selectionEnd = 0;
+                }, 0);
+                
+            }
+            _prevValueChanged(newValue, oldValue);
+        };
     }
 
     _disabledChanged (newValue, oldValue) {
