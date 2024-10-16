@@ -8,7 +8,7 @@ interface PropertyIndexer {
     Index indexFor(final Class<? extends AbstractEntity<?>> entityType);
 
     interface Index {
-        @Nullable MethodHandle getter(final String prop);
+        @Nullable MethodHandle accessor(final String prop);
 
         @Nullable MethodHandle setter(final String prop);
 

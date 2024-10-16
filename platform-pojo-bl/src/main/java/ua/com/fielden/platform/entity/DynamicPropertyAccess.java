@@ -8,7 +8,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 
-import static ua.com.fielden.platform.reflection.Reflector.DOT_SPLITTER_PATTERN;
 import static ua.com.fielden.platform.utils.ArrayUtils.getLast;
 
 /**
@@ -18,7 +17,7 @@ final class DynamicPropertyAccess {
 
     public static final String ERR_PROP_ACCESS_INDEX = "Failed to build an index for entity [%s]";
     public static final String ERR_NO_PROP_SETTER = "Failed to resolve setter for property [%s] in entity [%s]";
-    public static final String ERR_NO_PROP_GETTER = "Failed to resolve property [%s] in entity [%s]";
+    public static final String ERR_NO_PROP_ACCESSOR = "Failed to resolve property [%s] in entity [%s]";
 
     /**
      * Returns the value of the named property in {@code entity}.
@@ -67,12 +66,12 @@ final class DynamicPropertyAccess {
             throw new DynamicPropertyAccessCriticalError(ERR_PROP_ACCESS_INDEX.formatted(entityType.getTypeName()), e);
         }
 
-        final var getter = index.getter(prop);
-        if (getter == null) {
-            throw new EntityException(ERR_NO_PROP_GETTER.formatted(prop, entityType.getTypeName()));
+        final var accessor = index.accessor(prop);
+        if (accessor == null) {
+            throw new EntityException(ERR_NO_PROP_ACCESSOR.formatted(prop, entityType.getTypeName()));
         }
 
-        return getter.invoke(entity);
+        return accessor.invoke(entity);
     }
 
     /**
