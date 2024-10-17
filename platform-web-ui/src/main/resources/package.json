@@ -50,7 +50,7 @@
     "@polymer/paper-toolbar": "^3.0.1",
     "@polymer/paper-tooltip": "^3.0.1",
     "@google-web-components/google-chart": "^3.0.4",
-    "web-animations-js": "^2.3.1",
+    "web-animations-js": "^2.3.2",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "@webcomponents/shadycss": "^1.11.2",
     "@polymer/polymer": "^3.5.2",
