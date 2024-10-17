@@ -73,8 +73,10 @@ public class EnhancingSlaveEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setMasterEntityCollProp(final List<EnhancingMasterEntity> masterEntityCollProp) {
-        this.masterEntityCollProp = masterEntityCollProp;
+    public EnhancingSlaveEntity setMasterEntityCollProp(final List<EnhancingMasterEntity> masterEntityCollProp) {
+        this.masterEntityCollProp.clear();
+        this.masterEntityCollProp.addAll(masterEntityCollProp);
+        return this;
     }
 
     public Set<EnhancingSlaveEntity> getSlaveEntityCollProp() {
@@ -82,8 +84,10 @@ public class EnhancingSlaveEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setSlaveEntityCollProp(final Set<EnhancingSlaveEntity> slaveEntityCollProp) {
-        this.slaveEntityCollProp = slaveEntityCollProp;
+    public EnhancingSlaveEntity setSlaveEntityCollProp(final Set<EnhancingSlaveEntity> slaveEntityCollProp) {
+        this.slaveEntityCollProp.clear();
+        this.slaveEntityCollProp.addAll(slaveEntityCollProp);
+        return this;
     }
 
     public Collection<EnhancingEvenSlaverEntity> getEvenSlaverEntityCollProp() {
@@ -103,4 +107,5 @@ public class EnhancingSlaveEntity extends AbstractEntity<String> {
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
     }
+
 }

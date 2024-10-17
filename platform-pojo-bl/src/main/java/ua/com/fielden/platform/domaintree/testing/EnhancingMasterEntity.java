@@ -12,13 +12,13 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 
 /**
  * Entity for "domain tree enhancing" testing.
- * 
+ *
  * @author TG Team
- * 
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(String.class)
 public class EnhancingMasterEntity extends AbstractEntity<String> {
+
     private static final long serialVersionUID = 1L;
 
     protected EnhancingMasterEntity() {
@@ -71,8 +71,10 @@ public class EnhancingMasterEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setMasterEntityCollProp(final List<EnhancingMasterEntity> masterEntityCollProp) {
-        this.masterEntityCollProp = masterEntityCollProp;
+    public EnhancingMasterEntity setMasterEntityCollProp(final List<EnhancingMasterEntity> masterEntityCollProp) {
+        this.masterEntityCollProp.clear();
+        this.masterEntityCollProp.addAll(masterEntityCollProp);
+        return this;
     }
 
     public Set<EnhancingSlaveEntity> getSlaveEntityCollProp() {
@@ -80,8 +82,10 @@ public class EnhancingMasterEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setSlaveEntityCollProp(final Set<EnhancingSlaveEntity> slaveEntityCollProp) {
-        this.slaveEntityCollProp = slaveEntityCollProp;
+    public EnhancingMasterEntity setSlaveEntityCollProp(final Set<EnhancingSlaveEntity> slaveEntityCollProp) {
+        this.slaveEntityCollProp.clear();
+        this.slaveEntityCollProp.addAll(slaveEntityCollProp);
+        return this;
     }
 
     public Collection<EnhancingEvenSlaverEntity> getEvenSlaverEntityCollProp() {
@@ -101,4 +105,5 @@ public class EnhancingMasterEntity extends AbstractEntity<String> {
     public void setIntegerProp(final Integer integerProp) {
         this.integerProp = integerProp;
     }
+
 }

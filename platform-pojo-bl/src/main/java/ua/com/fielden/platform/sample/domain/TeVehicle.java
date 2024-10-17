@@ -493,8 +493,10 @@ public class TeVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setFuelUsages(final Set<TeVehicleFuelUsage> fuelUsages) {
-        this.fuelUsages = fuelUsages;
+    public TeVehicle setFuelUsages(final Set<TeVehicleFuelUsage> fuelUsages) {
+        this.fuelUsages.clear();
+        this.fuelUsages.addAll(fuelUsages);
+        return this;
     }
 
     public Set<TeVehicleFuelUsage> getFuelUsages() {
@@ -824,4 +826,5 @@ public class TeVehicle extends AbstractEntity<String> {
     public TeVehicleMake getMake() {
         return make;
     }
+
 }

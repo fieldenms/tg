@@ -2,7 +2,6 @@ package ua.com.fielden.platform.domaintree.testing;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -20,6 +19,8 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.types.Money;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Entity for "domain tree representation" testing.
@@ -358,7 +359,7 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     public List<ShortEvenSlaverEntity> getShortCollection() {
-        return Collections.unmodifiableList(shortCollection);
+        return unmodifiableList(shortCollection);
     }
 
     @Observable
@@ -373,8 +374,10 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public void setCollection(final List<EvenSlaverEntity> collection) {
-        this.collection = collection;
+    public EvenSlaverEntity setCollection(final List<EvenSlaverEntity> collection) {
+        this.collection.clear();
+        this.collection.addAll(collection);
+        return this;
     }
 
     public EntityWithStringKeyType getSimpleEntityProp() {
@@ -493,4 +496,5 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     public SlaveEntity getSlaveEntityLinkProp() {
         return slaveEntityLinkProp;
     }
+
 }

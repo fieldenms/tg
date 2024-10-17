@@ -293,8 +293,10 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setFuelUsages(final Set<TgFuelUsage> fuelUsages) {
-        this.fuelUsages = fuelUsages;
+    public TgVehicle setFuelUsages(final Set<TgFuelUsage> fuelUsages) {
+        this.fuelUsages.clear();
+        this.fuelUsages.addAll(fuelUsages);
+        return this;
     }
 
     public Set<TgFuelUsage> getFuelUsages() {
@@ -302,8 +304,10 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setVehicleFuelUsages(final Set<TgVehicleFuelUsage> vehicleFuelUsages) {
-        this.vehicleFuelUsages = vehicleFuelUsages;
+    public TgVehicle setVehicleFuelUsages(final Set<TgVehicleFuelUsage> vehicleFuelUsages) {
+        this.vehicleFuelUsages.clear();
+        this.vehicleFuelUsages.addAll(vehicleFuelUsages);
+        return this;
     }
 
     public Set<TgVehicleFuelUsage> getVehicleFuelUsages() {

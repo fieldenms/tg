@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 @MapEntityTo
 @CompanionObject(ITgWagon.class)
 public class TgWagon extends AbstractEntity<String> {
+
     private static final long serialVersionUID = 1L;
 
     @IsProperty
@@ -40,7 +41,7 @@ public class TgWagon extends AbstractEntity<String> {
 
     @IsProperty(value = TgWagonSlot.class, linkProperty = "wagon")
     @Title(value = "Wagon slots", desc = "A list of slots for the wagon")
-    private SortedSet<TgWagonSlot> slots = new TreeSet<TgWagonSlot>();  
+    private final SortedSet<TgWagonSlot> slots = new TreeSet<TgWagonSlot>();
 
     @IsProperty
     @Readonly
@@ -59,11 +60,7 @@ public class TgWagon extends AbstractEntity<String> {
         return firstSlot;
     }
 
-    
 
-    
-
-    
     protected TgWagon() {
     }
 
@@ -96,7 +93,10 @@ public class TgWagon extends AbstractEntity<String> {
     }
 
     @Observable
-    protected void setSlots(final SortedSet<TgWagonSlot> slots) {
-        this.slots = slots;
+    protected TgWagon setSlots(final SortedSet<TgWagonSlot> slots) {
+        this.slots.clear();
+        this.slots.addAll(slots);
+        return this;
     }
+
 }
