@@ -51,25 +51,20 @@ final class EntityFetcher implements IEntityFetcher {
     public <E extends AbstractEntity<?>> List<E>
     getEntitiesOnPage(final Session session, final QueryExecutionModel<E, ?> queryModel,
                       final Integer pageNumber, final Integer pageCapacity) {
-        try {
-            final DateTime st = new DateTime();
-            final List<EntityContainer<E>> containers = getContainers(session, queryModel, pageNumber, pageCapacity);
-            
-            if (!queryModel.isLightweight()) {
-                setContainersToBeInstrumented(containers);
-            }
+        final DateTime st = new DateTime();
+        final List<EntityContainer<E>> containers = getContainers(session, queryModel, pageNumber, pageCapacity);
 
-            final List<E> result = instantiateFromContainers(containers);
-            final Period pd = new Period(st, new DateTime());
-
-            final String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
-            LOGGER.debug(format("Duration: %s m %s s %s ms. Entities (%s) count: %s.", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName, result.size()));
-
-            return result;
-        } catch (final Exception e) {
-            LOGGER.error(e);
-            throw new IllegalStateException(e);
+        if (!queryModel.isLightweight()) {
+            setContainersToBeInstrumented(containers);
         }
+
+        final List<E> result = instantiateFromContainers(containers);
+        final Period pd = new Period(st, new DateTime());
+
+        final String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
+        LOGGER.debug(format("Duration: %s m %s s %s ms. Entities (%s) count: %s.", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName, result.size()));
+
+        return result;
     }
     
     private <E extends AbstractEntity<?>> List<EntityContainer<E>>

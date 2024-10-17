@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.jsoup;
+package ua.com.fielden.platform.text.jsoup;
 
 import org.jsoup.nodes.Node;
 

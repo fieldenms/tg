@@ -116,6 +116,7 @@ public class MappingGenerationTest {
 \t\t<column name="_VERSION" default="0" />
 \t</version>
 \t<property name="key" column="KEY_" type="org.hibernate.type.StringType"/>
+\t<property name="plainText" column="PLAINTEXT_" type="org.hibernate.type.StringType"/>
 \t<property name="text" type="ua.com.fielden.platform.types.RichTextType">
 \t\t<column name="TEXT_FORMATTEDTEXT"/>
 \t\t<column name="TEXT_CORETEXT"/>

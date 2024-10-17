@@ -17,8 +17,8 @@ public class RichTextJsonDeserialiser extends StdDeserializer<RichText> {
     @Override
     public RichText deserialize(final JsonParser parser, final DeserializationContext ctx) throws IOException {
         final JsonNode node = parser.readValueAsTree();
-        final var formattedTextNode = requireField(node, RichText._formattedText);
-        final var coreTextNode = requireField(node, RichText._coreText);
+        final var formattedTextNode = requireField(node, RichText.FORMATTED_TEXT);
+        final var coreTextNode = requireField(node, RichText.CORE_TEXT);
 
         // if all components are null, treat the whole as null
         if (formattedTextNode.isNull() && coreTextNode.isNull()) {

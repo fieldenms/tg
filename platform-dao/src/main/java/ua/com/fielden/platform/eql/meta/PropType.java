@@ -21,6 +21,7 @@ public final class PropType {
     public final static PropType INTEGER_PROP_TYPE = new PropType(Integer.class, H_INTEGER);
     public final static PropType INT_PROP_TYPE = new PropType(int.class, H_INTEGER);
     public final static PropType STRING_PROP_TYPE = new PropType(String.class, H_STRING);
+    public final static PropType NSTRING_PROP_TYPE = new PropType(String.class, H_NSTRING);
     public final static PropType DATE_PROP_TYPE = new PropType(Date.class, H_DATE);
     public final static PropType DATETIME_PROP_TYPE = new PropType(Date.class, H_DATETIME);
     public final static PropType UTCDATETIME_PROP_TYPE = new PropType(Date.class, H_UTCDATETIME);

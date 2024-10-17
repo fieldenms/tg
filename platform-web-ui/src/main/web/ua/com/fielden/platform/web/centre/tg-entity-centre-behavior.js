@@ -323,6 +323,19 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Indicates whether this entity centre is runAutomatically and allows customisation.
+         *
+         * For standalone centre it means that no criteria clearing will be performed during auto-run for default configurations.
+         * For embedded centre it means that
+         *  1. no criteria clearing will be performed during auto-run -- for default configurations;
+         *  2. loaded config will be preserved as well as its criteria -- for save-as configurations.
+         */
+        allowCustomised: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Returns the context for insertion point
          */
         insertionPointContextRetriever: {
@@ -598,7 +611,15 @@ const TgEntityCentreBehaviorImpl = {
          * 
          * This function is intended to be bound to child elements.
          */
-        _resetAutocompleterState: Function
+        _resetAutocompleterState: Function,
+
+        /**
+         * Function that returns Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         *
+         * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
+         * However, repeated invocation of this function will return new Promise in this case.
+         */
+        lastValidationAttemptPromise: Function
     },
 
     listeners: {
@@ -614,8 +635,10 @@ const TgEntityCentreBehaviorImpl = {
         // entity masters with their embedded centres can be cached and loaded save-as configurations will be used up until application will be refreshed;
         // this will not affect other places with the same masters -- e.g. Work Activity standalone centre has its own master cache with [WA => Details] embedded centre cached and [WA => Details] on other standalone centres will not be affected;
         // that's why resetting information about loaded configuration to default configuration is needed in these cached masters every time auto-running of embedded centre occurs
-        this.$.selection_criteria.saveAsName = '';
-        this.$.selection_criteria.configUuid = '';
+        if (!this.allowCustomised) {
+            this.$.selection_criteria.saveAsName = '';
+            this.$.selection_criteria.configUuid = '';
+        }
         if (this._selectedView === 0) {
             this.async(() => {
                 this._selectedView = this.preferredView;
@@ -795,7 +818,8 @@ const TgEntityCentreBehaviorImpl = {
             }
         };
         this._resetAutocompleterState = () => this.$.selection_criteria._resetAutocompleterState();
-        
+        this.lastValidationAttemptPromise = () => this.$.selection_criteria.lastValidationAttemptPromise;
+
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                 if (typeof result.summary !== 'undefined') {
@@ -1449,11 +1473,21 @@ const TgEntityCentreBehaviorImpl = {
         return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : isRunning; // Refresh button enabled even if pageCount === null i.e. where erroneous autorun occurred
     },
 
-    computeConfigButtonTooltip: function (staleCriteriaMessage) {
-        return (staleCriteriaMessage === null ? 'Show selection criteria' : staleCriteriaMessage) + ", Ctrl&nbsp+&nbspe";
+    computeConfigButtonTooltip: function (criteriaIndication) {
+        return criteriaIndication ? criteriaIndication.message : '';
     },
-    computeConfigButtonClasses: function (staleCriteriaMessage) {
-        return staleCriteriaMessage === null ? 'standart-action' : 'standart-action orange';
+    computeConfigButtonStyle: function (criteriaIndication) {
+        return criteriaIndication && criteriaIndication.style ? this._convertStyle(criteriaIndication.style) : '';
+    },
+
+    /**
+     * Converts StyleAttribute-based 'styleObject' to inline 'style' attribute.
+     * The object was serialised by Jackson as part of CriteriaIndication serialisation and sent to the client application.
+     */
+    _convertStyle: function (styleObject) {
+        return Object.keys(styleObject.value)
+            .map(key => `${key}:${styleObject.value[key].value.join(' ')}`)
+            .join(';')
     },
 
     currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {
