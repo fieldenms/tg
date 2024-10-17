@@ -10,6 +10,40 @@ import static org.junit.Assert.fail;
 public class RichTextHtmlSanitisationTest {
 
     @Test
+    public void all_features_supported_in_web_ui_editor_are_allowed() {
+        assertSameAfterSanitization(
+        """
+        <h1>This is my Heading</h1>
+        <h2>Smaller Heading</h2>
+        <h3>Smallest header</h3>
+        <p><strong>Simple</strong> <em>text</em> is <del>started</del> here. 
+        I need to <span style="color: #4CAF50 !important">describe</span> some issue with some <a href="https://stackoverflow.com/questions/13070054/convert-rgb-strings-to-hex-in-javascript" target="_blank">rotables</a> and other items. 
+        I just want to have some long text (paragraph) and then move on. er</p>
+        <p>Here I will try...</p>
+        <p>
+        <br></p>
+        <ol>
+        <li><p>hello</p></li>
+        <li><p>hi</p></li>
+        <li><p>hola</p></li>
+        </ol>
+        <p><br></p>
+        <ul>
+        <li><p>Item x</p></li>
+        <li><p>item y</p></li>
+        <li><p>item z</p></li>
+        </ul>
+        <p><br></p>
+        <ul><li class="task-list-item" data-task="true"><p>task q</p></li>
+        <li class="task-list-item" data-task="true"><p>task w</p></li>
+        <li class="task-list-item checked" data-task="true" data-task-checked="true"><p>task e</p></li>
+        </ul>
+        <p>
+        Some another paragraph. And description. Whatever.</p>
+        """);
+    }
+
+    @Test
     public void toast_ui_HTML_entities_are_allowed() {
         assertSameAfterSanitization("""
         <ul>
