@@ -47,6 +47,8 @@ const customInputTemplate = html`
             on-mouseup="_onMouseUp" 
             on-mousedown="_onMouseDown"
             on-keydown="_onKeydown"
+            on-focus="_onFocus"
+            on-blur="_outFocus"
             readonly$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"
@@ -104,17 +106,7 @@ export class TgMultilineTextEditor extends TgEditor {
             _onKeydown: {
                 type: Function,
                 value: function () {
-                    return (function (event) {
-                        if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
-                            this.commitIfChanged();
-                            this._copyTap();
-                        }
-                        // need to invoke base function-property? Just do it like this:
-                        //   var parentFunction = TgEditorBehaviorImpl.properties._onKeydown.value.call(this);
-                        //   parentFunction.call(this, event);
-                        //console.log("_onKeydown (for text area):", event);
-                        // TODO potentially, commit on CTRL+Enter?
-                    }).bind(this);
+                    return this._handleCopy.bind(this);
                 }
             }
         };
@@ -140,6 +132,16 @@ export class TgMultilineTextEditor extends TgEditor {
         suffix.style.alignSelf = "flex-start";
         this.decoratedInput().textarea.addEventListener("change", this._onChange);
         this.decoratedInput().textarea.style.cursor = "text";
+        const _prevValueChanged = this.decoratedInput()._valueChanged.bind(this.decoratedInput());
+        this.decoratedInput()._valueChanged = (newValue, oldValue) => {
+            if (this.decoratedInput().bindValue === newValue) {
+                setTimeout(() => {
+                    this.decoratedInput().selectionStart = this.decoratedInput().selectionEnd = 0;
+                }, 0);
+                
+            }
+            _prevValueChanged(newValue, oldValue);
+        };
     }
 
     _disabledChanged (newValue, oldValue) {
