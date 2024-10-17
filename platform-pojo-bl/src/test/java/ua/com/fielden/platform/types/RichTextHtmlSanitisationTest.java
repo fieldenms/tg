@@ -101,6 +101,11 @@ public class RichTextHtmlSanitisationTest {
         assertSameAfterSanitization("the <I>big</I> bang");
     }
 
+    @Test
+    public void attribute_target_in_element_a_is_allowed() {
+        assertSameAfterSanitization("the <a target='_blank' href='https://example.org'> example </a> site");
+    }
+
     private void assertSanitizationFailure(final String input) {
         assertFalse(RichTextSanitiser.sanitiseMarkdown(input).isSuccessful());
     }

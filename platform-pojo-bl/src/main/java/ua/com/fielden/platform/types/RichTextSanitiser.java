@@ -210,6 +210,17 @@ public final class RichTextSanitiser {
                 .toFactory();
     }
 
+    /**
+     * Creates a policy that allows the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a">{@code <a>}</a> element.
+     */
+    private static PolicyFactory allowA() {
+        return new HtmlPolicyBuilder()
+                .allowElements("a")
+                .allowAttributes("target")
+                .onElements("a")
+                .toFactory();
+    }
+
     private static PolicyFactory allowCommonElements() {
         return new HtmlPolicyBuilder()
                 .allowElements(
@@ -267,6 +278,7 @@ public final class RichTextSanitiser {
             .and(allowCommonAttributes())
             .and(allowEmptyElementsPolicy())
             .and(allowLink())
+            .and(allowA())
             .and(allowCommonElements())
             .and(allowToastUi());
 
