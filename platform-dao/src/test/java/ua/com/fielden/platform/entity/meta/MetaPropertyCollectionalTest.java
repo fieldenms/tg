@@ -1,9 +1,6 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
@@ -73,8 +70,6 @@ public class MetaPropertyCollectionalTest extends AbstractDaoTestCase {
         assertEquals(expected, prop(entity).getPrevValue());
         assertFalse(prop(entity).isChangedFromPrevious());
         
-        assertFalse(prop(entity).getValue() == prop(entity).getPrevValue()); // references should be different
-        assertFalse(prop(entity).getOriginalValue() == prop(entity).getPrevValue()); // references should be different
         assertTrue(EntityUtils.equalsEx(prop(entity).getValue(), prop(entity).getPrevValue())); // values should be equal
         assertTrue(prop(entity).isDirty()); // because of newly created entity
     }
