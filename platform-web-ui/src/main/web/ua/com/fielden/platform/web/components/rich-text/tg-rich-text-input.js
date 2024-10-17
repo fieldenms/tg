@@ -1,7 +1,7 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
-import '/resources/toastui-editor/toastui-editor-all.min.js';
+import '/resources/toastui-editor/toastui-editor-all.js';
 
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
@@ -13,6 +13,41 @@ import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { excludeErrors } from '/resources/components/tg-global-error-handler.js';
 
 excludeErrors( e => e.filename && e.filename.includes("toastui-editor-all") && e.error && e.error.name === 'TransformError');
+
+function fakeSelection(context, options) {
+
+    return {
+        wysiwygCommands: {
+            fakeSelect: ({from, to}, { tr, schema }, dispatch) => {
+                const mark = schema.marks.mark.create();
+                tr.addMark(from, to, mark).setMeta("addToHistory", false);
+                dispatch(tr);
+                return true;
+            },
+            fakeUnselect: ({from, to}, state, dispatch) => {
+                const markType = state.schema.marks.mark;
+                if (dispatch) {
+                    let tr = state.tr;
+                    const has = state.doc.rangeHasMark(from, to, markType);
+                    if (has) {
+                        tr.removeMark(from, to, markType).setMeta("addToHistory", false);
+                    }
+                    dispatch(tr);
+                }
+                return true;
+            },
+        },
+        toHTMLRenderers: {
+            htmlInline: {
+                mark(node, { entering }) {
+                    return entering
+                        ? { type: 'openTag', tagName: 'mark', attributes: node.attrs }
+                        : { type: 'closeTag', tagName: 'mark' };
+                },
+            },
+        },
+    }
+}
 
 function colorTextPlugin(context, options) {
     //The following method was copied from prosemirror-commands module
@@ -241,11 +276,20 @@ function preventListIdentation(event) {
     }
 }
 
+function getEditorHTMLText() {
+    return this._editor.getHTML().replace(/<mark>(.*?)<\/mark>/g, '$1');
+}
+
 const template = html`
     <style include='rich-text-enhanced-styles'>
         ::selection {
             color: currentcolor;
             background-color: rgba(31,  176, 255, 0.3);
+        }
+        mark {
+            display: inline-block;
+            background-color: rgba(31,  176, 255, 0.3);
+            color: unset;
         }
     </style>
     <div id="editor"></div>`; 
@@ -312,7 +356,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
                 caretChange: this._saveSelection.bind(this),
                 keydown: (viewType, event) => this.keyDownHandler(event)
             },
-            plugins: [colorTextPlugin],
+            plugins: [colorTextPlugin, fakeSelection],
             linkAttributes: {target: "_blank"},
             useCommandShortcut: false,
             usageStatistics: false,
@@ -422,6 +466,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         } else {
             this._editor.exec('addLink', { linkUrl: url, linkText: text });
         }
+        this.changeEventHandler();
     }
 
     applyColor(selectedColor) {
@@ -431,7 +476,19 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             this._editor.exec('clearColor');
         }
         this._editor.focus();
-        this._editor.setSelection(this._prevSelection[0], this._prevSelection[1]);
+        this.changeEventHandler();
+    }
+
+    fakeSelect() {
+        if (this._prevSelection[0] !== this._prevSelection[1]) {
+            this._editor.exec('fakeSelect', {from: this._prevSelection[0], to: this._prevSelection[1]});
+        }
+    }
+
+    fakeUnselect() {
+        if (this._prevSelection[0] !== this._prevSelection[1]) {
+            this._editor.exec('fakeUnselect', {from: this._prevSelection[0], to: this._prevSelection[1]});
+        }
     }
 
     createBulletList(event) {
@@ -459,6 +516,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._getEditableContent().setAttribute("contenteditable", editable + "");
     }
 
+    focusEditor() {
+        if (this._editor) {
+            this._editor.focus();
+        }
+    }
+
     getHeight() {
         return this._editor && this._editor.getHeight();
     }
@@ -470,32 +533,20 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }
     }
 
-    getDomAtCaretPosition() {
-        if (this._editor && this._prevSelection) {
-            return this._editor.wwEditor.view.domAtPos(this._prevSelection[1]).node.parentElement;
-        }
-    }
-
-    getSelectedText() {
-        if (this._editor && this._prevSelection) {
-            return this._editor.getSelectedText(this._prevSelection[0], this._prevSelection[1]);
-        }
-    }
-
-    _valueChanged(newValue) {
-        if(this._editor && newValue !== this._editor.getHTML()) {
-            this._editor.setHTML(newValue, false);
-        }
-    }
-
     _saveSelection(e) {
         if (this._editor) {
             this._prevSelection = this._editor.getSelection();
         }
     }
 
+    _valueChanged(newValue) {
+        if(this._editor && newValue !== getEditorHTMLText.bind(this)()) {
+            this._editor.setHTML(newValue, false);
+        }
+    }
+
     _htmlContentChanged(e) {
-        const htmlText = this._editor.getHTML();
+        const htmlText = getEditorHTMLText.bind(this)();
         if (this.value !== htmlText) {
             this.value = htmlText;
         }

@@ -75,8 +75,8 @@ const customLabelTemplate = html`
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Make your text bold, Ctrl+B, &#x2318;+B" on-down="_preventEvent" on-tap="_makeBold"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text, Ctrl+I, &#x2318;+I" on-down="_preventEvent" on-tap="_makeItalic"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it, Ctrl+S, &#x2318;+S" on-down="_preventEvent" on-tap="_makeStrike"></iron-icon>
-        <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-down="_preventEvent" on-tap="_changeTextColor"></iron-icon>
-        <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_preventEvent" on-tap="_toggleLink"></iron-icon>
+        <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
+        <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, &#x2318;+U" on-down="_preventEvent" on-tap="_createBulletedList"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Create a numbered list, Ctrl+O, &#x2318;+O" on-down="_preventEvent" on-tap="_createNumberedList"></iron-icon>
         <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="tg-rich-text-editor:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_preventEvent" on-tap="_createTaskList"></iron-icon>
@@ -152,6 +152,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         this.$.linkDropdown.positionTarget = document.body;
         this._cancelLinkInsertion = function () {
             this.$.linkDropdown.cancel();
+            this.$.input.focusEditor();
         }.bind(this);
         this._acceptLink = function () {
             this.$.input.toggleLink(this.$.linkDialog.url, this.$.linkDialog.linkText || this.$.linkDialog.url);
@@ -160,6 +161,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         this.$.colorDropdown.positionTarget = document.body;
         this._cancelColorAction = function() {
             this.$.colorDropdown.cancel();
+            this.$.input.focusEditor();
         }.bind(this);
         this._acceptColor = function() {
             this.$.input.applyColor(this.$.colorDialog.color);
@@ -183,6 +185,10 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _preventEvent(e) {
         e.preventDefault();
+    }
+
+    _applyFakeSelect(e) {
+        this.$.input.fakeSelect();
     }
 
     _makeHeader1(e) {
@@ -224,6 +230,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     _changeTextColor(e) {
         this.$.input.scrollIntoView();
         const textColorObj = this.$.input.initColorEditing();
+        this.$.input.fakeSelect();
         const coordinates = this.$.input.getSelectionCoordinates();
         const x = (coordinates[0].left + coordinates[1].left) / 2;
         const y = Math.max(coordinates[0].bottom, coordinates[1].bottom);
@@ -238,6 +245,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     _toggleLink(e) {
         this.$.input.scrollIntoView();
         const link = this.$.input.initLinkEditing();
+        this.$.input.fakeSelect();
         const coordinates = this.$.input.getSelectionCoordinates();
         const x = (coordinates[0].left + coordinates[1].left) / 2;
         const y = Math.max(coordinates[0].bottom, coordinates[1].bottom);
@@ -372,12 +380,14 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     _linkDialogClosed(e) {
         if (e.composedPath()[0] === this.$.linkDropdown) {
             this.$.linkDialog.resetState();
+            this.$.input.fakeUnselect();
         }
     }
 
     _colorDialogClosed(e) {
         if (e.composedPath()[0] === this.$.colorDropdown) {
             this.$.colorDialog.resetState();
+            this.$.input.fakeUnselect();
         }
     }
 
