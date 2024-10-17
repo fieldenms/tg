@@ -168,8 +168,7 @@ export class TgColourPicker extends TgEditor {
         
         domBind.colourSelected = function (e, detail) {
             this._acceptColourBind();
-            var target = e.target || e.srcElement;
-            self._editingValue = ((rgbToHex(target.style['background-color'])).substring(1)).toUpperCase();
+            self._editingValue = ((rgbToHex(e.target.style['background-color'])).substring(1)).toUpperCase();
             this.$.dropdown.close();
             self.decoratedInput().focus();
         }.bind(domBind);
