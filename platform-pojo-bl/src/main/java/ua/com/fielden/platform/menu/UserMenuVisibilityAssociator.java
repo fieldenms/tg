@@ -24,7 +24,7 @@ public class UserMenuVisibilityAssociator extends AbstractFunctionalEntityForCol
 
     @IsProperty(User.class)
     @Title(value = "Users", desc = "Users those see the choosen menu item")
-    private Set<User> users = new LinkedHashSet<User>();
+    private final Set<User> users = new LinkedHashSet<User>();
 
     @Observable
     protected UserMenuVisibilityAssociator setUsers(final Set<User> users) {

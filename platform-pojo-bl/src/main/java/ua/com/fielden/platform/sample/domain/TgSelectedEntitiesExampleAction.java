@@ -30,14 +30,14 @@ public class TgSelectedEntitiesExampleAction extends AbstractFunctionalEntityWit
     
     @IsProperty(Long.class)
     @Title("SelectedEntities Sequence")
-    private ArrayList<String> selectedEntitiesSeq = new ArrayList<>();
+    private final ArrayList<String> selectedEntitiesSeq = new ArrayList<>();
     
     @IsProperty(Long.class)
     @Title("SelectedEntityIds Sequence")
-    private ArrayList<String> selectedEntityIdsSeq = new ArrayList<>();
+    private final ArrayList<String> selectedEntityIdsSeq = new ArrayList<>();
     
     @Observable
-    protected TgSelectedEntitiesExampleAction setSelectedEntityIdsSeq(final ArrayList<String> selectedEntityIdsSeq) {
+    protected TgSelectedEntitiesExampleAction setSelectedEntityIdsSeq(final List<String> selectedEntityIdsSeq) {
         this.selectedEntityIdsSeq.clear();
         this.selectedEntityIdsSeq.addAll(selectedEntityIdsSeq);
         return this;
@@ -48,7 +48,7 @@ public class TgSelectedEntitiesExampleAction extends AbstractFunctionalEntityWit
     }
     
     @Observable
-    protected TgSelectedEntitiesExampleAction setSelectedEntitiesSeq(final ArrayList<String> selectedEntitiesSeq) {
+    protected TgSelectedEntitiesExampleAction setSelectedEntitiesSeq(final List<String> selectedEntitiesSeq) {
         this.selectedEntitiesSeq.clear();
         this.selectedEntitiesSeq.addAll(selectedEntitiesSeq);
         return this;

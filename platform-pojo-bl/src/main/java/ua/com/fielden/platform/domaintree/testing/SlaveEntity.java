@@ -80,10 +80,10 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
 
     ///////// Collections /////////
     @IsProperty(value = EvenSlaverEntity.class, linkProperty = "slaveEntityLinkProp")
-    private List<EvenSlaverEntity> collection = new ArrayList<>();
+    private final List<EvenSlaverEntity> collection = new ArrayList<>();
 
     @IsProperty(ShortEvenSlaverEntity.class)
-    private List<ShortEvenSlaverEntity> shortCollection = new ArrayList<>();
+    private final List<ShortEvenSlaverEntity> shortCollection = new ArrayList<>();
 
     ////////// Any property to be specifically excluded //////////
     @IsProperty(linkProperty = "slaveEntityLinkProp")
@@ -157,7 +157,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     ////////// A collection of AbstractEntity type with CritOnly assigned //////////
     @CritOnly
     @IsProperty(value = EvenSlaverEntity.class, linkProperty = "slaveEntityLinkProp")
-    private List<EvenSlaverEntity> critOnlyAECollectionProp = new ArrayList<EvenSlaverEntity>();
+    private final List<EvenSlaverEntity> critOnlyAECollectionProp = new ArrayList<EvenSlaverEntity>();
 
     ////////// A property of "entity with composite key" type //////////
     @IsProperty

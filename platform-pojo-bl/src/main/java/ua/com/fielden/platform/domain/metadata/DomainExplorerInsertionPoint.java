@@ -29,11 +29,11 @@ public class DomainExplorerInsertionPoint extends AbstractFunctionalEntityWithCe
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Generated Part Of Domain Hierarchy", desc = "Generated types or properties of domain hierarchy.")
-    private List<AbstractEntity<?>> generatedHierarchy = new ArrayList<>();
+    private final List<AbstractEntity<?>> generatedHierarchy = new ArrayList<>();
 
     @IsProperty(Long.class)
     @Title(value = "Loaded Domain Hierarchy", desc = "The indices of tree items where loaded domain hierarchy should be inserted.")
-    private List<Long> loadedHierarchy = new ArrayList<>();
+    private final List<Long> loadedHierarchy = new ArrayList<>();
 
     @IsProperty
     @Title(value = "Domain Type", desc = "Domain type whose properties should be loaded.")

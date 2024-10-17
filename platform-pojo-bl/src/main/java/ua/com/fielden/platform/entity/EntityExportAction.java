@@ -59,7 +59,7 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
 
     @IsProperty(Long.class)
     @Title("Selected Entity IDs")
-    private Set<Long> selectedEntityIds = new HashSet<>();
+    private final Set<Long> selectedEntityIds = new HashSet<>();
 
     public EntityExportAction() {
         setKey(NO_KEY);

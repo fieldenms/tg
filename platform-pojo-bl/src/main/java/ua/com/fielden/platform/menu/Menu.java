@@ -25,7 +25,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
 
     @IsProperty(ModuleMenu.class)
     @Title("Menu")
-    private List<ModuleMenu> menu = new ArrayList<>();
+    private final List<ModuleMenu> menu = new ArrayList<>();
 
     @IsProperty
     @Title("Edit menu items")

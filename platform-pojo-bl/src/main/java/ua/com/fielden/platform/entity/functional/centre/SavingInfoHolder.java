@@ -53,7 +53,7 @@ public class SavingInfoHolder extends AbstractEntity<NoKey> {
     }
 
     @Observable
-    protected SavingInfoHolder setContinuationProperties(final ArrayList<String> continuationProperties) {
+    protected SavingInfoHolder setContinuationProperties(final List<String> continuationProperties) {
         this.continuationProperties.clear();
         this.continuationProperties.addAll(continuationProperties);
         return this;
@@ -64,7 +64,7 @@ public class SavingInfoHolder extends AbstractEntity<NoKey> {
     }
     
     @Observable
-    protected SavingInfoHolder setContinuations(final ArrayList<IContinuationData> continuations) {
+    protected SavingInfoHolder setContinuations(final List<IContinuationData> continuations) {
         this.continuations.clear();
         this.continuations.addAll(continuations);
         return this;

@@ -32,15 +32,15 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     
     @IsProperty(Long.class) 
     @Title(value = "Chosen ids", desc = "IDs of chosen entities (added and / or remained chosen)")
-    private LinkedHashSet<ID_TYPE> chosenIds = new LinkedHashSet<>();
+    private final LinkedHashSet<ID_TYPE> chosenIds = new LinkedHashSet<>();
     
     @IsProperty(Long.class)
     @Title(value = "Added ids", desc = "IDs of added entities")
-    private LinkedHashSet<ID_TYPE> addedIds = new LinkedHashSet<>();
+    private final LinkedHashSet<ID_TYPE> addedIds = new LinkedHashSet<>();
     
     @IsProperty(Long.class)
     @Title(value = "Removed ids", desc = "IDs of removed entities")
-    private LinkedHashSet<ID_TYPE> removedIds = new LinkedHashSet<>();
+    private final LinkedHashSet<ID_TYPE> removedIds = new LinkedHashSet<>();
     
     @IsProperty
     @MapTo

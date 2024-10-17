@@ -24,11 +24,11 @@ public class SecurityMatrixSaveAction  extends AbstractFunctionalEntityWithCentr
 
     @IsProperty(Object.class)
     @Title("Token Role Associations To Save")
-    private Map<String, List<Integer>> associationsToSave = new HashMap<>();
+    private final Map<String, List<Integer>> associationsToSave = new HashMap<>();
 
     @IsProperty(Object.class)
     @Title("Token Role Associations To Remove")
-    private Map<String, List<Integer>> associationsToRemove = new HashMap<>();
+    private final Map<String, List<Integer>> associationsToRemove = new HashMap<>();
 
     protected SecurityMatrixSaveAction() {
         setKey(NO_KEY);

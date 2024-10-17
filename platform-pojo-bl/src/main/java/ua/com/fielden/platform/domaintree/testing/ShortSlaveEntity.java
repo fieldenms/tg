@@ -32,7 +32,7 @@ public class ShortSlaveEntity extends AbstractEntity<DynamicEntityKey> {
 
     ///////// Collections /////////
     @IsProperty(value = EvenSlaverEntity.class, linkProperty = "slaveEntityLinkProp")
-    private List<EvenSlaverEntity> collection = new ArrayList<>();
+    private final List<EvenSlaverEntity> collection = new ArrayList<>();
 
     public MasterEntity getMasterEntityProp() {
         return masterEntityProp;

@@ -29,7 +29,7 @@ public class AcknowledgeWarnings extends AbstractFunctionalEntityWithCentreConte
     
     @IsProperty(PropertyWarning.class)
     @Title(value = "Warnings", desc = "A list of user property warnings")
-    private Set<PropertyWarning> warnings = new LinkedHashSet<PropertyWarning>();
+    private final Set<PropertyWarning> warnings = new LinkedHashSet<PropertyWarning>();
 
     public AcknowledgeWarnings() {
         setKey(NO_KEY);

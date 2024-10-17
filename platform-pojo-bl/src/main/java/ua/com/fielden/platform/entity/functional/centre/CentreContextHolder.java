@@ -101,7 +101,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
     }
 
     @Observable
-    protected CentreContextHolder setSelectedEntities(final ArrayList<AbstractEntity<?>> selectedEntities) {
+    protected CentreContextHolder setSelectedEntities(final List<AbstractEntity<?>> selectedEntities) {
         this.selectedEntities.clear();
         this.selectedEntities.addAll(selectedEntities);
         return this;

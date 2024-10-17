@@ -53,11 +53,11 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Generated Hierarchy", desc = "Generated type or instance level of hierarchy")
-    private List<AbstractEntity<?>> generatedHierarchy = new ArrayList<>();
+    private final List<AbstractEntity<?>> generatedHierarchy = new ArrayList<>();
 
     @IsProperty(Long.class)
     @Title(value = "Loaded hiererchy", desc = "The indexes of tree items on each level where returned hieararchy should be inserted")
-    private List<Long> loadedHierarchy = new ArrayList<>();
+    private final List<Long> loadedHierarchy = new ArrayList<>();
 
     @IsProperty
     @Title(value = "Page Size", desc = "Page size of inctances to load")

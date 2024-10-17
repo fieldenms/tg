@@ -28,7 +28,7 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
 
     @IsProperty(ModuleMenuItem.class)
     @Title("Submenu")
-    private List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
+    private final List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
 
     @IsProperty
     @Title(value = "View", desc = "Menu item view")

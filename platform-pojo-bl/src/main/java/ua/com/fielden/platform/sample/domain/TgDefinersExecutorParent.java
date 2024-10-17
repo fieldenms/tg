@@ -32,7 +32,7 @@ public class TgDefinersExecutorParent extends AbstractEntity<DynamicEntityKey> {
     
     @IsProperty(TgDefinersExecutorCollectionalChild.class)
     @AfterChange(TgDefinersExecutorParentHandlerForCollection.class)
-    private Set<TgDefinersExecutorCollectionalChild> collectionWithHandler = new LinkedHashSet<TgDefinersExecutorCollectionalChild>();
+    private final Set<TgDefinersExecutorCollectionalChild> collectionWithHandler = new LinkedHashSet<TgDefinersExecutorCollectionalChild>();
     
     @IsProperty
     @MapTo

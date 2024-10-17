@@ -27,7 +27,7 @@ public class UserRolesUpdater extends AbstractFunctionalEntityForCollectionModif
     
     @IsProperty(UserRole.class)
     @Title(value = "User Roles", desc = "A list of user roles roles")
-    private Set<UserRole> roles = new LinkedHashSet<>();
+    private final Set<UserRole> roles = new LinkedHashSet<>();
 
     @Observable
     protected UserRolesUpdater setRoles(final Set<UserRole> roles) {

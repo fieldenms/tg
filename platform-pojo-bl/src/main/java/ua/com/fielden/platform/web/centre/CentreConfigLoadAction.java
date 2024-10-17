@@ -31,7 +31,7 @@ public class CentreConfigLoadAction extends AbstractFunctionalEntityForCollectio
     
     @IsProperty(LoadableCentreConfig.class)
     @Title("Configurations")
-    private Set<LoadableCentreConfig> centreConfigurations = new LinkedHashSet<>();
+    private final Set<LoadableCentreConfig> centreConfigurations = new LinkedHashSet<>();
     
     @IsProperty
     @Title("Context Holder")
@@ -45,7 +45,7 @@ public class CentreConfigLoadAction extends AbstractFunctionalEntityForCollectio
     @IsProperty(Long.class) 
     @Title(value = "Chosen ids", desc = "IDs of chosen entities (added and / or remained chosen)")
     @BeforeChange(@Handler(CentreConfigLoadActionChosenIdsValidator.class))
-    private LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
+    private final LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
     
     @IsProperty
     @Title(value = "Skip UI", desc = "Controls the requirement to show or to skip displaying of the associated entity master.")
@@ -63,7 +63,7 @@ public class CentreConfigLoadAction extends AbstractFunctionalEntityForCollectio
     
     @Override
     @Observable
-    public CentreConfigLoadAction setChosenIds(final LinkedHashSet<String> chosenIds) {
+    public CentreConfigLoadAction setChosenIds(final Set<String> chosenIds) {
         this.chosenIds.clear();
         this.chosenIds.addAll(chosenIds);
         return this;

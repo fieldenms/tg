@@ -30,7 +30,7 @@ public class TgCollectionalSerialisationParent extends AbstractEntity<String> {
     
     @IsProperty(TgCollectionalSerialisationChild.class)
     @Title(value = "Collectional prop", desc = "Collectional prop")
-    private Set<TgCollectionalSerialisationChild> collProp = new HashSet<TgCollectionalSerialisationChild>();
+    private final Set<TgCollectionalSerialisationChild> collProp = new HashSet<TgCollectionalSerialisationChild>();
 
     @Observable
     protected TgCollectionalSerialisationParent setCollProp(final Set<TgCollectionalSerialisationChild> collProp) {

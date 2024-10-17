@@ -24,7 +24,7 @@ public abstract class AbstractTreeEntry<K extends Comparable<?>> extends Abstrac
 
     @IsProperty(AbstractTreeEntry.class)
     @Title("Children")
-    private List<AbstractTreeEntry<?>> children = new ArrayList<>();
+    private final List<AbstractTreeEntry<?>> children = new ArrayList<>();
 
     @IsProperty
     @Title("Parent hierrarchy entry")

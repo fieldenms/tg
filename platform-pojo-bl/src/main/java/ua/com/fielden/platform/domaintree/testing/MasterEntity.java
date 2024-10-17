@@ -79,10 +79,10 @@ public class MasterEntity extends AbstractEntity<String> {
 
     ///////// Collections /////////
     @IsProperty(value = SlaveEntity.class, linkProperty = "masterEntityProp")
-    private List<SlaveEntity> collection = new ArrayList<>();
+    private final List<SlaveEntity> collection = new ArrayList<>();
 
     @IsProperty(ShortSlaveEntity.class)
-    private List<ShortSlaveEntity> shortCollection = new ArrayList<>();
+    private final List<ShortSlaveEntity> shortCollection = new ArrayList<>();
 
     ////////// Any property to be specifically excluded //////////
     @IsProperty(linkProperty = "masterEntityProp")
@@ -157,7 +157,7 @@ public class MasterEntity extends AbstractEntity<String> {
     ////////// A collection of AbstractEntity type with CritOnly assigned //////////
     @CritOnly
     @IsProperty(value = SlaveEntity.class, linkProperty = "masterEntityProp")
-    private List<SlaveEntity> critOnlyAECollectionProp = new ArrayList<SlaveEntity>();
+    private final List<SlaveEntity> critOnlyAECollectionProp = new ArrayList<SlaveEntity>();
 
     //////// A property of "entity with composite key" type //////////
     @IsProperty

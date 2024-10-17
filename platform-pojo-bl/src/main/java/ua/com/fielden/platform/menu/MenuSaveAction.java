@@ -25,11 +25,11 @@ public class MenuSaveAction extends AbstractFunctionalEntityWithCentreContext<St
 
     @IsProperty(String.class)
     @Title(value = "Visible menu items", desc = "Menu items that should become visible")
-    private Set<String> visibleMenuItems = new HashSet<>();
+    private final Set<String> visibleMenuItems = new HashSet<>();
 
     @IsProperty(String.class)
     @Title(value = "Invisible menu items", desc = "Menu items that should become invisible")
-    private Set<String> invisibleMenuItems = new HashSet<>();
+    private final Set<String> invisibleMenuItems = new HashSet<>();
 
     @Observable
     protected MenuSaveAction setInvisibleMenuItems(final Set<String> invisibleMenuItems) {

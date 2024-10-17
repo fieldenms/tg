@@ -22,15 +22,15 @@ public abstract class AbstractBatchAction<T extends AbstractEntity<?>> extends A
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Save entities", desc = "Entities to save")
-    private Set<T> saveEntities = new HashSet<>();
+    private final Set<T> saveEntities = new HashSet<>();
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Remove entities", desc = "Entities to remove")
-    private Set<T> removeEntities = new HashSet<>();
+    private final Set<T> removeEntities = new HashSet<>();
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Update entities", desc = "Entities to update")
-    private Set<T> updateEntities = new HashSet<>();
+    private final Set<T> updateEntities = new HashSet<>();
 
     /**
      * Set the dirty persistent entities to update.

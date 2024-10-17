@@ -150,14 +150,14 @@ public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     ////////// A collection of AbstractEntity type with CritOnly assigned //////////
     @CritOnly
     @IsProperty(EvenSlaverEntity.class)
-    private List<EvenSlaverEntity> critOnlyAECollectionProp = new ArrayList<EvenSlaverEntity>();
+    private final List<EvenSlaverEntity> critOnlyAECollectionProp = new ArrayList<EvenSlaverEntity>();
 
     ////////// A collection //////////
     @IsProperty(EvenSlaverEntity.class)
     private List<EvenSlaverEntity> collection = new ArrayList<EvenSlaverEntity>();
 
     @IsProperty(ShortEvenSlaverEntity.class)
-    private List<ShortEvenSlaverEntity> shortCollection = new ArrayList<>();
+    private final List<ShortEvenSlaverEntity> shortCollection = new ArrayList<>();
 
     ////////// Any property to be specifically excluded //////////
     @IsProperty

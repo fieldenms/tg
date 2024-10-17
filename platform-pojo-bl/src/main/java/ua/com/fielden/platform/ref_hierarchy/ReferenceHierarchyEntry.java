@@ -31,7 +31,7 @@ public class ReferenceHierarchyEntry extends AbstractTreeEntry<String> {
 
     @IsProperty(String.class)
     @Title(value = "Actions", desc = "Action list")
-    private List<String> actions = new ArrayList<String>();
+    private final List<String> actions = new ArrayList<String>();
 
     @Observable
     protected ReferenceHierarchyEntry setActions(final List<String> actions) {
