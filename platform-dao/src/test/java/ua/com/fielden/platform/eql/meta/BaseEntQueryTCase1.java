@@ -46,6 +46,7 @@ public class BaseEntQueryTCase1 {
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
 
     protected static final IDomainMetadata DOMAIN_METADATA;
+    protected static final QuerySourceInfoProvider QUERY_SOURCE_INFO_PROVIDER;
 
     static {
         final var dbVersionProvider = constantDbVersion(H2);
@@ -53,6 +54,7 @@ public class BaseEntQueryTCase1 {
                                                     entityTypes,
                                                     dbVersionProvider)
                 .build();
+        QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
     }
 
 }

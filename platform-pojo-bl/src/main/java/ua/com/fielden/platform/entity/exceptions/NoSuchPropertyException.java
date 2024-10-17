@@ -18,7 +18,8 @@ public class NoSuchPropertyException extends AbstractPlatformRuntimeException {
 
     public static NoSuchPropertyException noSuchPropertyException(final Class<?> type, final CharSequence property,
                                                                   final @Nullable Throwable cause) {
-        return new NoSuchPropertyException("No such property [%s] in type [%s]".formatted(property, type), cause);
+        final var typeName = type == null ? "null" : type.getTypeName();
+        return new NoSuchPropertyException("No such property [%s] in type [%s]".formatted(property, typeName), cause);
     }
 
     public NoSuchPropertyException(final String msg) {

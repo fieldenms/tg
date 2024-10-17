@@ -4,18 +4,19 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 
+import javax.annotation.Nullable;
+
 /**
  * A structure that represents resolution-related info for a query source item of type {@code T} within a query source.
  *
  * @author TG Team
- *
  */
 public abstract class AbstractQuerySourceItem<T> implements IResolvable<T> {
     public final String name; //shouldn't contain dots
-    public final CalcPropInfo expression;
-    public final Object hibType;
+    public final @Nullable CalcPropInfo expression;
+    public final @Nullable Object hibType;
 
-    public AbstractQuerySourceItem(final String name, final Object hibType, final CalcPropInfo expression) {
+    public AbstractQuerySourceItem(final String name, final @Nullable Object hibType, final @Nullable CalcPropInfo expression) {
         this.name = name;
         this.expression = expression;
         this.hibType = hibType;

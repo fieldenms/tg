@@ -18,6 +18,7 @@ import ua.com.fielden.platform.eql.stage1.queries.SubQueryForExists1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -83,7 +84,7 @@ public class QueryModelToStage1Transformer {
         return new SubQueryForExists1(parseTokensIntoComponents(qryModel, null));
     }
 
-    private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
+    private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final @Nullable OrderingModel orderModel) {
         final EqlCompilationResult.Select result = new EqlCompiler(this).compile(qryModel.getTokenSource(), EqlCompilationResult.Select.class);
         final Conditions1 udfModel = result.joinRoot() == null
                 ? EMPTY_CONDITIONS

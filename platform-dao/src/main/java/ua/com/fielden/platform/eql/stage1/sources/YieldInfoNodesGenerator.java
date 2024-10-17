@@ -13,13 +13,39 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
+import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPath;
 import static ua.com.fielden.platform.utils.StreamUtils.enumerated;
 
+/**
+ * Transforms yields from multiple source queries into <i>yield trees</i>.
+ * <p>
+ * Example:
+ * <pre>
+ * yield(...).as("model.key")
+ * yield(...).as("model.id")
+ * yield(...).as("person")
+ * yield(...).as("person.id")
+ * yield(...).as("cost")
+ *
+ *            key
+ *          /
+ * 1. model
+ *          \
+ *            id
+ *
+ * 2. person
+ *           \
+ *             id
+ *
+ * 3. cost
+ * </pre>
+ */
 public class YieldInfoNodesGenerator {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -42,7 +68,7 @@ public class YieldInfoNodesGenerator {
      */
     public static Collection<YieldInfoNode> generate(final List<SourceQuery2> models) {
         final List<YieldInfoTail> yieldsInfo = generateYieldInfos(models).stream()
-                .map(yield -> new YieldInfoTail(asList(yield.name().split("\\.")), yield.propType(), yield.nonnullable()))
+                .map(yield -> new YieldInfoTail(laxSplitPropPath(yield.name()), yield.propType(), yield.nonnullable()))
                 .toList();
 
         return group(yieldsInfo).values();
@@ -67,12 +93,7 @@ public class YieldInfoNodesGenerator {
     }
 
     private static boolean determineNonnullability(final List<YieldAndConditions> yieldVariants) {
-        for (final YieldAndConditions yield : yieldVariants) {
-            if (!determineNonnullability(yield)) {
-                return false;
-            }
-        }
-        return true;
+        return yieldVariants.stream().allMatch(YieldInfoNodesGenerator::determineNonnullability);
     }
 
     private static PropType determinePropType(final List<YieldAndConditions> yieldVariants) {
@@ -116,7 +137,7 @@ public class YieldInfoNodesGenerator {
 
                     return new YieldInfoNode(firstName,
                             optSimpleYield.map(y -> y.propType).orElse(null),
-                            optSimpleYield.map(y -> y.nonnullable).orElse(false),
+                            optSimpleYield.filter(y -> y.nonnullable).isPresent(),
                             group(nonEmptyTails));
                 }
         );

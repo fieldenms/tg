@@ -12,15 +12,15 @@ import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.RichText;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import javax.annotation.Nullable;
+import java.util.*;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.append;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 public class Prop1 implements ISingleOperand1<Prop2> {
@@ -37,28 +37,27 @@ public class Prop1 implements ISingleOperand1<Prop2> {
 
     @Override
     public Prop2 transform(final TransformationContextFromStage1To2 context) {
-        final Iterator<List<ISource2<? extends ISource3>>> it = context.sourcesForNestedQueries.iterator();
-        if (external) {
-            it.next();
-        }
-
-        while (it.hasNext()) {
-            final List<ISource2<? extends ISource3>> item = it.next();
-            final PropResolution resolution = resolveProp(item, this);
-            if (resolution != null) {
-                final boolean shouldBeTreatedAsId = propPath.endsWith("." + ID) && isEntityType(resolution.lastPart().javaType());
-                return new Prop2(resolution.source, enhancePath(resolution.getPath()), shouldBeTreatedAsId);
-            }
-        }
-
-        throw new EqlStage1ProcessingException(ERR_CANNOT_RESOLVE_PROPERTY.formatted(propPath));
+        return context.sourcesForNestedQueries.stream()
+                .skip(external ? 1 : 0)
+                .map(item -> resolveProp(item, this))
+                .flatMap(Optional::stream)
+                .map(resolution -> {
+                    final var shouldBeTreatedAsId = propPath.endsWith("." + ID) && isEntityType(resolution.lastPart().javaType());
+                    return new Prop2(resolution.source, enhancePath(resolution.getPath()), shouldBeTreatedAsId);
+                })
+                .findFirst()
+                .orElseThrow(() -> new EqlStage1ProcessingException(ERR_CANNOT_RESOLVE_PROPERTY.formatted(propPath)));
     }
-
+    /**
+     * If the given path ends with a component type that has a single property, appends that property onto the path.
+     * Otherwise, returns the given path.
+     *
+     * @return a new enhanced path or the same path
+     */
     public static List<AbstractQuerySourceItem<?>> enhancePath(final List<AbstractQuerySourceItem<?>> originalPath) {
-        final AbstractQuerySourceItem<?> last = originalPath.get(originalPath.size() - 1);
-        if (last instanceof QuerySourceItemForComponentType<?> lastComponent) {
+        if (originalPath.getLast() instanceof QuerySourceItemForComponentType<?> lastComponent) {
             if (lastComponent.getSubitems().size() == 1) {
-                return append(originalPath, lastComponent.getSubitems().values().iterator().next());
+                return append(originalPath, first(lastComponent.getSubitems().values()).orElseThrow());
             }
             else if (lastComponent.javaType() == RichText.class) {
                 return append(originalPath, lastComponent.getSubitems().get(RichText.CORE_TEXT));
@@ -67,7 +66,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         return originalPath;
     }
 
-    public static PropResolution resolvePropAgainstSource(final ISource2<? extends ISource3> source, final Prop1 prop) {
+    public static @Nullable PropResolution resolvePropAgainstSource(final ISource2<? extends ISource3> source, final Prop1 prop) {
         final PropResolutionProgress asIsResolution = source.querySourceInfo().resolve(new PropResolutionProgress(prop.propPath));
         if (source.alias() != null && (prop.propPath.startsWith(source.alias() + ".") || prop.propPath.equals(source.alias()))) {
             final String aliaslessPropName = prop.propPath.equals(source.alias()) ? ID : prop.propPath.substring(source.alias().length() + 1);
@@ -76,24 +75,27 @@ public class Prop1 implements ISingleOperand1<Prop2> {
                 if (!asIsResolution.isSuccessful()) {
                     return new PropResolution(source, aliaslessResolution.getResolved());
                 } else {
-                    throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]. Both [%s] and [%s] are resolvable against the given source.", prop.propPath, prop.propPath, aliaslessPropName));
+                    throw new EqlStage1ProcessingException(format(
+                            "Ambiguity while resolving property [%s] against [%s]. Both [%s] and [%s] are resolvable.",
+                            prop.propPath, source, prop.propPath, aliaslessPropName));
                 }
             }
         }
         return asIsResolution.isSuccessful() ? new PropResolution(source, asIsResolution.getResolved()) : null;
     }
 
-    private static PropResolution resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
+    private static Optional<PropResolution> resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
         final List<PropResolution> result = sources.stream()
                 .map(source -> resolvePropAgainstSource(source, prop))
                 .filter(Objects::nonNull)
-                .toList();
+                .limit(2)
+                .collect(toImmutableList());
 
         if (result.size() > 1) {
-            throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", prop.propPath));
+            throw new EqlStage1ProcessingException(format("Ambiguity while resolving property [%s]", prop.propPath));
         }
 
-        return result.size() == 1 ? result.getFirst() : null;
+        return first(result);
     }
 
     @Override
