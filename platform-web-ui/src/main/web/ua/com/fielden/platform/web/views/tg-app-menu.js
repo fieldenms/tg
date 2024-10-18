@@ -100,8 +100,9 @@ const template = html`
         <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
         <div id="logoutContainer" class="layout horizontal center" style="display: contents">
             <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
-            <paper-icon-button id="logoutButton" icon="tg-icons:logout" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
+            <paper-icon-button id="ideaButton" hidden$="[[!ideaUri]]" icon="icons:lightbulb-outline" tooltip-text="Tap to share your ideas" on-tap="_showIdeas"></paper-icon-button>
             <slot name="helpAction"></slot>
+            <paper-icon-button id="logoutButton" icon="tg-icons:logout" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
         </div>
     </div>
 
@@ -177,6 +178,7 @@ Polymer({
     properties: {
         menuConfig: Object,
         appTitle: String,
+        ideaUri: String,
         animationConfig: {
             value: function () {
                 return {};
@@ -276,6 +278,11 @@ Polymer({
     },
     _isDisabled: function(item) {
         return !isMenuPresent(item.menu);
+    },
+    _showIdeas: function (e) {
+        if (this.ideaUri && (!e.detail.sourceEvent.detail || e.detail.sourceEvent.detail < 2)) {
+            window.open(this.ideaUri);
+        }
     },
     _logout: function (e) {
         if (!e.detail.sourceEvent.detail || e.detail.sourceEvent.detail < 2) {

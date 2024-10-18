@@ -87,6 +87,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default configurations for [%s]-typed centres (caching)...";
 
     private final String title;
+    private final String ideaUri;
     private WebUiBuilder webUiBuilder;
     private Injector injector;
 
@@ -117,9 +118,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
      * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
      * @param masterActionOptions -- determines what options are available for master's save and cancel actions.
+     * @param ideaUri -- the idea page URI.
      */
-    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone, final Optional<MasterActionOptions> masterActionOptions) {
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone, final Optional<MasterActionOptions> masterActionOptions, final String ideaUri) {
         this.title = title;
+        this.ideaUri = ideaUri;
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
         this.webUiBuilder = new WebUiBuilder(this);
@@ -152,6 +155,20 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         } catch (final Exception ex) {
             throw new MissingWebResourceException("Could not read checksums from file.", ex);
         }
+    }
+
+    /**
+     * Creates abstract {@link IWebUiConfig}.
+     *
+     * @param title -- application title displayed by the web client
+     * @param workflow -- indicates development or deployment workflow, which affects how web resources get loaded.
+     * @param externalResourcePaths
+     * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
+     * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
+     * @param masterActionOptions -- determines what options are available for master's save and cancel actions.
+     */
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone, final Optional<MasterActionOptions> masterActionOptions) {
+        this(title, workflow, externalResourcePaths, independentTimeZone, masterActionOptions, null);
     }
 
     /**
@@ -263,7 +280,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genAppIndex() {
-        final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class)).replace("@title", title);
+        final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class))
+                .replace("@title", title)
+                .replace("@ideaUri", ideaUri != null ?  ideaUri : "");
         if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {
