@@ -444,11 +444,13 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     undo(event) {
         this._editor.exec('undo');
+        this.changeEventHandler();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     redo(event) {
         this._editor.exec('redo');
+        this.changeEventHandler();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
