@@ -34,6 +34,10 @@ styleElement.innerHTML = `
                 margin-top: 0 !important;
                 top: calc(0.8em - 2.5px);
             }
+            .toastui-editor-contents :not(span, mark) {
+                box-sizing: content-box;
+                line-height: 160%;
+            }
         </style>
     </template>
 `;
