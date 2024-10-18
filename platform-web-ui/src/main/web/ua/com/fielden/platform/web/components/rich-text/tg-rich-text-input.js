@@ -196,10 +196,11 @@ function mouseUpHandler(e) {
 }
 
 function getElementToEdit(predicate, extractor) {
-    if (this._prevSelection) {
-        if (this._prevSelection[0] === this._prevSelection[1]) {
+    const selection = this._editor.getSelection();
+    if (selection) {
+        if (selection[0] === selection[1]) {
             //It means that only caret postion was set (no selection). Then take text and url from dom at caret position if it exists
-            const node = this._editor.wwEditor.view.domAtPos(this._prevSelection[0], 1).node;
+            const node = this._editor.wwEditor.view.domAtPos(selection[0], 1).node;
             const element = findParentBy.bind(this)(node, predicate);
             if (element && element.pmViewDesc) {
                 const text = this._editor.getSelectedText(element.pmViewDesc.posAtStart, element.pmViewDesc.posAtEnd);
@@ -208,10 +209,10 @@ function getElementToEdit(predicate, extractor) {
         } else {
             //This branch indicates that user has selected some text or even nodes, therefore the text should be taken from selection
             // and url from the first <a> tag in selection
-            const text = this._editor.getSelectedText(this._prevSelection[0], this._prevSelection[1]);
+            const text = this._editor.getSelectedText(selection[0], selection[1]);
             const nodes = [];
-            for (let i = this._prevSelection[0]; i <= this._prevSelection[1]; i++) {
-                const node = this._editor.wwEditor.view.domAtPos(i, this._prevSelection[1] - i).node;
+            for (let i = selection[0]; i <= selection[1]; i++) {
+                const node = this._editor.wwEditor.view.domAtPos(i, selection[1] - i).node;
                 if (node) {
                     nodes.push(node);
                 }
@@ -334,8 +335,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
                 reflectToAttribute: true
             },
 
-            _editor: Object,
-            _prevSelection: Array
+            _editor: Object
         }
     }
 
@@ -353,7 +353,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             events: {
                 change: this._htmlContentChanged.bind(this),
                 blur: this.changeEventHandler,
-                caretChange: this._saveSelection.bind(this),
                 keydown: (viewType, event) => this.keyDownHandler(event)
             },
             plugins: [colorTextPlugin, fakeSelection],
@@ -437,7 +436,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     applyStrikethough(event) {
         this._editor.exec('strike');
-        if (this._prevSelection && this._prevSelection[0] !== this._prevSelection[1]) {
+        const selection = this._editor.getSelection();
+        if (selection && selection[0] !== selection[1]) {
             tearDownEvent(event.detail && event.detail.keyboardEvent);
         }
     }
@@ -463,7 +463,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     toggleLink(url, text) {
-        if (this._prevSelection && this._prevSelection[0] !== this._prevSelection[1] && !url) {
+        const selection = this._editor.getSelection();
+        if (selection && selection[0] !== selection[1] && !url) {
             this._editor.exec('toggleLink');
         } else {
             this._editor.exec('addLink', { linkUrl: url, linkText: text });
@@ -482,14 +483,16 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     fakeSelect() {
-        if (this._prevSelection[0] !== this._prevSelection[1]) {
-            this._editor.exec('fakeSelect', {from: this._prevSelection[0], to: this._prevSelection[1]});
+        const selection = this._editor.getSelection();
+        if (selection && selection[0] !== selection[1]) {
+            this._editor.exec('fakeSelect', {from: selection[0], to: selection[1]});
         }
     }
 
     fakeUnselect() {
-        if (this._prevSelection[0] !== this._prevSelection[1]) {
-            this._editor.exec('fakeUnselect', {from: this._prevSelection[0], to: this._prevSelection[1]});
+        const selection = this._editor.getSelection();
+        if (selection && selection[0] !== selection[1]) {
+            this._editor.exec('fakeUnselect', {from: selection[0], to: selection[1]});
         }
     }
 
@@ -508,7 +511,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     stopEditing(event) {
-        const cursorPosition = this._prevSelection ? this._prevSelection[1] : 0;
+        const selection = this._editor.getSelection();
+        const cursorPosition = selection ? selection[1] : 0;
         this._editor.setSelection(cursorPosition, cursorPosition);
         this.focus();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
@@ -529,15 +533,10 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     getSelectionCoordinates() {
-        if (this._editor && this._prevSelection) {
+        if (this._editor && this._editor.getSelection()) {
             const view = this._editor.wwEditor.view;
-            return [view.coordsAtPos(this._prevSelection[0]), view.coordsAtPos(this._prevSelection[1])];
-        }
-    }
-
-    _saveSelection(e) {
-        if (this._editor) {
-            this._prevSelection = this._editor.getSelection();
+            const selection = this._editor.getSelection();
+            return [view.coordsAtPos(selection[0]), view.coordsAtPos(selection[1])];
         }
     }
 
