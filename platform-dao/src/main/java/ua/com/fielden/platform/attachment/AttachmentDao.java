@@ -5,16 +5,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.attachment.Attachment.HYPERLINK;
-import static ua.com.fielden.platform.attachment.Attachment.pn_IS_LATEST_REV;
-import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_MODIFIED;
-import static ua.com.fielden.platform.attachment.Attachment.pn_LAST_REVISION;
-import static ua.com.fielden.platform.attachment.Attachment.pn_MIME;
-import static ua.com.fielden.platform.attachment.Attachment.pn_ORIG_FILE_NAME;
-import static ua.com.fielden.platform.attachment.Attachment.pn_PREV_REVISION;
-import static ua.com.fielden.platform.attachment.Attachment.pn_REV_NO;
-import static ua.com.fielden.platform.attachment.Attachment.pn_SHA1;
-import static ua.com.fielden.platform.attachment.Attachment.pn_TITLE;
+import static ua.com.fielden.platform.attachment.Attachment.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -210,7 +201,8 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                 DESC,
                 pn_TITLE, pn_SHA1, pn_ORIG_FILE_NAME, pn_REV_NO, 
                 pn_PREV_REVISION, pn_PREV_REVISION + "." + pn_REV_NO, pn_PREV_REVISION + "." + pn_LAST_REVISION, 
-                pn_LAST_REVISION, pn_LAST_MODIFIED, pn_MIME, pn_IS_LATEST_REV);
+                pn_LAST_REVISION, pn_LAST_MODIFIED, pn_MIME, pn_IS_LATEST_REV,
+                pn_LATITUDE, pn_LONGITUDE);
     }
     
     public byte[] download(final Attachment attachment) {
