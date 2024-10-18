@@ -1586,9 +1586,10 @@
     // See https://github.com/visionmedia/mocha/blob/master/support/tail.js#L137
 
     var runner = Mocha.prototype.run.call(mocha, function (_error) {
-      if (document.getElementById('mocha')) {
-        Mocha.utils.highlightTags('code');
-      }
+      /*TG #2329*/
+      //if (document.getElementById('mocha')) {
+      //  Mocha.utils.highlightTags('code');
+      //}
 
       done(); // We ignore the Mocha failure count.
     }); // Mocha's default `onerror` handling strips the stack (to support really old
