@@ -1693,7 +1693,15 @@
       var url = expandUrl(path, get('root'));
       debug('Loading environment script:', url); // Synchronous load.
 
+      /*TG #2329*/
+      if (url.includes('chai/chai.js')) { // chai js must be loaded as ES6 module (inside <script type="module">) and set to global 'chai' variable to be available in WCT
+        document.write('<script type="module">import * as chai from \'' + encodeURI(url) + '\'; globalThis.chai = chai;</script>'); // jshint ignore:line
+      } else if (url.includes('sinon-chai/lib/sinon-chai.js')) { // sinon-chai must be loaded after chai - also in ES6 way (<script type="module">)
+        document.write('<script src="' + encodeURI(url) + '" type="module"></script>'); // jshint ignore:line
+      } else {
       document.write('<script src="' + encodeURI(url) + '"></script>'); // jshint ignore:line
+      /*TG #2329*/
+      }
     });
     debug('Environment scripts loaded');
     var imports = get('environmentImports');
