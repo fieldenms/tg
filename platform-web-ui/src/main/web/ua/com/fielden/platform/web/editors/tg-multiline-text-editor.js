@@ -44,8 +44,6 @@ const customInputTemplate = html`
             bind-value="{{_editingValue}}"
             max-length="[[maxLength]]"
             on-input="_onInput"
-            on-mouseup="_onMouseUp" 
-            on-mousedown="_onMouseDown"
             on-keydown="_onKeydown"
             on-focus="_onFocus"
             on-blur="_outFocus"
@@ -84,18 +82,6 @@ export class TgMultilineTextEditor extends TgEditor {
             maxRows: {
                 type: Number,
                 value: 5
-            },
-    
-            _onMouseDown: {
-                type: Function,
-                value: function () {
-                    return (function (event) {
-                        if (this.shadowRoot.activeElement !== this.decoratedInput()) {
-                            this.decoratedInput().textarea.select();
-                            this._tearDownEventOnUp = true;
-                        }
-                    }).bind(this);
-                }
             },
             
             /**
