@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.test.server;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.types.RichText.fromHtml;
+import static ua.com.fielden.platform.types.RichText.fromMarkdown;
 
 import java.io.FileInputStream;
 import java.math.BigDecimal;
@@ -29,29 +31,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
-import ua.com.fielden.platform.sample.domain.ITgPerson;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
-import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
-import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -67,6 +47,7 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.DbUtils;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
@@ -293,6 +274,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
+
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY1").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY1</p>")).setDesc("rich text desc 1"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY2").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY2</p>")).setDesc("rich text desc 2"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY3").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY3</p>")).setDesc("rich text desc 3"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY4").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY4</p>")).setDesc("rich text desc 4"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY5</p>")).setDesc("rich text desc 5"));
     }
 
     private void populateGraphQlData() {

@@ -138,6 +138,13 @@ Polymer({
     },
 
     /**
+     * Determines whether property is RichText or not.
+     */
+    _isRichTextProp: function (_hostComponent, _entity, column) {
+        return _hostComponent && this._isProperty(column) && column.type && _entity && _hostComponent.isRichTextProp(_entity, column);
+    },
+
+    /**
      * Determines whether property is Hypelink or not.
      */
     _isHyperlinkProp: function (_hostComponent, _entity, column) {
@@ -217,6 +224,8 @@ Polymer({
         this._modified = this.egiEntity && this.egiEntity.entityModification && this.egiEntity.entityModification[this.column.property];
         if (this._isBooleanProp(this._hostComponent, this._entity, this.column)) {
             this._value = this._getBooleanIcon(this._hostComponent, this._entity, this.column);
+        } else if (this._isRichTextProp(this._hostComponent, this._entity, this.column)) {
+            this._value = this._getValueFromEntity(this._hostComponent, this._entity, this.column).coreText;
         } else {
             this._value = this._getBindedValue(this._hostComponent, this._entity, this.column);
         }

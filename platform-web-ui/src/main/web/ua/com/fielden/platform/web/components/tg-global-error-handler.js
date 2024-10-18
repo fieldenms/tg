@@ -5,6 +5,21 @@ import { containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.j
 
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 
+const excludedErrorPredicates = [];
+
+/**
+ * Registers a predicate to exclude errors from global error handler 
+ * 
+ * @param {Function} shouldExcludeError - predicate that identifies whether error should be excluded from global error handling or not.
+ */
+export function excludeErrors(shouldExcludeError) {
+    excludedErrorPredicates.push(shouldExcludeError);
+}
+
+function shouldExcludeError(e) {
+    return !!excludedErrorPredicates.find(errorPredicate => errorPredicate(e));
+}
+
 /**
  * Throw or reject with this type of error if you don't want to report this error to the user but want to report it to the server.
  */
@@ -137,18 +152,22 @@ class TgGlobalErrorHandler extends PolymerElement {
     }
 
     _handleUnhandledPromiseError (e) {
-        const error = e.reason.error || e.reason;
-        const errorMsg = error.message + "\n" + error.stack;
-        if (!e.reason.request || "IRON-REQUEST" !== e.reason.request.tagName) {
-            this._acceptError(e.composedPath()[0], error, errorMsg);
+        if (!shouldExcludeError(e)) {
+            const error = e.reason.error || e.reason;
+            const errorMsg = error.message + "\n" + error.stack;
+            if (!e.reason.request || "IRON-REQUEST" !== e.reason.request.tagName) {
+                this._acceptError(e.composedPath()[0], error, errorMsg);
+            }
         }
     }
 
     _handleError (e) {
-        const errorDetail = e.detail || e;
-        const errorMsg = errorDetail.message + " Error happened in: " + errorDetail.filename + " at Ln: " + errorDetail.lineno + ", Co: " + errorDetail.colno
-                        + "\n" + ((errorDetail.error && errorDetail.error.stack) ?  errorDetail.error.stack : JSON.stringify(errorDetail.error));
-        this._acceptError(e.composedPath()[0], errorDetail, errorMsg);
+        if (!shouldExcludeError(e)) {
+            const errorDetail = e.detail || e;
+            const errorMsg = errorDetail.message + " Error happened in: " + errorDetail.filename + " at Ln: " + errorDetail.lineno + ", Co: " + errorDetail.colno
+                            + "\n" + ((errorDetail.error && errorDetail.error.stack) ?  errorDetail.error.stack : JSON.stringify(errorDetail.error));
+            this._acceptError(e.composedPath()[0], errorDetail, errorMsg);
+        }
     }
 
     /**
