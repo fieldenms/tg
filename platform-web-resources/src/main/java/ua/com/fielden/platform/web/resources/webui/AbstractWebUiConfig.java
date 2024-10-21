@@ -108,13 +108,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     /**
      * Creates abstract {@link IWebUiConfig}.
      *
-     * @param title -- application title displayed by the web client
-     * @param workflow -- indicates development or deployment workflow, which affects how web resources get loaded.
-     * @param externalResourcePaths
-     * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
-     * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
-     * @param masterActionOptions -- determines what options are available for master's save and cancel actions.
-     * @param ideaUri -- an optional idea page URI.
+     * @param title  application title displayed by the web client.
+     * @param workflow  indicates development or deployment workflow, which affects how web resources get loaded.
+     * @param externalResourcePaths  additional root paths for file resources (see {@link #resourcePaths} for more information).
+     * @param independentTimeZone  if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
+     * @param masterActionOptions  determines what options are available for master's save and cancel actions.
+     * @param ideaUri  an optional idea page URI.
      */
     public AbstractWebUiConfig(
             final String title,
@@ -161,14 +160,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     /**
-     * Creates abstract {@link IWebUiConfig}.
-     *
-     * @param title -- application title displayed by the web client
-     * @param workflow -- indicates development or deployment workflow, which affects how web resources get loaded.
-     * @param externalResourcePaths
-     * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
-     * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
-     * @param masterActionOptions -- determines what options are available for master's save and cancel actions.
+     * The same as {@link #AbstractWebUiConfig}, but without {@code ideaUri}.
      */
     public AbstractWebUiConfig(
             final String title,
