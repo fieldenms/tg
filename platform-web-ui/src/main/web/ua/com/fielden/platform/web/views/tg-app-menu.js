@@ -35,7 +35,7 @@ const template = html`
             overflow: hidden;
         }
         .tool-bar {
-            padding: 0 16px;
+            padding: 0 8px 0 16px;
             height: 44px;
             font-size: 18px;
             color: white;
@@ -99,7 +99,7 @@ const template = html`
     <div id="toolbar" class="tool-bar">
         <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
         <div id="logoutContainer" class="layout horizontal center" style="display: contents">
-            <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
+            <span class="flex truncate" style="font-size:1rem; padding-right:8px; text-align: right;">[[menuConfig.userName]]</span>
             <paper-icon-button id="ideaButton" hidden$="[[!ideaUri]]" icon="icons:lightbulb-outline" tooltip-text="Tap to share your ideas" on-tap="_showIdeas"></paper-icon-button>
             <slot name="helpAction"></slot>
             <paper-icon-button id="logoutButton" icon="tg-icons:logout" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
