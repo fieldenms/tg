@@ -1,46 +1,16 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
-import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
-import static ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions.ALL_OFF;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
-
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.validator.routines.UrlValidator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
-import ua.com.fielden.platform.entity.EntityEditAction;
-import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.EntityNewAction;
-import ua.com.fielden.platform.entity.UserDefinableHelp;
+import ua.com.fielden.platform.entity.*;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
@@ -72,6 +42,28 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
+import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
+import static ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions.ALL_OFF;
+
 /**
  * The base implementation for Web UI configuration, which should be inherited from in concrete applications for defining the final application specific Web UI configuration.
  * <p>
@@ -87,7 +79,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default configurations for [%s]-typed centres (caching)...";
 
     private final String title;
-    private final String ideaUri;
+    private final Optional<String> ideaUri;
     private WebUiBuilder webUiBuilder;
     private Injector injector;
 
@@ -95,17 +87,21 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     protected MainMenuBuilder desktopMainMenuConfig;
     protected MainMenuBuilder mobileMainMenuConfig;
+
     /**
-     * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
-     * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
+     * The paths for any kind of file resources that are needed for a web-client.
+     * These are mapped to the '/resources/' router path.
+     * Also, these resource paths might be augmented with other custom paths.
+     * When a web-client requests a resource, then the application will search for that resource in these paths, starting with the custom paths.
      */
     private final List<String> resourcePaths;
     private final Workflows workflow;
     private final Map<String, String> checksums;
     private final boolean independentTimeZone;
     private final MasterActionOptions masterActionOptions;
+
     /**
-     * Holds the map between embedded entity centre's menu item type and [entity centre; entity master] pair.
+     * Holds the map between embedded entity centres' menu item types and [entity centre, entity master] pair.
      */
     private Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> embeddedCentreMap;
 
@@ -118,11 +114,18 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
      * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
      * @param masterActionOptions -- determines what options are available for master's save and cancel actions.
-     * @param ideaUri -- the idea page URI.
+     * @param ideaUri -- an optional idea page URI.
      */
-    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone, final Optional<MasterActionOptions> masterActionOptions, final String ideaUri) {
+    public AbstractWebUiConfig(
+            final String title,
+            final Workflows workflow,
+            final String[] externalResourcePaths,
+            final boolean independentTimeZone,
+            final Optional<MasterActionOptions> masterActionOptions,
+            final Optional<String> ideaUri)
+    {
         this.title = title;
-        this.ideaUri = ideaUri;
+        this.ideaUri = ideaUri.map(uri -> validateIdeaUri(uri).getInstanceOrElseThrow());
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
         this.webUiBuilder = new WebUiBuilder(this);
@@ -167,8 +170,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
      * @param masterActionOptions -- determines what options are available for master's save and cancel actions.
      */
-    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone, final Optional<MasterActionOptions> masterActionOptions) {
-        this(title, workflow, externalResourcePaths, independentTimeZone, masterActionOptions, null);
+    public AbstractWebUiConfig(
+            final String title,
+            final Workflows workflow,
+            final String[] externalResourcePaths,
+            final boolean independentTimeZone,
+            final Optional<MasterActionOptions> masterActionOptions) {
+        this(title, workflow, externalResourcePaths, independentTimeZone, masterActionOptions, Optional.empty());
     }
 
     /**
@@ -282,7 +290,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public final String genAppIndex() {
         final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class))
                 .replace("@title", title)
-                .replace("@ideaUri", ideaUri != null ?  ideaUri : "");
+                .replace("@ideaUri", ideaUri.orElse(""));
         if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {
@@ -524,6 +532,18 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             logger.info(format(log + "done [%s]", embeddedCentreMap.size()));
         }
         return embeddedCentreMap;
+    }
+
+    private static Result validateIdeaUri(final String webAddress) {
+        if (StringUtils.isBlank(webAddress)) {
+            return successful();
+        }
+
+        final var validator = new UrlValidator(new String[] { HTTPS.name(), HTTPS.name().toLowerCase() }, ALLOW_LOCAL_URLS);
+        if (!validator.isValid(webAddress)) {
+            return failuref("Idea URI [%s] is not a valid HTTPS address.", webAddress);
+        }
+        return successful(webAddress);
     }
 
 }
