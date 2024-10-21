@@ -100,7 +100,7 @@ const template = html`
         <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
         <div id="logoutContainer" class="layout horizontal center" style="display: contents">
             <span class="flex truncate" style="font-size:1rem; padding-right:8px; text-align: right;">[[menuConfig.userName]]</span>
-            <paper-icon-button id="ideaButton" hidden$="[[!ideaUri]]" icon="icons:lightbulb-outline" tooltip-text="Tap to share your ideas" on-tap="_showIdeas"></paper-icon-button>
+            <paper-icon-button id="ideaButton" hidden$="[[!ideaUri]]" icon="icons:lightbulb-outline" tooltip-text$="[[_getIdeaTooltip(ideaUri)]]" on-tap="_showIdeas"></paper-icon-button>
             <slot name="helpAction"></slot>
             <paper-icon-button id="logoutButton" icon="tg-icons:logout" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
         </div>
@@ -278,6 +278,11 @@ Polymer({
     },
     _isDisabled: function(item) {
         return !isMenuPresent(item.menu);
+    },
+    _getIdeaTooltip: function (ideaUri) {
+        if (ideaUri) {
+            return `Tap to share your ideas!<br>${ideaUri}`;
+        }
     },
     _showIdeas: function (e) {
         if (this.ideaUri && (!e.detail.sourceEvent.detail || e.detail.sourceEvent.detail < 2)) {
