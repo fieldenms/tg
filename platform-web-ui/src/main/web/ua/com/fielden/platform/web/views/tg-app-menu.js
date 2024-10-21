@@ -281,7 +281,7 @@ Polymer({
     },
     _getIdeaTooltip: function (ideaUri) {
         if (ideaUri) {
-            return `Tap to share your ideas<br>${ideaUri}`;
+            return `Tap to share your ideas!<br>${ideaUri}`;
         }
     },
     _showIdeas: function (e) {
