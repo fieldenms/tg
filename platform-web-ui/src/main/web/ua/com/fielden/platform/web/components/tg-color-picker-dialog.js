@@ -7,6 +7,8 @@ import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polyme
 import '/resources/editors/tg-colour-picker.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+
 
 const template = html`
     <style>
@@ -109,6 +111,11 @@ export class TgColorPickerDialog extends PolymerElement {
         };
     }
 
+    ready () {
+        super.ready();
+        this.addEventListener("keydown", this._captureKeyDown.bind(this));
+    }
+
     set color(newColor) {
         const hashlessColor = newColor ? (newColor.startsWith('#') ? newColor.substring(1) : newColor).toUpperCase() : '';
         this.$.colorEditor.assignConcreteValue({hashlessUppercasedColourValue: hashlessColor}, this._reflector.tg_convert.bind(this._reflector));
@@ -117,6 +124,14 @@ export class TgColorPickerDialog extends PolymerElement {
 
     get color() {
         return this._entity['colorProp'] ? `#${this._entity['colorProp'].hashlessUppercasedColourValue}` : '';
+    }
+
+    focusDefaultEditor() {
+        this.$.colorEditor.$.input.focus();
+    }
+
+    resetState() {
+        this.color = '';
     }
 
     _cancelColor() {
@@ -130,10 +145,12 @@ export class TgColorPickerDialog extends PolymerElement {
         }
     }
 
-    resetState() {
-        this.color = '';
+    _captureKeyDown(e) {
+        if (e.keyCode === 13) {
+            this._okColor();
+            tearDownEvent(e);
+        }
     }
-
 }
 
 customElements.define('tg-color-picker-dialog', TgColorPickerDialog);

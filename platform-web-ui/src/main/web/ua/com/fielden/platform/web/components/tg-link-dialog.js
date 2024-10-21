@@ -6,6 +6,7 @@ import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polyme
 
 import '/resources/editors/tg-singleline-text-editor.js';
 import '/resources/editors/tg-hyperlink-editor.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 
@@ -116,6 +117,11 @@ export class TgLinkDialog extends PolymerElement {
         };
     }
 
+    ready () {
+        super.ready();
+        this.addEventListener("keydown", this._captureKeyDown.bind(this));
+    }
+
     set url(newUrl) {
         this.$.urlEditor.assignConcreteValue({value: newUrl}, this._reflector.tg_convert.bind(this._reflector));
         this.$.urlEditor.commitIfChanged();
@@ -123,6 +129,15 @@ export class TgLinkDialog extends PolymerElement {
 
     get url() {
         return this._entity['urlProp'] ? this._entity['urlProp'].value : '';
+    }
+
+    focusDefaultEditor() {
+        this.$.urlEditor.$.input.focus();
+    }
+
+    resetState() {
+        this.url = '';
+        this.linkText = '';
     }
 
     _cancelLink() {
@@ -136,9 +151,11 @@ export class TgLinkDialog extends PolymerElement {
         }
     }
 
-    resetState() {
-        this.url = '';
-        this.linkText = '';
+    _captureKeyDown(e) {
+        if (e.keyCode === 13) {
+            this._okLink();
+            tearDownEvent(e);
+        }
     }
 }
 

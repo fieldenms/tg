@@ -58,10 +58,10 @@ const additionalTemplate = html`
             box-shadow: 0px 2px 6px #ccc;
         }
     </style>
-    <iron-dropdown id="linkDropdown" style="width:300px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_linkDialogClosed">
+    <iron-dropdown id="linkDropdown" style="width:300px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
         <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]"></tg-link-dialog>
     </iron-dropdown>
-    <iron-dropdown id="colorDropdown" style="width:270px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_colorDialogClosed">
+    <iron-dropdown id="colorDropdown" style="width:300px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
         <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]"></tg-color-picker-dialog>
     </iron-dropdown>`;
 const customLabelTemplate = html`
@@ -377,17 +377,22 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         return localStorageKey(`${this.entityType}_${this.propertyName}_height`);
     }
 
-    _linkDialogClosed(e) {
-        if (e.composedPath()[0] === this.$.linkDropdown) {
-            this.$.linkDialog.resetState();
-            this.$.input.fakeUnselect();
+    _dialogClosed(e) {
+        if (e.composedPath()[0].tagName == "IRON-DROPDOWN") {
+            const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
+            if (dropDownContent && dropDownContent.resetState) {
+                dropDownContent.resetState();
+                this.$.input.fakeUnselect();
+            }
         }
     }
 
-    _colorDialogClosed(e) {
-        if (e.composedPath()[0] === this.$.colorDropdown) {
-            this.$.colorDialog.resetState();
-            this.$.input.fakeUnselect();
+    _dialogOpened(e) {
+        if (e.composedPath()[0].tagName == "IRON-DROPDOWN") {
+            const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
+            if (dropDownContent && dropDownContent.focusDefaultEditor) {
+                dropDownContent.focusDefaultEditor();
+            }
         }
     }
 
