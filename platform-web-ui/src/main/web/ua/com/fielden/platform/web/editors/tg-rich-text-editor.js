@@ -11,6 +11,40 @@ import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mix
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
 import { tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
 
+function setDialogPosition(dialog, pos) {
+    const dialogWidth = parseInt(dialog.style.width);
+    const dialogHeight = parseInt(dialog.style.height);
+    let x = (pos[0].left + pos[1].left) / 2 - dialogWidth / 2;
+    let y = Math.max(pos[0].bottom, pos[1].bottom);
+
+    const wWidth = getWindowWidth();
+    const wHeight = getWindowHeight();
+
+    if (x < 0) {
+        x = 0; 
+    } else if (x + dialogWidth > wWidth) {
+        x = wWidth - dialogWidth;
+    }
+
+    if (y < 0) {
+        y = 0;
+    } else if (y + dialogHeight > wHeight) {
+        const yAboveTheText = Math.min(pos[0].top, pos[1].top) - dialogHeight;
+        y = Math.min(wHeight - dialogHeight, yAboveTheText);
+    }
+
+    dialog.horizontalOffset =  x;
+    dialog.verticalOffset = y;
+}
+
+function getWindowWidth () {
+    return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+}
+
+function getWindowHeight () {
+    return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+}
+
 const additionalTemplate = html`
     <style>
         #input {
@@ -58,10 +92,10 @@ const additionalTemplate = html`
             box-shadow: 0px 2px 6px #ccc;
         }
     </style>
-    <iron-dropdown id="linkDropdown" style="width:300px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
+    <iron-dropdown id="linkDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
         <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]"></tg-link-dialog>
     </iron-dropdown>
-    <iron-dropdown id="colorDropdown" style="width:300px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
+    <iron-dropdown id="colorDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
         <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]"></tg-color-picker-dialog>
     </iron-dropdown>`;
 const customLabelTemplate = html`
@@ -231,14 +265,10 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         this.$.input.scrollIntoView();
         const textColorObj = this.$.input.initColorEditing();
         this.$.input.fakeSelect();
-        const coordinates = this.$.input.getSelectionCoordinates();
-        const x = (coordinates[0].left + coordinates[1].left) / 2;
-        const y = Math.max(coordinates[0].bottom, coordinates[1].bottom);
         if (textColorObj) {
             this.$.colorDialog.color = textColorObj.detail;
         }
-        this.$.colorDropdown.horizontalOffset =  x - parseInt(this.$.colorDropdown.style.width) / 2;
-        this.$.colorDropdown.verticalOffset = y;
+        setDialogPosition(this.$.colorDropdown, this.$.input.getSelectionCoordinates());
         this.$.colorDropdown.open();
     }
 
@@ -246,15 +276,11 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         this.$.input.scrollIntoView();
         const link = this.$.input.initLinkEditing();
         this.$.input.fakeSelect();
-        const coordinates = this.$.input.getSelectionCoordinates();
-        const x = (coordinates[0].left + coordinates[1].left) / 2;
-        const y = Math.max(coordinates[0].bottom, coordinates[1].bottom);
         if (link) {
             this.$.linkDialog.url = link.detail;
             this.$.linkDialog.linkText = link.text;
         }
-        this.$.linkDropdown.horizontalOffset =  x - parseInt(this.$.linkDropdown.style.width) / 2;
-        this.$.linkDropdown.verticalOffset = y;
+        setDialogPosition(this.$.linkDropdown, this.$.input.getSelectionCoordinates());
         this.$.linkDropdown.open();
     }
 
