@@ -126,9 +126,9 @@ const additionalTemplate = html`
         }
         .primary {
             font-size: 10pt;
-            padding-bottom: 3px;
         }
         .secondary {
+            padding-top: 3px;
             font-size: 8pt;
         }
         .shared {
@@ -179,7 +179,7 @@ const customInputTemplate = html`
                         <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
                         <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]" style$="[[_computeTitleStyle(canReorderItems)]]">
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
-                            <div class$="[[_computedDescriptionClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
+                            <div class$="[[_computedDescriptionClass(item)]]" hidden$="[[!_calcItemText(item, descriptionPropertyName)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
                         </div>
                         <div class="primary shared" inner-h-t-m-l="[[_calcSharedByText(item)]]" hidden$="[[_sharedByTextHidden(item)]]"></div>
                         <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
@@ -588,7 +588,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         }
         return classes;
     }
-    
+
     _computedDescriptionClass (item) {
         let classes = 'secondary dim truncate';
         if (item.inherited) {
