@@ -53,6 +53,7 @@ milliseconds.
 
 Polymer({
   is: 'iron-location',
+  _template: null,
   properties: {
     //Indicates whether uri should be docoded on window.location changes or not.
     noDecode: {
@@ -385,7 +386,7 @@ Polymer({
     // in a new tab.
 
 
-    if (event.metaKey || event.ctrlKey) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey) {
       return null;
     }
 
