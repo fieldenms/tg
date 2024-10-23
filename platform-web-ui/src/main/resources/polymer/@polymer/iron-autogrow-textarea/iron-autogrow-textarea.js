@@ -33,12 +33,11 @@ Custom property | Description | Default
 `--iron-autogrow-textarea` | Mixin applied to the textarea | `{}`
 `--iron-autogrow-textarea-placeholder` | Mixin applied to the textarea placeholder | `{}`
 
-@group Iron Elements
-@hero hero.svg
 @demo demo/index.html
 */
 
 Polymer({
+  /** @override */
   _template: html`
     <style>
       :host {
@@ -102,7 +101,7 @@ Polymer({
 
     <!-- size the input/textarea with a div, because the textarea has intrinsic size in ff -->
     <div class="textarea-container fit">
-      <textarea id="textarea" name\$="[[name]]" aria-label\$="[[label]]" autocomplete\$="[[autocomplete]]" autofocus\$="[[autofocus]]" inputmode\$="[[inputmode]]" placeholder\$="[[placeholder]]" readonly\$="[[readonly]]" required\$="[[required]]" disabled\$="[[disabled]]" rows\$="[[rows]]" minlength\$="[[minlength]]" maxlength\$="[[maxlength]]"></textarea>
+      <textarea id="textarea" name$="[[name]]" aria-label$="[[label]]" autocomplete$="[[autocomplete]]" autofocus$="[[autofocus]]" autocapitalize$="[[autocapitalize]]" inputmode$="[[inputmode]]" placeholder$="[[placeholder]]" readonly$="[[readonly]]" required$="[[required]]" disabled$="[[disabled]]" rows$="[[rows]]" minlength$="[[minlength]]" maxlength$="[[maxlength]]"></textarea>
     </div>
 `,
   is: 'iron-autogrow-textarea',
@@ -166,10 +165,20 @@ Polymer({
 
     /**
      * Bound to the textarea's `autofocus` attribute.
+     *
+     * @type {!boolean}
      */
     autofocus: {
       type: Boolean,
       value: false
+    },
+
+    /**
+     * Bound to the textarea's `autocapitalize` attribute.
+     */
+    autocapitalize: {
+      type: String,
+      value: 'none'
     },
 
     /**
@@ -230,7 +239,10 @@ Polymer({
    * @return {!HTMLTextAreaElement}
    */
   get textarea() {
-    return this.$.textarea;
+    return (
+      /** @type {!HTMLTextAreaElement} */
+      this.$.textarea
+    );
   },
 
   /**
@@ -263,13 +275,14 @@ Polymer({
     this.$.textarea.selectionEnd = value;
   },
 
+  /** @override */
   attached: function () {
     /* iOS has an arbitrary left margin of 3px that isn't present
      * in any other browser, and means that the paper-textarea's cursor
      * overlaps the label.
      * See https://github.com/PolymerElements/paper-input/issues/468.
      */
-    var IS_IOS = navigator.userAgent.match(/iP(?:[oa]d|hone)/);
+    var IS_IOS = navigator.userAgent.match(/iP(?:[oa]d|hone)/) && !navigator.userAgent.match(/OS 1[3456789]/);
 
     if (IS_IOS) {
       this.$.textarea.style.marginLeft = '-3px';
