@@ -11,6 +11,7 @@ found at http://polymer.github.io/PATENTS.txt
 import "../polymer/polymer-legacy.js";
 import { dom } from "../polymer/lib/legacy/polymer.dom.js";
 import { useShadow } from "../polymer/lib/utils/settings.js"; // Contains all connected resizables that do not have a parent.
+/*TG #2329*/
 import { afterNextRender } from "/resources/polymer/@polymer/polymer/lib/utils/render-status.js";
 
 var ORPHANS = new Set();
@@ -63,6 +64,7 @@ export const IronResizableBehavior = {
     this._boundOnDescendantIronResize = this._onDescendantIronResize.bind(this);
   },
   attached: function () {
+    /*TG #2329*/
     afterNextRender(this, () => {
       this._requestResizeNotifications();
     });
