@@ -9,7 +9,7 @@ import { html } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
-import { tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, localStorageKey, getRelativePos, isMobileApp  } from '/resources/reflection/tg-polymer-utils.js';
 
 function setDialogPosition(dialog, pos) {
     const dialogWidth = parseInt(dialog.style.width);
@@ -416,7 +416,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     _dialogOpened(e) {
         if (e.composedPath()[0].tagName == "IRON-DROPDOWN") {
             const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
-            if (dropDownContent && dropDownContent.focusDefaultEditor) {
+            if (dropDownContent && dropDownContent.focusDefaultEditor && !isMobileApp()) {
                 dropDownContent.focusDefaultEditor();
             }
         }

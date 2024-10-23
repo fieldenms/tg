@@ -134,15 +134,17 @@ export class TgColorPickerDialog extends PolymerElement {
         this.color = '';
     }
 
-    _cancelColor() {
+    _cancelColor(e) {
         this.cancelCallback && this.cancelCallback();
+        tearDownEvent(e);
     }
 
-    _okColor() {
+    _okColor(e) {
         this.$.colorEditor.commitIfChanged();
         if (!this.$.colorEditor._error) {
             this.okCallback && this.okCallback();
         }
+        tearDownEvent(e);
     }
 
     _captureKeyDown(e) {

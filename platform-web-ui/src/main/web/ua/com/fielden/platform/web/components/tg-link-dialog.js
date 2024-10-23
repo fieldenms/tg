@@ -140,15 +140,17 @@ export class TgLinkDialog extends PolymerElement {
         this.linkText = '';
     }
 
-    _cancelLink() {
+    _cancelLink(e) {
         this.cancelCallback && this.cancelCallback();
+        tearDownEvent(e);
     }
 
-    _okLink() {
+    _okLink(e) {
         this.$.urlEditor.commitIfChanged();
         if (!this.$.urlEditor._error) {
             this.okCallback && this.okCallback();
         }
+        tearDownEvent(e);
     }
 
     _captureKeyDown(e) {

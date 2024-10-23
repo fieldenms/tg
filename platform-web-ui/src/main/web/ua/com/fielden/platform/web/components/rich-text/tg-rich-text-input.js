@@ -473,7 +473,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     applyColor(selectedColor) {
-        this._editor.wwEditor.view.focus();
+        this.focusView();
         if (selectedColor) {
             this._editor.exec("color", {selectedColor: selectedColor});
         } else {
@@ -525,6 +525,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     focusEditor() {
         if (this._editor) {
             this._editor.focus();
+        }
+    }
+
+    focusView() {
+        if (this._editor) {
+            this._editor.wwEditor.view.focus();
         }
     }
 
