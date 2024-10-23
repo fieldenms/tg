@@ -14,7 +14,7 @@ import { IronResizableBehavior } from "../iron-resizable-behavior/iron-resizable
 import { dom } from "../polymer/lib/legacy/polymer.dom.js";
 import { useShadow } from "../polymer/lib/utils/settings.js";
 import { IronFocusablesHelper } from './iron-focusables-helper.js';
-import { IronOverlayManager } from './iron-overlay-manager.js';
+import { IronOverlayManager, IronOverlayManagerClass } from './iron-overlay-manager.js';
 import { pushScrollLock, removeScrollLock } from './iron-scroll-manager.js';
 /** @polymerBehavior */
 
@@ -199,6 +199,8 @@ export const IronOverlayBehaviorImpl = {
 
     this._ensureSetup();
   },
+
+  /** @override */
   attached: function () {
     // Call _openedChanged here so that position can be computed correctly.
     if (this.opened) {
@@ -207,8 +209,22 @@ export const IronOverlayBehaviorImpl = {
 
     this._observer = dom(this).observeNodes(this._onNodesChange);
   },
+
+  /** @override */
   detached: function () {
-    dom(this).unobserveNodes(this._observer);
+    // TODO(bicknellr): Per spec, checking `this._observer` should never be
+    // necessary because `connectedCallback` and `disconnectedCallback` should
+    // always be called in alternating order. However, the custom elements
+    // polyfill doesn't implement the reactions stack, so this can sometimes
+    // happen, particularly if ShadyDOM is in noPatch mode where the custom
+    // elements polyfill is installed before ShadyDOM. We should investigate
+    // whether or not we can either implement the reactions stack without major
+    // performance implications or patch ShadyDOM's functions to restore the
+    // typical ShadyDOM-then-custom-elements order and remove this workaround.
+    if (this._observer) {
+      dom(this).unobserveNodes(this._observer);
+    }
+
     this._observer = null;
 
     for (var cb in this.__rafs) {
@@ -444,7 +460,7 @@ export const IronOverlayBehaviorImpl = {
         // button outside the overlay).
         var activeElement = this._manager.deepActiveElement;
 
-        if (activeElement === document.body || dom(this).deepContains(activeElement)) {
+        if (activeElement === document.body || composedContains(this, activeElement)) {
           this.__restoreFocusNode.focus();
         }
       }
@@ -486,7 +502,9 @@ export const IronOverlayBehaviorImpl = {
 
       this._applyFocus();
     } else {
-      this._focusedChild = path[0];
+      this._focusedChild =
+      /** @type {Node} */
+      path[0];
     }
   },
 
@@ -776,6 +794,18 @@ export const IronOverlayBehaviorImpl = {
     }
   }
 };
+
+const composedParent = node => node.assignedSlot || node.parentNode || node.host;
+
+const composedContains = (ancestor, descendant) => {
+  for (let element = descendant; element; element = composedParent(element)) {
+    if (element === ancestor) {
+      return true;
+    }
+  }
+
+  return false;
+};
 /**
   Use `Polymer.IronOverlayBehavior` to implement an element that can be hidden
   or shown, and displays on top of other content. It includes an optional
@@ -826,6 +856,7 @@ export const IronOverlayBehaviorImpl = {
   @demo demo/index.html
   @polymerBehavior
  */
+
 
 export const IronOverlayBehavior = [IronFitBehavior, IronResizableBehavior, IronOverlayBehaviorImpl];
 /**

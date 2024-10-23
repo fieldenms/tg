@@ -29,6 +29,7 @@ Custom property | Description | Default
 */
 
 Polymer({
+  /** @override */
   _template: html`
     <style>
       :host {
@@ -68,10 +69,14 @@ Polymer({
   listeners: {
     'transitionend': '_onTransitionend'
   },
+
+  /** @override */
   created: function () {
     // Used to cancel previous requestAnimationFrame calls when opened changes.
     this.__openedRaf = null;
   },
+
+  /** @override */
   attached: function () {
     this.opened && this._openedChanged(this.opened);
   },

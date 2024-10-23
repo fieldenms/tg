@@ -14,62 +14,60 @@ import { IronA11yKeysBehavior } from "../iron-a11y-keys-behavior/iron-a11y-keys-
 import { dom } from "../polymer/lib/legacy/polymer.dom.js";
 import * as gestures from "../polymer/lib/utils/gestures.js";
 /**
- * @struct
- * @constructor
- * @private
+ * @package
  */
 
-export const IronOverlayManagerClass = function () {
-  /**
-   * Used to keep track of the opened overlays.
-   * @private {!Array<!Element>}
-   */
-  this._overlays = [];
-  /**
-   * iframes have a default z-index of 100,
-   * so this default should be at least that.
-   * @private {number}
-   */
+export class IronOverlayManagerClass {
+  constructor() {
+    /**
+     * Used to keep track of the opened overlays.
+     * @private {!Array<!Element>}
+     */
+    this._overlays = [];
+    /**
+     * iframes have a default z-index of 100,
+     * so this default should be at least that.
+     * @private {number}
+     */
 
-  this._minimumZ = 101;
-  /**
-   * Memoized backdrop element.
-   * @private {Element|null}
-   */
+    this._minimumZ = 101;
+    /**
+     * Memoized backdrop element.
+     * @private {Element|null}
+     */
 
-  this._backdropElement = null; // Enable document-wide tap recognizer.
-  // NOTE: Use useCapture=true to avoid accidentally prevention of the closing
-  // of an overlay via event.stopPropagation(). The only way to prevent
-  // closing of an overlay should be through its APIs.
-  // NOTE: enable tap on <html> to workaround Polymer/polymer#4459
-  // Pass no-op function because MSEdge 15 doesn't handle null as 2nd argument
-  // https://github.com/Microsoft/ChakraCore/issues/3863
+    this._backdropElement = null; // Enable document-wide tap recognizer.
+    // NOTE: Use useCapture=true to avoid accidentally prevention of the closing
+    // of an overlay via event.stopPropagation(). The only way to prevent
+    // closing of an overlay should be through its APIs.
+    // NOTE: enable tap on <html> to workaround Polymer/polymer#4459
+    // Pass no-op function because MSEdge 15 doesn't handle null as 2nd argument
+    // https://github.com/Microsoft/ChakraCore/issues/3863
 
-  gestures.add(document.documentElement, 'tap', function () {});
-  const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
-  document.addEventListener(clickEvent, this._onCaptureClick.bind(this), true);
-  document.addEventListener('focus', this._onCaptureFocus.bind(this), true);
-  document.addEventListener('keydown', this._onCaptureKeyDown.bind(this), true);
-};
-IronOverlayManagerClass.prototype = {
-  constructor: IronOverlayManagerClass,
-
+    gestures.addListener(document.documentElement, 'tap', function () {});
+    document.addEventListener('tap', this._onCaptureClick.bind(this), true);
+    document.addEventListener('focus', this._onCaptureFocus.bind(this), true);
+    document.addEventListener('keydown', this._onCaptureKeyDown.bind(this), true);
+  }
   /**
    * The shared backdrop element.
    * @return {!Element} backdropElement
    */
+
+
   get backdropElement() {
     if (!this._backdropElement) {
       this._backdropElement = document.createElement('iron-overlay-backdrop');
     }
 
     return this._backdropElement;
-  },
-
+  }
   /**
    * The deepest active element.
    * @return {!Element} activeElement the active element
    */
+
+
   get deepActiveElement() {
     var active = document.activeElement; // document.activeElement can be null
     // https://developer.mozilla.org/en-US/docs/Web/API/Document/activeElement
@@ -85,15 +83,16 @@ IronOverlayManagerClass.prototype = {
     }
 
     return active;
-  },
-
+  }
   /**
    * Brings the overlay at the specified index to the front.
    * @param {number} i
    * @private
    */
-  _bringOverlayAtIndexToFront: function (i) {
-    const overlay = this._overlays[i];
+
+
+  _bringOverlayAtIndexToFront(i) {
+    var overlay = this._overlays[i];
 
     if (!overlay) {
       return;
@@ -101,56 +100,53 @@ IronOverlayManagerClass.prototype = {
 
     var lastI = this._overlays.length - 1;
     var currentOverlay = this._overlays[lastI]; // Ensure always-on-top overlay stays on top.
-    
-    while (currentOverlay && this._shouldBeBehindOverlay(overlay, currentOverlay)) {
-      lastI--;
-      currentOverlay = this._overlays[lastI];
-    } 
 
-    // If already the top element, return.
+    if (currentOverlay && this._shouldBeBehindOverlay(overlay, currentOverlay)) {
+      lastI--;
+    } // If already the top element, return.
+
+
     if (i >= lastI) {
       return;
-    } 
+    } // Update z-index to be on top.
 
-    const minimumZ = Math.max(this._getZ(this._overlays[lastI]), this._minimumZ);
 
-    // Get the smallest z-index to replace z-index for the next overlay in the list
-    let lastZ = this._getZ(overlay);
-    while (i < lastI) {
-      // Shift overlay to left
-      this._overlays[i] = this._overlays[i + 1];
-      i++;
-      // Replace z-index a for shifted overlay by that last smallest z-index. But before doing this capture z-index for the next overlay.
-      let tempZ = this._getZ(this._overlays[i])
-      this._setZ(this._overlays[i], lastZ);
-      lastZ = tempZ;
-    }
-    this._overlays[lastI] = overlay;
+    var minimumZ = Math.max(this.currentOverlayZ(), this._minimumZ);
 
     if (this._getZ(overlay) <= minimumZ) {
-      this._setZ(overlay, minimumZ);
-    }
-  },
+      this._applyOverlayZ(overlay, minimumZ);
+    } // Shift other overlays behind the new on top.
 
+
+    while (i < lastI) {
+      this._overlays[i] = this._overlays[i + 1];
+      i++;
+    }
+
+    this._overlays[lastI] = overlay;
+  }
   /**
    * Adds the overlay and updates its z-index if it's opened, or removes it if
    * it's closed. Also updates the backdrop z-index.
    * @param {!Element} overlay
    */
-  addOrRemoveOverlay: function (overlay) {
+
+
+  addOrRemoveOverlay(overlay) {
     if (overlay.opened) {
       this.addOverlay(overlay);
     } else {
       this.removeOverlay(overlay);
     }
-  },
-
+  }
   /**
    * Tracks overlays for z-index and focus management.
    * Ensures the last added overlay with always-on-top remains on top.
    * @param {!Element} overlay
    */
-  addOverlay: function (overlay) {
+
+
+  addOverlay(overlay) {
     var i = this._overlays.indexOf(overlay);
 
     if (i >= 0) {
@@ -164,17 +160,17 @@ IronOverlayManagerClass.prototype = {
     var currentOverlay = this._overlays[insertionIndex - 1];
     var minimumZ = Math.max(this._getZ(currentOverlay), this._minimumZ);
 
-    var newZ = this._getZ(overlay); 
-    
-    // Ensure always-on-top overlay stays on top.
-    while (currentOverlay && this._shouldBeBehindOverlay(overlay, currentOverlay)) {
+    var newZ = this._getZ(overlay); // Ensure always-on-top overlay stays on top.
+
+
+    if (currentOverlay && this._shouldBeBehindOverlay(overlay, currentOverlay)) {
       // This bumps the z-index of +2.
       this._applyOverlayZ(currentOverlay, minimumZ);
 
       insertionIndex--; // Update minimumZ to match previous overlay's z-index.
 
-      currentOverlay = this._overlays[insertionIndex - 1];
-      minimumZ = Math.max(this._getZ(currentOverlay), this._minimumZ);
+      var previousOverlay = this._overlays[insertionIndex - 1];
+      minimumZ = Math.max(this._getZ(previousOverlay), this._minimumZ);
     } // Update z-index and insert overlay.
 
 
@@ -185,12 +181,13 @@ IronOverlayManagerClass.prototype = {
     this._overlays.splice(insertionIndex, 0, overlay);
 
     this.trackBackdrop();
-  },
-
+  }
   /**
    * @param {!Element} overlay
    */
-  removeOverlay: function (overlay) {
+
+
+  removeOverlay(overlay) {
     var i = this._overlays.indexOf(overlay);
 
     if (i === -1) {
@@ -200,34 +197,38 @@ IronOverlayManagerClass.prototype = {
     this._overlays.splice(i, 1);
 
     this.trackBackdrop();
-  },
-
+  }
   /**
    * Returns the current overlay.
    * @return {!Element|undefined}
    */
-  currentOverlay: function () {
+
+
+  currentOverlay() {
     var i = this._overlays.length - 1;
     return this._overlays[i];
-  },
-
+  }
   /**
    * Returns the current overlay z-index.
    * @return {number}
    */
-  currentOverlayZ: function () {
-    return this._getZ(this.currentOverlay());
-  },
 
+
+  currentOverlayZ() {
+    return this._getZ(this.currentOverlay());
+  }
   /**
    * Ensures that the minimum z-index of new overlays is at least `minimumZ`.
    * This does not effect the z-index of any existing overlays.
    * @param {number} minimumZ
    */
-  ensureMinimumZ: function (minimumZ) {
+
+
+  ensureMinimumZ(minimumZ) {
     this._minimumZ = Math.max(this._minimumZ, minimumZ);
-  },
-  focusOverlay: function () {
+  }
+
+  focusOverlay() {
     var current =
     /** @type {?} */
     this.currentOverlay();
@@ -235,12 +236,13 @@ IronOverlayManagerClass.prototype = {
     if (current) {
       current._applyFocus();
     }
-  },
-
+  }
   /**
    * Updates the backdrop z-index.
    */
-  trackBackdrop: function () {
+
+
+  trackBackdrop() {
     var overlay = this._overlayWithBackdrop(); // Avoid creating the backdrop if there is no overlay with backdrop.
 
 
@@ -254,12 +256,13 @@ IronOverlayManagerClass.prototype = {
     // https://github.com/Polymer/polymer/issues/4526
 
     this.backdropElement.prepare();
-  },
-
+  }
   /**
    * @return {!Array<!Element>}
    */
-  getBackdrops: function () {
+
+
+  getBackdrops() {
     var backdrops = [];
 
     for (var i = 0; i < this._overlays.length; i++) {
@@ -269,35 +272,38 @@ IronOverlayManagerClass.prototype = {
     }
 
     return backdrops;
-  },
-
+  }
   /**
    * Returns the z-index for the backdrop.
    * @return {number}
    */
-  backdropZ: function () {
-    return this._getZ(this._overlayWithBackdrop()) - 1;
-  },
 
+
+  backdropZ() {
+    return this._getZ(this._overlayWithBackdrop()) - 1;
+  }
   /**
    * Returns the top opened overlay that has a backdrop.
    * @return {!Element|undefined}
    * @private
    */
-  _overlayWithBackdrop: function () {
+
+
+  _overlayWithBackdrop() {
     for (var i = this._overlays.length - 1; i >= 0; i--) {
       if (this._overlays[i].withBackdrop) {
         return this._overlays[i];
       }
     }
-  },
-
+  }
   /**
    * Calculates the minimum z-index for the overlay.
    * @param {Element=} overlay
    * @private
    */
-  _getZ: function (overlay) {
+
+
+  _getZ(overlay) {
     var z = this._minimumZ;
 
     if (overlay) {
@@ -310,26 +316,27 @@ IronOverlayManagerClass.prototype = {
     }
 
     return z;
-  },
-
+  }
   /**
    * @param {!Element} element
    * @param {number|string} z
    * @private
    */
-  _setZ: function (element, z) {
-    element.style.zIndex = z;
-  },
 
+
+  _setZ(element, z) {
+    element.style.zIndex = z;
+  }
   /**
    * @param {!Element} overlay
    * @param {number} aboveZ
    * @private
    */
-  _applyOverlayZ: function (overlay, aboveZ) {
-    this._setZ(overlay, aboveZ + 2);
-  },
 
+
+  _applyOverlayZ(overlay, aboveZ) {
+    this._setZ(overlay, aboveZ + 2);
+  }
   /**
    * Returns the deepest overlay in the path.
    * @param {!Array<!Element>=} path
@@ -337,7 +344,9 @@ IronOverlayManagerClass.prototype = {
    * @suppress {missingProperties}
    * @private
    */
-  _overlayInPath: function (path) {
+
+
+  _overlayInPath(path) {
     path = path || [];
 
     for (var i = 0; i < path.length; i++) {
@@ -345,14 +354,15 @@ IronOverlayManagerClass.prototype = {
         return path[i];
       }
     }
-  },
-
+  }
   /**
    * Ensures the click event is delegated to the right overlay.
    * @param {!Event} event
    * @private
    */
-  _onCaptureClick: function (event) {
+
+
+  _onCaptureClick(event) {
     var i = this._overlays.length - 1;
     if (i === -1) return;
     var path =
@@ -371,14 +381,15 @@ IronOverlayManagerClass.prototype = {
         break;
       }
     }
-  },
-
+  }
   /**
    * Ensures the focus event is delegated to the right overlay.
    * @param {!Event} event
    * @private
    */
-  _onCaptureFocus: function (event) {
+
+
+  _onCaptureFocus(event) {
     var overlay =
     /** @type {?} */
     this.currentOverlay();
@@ -386,14 +397,15 @@ IronOverlayManagerClass.prototype = {
     if (overlay) {
       overlay._onCaptureFocus(event);
     }
-  },
-
+  }
   /**
    * Ensures TAB and ESC keyboard events are delegated to the right overlay.
    * @param {!Event} event
    * @private
    */
-  _onCaptureKeyDown: function (event) {
+
+
+  _onCaptureKeyDown(event) {
     var overlay =
     /** @type {?} */
     this.currentOverlay();
@@ -405,8 +417,7 @@ IronOverlayManagerClass.prototype = {
         overlay._onCaptureTab(event);
       }
     }
-  },
-
+  }
   /**
    * Returns if the overlay1 should be behind overlay2.
    * @param {!Element} overlay1
@@ -415,8 +426,12 @@ IronOverlayManagerClass.prototype = {
    * @suppress {missingProperties}
    * @private
    */
-  _shouldBeBehindOverlay: function (overlay1, overlay2) {
+
+
+  _shouldBeBehindOverlay(overlay1, overlay2) {
     return !overlay1.alwaysOnTop && overlay2.alwaysOnTop;
   }
-};
+
+}
+;
 export const IronOverlayManager = new IronOverlayManagerClass();
