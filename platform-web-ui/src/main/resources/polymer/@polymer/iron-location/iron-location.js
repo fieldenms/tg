@@ -55,6 +55,7 @@ Polymer({
   is: 'iron-location',
   _template: null,
   properties: {
+    /*TG #2329*/
     //Indicates whether uri should be docoded on window.location changes or not.
     noDecode: {
       type: Boolean,
@@ -67,6 +68,7 @@ Polymer({
       type: String,
       notify: true,
       value: function () {
+        /*TG #2329*/
         return this.noDecode ? window.location.pathname : window.decodeURIComponent(window.location.pathname);
       }
     },
@@ -89,6 +91,7 @@ Polymer({
       type: String,
       notify: true,
       value: function () {
+        /*TG #2329*/
         return this.noDecode ? window.location.hash.slice(1) : window.decodeURIComponent(window.location.hash.slice(1));
       }
     },
@@ -184,6 +187,7 @@ Polymer({
     this._initialized = false;
   },
   _hashChanged: function () {
+    /*TG #2329*/
     if (this.noDecode) {
       this._hashChangedOld();
     } else {
@@ -194,9 +198,11 @@ Polymer({
     this.hash = window.location.hash.substring(1);
   },
   _hashChangedNew: function () {
+    /*TG #2329*/ /*end*/
     this.hash = window.decodeURIComponent(this.__location.hash.substring(1));
   },
   _urlChanged: function () {
+    /*TG #2329*/
     if (this.noDecode) {
       this._urlChangedOld();
     } else {
@@ -217,6 +223,7 @@ Polymer({
     this._updateUrl();
   },
   _urlChangedNew: function () {
+    /*TG #2329*/ /*end*/
     // We want to extract all info out of the updated URL before we
     // try to write anything back into it.
     //
@@ -233,6 +240,7 @@ Polymer({
     this._updateUrl();
   },
   _getUrl: function () {
+    /*TG #2329*/
     if (this.noDecode) {
       return this._getUrlOld();
     } else {
@@ -251,6 +259,7 @@ Polymer({
     return url;
   },
   _getUrlNew: function () {
+    /*TG #2329*/ /*end*/
     var partiallyEncodedPath = window.encodeURI(this.path).replace(/\#/g, '%23').replace(/\?/g, '%3F');
     var partiallyEncodedQuery = '';
 
@@ -274,6 +283,7 @@ Polymer({
     return partiallyEncodedPath + partiallyEncodedQuery + partiallyEncodedHash;
   },
   _updateUrl: function() {
+    /*TG #2329*/
     if (this.noDecode) {
       this._updateUrlOld();
     } else {
@@ -309,6 +319,7 @@ Polymer({
     this.fire('location-changed', {}, {node: window});
   },
   _updateUrlNew: function () {
+    /*TG #2329*/ /*end*/
     if (this._dontUpdateUrl || !this._initialized) {
       return;
     }
