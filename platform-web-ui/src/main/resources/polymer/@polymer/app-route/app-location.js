@@ -68,6 +68,7 @@ firing a `location-changed` event on `window`. i.e.
 */
 
 Polymer({
+  /*TG #2329*/ /* no-decode="[[noDecode]]" */
   _template: html`
     <iron-query-params params-string="{{__query}}" params-object="{{queryParams}}">
     </iron-query-params>
@@ -76,6 +77,7 @@ Polymer({
   `,
   is: 'app-location',
   properties: {
+    /*TG #2329*/
     noDecode: {
       type: Boolean,
       value: false 
