@@ -77,7 +77,7 @@ function colorTextPlugin(context, options) {
                     const mark = schema.marks.span.create(attrs);
 
                     tr.addMark(from, to, mark);
-                    dispatch(tr);
+                    dispatch(tr.scrollIntoView());
 
                     return true;
                 }
@@ -473,12 +473,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     applyColor(selectedColor) {
+        this._editor.wwEditor.view.focus();
         if (selectedColor) {
             this._editor.exec("color", {selectedColor: selectedColor});
         } else {
             this._editor.exec('clearColor');
         }
-        this._editor.focus();
         this.changeEventHandler();
     }
 
