@@ -38,7 +38,6 @@
     "@polymer/iron-swipeable-container": "^3.0.1",
     "@polymer/iron-validatable-behavior": "^3.0.1",
     "@polymer/neon-animation": "^3.0.1",
-    "@polymer/paper-badge": "^3.1.0",
     "@polymer/paper-behaviors": "^3.0.1",
     "@polymer/paper-button": "^3.0.1",
     "@polymer/paper-card": "^3.0.1",

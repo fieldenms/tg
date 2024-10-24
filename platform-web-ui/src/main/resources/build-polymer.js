@@ -41,7 +41,6 @@ import '@polymer/iron-scroll-threshold/iron-scroll-threshold.js';
 import '@polymer/iron-swipeable-container/iron-swipeable-container.js';
 import '@polymer/iron-test-helpers/iron-test-helpers.js';
 import '@polymer/neon-animation/neon-animation.js';
-import '@polymer/paper-badge/paper-badge.js';
 import '@polymer/paper-behaviors/paper-button-behavior.js';
 import '@polymer/paper-behaviors/paper-checked-element-behavior.js';
 import '@polymer/paper-behaviors/paper-inky-focus-behavior.js';
