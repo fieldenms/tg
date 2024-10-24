@@ -269,6 +269,7 @@ Polymer({
       value: 'aria-checked'
     }
   },
+  /*TG #2329*/
   ready: function () {
     // TG: override default paper-checkbox behaviour of changing value by Enter key; this should not happen; standard checkboxes don't change state on Enter key
     delete this.keyBindings["enter:keydown"];
