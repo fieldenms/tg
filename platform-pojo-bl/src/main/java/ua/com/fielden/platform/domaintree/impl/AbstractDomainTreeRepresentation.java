@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.domaintree.Function;
@@ -26,6 +27,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
@@ -204,16 +206,12 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     public static List<Field> constructKeysAndProperties(final Class<?> type, final boolean withIdAndVersion) {
         // logger().info("Started constructKeysAndProperties for [" + type.getSimpleName() + "].");
-        final List<Field> properties = findProperties(type);
-        // let's remove desc and key properties as they will be added separately a couple of lines below
-        for (final Iterator<Field> iter = properties.iterator(); iter.hasNext();) {
-            final Field prop = iter.next();
-            if (KEY.equals(prop.getName()) || DESC.equals(prop.getName())) {
-                iter.remove();
-            }
-        }
-        final List<Field> keys = getKeyMembers((Class<? extends AbstractEntity<?>>) type);
-        properties.removeAll(keys); // remove composite key members if any
+        final var keys = getKeyMembers((Class<? extends AbstractEntity<?>>) type);
+        final var properties = streamProperties(type)
+                // let's remove desc and key properties as they will be added separately a couple of lines below
+                .filter(prop -> !KEY.equals(prop.getName()) && !DESC.equals(prop.getName()))
+                .filter(prop -> !keys.contains(prop)) // remove composite key members if any
+                .collect(toImmutableList());
 
         // now let's ensure that that key related properties and desc are first in the list of properties
         final List<Field> fieldsAndKeys = new ArrayList<>();

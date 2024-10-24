@@ -355,8 +355,7 @@ final class DomainMetadataGenerator {
     private Optional<PropertyMetadata> mkPropVersion(final EntityMetadataBuilder<?, ?> entityBuilder) {
         return switch (entityBuilder) {
             case EntityMetadataBuilder.Synthetic s when isSyntheticBasedOnPersistentEntityType(s.getJavaType()) ->
-                    Optional.of(persistentProp(VERSION, mkPropertyTypeOrThrow(Long.class), H_LONG,
-                                               PropertyNature.Persistent.data(propColumn(VERSION)))
+                    Optional.of(plainProp(VERSION, mkPropertyTypeOrThrow(Long.class), H_LONG)
                                         .required(true).build());
             case EntityMetadataBuilder.Persistent $ ->
                     Optional.of(persistentProp(VERSION, mkPropertyTypeOrThrow(Long.class), H_LONG,
@@ -400,7 +399,7 @@ final class DomainMetadataGenerator {
                                             .required(true).build());
                 case EntityMetadataBuilder.Synthetic s ->
                         isSyntheticBasedOnPersistentEntityType(s.getJavaType())
-                                ? Optional.of(persistentProp(KEY, propTypeMd, getHibType.get(), PropertyNature.Persistent.data(keyColumn))
+                                ? Optional.of(plainProp(KEY, propTypeMd, getHibType.get())
                                                       .required(true).build())
                                 : Optional.of(plainProp(KEY, propTypeMd, getHibType.getOpt().orElse(null))
                                                       .required(true).build());
@@ -412,9 +411,8 @@ final class DomainMetadataGenerator {
     /* "id" - depends on the enclosing entity's nature:
      * - Persistent - included as persistent.
      * - Synthetic:
-     *   - Based on Persistent - included as persistent.
      *   - With entity-typed key - implicitly calculated making it equal to "key".
-     *   - Else - included as persistent (something to reconsider).
+     *   - Else - included as plain.
      * - Else - excluded.
      */
     private Optional<PropertyMetadata> mkPropId(final EntityMetadataBuilder<?, ?> entityBuilder) {
@@ -432,15 +430,16 @@ final class DomainMetadataGenerator {
                                 "This is not supported.",
                                 s.getJavaType().getTypeName()));
                     }
-                    yield Optional.of(propId);
+                    yield Optional.of(plainProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY).build());
                 } else if (isEntityType(getKeyType(s.getJavaType()))) {
                     yield Optional.of(calculatedProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY,
                                                      PropertyNature.Calculated.data(expr().prop(KEY).model(), true, false))
                                               .build());
                 } else {
-                    // FIXME reconsider this implementation taking into account its role combined with actual yields
-                    // information in the process of getting final EntityPropInfo for Synthetic Entity
-                    yield Optional.of(propId);
+                    // Uncoditionally include ID for other synthetic entities. Whether it's actually used (i.e., yielded
+                    // in the underlying model) will be known by QuerySourceInfoProvider, which is used to determine if
+                    // ID should be fetched.
+                    yield Optional.of(plainProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY).build());
                 }
             }
             default -> Optional.empty();
@@ -492,7 +491,7 @@ final class DomainMetadataGenerator {
         // old code: last 2 conditions are to overcome incorrect metadata combinations
         // TODO: Should an exception be thrown for incorrect definitions?
         //       It is probably best to delegate verification of property declarations to the compile time verifier.
-        else if (atMapTo != null && !isSyntheticEntityType(enclosingEntityType) && atCalculated == null) {
+        else if (atMapTo != null && !entityBuilder.getNature().isSynthetic() && atCalculated == null) {
             final String columnName = mkColumnName(field.getName(), atMapTo);
             final var propTypeMd = mkPropertyTypeOrThrow(field);
             builder = Optional.of(

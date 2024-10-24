@@ -8,9 +8,8 @@ import ua.com.fielden.platform.eql.stage1.sundries.Yields1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 
 /**
- * Represents all structural query parts (components) obtained as the result of stage 0 (fluent API tokens) to stage 1 transformation.
+ * Represents all structural components of a query obtained as a result of stage 0 to stage 1 transformation (parsing).
  * This class is used as a convenience to keep all the query components together.
- *
  */
 public record QueryComponents1(
                 IJoinNode1<? extends IJoinNode2<?>> joinRoot,

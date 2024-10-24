@@ -12,8 +12,8 @@ import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
  * <p>
  * Note: all methods throw {@link IllegalArgumentException} in case of malformed <code>dotNotationProperties</code> (if the property does not exist etc.).
  *
+ * @see fetch
  * @author TG Team
- *
  */
 public interface IFetchProvider<T extends AbstractEntity<?>> {
     /**
@@ -105,6 +105,15 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      * @return new immutable {@link IFetchProvider} without specified property(-ies)
      */
     IFetchProvider<T> without(final CharSequence dotNotationProperty, final CharSequence... otherDotNotationProperties);
+
+    /**
+     * Excludes the properties from {@link IFetchProvider} (if they were included before that).
+     *
+     * @param dotNotationProperties  property names ("dot-notation" syntax)
+     *
+     * @return new immutable {@link IFetchProvider} without specified properties
+     */
+    IFetchProvider<T> without(final Iterable<? extends CharSequence> dotNotationProperties);
 
     /**
      * Copies {@link IFetchProvider} with new {@code managedType}.

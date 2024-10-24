@@ -602,7 +602,7 @@ public class Finder {
     public static List<Field> getFields(final Class<?> type, final boolean withUnion) {
         final List<Field> properties = new ArrayList<>();
         Class<?> klass = type;
-        if (AbstractUnionEntity.class.isAssignableFrom(klass) && withUnion) {
+        if (withUnion && AbstractUnionEntity.class.isAssignableFrom(klass)) {
             properties.addAll(getUnionEntityFields((Class<AbstractUnionEntity>) type));
         } else {
             while (klass != Object.class) { // need to iterated thought

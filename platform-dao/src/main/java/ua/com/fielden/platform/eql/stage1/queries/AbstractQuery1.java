@@ -126,7 +126,7 @@ public abstract class AbstractQuery1 {
         final TransformationResultFromStage1To2<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(context);
         final TransformationContextFromStage1To2 enhancedContext = joinRootTr.updatedContext;
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
-        final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context.querySourceInfoProvider, whereConditions.transform(enhancedContext));
+        final Conditions2 whereConditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context, whereConditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
@@ -146,18 +146,13 @@ public abstract class AbstractQuery1 {
 
     /**
      * Injects user-defined filtering conditions into the main source WHERE conditions.
-     *
-     * @param mainSource
-     * @param querySourceInfoProvider
-     * @param originalConditions
-     * @return
      */
-    private Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final QuerySourceInfoProvider querySourceInfoProvider, final Conditions2 originalConditions) {
+    private Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final TransformationContextFromStage1To2 context, final Conditions2 originalConditions) {
         if (udfConditions.isEmpty()) {
             return originalConditions;
         }
 
-        final TransformationContextFromStage1To2 localContext = TransformationContextFromStage1To2.forMainContext(querySourceInfoProvider).cloneWithAdded(mainSource);
+        final TransformationContextFromStage1To2 localContext = TransformationContextFromStage1To2.forMainContext(context).cloneWithAdded(mainSource);
         final Conditions2 udfConditions2 = udfConditions.transform(localContext);
 
         if (originalConditions.ignore()) {

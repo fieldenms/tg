@@ -9,11 +9,13 @@ import java.util.TreeMap;
 
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
+import javax.annotation.Nullable;
+
 public class QuerySourceItemForComponentType<T> extends AbstractQuerySourceItem<T> {
     private final Class<T> javaType;
     private final SortedMap<String, AbstractQuerySourceItem<?>> subitems = new TreeMap<>(); // TODO why sorted?
 
-    public QuerySourceItemForComponentType(final String name, final Class<T> javaType, final Object hibType) {
+    public QuerySourceItemForComponentType(final String name, final Class<T> javaType, final @Nullable Object hibType) {
         super(name, hibType, null);
         this.javaType = javaType;
     }

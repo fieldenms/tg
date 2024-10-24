@@ -4,6 +4,8 @@ import java.util.Map;
 
 import ua.com.fielden.platform.eql.meta.PropType;
 
+import javax.annotation.Nullable;
+
 /**
  * A structure used for representing yielded properties. It is used strictly for metadata generation needs.
  * <p>
@@ -20,5 +22,5 @@ import ua.com.fielden.platform.eql.meta.PropType;
  *
  * @author TG Team
  */
-public record YieldInfoNode(String name, PropType propType, boolean nonnullable, Map<String, YieldInfoNode> items) {
+public record YieldInfoNode(String name, @Nullable PropType propType, boolean nonnullable, Map<String, YieldInfoNode> items) {
 }
