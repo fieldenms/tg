@@ -43,7 +43,7 @@ public class SequentialGroupingStream {
     }
 
     /**
-     * The same as {@link #stream(Stream, BiPredicate, Optional)}, but automatic closing of the base stream upon processing of its last element by a terminal operation, invoked on the resultant stream.
+     * The same as {@link #stream(Stream, BiPredicate, Optional)}, but with automatic closing of the base stream upon processing of its last element by a terminal operation, invoked on the resultant stream.
      * Closing of the resultant stream still leads to closing of the base stream if it was not closed sooner due to the consumption by a terminal operation.
      * <p>
      * For example, if {@link Stream#forEach(Consumer)} or {@link Stream#collect(Collector)} is invoked on the resultant stream, the based stream will get closed after the processing of its last element.
