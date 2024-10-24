@@ -33,7 +33,6 @@
     "@polymer/iron-scroll-target-behavior": "^3.0.1",
     "@polymer/iron-scroll-threshold": "^3.0.1",
     "@polymer/iron-selector": "^3.0.1",
-    "@polymer/iron-swipeable-container": "^3.0.1",
     "@polymer/iron-validatable-behavior": "^3.0.1",
     "@polymer/neon-animation": "^3.0.1",
     "@polymer/paper-behaviors": "^3.0.1",
