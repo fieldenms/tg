@@ -644,26 +644,27 @@
          <body fullbleed unresolved>
                   <paper-header-panel main rightDrawer>
                            <paper-toolbar style="background-color: #03A9F4">
-                                    <paper-tooltip label="See the range of all radars">
+                                    <core-tooltip label="See the range of all radars">
                                              <paper-icon-button id="addCircles" onclick="addAllCircles()" icon="cloud">
                                              </paper-icon-button>
-                                    </paper-tooltip>
-                                    <paper-tooltip label="See the range of working radars">
+                                    </core-tooltip>
+                                    <core-tooltip label="See the range of working radars">
                                              <paper-icon-button id="addCircles" onclick="addWorkingCircles()" icon="cloud-done">
                                              </paper-icon-button>
-                                    </paper-tooltip>
+                                    </core-tooltip>
 
-                                    <paper-tooltip label="Area with no visibility">
+                                    <core-tooltip label="Area with no visibility">
                                              <paper-icon-button id="addCircles" onclick="seeNoVisibility()" icon="visibility-off">
                                              </paper-icon-button>
-                                    </paper-tooltip>
-                                    <paper-tooltip label="The progress of repair">
+                                    </core-tooltip>
+                                    <core-tooltip label="The progress of repair">
                                              <paper-icon-button id="addCircles" onclick="showProgressBar()" icon="settings">
-                                    </paper-tooltip>
-                                    <paper-tooltip label="Close all">
+                                             </paper-icon-button>
+                                    </core-tooltip>
+                                    <core-tooltip label="Close all">
                                              <paper-icon-button id="addCircles" onclick="initialize()" icon="close">
                                              </paper-icon-button>
-                                    </paper-tooltip>
+                                    </core-tooltip>
                                     <!--
                                     <button onclick="{{dialog.toggle()}}">
                                              Dialog
