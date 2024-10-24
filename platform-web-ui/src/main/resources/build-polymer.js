@@ -1,6 +1,7 @@
 import '@polymer/polymer/polymer-element.js';
 import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/app-layout/app-layout.js';
+import '@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
+import '@polymer/app-layout/app-drawer/app-drawer.js';
 import '@polymer/app-route/app-route.js';
 import '@polymer/app-route/app-location.js';
 import '@polymer/app-route/app-route-converter.js';
