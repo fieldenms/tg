@@ -147,7 +147,7 @@ public class SequentialGroupingStreamExampleTestCase {
     }
 
     @Test
-    public void stream_creates_stream_that_closes_base_stream_upon_close_but_not_upon_terminal_op() {
+    public void base_stream_is_closed_upon_closing_the_grouping_stream_but_not_upon_terminal_op() {
         final AtomicBoolean baseStreamIsClosed = new AtomicBoolean(false);
         final Stream<String> baseStream = Stream.of("1", "1", "2").onClose(() -> baseStreamIsClosed.set(true));
         try(final Stream<List<String>> stream = SequentialGroupingStream.stream(
@@ -156,34 +156,6 @@ public class SequentialGroupingStreamExampleTestCase {
             // run a terminal operation
             final List<List<String>> groups = stream.collect(Collectors.toList());
             assertEquals(2, groups.size());
-            assertFalse("Base stream was closed prematurely.", baseStreamIsClosed.get());
-        }
-        assertTrue(baseStreamIsClosed.get());
-    }
-
-    @Test
-    public void streamClosedOnTermination_creates_stream_that_closes_base_stream_upon_terminal_op() {
-        final AtomicBoolean baseStreamIsClosed = new AtomicBoolean(false);
-        final Stream<String> baseStream = Stream.of("1", "1", "2").onClose(() -> baseStreamIsClosed.set(true));
-        try(final Stream<List<String>> stream = SequentialGroupingStream.streamClosedOnTermination(
-                baseStream,
-                (el, group) -> group.isEmpty() || group.getFirst().equals(el))) {
-            // run some non-terminal operations and conclude with a terminal operation
-            final var sum = stream.filter(grp -> grp.size() >= 1).mapToInt(grp -> grp.size()).sum();
-            assertEquals(3, sum);
-            assertTrue("Base stream was not closed upon terminal op.", baseStreamIsClosed.get());
-        }
-    }
-
-    @Test
-    public void streamClosedOnTermination_creates_stream_that_closes_upon_close_but_not_upon_non_terminal_op() {
-        final AtomicBoolean baseStreamIsClosed = new AtomicBoolean(false);
-        final Stream<String> baseStream = Stream.of("1", "1", "2").onClose(() -> baseStreamIsClosed.set(true));
-        try(final Stream<List<String>> stream = SequentialGroupingStream.streamClosedOnTermination(
-                baseStream,
-                (el, group) -> group.isEmpty() || group.getFirst().equals(el))) {
-            // run some non-terminal operations
-            stream.filter(grp -> grp.size() > 1).map(grp -> grp.size());
             assertFalse("Base stream was closed prematurely.", baseStreamIsClosed.get());
         }
         assertTrue(baseStreamIsClosed.get());
