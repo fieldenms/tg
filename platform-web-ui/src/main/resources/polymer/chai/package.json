@@ -1,5 +1,5 @@
 {
-  "_from": "chai@^5.1.1",
+  "_from": "chai@^5.1.2",
   "_id": "chai@5.1.2",
   "_inBundle": false,
   "_integrity": "sha512-aGtmf24DW6MLHHG5gCx4zaI3uBq3KRtxeVs0DjFH6Z0rDNbsvTxFASFvdj79pxjxZ8/5u3PIiN3IwEIQkiiuPw==",
@@ -8,19 +8,19 @@
   "_requested": {
     "type": "range",
     "registry": true,
-    "raw": "chai@^5.1.1",
+    "raw": "chai@^5.1.2",
     "name": "chai",
     "escapedName": "chai",
-    "rawSpec": "^5.1.1",
+    "rawSpec": "^5.1.2",
     "saveSpec": null,
-    "fetchSpec": "^5.1.1"
+    "fetchSpec": "^5.1.2"
   },
   "_requiredBy": [
     "/"
   ],
   "_resolved": "https://registry.npmjs.org/chai/-/chai-5.1.2.tgz",
   "_shasum": "3afbc340b994ae3610ca519a6c70ace77ad4378d",
-  "_spec": "chai@^5.1.1",
+  "_spec": "chai@^5.1.2",
   "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
   "author": {
     "name": "Jake Luer",
