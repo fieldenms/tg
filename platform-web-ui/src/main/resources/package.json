@@ -67,7 +67,7 @@
     "@webcomponents/shadycss": "^1.11.2",
     "@polymer/polymer": "^3.5.2",
     "@polymer/test-fixture": "^4.0.2",
-    "chai": "^5.1.1",
+    "chai": "^5.1.2",
     "mocha": "^10.7.3",
     "wct-browser-legacy": "^1.0.2",
     "wct-mocha": "^1.1.0"
