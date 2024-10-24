@@ -1,8 +1,8 @@
 {
   "_from": "chai@^5.1.1",
-  "_id": "chai@5.1.1",
+  "_id": "chai@5.1.2",
   "_inBundle": false,
-  "_integrity": "sha512-pT1ZgP8rPNqUgieVaEY+ryQr6Q4HXNg8Ei9UnLUrjN4IA7dvQC5JB+/kxVcPNDHyBcc/26CXPkbNzq3qwrOEKA==",
+  "_integrity": "sha512-aGtmf24DW6MLHHG5gCx4zaI3uBq3KRtxeVs0DjFH6Z0rDNbsvTxFASFvdj79pxjxZ8/5u3PIiN3IwEIQkiiuPw==",
   "_location": "/chai",
   "_phantomChildren": {},
   "_requested": {
@@ -18,8 +18,8 @@
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/chai/-/chai-5.1.1.tgz",
-  "_shasum": "f035d9792a22b481ead1c65908d14bb62ec1c82c",
+  "_resolved": "https://registry.npmjs.org/chai/-/chai-5.1.2.tgz",
+  "_shasum": "3afbc340b994ae3610ca519a6c70ace77ad4378d",
   "_spec": "chai@^5.1.1",
   "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
   "author": {
@@ -98,5 +98,5 @@
     "test-node": "mocha --require ./test/bootstrap/index.js --reporter dot test/*.js"
   },
   "type": "module",
-  "version": "5.1.1"
+  "version": "5.1.2"
 }
