@@ -118,7 +118,7 @@ public class EntityContainerFetcher {
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(executionContext.getEntityFactory());
 
-        return SequentialGroupingStream.streamClosedOnTermination(stream, (el, group) -> group.size() < batchSize, Optional.of(batchSize))
+        return SequentialGroupingStream.stream(stream, (el, group) -> group.size() < batchSize, Optional.of(batchSize))
                                        .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
     }
 

@@ -12,14 +12,18 @@ import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
@@ -216,7 +220,34 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         assertEquals("desc Y", values.get(1).get("distinctDesc"));
         assertEquals(2, values.get(1).<Number>get("kount").intValue());
     }
-    
+
+    /**
+     * This test demonstrates a situation in which previously supported auto-closing of companion streams was leading to a JDBC runtime exception.
+     * The exception was happening at the time of invoking {@code results.next()} in {@link ua.com.fielden.platform.entity.query.stream.ScrollableResultStream} on already closed results.
+     * <p>
+     * As a result of this additional analysis was performed, and it was decided to remove support for auto-closing in case of terminal operations executed on the companion streams.
+     * Instead, a more conventional try-with-resources construct should always be used to correctly manage the resources associated with companion streams.
+     */
+    @Test
+    public void data_stream_does_not_get_closed_prematurely_in_case_of_head_and_tail() {
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+
+        final var count = co.count(query);
+        try(final var stream = co.stream(from(query).model())) {
+            // The following code emulates the implementation of StreamUtils.head_and_tail as it was at the time of writing.
+            final var iter = stream.iterator();
+            final var head = iter.hasNext() ? Optional.of(iter.next()) : Optional.empty();
+            final Iterable<EntityWithMoney> iterable = () -> iter;
+            final Stream<EntityWithMoney> tail = StreamSupport.stream(iterable.spliterator(), false);
+
+            // The following call was throwing a JDBC exception.
+            final var tailLength = tail.count();
+            assertEquals(count - 1, tailLength);
+        }
+
+    }
+
     @Override
     @SessionRequired
     protected void populateDomain() {
