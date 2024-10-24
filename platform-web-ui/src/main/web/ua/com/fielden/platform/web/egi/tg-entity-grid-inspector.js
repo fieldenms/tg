@@ -2149,11 +2149,13 @@ Polymer({
             return value && ("<b>" + value + "</b>");
         } else if (this._reflector.findTypeByName(column.type)) {
             return this._generateEntityTooltip(entity, column);
+        } else if (column.type === 'RichText') {
+            const value = this.getBindedValue(entity, column).toString();
+            return value && (`<div class="toastui-editor-contents" style="overflow:hidden;padding:8px;border-radius:2px;">${value}</div>`);
         } else {
             const value = this.getBindedValue(entity, column).toString();
             return value && ("<b>" + value + "</b>");
         }
-        return "";
     },
 
     getDescTooltip: function (entity, column) {

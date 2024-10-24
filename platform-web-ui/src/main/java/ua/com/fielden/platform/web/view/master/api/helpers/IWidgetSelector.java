@@ -1,24 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.helpers;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.view.master.api.widgets.IAutocompleterConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ICheckboxConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ICollectionalEditorConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ICollectionalRepresentorConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IColourConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IDatePickerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IDateTimePickerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IDecimalConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IEmailConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IFileConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IHiddenTextConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IHyperlinkConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IMoneyConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IMultilineTextConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.IPhoneNumberConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ISinglelineTextConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ISpinnerConfig;
-import ua.com.fielden.platform.web.view.master.api.widgets.ITimePickerConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.*;
 
 /**
  *
@@ -34,8 +17,10 @@ public interface IWidgetSelector<T extends AbstractEntity<?>> {
     IAutocompleterConfig<T> asAutocompleter();
     /** An editor for properties of type String that have not too long values (i.e. can normally fit on a single line). */
     ISinglelineTextConfig<T> asSinglelineText();
-    /** An editor for properties of type String that have may have long values, which would benefit from being displayed on several lines. */
+    /** An editor for properties of type String that may have long values, which would benefit from being displayed on several lines. */
     IMultilineTextConfig<T> asMultilineText();
+    /** An editor for properties of type RichText. */
+    IRichTextConfig<T> asRichText();
     /** Not-yet supported, use asSinglelineText() instead. */
     IHiddenTextConfig<T> asHiddenText();
     /** An editor for representing short collectional properties (not editable). */
