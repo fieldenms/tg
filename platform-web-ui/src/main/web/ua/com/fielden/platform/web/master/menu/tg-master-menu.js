@@ -17,7 +17,6 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
-import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
