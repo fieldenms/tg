@@ -234,6 +234,7 @@ public class CommonEntityDaoStreamingTestCase extends AbstractDaoTestCase {
         final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
         final var count = co.count(query);
+        assertTrue("Expecting more than 0 records for this test.", count > 0);
         try(final var stream = co.stream(from(query).model())) {
             // The following code emulates the implementation of StreamUtils.head_and_tail as it was at the time of writing.
             final var iter = stream.iterator();
