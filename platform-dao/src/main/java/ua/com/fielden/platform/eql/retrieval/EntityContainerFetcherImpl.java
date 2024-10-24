@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -183,7 +182,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(entityFactory);
 
-        return SequentialGroupingStream.streamClosedOnTermination(stream, (el, group) -> group.size() < batchSize, Optional.of(batchSize))
+        return SequentialGroupingStream.stream(stream, (el, group) -> group.size() < batchSize, Optional.of(batchSize))
                                        .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
     }
 
