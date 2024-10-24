@@ -63,7 +63,6 @@ import '@polymer/paper-ripple/paper-ripple.js';
 import '@polymer/paper-spinner/paper-spinner.js';
 import '@polymer/paper-styles/paper-styles.js';
 import '@polymer/paper-styles/paper-styles-classes.js';
-import '@polymer/paper-swatch-picker/paper-swatch-picker.js';
 import '@polymer/paper-tabs/paper-tabs.js';
 import '@polymer/paper-toast/paper-toast.js';
 import '@polymer/paper-toolbar/paper-toolbar.js';
