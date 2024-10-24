@@ -54,6 +54,7 @@ is the first `app-toolbar that is an immediate child of app-header.
 ```html
 <app-header condenses>
   <app-toolbar> Sticky element </app-toolbar>
+  <app-toolbar></app-toolbar>
 </app-header>
 ```
 
@@ -222,7 +223,6 @@ Mixin | Description | Default
 `--app-header-background-rear-layer` | Applies to the rear layer of the background. | {}
 `--app-header-shadow` | Applies to the shadow. | {}
 
-@group App Elements
 @element app-header
 @demo app-header/demo/blend-background-1.html Blend Background Image
 @demo app-header/demo/blend-background-2.html Blend 2 Background Images
@@ -238,6 +238,7 @@ Mixin | Description | Default
 */
 
 Polymer({
+  /** @override */
   _template: html`
     <style>
       :host {

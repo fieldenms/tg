@@ -58,7 +58,6 @@ its container:
 </app-header-layout>
 ```
 
-@group App Elements
 @element app-header-layout
 @demo app-header-layout/demo/simple.html Simple Demo
 @demo app-header-layout/demo/scrolling-region.html Scrolling Region
@@ -67,6 +66,7 @@ its container:
 */
 
 Polymer({
+  /** @override */
   _template: html`
     <style>
       :host {

@@ -86,13 +86,13 @@ Mixin | Description | Default
 ----------------|-------------|----------
 `--app-box-background-front-layer` | Applies to the front layer of the background | {}
 
-@group App Elements
 @element app-box
 @demo app-box/demo/document-scroll.html Document Scroll
 @demo app-box/demo/scrolling-region.html Scrolling Region
 */
 
 Polymer({
+  /** @override */
   _template: html`
     <style>
       :host {
@@ -146,6 +146,8 @@ Polymer({
    * @type {number}
    */
   _progress: 0,
+
+  /** @override */
   attached: function () {
     this.resetLayout();
   },

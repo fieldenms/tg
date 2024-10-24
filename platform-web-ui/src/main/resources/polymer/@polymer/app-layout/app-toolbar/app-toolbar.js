@@ -55,12 +55,12 @@ Custom property              | Description                  | Default
 -----------------------------|------------------------------|-----------------------
 `--app-toolbar-font-size`    | Toolbar font size            | 20px
 
-@group App Elements
 @element app-toolbar
 @demo app-toolbar/demo/index.html
 */
 
 Polymer({
+  /** @override */
   _template: html`
     <style>
 
