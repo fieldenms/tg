@@ -2,7 +2,6 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-media-query/iron-media-query.js'
-import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
