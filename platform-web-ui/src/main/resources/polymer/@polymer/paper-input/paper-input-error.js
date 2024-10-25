@@ -36,6 +36,7 @@ Custom property | Description | Default
 */
 
 Polymer({
+  /** @override */
   _template: html`
     <style>
       :host {

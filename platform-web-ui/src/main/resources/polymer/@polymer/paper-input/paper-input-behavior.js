@@ -207,6 +207,8 @@ export const PaperInputBehaviorImpl = {
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `autofocus`
      * property.
+     *
+     * @type {!boolean}
      */
     autofocus: {
       type: Boolean,
@@ -428,11 +430,14 @@ export const PaperInputBehaviorImpl = {
     return this.inputElement;
   },
 
+  /** @override */
   created: function () {
     // These types have some default placeholder text; overlapping
     // the label on top of it looks terrible. Auto-float the label in this case.
     this._typesThatHaveText = ['date', 'datetime', 'datetime-local', 'month', 'time', 'week', 'file'];
   },
+
+  /** @override */
   attached: function () {
     this._updateAriaLabelledBy(); // In the 2.0 version of the element, this is handled in `onIronInputReady`,
     // i.e. after the native input has finished distributing. In the 1.0

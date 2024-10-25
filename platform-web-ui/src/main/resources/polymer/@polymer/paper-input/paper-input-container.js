@@ -150,12 +150,15 @@ Custom property | Description | Default
 `--paper-input-container-underline-disabled` | Mixin applied to the underline when the input is disabled | `{}`
 `--paper-input-prefix` | Mixin applied to the input prefix | `{}`
 `--paper-input-suffix` | Mixin applied to the input suffix | `{}`
+`--paper-input-container-label-before` | Mixin applied to label before pseudo element | {}
+`--paper-input-container-label-after` | Mixin applied to label after pseudo element (useful for required asterisk) | {}
 
 This element is `display:block` by default, but you can set the `inline`
 attribute to make it `display:inline-block`.
 */
 
 Polymer({
+  /** @override */
   _template: html`
     <style>
       :host {
@@ -266,6 +269,17 @@ Polymer({
         @apply --paper-font-subhead;
         @apply --paper-input-container-label;
         @apply --paper-transition-easing;
+      }
+
+
+      .input-content ::slotted(label):before,
+      .input-content ::slotted(.paper-input-label):before {
+        @apply --paper-input-container-label-before;
+      }
+
+      .input-content ::slotted(label):after,
+      .input-content ::slotted(.paper-input-label):after {
+        @apply --paper-input-container-label-after;
       }
 
       .input-content.label-is-floating ::slotted(label),
@@ -512,6 +526,7 @@ Polymer({
     return this._inputElement[this._propertyForValue] || this._inputElement.value;
   },
 
+  /** @override */
   ready: function () {
     // Paper-input treats a value of undefined differently at startup than
     // the rest of the time (specifically: it does not validate it at startup,
@@ -528,6 +543,8 @@ Polymer({
     this.addEventListener('focus', this._boundOnFocus, true);
     this.addEventListener('blur', this._boundOnBlur, true);
   },
+
+  /** @override */
   attached: function () {
     if (this.attrForValue) {
       this._inputElement.addEventListener(this._valueChangedEvent, this._boundValueChanged);

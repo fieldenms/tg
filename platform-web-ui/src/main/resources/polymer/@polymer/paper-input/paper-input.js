@@ -70,14 +70,14 @@ Custom property | Description | Default
 ----------------|-------------|----------
 `--paper-input-container-ms-clear` | Mixin applied to the Internet Explorer reveal button (the eyeball) | {}
 
-@group Paper Elements
 @element paper-input
-@hero hero.svg
 @demo demo/index.html
 */
 
 Polymer({
   is: 'paper-input',
+
+  /** @override */
   _template: html`
     <style>
       :host {
@@ -168,7 +168,7 @@ Polymer({
 
       <!-- Need to bind maxlength so that the paper-input-char-counter works correctly -->
       <iron-input bind-value="{{value}}" slot="input" class="input-element" id$="[[_inputId]]" maxlength$="[[maxlength]]" allowed-pattern="[[allowedPattern]]" invalid="{{invalid}}" validator="[[validator]]">
-        <input aria-labelledby$="[[_ariaLabelledBy]]" aria-describedby$="[[_ariaDescribedBy]]" disabled$="[[disabled]]" title$="[[title]]" type$="[[type]]" pattern$="[[pattern]]" required$="[[required]]" autocomplete$="[[autocomplete]]" autofocus$="[[autofocus]]" inputmode$="[[inputmode]]" minlength$="[[minlength]]" maxlength$="[[maxlength]]" min$="[[min]]" max$="[[max]]" step$="[[step]]" name$="[[name]]" placeholder$="[[placeholder]]" readonly$="[[readonly]]" list$="[[list]]" size$="[[size]]" autocapitalize$="[[autocapitalize]]" autocorrect$="[[autocorrect]]" on-change="_onChange" tabindex$="[[tabIndex]]" autosave$="[[autosave]]" results$="[[results]]" accept$="[[accept]]" multiple$="[[multiple]]">
+        <input aria-labelledby$="[[_ariaLabelledBy]]" aria-describedby$="[[_ariaDescribedBy]]" disabled$="[[disabled]]" title$="[[title]]" type$="[[type]]" pattern$="[[pattern]]" required$="[[required]]" autocomplete$="[[autocomplete]]" autofocus$="[[autofocus]]" inputmode$="[[inputmode]]" minlength$="[[minlength]]" maxlength$="[[maxlength]]" min$="[[min]]" max$="[[max]]" step$="[[step]]" name$="[[name]]" placeholder$="[[placeholder]]" readonly$="[[readonly]]" list$="[[list]]" size$="[[size]]" autocapitalize$="[[autocapitalize]]" autocorrect$="[[autocorrect]]" on-change="_onChange" tabindex$="[[tabIndex]]" autosave$="[[autosave]]" results$="[[results]]" accept$="[[accept]]" multiple$="[[multiple]]" role$="[[inputRole]]" aria-haspopup$="[[inputAriaHaspopup]]">
       </iron-input>
 
       <slot name="suffix" slot="suffix"></slot>
@@ -188,6 +188,14 @@ Polymer({
     value: {
       // Required for the correct TypeScript type-generation
       type: String
+    },
+    inputRole: {
+      type: String,
+      value: undefined
+    },
+    inputAriaHaspopup: {
+      type: String,
+      value: undefined
     }
   },
 
@@ -211,7 +219,9 @@ Polymer({
     // Even though this is only used in the next line, save this for
     // backwards compatibility, since the native input had this ID until 2.0.5.
     if (!this.$.nativeInput) {
-      this.$.nativeInput = this.$$('input');
+      this.$.nativeInput =
+      /** @type {!Element} */
+      this.$$('input');
     }
 
     if (this.inputElement && this._typesThatHaveText.indexOf(this.$.nativeInput.type) !== -1) {
