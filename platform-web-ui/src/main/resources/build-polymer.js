@@ -4,7 +4,6 @@ import '@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
 import '@polymer/app-layout/app-drawer/app-drawer.js';
 import '@polymer/app-route/app-route.js';
 import '@polymer/app-route/app-location.js';
-import '@polymer/app-route/app-route-converter.js';
 import '@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import '@polymer/iron-ajax/iron-ajax.js';
 import '@polymer/iron-autogrow-textarea/iron-autogrow-textarea.js';
