@@ -58,6 +58,7 @@ Polymer({
 
       #a11yWrapper {
         visibility: hidden;
+        /*TG #2329*/
         overflow: hidden;
         text-overflow: ellipsis;
       }
