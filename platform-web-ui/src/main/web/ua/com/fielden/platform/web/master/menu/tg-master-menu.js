@@ -4,7 +4,6 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import '/resources/polymer/@polymer/iron-icons/maps-icons.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
-import '/resources/polymer/@polymer/iron-selector/iron-selector.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import { afterNextRender } from "/resources/polymer/@polymer/polymer/lib/utils/render-status.js";
