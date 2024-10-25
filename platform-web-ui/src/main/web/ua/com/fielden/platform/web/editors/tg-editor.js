@@ -86,6 +86,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 @apply --layout-center;
             }
             #copyIcon {
+                flex-shrink: 0;
                 display: none;
                 width: 18px;
                 height: 18px;

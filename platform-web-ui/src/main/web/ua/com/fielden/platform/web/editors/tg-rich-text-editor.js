@@ -47,20 +47,34 @@ function getWindowHeight () {
 
 const additionalTemplate = html`
     <style>
+        :host {
+            --paper-font-caption: {
+                line-height: 45px;
+            }
+        }
+        label {
+            cursor: default;
+            @apply --layout-vertical;
+            @apply --layout-start;
+        }
+        .label-title {
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
+        .editor-toolbar {
+            @apply --layout-horizontal;
+            @apply --layout-center;
+            padding-top: 10px;
+        }
         #input {
             cursor: text;
         }
-        .title-action {
-            display: none;
-            width: 18px;
-            height: 18px;
-            margin-left: 4px;
-        }
-        label .title-action {
+        .toolbar-action {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
             cursor: pointer;
-        }
-        :host(:hover) .title-action,#decorator[focused] .title-action {
-            display: unset;
         }
         #resizer {
             position: absolute;
@@ -100,22 +114,26 @@ const additionalTemplate = html`
     </iron-dropdown>`;
 const customLabelTemplate = html`
     <label id="editorLabel" style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
-        <span>[[propTitle]]</span>
-        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" class="title-action" icon="icons:content-copy" action-title="Copy" tooltip-text="Copy content" on-down="_preventEvent" on-tap="_copyTap"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="tg-rich-text-editor:header-1" action-title="Heading 1" tooltip-text="Make your text header 1" on-down="_preventEvent" on-tap="_makeHeader1"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="tg-rich-text-editor:header-2" action-title="Heading 2" tooltip-text="Make your text header 2" on-down="_preventEvent" on-tap="_makeHeader2"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="tg-rich-text-editor:header-3" action-title="Heading 3" tooltip-text="Make your text header 3" on-down="_preventEvent" on-tap="_makeHeader3"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="tg-rich-text-editor:format-paragraph" action-title="Paragraph" tooltip-text="Make your text paragraph" on-down="_preventEvent" on-tap="_makeParagraph"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Make your text bold, Ctrl+B, &#x2318;+B" on-down="_preventEvent" on-tap="_makeBold"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text, Ctrl+I, &#x2318;+I" on-down="_preventEvent" on-tap="_makeItalic"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it, Ctrl+S, &#x2318;+S" on-down="_preventEvent" on-tap="_makeStrike"></iron-icon>
-        <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
-        <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="title-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, &#x2318;+U" on-down="_preventEvent" on-tap="_createBulletedList"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Create a numbered list, Ctrl+O, &#x2318;+O" on-down="_preventEvent" on-tap="_createNumberedList"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="tg-rich-text-editor:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_preventEvent" on-tap="_createTaskList"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, &#x2318;+Z" on-down="_preventEvent" on-tap="_undo"></iron-icon>
-        <iron-icon hidden$="[[noLabelFloat]]" class="title-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, &#x2318;+Y" on-down="_preventEvent" on-tap="_redo"></iron-icon>
+        <div class="label-title">
+            <span>[[propTitle]]</span>
+            <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" action-title="Copy" tooltip-text="Copy content" on-down="_preventEvent" on-tap="_copyTap"></iron-icon>
+        </div>
+        <div class="editor-toolbar">
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:header-1" action-title="Heading 1" tooltip-text="Make your text header 1" on-down="_preventEvent" on-tap="_makeHeader1"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:header-2" action-title="Heading 2" tooltip-text="Make your text header 2" on-down="_preventEvent" on-tap="_makeHeader2"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:header-3" action-title="Heading 3" tooltip-text="Make your text header 3" on-down="_preventEvent" on-tap="_makeHeader3"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:format-paragraph" action-title="Paragraph" tooltip-text="Make your text paragraph" on-down="_preventEvent" on-tap="_makeParagraph"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Make your text bold, Ctrl+B, &#x2318;+B" on-down="_preventEvent" on-tap="_makeBold"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text, Ctrl+I, &#x2318;+I" on-down="_preventEvent" on-tap="_makeItalic"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it, Ctrl+S, &#x2318;+S" on-down="_preventEvent" on-tap="_makeStrike"></iron-icon>
+            <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
+            <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, &#x2318;+U" on-down="_preventEvent" on-tap="_createBulletedList"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Create a numbered list, Ctrl+O, &#x2318;+O" on-down="_preventEvent" on-tap="_createNumberedList"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_preventEvent" on-tap="_createTaskList"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, &#x2318;+Z" on-down="_preventEvent" on-tap="_undo"></iron-icon>
+            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, &#x2318;+Y" on-down="_preventEvent" on-tap="_redo"></iron-icon>
+        </div>
     </label>`;
 
 const customInputTemplate = html`
