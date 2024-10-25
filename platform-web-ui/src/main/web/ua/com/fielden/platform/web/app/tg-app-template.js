@@ -30,6 +30,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 let screenWidth = window.screen.availWidth;
 let screenHeight = window.screen.availHeight;
