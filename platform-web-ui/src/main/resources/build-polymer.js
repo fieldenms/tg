@@ -30,6 +30,7 @@ import '@polymer/iron-iconset-svg/iron-iconset-svg.js';
 import '@polymer/iron-list/iron-list.js';
 import '@polymer/iron-media-query/iron-media-query.js';
 import '@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
+import '@polymer/iron-overlay-behavior/iron-overlay-manager.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '@polymer/iron-selector/iron-selector.js';
 import '@polymer/iron-scroll-threshold/iron-scroll-threshold.js';
