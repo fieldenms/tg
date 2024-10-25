@@ -4,6 +4,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-styles.js';
+import '/resources/polymer/@polymer/paper-button/paper-button.js';
 
 import '/resources/components/tg-confirmation-dialog.js';
 import '/resources/centre/tg-selection-view.js';

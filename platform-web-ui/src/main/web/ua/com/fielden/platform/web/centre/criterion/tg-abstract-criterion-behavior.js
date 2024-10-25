@@ -5,6 +5,7 @@ import '/resources/components/tg-scrollable-component.js';
 import '/resources/images/tg-icons.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/centre/criterion/tg-criterion-config.js';
+import '/resources/polymer/@polymer/paper-button/paper-button.js';
 
 const criterionBehaviorStyle = html`
     <custom-style>
