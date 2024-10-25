@@ -1,24 +1,42 @@
 package ua.com.fielden.platform.audit;
 
 import com.google.common.collect.Streams;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
 
+import javax.lang.model.element.Modifier;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.squareup.javapoet.MethodSpec.methodBuilder;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static org.apache.commons.lang3.StringUtils.uncapitalize;
+import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
     static final String A3T = "a3t";
 
     private final IDomainMetadata domainMetadata;
+    private final Map<Type, TypeName> typeNameCache = new ConcurrentHashMap<>();
+    private final Map<Class<?>, AnnotationSpec> markerAnnotationCache = new ConcurrentHashMap<>();
 
     @Inject
     AuditEntityGeneratorImpl(final IDomainMetadata domainMetadata) {
@@ -59,11 +77,133 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final Path sourceRoot)
         throws IOException
     {
-        final var typeSpec = TypeSpec.classBuilder(ClassName.get(auditTypePkg, auditTypeName))
+        final var auditTypeClassName = ClassName.get(auditTypePkg, auditTypeName);
+
+        final var a3tBuilder = new AuditEntityBuilder(auditTypeClassName, type);
+
+        // Property for the reference to the audited entity
+        final var auditedEntityProp = propertyBuilder(uncapitalize(type.getSimpleName()), type)
+                .addAnnotation(AnnotationSpecs.compositeKeyMember(AbstractAuditEntity.NEXT_COMPOSITE_KEY_MEMBER))
+                .addAnnotation(getAnnotation(MapTo.class))
+                .addAnnotation(getAnnotation(Required.class))
+                // TODO @Final?
+                .addAnnotation(AnnotationSpecs.title(getEntityTitleAndDesc(type)))
                 .build();
+
+        a3tBuilder.addProperty(auditedEntityProp);
+
+        // Abstract methods in the base audit entity type
+        a3tBuilder.addMethod(methodBuilder("getAuditedEntity")
+                                     .addModifiers(PUBLIC)
+                                     .returns(getClassName(type))
+                                     .addAnnotation(getAnnotation(Override.class))
+                                     .addStatement("return %s()".formatted(auditedEntityProp.getAccessorSpec().name))
+                                     .build());
+        a3tBuilder.addMethod(methodBuilder("setAuditedEntity")
+                                     .addModifiers(PUBLIC)
+                                     .addParameter(getClassName(type), "entity", Modifier.FINAL)
+                                     .returns(auditTypeClassName)
+                                     .addAnnotation(getAnnotation(Override.class))
+                                     .addStatement("return %s(%s)".formatted(auditedEntityProp.getSetterSpec(auditTypeClassName).name, "entity"))
+                                     .build());
+
+        // Audited properties
+        final var auditedEntityMetadata = domainMetadata.forEntity(type);
+        auditedEntityMetadata.properties().stream()
+                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
+                .filter(AuditEntityGeneratorImpl::isAudited)
+                .map(pm -> propertyBuilder("a3t_" + pm.name(), pm.type().javaType())
+                        .addAnnotation(getAnnotation(MapTo.class))
+                        // TODO @Final?
+                        .build())
+                .forEach(a3tBuilder::addProperty);
+
+        final var typeSpec = a3tBuilder.build();
         final var javaFile = JavaFile.builder(auditTypePkg, typeSpec)
                 .build();
         javaFile.writeTo(sourceRoot);
+    }
+
+    private static boolean isAudited(final PropertyMetadata.Persistent property) {
+        class $ {
+            static final Set<String> IGNORED_PROPERTIES = Set.of(
+                    // id is captured by the audited entity reference property
+                    AbstractEntity.ID,
+                    AbstractEntity.VERSION,
+                    AbstractPersistentEntity.CREATED_BY,
+                    AbstractPersistentEntity.CREATED_DATE,
+                    AbstractPersistentEntity.CREATED_TRANSACTION_GUID,
+                    AbstractPersistentEntity.LAST_UPDATED_BY,
+                    AbstractPersistentEntity.LAST_UPDATED_DATE,
+                    AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID,
+                    ActivatableAbstractEntity.REF_COUNT);
+        }
+
+        return !$.IGNORED_PROPERTIES.contains(property.name());
+    }
+
+    private ClassName getClassName(final Class<?> type) {
+        return (ClassName) typeNameCache.computeIfAbsent(type, ClassName::get);
+    }
+
+    private TypeName getTypeName(final Type type) {
+        return typeNameCache.computeIfAbsent(type, TypeName::get);
+    }
+
+    private AnnotationSpec getAnnotation(final Class<? extends Annotation> annotationType) {
+        return markerAnnotationCache.computeIfAbsent(annotationType, k -> AnnotationSpec.builder(k).build());
+    }
+
+    private final class AuditEntityBuilder {
+        private final ClassName className;
+        private final Class<? extends AbstractEntity<?>> auditedType;
+        private final ArrayList<PropertySpec> properties;
+        private final ArrayList<MethodSpec> methods;
+
+        private AuditEntityBuilder(final ClassName className, final Class<? extends AbstractEntity<?>> auditedType) {
+            this.className = className;
+            this.auditedType = auditedType;
+            this.properties = new ArrayList<>();
+            this.methods = new ArrayList<>();
+        }
+
+        public TypeSpec build() {
+            final var builder = TypeSpec.classBuilder(className)
+                    .addModifiers(PUBLIC)
+                    .superclass(ParameterizedTypeName.get(AbstractAuditEntity.class, auditedType))
+                    .addAnnotation(AnnotationSpecs.auditFor(auditedType))
+                    // TODO Meta-model is not needed. Meta-model processor needs to support a new annotation - WithoutMetaModel.
+                    .addAnnotation(getAnnotation(MapEntityTo.class));
+            properties.forEach(propSpec -> {
+                builder.addField(propSpec.toFieldSpec());
+                builder.addMethod(propSpec.getAccessorSpec());
+                builder.addMethod(propSpec.getSetterSpec(className));
+            });
+            builder.addMethods(methods);
+            return builder.build();
+        }
+
+        public AuditEntityBuilder addProperty(final PropertySpec property) {
+            properties.add(property);
+            return this;
+        }
+
+        public AuditEntityBuilder addProperties(final PropertySpec... properties) {
+            for (final var property : properties) {
+                this.properties.add(property);
+            }
+            return this;
+        }
+
+        public AuditEntityBuilder addProperties(final Iterable<? extends PropertySpec> properties) {
+            properties.forEach(this.properties::add);
+            return this;
+        }
+
+        public AuditEntityBuilder addMethod(MethodSpec method) {
+            methods.add(method);
+            return this;
+        }
     }
 
     private static Path classNameToFilePath(final String packageName, final String classSimpleName) {
