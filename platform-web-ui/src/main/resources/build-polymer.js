@@ -61,7 +61,6 @@ import '@polymer/paper-item/paper-item.js';
 import '@polymer/paper-listbox/paper-listbox.js';
 import '@polymer/paper-progress/paper-progress.js';
 import '@polymer/paper-radio-button/paper-radio-button.js';
-import '@polymer/paper-ripple/paper-ripple.js';
 import '@polymer/paper-spinner/paper-spinner.js';
 import '@polymer/paper-styles/paper-styles.js';
 import '@polymer/paper-styles/paper-styles-classes.js';
