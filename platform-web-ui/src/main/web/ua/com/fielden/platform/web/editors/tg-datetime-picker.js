@@ -5,7 +5,6 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js'
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js'
 import '/resources/polymer/@polymer/paper-button/paper-button.js'
 import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js'
-import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
 import '/resources/polymer/@polymer/neon-animation/animations/scale-up-animation.js'
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js'
 
