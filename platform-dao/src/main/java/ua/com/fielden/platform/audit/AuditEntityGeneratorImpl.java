@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 
@@ -118,11 +119,29 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                         .build())
                 .forEach(a3tBuilder::addProperty);
 
-        final var typeSpec = a3tBuilder.build();
+        final var typeSpec = a3tBuilder.build(addSkipEntityExistsValidation);
         final var javaFile = JavaFile.builder(auditTypePkg, typeSpec)
                 .build();
         javaFile.writeTo(sourceRoot);
     }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : AuditEntityBuilder.Processor declarations
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    /**
+     * Annotates each entity-typed property with {@link SkipEntityExistsValidation}, unless this annotation is already present.
+     */
+    private final AuditEntityBuilder.Processor addSkipEntityExistsValidation = new AuditEntityBuilder.Processor() {
+        public PropertySpec processProperty(final AuditEntityBuilder builder, final PropertySpec propSpec) {
+            return propSpec.type() instanceof Class klass
+                   && domainMetadata.forEntityOpt(klass).isPresent()
+                   && !propSpec.hasAnnotation(getClassName(SkipEntityExistsValidation.class))
+                    ? propSpec.toBuilder().addAnnotation(getAnnotation(SkipEntityExistsValidation.class)).build()
+                    : propSpec;
+        }
+    };
+
 
     private static boolean isAudited(final PropertyMetadata.Persistent property) {
         class $ {
@@ -167,18 +186,20 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             this.methods = new ArrayList<>();
         }
 
-        public TypeSpec build() {
+        public TypeSpec build(final Processor processor) {
             final var builder = TypeSpec.classBuilder(className)
                     .addModifiers(PUBLIC)
                     .superclass(ParameterizedTypeName.get(AbstractAuditEntity.class, auditedType))
                     .addAnnotation(AnnotationSpecs.auditFor(auditedType))
                     // TODO Meta-model is not needed. Meta-model processor needs to support a new annotation - WithoutMetaModel.
-                    .addAnnotation(getAnnotation(MapEntityTo.class));
-            properties.forEach(propSpec -> {
-                builder.addField(propSpec.toFieldSpec());
-                builder.addMethod(propSpec.getAccessorSpec());
-                builder.addMethod(propSpec.getSetterSpec(className));
-            });
+                    .addAnnotation(MapEntityTo.class);
+            properties.stream()
+                    .map(prop -> processor.processProperty(this, prop))
+                    .forEach(propSpec -> {
+                        builder.addField(propSpec.toFieldSpec());
+                        builder.addMethod(propSpec.getAccessorSpec());
+                        builder.addMethod(propSpec.getSetterSpec(className));
+                    });
             builder.addMethods(methods);
             return builder.build();
         }
@@ -203,6 +224,10 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         public AuditEntityBuilder addMethod(MethodSpec method) {
             methods.add(method);
             return this;
+        }
+
+        interface Processor {
+            PropertySpec processProperty(AuditEntityBuilder builder, PropertySpec property);
         }
     }
 
