@@ -50,7 +50,6 @@ import '@polymer/neon-animation/animations/transform-animation.js';
 import '@polymer/paper-button/paper-button.js';
 import '@polymer/paper-checkbox/paper-checkbox.js';
 import '@polymer/paper-dialog/paper-dialog.js';
-import '@polymer/paper-dialog-behavior/paper-dialog-behavior.js';
 import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '@polymer/paper-fab/paper-fab.js';
 import '@polymer/paper-icon-button/paper-icon-button.js';
