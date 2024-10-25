@@ -28,7 +28,6 @@ import '@polymer/iron-icons/places-icons.js';
 import '@polymer/iron-icons/social-icons.js';
 import '@polymer/iron-iconset-svg/iron-iconset-svg.js';
 import '@polymer/iron-list/iron-list.js';
-import '@polymer/iron-location/iron-location.js';
 import '@polymer/iron-media-query/iron-media-query.js';
 import '@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import '@polymer/iron-pages/iron-pages.js';
