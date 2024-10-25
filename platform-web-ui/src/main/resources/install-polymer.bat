@@ -1,5 +1,4 @@
 npm install && ^
-git clone https://github.com/PolymerElements/iron-test-helpers node_modules\@polymer\iron-test-helpers && ^
 polymer build && ^
 rmdir /S /Q polymer & ^
 rename node_modules polymer && ^
