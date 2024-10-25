@@ -88,6 +88,8 @@ if ! mvn clean deploy -DdatabaseUri.prefix=${DATABASE_URI_PREFIX} -Dfork.count=$
   abort_release
 fi
 
+read -r -s -p $'Press ENTER to merge the release branch into develop...'
+
 info "Merge release branch back into develop"
 git checkout develop && git pull origin develop && \
     git merge --no-ff release-${RELEASE_VERSION} || { error "Failed to merge release branch back into develop"; abort_release; }
@@ -99,8 +101,12 @@ mvn versions:set -DnewVersion=${NEXT_DEVELOPMENT_VERSION} -DprocessAllModules=tr
 info "Commit the changes"
 git add pom.xml **/pom.xml && git commit -m "Update versions to ${NEXT_DEVELOPMENT_VERSION}" || { error "Failed to commit next development version changes"; abort_release; }
 
+read -r -s -p $'Press ENTER to delete the release branch into develop...'
+
 info "Delete the release branch ${RELEASE_VERSION}"
 git branch -d release-${RELEASE_VERSION} || { error "Failed to delete the release branch"; exit 1; }
+
+read -r -s -p $'Press ENTER to push changes to remote - make sure your have the privileges for that...'
 
 info "Push changes to remote"
 git push origin develop && git push origin master && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
