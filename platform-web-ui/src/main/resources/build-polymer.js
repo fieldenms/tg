@@ -7,7 +7,6 @@ import '@polymer/app-route/app-location.js';
 import '@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import '@polymer/iron-ajax/iron-ajax.js';
 import '@polymer/iron-autogrow-textarea/iron-autogrow-textarea.js';
-import '@polymer/iron-behaviors/iron-button-state.js';
 import '@polymer/iron-behaviors/iron-control-state.js';
 import '@polymer/iron-collapse/iron-collapse.js';
 import '@polymer/iron-dropdown/iron-dropdown.js';
