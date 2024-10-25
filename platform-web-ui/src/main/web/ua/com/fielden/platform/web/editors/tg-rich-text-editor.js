@@ -47,11 +47,6 @@ function getWindowHeight () {
 
 const additionalTemplate = html`
     <style>
-        :host {
-            --paper-font-caption: {
-                line-height: 45px;
-            }
-        }
         label {
             cursor: default;
             @apply --layout-vertical;
@@ -201,6 +196,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     ready() {
         super.ready();
+        this.decorator().$$('.floated-label-placeholder').style.lineHeight = "45px";
         this.$.linkDropdown.positionTarget = document.body;
         this._cancelLinkInsertion = function () {
             this.$.linkDropdown.cancel();

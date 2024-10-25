@@ -281,6 +281,16 @@ function getEditorHTMLText() {
     return this._editor.getHTML().replace(/<mark>(.*?)<\/mark>/g, '$1');
 }
 
+function applyFakeSelection(selection) {
+    if (selection && selection[0] !== selection[1]) {
+        this._editor.exec('fakeSelect', {from: selection[0], to: selection[1]});
+    }
+}
+
+function applyFakeUnselection(selection) {
+    this._editor.exec('fakeUnselect', {from: selection[0], to: selection[1]});
+}
+
 const template = html`
     <style include='rich-text-enhanced-styles'>
         ::selection {
@@ -335,7 +345,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
                 reflectToAttribute: true
             },
 
-            _editor: Object
+            _editor: Object,
+            _fakeSelection:{
+                type: Array,
+                observer: "_fakeSelectionChanged"
+            }
         }
     }
 
@@ -352,7 +366,9 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             initialEditType: 'wysiwyg',
             events: {
                 change: this._htmlContentChanged.bind(this),
-                blur: this.changeEventHandler,
+                caretChange: this._updateFakeSelection.bind(this),
+                blur: this._focusLost.bind(this),
+                focus: this._focusGain.bind(this),
                 keydown: (viewType, event) => this.keyDownHandler(event)
             },
             plugins: [colorTextPlugin, fakeSelection],
@@ -483,17 +499,13 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     fakeSelect() {
-        const selection = this._editor.getSelection();
-        if (selection && selection[0] !== selection[1]) {
-            this._editor.exec('fakeSelect', {from: selection[0], to: selection[1]});
-        }
+        this._fakeSelection = this._editor.getSelection();
+        applyFakeSelection.bind(this)(this._fakeSelection);
     }
 
     fakeUnselect() {
-        const selection = this._editor.getSelection();
-        if (selection && selection[0] !== selection[1]) {
-            this._editor.exec('fakeUnselect', {from: selection[0], to: selection[1]});
-        }
+        applyFakeUnselection.bind(this)(this._fakeSelection);
+        delete this._fakeSelection;
     }
 
     createBulletList(event) {
@@ -556,6 +568,34 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         const htmlText = getEditorHTMLText.bind(this)();
         if (this.value !== htmlText) {
             this.value = htmlText;
+        }
+    }
+
+    _updateFakeSelection(e) {
+        // if (this._fakeSelection) {
+        //     this._fakeSelection = this._editor.getSelection();
+        // }
+    }
+
+    _fakeSelectionChanged(newSelection, oldSelection) {
+        // if (!newSelection && oldSelection) {
+        //     applyFakeUnselection.bind(this)(oldSelection);
+        // } else if (newSelection && !this.shadowRoot.activeElement) {
+        //     applyFakeSelection.bind(this)(newSelection);
+        // }
+    }
+
+    _focusLost(e) {
+        this.changeEventHandler(e);
+        if (this._fakeSelection) {
+            this._fakeSelection = this._editor.getSelection();
+            applyFakeSelection.bind(this)(this._fakeSelection);
+        }
+    }
+    
+    _focusGain(e) {
+        if (this._fakeSelection) {
+            applyFakeUnselection.bind(this)(this._fakeSelection);
         }
     }
 
