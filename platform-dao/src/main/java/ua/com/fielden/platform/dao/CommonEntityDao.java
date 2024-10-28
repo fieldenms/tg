@@ -290,7 +290,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Returns a session instances without any checks. It is intended mainly for testing purposes to ensure correct session state after various db operations.
+     * Returns a session instances without any checks.
+     * It is intended mainly for testing purposes to ensure correctness of the session state after various db operations.
      *
      * @return
      */

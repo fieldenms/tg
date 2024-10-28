@@ -39,15 +39,20 @@ public class ScrollableResultStream {
 
         @Override
         public boolean tryAdvance(Consumer<? super Object[]> action) {
-            final boolean advanced = results.next();
-            
-            if (!advanced) {
-                return false;
-            } else {
-                action.accept(results.get());
+            try {
+                final boolean advanced = results.next();
+
+                if (!advanced) {
+                    return false;
+                } else {
+                    action.accept(results.get());
+                }
+
+                return true;
+            } catch (final Throwable ex) {
+                results.close();
+                throw ex;
             }
-            
-            return true;
         }
 
         @Override

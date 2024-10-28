@@ -5,10 +5,12 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EntityContainerInstantiationException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.RichText;
 
+import static graphql.Assert.assertNotNull;
 import static java.lang.String.join;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
@@ -193,6 +195,90 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         final var entity = co(EntityWithRichText.class).getEntity(from(query).model());
         assertNotNull(entity);
         assertTrue(richText.equalsByText(entity.getText()));
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Using RichText properties in EQL expressions
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @Test
+    public void concatenation_of_unicode_RichText_with_ascii_string_produces_unicode_string_when_modelled_as_aggregates() {
+        save(new_(EntityWithRichText.class, "1").setText(RichText.fromHtml("привіт")));
+
+        final var query = select(EntityWithRichText.class)
+                .yield().concat().prop("text").with().val(" world").end().as("str")
+                .modelAsAggregate();
+
+        final var entity = co(EntityAggregates.class).getEntity(EntityQueryUtils.from(query).model());
+        assertNotNull(entity);
+        assertEquals("привіт world", entity.get("str"));
+    }
+
+    @Test
+    public void caseWhen_with_unicode_result_in_one_branch_produces_unicode_string_when_modelled_as_aggregates_01() {
+        save(new_(EntityWithRichText.class, "1").setText(RichText.fromHtml("привіт")));
+
+        final var query = select(EntityWithRichText.class)
+                .yield().caseWhen().prop("key").isNotNull().then().prop("text").otherwise().val("hello").end().as("str")
+                .modelAsAggregate();
+
+        final var entity = co(EntityAggregates.class).getEntity(EntityQueryUtils.from(query).model());
+        assertNotNull(entity);
+        assertEquals("привіт", entity.get("str"));
+    }
+
+    @Test
+    public void caseWhen_with_unicode_result_in_one_branch_produces_unicode_string_when_modelled_as_aggregates_02() {
+        save(new_(EntityWithRichText.class, "1").setText(RichText.fromHtml("привіт")));
+
+        final var query = select(EntityWithRichText.class)
+                .yield().caseWhen().prop("key").isNotNull().then().prop("text").otherwise().val(null).end().as("str")
+                .modelAsAggregate();
+
+        final var entity = co(EntityAggregates.class).getEntity(EntityQueryUtils.from(query).model());
+        assertNotNull(entity);
+        assertEquals("привіт", entity.get("str"));
+    }
+
+    @Test
+    public void concatenation_of_RichText_property_that_contains_unicode_with_ascii_property_results_in_unicode_string() {
+        save(new_(EntityWithRichText.class, "1")
+                     .setText(RichText.fromHtml("привіт"))
+                     .setPlainText(" world"));
+
+        final var query = select(EntityWithRichText.class)
+                .yield().concat().prop("text").with().prop("plainText").end().as("str")
+                .modelAsAggregate();
+
+        final var entity = co(EntityAggregates.class).getEntity(EntityQueryUtils.from(query).model());
+        assertNotNull(entity);
+        assertEquals("привіт world", entity.get("str"));
+    }
+
+    @Test
+    public void RichText_property_with_unicode_is_lowercased_correctly() {
+        save(new_(EntityWithRichText.class, "1").setText(RichText.fromHtml("Мова Програмування")));
+
+        final var query = select(EntityWithRichText.class)
+                .yield().lowerCase().prop("text").as("str")
+                .modelAsAggregate();
+
+        final var entity = co(EntityAggregates.class).getEntity(EntityQueryUtils.from(query).model());
+        assertNotNull(entity);
+        assertEquals("мова програмування", entity.get("str"));
+    }
+
+    @Test
+    public void RichText_property_with_unicode_is_uppercased_correctly() {
+        save(new_(EntityWithRichText.class, "1").setText(RichText.fromHtml("Мова Програмування")));
+
+        final var query = select(EntityWithRichText.class)
+                .yield().upperCase().prop("text").as("str")
+                .modelAsAggregate();
+
+        final var entity = co(EntityAggregates.class).getEntity(EntityQueryUtils.from(query).model());
+        assertNotNull(entity);
+        assertEquals("МОВА ПРОГРАМУВАННЯ", entity.get("str"));
     }
 
 }
