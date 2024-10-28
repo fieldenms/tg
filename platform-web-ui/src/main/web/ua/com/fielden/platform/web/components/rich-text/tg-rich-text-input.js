@@ -9,7 +9,7 @@ import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys
 import '/resources/components/rich-text/tg-rich-text-input-enhanced-styles.js';
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { excludeErrors } from '/resources/components/tg-global-error-handler.js';
 
 excludeErrors( e => e.filename && e.filename.includes("toastui-editor-all") && e.error && e.error.name === 'TransformError');
@@ -230,6 +230,9 @@ function handleTaskListItemStatusChange(e) {
         const style = getComputedStyle(node.node, ':before');
         if (isPositionInBox(style, e.offsetX, e.offsetY)) {
             this.changeEventHandler();
+            if (this.shadowRoot.activeElement && isMobileApp()) {
+                this._editor.setSelection(node.node.pmViewDesc.posAtStart, node.node.pmViewDesc.posAtStart);
+            }
         }
     }
 }
