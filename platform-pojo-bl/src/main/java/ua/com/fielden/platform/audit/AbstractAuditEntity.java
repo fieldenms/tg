@@ -46,19 +46,19 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     private User user;
 
     @IsProperty
-    @Title(value = "Audit Transaction ID", desc = "A unique identifier of the audit transaction for this audit record.")
+    @Title(value = "Audited Transaction ID", desc = "A unique identifier of the transaction for the audited event.")
     @MapTo
     @Final
     @Required
-    private String auditTransactionGuid;
+    private String auditedTransactionGuid;
 
-    public String getAuditTransactionGuid() {
-        return auditTransactionGuid;
+    public String getAuditedTransactionGuid() {
+        return auditedTransactionGuid;
     }
 
     @Observable
-    public AbstractAuditEntity<E> setAuditTransactionGuid(final String auditTransactionGuid) {
-        this.auditTransactionGuid = auditTransactionGuid;
+    public AbstractAuditEntity<E> setAuditedTransactionGuid(final String auditedTransactionGuid) {
+        this.auditedTransactionGuid = auditedTransactionGuid;
         return this;
     }
 
