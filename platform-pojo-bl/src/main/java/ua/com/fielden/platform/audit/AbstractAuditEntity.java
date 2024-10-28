@@ -7,12 +7,19 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.security.user.User;
 
 import java.util.Date;
+import java.util.Set;
 
 /**
  * Base type for all audit-entity types.
  * <p>
  * It is expected that in a typical scenario an audit-entity type has a key-member property representing a reference to the audited entity.
  * However, to provide more control in atypical scenarios, this base type leaves it up to specific audit-entity types to declare such a property.
+ * <p>
+ * It is also expected that each audit-entity type will participate in a one-to-many association with an entity type derived
+ * from {@link AbstractAuditModProp}, to represent properties, values of which changed during an audit event.
+ * Thus, all audit-types are expected to declare a corresponding collectional property and implement its accessor - {@link #getChangedProps()};
+ * an abstract setter is not declared in this base type because there is no suitable type for the setter's parameter
+ * (method types are contravariant in the parameter type).
  *
  * @param <E>  type of the audited entity
  */
@@ -24,6 +31,8 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     public abstract E getAuditedEntity();
 
     public abstract AbstractAuditEntity<E> setAuditedEntity(E auditedEntity);
+
+    public abstract Set<? extends AbstractAuditModProp<? extends AbstractAuditEntity<E>>> getChangedProps();
 
     @IsProperty
     @MapTo
