@@ -19,30 +19,37 @@ import java.util.Date;
 @KeyType(DynamicEntityKey.class)
 public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends AbstractEntity<DynamicEntityKey> {
 
-    static final int NEXT_COMPOSITE_KEY_MEMBER = 3;
+    static final int NEXT_COMPOSITE_KEY_MEMBER = 2;
 
     public abstract E getAuditedEntity();
 
     public abstract AbstractAuditEntity<E> setAuditedEntity(E auditedEntity);
 
     @IsProperty
+    @MapTo
+    @Title(value = "Audited entity version", desc = "Version of the entity for which this audit record was created.")
+    @CompositeKeyMember(1)
+    private Long auditedVersion;
+
+    @IsProperty
     @Title(value = "Date", desc = "Date/time the audited event took place.")
     @MapTo
     @Final
-    @CompositeKeyMember(1)
+    @Required
     private Date auditDate;
 
     @IsProperty
     @Title(value = "User", desc = "User who performed the audited event.")
     @MapTo
     @Final
-    @CompositeKeyMember(2)
+    @Required
     private User user;
 
     @IsProperty
     @Title(value = "Audit Transaction ID", desc = "A unique identifier of the audit transaction for this audit record.")
     @MapTo
     @Final
+    @Required
     private String auditTransactionGuid;
 
     public String getAuditTransactionGuid() {
@@ -72,6 +79,16 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     @Observable
     public AbstractAuditEntity<E> setAuditDate(final Date auditDate) {
         this.auditDate = auditDate;
+        return this;
+    }
+
+    public Long getAuditedVersion() {
+        return auditedVersion;
+    }
+
+    @Observable
+    public AbstractAuditEntity<E> setAuditedVersion(final Long auditedVersion) {
+        this.auditedVersion = auditedVersion;
         return this;
     }
 
