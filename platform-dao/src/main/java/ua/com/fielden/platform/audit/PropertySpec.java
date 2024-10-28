@@ -17,39 +17,43 @@ import static javax.lang.model.element.Modifier.*;
 final class PropertySpec {
 
     private final String name;
-    private final Type type;
+    private final TypeName typeName;
     private final List<AnnotationSpec> annotations;
 
-    private PropertySpec(final String name, final Type type, final Iterable<? extends AnnotationSpec> annotations) {
+    private PropertySpec(final String name, final TypeName typeName, final Iterable<? extends AnnotationSpec> annotations) {
         this.name = name;
-        this.type = type;
+        this.typeName = typeName;
         this.annotations = ImmutableList.copyOf(annotations);
     }
 
-    private PropertySpec(final String name, final Type type) {
-        this(name, type, ImmutableList.of());
+    private PropertySpec(final String name, final TypeName typeName) {
+        this(name, typeName, ImmutableList.of());
     }
 
-    public static Builder propertyBuilder(final String name, final Type type) {
+    public static Builder propertyBuilder(final String name, final TypeName type) {
         return new Builder(name, type, ImmutableList.of());
     }
 
+    public static Builder propertyBuilder(final String name, final Type type) {
+        return new Builder(name, TypeName.get(type), ImmutableList.of());
+    }
+
     public Builder toBuilder() {
-        return new Builder(name, type, annotations);
+        return new Builder(name, typeName, annotations);
     }
 
     public FieldSpec toFieldSpec() {
-        return FieldSpec.builder(type, name, PRIVATE)
+        return FieldSpec.builder(typeName, name, PRIVATE)
                 .addAnnotation(IsProperty.class)
                 .addAnnotations(annotations)
                 .build();
     }
 
     public MethodSpec getAccessorSpec() {
-        final String prefix = TypeName.BOOLEAN.equals(type) ? "is" : "get";
+        final String prefix = TypeName.BOOLEAN.equals(typeName) ? "is" : "get";
         return MethodSpec.methodBuilder(prefix + StringUtils.capitalize(name))
                 .addModifiers(PUBLIC)
-                .returns(type)
+                .returns(typeName)
                 .addStatement("return this.%s".formatted(name))
                 .build();
     }
@@ -59,7 +63,7 @@ final class PropertySpec {
                 .addModifiers(PUBLIC)
                 .returns(declaringClassName)
                 .addAnnotation(Observable.class)
-                .addParameter(type, name, FINAL)
+                .addParameter(typeName, name, FINAL)
                 .addStatement("this.%s = %s".formatted(name, name))
                 .addStatement("return this")
                 .build();
@@ -77,8 +81,8 @@ final class PropertySpec {
         return name;
     }
 
-    public Type type() {
-        return type;
+    public TypeName type() {
+        return typeName;
     }
 
     public List<AnnotationSpec> annotations() {
@@ -90,30 +94,30 @@ final class PropertySpec {
         return this == obj
                || obj instanceof PropertySpec that
                   && Objects.equals(this.name, that.name)
-                  && Objects.equals(this.type, that.type)
+                  && Objects.equals(this.typeName, that.typeName)
                   && Objects.equals(this.annotations, that.annotations);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, type, annotations);
+        return Objects.hash(name, typeName, annotations);
     }
 
     @Override
     public String toString() {
         return "PropertySpec[" +
                "name=" + name + ", " +
-               "type=" + type + ", " +
+               "type=" + typeName + ", " +
                "annotations=" + annotations + ']';
     }
 
     static final class Builder {
 
         private final String name;
-        private final Type type;
+        private final TypeName type;
         private final ImmutableList.Builder<AnnotationSpec> annotations;
 
-        private Builder(final String name, final Type type, final Iterable<? extends AnnotationSpec> annotations) {
+        private Builder(final String name, final TypeName type, final Iterable<? extends AnnotationSpec> annotations) {
             this.name = name;
             this.type = type;
             this.annotations = ImmutableList.builderWithExpectedSize(annotations instanceof Collection c ? c.size() : 0);

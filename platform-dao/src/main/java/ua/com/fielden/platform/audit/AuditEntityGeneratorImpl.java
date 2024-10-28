@@ -12,7 +12,9 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 
+import javax.annotation.Nullable;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -134,7 +136,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
      */
     private final AuditEntityBuilder.Processor addSkipEntityExistsValidation = new AuditEntityBuilder.Processor() {
         public PropertySpec processProperty(final AuditEntityBuilder builder, final PropertySpec propSpec) {
-            return propSpec.type() instanceof Class klass
+            return reflectType(propSpec.type()) instanceof Class klass
                    && domainMetadata.forEntityOpt(klass).isPresent()
                    && !propSpec.hasAnnotation(getClassName(SkipEntityExistsValidation.class))
                     ? propSpec.toBuilder().addAnnotation(getAnnotation(SkipEntityExistsValidation.class)).build()
@@ -233,6 +235,42 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
     private static Path classNameToFilePath(final String packageName, final String classSimpleName) {
         return Path.of(packageName.replace('.', '/'), classSimpleName + ".java");
+    }
+
+    /**
+     * Converts the named type to a Java reflection object, if such type exists; otherwise, returns {@code null}.
+     * <p>
+     * Limitations:
+     * <ul>
+     *   <li> Unsupported types: arrays, wildcards, type variables.
+     *   <li> For parameterised type names, only the raw type is used.
+     * </ul>
+     */
+    private static @Nullable Type reflectType(final TypeName typeName) {
+        class $ {
+            static final Map<TypeName, Class<?>> PRIMITIVES = Map.of(
+                    TypeName.VOID, void.class,
+                    TypeName.BOOLEAN, boolean.class,
+                    TypeName.BYTE, byte.class,
+                    TypeName.SHORT, short.class,
+                    TypeName.INT, int.class,
+                    TypeName.LONG, long.class,
+                    TypeName.CHAR, char.class,
+                    TypeName.FLOAT, float.class,
+                    TypeName.DOUBLE, double.class);
+        }
+
+        if (typeName.isPrimitive()) {
+            return $.PRIMITIVES.get(typeName);
+        }
+        else {
+            return switch (typeName) {
+                // TODO findClass will throw if a class is not found. Introduce ClassesRetriever.findClassOrNull.
+                case ClassName className -> ClassesRetriever.findClass(className.reflectionName());
+                case ParameterizedTypeName paramTypeName -> reflectType(paramTypeName.rawType);
+                default -> throw new UnsupportedOperationException("Type name [%s] cannot be converted to a reflected type.");
+            };
+        }
     }
 
 }
