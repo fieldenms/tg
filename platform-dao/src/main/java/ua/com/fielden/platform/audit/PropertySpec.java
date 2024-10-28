@@ -38,6 +38,30 @@ final class PropertySpec {
         return new Builder(name, TypeName.get(type), ImmutableList.of());
     }
 
+    /**
+     * Adds the specified property, along with its accessor and setter, to the specified builder.
+     *
+     * @param typeName  name of the type being built (whether this is true is not checked by this method)
+     */
+    public static TypeSpec.Builder addProperty(final TypeSpec.Builder builder, final TypeName typeName, final PropertySpec propertySpec) {
+        return builder.addField(propertySpec.toFieldSpec())
+                .addMethod(propertySpec.getAccessorSpec())
+                .addMethod(propertySpec.getSetterSpec(typeName));
+    }
+
+    /**
+     * Adds the specified properties, along with their accessors and setters, to the specified builder.
+     *
+     * @param typeName  name of the type being built (whether this is true is not checked by this method)
+     */
+    public static TypeSpec.Builder addProperties(final TypeSpec.Builder builder, final TypeName typeName, final PropertySpec propertySpec, final PropertySpec... propertySpecs) {
+        addProperty(builder, typeName, propertySpec);
+        for (final var spec : propertySpecs) {
+            addProperty(builder, typeName, spec);
+        }
+        return builder;
+    }
+
     public Builder toBuilder() {
         return new Builder(name, typeName, annotations);
     }

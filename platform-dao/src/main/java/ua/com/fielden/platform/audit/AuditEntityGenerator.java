@@ -9,13 +9,21 @@ import java.util.Set;
 @ImplementedBy(AuditEntityGeneratorImpl.class)
 public interface AuditEntityGenerator {
 
-    default Set<Path> generate(Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes) {
+    default Set<GeneratedResult> generate(Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes) {
         return generate(entityTypes, Path.of("src/main/java"));
     }
 
-    Set<Path> generate(
+    Set<GeneratedResult> generate(
             Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
             Path sourceRoot);
+
+    /**
+     * Result of audit-entity generation.
+     *
+     * @param auditEntityPath  path to a source file with an {@linkplain AbstractAuditEntity audit-entity} type
+     * @param auditEntityModPropPath  path to a source file with a {@linkplain AbstractAuditModProp one-to-many entity type that represents changed properties}
+     */
+    record GeneratedResult (Path auditEntityPath, Path auditEntityModPropPath) { }
 
     // TODO: Display deltas
 
