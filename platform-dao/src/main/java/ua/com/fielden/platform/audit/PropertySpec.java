@@ -68,12 +68,14 @@ final class PropertySpec {
 
     public FieldSpec toFieldSpec() {
         return FieldSpec.builder(typeName, name, PRIVATE)
+                // TODO IsProperty.value() for collectional properties
                 .addAnnotation(IsProperty.class)
                 .addAnnotations(annotations)
                 .build();
     }
 
     public MethodSpec getAccessorSpec() {
+        // TODO Special body for collectional properties
         final String prefix = TypeName.BOOLEAN.equals(typeName) ? "is" : "get";
         return MethodSpec.methodBuilder(prefix + StringUtils.capitalize(name))
                 .addModifiers(PUBLIC)
@@ -83,6 +85,7 @@ final class PropertySpec {
     }
 
     public MethodSpec getSetterSpec(final TypeName declaringClassName) {
+        // TODO Special body for collectional properties
         return MethodSpec.methodBuilder("set" + StringUtils.capitalize(name))
                 .addModifiers(PUBLIC)
                 .returns(declaringClassName)

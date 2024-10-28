@@ -70,7 +70,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final var modPropTypePath = sourceRoot.resolve(classNameToFilePath(auditTypePkg, modPropTypeName));
 
         try {
-            generateAuditEntity(type, auditTypePkg, auditTypeName, sourceRoot);
+            generateAuditEntity(type, auditTypePkg, auditTypeName, ClassName.get(auditTypePkg, modPropTypeName), sourceRoot);
             generateModPropEntity(type, ClassName.get(auditTypePkg, auditTypeName), auditTypePkg, modPropTypeName, sourceRoot);
         } catch (final Exception e) {
             throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(auditTypeVersion, type.getTypeName()), e);
@@ -83,6 +83,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final Class<? extends AbstractEntity<?>> type,
             final String auditTypePkg,
             final String auditTypeName,
+            final ClassName modPropTypeName,
             final Path sourceRoot)
         throws IOException
     {
@@ -99,7 +100,13 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(AnnotationSpecs.title(getEntityTitleAndDesc(type)))
                 .build();
 
+        // Collectional property to model one-to-many association with the ModProp entity
+        final var modPropEntityProp = propertyBuilder("changedProps", ParameterizedTypeName.get(getClassName(Set.class), modPropTypeName))
+                .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of an audit event."))
+                .build();
+
         a3tBuilder.addProperty(auditedEntityProp);
+        a3tBuilder.addProperty(modPropEntityProp);
 
         // Abstract methods in the base audit entity type
         a3tBuilder.addMethod(methodBuilder("getAuditedEntity")
