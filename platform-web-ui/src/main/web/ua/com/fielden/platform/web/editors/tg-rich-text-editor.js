@@ -203,7 +203,8 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             this.$.input.focusEditor();
         }.bind(this);
         this._acceptLink = function () {
-            this.$.input.toggleLink(this.$.linkDialog.url, this.$.linkDialog.linkText || this.$.linkDialog.url);
+            const link = this.$.input.initLinkEditing();
+            this.$.input.toggleLink(this.$.linkDialog.url, (link && link.text) || this.$.linkDialog.url);
             this.$.linkDropdown.close();
         }.bind(this);
         this.$.colorDropdown.positionTarget = document.body;
@@ -212,6 +213,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             this.$.input.focusEditor();
         }.bind(this);
         this._acceptColor = function() {
+            this.$.input.initColorEditing();
             this.$.input.applyColor(this.$.colorDialog.color);
             this.$.colorDropdown.close();
         }.bind(this);
@@ -292,7 +294,6 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         this.$.input.fakeSelect();
         if (link) {
             this.$.linkDialog.url = link.detail;
-            this.$.linkDialog.linkText = link.text;
         }
         setDialogPosition(this.$.linkDropdown, this.$.input.getSelectionCoordinates());
         this.$.linkDropdown.open();

@@ -89,11 +89,6 @@ export class TgLinkDialog extends PolymerElement {
     static get properties() {
         return {
             //public properties
-            linkText: {
-                type: String,
-                value: '',
-            },
-
             validationCallback: Function,
 
             cancelCallback: Function,
@@ -137,7 +132,6 @@ export class TgLinkDialog extends PolymerElement {
 
     resetState() {
         this.url = '';
-        this.linkText = '';
     }
 
     _cancelLink(e) {

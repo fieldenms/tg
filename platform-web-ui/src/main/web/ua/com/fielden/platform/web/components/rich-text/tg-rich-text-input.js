@@ -346,9 +346,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             },
 
             _editor: Object,
-            _fakeSelection:{
+            _fakeSelection: {
                 type: Array,
-                observer: "_fakeSelectionChanged"
             }
         }
     }
@@ -366,7 +365,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             initialEditType: 'wysiwyg',
             events: {
                 change: this._htmlContentChanged.bind(this),
-                caretChange: this._updateFakeSelection.bind(this),
                 blur: this._focusLost.bind(this),
                 focus: this._focusGain.bind(this),
                 keydown: (viewType, event) => this.keyDownHandler(event)
@@ -569,20 +567,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         if (this.value !== htmlText) {
             this.value = htmlText;
         }
-    }
-
-    _updateFakeSelection(e) {
-        // if (this._fakeSelection) {
-        //     this._fakeSelection = this._editor.getSelection();
-        // }
-    }
-
-    _fakeSelectionChanged(newSelection, oldSelection) {
-        // if (!newSelection && oldSelection) {
-        //     applyFakeUnselection.bind(this)(oldSelection);
-        // } else if (newSelection && !this.shadowRoot.activeElement) {
-        //     applyFakeSelection.bind(this)(newSelection);
-        // }
     }
 
     _focusLost(e) {
