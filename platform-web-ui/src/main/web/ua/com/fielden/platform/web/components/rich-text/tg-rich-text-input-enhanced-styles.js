@@ -38,6 +38,15 @@ styleElement.innerHTML = `
                 box-sizing: content-box;
                 line-height: 160%;
             }
+            del a span, del a {
+                text-decoration: line-through underline !important;
+            }
+            del span {
+                text-decoration: line-through !important;  
+            }
+            a span {
+                text-decoration: underline !important;
+            }
         </style>
     </template>
 `;

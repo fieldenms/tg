@@ -300,7 +300,16 @@ const template = html`
         mark {
             display: inline-block;
             background-color: rgba(31,  176, 255, 0.3);
-            color: unset;
+            color: inherit;
+        }
+        del a mark {
+            text-decoration: line-through underline !important;
+        }
+        del mark {
+            text-decoration: line-through;  
+        }
+        a mark {
+            text-decoration: underline;
         }
     </style>
     <div id="editor"></div>`; 
