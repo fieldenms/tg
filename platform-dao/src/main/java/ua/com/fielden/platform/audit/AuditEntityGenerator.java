@@ -21,9 +21,9 @@ public interface AuditEntityGenerator {
      * Result of audit-entity generation.
      *
      * @param auditEntityPath  path to a source file with an {@linkplain AbstractAuditEntity audit-entity} type
-     * @param auditEntityModPropPath  path to a source file with a {@linkplain AbstractAuditModProp one-to-many entity type that represents changed properties}
+     * @param auditPropEntityPath  path to a source file with a {@linkplain AbstractAuditProp one-to-many entity type that represents changed properties}
      */
-    record GeneratedResult (Path auditEntityPath, Path auditEntityModPropPath) { }
+    record GeneratedResult (Path auditEntityPath, Path auditPropEntityPath) { }
 
     // TODO: Display deltas
 

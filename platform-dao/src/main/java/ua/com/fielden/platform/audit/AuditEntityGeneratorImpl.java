@@ -63,24 +63,24 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final var auditTypeVersion = 1;
         final var auditTypeName = type.getSimpleName() + "_" + A3T + "_" + auditTypeVersion;
         final var auditTypePath = sourceRoot.resolve(classNameToFilePath(auditTypePkg, auditTypeName));
-        final var modPropTypeName = type.getSimpleName() + "_" + A3T + "_" + "ModProp" + "_" + auditTypeVersion;
-        final var modPropTypePath = sourceRoot.resolve(classNameToFilePath(auditTypePkg, modPropTypeName));
+        final var auditPropTypeName = auditTypeName + "_Prop";
+        final var auditPropTypePath = sourceRoot.resolve(classNameToFilePath(auditTypePkg, auditPropTypeName));
 
         try {
-            generateAuditEntity(type, auditTypePkg, auditTypeName, ClassName.get(auditTypePkg, modPropTypeName), sourceRoot);
-            generateModPropEntity(type, ClassName.get(auditTypePkg, auditTypeName), auditTypePkg, modPropTypeName, sourceRoot);
+            generateAuditEntity(type, auditTypePkg, auditTypeName, ClassName.get(auditTypePkg, auditPropTypeName), sourceRoot);
+            generateAuditPropEntity(type, ClassName.get(auditTypePkg, auditTypeName), auditTypePkg, auditPropTypeName, sourceRoot);
         } catch (final Exception e) {
             throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(auditTypeVersion, type.getTypeName()), e);
         }
 
-        return new GeneratedResult(auditTypePath, modPropTypePath);
+        return new GeneratedResult(auditTypePath, auditPropTypePath);
     }
 
     private void generateAuditEntity(
             final Class<? extends AbstractEntity<?>> type,
             final String auditTypePkg,
             final String auditTypeName,
-            final ClassName modPropTypeName,
+            final ClassName auditPropTypeName,
             final Path sourceRoot)
         throws IOException
     {
@@ -97,14 +97,14 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(AnnotationSpecs.title(getEntityTitleAndDesc(type)))
                 .build();
 
-        // Collectional property to model one-to-many association with the ModProp entity
-        final var modPropEntityProp = propertyBuilder("changedProps", ParameterizedTypeName.get(javaPoet.getClassName(Set.class), modPropTypeName))
+        // Collectional property to model one-to-many association with the audit-prop entity
+        final var changedPropsProp = propertyBuilder("changedProps", ParameterizedTypeName.get(javaPoet.getClassName(Set.class), auditPropTypeName))
                 .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of an audit event."))
                 .initializer("new $T<>()", javaPoet.getClassName(HashSet.class))
                 .build();
 
         a3tBuilder.addProperty(auditedEntityProp);
-        a3tBuilder.addProperty(modPropEntityProp);
+        a3tBuilder.addProperty(changedPropsProp);
 
         // Abstract methods in the base audit entity type
         a3tBuilder.addMethod(methodBuilder("getAuditedEntity")
@@ -232,22 +232,22 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    // : ModProp entity generation
+    // : Audit-prop entity generation
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    private void generateModPropEntity(
+    private void generateAuditPropEntity(
             final Class<? extends AbstractEntity<?>> auditedType,
             final TypeName auditEntityClassName,
-            final String modPropTypePkg,
-            final String modPropTypeName,
+            final String auditPropTypePkg,
+            final String auditPropTypeName,
             final Path sourceRoot)
         throws IOException
     {
-        final var modPropTypeClassName = ClassName.get(modPropTypePkg, modPropTypeName);
+        final var auditPropTypeClassName = ClassName.get(auditPropTypePkg, auditPropTypeName);
 
-        final var builder = classBuilder(modPropTypeClassName)
+        final var builder = classBuilder(auditPropTypeClassName)
                 .addModifiers(PUBLIC)
-                .superclass(ParameterizedTypeName.get(javaPoet.getClassName(AbstractAuditModProp.class), auditEntityClassName))
+                .superclass(ParameterizedTypeName.get(javaPoet.getClassName(AbstractAuditProp.class), auditEntityClassName))
                 .addAnnotation(javaPoet.getAnnotation(MapEntityTo.class));
 
         final var auditEntityProp = propertyBuilder(uncapitalize(auditedType.getSimpleName()) + "Audit", auditEntityClassName)
@@ -262,7 +262,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .build();
 
-        PropertySpec.addProperties(environment, builder, modPropTypeClassName, auditEntityProp, pdProp);
+        PropertySpec.addProperties(environment, builder, auditPropTypeClassName, auditEntityProp, pdProp);
 
         // Abstract methods in the base type
 
@@ -273,18 +273,18 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                                   .returns(auditEntityProp.type())
                                   .addStatement("return %s()".formatted(auditEntityPropAccessor.name))
                                   .build());
-        // AbstractAuditModProp<AE> setAuditedEntity(AE entity);
-        final var auditEntityPropSetter = auditEntityProp.getSetterSpec(environment, modPropTypeClassName);
+        // AbstractAuditProp<AE> setAuditedEntity(AE entity);
+        final var auditEntityPropSetter = auditEntityProp.getSetterSpec(environment, auditPropTypeClassName);
         builder.addMethod(methodBuilder("setAuditedEntity")
                                   .addModifiers(PUBLIC)
-                                  .returns(modPropTypeClassName)
+                                  .returns(auditPropTypeClassName)
                                   .addParameter(auditEntityClassName, "entity", FINAL)
                                   .addStatement("return %s(entity)".formatted(auditEntityPropSetter.name))
                                   .build());
 
         final var typeSpec = builder.build();
 
-        final var javaFile = JavaFile.builder(modPropTypePkg, typeSpec)
+        final var javaFile = JavaFile.builder(auditPropTypePkg, typeSpec)
                 .build();
         javaFile.writeTo(sourceRoot);
     }
