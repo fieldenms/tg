@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -25,6 +26,7 @@ import java.util.Set;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
+import static java.lang.String.format;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
@@ -50,10 +52,18 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
             final Path sourceRoot)
     {
+        entityTypes.forEach(AuditEntityGeneratorImpl::validateAuditedType);
         return Streams.stream(entityTypes)
                 .parallel()
                 .map(type -> generate_(type, sourceRoot))
                 .collect(toImmutableSet());
+    }
+
+    private static void validateAuditedType(final Class<? extends AbstractEntity<?>> auditedType) {
+        if (!AuditUtils.isAudited(auditedType)) {
+            throw new InvalidArgumentException(format("Entity type [%s] cannot be audited. It must be annotated with @%s.",
+                                                      auditedType.getTypeName(), Audited.class.getTypeName()));
+        }
     }
 
     private GeneratedResult generate_(final Class<? extends AbstractEntity<?>> type, final Path sourceRoot) {
