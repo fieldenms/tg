@@ -28,12 +28,11 @@ import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.apache.commons.lang3.StringUtils.uncapitalize;
+import static ua.com.fielden.platform.audit.AbstractAuditEntity.A3T;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
-
-    static final String A3T = "a3t";
 
     private final IDomainMetadata domainMetadata;
     private final GeneratorEnvironment environment;

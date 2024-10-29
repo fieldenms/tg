@@ -26,6 +26,8 @@ import java.util.Set;
 @KeyType(DynamicEntityKey.class)
 public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends AbstractEntity<DynamicEntityKey> {
 
+    public static final String A3T = "a3t";
+
     static final int NEXT_COMPOSITE_KEY_MEMBER = 2;
 
     public abstract E getAuditedEntity();
