@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 
@@ -92,7 +93,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(AnnotationSpecs.compositeKeyMember(AbstractAuditEntity.NEXT_COMPOSITE_KEY_MEMBER))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .addAnnotation(javaPoet.getAnnotation(Required.class))
-                // TODO @Final?
+                .addAnnotation(javaPoet.getAnnotation(Final.class))
                 .addAnnotation(AnnotationSpecs.title(getEntityTitleAndDesc(type)))
                 .build();
 
@@ -127,7 +128,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .filter(AuditEntityGeneratorImpl::isAudited)
                 .map(pm -> propertyBuilder("a3t_" + pm.name(), pm.type().javaType())
                         .addAnnotation(javaPoet.getAnnotation(MapTo.class))
-                        // TODO @Final?
+                        .addAnnotation(javaPoet.getAnnotation(Final.class))
                         .build())
                 .forEach(a3tBuilder::addProperty);
 
