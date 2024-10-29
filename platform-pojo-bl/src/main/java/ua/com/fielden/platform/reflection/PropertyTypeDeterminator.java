@@ -418,6 +418,27 @@ public class PropertyTypeDeterminator {
     }
 
     /**
+     * If the specified type is a parameterised collection type, returns a pair (raw collectional type, element type);
+     * otherwise, returns an empty optional.
+     */
+    public static Optional<T2<Class<?>, Class<?>>> collectionalType(final Type type) {
+        if (type instanceof ParameterizedType paramType) {
+            if (paramType.getRawType() instanceof Class<?> rawClass && EntityUtils.isCollectional(rawClass)) {
+                final @Nullable Class<?> eltClass;
+                if (paramType.getActualTypeArguments().length == 1) {
+                    eltClass = classFrom(paramType.getActualTypeArguments()[0]);
+                } else {
+                    eltClass = null;
+                }
+
+                return eltClass == null ? Optional.empty() : Optional.of(t2(rawClass, eltClass));
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    /**
      * Identifies whether property <code>doNotationExp</code> in type <code>entityType</code> is map.
      *
      * @param entityType
