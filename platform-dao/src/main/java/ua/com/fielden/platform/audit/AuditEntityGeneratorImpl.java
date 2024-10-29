@@ -13,19 +13,12 @@ import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.reflection.ClassesRetriever;
 
-import javax.annotation.Nullable;
-import javax.lang.model.element.Modifier;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -41,12 +34,14 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     static final String A3T = "a3t";
 
     private final IDomainMetadata domainMetadata;
-    private final Map<Type, TypeName> typeNameCache = new ConcurrentHashMap<>();
-    private final Map<Class<?>, AnnotationSpec> markerAnnotationCache = new ConcurrentHashMap<>();
+    private final GeneratorEnvironment environment;
+    private final JavaPoet javaPoet;
 
     @Inject
     AuditEntityGeneratorImpl(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
+        environment = new GeneratorEnvironment();
+        javaPoet = environment.javaPoet();
     }
 
     @Override
@@ -94,14 +89,14 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         // Property for the reference to the audited entity
         final var auditedEntityProp = propertyBuilder(uncapitalize(type.getSimpleName()), type)
                 .addAnnotation(AnnotationSpecs.compositeKeyMember(AbstractAuditEntity.NEXT_COMPOSITE_KEY_MEMBER))
-                .addAnnotation(getAnnotation(MapTo.class))
-                .addAnnotation(getAnnotation(Required.class))
+                .addAnnotation(javaPoet.getAnnotation(MapTo.class))
+                .addAnnotation(javaPoet.getAnnotation(Required.class))
                 // TODO @Final?
                 .addAnnotation(AnnotationSpecs.title(getEntityTitleAndDesc(type)))
                 .build();
 
         // Collectional property to model one-to-many association with the ModProp entity
-        final var modPropEntityProp = propertyBuilder("changedProps", ParameterizedTypeName.get(getClassName(Set.class), modPropTypeName))
+        final var modPropEntityProp = propertyBuilder("changedProps", ParameterizedTypeName.get(javaPoet.getClassName(Set.class), modPropTypeName))
                 .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of an audit event."))
                 .build();
 
@@ -111,15 +106,15 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         // Abstract methods in the base audit entity type
         a3tBuilder.addMethod(methodBuilder("getAuditedEntity")
                                      .addModifiers(PUBLIC)
-                                     .returns(getClassName(type))
-                                     .addAnnotation(getAnnotation(Override.class))
+                                     .returns(javaPoet.getClassName(type))
+                                     .addAnnotation(javaPoet.getAnnotation(Override.class))
                                      .addStatement("return %s()".formatted(auditedEntityProp.getAccessorSpec().name))
                                      .build());
         a3tBuilder.addMethod(methodBuilder("setAuditedEntity")
                                      .addModifiers(PUBLIC)
-                                     .addParameter(getClassName(type), "entity", Modifier.FINAL)
+                                     .addParameter(javaPoet.getClassName(type), "entity", FINAL)
                                      .returns(auditTypeClassName)
-                                     .addAnnotation(getAnnotation(Override.class))
+                                     .addAnnotation(javaPoet.getAnnotation(Override.class))
                                      .addStatement("return %s(%s)".formatted(auditedEntityProp.getSetterSpec(auditTypeClassName).name, "entity"))
                                      .build());
 
@@ -129,7 +124,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                 .filter(AuditEntityGeneratorImpl::isAudited)
                 .map(pm -> propertyBuilder("a3t_" + pm.name(), pm.type().javaType())
-                        .addAnnotation(getAnnotation(MapTo.class))
+                        .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                         // TODO @Final?
                         .build())
                 .forEach(a3tBuilder::addProperty);
@@ -149,14 +144,13 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
      */
     private final AuditEntityBuilder.Processor addSkipEntityExistsValidation = new AuditEntityBuilder.Processor() {
         public PropertySpec processProperty(final AuditEntityBuilder builder, final PropertySpec propSpec) {
-            return reflectType(propSpec.type()) instanceof Class klass
+            return javaPoet.reflectType(propSpec.type()) instanceof Class klass
                    && domainMetadata.forEntityOpt(klass).isPresent()
-                   && !propSpec.hasAnnotation(getClassName(SkipEntityExistsValidation.class))
-                    ? propSpec.toBuilder().addAnnotation(getAnnotation(SkipEntityExistsValidation.class)).build()
+                   && !propSpec.hasAnnotation(javaPoet.getClassName(SkipEntityExistsValidation.class))
+                    ? propSpec.toBuilder().addAnnotation(javaPoet.getAnnotation(SkipEntityExistsValidation.class)).build()
                     : propSpec;
         }
     };
-
 
     private static boolean isAudited(final PropertyMetadata.Persistent property) {
         class $ {
@@ -174,18 +168,6 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         }
 
         return !$.IGNORED_PROPERTIES.contains(property.name());
-    }
-
-    private ClassName getClassName(final Class<?> type) {
-        return (ClassName) typeNameCache.computeIfAbsent(type, ClassName::get);
-    }
-
-    private TypeName getTypeName(final Type type) {
-        return typeNameCache.computeIfAbsent(type, TypeName::get);
-    }
-
-    private AnnotationSpec getAnnotation(final Class<? extends Annotation> annotationType) {
-        return markerAnnotationCache.computeIfAbsent(annotationType, k -> AnnotationSpec.builder(k).build());
     }
 
     private final class AuditEntityBuilder {
@@ -262,21 +244,22 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final var builder = classBuilder(modPropTypeClassName)
                 .addModifiers(PUBLIC)
-                .superclass(ParameterizedTypeName.get(getClassName(AbstractAuditModProp.class), auditEntityClassName))
-                .addAnnotation(getAnnotation(MapEntityTo.class));
+                .superclass(ParameterizedTypeName.get(javaPoet.getClassName(AbstractAuditModProp.class), auditEntityClassName))
+                .addAnnotation(javaPoet.getAnnotation(MapEntityTo.class));
 
         final var auditEntityProp = propertyBuilder(uncapitalize(auditedType.getSimpleName()) + "Audit", auditEntityClassName)
                 .addAnnotation(AnnotationSpecs.compositeKeyMember(1))
-                .addAnnotation(getAnnotation(MapTo.class))
+                .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .build();
 
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
-        final var pdProp = propertyBuilder("property", ParameterizedTypeName.get(getClassName(PropertyDescriptor.class), auditEntityClassName))
+        final var pdProp = propertyBuilder("property", ParameterizedTypeName.get(
+                javaPoet.getClassName(PropertyDescriptor.class), auditEntityClassName))
                 .addAnnotation(AnnotationSpecs.compositeKeyMember(2))
-                .addAnnotation(getAnnotation(MapTo.class))
+                .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .build();
 
-        PropertySpec.addProperties(builder, modPropTypeClassName, auditEntityProp, pdProp);
+        PropertySpec.addProperties(builder, modPropTypeClassName, environment, auditEntityProp, pdProp);
 
         // Abstract methods in the base type
 
@@ -304,42 +287,6 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
     private static Path classNameToFilePath(final String packageName, final String classSimpleName) {
         return Path.of(packageName.replace('.', '/'), classSimpleName + ".java");
-    }
-
-    /**
-     * Converts the named type to a Java reflection object, if such type exists; otherwise, returns {@code null}.
-     * <p>
-     * Limitations:
-     * <ul>
-     *   <li> Unsupported types: arrays, wildcards, type variables.
-     *   <li> For parameterised type names, only the raw type is used.
-     * </ul>
-     */
-    private static @Nullable Type reflectType(final TypeName typeName) {
-        class $ {
-            static final Map<TypeName, Class<?>> PRIMITIVES = Map.of(
-                    TypeName.VOID, void.class,
-                    TypeName.BOOLEAN, boolean.class,
-                    TypeName.BYTE, byte.class,
-                    TypeName.SHORT, short.class,
-                    TypeName.INT, int.class,
-                    TypeName.LONG, long.class,
-                    TypeName.CHAR, char.class,
-                    TypeName.FLOAT, float.class,
-                    TypeName.DOUBLE, double.class);
-        }
-
-        if (typeName.isPrimitive()) {
-            return $.PRIMITIVES.get(typeName);
-        }
-        else {
-            return switch (typeName) {
-                // TODO findClass will throw if a class is not found. Introduce ClassesRetriever.findClassOrNull.
-                case ClassName className -> ClassesRetriever.findClass(className.reflectionName());
-                case ParameterizedTypeName paramTypeName -> reflectType(paramTypeName.rawType);
-                default -> throw new UnsupportedOperationException("Type name [%s] cannot be converted to a reflected type.");
-            };
-        }
     }
 
 }
