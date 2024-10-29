@@ -17,6 +17,7 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -98,6 +99,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         // Collectional property to model one-to-many association with the ModProp entity
         final var modPropEntityProp = propertyBuilder("changedProps", ParameterizedTypeName.get(javaPoet.getClassName(Set.class), modPropTypeName))
                 .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of an audit event."))
+                .initializer("new $T<>()", javaPoet.getClassName(HashSet.class))
                 .build();
 
         a3tBuilder.addProperty(auditedEntityProp);
@@ -108,14 +110,14 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                                      .addModifiers(PUBLIC)
                                      .returns(javaPoet.getClassName(type))
                                      .addAnnotation(javaPoet.getAnnotation(Override.class))
-                                     .addStatement("return %s()".formatted(auditedEntityProp.getAccessorSpec().name))
+                                     .addStatement("return %s()".formatted(auditedEntityProp.getAccessorSpec(environment).name))
                                      .build());
         a3tBuilder.addMethod(methodBuilder("setAuditedEntity")
                                      .addModifiers(PUBLIC)
                                      .addParameter(javaPoet.getClassName(type), "entity", FINAL)
                                      .returns(auditTypeClassName)
                                      .addAnnotation(javaPoet.getAnnotation(Override.class))
-                                     .addStatement("return %s(%s)".formatted(auditedEntityProp.getSetterSpec(auditTypeClassName).name, "entity"))
+                                     .addStatement("return %s(%s)".formatted(auditedEntityProp.getSetterSpec(environment, auditTypeClassName).name, "entity"))
                                      .build());
 
         // Audited properties
@@ -193,9 +195,9 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             properties.stream()
                     .map(prop -> processor.processProperty(this, prop))
                     .forEach(propSpec -> {
-                        builder.addField(propSpec.toFieldSpec());
-                        builder.addMethod(propSpec.getAccessorSpec());
-                        builder.addMethod(propSpec.getSetterSpec(className));
+                        builder.addField(propSpec.toFieldSpec(environment));
+                        builder.addMethod(propSpec.getAccessorSpec(environment));
+                        builder.addMethod(propSpec.getSetterSpec(environment, className));
                     });
             builder.addMethods(methods);
             return builder.build();
@@ -259,7 +261,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .build();
 
-        PropertySpec.addProperties(builder, modPropTypeClassName, environment, auditEntityProp, pdProp);
+        PropertySpec.addProperties(environment, builder, modPropTypeClassName, auditEntityProp, pdProp);
 
         // Abstract methods in the base type
 

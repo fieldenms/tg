@@ -4,7 +4,6 @@ import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import ua.com.fielden.platform.reflection.ClassesRetriever;
 
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
@@ -71,10 +70,15 @@ final class JavaPoet {
         }
         else {
             return switch (typeName) {
-                // TODO findClass will throw if a class is not found. Introduce ClassesRetriever.findClassOrNull.
-                case ClassName className -> ClassesRetriever.findClass(className.reflectionName());
+                case ClassName className -> {
+                    try {
+                        yield Class.forName(className.reflectionName(), false, JavaPoet.class.getClassLoader());
+                    } catch (final ClassNotFoundException e) {
+                        yield null;
+                    }
+                }
                 case ParameterizedTypeName paramTypeName -> reflectType(paramTypeName.rawType);
-                default -> throw new UnsupportedOperationException("Type name [%s] cannot be converted to a reflected type.");
+                default -> throw new UnsupportedOperationException("Type name [%s] cannot be reflected.");
             };
         }
     }
