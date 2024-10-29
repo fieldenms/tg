@@ -1,6 +1,5 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
-import '/resources/images/tg-rich-text-editor-icons.js';
 import '/resources/components/rich-text/tg-rich-text-input.js';
 import '/resources/components/tg-link-dialog.js';
 import '/resources/components/tg-color-picker-dialog.js';
@@ -9,67 +8,12 @@ import { html } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
-import { tearDownEvent, localStorageKey, getRelativePos, isMobileApp  } from '/resources/reflection/tg-polymer-utils.js';
-
-function setDialogPosition(dialog, pos) {
-    const dialogWidth = parseInt(dialog.style.width);
-    const dialogHeight = parseInt(dialog.style.height);
-    let x = (pos[0].left + pos[1].left) / 2 - dialogWidth / 2;
-    let y = Math.max(pos[0].bottom, pos[1].bottom);
-
-    const wWidth = getWindowWidth();
-    const wHeight = getWindowHeight();
-
-    if (x < 0) {
-        x = 0; 
-    } else if (x + dialogWidth > wWidth) {
-        x = wWidth - dialogWidth;
-    }
-
-    if (y < 0) {
-        y = 0;
-    } else if (y + dialogHeight > wHeight) {
-        const yAboveTheText = Math.min(pos[0].top, pos[1].top) - dialogHeight;
-        y = Math.min(wHeight - dialogHeight, yAboveTheText);
-    }
-
-    dialog.horizontalOffset =  x;
-    dialog.verticalOffset = y;
-}
-
-function getWindowWidth () {
-    return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-}
-
-function getWindowHeight () {
-    return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-}
+import { tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
-        label {
-            cursor: default;
-            @apply --layout-vertical;
-            @apply --layout-start;
-        }
-        .label-title {
-            @apply --layout-horizontal;
-            @apply --layout-center;
-        }
-        .editor-toolbar {
-            @apply --layout-horizontal;
-            @apply --layout-center;
-            padding-top: 10px;
-        }
         #input {
             cursor: text;
-        }
-        .toolbar-action {
-            flex-shrink: 0;
-            width: 24px;
-            height: 24px;
-            margin-right: 10px;
-            cursor: pointer;
         }
         #resizer {
             position: absolute;
@@ -96,39 +40,12 @@ const additionalTemplate = html`
             /* Non-prefixed version, currently
                supported by Chrome and Opera */
         }
-        .dropdown-content {
-            background-color: white;
-            box-shadow: 0px 2px 6px #ccc;
-        }
-    </style>
-    <iron-dropdown id="linkDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
-        <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]"></tg-link-dialog>
-    </iron-dropdown>
-    <iron-dropdown id="colorDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
-        <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]"></tg-color-picker-dialog>
-    </iron-dropdown>`;
+    </style>`;
+
 const customLabelTemplate = html`
     <label id="editorLabel" style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
-        <div class="label-title">
-            <span>[[propTitle]]</span>
-            <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" action-title="Copy" tooltip-text="Copy content" on-down="_preventEvent" on-tap="_copyTap"></iron-icon>
-        </div>
-        <div class="editor-toolbar">
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:header-1" action-title="Heading 1" tooltip-text="Make your text header 1" on-down="_preventEvent" on-tap="_makeHeader1"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:header-2" action-title="Heading 2" tooltip-text="Make your text header 2" on-down="_preventEvent" on-tap="_makeHeader2"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:header-3" action-title="Heading 3" tooltip-text="Make your text header 3" on-down="_preventEvent" on-tap="_makeHeader3"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:format-paragraph" action-title="Paragraph" tooltip-text="Make your text paragraph" on-down="_preventEvent" on-tap="_makeParagraph"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Make your text bold, Ctrl+B, &#x2318;+B" on-down="_preventEvent" on-tap="_makeBold"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text, Ctrl+I, &#x2318;+I" on-down="_preventEvent" on-tap="_makeItalic"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it, Ctrl+S, &#x2318;+S" on-down="_preventEvent" on-tap="_makeStrike"></iron-icon>
-            <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
-            <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, &#x2318;+U" on-down="_preventEvent" on-tap="_createBulletedList"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Create a numbered list, Ctrl+O, &#x2318;+O" on-down="_preventEvent" on-tap="_createNumberedList"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_preventEvent" on-tap="_createTaskList"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, &#x2318;+Z" on-down="_preventEvent" on-tap="_undo"></iron-icon>
-            <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, &#x2318;+Y" on-down="_preventEvent" on-tap="_redo"></iron-icon>
-        </div>
+        <span>[[propTitle]]</span>
+        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" action-title="Copy" tooltip-text="Copy content" on-down="_preventEvent" on-tap="_copyTap"></iron-icon>
     </label>`;
 
 const customInputTemplate = html`
@@ -185,38 +102,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
                     return this._handleCopy.bind(this);
                 }
             },
-
-            _cancelLinkInsertion: Function,
-            _acceptLink: Function,
-
-            _cancelColorAction: Function,
-            _acceptColor: Function
         }
-    }
-
-    ready() {
-        super.ready();
-        this.decorator().$$('.floated-label-placeholder').style.lineHeight = "45px";
-        this.$.linkDropdown.positionTarget = document.body;
-        this._cancelLinkInsertion = function () {
-            this.$.linkDropdown.cancel();
-            this.$.input.focusEditor();
-        }.bind(this);
-        this._acceptLink = function () {
-            const link = this.$.input.initLinkEditing();
-            this.$.input.toggleLink(this.$.linkDialog.url, (link && link.text) || this.$.linkDialog.url);
-            this.$.linkDropdown.close();
-        }.bind(this);
-        this.$.colorDropdown.positionTarget = document.body;
-        this._cancelColorAction = function() {
-            this.$.colorDropdown.cancel();
-            this.$.input.focusEditor();
-        }.bind(this);
-        this._acceptColor = function() {
-            this.$.input.initColorEditing();
-            this.$.input.applyColor(this.$.colorDialog.color);
-            this.$.colorDropdown.close();
-        }.bind(this);
     }
 
     convertToString (value) {
@@ -231,87 +117,6 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         }
 
         return {coreText: '', 'formattedText': strValue};
-    }
-
-    _preventEvent(e) {
-        e.preventDefault();
-    }
-
-    _applyFakeSelect(e) {
-        this.$.input.fakeSelect();
-    }
-
-    _makeHeader1(e) {
-        this.$.input.applyHeader1(e);
-    }
-
-    _makeHeader2(e) {
-        this.$.input.applyHeader2(e);
-    }
-
-    _makeHeader3(e) {
-        this.$.input.applyHeader3(e);
-    }
-
-    _makeParagraph(e) {
-        this.$.input.applyParagraph(e);
-    }
-
-    _makeBold(e) {
-        this.$.input.applyBold(e);
-    }
-    
-    _makeItalic(e) {
-        this.$.input.applyItalic(e);
-    }
-
-    _makeStrike(e) {
-        this.$.input.applyStrikethough(e);
-    }
-
-    _undo(e) {
-        this.$.input.undo(e);
-    }
-
-    _redo(e) {
-        this.$.input.redo(e);
-    }
-
-    _changeTextColor(e) {
-        this.$.input.scrollIntoView();
-        const textColorObj = this.$.input.initColorEditing();
-        this.$.input.fakeSelect();
-        if (textColorObj) {
-            this.$.colorDialog.color = textColorObj.detail;
-        }
-        setDialogPosition(this.$.colorDropdown, this.$.input.getSelectionCoordinates());
-        this.$.colorDropdown.open();
-    }
-
-    _toggleLink(e) {
-        this.$.input.scrollIntoView();
-        const link = this.$.input.initLinkEditing();
-        this.$.input.fakeSelect();
-        if (link) {
-            this.$.linkDialog.url = link.detail;
-        }
-        setDialogPosition(this.$.linkDropdown, this.$.input.getSelectionCoordinates());
-        this.$.linkDropdown.open();
-    }
-
-    _createBulletedList(e) {
-        this.$.input.createBulletList(e);
-        this.$.input.scrollIntoView();
-    }
-
-    _createNumberedList(e) {
-        this.$.input.createOrderedList(e);
-        this.$.input.scrollIntoView();
-    }
-
-    _createTaskList(e) {
-        this.$.input.createTaskList(e);
-        this.$.input.scrollIntoView();
     }
 
     _calcHeight(height, entityType, propertyName) {
@@ -344,8 +149,8 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
                 case 'start':
                     break;
                 case 'track':
-                    const prevHeight = this.$.input.offsetHeight;
-                    let newHeight = this.$.input.offsetHeight + event.detail.ddy;
+                    const prevHeight = parseInt(this.$.input.getHeight());
+                    let newHeight = prevHeight + event.detail.ddy;
                     //Adjust height if mouse is out of the scroll container
                     const scrollContainer = this._getScrollingParent();
                     const mousePos = scrollContainer && getRelativePos(event.detail.x, event.detail.y, scrollContainer);
@@ -403,6 +208,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _resetHeight(e) {
+        //TODO implement
         console.log("Height was reset");
     }
 
@@ -416,25 +222,6 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _generateKey() {
         return localStorageKey(`${this.entityType}_${this.propertyName}_height`);
-    }
-
-    _dialogClosed(e) {
-        if (e.composedPath()[0].tagName == "IRON-DROPDOWN") {
-            const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
-            if (dropDownContent && dropDownContent.resetState) {
-                dropDownContent.resetState();
-                this.$.input.fakeUnselect();
-            }
-        }
-    }
-
-    _dialogOpened(e) {
-        if (e.composedPath()[0].tagName == "IRON-DROPDOWN") {
-            const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
-            if (dropDownContent && dropDownContent.focusDefaultEditor && !isMobileApp()) {
-                dropDownContent.focusDefaultEditor();
-            }
-        }
     }
 
     _copyTap() {

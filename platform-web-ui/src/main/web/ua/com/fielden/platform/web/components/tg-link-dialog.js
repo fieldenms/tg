@@ -110,6 +110,7 @@ export class TgLinkDialog extends PolymerElement {
         this.validationCallback = function () {
             console.log("validation of link entity");
         };
+        this.addEventListener("addon-attached", this._onAddonAttached.bind(this));
     }
 
     ready () {
@@ -152,6 +153,10 @@ export class TgLinkDialog extends PolymerElement {
             this._okLink();
             tearDownEvent(e);
         }
+    }
+    
+    _onAddonAttached(e) {
+        tearDownEvent(e);
     }
 }
 

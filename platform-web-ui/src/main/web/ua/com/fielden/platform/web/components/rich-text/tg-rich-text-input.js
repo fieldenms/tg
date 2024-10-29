@@ -1,16 +1,23 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
-import '/resources/toastui-editor/toastui-editor-all.js';
-
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-
-import '/resources/components/rich-text/tg-rich-text-input-enhanced-styles.js';
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { excludeErrors } from '/resources/components/tg-global-error-handler.js';
+
+import '/resources/toastui-editor/toastui-editor-all.js';
+import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
+import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import '/resources/polymer/@polymer/iron-icons/editor-icons.js';
+import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js';
+
+import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
+
+import '/resources/components/rich-text/tg-rich-text-input-enhanced-styles.js';
+import '/resources/images/tg-rich-text-editor-icons.js';
 
 excludeErrors( e => e.filename && e.filename.includes("toastui-editor-all") && e.error && e.error.name === 'TransformError');
 
@@ -246,9 +253,21 @@ function isPositionInBox(style, offsetX, offsetY) {
     return offsetX >= left && offsetX <= left + width && offsetY >= top && offsetY <= top + height;
 }
 
-function focusEditor(event) {
+function focusOnKeyDown(event) {
     if (event.keyCode === 13 && !this.shadowRoot.activeElement) {
         this._editor.moveCursorToStart(true);
+    }
+}
+
+function focusEditor() {
+    if (this._editor) {
+        this._editor.focus();
+    }
+}
+
+function focusView() {
+    if (this._editor) {
+        this._editor.wwEditor.view.focus();
     }
 }
 
@@ -294,6 +313,80 @@ function applyFakeUnselection(selection) {
     this._editor.exec('fakeUnselect', {from: selection[0], to: selection[1]});
 }
 
+function initLinkEditing() {
+    return editElement.bind(this)(isLink, el => el.getAttribute('href'));
+}
+
+function initColorEditing() {
+    return editElement.bind(this)(isColoredSpan, el => rgbToHex(el.style.color));
+}
+
+function toggleLink(url, text) {
+    const selection = this._editor.getSelection();
+    if (selection && selection[0] !== selection[1] && !url) {
+        this._editor.exec('toggleLink');
+    } else {
+        this._editor.exec('addLink', { linkUrl: url, linkText: text });
+    }
+    this.changeEventHandler();
+}
+
+ function applyColor(selectedColor) {
+    focusView.bind(this)();
+    if (selectedColor) {
+        this._editor.exec("color", {selectedColor: selectedColor});
+    } else {
+        this._editor.exec('clearColor');
+    }
+    this.changeEventHandler();
+}
+
+function setDialogPosition(dialog, pos) {
+    const dialogWidth = parseInt(dialog.style.width);
+    const dialogHeight = parseInt(dialog.style.height);
+    let x = (pos[0].left + pos[1].left) / 2 - dialogWidth / 2;
+    let y = Math.max(pos[0].bottom, pos[1].bottom);
+
+    const wWidth = getWindowWidth();
+    const wHeight = getWindowHeight();
+
+    if (x < 0) {
+        x = 0; 
+    } else if (x + dialogWidth > wWidth) {
+        x = wWidth - dialogWidth;
+    }
+
+    if (y < 0) {
+        y = 0;
+    } else if (y + dialogHeight > wHeight) {
+        const yAboveTheText = Math.min(pos[0].top, pos[1].top) - dialogHeight;
+        y = Math.min(wHeight - dialogHeight, yAboveTheText);
+    }
+
+    dialog.horizontalOffset =  x;
+    dialog.verticalOffset = y;
+}
+
+function getWindowWidth () {
+    return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+}
+
+function getWindowHeight () {
+    return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+}
+
+function getSelectionCoordinates() {
+    if (this._editor && this._editor.getSelection()) {
+        const view = this._editor.wwEditor.view;
+        const selection = this._editor.getSelection();
+        return [view.coordsAtPos(selection[0]), view.coordsAtPos(selection[1])];
+    }
+}
+
+function scrollIntoView() {
+    this._editor.wwEditor.view.dispatch(this._editor.wwEditor.view.state.tr.scrollIntoView());
+}
+
 const template = html`
     <style include='rich-text-enhanced-styles'>
         ::selection {
@@ -314,7 +407,46 @@ const template = html`
         a mark {
             text-decoration: underline;
         }
+        .editor-toolbar {
+            @apply --layout-horizontal;
+            @apply --layout-center;
+            padding-top: 8px;
+        }
+        .toolbar-action {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            cursor: pointer;
+            color: var(--paper-input-container-color, var(--secondary-text-color));
+        }
+        .dropdown-content {
+            background-color: white;
+            box-shadow: 0px 2px 6px #ccc;
+        }
     </style>
+    <iron-dropdown id="linkDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
+        <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]"></tg-link-dialog>
+    </iron-dropdown>
+    <iron-dropdown id="colorDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
+        <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]"></tg-color-picker-dialog>
+    </iron-dropdown>
+    <div class="editor-toolbar">
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:header-1" action-title="Heading 1" tooltip-text="Make your text header 1" on-down="_stopMouseEvent" on-tap="_applyHeader1"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:header-2" action-title="Heading 2" tooltip-text="Make your text header 2" on-down="_stopMouseEvent" on-tap="_applyHeader2"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:header-3" action-title="Heading 3" tooltip-text="Make your text header 3" on-down="_stopMouseEvent" on-tap="_applyHeader3"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:format-paragraph" action-title="Paragraph" tooltip-text="Make your text paragraph" on-down="_stopMouseEvent" on-tap="_applyParagraph"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Make your text bold, Ctrl+B, &#x2318;+B" on-down="_stopMouseEvent" on-tap="_applyBold"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text, Ctrl+I, &#x2318;+I" on-down="_stopMouseEvent" on-tap="_applyItalic"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it, Ctrl+S, &#x2318;+S" on-down="_stopMouseEvent" on-tap="_applyStrikethough"></iron-icon>
+        <iron-icon id="colorAction" hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
+        <iron-icon id="linkAction" hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, &#x2318;+U" on-down="_stopMouseEvent" on-tap="_createBulletList"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Create a numbered list, Ctrl+O, &#x2318;+O" on-down="_stopMouseEvent" on-tap="_createOrderedList"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="tg-rich-text-editor:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_stopMouseEvent" on-tap="_createTaskList"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, &#x2318;+Z" on-down="_stopMouseEvent" on-tap="_undo"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" class="toolbar-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, &#x2318;+Y" on-down="_stopMouseEvent" on-tap="_redo"></iron-icon>
+    </div>
     <div id="editor"></div>`; 
 
 class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKeysBehavior, TgTooltipBehavior], PolymerElement) {
@@ -360,7 +492,13 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             _editor: Object,
             _fakeSelection: {
                 type: Array,
-            }
+            },
+
+            _cancelLinkInsertion: Function,
+            _acceptLink: Function,
+
+            _cancelColorAction: Function,
+            _acceptColor: Function
         }
     }
 
@@ -370,6 +508,28 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     ready() {
         super.ready();
+        //Initialise link and color dialogs
+        this.$.linkDropdown.positionTarget = document.body;
+        this._cancelLinkInsertion = function () {
+            this.$.linkDropdown.cancel();
+            focusEditor.bind(this)();
+        }.bind(this);
+        this._acceptLink = function () {
+            const link = initLinkEditing.bind(this)();
+            toggleLink.bind(this)(this.$.linkDialog.url, (link && link.text) || this.$.linkDialog.url);
+            this.$.linkDropdown.close();
+        }.bind(this);
+        this.$.colorDropdown.positionTarget = document.body;
+        this._cancelColorAction = function() {
+            this.$.colorDropdown.cancel();
+            focusEditor.bind(this)();
+        }.bind(this);
+        this._acceptColor = function() {
+            initColorEditing.bind(this)();
+            applyColor.bind(this)(this.$.colorDialog.color);
+            this.$.colorDropdown.close();
+        }.bind(this);
+        // Create editor
         this._editor = new toastui.Editor({
             el: this.$.editor,
             height: this.height,
@@ -406,16 +566,16 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         //Add key down to prevent tab key on list
         this._getEditableContent().addEventListener("keydown", preventListIdentation.bind(this), true);
         //Initiate key binding and key event target
-        this.addOwnKeyBinding('ctrl+b meta+b', 'applyBold');
-        this.addOwnKeyBinding('ctrl+i meta+i', 'applyItalic');
-        this.addOwnKeyBinding('ctrl+s meta+s', 'applyStrikethough');
-        this.addOwnKeyBinding('ctrl+z meta+z', 'undo');
-        this.addOwnKeyBinding('ctrl+y meta+y', 'redo');
-        this.addOwnKeyBinding('tab', 'stopEvent');
-        this.addOwnKeyBinding('shift+tab', 'stopEvent');
-        this.addOwnKeyBinding('ctrl+u meta+u', 'createBulletList');
-        this.addOwnKeyBinding('ctrl+o meta+o', 'createOrderedList');
-        this.addOwnKeyBinding('esc', 'stopEditing');
+        this.addOwnKeyBinding('ctrl+b meta+b', '_applyBold');
+        this.addOwnKeyBinding('ctrl+i meta+i', '_applyItalic');
+        this.addOwnKeyBinding('ctrl+s meta+s', '_applyStrikethough');
+        this.addOwnKeyBinding('ctrl+z meta+z', '_undo');
+        this.addOwnKeyBinding('ctrl+y meta+y', '_redo');
+        this.addOwnKeyBinding('tab', '_stopKeyboradEvent');
+        this.addOwnKeyBinding('shift+tab', '_stopKeyboradEvent');
+        this.addOwnKeyBinding('ctrl+u meta+u', '_createBulletList');
+        this.addOwnKeyBinding('ctrl+o meta+o', '_createOrderedList');
+        this.addOwnKeyBinding('esc', '_stopEditing');
         this.keyEventTarget = this._getEditableContent();
         //Adjust key event handler to be able to process events from _editor when event was prevented
         const prevKeyBindingHandler = this._onKeyBindingEvent.bind(this);
@@ -423,44 +583,52 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             Object.defineProperty(event, 'defaultPrevented', {value: false})
             prevKeyBindingHandler(keyBindings, event);
         };
-        this.addEventListener('keydown', focusEditor.bind(this));
+        this.addEventListener('keydown', focusOnKeyDown.bind(this));
     }
 
-    scrollIntoView() {
-        this._editor.wwEditor.view.dispatch(this._editor.wwEditor.view.state.tr.scrollIntoView());
+    makeEditable(editable) {
+        this._getEditableContent().setAttribute("contenteditable", editable + "");
     }
 
-    stopEvent(event) {
+    getHeight() {
+        return this._editor && this._editor.getHeight();
+    }
+
+    _stopKeyboradEvent(event) {
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    applyHeader1(event) {
+    _stopMouseEvent(e) {
+        e.preventDefault();
+    }
+
+    _applyHeader1(event) {
         this._editor.exec('heading', { level: 1 });
     }
 
-    applyHeader2(event) {
+    _applyHeader2(event) {
         this._editor.exec('heading', { level: 2 });
     }
 
-    applyHeader3(event) {
+    _applyHeader3(event) {
         this._editor.exec('heading', { level: 3 });
     }
 
-    applyParagraph(event) {
+    _applyParagraph(event) {
         this._editor.exec('heading', { level: 0 });
     }
 
-    applyBold(event) {
+    _applyBold(event) {
         this._editor.exec('bold');
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    applyItalic(event) {
+    _applyItalic(event) {
         this._editor.exec('italic');
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    applyStrikethough(event) {
+    _applyStrikethough(event) {
         this._editor.exec('strike');
         const selection = this._editor.getSelection();
         if (selection && selection[0] !== selection[1]) {
@@ -468,104 +636,73 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }
     }
 
-    undo(event) {
+    _changeTextColor(e) {
+        scrollIntoView.bind(this)();
+        const textColorObj = initColorEditing.bind(this)();
+        this._applyFakeSelect();
+        if (textColorObj) {
+            this.$.colorDialog.color = textColorObj.detail;
+        }
+        setDialogPosition(this.$.colorDropdown, getSelectionCoordinates.bind(this)());
+        this.$.colorDropdown.open();
+    }
+
+    _toggleLink(e) {
+        scrollIntoView.bind(this)();
+        const link = initLinkEditing.bind(this)();
+        this._applyFakeSelect();
+        if (link) {
+            this.$.linkDialog.url = link.detail;
+        }
+        setDialogPosition(this.$.linkDropdown, getSelectionCoordinates.bind(this)());
+        this.$.linkDropdown.open();
+    }
+
+    _undo(event) {
         this._editor.exec('undo');
         this.changeEventHandler();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    redo(event) {
+    _redo(event) {
         this._editor.exec('redo');
         this.changeEventHandler();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    initLinkEditing() {
-        return editElement.bind(this)(isLink, el => el.getAttribute('href'));
+    _createBulletList(e) {
+        this._editor.exec('bulletList');
+        tearDownEvent(e.detail && e.detail.keyboardEvent);
+        scrollIntoView.bind(this)();
     }
 
-    initColorEditing() {
-        return editElement.bind(this)(isColoredSpan, el => rgbToHex(el.style.color));
+    _createOrderedList(e) {
+        this._editor.exec('orderedList');
+        tearDownEvent(e.detail && e.detail.keyboardEvent);
+        scrollIntoView.bind(this)();
     }
 
-    toggleLink(url, text) {
-        const selection = this._editor.getSelection();
-        if (selection && selection[0] !== selection[1] && !url) {
-            this._editor.exec('toggleLink');
-        } else {
-            this._editor.exec('addLink', { linkUrl: url, linkText: text });
-        }
-        this.changeEventHandler();
+    _createTaskList(e) {
+        this._editor.exec('taskList');
+        scrollIntoView.bind(this)();
     }
 
-    applyColor(selectedColor) {
-        this.focusView();
-        if (selectedColor) {
-            this._editor.exec("color", {selectedColor: selectedColor});
-        } else {
-            this._editor.exec('clearColor');
-        }
-        this.changeEventHandler();
-    }
-
-    fakeSelect() {
+    _applyFakeSelect() {
         this._fakeSelection = this._editor.getSelection();
         applyFakeSelection.bind(this)(this._fakeSelection);
     }
 
-    fakeUnselect() {
+    _applyFakeUnselect() {
         applyFakeUnselection.bind(this)(this._fakeSelection);
         delete this._fakeSelection;
     }
 
-    createBulletList(event) {
-        this._editor.exec('bulletList');
-        tearDownEvent(event.detail && event.detail.keyboardEvent);
-    }
-
-    createOrderedList(event) {
-        this._editor.exec('orderedList');
-        tearDownEvent(event.detail && event.detail.keyboardEvent);
-    }
-
-    createTaskList(event) {
-        this._editor.exec('taskList');
-    }
-
-    stopEditing(event) {
+    _stopEditing(event) {
         const selection = this._editor.getSelection();
         const cursorPosition = selection ? selection[1] : 0;
         this._editor.setSelection(cursorPosition, cursorPosition);
         this.focus();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
-    }
-
-    makeEditable(editable) {
-        this._getEditableContent().setAttribute("contenteditable", editable + "");
-    }
-
-    focusEditor() {
-        if (this._editor) {
-            this._editor.focus();
-        }
-    }
-
-    focusView() {
-        if (this._editor) {
-            this._editor.wwEditor.view.focus();
-        }
-    }
-
-    getHeight() {
-        return this._editor && this._editor.getHeight();
-    }
-
-    getSelectionCoordinates() {
-        if (this._editor && this._editor.getSelection()) {
-            const view = this._editor.wwEditor.view;
-            const selection = this._editor.getSelection();
-            return [view.coordsAtPos(selection[0]), view.coordsAtPos(selection[1])];
-        }
     }
 
     _valueChanged(newValue) {
@@ -619,6 +756,25 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _getEditableContent() {
         return this._editor.getEditorElements().wwEditor.children[0];
+    }
+
+    _dialogClosed(e) {
+        if (e.composedPath()[0].tagName == "IRON-DROPDOWN") {
+            const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
+            if (dropDownContent && dropDownContent.resetState) {
+                dropDownContent.resetState();
+                this._applyFakeUnselect();
+            }
+        }
+    }
+
+    _dialogOpened(e) {
+        if (e.composedPath()[0].tagName == "IRON-DROPDOWN") {
+            const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
+            if (dropDownContent && dropDownContent.focusDefaultEditor && !isMobileApp()) {
+                dropDownContent.focusDefaultEditor();
+            }
+        }
     }
 }
 

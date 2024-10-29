@@ -109,6 +109,7 @@ export class TgColorPickerDialog extends PolymerElement {
         this._validationCallback = function () {
             console.log("validation of color entity");
         };
+        this.addEventListener("addon-attached", this._onAddonAttached.bind(this));
     }
 
     ready () {
@@ -152,6 +153,10 @@ export class TgColorPickerDialog extends PolymerElement {
             this._okColor();
             tearDownEvent(e);
         }
+    }
+
+    _onAddonAttached(e) {
+        tearDownEvent(e);
     }
 }
 
