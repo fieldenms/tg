@@ -136,7 +136,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                 .filter(AuditEntityGeneratorImpl::isAudited)
                 .map(pm -> propertyBuilder("a3t_" + pm.name(), pm.type().javaType())
-                        .addAnnotation(javaPoet.getAnnotation(MapTo.class))
+                        .addAnnotation(AnnotationSpecs.mapTo((A3T + "_" + pm.name()).toUpperCase()))
                         .addAnnotation(javaPoet.getAnnotation(Final.class))
                         .build())
                 .forEach(a3tBuilder::addProperty);

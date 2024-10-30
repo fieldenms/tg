@@ -3,6 +3,7 @@ package ua.com.fielden.platform.audit;
 import com.squareup.javapoet.AnnotationSpec;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -34,6 +35,12 @@ final class AnnotationSpecs {
     public static AnnotationSpec title(final CharSequence title) {
         return AnnotationSpec.builder(Title.class)
                 .addMember("value", "$S", title.toString())
+                .build();
+    }
+
+    public static AnnotationSpec mapTo(final CharSequence value) {
+        return AnnotationSpec.builder(MapTo.class)
+                .addMember("value", "$S", value.toString())
                 .build();
     }
 
