@@ -1,5 +1,5 @@
 {
-  "_from": "mocha@^10.7.3",
+  "_from": "mocha@^10.8.2",
   "_id": "mocha@10.8.2",
   "_inBundle": false,
   "_integrity": "sha512-VZlYo/WE8t1tstuRmqgeyBgCbJc/lEdopaa+axcKzTBJ+UIdlAB9XnmvTCAH4pwR4ElNInaedhEBmZD8iCSVEg==",
@@ -8,19 +8,19 @@
   "_requested": {
     "type": "range",
     "registry": true,
-    "raw": "mocha@^10.7.3",
+    "raw": "mocha@^10.8.2",
     "name": "mocha",
     "escapedName": "mocha",
-    "rawSpec": "^10.7.3",
+    "rawSpec": "^10.8.2",
     "saveSpec": null,
-    "fetchSpec": "^10.7.3"
+    "fetchSpec": "^10.8.2"
   },
   "_requiredBy": [
     "/"
   ],
   "_resolved": "https://registry.npmjs.org/mocha/-/mocha-10.8.2.tgz",
   "_shasum": "8d8342d016ed411b12a429eb731b825f961afb96",
-  "_spec": "mocha@^10.7.3",
+  "_spec": "mocha@^10.8.2",
   "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
   "author": {
     "name": "TJ Holowaychuk",
