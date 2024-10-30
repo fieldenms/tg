@@ -1,3 +1,4 @@
+rm -f package-lock.json
 npm install
 polymer build
 rm -r -f polymer
@@ -9,4 +10,3 @@ mv build/tg-custom-build/node_modules/@polymer polymer/
 mv build/tg-custom-build/node_modules/wct-browser-legacy polymer/
 mv build/tg-custom-build/node_modules/@google-web-components polymer/
 rm -r -f build
-rm -f package-lock.json
