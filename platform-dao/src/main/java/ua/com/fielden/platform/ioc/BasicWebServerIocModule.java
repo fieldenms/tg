@@ -3,6 +3,8 @@ package ua.com.fielden.platform.ioc;
 import com.google.inject.Stage;
 import com.google.inject.name.Names;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
+import ua.com.fielden.platform.audit.AbstractAuditProp;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -29,19 +31,22 @@ import ua.com.fielden.platform.web_api.IWebApi;
 import java.util.List;
 import java.util.Properties;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.audit.AuditUtils.*;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
 
 /**
  * Basic IoC module for server web applications, which should be extended by an application-specific IoC module.
- *
- * This IoC provides all the necessary bindings for:
+ * <p>
+ * This module is reponsible for:
  * <ul>
- * <li>Applications settings (refer {@link IApplicationSettings});
- * <li>Serialisation mechanism;
- * <li>Essential DAO interfaces {@link IUser}, {@link IAuthorisationModel}, and more;
- * <li>Provides application main menu configuration related DAO bindings.
+ *   <li> Binding of applications settings (refer {@link IApplicationSettings});
+ *   <li> Serialisation mechanism;
+ *   <li> Binding of essential DAO interfaces {@link IUser}, {@link IAuthorisationModel}, and more;
+ *   <li> Providing application main menu configuration related DAO bindings;
+ *   <li> Binding of audit-entity types (subtypes of {@link AbstractAuditEntity} and {@link AbstractAuditProp}).
  * </ul>
  * <p>
  * Instantiation of singletons occurs in accordance with <a href="https://github.com/google/guice/wiki/Scopes#eager-singletons">Guice Eager Singletons</a>,
@@ -64,7 +69,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
     {
         super(props, domainEntityTypes);
         this.props = props;
-        this.applicationDomainProvider = applicationDomainProvider;
+        this.applicationDomainProvider = registerAuditTypes(applicationDomainProvider);
         // Currently there is no good way of binding the default implementation of IAuthorisationModel other than having multiple constructors in this module.
         // Good old @ImplementedBy cannot be used because the default implementation resides in platform-dao, while the interface is in platform-pojo-bl.
         this.authorisationModelType = ServerAuthorisationModel.class;
@@ -139,6 +144,24 @@ public class BasicWebServerIocModule extends CompanionIocModule {
 
     public Properties getProps() {
         return props;
+    }
+
+    /**
+     * Returns a new application domain provider that adds an audit-entity type and a corresponding audit-prop type
+     * to each audited entity type in the specified provider.
+     */
+    private static IApplicationDomainProvider registerAuditTypes(final IApplicationDomainProvider applicationDomainProvider) {
+        final var newEntityTypes = applicationDomainProvider.entityTypes().stream()
+                .<Class<? extends AbstractEntity<?>>> mapMulti((type, sink) -> {
+                    sink.accept(type);
+                    if (isAudited(type)) {
+                        sink.accept(getAuditType(type));
+                        sink.accept(getAuditPropType(type));
+                    }
+                })
+                .collect(toImmutableList());
+
+        return () -> newEntityTypes;
     }
 
 }
