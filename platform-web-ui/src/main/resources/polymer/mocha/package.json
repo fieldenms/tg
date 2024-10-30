@@ -1,8 +1,8 @@
 {
   "_from": "mocha@^10.7.3",
-  "_id": "mocha@10.7.3",
+  "_id": "mocha@10.8.2",
   "_inBundle": false,
-  "_integrity": "sha512-uQWxAu44wwiACGqjbPYmjo7Lg8sFrS3dQe7PP2FQI+woptP4vZXSMcfMyFL/e1yFEeEpV4RtyTpZROOKmxis+A==",
+  "_integrity": "sha512-VZlYo/WE8t1tstuRmqgeyBgCbJc/lEdopaa+axcKzTBJ+UIdlAB9XnmvTCAH4pwR4ElNInaedhEBmZD8iCSVEg==",
   "_location": "/mocha",
   "_phantomChildren": {},
   "_requested": {
@@ -18,8 +18,8 @@
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/mocha/-/mocha-10.7.3.tgz",
-  "_shasum": "ae32003cabbd52b59aece17846056a68eb4b0752",
+  "_resolved": "https://registry.npmjs.org/mocha/-/mocha-10.8.2.tgz",
+  "_shasum": "8d8342d016ed411b12a429eb731b825f961afb96",
   "_spec": "mocha@^10.7.3",
   "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
   "author": {
@@ -188,12 +188,12 @@
     "docs:api": "jsdoc -c jsdoc.conf.json",
     "docs:site": "eleventy",
     "format": "run-s format:*",
-    "format:eslint": "eslint --fix . 'bin/*'",
-    "format:prettier": "prettier --write '!(package*).json' '.*.json' 'lib/**/*.json' '*.yml'",
+    "format:eslint": "eslint --fix . \"bin/*\"",
+    "format:prettier": "prettier --write \"!(package*).json\" \".*.json\" \"lib/**/*.json\" \"*.yml\"",
     "lint": "run-p lint:*",
-    "lint:code": "eslint . 'bin/*' --max-warnings 0",
+    "lint:code": "eslint . \"bin/*\" --max-warnings 0",
     "lint:knip": "knip --cache",
-    "lint:markdown": "markdownlint '*.md' 'docs/**/*.md' '.github/*.md' 'lib/**/*.md' 'test/**/*.md' 'example/**/*.md' -i CHANGELOG.md",
+    "lint:markdown": "markdownlint \"*.md\" \"docs/**/*.md\" \".github/*.md\" \"lib/**/*.md\" \"test/**/*.md\" \"example/**/*.md\" -i CHANGELOG.md",
     "prepublishOnly": "run-s clean build",
     "test": "run-s lint test-node test-browser",
     "test-browser": "run-s clean build test-browser:*",
@@ -209,7 +209,7 @@
     "test-node": "run-s test-coverage-clean test-node:* test-coverage-generate",
     "test-node-run": "nyc --no-clean --reporter=json node bin/mocha.js --forbid-only",
     "test-node-run-only": "nyc --no-clean --reporter=json node bin/mocha.js",
-    "test-node:integration": "run-s clean build && npm run -s test-node-run -- --parallel --timeout 10000 --slow 3750 'test/integration/**/*.spec.js'",
+    "test-node:integration": "run-s clean build && npm run -s test-node-run -- --parallel --timeout 10000 --slow 3750 \"test/integration/**/*.spec.js\"",
     "test-node:interfaces": "run-p test-node:interfaces:*",
     "test-node:interfaces:bdd": "npm run -s test-node-run -- --ui bdd test/interfaces/bdd.spec",
     "test-node:interfaces:exports": "npm run -s test-node-run -- --ui exports test/interfaces/exports.spec",
@@ -221,14 +221,14 @@
     "test-node:only:globalBdd": "npm run -s test-node-run-only -- --ui bdd test/only/global/bdd.spec --no-parallel",
     "test-node:only:globalQunit": "npm run -s test-node-run-only -- --ui qunit test/only/global/qunit.spec --no-parallel",
     "test-node:only:globalTdd": "npm run -s test-node-run-only -- --ui tdd test/only/global/tdd.spec --no-parallel",
-    "test-node:reporters": "npm run -s test-node-run -- 'test/reporters/*.spec.js'",
+    "test-node:reporters": "npm run -s test-node-run -- \"test/reporters/*.spec.js\"",
     "test-node:requires": "npm run -s test-node-run -- --require coffeescript/register --require test/require/a.js --require test/require/b.coffee --require test/require/c.js --require test/require/d.coffee test/require/require.spec.js",
-    "test-node:unit": "npm run -s test-node-run -- 'test/unit/*.spec.js' 'test/node-unit/**/*.spec.js'",
+    "test-node:unit": "npm run -s test-node-run -- \"test/unit/*.spec.js\" \"test/node-unit/**/*.spec.js\"",
     "test-smoke": "node ./bin/mocha --no-config test/smoke/smoke.spec.js",
     "version": "run-p version:* && git add -A ./AUTHORS ./CHANGELOG.md",
     "version:linkify-changelog": "node scripts/linkify-changelog.mjs",
     "version:update-authors": "node scripts/update-authors.js"
   },
   "type": "commonjs",
-  "version": "10.7.3"
+  "version": "10.8.2"
 }

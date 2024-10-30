@@ -58,7 +58,7 @@
     "@polymer/polymer": "^3.5.2",
     "@polymer/test-fixture": "^4.0.2",
     "chai": "^5.1.2",
-    "mocha": "^10.7.3",
+    "mocha": "^10.8.2",
     "wct-browser-legacy": "^1.0.2"
   }
 }
