@@ -1,14 +1,18 @@
 package ua.com.fielden.platform.types;
 
+import com.google.common.collect.Streams;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import ua.com.fielden.platform.text.jsoup.NodeVisitor;
 import ua.com.fielden.platform.utils.StringUtils;
 
-import java.io.IOException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 /**
  * Extracts <i>core text</i> from a HTML document.
@@ -20,37 +24,104 @@ import java.util.regex.Pattern;
  *   <li> Leading and trailing whitespace of the whole core text is always stripped.
  * </ul>
  */
-final class RichTextAsHtmlCoreTextExtractor implements NodeVisitor {
+final class RichTextAsHtmlCoreTextExtractor {
 
     /**
      * Extracts the core text.
-     *
-     * @param node
-     * @return
      */
-    public static String toCoreText(final org.jsoup.nodes.Node node) {
+    public static String toCoreText(final Node root) {
+        final Stream<Node> nodes = traverse(
+                root,
+                node -> node instanceof Element element
+                        && (equalTagNames("a", element.tagName()) || equalTagNames("img", element.tagName())));
+
+        return nodes.map(node -> {
+                    final var text = switch (node) {
+                        case Element element when equalTagNames("a", element.tagName())
+                                -> formatLink(element.attr("href"), element.text());
+                        case Element element when equalTagNames("img", element.tagName())
+                                -> formatLink(element.attr("src"), element.attr("alt"));
+                        case TextNode textNode -> formatText(textNode);
+                        default -> "";
+                    };
+
+                    final String leadingWs = node.previousSibling() != null && isSeparable(node.previousSibling()) ? " " : "";
+                    final String trailingWs = node.nextSibling() != null && isSeparable(node.nextSibling()) ? " " : "";
+
+                    return leadingWs + text + trailingWs;
+                })
+                .map(RichTextAsHtmlCoreTextExtractor::stripWhitespace)
+                .collect(collector);
+    }
+
+    /**
+     * Returns a stream of nodes that represents a depth-first traversal of the specified tree.
+     * The root node, intermediate and leaf nodes are included in the stream.
+     *
+     * @param root  the root of the tree to traverse
+     * @param skipChildren  a predicate which is true for nodes whose children should be excluded from the stream
+     */
+    private static Stream<Node> traverse(final Node root, final Predicate<? super Node> skipChildren) {
+        final var iterator = new Iterator<Node>() {
+            Node node = root;
+
+            @Override
+            public boolean hasNext() {
+                return node != null;
+            }
+
+            @Override
+            public Node next() {
+                if (!hasNext()) { throw new NoSuchElementException(); }
+
+                final Node thisNode = node;
+
+                // Find the next node
+                if (node.childNodeSize() > 0 && !skipChildren.test(node)) {
+                    node = node.firstChild();
+                }
+                else {
+                    // Find the first next sibling, going up the tree
+                    Node nextNode = node;
+                    while (nextNode != root && nextNode.nextSibling() == null) {
+                        nextNode = nextNode.parentNode();
+                    }
+                    if (nextNode == root) {
+                        // Traversal is over
+                        node = null;
+                    } else {
+                        // If next sibling is null, traversal is over
+                        node = nextNode.nextSibling();
+                    }
+                }
+
+                return thisNode;
+            }
+        };
+
+        return Streams.stream(iterator);
+    }
+
+    private static String formatLink(final String destination, final String text) {
+        final boolean hasDest = destination != null && !destination.isBlank();
+        final boolean hasText = text != null && !text.isBlank();
+
         final var sb = new StringBuilder();
-        new RichTextAsHtmlCoreTextExtractor(sb).visit(node);
-        // Strip trailing whitespace
-        return StringUtils.deleteTrailing(sb, Character::isWhitespace).toString();
-    }
-
-    private final Writer writer;
-
-    private RichTextAsHtmlCoreTextExtractor(final Appendable sink) {
-        this.writer = new Writer(sink);
-    }
-
-    public void visit(final org.jsoup.nodes.Node node) {
-        switch (node) {
-        case Element elt -> visitElement(elt);
-        case TextNode text -> visitText(text);
-        default -> {
+        if (hasText) {
+            sb.append(text);
         }
+
+        if (hasDest) {
+            if (hasText && !text.endsWith(" ")) {
+                sb.append(' ');
+            }
+            sb.append('(').append(destination).append(')');
         }
+
+        return sb.toString();
     }
 
-    private void visitText(final TextNode text) {
+    private static String formatText(final TextNode text) {
         final CharSequence content;
         if (isOnlyChild(text)) {
             content = text.getWholeText().strip();
@@ -64,44 +135,21 @@ final class RichTextAsHtmlCoreTextExtractor implements NodeVisitor {
         else {
             content = text.getWholeText();
         }
-        writer.append(content);
+        return content.toString();
     }
 
-    private void visitElement(final Element element) {
-        final var shouldSeparate = isSeparable(element);
-        if (shouldSeparate) {
-            writer.append(' ');
-        }
-
-        if (equalTagNames("a", element.tagName())) {
-            // <a> may have child nodes (e.g., <a href="..."> <b>text</b> </a>), that's why we want text() and not ownText()
-            visitLink(element.attr("href"), element.text());
-        } else if (equalTagNames("img", element.tagName())) {
-            visitLink(element.attr("src"), element.attr("alt"));
-        } else {
-            visitChildren(element);
-        }
-
-        if (shouldSeparate) {
-            writer.append(' ');
-        }
-    }
-
-    private void visitLink(final String destination, final String text) {
-        final boolean hasDest = destination != null && !destination.isBlank();
-        final boolean hasText = text != null && !text.isBlank();
-
-        if (hasText) {
-            writer.append(text);
-        }
-
-        if (hasDest) {
-            if (hasText && !text.endsWith(" ")) {
-                writer.append(' ');
-            }
-            writer.appendRaw('(' + destination + ')');
-        }
-    }
+    private static final Collector<CharSequence, StringBuilder, String> collector = Collector.of(
+            StringBuilder::new,
+            (sb, str) -> {
+                if (sb.isEmpty() || Character.isWhitespace(sb.charAt(sb.length() - 1))) {
+                    sb.append(str, StringUtils.indexOfOrElse(str, c -> !Character.isWhitespace(c), str.length()), str.length());
+                } else {
+                    sb.append(str);
+                }
+            },
+            StringBuilder::append,
+            sb -> StringUtils.deleteTrailing(sb, Character::isWhitespace).toString()
+    );
 
     /**
      * This predicate is true for HTML elements that need to be separated by whitespace from surrounding text.
@@ -123,6 +171,13 @@ final class RichTextAsHtmlCoreTextExtractor implements NodeVisitor {
         return !$.NON_SEPARABLE_TAGS.contains(element.tagName().toLowerCase());
     }
 
+    /**
+     * @see #isSeparable(Element)
+     */
+    private static boolean isSeparable(final Node node) {
+        return node instanceof Element element && isSeparable(element);
+    }
+
     private static boolean isFirstChild(final Node node) {
         return node.previousSibling() == null;
     }
@@ -140,110 +195,20 @@ final class RichTextAsHtmlCoreTextExtractor implements NodeVisitor {
     }
 
     /**
-     * Appends character sequences to a buffer that will represent the resulting core text.
-     * <ol>
-     *   <li> Newline characters (or character sequences, such as {@code \r\n}) are replaced by a single space character.
-     *   <li> Consecutive whitespace characters are replaced by a single space character.
-     *   <li> The underlying buffer will not contain leading whitespace.
-     *   <li> The underlying buffer may contain trailing whitespace.
-     * </ol>
+     * Transforms a char sequence by stripping whitespace as described in the corresponding section of the documentation of this class.
      */
-    private static final class Writer {
-
-        private final Appendable sink;
-        private boolean empty = true;
-        private boolean endsWithWhitespace = false;
-
-        private Writer(final Appendable sink) {
-            this.sink = sink;
+    private static CharSequence stripWhitespace(final CharSequence charSeq) {
+        if (charSeq.isEmpty()) {
+            return charSeq;
         }
 
-        /**
-         * Appends the specified text to the buffer, performing the transformations described in the documentation of this class.
-         */
-        public void append(final CharSequence charSeq) {
-            append_(stripWhitespace(charSeq));
+        class $ {
+            static final Pattern NEWLINE_PATTERN = Pattern.compile("\\r?\\n");
+            static final Pattern MULTI_WS_PATTERN = Pattern.compile("\\s{2,}");
         }
 
-        /**
-         * Appends the specified character to the buffer, performing the transformations described in the documentation of this class.
-         */
-        public void append(final char c) {
-            append_(c);
-        }
-
-        /**
-         * Appends the specified sequence to the buffer, ignoring all transformations.
-         */
-        public void appendRaw(final CharSequence charSeq) {
-            appendRaw(charSeq, 0, charSeq.length());
-        }
-
-        /**
-         * Appends the specified subsequence to the buffer, ignoring all transformations.
-         */
-        public void appendRaw(final CharSequence charSeq, final int start, final int end) {
-            if (start != end) {
-                try {
-                    sink.append(charSeq, start, end);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-                endsWithWhitespace = Character.isWhitespace(charSeq.charAt(charSeq.length() - 1));
-                empty = false;
-            }
-        }
-
-        private void append_(final CharSequence charSeq) {
-            if (!charSeq.isEmpty()) {
-                // We want to avoid consecutive whitespace, so skip leading whitespace if the last appended character is whitespace
-                // Skip leading whitespace if we haven't appended yet to ensure that the resulting string doesn't start with whitespace.
-                final int start;
-                if (endsWithWhitespace || empty) {
-                    start = StringUtils.indexOf(charSeq, c -> !Character.isWhitespace(c));
-                }
-                else {
-                    start = 0;
-                }
-
-                if (start != -1) {
-                    appendRaw(charSeq, start, charSeq.length());
-                }
-            }
-        }
-
-        private void append_(final char c) {
-            if (Character.isWhitespace(c) && (endsWithWhitespace || empty)) {
-               return;
-            }
-
-            try {
-                sink.append(c);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            endsWithWhitespace = Character.isWhitespace(c);
-            empty = false;
-        }
-
-        /**
-         * Transforms a char sequence by stripping whitespace as described in the corresponding section of the documentation of this class.
-         */
-        private static CharSequence stripWhitespace(final CharSequence charSeq) {
-            if (charSeq.isEmpty()) {
-                return charSeq;
-            }
-
-            class $ {
-                static final Pattern NEWLINE_PATTERN = Pattern.compile("\\r?\\n");
-                static final Pattern MULTI_WS_PATTERN = Pattern.compile("\\s{2,}");
-            }
-
-            return $.MULTI_WS_PATTERN.matcher($.NEWLINE_PATTERN.matcher(charSeq).replaceAll(" "))
-                    .replaceAll(" ");
-        }
+        return $.MULTI_WS_PATTERN.matcher($.NEWLINE_PATTERN.matcher(charSeq).replaceAll(" "))
+                .replaceAll(" ");
     }
 
 }
