@@ -13,8 +13,10 @@ import {TgReflector} from '/app/tg-reflector.js';
 const template = html`
     <style>
         :host {
-            padding: 20px;
             @apply --layout-vertical;
+        }
+        tg-hyperlink-editor {
+            padding: 20px 20px 0 20px;
         }
         .actions {
             padding: 10px;
@@ -22,16 +24,22 @@ const template = html`
             @apply --layout-wrap;
             @apply --layout-center-justified;
         }
+        paper-button {
+            width: 80px;
+            font-size: 10pt;
+            line-height: normal;
+            margin: 10px;
+        }
     </style>
     <tg-hyperlink-editor id="urlEditor" entity="[[_entity]]" property-name="urlProp"
         current-state="EDIT" prop-title="URL" prop-desc="Page URL to insert"
         action="null" validation-callback="[[validationCallback]]">
     </tg-hyperlink-editor>
     <div class="actions">
-        <paper-button raised roll="button" on-tap="_cancelLink" style="width:80px;" tooltip-text="Do not insert a link">
+        <paper-button raised roll="button" on-tap="_cancelLink" tooltip-text="Do not insert a link">
             <span>Cancel</span>
         </paper-button>
-        <paper-button raised roll="button" on-tap="_okLink" style="width:80px;" tooltip-text="Insert a link">
+        <paper-button raised roll="button" on-tap="_okLink" tooltip-text="Insert a link">
             <span>OK</span>
         </paper-button>
     </div>`;

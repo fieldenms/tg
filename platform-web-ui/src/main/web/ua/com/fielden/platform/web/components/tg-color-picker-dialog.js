@@ -13,8 +13,10 @@ import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 const template = html`
     <style>
         :host {
-            padding: 20px;
             @apply --layout-vertical;
+        }
+        tg-colour-picker {
+            padding: 20px 20px 0 20px;
         }
         .actions {
             padding: 10px;
@@ -22,16 +24,22 @@ const template = html`
             @apply --layout-wrap;
             @apply --layout-center-justified;
         }
+        paper-button {
+            width: 80px;
+            font-size: 10pt;
+            line-height: normal;
+            margin: 10px;
+        }
     </style>
     <tg-colour-picker id="colorEditor" entity="[[_entity]]" property-name="colorProp"
         current-state="EDIT" prop-title="Text Color" prop-desc="The color of the selected text"
         action="null" validation-callback="[[_validationCallback]]">
     </tg-colour-picker>
     <div class="actions">
-        <paper-button raised roll="button" on-tap="_cancelColor" style="width:80px;" tooltip-text="Cancel text color">
+        <paper-button raised roll="button" on-tap="_cancelColor" tooltip-text="Cancel text color">
             <span>Cancel</span>
         </paper-button>
-        <paper-button raised roll="button" on-tap="_okColor" style="width:80px;" tooltip-text="Color the selected text">
+        <paper-button raised roll="button" on-tap="_okColor" tooltip-text="Color the selected text">
             <span>OK</span>
         </paper-button>
     </div>`;
