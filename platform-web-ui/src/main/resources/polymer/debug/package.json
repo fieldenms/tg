@@ -1,56 +1,38 @@
 {
-  "_from": "debug@^4.3.5",
-  "_id": "debug@4.3.7",
-  "_inBundle": false,
-  "_integrity": "sha512-Er2nc/H7RrMXZBFCEim6TCmMk02Z8vLC2Rbi1KEBggpo0fS6l0S1nnapwmIi3yW/+GOJap1Krg4w0Hg80oCqgQ==",
-  "_location": "/debug",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "debug@^4.3.5",
-    "name": "debug",
-    "escapedName": "debug",
-    "rawSpec": "^4.3.5",
-    "saveSpec": null,
-    "fetchSpec": "^4.3.5"
+  "name": "debug",
+  "version": "4.3.7",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/debug-js/debug.git"
   },
-  "_requiredBy": [
-    "/mocha"
+  "description": "Lightweight debugging utility for Node.js and the browser",
+  "keywords": [
+    "debug",
+    "log",
+    "debugger"
   ],
-  "_resolved": "https://registry.npmjs.org/debug/-/debug-4.3.7.tgz",
-  "_shasum": "87945b4151a011d76d95a198d7111c865c360a52",
-  "_spec": "debug@^4.3.5",
-  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/mocha",
-  "author": {
-    "name": "Josh Junon",
-    "url": "https://github.com/qix-"
-  },
-  "browser": "./src/browser.js",
-  "bugs": {
-    "url": "https://github.com/debug-js/debug/issues"
-  },
-  "bundleDependencies": false,
+  "files": [
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "author": "Josh Junon (https://github.com/qix-)",
   "contributors": [
-    {
-      "name": "TJ Holowaychuk",
-      "email": "tj@vision-media.ca"
-    },
-    {
-      "name": "Nathan Rajlich",
-      "email": "nathan@tootallnate.net",
-      "url": "http://n8.io"
-    },
-    {
-      "name": "Andrew Rhyne",
-      "email": "rhyneandrew@gmail.com"
-    }
+    "TJ Holowaychuk <tj@vision-media.ca>",
+    "Nathan Rajlich <nathan@tootallnate.net> (http://n8.io)",
+    "Andrew Rhyne <rhyneandrew@gmail.com>"
   ],
+  "license": "MIT",
+  "scripts": {
+    "lint": "xo",
+    "test": "npm run test:node && npm run test:browser && npm run lint",
+    "test:node": "istanbul cover _mocha -- test.js test.node.js",
+    "test:browser": "karma start --single-run",
+    "test:coverage": "cat ./coverage/lcov.info | coveralls"
+  },
   "dependencies": {
     "ms": "^2.1.3"
   },
-  "deprecated": false,
-  "description": "Lightweight debugging utility for Node.js and the browser",
   "devDependencies": {
     "brfs": "^2.0.1",
     "browserify": "^16.2.3",
@@ -65,38 +47,14 @@
     "sinon": "^14.0.0",
     "xo": "^0.23.0"
   },
-  "engines": {
-    "node": ">=6.0"
-  },
-  "files": [
-    "src",
-    "LICENSE",
-    "README.md"
-  ],
-  "homepage": "https://github.com/debug-js/debug#readme",
-  "keywords": [
-    "debug",
-    "log",
-    "debugger"
-  ],
-  "license": "MIT",
-  "main": "./src/index.js",
-  "name": "debug",
   "peerDependenciesMeta": {
     "supports-color": {
       "optional": true
     }
   },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/debug-js/debug.git"
-  },
-  "scripts": {
-    "lint": "xo",
-    "test": "npm run test:node && npm run test:browser && npm run lint",
-    "test:browser": "karma start --single-run",
-    "test:coverage": "cat ./coverage/lcov.info | coveralls",
-    "test:node": "istanbul cover _mocha -- test.js test.node.js"
-  },
-  "version": "4.3.7"
+  "main": "./src/index.js",
+  "browser": "./src/browser.js",
+  "engines": {
+    "node": ">=6.0"
+  }
 }

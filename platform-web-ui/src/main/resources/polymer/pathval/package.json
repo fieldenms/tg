@@ -1,57 +1,40 @@
 {
-  "_from": "pathval@^2.0.0",
-  "_id": "pathval@2.0.0",
-  "_inBundle": false,
-  "_integrity": "sha512-vE7JKRyES09KiunauX7nd2Q9/L7lhok4smP9RZTDeD4MVs72Dp2qNFVz39Nz5a0FVEW0BJR6C0DYrq6unoziZA==",
-  "_location": "/pathval",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "pathval@^2.0.0",
-    "name": "pathval",
-    "escapedName": "pathval",
-    "rawSpec": "^2.0.0",
-    "saveSpec": null,
-    "fetchSpec": "^2.0.0"
-  },
-  "_requiredBy": [
-    "/chai"
+  "name": "pathval",
+  "description": "Object value retrieval given a string path",
+  "homepage": "https://github.com/chaijs/pathval",
+  "version": "2.0.0",
+  "keywords": [
+    "pathval",
+    "value retrieval",
+    "chai util"
   ],
-  "_resolved": "https://registry.npmjs.org/pathval/-/pathval-2.0.0.tgz",
-  "_shasum": "7e2550b422601d4f6b8e26f1301bc8f15a741a25",
-  "_spec": "pathval@^2.0.0",
-  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/chai",
-  "author": {
-    "name": "Veselin Todorov",
-    "email": "hi@vesln.com"
+  "license": "MIT",
+  "author": "Veselin Todorov <hi@vesln.com>",
+  "files": [
+    "index.js",
+    "pathval.js"
+  ],
+  "main": "./index.js",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/chaijs/pathval.git"
   },
-  "bugs": {
-    "url": "https://github.com/chaijs/pathval/issues"
+  "scripts": {
+    "build": "browserify --standalone pathval -o pathval.js",
+    "lint": "eslint --ignore-path .gitignore .",
+    "lint:fix": "npm run lint -- --fix",
+    "prepublish": "npm run build",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post",
+    "pretest": "npm run lint",
+    "test": "npm run test:node && npm run test:browser",
+    "test:browser": "web-test-runner test/index.js --node-resolve",
+    "test:node": "mocha"
   },
-  "bundleDependencies": false,
   "config": {
     "ghooks": {
       "commit-msg": "validate-commit-msg"
     }
-  },
-  "deprecated": false,
-  "description": "Object value retrieval given a string path",
-  "devDependencies": {
-    "@web/test-runner": "^0.17.0",
-    "browserify": "^17.0.0",
-    "browserify-istanbul": "^3.0.1",
-    "eslint": "^7.13.0",
-    "eslint-config-strict": "^14.0.1",
-    "eslint-plugin-filenames": "^1.3.2",
-    "ghooks": "^2.0.4",
-    "mocha": "^8.2.1",
-    "semantic-release": "^17.2.2",
-    "simple-assert": "^2.0.0",
-    "validate-commit-msg": "^2.14.0"
-  },
-  "engines": {
-    "node": ">= 14.16"
   },
   "eslintConfig": {
     "extends": [
@@ -71,34 +54,20 @@
       "max-statements": 0
     }
   },
-  "files": [
-    "index.js",
-    "pathval.js"
-  ],
-  "homepage": "https://github.com/chaijs/pathval",
-  "keywords": [
-    "pathval",
-    "value retrieval",
-    "chai util"
-  ],
-  "license": "MIT",
-  "main": "./index.js",
-  "name": "pathval",
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/chaijs/pathval.git"
+  "devDependencies": {
+    "@web/test-runner": "^0.17.0",
+    "browserify": "^17.0.0",
+    "browserify-istanbul": "^3.0.1",
+    "eslint": "^7.13.0",
+    "eslint-config-strict": "^14.0.1",
+    "eslint-plugin-filenames": "^1.3.2",
+    "ghooks": "^2.0.4",
+    "mocha": "^8.2.1",
+    "semantic-release": "^17.2.2",
+    "simple-assert": "^2.0.0",
+    "validate-commit-msg": "^2.14.0"
   },
-  "scripts": {
-    "build": "browserify --standalone pathval -o pathval.js",
-    "lint": "eslint --ignore-path .gitignore .",
-    "lint:fix": "npm run lint -- --fix",
-    "prepublish": "npm run build",
-    "pretest": "npm run lint",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post",
-    "test": "npm run test:node && npm run test:browser",
-    "test:browser": "web-test-runner test/index.js --node-resolve",
-    "test:node": "mocha"
-  },
-  "type": "module",
-  "version": "2.0.0"
+  "engines": {
+    "node": ">= 14.16"
+  }
 }

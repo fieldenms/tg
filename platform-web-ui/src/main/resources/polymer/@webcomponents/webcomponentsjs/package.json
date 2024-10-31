@@ -1,49 +1,26 @@
 {
-  "_from": "@webcomponents/webcomponentsjs@^2.8.0",
-  "_id": "@webcomponents/webcomponentsjs@2.8.0",
-  "_inBundle": false,
-  "_integrity": "sha512-loGD63sacRzOzSJgQnB9ZAhaQGkN7wl2Zuw7tsphI5Isa0irijrRo6EnJii/GgjGefIFO8AIO7UivzRhFaEk9w==",
-  "_location": "/@webcomponents/webcomponentsjs",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "@webcomponents/webcomponentsjs@^2.8.0",
-    "name": "@webcomponents/webcomponentsjs",
-    "escapedName": "@webcomponents%2fwebcomponentsjs",
-    "scope": "@webcomponents",
-    "rawSpec": "^2.8.0",
-    "saveSpec": null,
-    "fetchSpec": "^2.8.0"
+  "name": "@webcomponents/webcomponentsjs",
+  "version": "2.8.0",
+  "publishConfig": {
+    "access": "public"
   },
-  "_requiredBy": [
-    "/",
-    "/wct-browser-legacy"
-  ],
-  "_resolved": "https://registry.npmjs.org/@webcomponents/webcomponentsjs/-/webcomponentsjs-2.8.0.tgz",
-  "_shasum": "ab21f027594fa827c1889e8b646da7be27c7908a",
-  "_spec": "@webcomponents/webcomponentsjs@^2.8.0",
-  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources",
-  "author": {
-    "name": "The Polymer Project Authors",
-    "url": "https://polymer.github.io/AUTHORS.txt"
-  },
-  "bugs": {
-    "url": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+webcomponentsjs\""
-  },
-  "bundleDependencies": false,
-  "deprecated": false,
   "description": "Web Components Polyfills",
-  "devDependencies": {
-    "@webcomponents/custom-elements": "^1.6.0",
-    "@webcomponents/shadycss": "^1.11.2",
-    "@webcomponents/shadydom": "^1.11.0",
-    "@webcomponents/template": "^1.5.1",
-    "@webcomponents/url": "^0.7.9",
-    "babel-preset-minify": "^0.4.3",
-    "get-own-property-symbols": "^0.9.2",
-    "gulp-concat": "^2.6.1",
-    "promise-polyfill": "^8.0.0"
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomponents/polyfills.git",
+    "directory": "packages/webcomponentsjs"
+  },
+  "author": "The Polymer Project Authors (https://polymer.github.io/AUTHORS.txt)",
+  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs",
+  "bugs": "https://github.com/webcomponents/polyfills/issues?q=is%3Aissue+is%3Aopen+label%3A\"Package%3A+webcomponentsjs\"",
+  "main": "webcomponents-bundle.js",
+  "scripts": {
+    "build": "tsc && gulp",
+    "build:watch": "chokidar --initial --follow-symlinks 'src/entrypoints/**/*.js' 'ts_src/**/*.ts' 'node_modules/@webcomponents/**/*.js' -c 'npm run build'",
+    "clean": "gulp clean",
+    "prepack": "npm run build",
+    "regen-package-lock": "rm -rf node_modules package-lock.json; npm install"
   },
   "files": [
     "bundles/**/*",
@@ -54,30 +31,21 @@
     "webcomponents-bundle.js*",
     "webcomponents-loader.js"
   ],
-  "homepage": "https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs",
   "keywords": [
     "webcomponents",
     "web-components",
     "polyfill",
     "shim"
   ],
-  "license": "BSD-3-Clause",
-  "main": "webcomponents-bundle.js",
-  "name": "@webcomponents/webcomponentsjs",
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/webcomponents/polyfills.git",
-    "directory": "packages/webcomponentsjs"
-  },
-  "scripts": {
-    "build": "tsc && gulp",
-    "build:watch": "chokidar --initial --follow-symlinks 'src/entrypoints/**/*.js' 'ts_src/**/*.ts' 'node_modules/@webcomponents/**/*.js' -c 'npm run build'",
-    "clean": "gulp clean",
-    "prepack": "npm run build",
-    "regen-package-lock": "rm -rf node_modules package-lock.json; npm install"
-  },
-  "version": "2.8.0"
+  "devDependencies": {
+    "@webcomponents/custom-elements": "^1.6.0",
+    "@webcomponents/shadycss": "^1.11.2",
+    "@webcomponents/shadydom": "^1.11.0",
+    "@webcomponents/template": "^1.5.1",
+    "@webcomponents/url": "^0.7.9",
+    "babel-preset-minify": "^0.4.3",
+    "get-own-property-symbols": "^0.9.2",
+    "gulp-concat": "^2.6.1",
+    "promise-polyfill": "^8.0.0"
+  }
 }

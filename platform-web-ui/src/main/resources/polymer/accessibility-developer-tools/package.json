@@ -1,36 +1,10 @@
 {
-  "_from": "accessibility-developer-tools@^2.12.0",
-  "_id": "accessibility-developer-tools@2.12.0",
-  "_inBundle": false,
-  "_integrity": "sha512-ltexLD/Bzwr1tDskQQFi88L4akbn8zFLIFIc00vFkH3G4hNEHruuJVcJuJTeUXLxms9dSon+cHSCmfFThnowFQ==",
-  "_location": "/accessibility-developer-tools",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "accessibility-developer-tools@^2.12.0",
-    "name": "accessibility-developer-tools",
-    "escapedName": "accessibility-developer-tools",
-    "rawSpec": "^2.12.0",
-    "saveSpec": null,
-    "fetchSpec": "^2.12.0"
+  "name": "accessibility-developer-tools",
+  "version": "2.12.0",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/GoogleChrome/accessibility-developer-tools"
   },
-  "_requiredBy": [
-    "/wct-browser-legacy"
-  ],
-  "_resolved": "https://registry.npmjs.org/accessibility-developer-tools/-/accessibility-developer-tools-2.12.0.tgz",
-  "_shasum": "3da0cce9d6ec6373964b84f35db7cfc3df7ab514",
-  "_spec": "accessibility-developer-tools@^2.12.0",
-  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/wct-browser-legacy",
-  "author": {
-    "name": "Google"
-  },
-  "bugs": {
-    "url": "https://github.com/GoogleChrome/accessibility-developer-tools/issues"
-  },
-  "bundleDependencies": false,
-  "deprecated": false,
-  "description": "This is a library of accessibility-related testing and utility code.",
   "devDependencies": {
     "bluebird": "^2.9.27",
     "eslint-plugin-google-camelcase": "0.0.1",
@@ -47,24 +21,23 @@
     "load-grunt-tasks": "^3.2.0",
     "superagent": "^1.2.0"
   },
+  "scripts": {
+    "test": "grunt travis --verbose"
+  },
+  "description": "This is a library of accessibility-related testing and utility code.",
+  "bugs": {
+    "url": "https://github.com/GoogleChrome/accessibility-developer-tools/issues"
+  },
+  "homepage": "https://github.com/GoogleChrome/accessibility-developer-tools",
+  "main": "main.js",
   "directories": {
     "test": "test"
   },
-  "homepage": "https://github.com/GoogleChrome/accessibility-developer-tools",
   "keywords": [
     "accessibility",
     "testing",
     "WCAG"
   ],
-  "license": "Apache-2.0",
-  "main": "main.js",
-  "name": "accessibility-developer-tools",
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/GoogleChrome/accessibility-developer-tools.git"
-  },
-  "scripts": {
-    "test": "grunt travis --verbose"
-  },
-  "version": "2.12.0"
+  "author": "Google",
+  "license": "Apache-2.0"
 }

@@ -1,51 +1,56 @@
 {
-  "_from": "deep-eql@^5.0.1",
-  "_id": "deep-eql@5.0.2",
-  "_inBundle": false,
-  "_integrity": "sha512-h5k/5U50IJJFpzfL6nO9jaaumfjO/f2NjK/oYB2Djzm4p9L+3T9qWpZqZ2hAbLPuuYq9wrU08WQyBTL5GbPk5Q==",
-  "_location": "/deep-eql",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "deep-eql@^5.0.1",
-    "name": "deep-eql",
-    "escapedName": "deep-eql",
-    "rawSpec": "^5.0.1",
-    "saveSpec": null,
-    "fetchSpec": "^5.0.1"
-  },
-  "_requiredBy": [
-    "/chai"
-  ],
-  "_resolved": "https://registry.npmjs.org/deep-eql/-/deep-eql-5.0.2.tgz",
-  "_shasum": "4b756d8d770a9257300825d52a2c2cff99c3a341",
-  "_spec": "deep-eql@^5.0.1",
-  "_where": "/home/jhou/workspace-java/tg/platform-web-ui/src/main/resources/node_modules/chai",
-  "author": {
-    "name": "Jake Luer",
-    "email": "jake@alogicalparadox.com"
-  },
-  "bugs": {
-    "url": "https://github.com/chaijs/deep-eql/issues"
-  },
-  "bundleDependencies": false,
-  "contributors": [
-    {
-      "name": "Keith Cirkel",
-      "url": "https://github.com/keithamus"
-    },
-    {
-      "name": "dougluce",
-      "url": "https://github.com/dougluce"
-    },
-    {
-      "name": "Lorenz Leutgeb",
-      "url": "https://github.com/flowlo"
-    }
-  ],
-  "deprecated": false,
+  "name": "deep-eql",
+  "version": "5.0.2",
   "description": "Improved deep equality testing for Node.js and the browser.",
+  "keywords": [
+    "chai util",
+    "deep equal",
+    "object equal",
+    "testing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:chaijs/deep-eql.git"
+  },
+  "license": "MIT",
+  "author": "Jake Luer <jake@alogicalparadox.com>",
+  "contributors": [
+    "Keith Cirkel (https://github.com/keithamus)",
+    "dougluce (https://github.com/dougluce)",
+    "Lorenz Leutgeb (https://github.com/flowlo)"
+  ],
+  "type": "module",
+  "main": "./index.js",
+  "files": [
+    "index.js",
+    "deep-eql.js"
+  ],
+  "scripts": {
+    "bench": "node bench",
+    "lint": "eslint --ignore-path .gitignore .",
+    "semantic-release": "semantic-release pre && semantic-release post",
+    "pretest": "npm run lint",
+    "test": "npm run test:node && npm run test:browser",
+    "test:browser": "web-test-runner",
+    "test:node": "istanbul cover _mocha",
+    "upload-coverage": "lcov-result-merger 'coverage/**/lcov.info' | coveralls; exit 0",
+    "watch": "web-test-runner --watch"
+  },
+  "eslintConfig": {
+    "extends": [
+      "strict/es5"
+    ],
+    "rules": {
+      "complexity": 0,
+      "no-underscore-dangle": 0,
+      "no-use-before-define": 0,
+      "spaced-comment": 0
+    },
+    "parserOptions": {
+      "sourceType": "module",
+      "ecmaVersion": 2015
+    }
+  },
   "devDependencies": {
     "@js-temporal/polyfill": "^0.4.3",
     "@rollup/plugin-commonjs": "^24.1.0",
@@ -64,51 +69,5 @@
   },
   "engines": {
     "node": ">=6"
-  },
-  "eslintConfig": {
-    "extends": [
-      "strict/es5"
-    ],
-    "rules": {
-      "complexity": 0,
-      "no-underscore-dangle": 0,
-      "no-use-before-define": 0,
-      "spaced-comment": 0
-    },
-    "parserOptions": {
-      "sourceType": "module",
-      "ecmaVersion": 2015
-    }
-  },
-  "files": [
-    "index.js",
-    "deep-eql.js"
-  ],
-  "homepage": "https://github.com/chaijs/deep-eql#readme",
-  "keywords": [
-    "chai util",
-    "deep equal",
-    "object equal",
-    "testing"
-  ],
-  "license": "MIT",
-  "main": "./index.js",
-  "name": "deep-eql",
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/chaijs/deep-eql.git"
-  },
-  "scripts": {
-    "bench": "node bench",
-    "lint": "eslint --ignore-path .gitignore .",
-    "pretest": "npm run lint",
-    "semantic-release": "semantic-release pre && semantic-release post",
-    "test": "npm run test:node && npm run test:browser",
-    "test:browser": "web-test-runner",
-    "test:node": "istanbul cover _mocha",
-    "upload-coverage": "lcov-result-merger 'coverage/**/lcov.info' | coveralls; exit 0",
-    "watch": "web-test-runner --watch"
-  },
-  "type": "module",
-  "version": "5.0.2"
+  }
 }
