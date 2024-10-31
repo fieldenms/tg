@@ -16,7 +16,7 @@
     "fetchSpec": "^5.1.2"
   },
   "_requiredBy": [
-    "/"
+    "#DEV:/"
   ],
   "_resolved": "https://registry.npmjs.org/chai/-/chai-5.1.2.tgz",
   "_shasum": "3afbc340b994ae3610ca519a6c70ace77ad4378d",

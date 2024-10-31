@@ -16,7 +16,7 @@
     "fetchSpec": "^10.8.2"
   },
   "_requiredBy": [
-    "/"
+    "#DEV:/"
   ],
   "_resolved": "https://registry.npmjs.org/mocha/-/mocha-10.8.2.tgz",
   "_shasum": "8d8342d016ed411b12a429eb731b825f961afb96",

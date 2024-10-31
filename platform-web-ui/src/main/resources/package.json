@@ -55,7 +55,9 @@
     "web-animations-js": "^2.3.2",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "@webcomponents/shadycss": "^1.11.2",
-    "@polymer/polymer": "^3.5.2",
+    "@polymer/polymer": "^3.5.2"
+  },
+  "devDependencies": {
     "@polymer/test-fixture": "^4.0.2",
     "chai": "^5.1.2",
     "mocha": "^10.8.2",
