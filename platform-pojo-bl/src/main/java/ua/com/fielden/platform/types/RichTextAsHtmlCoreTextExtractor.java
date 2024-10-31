@@ -10,9 +10,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
+
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
  * Extracts <i>core text</i> from a HTML document.
@@ -35,23 +35,94 @@ final class RichTextAsHtmlCoreTextExtractor {
                 node -> node instanceof Element element
                         && (equalTagNames("a", element.tagName()) || equalTagNames("img", element.tagName())));
 
-        return nodes.map(node -> {
-                    final var text = switch (node) {
-                        case Element element when equalTagNames("a", element.tagName())
-                                -> formatLink(element.attr("href"), element.text());
-                        case Element element when equalTagNames("img", element.tagName())
-                                -> formatLink(element.attr("src"), element.attr("alt"));
-                        case TextNode textNode -> formatText(textNode);
-                        default -> "";
-                    };
+        return foldLeft(nodes,
+                        new CoreTextBuilder(),
+                        (builder0, node) -> {
+                            final String leadingWs = node.previousSibling() != null && isSeparable(node.previousSibling()) ? " " : "";
+                            final var builder1 = builder0.append(leadingWs);
 
-                    final String leadingWs = node.previousSibling() != null && isSeparable(node.previousSibling()) ? " " : "";
-                    final String trailingWs = node.nextSibling() != null && isSeparable(node.nextSibling()) ? " " : "";
+                            final var builder2 = switch (node) {
+                                case Element element when equalTagNames("a", element.tagName())
+                                        -> formatLink(element.attr("href"), element.text(), builder1);
+                                case Element element when equalTagNames("img", element.tagName())
+                                        -> formatLink(element.attr("src"), element.attr("alt"), builder1);
+                                case TextNode textNode -> formatText(textNode, builder1);
+                                default -> builder1;
+                            };
 
-                    return leadingWs + text + trailingWs;
-                })
-                .map(RichTextAsHtmlCoreTextExtractor::stripWhitespace)
-                .collect(collector);
+                            final String trailingWs = node.nextSibling() != null && isSeparable(node.nextSibling()) ? " " : "";
+                            return builder2.append(trailingWs);
+                        })
+                .stripTrailing()
+                .build();
+    }
+
+    private static final class CoreTextBuilder {
+
+        private final StringBuilder buffer;
+
+        private CoreTextBuilder() {
+            this.buffer = new StringBuilder();
+        }
+
+        /**
+         * Appends the specified character sequence, handling whitespace accordingly.
+         */
+        public CoreTextBuilder append(final CharSequence charSeq) {
+            if (charSeq.isEmpty()) {
+                return this;
+            }
+            else {
+                final int start;
+                if (buffer.isEmpty() || Character.isWhitespace(buffer.charAt(buffer.length() - 1))) {
+                    start = StringUtils.indexOfOrElse(charSeq, c -> !Character.isWhitespace(c), charSeq.length());
+                }
+                else {
+                    start = 0;
+                }
+
+                for (int i = start; i < charSeq.length(); i++) {
+                    append(charSeq.charAt(i));
+                }
+
+                return this;
+            }
+        }
+
+        /**
+         * Appends the specified character, handling whitespace accordingly.
+         */
+        public CoreTextBuilder append(final char c) {
+            final boolean isWs = Character.isWhitespace(c);
+            if (isWs && (buffer.isEmpty() || Character.isWhitespace(buffer.charAt(buffer.length() - 1)))) {
+                // ignore
+            }
+            else {
+                buffer.append(isWs ? ' ' : c);
+            }
+
+            return this;
+        }
+
+        /**
+         * Deletes trailing whitespace.
+         * <p>
+         * This is not performed automatically by the appending methods.
+         * Therefore, this method must be called to ensure that trailing whitespace is stripped.
+         */
+        public CoreTextBuilder stripTrailing() {
+            StringUtils.deleteTrailing(buffer, Character::isWhitespace);
+            return this;
+        }
+
+        @Override
+        public String toString() {
+            return buffer.toString();
+        }
+
+        public String build() {
+            return buffer.toString();
+        }
     }
 
     /**
@@ -102,54 +173,35 @@ final class RichTextAsHtmlCoreTextExtractor {
         return Streams.stream(iterator);
     }
 
-    private static String formatLink(final String destination, final String text) {
+    private static CoreTextBuilder formatLink(final String destination, final String text, final CoreTextBuilder builder) {
         final boolean hasDest = destination != null && !destination.isBlank();
         final boolean hasText = text != null && !text.isBlank();
 
-        final var sb = new StringBuilder();
         if (hasText) {
-            sb.append(text);
+            builder.append(text);
         }
 
         if (hasDest) {
-            if (hasText && !text.endsWith(" ")) {
-                sb.append(' ');
-            }
-            sb.append('(').append(destination).append(')');
+            builder.append(' ').append('(').append(destination).append(')');
         }
 
-        return sb.toString();
+        return builder;
     }
 
-    private static String formatText(final TextNode text) {
-        final CharSequence content;
+    private static CoreTextBuilder formatText(final TextNode text, final CoreTextBuilder builder) {
         if (isOnlyChild(text)) {
-            content = text.getWholeText().strip();
+            return builder.append(text.getWholeText().strip());
         }
         else if (isFirstChild(text)) {
-            content = text.getWholeText().stripLeading();
+            return builder.append(text.getWholeText().stripLeading());
         }
         else if (isLastChild(text)) {
-            content = text.getWholeText().stripTrailing();
+            return builder.append(text.getWholeText().stripTrailing());
         }
         else {
-            content = text.getWholeText();
+            return builder.append(text.getWholeText());
         }
-        return content.toString();
     }
-
-    private static final Collector<CharSequence, StringBuilder, String> collector = Collector.of(
-            StringBuilder::new,
-            (sb, str) -> {
-                if (sb.isEmpty() || Character.isWhitespace(sb.charAt(sb.length() - 1))) {
-                    sb.append(str, StringUtils.indexOfOrElse(str, c -> !Character.isWhitespace(c), str.length()), str.length());
-                } else {
-                    sb.append(str);
-                }
-            },
-            StringBuilder::append,
-            sb -> StringUtils.deleteTrailing(sb, Character::isWhitespace).toString()
-    );
 
     /**
      * This predicate is true for HTML elements that need to be separated by whitespace from surrounding text.
@@ -192,23 +244,6 @@ final class RichTextAsHtmlCoreTextExtractor {
 
     private static boolean equalTagNames(final String name1, final String name2) {
         return name1.equalsIgnoreCase(name2);
-    }
-
-    /**
-     * Transforms a char sequence by stripping whitespace as described in the corresponding section of the documentation of this class.
-     */
-    private static CharSequence stripWhitespace(final CharSequence charSeq) {
-        if (charSeq.isEmpty()) {
-            return charSeq;
-        }
-
-        class $ {
-            static final Pattern NEWLINE_PATTERN = Pattern.compile("\\r?\\n");
-            static final Pattern MULTI_WS_PATTERN = Pattern.compile("\\s{2,}");
-        }
-
-        return $.MULTI_WS_PATTERN.matcher($.NEWLINE_PATTERN.matcher(charSeq).replaceAll(" "))
-                .replaceAll(" ");
     }
 
 }
