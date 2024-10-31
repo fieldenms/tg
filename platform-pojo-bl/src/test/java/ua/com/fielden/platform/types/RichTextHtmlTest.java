@@ -74,6 +74,12 @@ After quote.
     }
 
     @Test
+    public void links_inside_a_word_break_the_word() {
+        assertCoreText("me mo (https://example.com) ry",
+                       "me<a href='https://example.com'>mo</a>ry");
+    }
+
+    @Test
     public void image_links_are_transformed_to_image_description_followed_by_parenthesised_uri() {
         assertCoreText("my lovely cat (cat.jpeg)",
                        "<img alt='my lovely cat' src='cat.jpeg' />");
@@ -131,7 +137,9 @@ After quote.
     public void headings_are_removed() {
         assertCoreText("Introduction", "<h1> Introduction");
         assertCoreText("Introduction", " <h2 > Introduction </h2>");
-        assertCoreText("Introduction to", "<h1> Introduction <h2> to ");
+        assertCoreText("Introduction to", "<h1> Introduction <h2> to");
+        assertCoreText("Introduction to mathematics", " <h1> Introduction <h2> to</h2>mathematics");
+        assertCoreText("Introduction to mathematics", "<h1> Introduction <h2> to </h2>mathematics");
     }
 
     @Test
@@ -248,6 +256,27 @@ After quote.
                        </ol>
                        """);
     }
+
+    @Test
+    public void certain_tags_within_a_word_are_removed_without_breaking_the_word() {
+        assertCoreText("memory", "me<b>mo</b>ry");
+        assertCoreText("memory", "me<i>mo</i>ry");
+        assertCoreText("memory", "me<u>mo</u>ry");
+        assertCoreText("memory", "me<code>mo</code>ry");
+        assertCoreText("memory", "me<sub>mo</sub>ry");
+        assertCoreText("memory", "me<s>mo</s>ry");
+        assertCoreText("memory", "me<span style='color: #4CAF50 !important'>mo</span>ry");
+    }
+
+    @Test
+    public void separable_tags_are_separated_from_surrounding_text() {
+        assertCoreText("hello world", "hello<img />world");
+        assertCoreText("first second third", "first<p>second</p>third");
+        assertCoreText("first second third", "first\n<p>second</p>\nthird");
+        assertCoreText("first second third", "first<p>\nsecond\n</p>third");
+        assertCoreText("first second third", "first<p>\nsecond\n</p>\nthird");
+        assertCoreText("first second third", "\nfirst<p>\r\nsecond\n</p>\nthird\r\n");
+   }
 
     private static void assertCoreText(final String expected, final String input) {
         assertEquals(expected, RichText.fromHtml(input).coreText());
