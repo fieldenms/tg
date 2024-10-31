@@ -58,9 +58,20 @@
     "@polymer/polymer": "^3.5.2"
   },
   "devDependencies": {
-    "@polymer/test-fixture": "^4.0.2",
-    "chai": "^5.1.2",
-    "mocha": "^10.8.2",
+    "@polymer/test-fixture": "~4.0.2",
+    "chai": "~5.1.2",
+    "mocha": "~10.8.2",
+    "sinon": "~19.0.2",
+    "sinon-chai": "~4.0.0",
     "wct-browser-legacy": "^1.0.2"
+  },
+  "overrides": {
+    "wct-browser-legacy": {
+      "@polymer/test-fixture": "$@polymer/test-fixture",
+      "chai": "$chai",
+      "mocha": "$mocha",
+      "sinon": "$sinon",
+      "sinon-chai": "$sinon-chai"
+    }
   }
 }
