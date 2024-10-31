@@ -73,10 +73,10 @@ final class RichTextAsHtmlCoreTextExtractor implements NodeVisitor {
             writer.append(' ');
         }
 
-        if ("a".equals(element.tagName())) {
+        if (equalTagNames("a", element.tagName())) {
             // <a> may have child nodes (e.g., <a href="..."> <b>text</b> </a>), that's why we want text() and not ownText()
             visitLink(element.attr("href"), element.text());
-        } else if ("img".equals(element.tagName())) {
+        } else if (equalTagNames("img", element.tagName())) {
             visitLink(element.attr("src"), element.attr("alt"));
         } else {
             visitChildren(element);
@@ -120,7 +120,7 @@ final class RichTextAsHtmlCoreTextExtractor implements NodeVisitor {
             static final Set<String> NON_SEPARABLE_TAGS = Set.of(
                     "em", "i", "b", "strong", "u", "mark", "del", "s", "sub", "small", "sup", "span", "q", "code", "time");
         }
-        return !$.NON_SEPARABLE_TAGS.contains(element.tagName());
+        return !$.NON_SEPARABLE_TAGS.contains(element.tagName().toLowerCase());
     }
 
     private static boolean isFirstChild(final Node node) {
@@ -133,6 +133,10 @@ final class RichTextAsHtmlCoreTextExtractor implements NodeVisitor {
 
     private static boolean isOnlyChild(final Node node) {
         return node.nextSibling() == null && node.previousSibling() == null;
+    }
+
+    private static boolean equalTagNames(final String name1, final String name2) {
+        return name1.equalsIgnoreCase(name2);
     }
 
     /**
