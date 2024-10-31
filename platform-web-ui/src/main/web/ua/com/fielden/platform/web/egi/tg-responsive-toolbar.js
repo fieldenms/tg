@@ -27,6 +27,9 @@ const template = html`
             margin-left: 30px;
             @apply --layout-horizontal;
         }
+        :host(.with-custom-expand-button) #expandToolbarButton {
+            @apply --tg-responsove-toolbar-expand-button;
+        }
         #expandToolbarButton.invisible {
             display: none;
         }
@@ -79,8 +82,11 @@ class ToolbarElement {
     }
 
     get width() {
-        if (!this._width) {
-            this._width = this.element && this.element.offsetWidth;
+        if (!this._width && this.element) {
+            const style = this.element.currentStyle || window.getComputedStyle(this.element),
+                width = this.element.getBoundingClientRect().width,
+                margin = parseFloat(style.marginLeft) + parseFloat(style.marginRight);
+            this._width = width + margin;
         }
         return this._width;
     }

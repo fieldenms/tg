@@ -12,6 +12,9 @@ import { tearDownEvent, localStorageKey, getRelativePos } from '/resources/refle
 
 const additionalTemplate = html`
     <style>
+        :host {
+            min-width: 0;
+        }
         #input {
             cursor: text;
         }
