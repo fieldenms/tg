@@ -27,10 +27,14 @@ import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
  */
 final class RichTextAsHtmlCoreTextExtractor {
 
+    public static String toCoreText(final Node root) {
+        return toCoreText(root, defaultExtension);
+    }
+
     /**
      * Extracts the core text.
      */
-    public static String toCoreText(final Node root) {
+    public static String toCoreText(final Node root, final Extension extension) {
         final Stream<Node> nodes = traverse(
                 root,
                 node -> node instanceof Element element
@@ -48,7 +52,7 @@ final class RichTextAsHtmlCoreTextExtractor {
                                 case Element element when equalTagNames("img", element.tagName())
                                         -> formatLink(element.attr("src"), element.attr("alt"), builder1);
                                 case Element element when equalTagNames("li", element.tagName())
-                                        -> builder1.append(' ').append(chooseListMarker(element)).append(' ');
+                                        -> builder1.append(' ').append(chooseListMarker(element, extension)).append(' ');
                                 case TextNode textNode -> formatText(textNode, builder1);
                                 default -> builder1;
                             };
@@ -59,6 +63,26 @@ final class RichTextAsHtmlCoreTextExtractor {
                 .stripTrailing()
                 .build();
     }
+
+    public interface Extension {
+
+        boolean isTaskItem(Element element);
+
+        boolean isTaskItemChecked(Element element);
+
+    }
+
+    private static final Extension defaultExtension = new Extension() {
+        @Override
+        public boolean isTaskItem(final Element element) {
+            return false;
+        }
+
+        @Override
+        public boolean isTaskItemChecked(final Element element) {
+            return false;
+        }
+    };
 
     private static final class CoreTextBuilder {
 
@@ -249,8 +273,14 @@ final class RichTextAsHtmlCoreTextExtractor {
         return name1.equalsIgnoreCase(name2);
     }
 
-    private static CharSequence chooseListMarker(final Element element) {
-        if (element.parent() != null && equalTagNames("ol", element.parent().tagName())) {
+    private static CharSequence chooseListMarker(final Element element, final Extension extension) {
+        if (extension.isTaskItemChecked(element)) {
+            return "- [x]";
+        }
+        else if (extension.isTaskItem(element)) {
+            return "- [ ]";
+        }
+        else if (element.parent() != null && equalTagNames("ol", element.parent().tagName())) {
             // Ordered list
             final var preceedingItemsCount = previousSiblings(element)
                     .filter(sib -> sib instanceof Element sibElt && equalTagNames("li", sibElt.tagName()))

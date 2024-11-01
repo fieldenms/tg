@@ -278,6 +278,23 @@ After quote.
         assertCoreText("first second third", "\nfirst<p>\r\nsecond\n</p>\nthird\r\n");
    }
 
+    @Test
+    public void toastUi_task_items_are_marked_using_standard_Markdown_markers_for_task_items() {
+        assertCoreText("- [ ] task 1 - [ ] task 2 - [x] task 3 - [ ] subtask 1 - [x] subtask 2 - [x] task 4",
+                       """
+                       <ul>
+                       <li class="task-list-item"><p>task 1</p></li>
+                       <li class="task-list-item"><p>task 2</p></li>
+                       <li class="task-list-item checked"><p>task 3</p></li>
+                         <ul>
+                         <li class="task-list-item"><p>subtask 1</p></li>
+                         <li class="task-list-item checked"><p>subtask 2</p></li>
+                         </ul>
+                       <li class="task-list-item checked"><p>task 4</p></li>
+                       </ul>
+                       """);
+    }
+
     private static void assertCoreText(final String expected, final String input) {
         assertEquals(expected, RichText.fromHtml(input).coreText());
     }
