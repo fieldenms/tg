@@ -193,14 +193,14 @@ After quote.
     }
 
     @Test
-    public void simple_ordered_lists_are_squashed_into_a_single_line_with_list_tags_removed() {
-        assertCoreText("one two",
+    public void simple_ordered_lists_are_squashed_into_a_single_line_with_list_tags_replaced_by_numbers() {
+        assertCoreText("1. one 2. two",
                        """
                        <ol>
                          <li>one
                               <lI>   two
                        """);
-        assertCoreText("one two",
+        assertCoreText("1. one 2. two",
                        """
                        <ol>
                          <li>one
@@ -210,14 +210,14 @@ After quote.
     }
 
     @Test
-    public void simple_unordered_lists_are_squashed_into_a_single_line_with_list_tags_removed() {
-        assertCoreText("one two",
+    public void simple_unordered_lists_are_squashed_into_a_single_line_with_list_tags_replaced_by_dashes() {
+        assertCoreText("- one - two",
                        """
                        <ul>
                          <li>one
                               <lI>   two
                        """);
-        assertCoreText("one two",
+        assertCoreText("- one - two",
                        """
                        <ul>
                          <li>one
@@ -227,8 +227,8 @@ After quote.
     }
 
     @Test
-    public void list_items_with_content_are_squashed_into_a_single_line_with_list_tags_removed() {
-        assertCoreText("item content more stuff",
+    public void ordered_list_items_with_content_are_squashed_into_a_single_line_with_list_tags_replaced_by_dash_characters() {
+        assertCoreText("1. item content 2. more stuff",
                        """
                        <ol>
                          <li> item
@@ -241,8 +241,8 @@ After quote.
     }
 
     @Test
-    public void nested_list_items_are_squashed_into_a_single_line_with_list_tags_removed() {
-        assertCoreText("item 1 subitem 1 subitem 2 item 2 subitem 3",
+    public void nested_list_items_are_squashed_into_a_single_line_with_list_tags_replaced_by_corresponding_characters() {
+        assertCoreText("1. item 1 - subitem 1 - subitem 2 2. item 2 1. subitem 3",
                        """
                        <ol>
                          <li> item 1

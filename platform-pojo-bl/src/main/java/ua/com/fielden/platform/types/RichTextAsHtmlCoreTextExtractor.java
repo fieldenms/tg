@@ -8,6 +8,7 @@ import ua.com.fielden.platform.utils.StringUtils;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -46,6 +47,8 @@ final class RichTextAsHtmlCoreTextExtractor {
                                         -> formatLink(element.attr("href"), element.text(), builder1);
                                 case Element element when equalTagNames("img", element.tagName())
                                         -> formatLink(element.attr("src"), element.attr("alt"), builder1);
+                                case Element element when equalTagNames("li", element.tagName())
+                                        -> builder1.append(' ').append(chooseListMarker(element)).append(' ');
                                 case TextNode textNode -> formatText(textNode, builder1);
                                 default -> builder1;
                             };
@@ -244,6 +247,24 @@ final class RichTextAsHtmlCoreTextExtractor {
 
     private static boolean equalTagNames(final String name1, final String name2) {
         return name1.equalsIgnoreCase(name2);
+    }
+
+    private static CharSequence chooseListMarker(final Element element) {
+        if (element.parent() != null && equalTagNames("ol", element.parent().tagName())) {
+            // Ordered list
+            final var preceedingItemsCount = previousSiblings(element)
+                    .filter(sib -> sib instanceof Element sibElt && equalTagNames("li", sibElt.tagName()))
+                    .count();
+            return String.valueOf(preceedingItemsCount + 1) + '.';
+        }
+        else {
+            // Unordered list
+            return "-";
+        }
+    }
+
+    private static Stream<Node> previousSiblings(final Node node) {
+        return Stream.iterate(node.previousSibling(), Objects::nonNull, Node::previousSibling);
     }
 
 }
