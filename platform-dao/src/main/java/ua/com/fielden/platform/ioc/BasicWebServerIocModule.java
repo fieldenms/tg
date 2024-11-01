@@ -29,6 +29,7 @@ import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -49,6 +50,9 @@ import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_M
  *   <li> Binding of audit-entity types (subtypes of {@link AbstractAuditEntity} and {@link AbstractAuditProp}).
  * </ul>
  * <p>
+ * A special audit-entity generation mode is supported, which ignores audit-entity types that were missing at the time
+ * of application launch. This mode enables the primordial generation of audit-entity types.
+ * <p>
  * Instantiation of singletons occurs in accordance with <a href="https://github.com/google/guice/wiki/Scopes#eager-singletons">Guice Eager Singletons</a>,
  * where values of {@link Workflows} are mapped to {@link Stage}.
  *
@@ -57,6 +61,12 @@ import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_M
  */
 public class BasicWebServerIocModule extends CompanionIocModule {
     private static final Logger LOGGER = getLogger(BasicWebServerIocModule.class);
+
+    /**
+     * Names a system property, presence of which indicates that the application is running in the audit-entity generation mode
+     * (i.e., application-specific class {@code GenAudit} was launched).
+     */
+    public static final String GEN_AUDIT_MODE = "genAuditMode";
 
     private final Properties props;
     protected final IApplicationDomainProvider applicationDomainProvider;
@@ -69,7 +79,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
     {
         super(props, domainEntityTypes);
         this.props = props;
-        this.applicationDomainProvider = registerAuditTypes(applicationDomainProvider);
+        this.applicationDomainProvider = registerAuditTypes(applicationDomainProvider, props.getProperty(GEN_AUDIT_MODE) != null);
         // Currently there is no good way of binding the default implementation of IAuthorisationModel other than having multiple constructors in this module.
         // Good old @ImplementedBy cannot be used because the default implementation resides in platform-dao, while the interface is in platform-pojo-bl.
         this.authorisationModelType = ServerAuthorisationModel.class;
@@ -150,13 +160,21 @@ public class BasicWebServerIocModule extends CompanionIocModule {
      * Returns a new application domain provider that adds an audit-entity type and a corresponding audit-prop type
      * to each audited entity type in the specified provider.
      */
-    private static IApplicationDomainProvider registerAuditTypes(final IApplicationDomainProvider applicationDomainProvider) {
+    private static IApplicationDomainProvider registerAuditTypes(
+            final IApplicationDomainProvider applicationDomainProvider,
+            final boolean ignoreMissingAuditTypes)
+    {
         final var newEntityTypes = applicationDomainProvider.entityTypes().stream()
                 .<Class<? extends AbstractEntity<?>>> mapMulti((type, sink) -> {
                     sink.accept(type);
                     if (isAudited(type)) {
-                        sink.accept(getAuditType(type));
-                        sink.accept(getAuditPropType(type));
+                        if (ignoreMissingAuditTypes) {
+                            findAuditType(type).ifPresent(sink::accept);
+                            findAuditPropType(type).ifPresent(sink::accept);
+                        } else {
+                            sink.accept(getAuditType(type));
+                            sink.accept(getAuditPropType(type));
+                        }
                     }
                 })
                 .collect(toImmutableList());
