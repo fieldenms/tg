@@ -214,7 +214,8 @@ var _config = {
         [
             /*TG #2329*/
             //'stacky/browser.js',
-            'async/lib/async.js',
+            /*TG #2329*/
+            'async/dist/async.js',
             /*TG #2329*/
             'lodash/lodash.js',
             'mocha/mocha.js',
