@@ -1,0 +1,32 @@
+{
+  "description": "Triggers an event when nearing the beginning or end of a scrollable element ",
+  "keywords": [
+    "web-components",
+    "polymer"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/PolymerElements/iron-scroll-threshold"
+  },
+  "homepage": "https://github.com/PolymerElements/iron-scroll-threshold",
+  "name": "@polymer/iron-scroll-threshold",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "webmat": "^0.2.0",
+    "@webcomponents/webcomponentsjs": "^2.0.0",
+    "wct-browser-legacy": "^1.0.1",
+    "@polymer/gen-typescript-declarations": "^1.5.1"
+  },
+  "scripts": {
+    "format": "webmat",
+    "generate-types": "gen-typescript-declarations --deleteExisting --outDir . --verify",
+    "prepare": "npm run generate-types"
+  },
+  "version": "3.0.1",
+  "main": "iron-scroll-threshold.js",
+  "author": "The Polymer Authors",
+  "dependencies": {
+    "@polymer/polymer": "^3.0.0",
+    "@polymer/iron-scroll-target-behavior": "^3.0.0-pre.26"
+  }
+}

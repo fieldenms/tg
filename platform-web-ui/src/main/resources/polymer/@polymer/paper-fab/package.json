@@ -1,0 +1,39 @@
+{
+  "description": "A material design floating action button",
+  "keywords": [
+    "web-components",
+    "polymer",
+    "button"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/PolymerElements/paper-fab.git"
+  },
+  "homepage": "https://github.com/PolymerElements/paper-fab",
+  "name": "@polymer/paper-fab",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "webmat": "^0.2.0",
+    "@polymer/iron-demo-helpers": "^3.0.1",
+    "@polymer/iron-icons": "^3.0.0-pre.26",
+    "@polymer/paper-styles": "^3.0.0-pre.26",
+    "wct-browser-legacy": "^1.0.1",
+    "@webcomponents/webcomponentsjs": "^2.0.0",
+    "@polymer/gen-typescript-declarations": "^1.5.1"
+  },
+  "scripts": {
+    "format": "webmat",
+    "generate-types": "gen-typescript-declarations --deleteExisting --outDir . --verify",
+    "prepare": "npm run generate-types"
+  },
+  "version": "3.0.1",
+  "main": "paper-fab.js",
+  "author": "The Polymer Authors",
+  "dependencies": {
+    "@polymer/iron-flex-layout": "^3.0.0-pre.26",
+    "@polymer/iron-icon": "^3.0.0-pre.26",
+    "@polymer/paper-behaviors": "^3.0.0-pre.27",
+    "@polymer/paper-styles": "^3.0.0-pre.26",
+    "@polymer/polymer": "^3.0.0"
+  }
+}

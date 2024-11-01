@@ -1,0 +1,43 @@
+{
+  "description": "Wrapper around native form that submits native and custom elements",
+  "keywords": [
+    "web-components",
+    "polymer",
+    "form"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/PolymerElements/iron-form.git"
+  },
+  "homepage": "https://github.com/PolymerElements/iron-form",
+  "name": "@polymer/iron-form",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "webmat": "^0.2.0",
+    "@polymer/iron-demo-helpers": "^3.0.1",
+    "@polymer/paper-button": "^3.0.0-pre.26",
+    "@polymer/paper-checkbox": "^3.0.0-pre.26",
+    "@polymer/paper-dropdown-menu": "^3.0.0-pre.26",
+    "@polymer/paper-input": "^3.0.0-pre.26",
+    "@polymer/paper-item": "^3.0.0-pre.26",
+    "@polymer/paper-listbox": "^3.0.0-pre.26",
+    "@polymer/paper-spinner": "^3.0.0-pre.26",
+    "@polymer/paper-styles": "^3.0.0-pre.26",
+    "web-animations-js": "^2.3.1",
+    "wct-browser-legacy": "^1.0.1",
+    "@webcomponents/webcomponentsjs": "^2.0.0",
+    "@polymer/gen-typescript-declarations": "^1.5.1"
+  },
+  "scripts": {
+    "format": "webmat",
+    "generate-types": "gen-typescript-declarations --deleteExisting --outDir . --verify",
+    "prepare": "npm run generate-types"
+  },
+  "version": "3.0.1",
+  "main": "iron-form.js",
+  "author": "The Polymer Authors",
+  "dependencies": {
+    "@polymer/polymer": "^3.0.0",
+    "@polymer/iron-ajax": "^3.0.0-pre.26"
+  }
+}

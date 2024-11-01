@@ -1,0 +1,34 @@
+{
+  "description": "A simple element to fixture DOM for tests",
+  "keywords": [
+    "web-components",
+    "polymer",
+    "testing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/polymerelements/test-fixture.git"
+  },
+  "homepage": "https://github.com/polymerelements/test-fixture#readme",
+  "name": "@polymer/test-fixture",
+  "version": "4.0.2",
+  "main": "test-fixture.js",
+  "author": "The Polymer Authors",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/polymerelements/test-fixture/issues"
+  },
+  "devDependencies": {
+    "@webcomponents/webcomponentsjs": "^2.0.0",
+    "wct-browser-legacy": "^1.0.1",
+    "web-component-tester": "^6.0.0-prerelease.5",
+    "webmat": "^0.2.2",
+    "@polymer/gen-typescript-declarations": "^1.5.1"
+  },
+  "scripts": {
+    "format": "webmat",
+    "generate-types": "gen-typescript-declarations --deleteExisting --outDir . --verify",
+    "prepare": "npm run generate-types"
+  },
+  "dependencies": {}
+}
