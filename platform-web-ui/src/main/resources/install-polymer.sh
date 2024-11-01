@@ -1,5 +1,6 @@
 rm -f package-lock.json
 npm install
+rm -f node_modules/stacky
 polymer build
 rm -r -f polymer
 mv node_modules polymer

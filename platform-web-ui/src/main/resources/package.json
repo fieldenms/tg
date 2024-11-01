@@ -64,7 +64,6 @@
     "mocha": "~10.8.2",
     "sinon": "~19.0.2",
     "sinon-chai": "~4.0.0",
-    "stacky": "~1.3.1",
     "wct-browser-legacy": "^1.0.2"
   },
   "overrides": {
@@ -74,10 +73,8 @@
       "mocha": "$mocha",
       "sinon": "$sinon",
       "sinon-chai": "$sinon-chai",
-      "lodash": "$lodash"
-    },
-    "stacky": {
-      "lodash": "$lodash"
+      "lodash": "$lodash",
+      "stacky": "../_EXCLUDED_"
     }
   }
 }
