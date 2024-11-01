@@ -415,12 +415,15 @@ const template = html`
             overflow: hidden;
             padding-top: 8px;
         }
-        .with-custom-expand-button {
+        .custom-responsive-toolbar {
             --tg-responsove-toolbar-expand-button: {
                 padding: 0;
                 width: 18px;
                 height: 18px;
                 color:var(--paper-input-container-color, var(--secondary-text-color));
+            };
+            --tg-responsove-toolbar-dropdown-content: {
+                padding: 8px 0 8px 8px;
             }
         }
         .toolbar-action {
@@ -442,7 +445,7 @@ const template = html`
     <iron-dropdown id="colorDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
         <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]"></tg-color-picker-dialog>
     </iron-dropdown>
-    <tg-responsive-toolbar class="with-custom-expand-button editor-toolbar">
+    <tg-responsive-toolbar class="custom-responsive-toolbar editor-toolbar">
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:header-1" action-title="Heading 1" tooltip-text="Make your text header 1" on-down="_stopMouseEvent" on-tap="_applyHeader1"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:header-2" action-title="Heading 2" tooltip-text="Make your text header 2" on-down="_stopMouseEvent" on-tap="_applyHeader2"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:header-3" action-title="Heading 3" tooltip-text="Make your text header 3" on-down="_stopMouseEvent" on-tap="_applyHeader3"></iron-icon>

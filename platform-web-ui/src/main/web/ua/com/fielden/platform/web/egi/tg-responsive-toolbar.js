@@ -27,8 +27,11 @@ const template = html`
             margin-left: 30px;
             @apply --layout-horizontal;
         }
-        :host(.with-custom-expand-button) #expandToolbarButton {
+        :host(.custom-responsive-toolbar) #expandToolbarButton {
             @apply --tg-responsove-toolbar-expand-button;
+        }
+        :host(.custom-responsive-toolbar) .dropdown-content {
+            @apply --tg-responsove-toolbar-dropdown-content;
         }
         #expandToolbarButton.invisible {
             display: none;
