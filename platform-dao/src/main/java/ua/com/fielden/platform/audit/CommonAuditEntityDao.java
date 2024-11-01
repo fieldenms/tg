@@ -4,9 +4,13 @@ import jakarta.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.EntityUtils;
 
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.A3T;
 import static ua.com.fielden.platform.error.Result.failuref;
@@ -60,6 +64,15 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
 
         audit.endInitialising();
         return audit;
+    }
+
+    @Override
+    protected IFetchProvider<AE> createFetchProvider() {
+        return EntityUtils.fetch(getEntityType())
+                .with(domainMetadata.forEntity(getEntityType()).properties().stream()
+                              .filter(PropertyMetadata::isPersistent)
+                              .map(PropertyMetadata::name)
+                              .collect(toSet()));
     }
 
     /**
