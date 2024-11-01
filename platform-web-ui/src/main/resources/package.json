@@ -69,14 +69,14 @@
   },
   "overrides": {
     "wct-browser-legacy": {
-      "async": "$async",
+      "@polymer/sinonjs": "../_EXCLUDED_",
       "@polymer/test-fixture": "$@polymer/test-fixture",
+      "async": "$async",
       "chai": "$chai",
+      "lodash": "$lodash",
       "mocha": "$mocha",
       "sinon": "$sinon",
       "sinon-chai": "$sinon-chai",
-      "lodash": "$lodash",
-      "@polymer/sinonjs": "../_EXCLUDED_",
       "stacky": "../_EXCLUDED_"
     }
   }
