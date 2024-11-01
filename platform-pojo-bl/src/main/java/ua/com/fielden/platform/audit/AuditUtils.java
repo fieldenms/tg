@@ -33,6 +33,10 @@ public final class AuditUtils {
         return type.getPackageName() + "." + simpleName;
     }
 
+    public static boolean isAuditEntityType(final Class<?> type) {
+        return AbstractAuditEntity.class.isAssignableFrom(type);
+    }
+
     /**
      * Locates and returns the {@linkplain AbstractAuditProp audit-prop entity type} for the specified entity type.
      * Throws an exception if the audit-prop type cannot be located.
@@ -51,6 +55,10 @@ public final class AuditUtils {
 
     static String getAuditPropTypeName(final Class<? extends AbstractEntity<?>> type, final int version) {
         return getAuditTypeName(type, version) + "_Prop";
+    }
+
+    public static boolean isAuditPropEntityType(final Class<?> type) {
+        return AbstractAuditProp.class.isAssignableFrom(type);
     }
 
     private AuditUtils() {}

@@ -1,20 +1,24 @@
 package ua.com.fielden.platform.entity.factory;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-
-import jakarta.inject.Singleton;
-import org.apache.logging.log4j.Logger;
-
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
+import jakarta.inject.Singleton;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.companion.ICanReadUninstrumented;
+import ua.com.fielden.platform.companion.IEntityCompanionGenerator;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
 
 /**
  * Default implementation for {@link ICompanionObjectFinder}, which utilises injector (thread-safe) for creating Companion Object (CO) instances.
@@ -27,10 +31,15 @@ final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
     private static final Logger LOGGER = getLogger(DefaultCompanionObjectFinderImpl.class);
     
     private final Injector injector;
-    
+    private final IEntityCompanionGenerator companionGenerator;
+
     @Inject
-    public DefaultCompanionObjectFinderImpl(final Injector injector) {
+    public DefaultCompanionObjectFinderImpl(
+            final Injector injector,
+            final IEntityCompanionGenerator companionGenerator)
+    {
         this.injector = injector;
+        this.companionGenerator = companionGenerator;
     }
 
     @Override
@@ -45,9 +54,19 @@ final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
 
     @Override
     public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T find(final Class<E> type, final boolean uninstrumented) {
+        final Class<T> coType;
         if (type.isAnnotationPresent(CompanionObject.class)) {
+            coType = (Class<T>) type.getAnnotation(CompanionObject.class).value();
+        }
+        else if (type.isAnnotationPresent(CompanionIsGenerated.class)) {
+            coType = (Class<T>) companionGenerator.generateCompanion(type);
+        }
+        else {
+            coType = null;
+        }
+
+        if (coType != null) {
             try {
-                final Class<T> coType = (Class<T>) type.getAnnotation(CompanionObject.class).value();
                 final T co = injector.getInstance(coType);
                 return decideUninstrumentation(uninstrumented, coType, co);
             } catch (final EntityCompanionException e) {
@@ -59,7 +78,9 @@ final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
                 return null;
             }
         }
-        return null;
+        else {
+            return null;
+        }
     }
 
     /**
