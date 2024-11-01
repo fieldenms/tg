@@ -212,7 +212,8 @@ window.waitFor = waitFor;
 var _config = {
     environmentScripts: !!window.__wctUseNpm ?
         [
-            'stacky/browser.js',
+            /*TG #2329*/
+            //'stacky/browser.js',
             'async/lib/async.js',
             /*TG #2329*/
             'lodash/lodash.js',
@@ -225,7 +226,8 @@ var _config = {
             '@polymer/test-fixture/test-fixture.js'
         ] :
         [
-            'stacky/browser.js',
+            /*TG #2329*/
+            //'stacky/browser.js',
             'async/lib/async.js',
             'lodash/lodash.js',
             'mocha/mocha.js',
@@ -1103,16 +1105,17 @@ var style = document.createElement('style');
 style.textContent = "\n    html, body {\n      position: relative;\n      height: 100%;\n      width:  100%;\n      min-width: 900px;\n    }\n    #mocha, #subsuites {\n      height: 100%;\n      position: absolute;\n      top: 0;\n    }\n    #mocha {\n      box-sizing: border-box;\n      margin: 0 !important;\n      padding: 60px 20px;\n      right: 0;\n      left: 500px;\n    }\n    #subsuites {\n      -ms-flex-direction: column;\n      -webkit-flex-direction: column;\n      display: -ms-flexbox;\n      display: -webkit-flex;\n      display: flex;\n      flex-direction: column;\n      left: 0;\n      width: 500px;\n    }\n    #subsuites .subsuite {\n      border: 0;\n      width: 100%;\n      height: 100%;\n    }\n    #mocha .test.pass .duration {\n      color: #555 !important;\n    }\n";
 document.head.appendChild(style);
 
-var STACKY_CONFIG = {
-    indent: '  ',
-    locationStrip: [
-        /^https?:\/\/[^\/]+/,
-        /\?.*$/,
-    ],
-    filter: function (line) {
-        return !!line.location.match(/\/web-component-tester\/[^\/]+(\?.*)?$/);
-    },
-};
+/*TG #2329*/
+//var STACKY_CONFIG = {
+//    indent: '  ',
+//    locationStrip: [
+//        /^https?:\/\/[^\/]+/,
+//        /\?.*$/,
+//    ],
+//    filter: function (line) {
+//        return !!line.location.match(/\/web-component-tester\/[^\/]+(\?.*)?$/);
+//    },
+//};
 // https://github.com/visionmedia/mocha/blob/master/lib/runner.js#L36-46
 var MOCHA_EVENTS = [
     'start',
@@ -1291,10 +1294,12 @@ var MultiReporter = /** @class */ (function () {
         }
         // Normalize errors
         if (eventName === 'fail') {
-            extraArgs[1] = Stacky.normalize(extraArgs[1], STACKY_CONFIG);
+            /*TG #2329*/
+            //extraArgs[1] = Stacky.normalize(extraArgs[1], STACKY_CONFIG);
         }
         if (extraArgs[0] && extraArgs[0].err) {
-            extraArgs[0].err = Stacky.normalize(extraArgs[0].err, STACKY_CONFIG);
+            /*TG #2329*/
+            //extraArgs[0].err = Stacky.normalize(extraArgs[0].err, STACKY_CONFIG);
         }
     };
     /**
