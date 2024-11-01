@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
-import static java.lang.String.format;
 import static java.lang.invoke.MethodType.methodType;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
@@ -43,10 +42,10 @@ import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
  * Accessors in a property index are method handles that read directly from a {@linkplain VarHandle property's field}.
  * Although this violates encapsulation by ignoring the declared property accessor methods, no disadvantages are observed
  * in practice for the majority of property types due to the simplicity of their accessors.
- * The only exception is collectional properties, whose accessors return an unmodifiable view instead of the immediate property value.
+ * The only exception is collectional properties, where accessors return an unmodifiable view instead of the immediate property value.
  * <p>
- * This is subject to change, with the goal of actually using property accessors. However, currently the platform relies
- * on collectional values being read directly from the property's field, which poses a challenge for the implementation of the new approach.
+ * This is subject to change, with the goal of actually using property accessors.
+ * However, currently the platform relies on collectional values being read directly from the property's field, which poses a challenge for the implementation of the new approach.
  *
  * <h4> Overridden setters </h4>
  * <p>
@@ -62,8 +61,13 @@ import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
  */
 class PropertyIndexerImpl implements PropertyIndexer {
 
-    private final Field idProperty = getFieldByName(AbstractEntity.class, ID);
-    private final Field versionProperty = getFieldByName(AbstractEntity.class, VERSION);
+    private static final String ERR_MISSING_SETTER = "Missing setter for property [%s] in entity [%s].";
+    private static final String ERR_MISSING_ACCESSOR = "Missing accessor for property [%s] in entity [%s].";
+    private static final String ERR_RESOLVING_COMMON_PROPS_FOR_UNION_ENTITY = "Failed to resolve common property [%s] in union entity [%s] with active entity [%s].";
+    private static final String ERR_RESOLVING_SETTER_FOR_COMMON_PROP_OF_UNINION_ENTITY = "Failed to resolve a setter for common property [%s] in union entity [%s] with active entity [%s].";
+
+    private static final Field ID_FIELD = getFieldByName(AbstractEntity.class, ID);
+    private static final Field VERSION_FIELD = getFieldByName(AbstractEntity.class, VERSION);
 
     @Override
     public StandardIndex indexFor(final Class<? extends AbstractEntity<?>> entityType) {
@@ -74,25 +78,25 @@ class PropertyIndexerImpl implements PropertyIndexer {
     }
 
     private StandardIndex buildIndex(final Class<? extends AbstractEntity<?>> entityType) {
-        // We could use Finder.streamRealProperties but that would misalign with the old Reflection-based behaviour.
-        // Primarily, this is due to conditional inclusion of properties "key" and "desc".
-        // The current approach is already more limiting than the old one, but reasonably so.
-        // It provides access only to properties, while the old approach provided access to all fields.
+        // We could use Finder.streamRealProperties but that would diverge from the previous Reflection-based implementation.
+        // Primarily, this is due to the conditional inclusion of properties "key" and "desc".
+        // The current approach is already more limiting than the previous one, but reasonably so.
+        // It provides access only to properties, while before the access was provided to all fields.
         final var declaredPropsIndex = buildDeclaredPropertiesIndex(entityType);
         return ((Class<?>) entityType) == AbstractEntity.class
                 ? declaredPropsIndex
                 : overlayIndex(declaredPropsIndex, indexFor((Class<? extends AbstractEntity<?>>) entityType.getSuperclass()));
     }
 
-    private StandardIndex buildDeclaredPropertiesIndex(final Class<? extends AbstractEntity<?>> entityType) {
+    private static StandardIndex buildDeclaredPropertiesIndex(final Class<? extends AbstractEntity<?>> entityType) {
         final var lookupProvider = new CachingPrivateLookupProvider();
         final var properties = (Class<?>) entityType == AbstractEntity.class
                 // Include id and version explicitly, since they lack @IsProperty.
-                ? Stream.concat(streamDeclaredProperties(entityType), Stream.of(idProperty, versionProperty))
+                ? Stream.concat(streamDeclaredProperties(entityType), Stream.of(ID_FIELD, VERSION_FIELD))
                 : streamDeclaredProperties(entityType);
         return properties.collect(Collectors.teeing(
                 toImmutableMap(Field::getName, lookupProvider::unreflectAccessor),
-                toImmutableMap(Field::getName, prop -> lookupProvider.unreflectPropertySetter(entityType, prop)),
+                toImmutableMap(Field::getName, prop -> lookupProvider.unreflectSetter(entityType, prop)),
                 StandardIndex::makeIndex));
     }
 
@@ -158,9 +162,10 @@ class PropertyIndexerImpl implements PropertyIndexer {
     /**
      * Union entity index consists of:
      * <ol>
-     *   <li> Union properties (all entity-typed ones)
+     *   <li> Union properties (all entity-typed ones).
      *   <li> Common properties, which are accessed through an {@linkplain AbstractUnionEntity#activeEntity() active entity}
-     *   of a union entity. These include properties {@code id}, {@code key} and {@code desc}.
+     *   of a union entity.
+     *        These include properties {@code id}, {@code key} and {@code desc}.
      * </ol>
      */
     private StandardIndex buildUnionEntityIndex(final Class<? extends AbstractUnionEntity> entityType) {
@@ -175,21 +180,20 @@ class PropertyIndexerImpl implements PropertyIndexer {
         }
 
         final var unionMembers = Finder.streamUnionMembers(entityType).toList();
-        Stream.concat(AbstractUnionEntity.commonProperties(entityType).stream(),
-                      Stream.of(KEY, ID, DESC))
-                .distinct()
-                .forEach(commonPropName -> {
-                    // accessors for this common property in all union members
-                    final Map<Class<?>, MethodHandle> commonPropAccessors = unionMembers.stream()
-                            .collect(toMap(Function.identity(),
-                                           ty -> lookupProvider.unreflectAccessor(getFieldByName(ty, commonPropName))));
-                    final Map<Class<?>, MethodHandle> commonPropSetters = unionMembers.stream()
-                            .collect(toMap(Function.identity(),
-                                           ty -> lookupProvider.unreflect(obtainPropertySetter(ty, commonPropName))));
-                    // this is where we create closures
-                    accessors.put(commonPropName, MethodHandles.insertArguments(mh_getCommonProperty, 0, commonPropName, commonPropAccessors));
-                    setters.put(commonPropName, MethodHandles.insertArguments(mh_setCommonProperty, 0, commonPropName, commonPropSetters));
-                });
+        Stream.concat(AbstractUnionEntity.commonProperties(entityType).stream(), Stream.of(KEY, ID, DESC))
+               .distinct()
+               .forEach(commonPropName -> {
+                   // accessors for this common property in all union members
+                   final Map<Class<?>, MethodHandle> commonPropAccessors = unionMembers.stream()
+                           .collect(toMap(Function.identity(),
+                                          ty -> lookupProvider.unreflectAccessor(getFieldByName(ty, commonPropName))));
+                   final Map<Class<?>, MethodHandle> commonPropSetters = unionMembers.stream()
+                           .collect(toMap(Function.identity(),
+                                          ty -> lookupProvider.unreflect(obtainPropertySetter(ty, commonPropName))));
+                   // this is where we create closures
+                   accessors.put(commonPropName, MethodHandles.insertArguments(mh_getCommonProperty, 0, commonPropName, commonPropAccessors));
+                   setters.put(commonPropName, MethodHandles.insertArguments(mh_setCommonProperty, 0, commonPropName, commonPropSetters));
+               });
 
         return makeIndex(accessors.buildOrThrow(), setters.buildOrThrow());
     }
@@ -197,18 +201,20 @@ class PropertyIndexerImpl implements PropertyIndexer {
     /**
      * Reads the value of a common property from a union entity instance.
      * <p>
-     * This method is used to build union entity indices. Ultimately, it gets transformed into a method handle representing
-     * a accessor (takes 1 argument: a union entity instance). Other arguments are taken care of in the process of method handle
-     * transformation. Another way to view this method is as a closure where all arguments except {@code entity} have been
-     * captured.
+     * This method is used to build union entity indices.
+     * Ultimately, it gets transformed into a method handle representing an accessor, expecting one argument of a union-entity type.
+     * The rest of the arguments are taken care of in the process of a method handle transformation.
+     * <p>
+     * Another way to view this method is as a closure where all arguments except {@code entity} have been enclosed.
      *
      * @param prop  simple property name
      * @param accessors  {@code {canonicalEntityType: accessor}}
      * @param entity  entity to retrieve the property value from
      */
-    private static Object getCommonProperty(final String prop,
-                                            final Map<Class<? extends AbstractEntity<?>>, MethodHandle> accessors,
-                                            final AbstractUnionEntity entity)
+    private static Object getCommonProperty(
+            final String prop,
+            final Map<Class<? extends AbstractEntity<?>>, MethodHandle> accessors,
+            final AbstractUnionEntity entity)
             throws Throwable
     {
         final var activeEntity = entity.activeEntity();
@@ -219,9 +225,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
         // active entity might be enhanced, but accessors are keyed on canonical entity types
         final var accessor = accessors.get(activeEntity.getType());
         if (accessor == null) {
-            throw new EntityException(
-                    "Failed to resolve common property [%s] in union entity [%s] with active entity [%s]"
-                            .formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
+            throw new EntityException(ERR_RESOLVING_COMMON_PROPS_FOR_UNION_ENTITY.formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
         }
 
         return accessor.invoke(activeEntity);
@@ -230,26 +234,25 @@ class PropertyIndexerImpl implements PropertyIndexer {
     /**
      * Sets the value of a common property into a union entity instance.
      * <p>
-     * Similarly to {@link #getCommonProperty(String, Map, AbstractUnionEntity)}, this method is used to build union entity
-     * indices. It gets transformed into a closure with 2 arguments: {@code entity} and {@code value}.
+     * Similarly to {@link #getCommonProperty(String, Map, AbstractUnionEntity)}, this method is used to build union entity indices.
+     * It gets transformed into a closure with 2 arguments – {@code entity} and {@code value}.
      *
      * @param prop  simple property name
      * @param setters  {@code {canonicalEntityType: accessor}}
      * @param entity  union entity to set the value into (effectively, its active entity)
      * @param value  new property value
      */
-    private static Object setCommonProperty(final String prop,
-                                            final Map<Class<? extends AbstractEntity<?>>, MethodHandle> setters,
-                                            final AbstractUnionEntity entity, final Object value)
+    private static Object setCommonProperty(
+            final String prop,
+            final Map<Class<? extends AbstractEntity<?>>, MethodHandle> setters,
+            final AbstractUnionEntity entity, final Object value)
             throws Throwable
     {
         final var activeEntity = entity.activeEntity();
         // active entity might be enhanced, but setters are keyed on canonical entity types
         final var setter = setters.get(activeEntity.getType());
         if (setter == null) {
-            throw new EntityException(
-                    "Failed to resolve a setter for common property [%s] in union entity [%s] with active entity [%s]"
-                            .formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
+            throw new EntityException(ERR_RESOLVING_SETTER_FOR_COMMON_PROP_OF_UNINION_ENTITY.formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
         }
 
         return setter.invoke(activeEntity, value);
@@ -257,7 +260,6 @@ class PropertyIndexerImpl implements PropertyIndexer {
 
     private static final MethodHandle mh_getCommonProperty;
     private static final MethodHandle mh_setCommonProperty;
-
     static {
         try {
             mh_getCommonProperty = MethodHandles.lookup()
@@ -266,14 +268,17 @@ class PropertyIndexerImpl implements PropertyIndexer {
             mh_setCommonProperty = MethodHandles.lookup()
                     .findStatic(PropertyIndexerImpl.class, "setCommonProperty",
                                 methodType(Object.class, String.class, Map.class, AbstractUnionEntity.class, Object.class));
-        } catch (final NoSuchMethodException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+        } catch (final NoSuchMethodException | IllegalAccessException ex) {
+            throw new ReflectionException(ex);
         }
     }
 
-    // Allows us to seamlessly traverse type hierarchies without worrying about access.
-    // For example, retrieving all properties of an entity type requires traversing its type hierarchy, which involves
-    // accessing VarHandle's in multiple classes, which requires a different Lookup for each class.
+    /**
+     * Seamlessly traverses type hierarchies without worrying about access.
+     * <p>
+     * For example, retrieving all properties of an entity type requires traversing its type hierarchy.
+     * This involves accessing VarHandle's in multiple classes, which requires a different Lookup for each class.
+     */
     private static class CachingPrivateLookupProvider implements Function<Class<?>, MethodHandles.Lookup> {
         private final Map<Class<?>, MethodHandles.Lookup> cache = new HashMap<>();
 
@@ -282,8 +287,8 @@ class PropertyIndexerImpl implements PropertyIndexer {
             return cache.computeIfAbsent(klass, k -> {
                 try {
                     return MethodHandles.privateLookupIn(k, MethodHandles.lookup());
-                } catch (final IllegalAccessException e) {
-                    throw new RuntimeException(e);
+                } catch (final IllegalAccessException ex) {
+                    throw new ReflectionException(ex);
                 }
             });
         }
@@ -291,29 +296,27 @@ class PropertyIndexerImpl implements PropertyIndexer {
         public MethodHandle unreflectAccessor(final Field field) {
             try {
                 return apply(field.getDeclaringClass()).unreflectGetter(field);
-            } catch (final IllegalAccessException e) {
-                throw new RuntimeException(e);
+            } catch (final IllegalAccessException ex) {
+                throw new ReflectionException(ERR_MISSING_ACCESSOR.formatted(field.getName(), field.getDeclaringClass().getTypeName()), ex);
             }
         }
 
         public MethodHandle unreflect(final Method method) {
             try {
                 return apply(method.getDeclaringClass()).unreflect(method);
-            } catch (final IllegalAccessException e) {
-                throw new RuntimeException(e);
+            } catch (final IllegalAccessException ex) {
+                throw new ReflectionException(ex);
             }
         }
 
-        public MethodHandle unreflectPropertySetter(final Class<? extends AbstractEntity<?>> entityType, final Field field) {
+        public MethodHandle unreflectSetter(final Class<? extends AbstractEntity<?>> entityType, final Field field) {
             // Reflector.obtainPropertySetter does not support property "key" overridden in an abstract type, because
             // PropertyTypeDeterminator.determineClass returns null in such cases (due to missing @KeyType), causing an NPE.
-            // Thus, we exercise finer controler over the lookup.
+            // Therefore, we need to exercise a finer control over the lookup here.
             try {
                 return unreflect(Reflector.getMethodForClass(entityType, Mutator.SETTER.getName(field.getName()), field.getType()));
-            } catch (final NoSuchMethodException e) {
-                throw new ReflectionException(format("Missing setter for property [%s] in entity [%s]",
-                                                     field.getName(), entityType.getTypeName()),
-                                              e);
+            } catch (final NoSuchMethodException ex) {
+                throw new ReflectionException(ERR_MISSING_SETTER.formatted(field.getName(), entityType.getTypeName()), ex);
             }
         }
 
