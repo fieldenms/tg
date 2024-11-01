@@ -76,6 +76,7 @@
       "sinon": "$sinon",
       "sinon-chai": "$sinon-chai",
       "lodash": "$lodash",
+      "@polymer/sinonjs": "../_EXCLUDED_",
       "stacky": "../_EXCLUDED_"
     }
   }
