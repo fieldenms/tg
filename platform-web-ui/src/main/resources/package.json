@@ -74,10 +74,10 @@
       "mocha": "$mocha",
       "sinon": "$sinon",
       "sinon-chai": "$sinon-chai",
-      "lodash": "~4.17.21"
+      "lodash": "$lodash"
     },
     "stacky": {
-      "lodash": "~4.17.21"
+      "lodash": "$lodash"
     }
   }
 }
