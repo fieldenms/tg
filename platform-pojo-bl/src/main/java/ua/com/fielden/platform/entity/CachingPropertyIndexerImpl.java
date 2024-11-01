@@ -16,7 +16,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isProx
  * <p>
  * Cache of the type used in this class won't benefit from weak keys due to key values ({@link Class} instances) being
  * strongly referenced by cached values: through {@link MethodHandle} in {@link StandardIndex}
- * ({@link java.lang.invoke.DirectMethodHandle#member} -> {@link java.lang.invoke.MemberName#clazz}).
+ * ({@code java.lang.invoke.DirectMethodHandle#member} -> {@code java.lang.invoke.MemberName#clazz}).
  * <p>
  * Therefore, a time-based eviction strategy is required.
  */
@@ -66,9 +66,8 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
         }
 
         try {
-            // super.indexFor may invoke this method recursively to build an index for the supertype of this entity type,
-            // causing a recursive load in the cache, which is ok as long as values are loaded for *different* keys
-            // (recursive loading of a value for the same key is unsupported by Guava Cache).
+            // super.indexFor may invoke this method recursively to build an index for the supertype of this entity type, causing a recursive load in the cache.
+            // This is ok as long as values are loaded for *different* keys as recursive loading of a value for the same key is unsupported by Guava Cache.
             return cache.get(entityType, () -> super.indexFor(entityType));
         } catch (final ExecutionException ex) {
             throw new RuntimeException(ex.getCause());
