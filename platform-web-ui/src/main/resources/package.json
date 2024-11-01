@@ -58,6 +58,7 @@
     "@polymer/polymer": "^3.5.2"
   },
   "devDependencies": {
+    "async": "~3.2.6",
     "lodash": "~4.17.21",
     "@polymer/test-fixture": "~4.0.2",
     "chai": "~5.1.2",
@@ -68,6 +69,7 @@
   },
   "overrides": {
     "wct-browser-legacy": {
+      "async": "$async",
       "@polymer/test-fixture": "$@polymer/test-fixture",
       "chai": "$chai",
       "mocha": "$mocha",
