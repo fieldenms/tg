@@ -6,10 +6,7 @@ import jakarta.inject.Inject;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
@@ -201,7 +198,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                     .superclass(ParameterizedTypeName.get(AbstractAuditEntity.class, auditedType))
                     .addAnnotation(AnnotationSpecs.auditFor(auditedType))
                     // TODO Meta-model is not needed. Meta-model processor needs to support a new annotation - WithoutMetaModel.
-                    .addAnnotation(MapEntityTo.class);
+                    .addAnnotation(MapEntityTo.class)
+                    .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class));
             properties.stream()
                     .map(prop -> processor.processProperty(this, prop))
                     .forEach(propSpec -> {
