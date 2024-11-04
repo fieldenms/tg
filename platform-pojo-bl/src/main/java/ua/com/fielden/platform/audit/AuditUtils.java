@@ -101,6 +101,47 @@ public final class AuditUtils {
         return (Class<AbstractAuditProp<AbstractAuditEntity<E>>>) entityType.getClassLoader().loadClass(auditPropTypeName);
     }
 
+    /**
+     * Locates and returns the {@linkplain AbstractAuditProp audit-prop entity type} for the specified audit-entity type.
+     * Returns an empty optional if the audit-prop type cannot be located.
+     *
+     * @see #getAuditPropTypeForAuditType(Class)
+     */
+    public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
+    Optional<Class<AP>> findAuditPropTypeForAuditType(final Class<AE> auditType)
+    {
+        try {
+            return Optional.of(getAuditPropTypeForAuditTypeOrThrow(auditType));
+        } catch (final ClassNotFoundException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Locates and returns the {@linkplain AbstractAuditProp audit-prop entity type} for the specified audit-entity type.
+     * Throws an exception if the audit-prop type cannot be located.
+     *
+     * @see #findAuditPropType(Class)
+     */
+    public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
+    Class<AP> getAuditPropTypeForAuditType(final Class<AE> auditType)
+    {
+        try {
+            return getAuditPropTypeForAuditTypeOrThrow(auditType);
+        } catch (final ClassNotFoundException e) {
+            throw new InvalidArgumentException("Audit-prop entity type doesn't exist for audit-entity type [%s]".formatted(auditType.getTypeName()), e);
+        }
+    }
+
+    private static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
+    Class<AP> getAuditPropTypeForAuditTypeOrThrow(final Class<AE> auditType)
+            throws ClassNotFoundException
+    {
+        // TODO Support multiple versions of audit-entity types
+        final var auditPropTypeName = auditType.getName() + "_Prop";
+        return (Class<AP>) auditType.getClassLoader().loadClass(auditPropTypeName);
+    }
+
     static String getAuditPropTypeName(final Class<? extends AbstractEntity<?>> type, final int version) {
         return getAuditTypeName(type, version) + "_Prop";
     }

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.audit;
 
+import com.google.common.collect.Iterables;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -10,9 +11,12 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import javax.annotation.Nullable;
+
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.A3T;
+import static ua.com.fielden.platform.audit.AuditUtils.getAuditPropTypeForAuditType;
 import static ua.com.fielden.platform.error.Result.failuref;
 
 /**
@@ -25,12 +29,46 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
         extends CommonEntityDao<AE>
         implements IAuditEntityDao<E, AE>
 {
+    private final Class<AbstractAuditProp<AE>> auditPropType;
 
     private IDomainMetadata domainMetadata;
+
+    protected CommonAuditEntityDao() {
+        super();
+        auditPropType = getAuditPropTypeForAuditType(getEntityType());
+    }
 
     @Inject
     protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
+    }
+
+    /**
+     * Returns the name of a property of this audit-entity type that audits the specified property of the audited entity type,
+     * if the specified property is indeed audited; otherwise, returns {@code null}.
+     */
+    protected final @Nullable String getAuditPropertyName(final CharSequence auditedProperty) {
+        final var auditPropertyName = A3T + "_" + auditedProperty;
+        return domainMetadata.forEntity(getEntityType()).propertyOpt(auditPropertyName).isPresent() ? auditPropertyName : null;
+        // return auditedToAuditPropertyNames.get(auditedProperty.toString());
+    }
+
+    @Override
+    public AE audit(final E auditedEntity, final String transactionGuid, final Iterable<? extends CharSequence> dirtyProperties) {
+        final AE auditEntity = save(newAudit(auditedEntity, transactionGuid));
+
+        if (!Iterables.isEmpty(dirtyProperties)) {
+            // Audit information about changed properites
+            final IAuditPropDao<AE, AbstractAuditProp<AE>> coAuditProp = co(auditPropType);
+            for (final var property : dirtyProperties) {
+                final var auditProperty = getAuditPropertyName(property.toString());
+                if (auditProperty != null) {
+                    coAuditProp.quickSave(coAuditProp.newAuditProp(auditEntity, auditProperty));
+                }
+            }
+        }
+
+        return auditEntity;
     }
 
     @Override
