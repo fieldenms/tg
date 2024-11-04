@@ -2,10 +2,7 @@ package ua.com.fielden.platform.audit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * This annotation is applied to audit-entity types to indicate their corresponding audited entities.
@@ -14,6 +11,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
+@Inherited
 public @interface AuditFor {
 
     /**
