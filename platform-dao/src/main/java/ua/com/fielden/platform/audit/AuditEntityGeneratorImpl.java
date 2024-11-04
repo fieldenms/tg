@@ -255,7 +255,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final var builder = classBuilder(auditPropTypeClassName)
                 .addModifiers(PUBLIC)
                 .superclass(ParameterizedTypeName.get(javaPoet.getClassName(AbstractAuditProp.class), auditEntityClassName))
-                .addAnnotation(javaPoet.getAnnotation(MapEntityTo.class));
+                .addAnnotation(javaPoet.getAnnotation(MapEntityTo.class))
+                .addAnnotation(AnnotationSpecs.auditPropFor(auditEntityClassName));
 
         final var auditEntityProp = propertyBuilder(uncapitalize(auditedType.getSimpleName()) + "Audit", auditEntityClassName)
                 .addAnnotation(AnnotationSpecs.compositeKeyMember(1))

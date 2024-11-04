@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.audit;
 
 import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.TypeName;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -12,6 +13,18 @@ final class AnnotationSpecs {
     public static AnnotationSpec auditFor(final Class<? extends AbstractEntity<?>> entityType) {
         return AnnotationSpec.builder(AuditFor.class)
                 .addMember("value", "$T.class", entityType)
+                .build();
+    }
+
+    public static AnnotationSpec auditPropFor(final Class<? extends AbstractAuditEntity<?>> auditEntityType) {
+        return AnnotationSpec.builder(AuditPropFor.class)
+                .addMember("value", "$T.class", auditEntityType)
+                .build();
+    }
+
+    public static AnnotationSpec auditPropFor(final TypeName auditEntityType) {
+        return AnnotationSpec.builder(AuditPropFor.class)
+                .addMember("value", "$T.class", auditEntityType)
                 .build();
     }
 

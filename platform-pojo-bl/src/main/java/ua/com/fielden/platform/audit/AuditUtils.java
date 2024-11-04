@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.audit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
@@ -105,6 +107,43 @@ public final class AuditUtils {
 
     public static boolean isAuditPropEntityType(final Class<?> type) {
         return AbstractAuditProp.class.isAssignableFrom(type);
+    }
+
+    /**
+     * Locates and returns the audit-entity type for the specified audit-prop entity type.
+     * Returns an empty optional if the audit type cannot be located.
+     *
+     * @see #getAuditTypeForAuditPropType(Class)
+     */
+    public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
+    Optional<Class<AE>> findAuditTypeForAuditPropType(final Class<AP> auditEntity)
+    {
+        return Optional.ofNullable(getAuditTypeForAuditPropTypeOrNull(auditEntity));
+    }
+
+    /**
+     * Locates and returns the audit-entity type for the specified audit-prop entity type.
+     * Throws an exception if the audit type cannot be located.
+     * <p>
+     * The return type of this method deliberately doesn't contain wildcards, as that would greatly reduce the ergonomics around its usage.
+     *
+     * @see #findAuditTypeForAuditPropType(Class)
+     */
+    public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
+    Class<AE> getAuditTypeForAuditPropType(final Class<AP> auditPropType)
+    {
+        final var auditType = getAuditTypeForAuditPropTypeOrNull(auditPropType);
+        if (auditType == null) {
+            throw new EntityDefinitionException("Audit-prop entity [%s] is missing required annotation @%s"
+                                                        .formatted(auditPropType.getTypeName(), AuditPropFor.class.getTypeName()));
+        }
+        return auditType;
+    }
+
+    private static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
+    @Nullable Class<AE> getAuditTypeForAuditPropTypeOrNull(final Class<AP> auditPropType)
+    {
+        return (Class<AE>) auditPropType.getAnnotation(AuditPropFor.class).value();
     }
 
     private AuditUtils() {}
