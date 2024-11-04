@@ -79,9 +79,12 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
         if (!Iterables.isEmpty(dirtyProperties)) {
             // Audit information about changed properites
             final IAuditPropDao<AE, AbstractAuditProp<AE>> coAuditProp = co(auditPropType);
+            final boolean isNewAuditedEntity = auditedEntity.getVersion() == 0L;
             for (final var property : dirtyProperties) {
                 final var auditProperty = getAuditPropertyName(property.toString());
-                if (auditProperty != null) {
+                // Ignore properties that are not audited.
+                // Ignore nulls if this is the very first version of the audited entity, which means that there are no historical values for its properties.
+                if (auditProperty != null && !(isNewAuditedEntity && auditedEntity.get(property.toString()) == null)) {
                     coAuditProp.quickSave(coAuditProp.newAuditProp(auditEntity, auditProperty));
                 }
             }

@@ -19,6 +19,9 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      *   <li> An audit record is created by instantiating and saving a corresponding audit-entity.
      *   <li> For each <i>changed property</i>, an audit-prop record is created by instantiating and saving a corresponding
      *        audit-prop entity.
+     *        <p>
+     *        If the specified audited entity instance is new (i.e., was persisted for the very first time), then properties with
+     *        {@code null} values are not considered changed.
      * </ul>
      *
      * @param auditedEntity  the audited entity that will be used to initialise the audit-entity instance.
