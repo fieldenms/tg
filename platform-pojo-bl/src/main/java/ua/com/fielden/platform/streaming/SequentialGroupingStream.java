@@ -7,8 +7,11 @@ import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import static java.util.Optional.empty;
 
 /**
  * A stream factory that produces a stream of groups that are made of the element from the base stream. 
@@ -20,13 +23,24 @@ import java.util.stream.StreamSupport;
 public class SequentialGroupingStream {
 
     private SequentialGroupingStream() {}
-    
-    public static <T> Stream<List<T>> stream(final Stream<T> stream, final BiPredicate<T, List<T>> grouping, final Optional<Integer> groupSizeEstimate) {
-        return StreamSupport.stream(new SequentialGroupSplitterator<>(stream, grouping, groupSizeEstimate), false);
+
+    /**
+     * Creates a new stream based on {@code baseStream} by grouping its elements using the {@code grouping} predicate
+     * and an optional group size estimate to assist with estimating the size of the resultant stream.
+     * <p>
+     * <b>Important: </b> <i>The base stream gets closed if the resultant stream is closed.</i>
+     */
+    public static <T> Stream<List<T>> stream(final Stream<T> baseStream, final BiPredicate<T, List<T>> grouping, final Optional<Integer> groupSizeEstimate) {
+        final var spliterator = new SequentialGroupSplitterator<>(baseStream, grouping, groupSizeEstimate);
+        return StreamSupport.stream(spliterator, false)
+                            .onClose(baseStream::close);
     }
 
-    public static <T> Stream<List<T>> stream(final Stream<T> stream, final BiPredicate<T, List<T>> grouping) {
-        return StreamSupport.stream(new SequentialGroupSplitterator<>(stream, grouping, Optional.empty()), false);
+    /**
+     * The same as {@link #stream(Stream, BiPredicate, Optional)}, but without a group size estimate.
+     */
+    public static <T> Stream<List<T>> stream(final Stream<T> baseStream, final BiPredicate<T, List<T>> grouping) {
+        return stream(baseStream, grouping, empty());
     }
 
     private static class SequentialGroupSplitterator<T> implements Spliterator<List<T>> {
@@ -40,7 +54,7 @@ public class SequentialGroupingStream {
             this.grouping = grouping;
             this.groupSizeEstimate = groupSizeEstimate.orElse(25);
             if (this.groupSizeEstimate <= 0) {
-                throw new IllegalArgumentException("Groupe size estimate should be a positive integer.");
+                throw new IllegalArgumentException("Group size estimate should be a positive integer.");
             }
         }
 
@@ -69,7 +83,8 @@ public class SequentialGroupingStream {
                 action.accept(group);
             }
 
-            return advanced || remainder != null;
+            final var couldAdvanceOrRemainingElementsExist = advanced || remainder != null;
+            return couldAdvanceOrRemainingElementsExist;
         }
 
         @Override

@@ -48,7 +48,7 @@ const template = html`
     <tg-message-panel></tg-message-panel>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]">
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]" idea-uri="[[ideaUri]]">
                 <paper-icon-button id="helpAction" slot="helpAction" icon="icons:help-outline" tabindex="1"
                     on-mousedown="_helpMouseDownEventHandler" 
                     on-touchstart="_helpMouseDownEventHandler" 
@@ -193,6 +193,7 @@ Polymer({
             }
         },
         appTitle: String,
+        ideaUri: String,
         entityType: String,
 
         _manager: {
