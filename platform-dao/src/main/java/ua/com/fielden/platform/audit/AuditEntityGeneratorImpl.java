@@ -273,16 +273,16 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         // Abstract methods in the base type
 
-        // AE getAuditedEntity();
+        // AE getAuditEntity();
         final var auditEntityPropAccessor = auditEntityProp.getAccessorSpec(environment);
-        builder.addMethod(methodBuilder("getAuditedEntity")
+        builder.addMethod(methodBuilder("getAuditEntity")
                                   .addModifiers(PUBLIC)
                                   .returns(auditEntityProp.type())
                                   .addStatement("return %s()".formatted(auditEntityPropAccessor.name))
                                   .build());
-        // AbstractAuditProp<AE> setAuditedEntity(AE entity);
+        // AbstractAuditProp<AE> setAuditEntity(AE entity);
         final var auditEntityPropSetter = auditEntityProp.getSetterSpec(environment, auditPropTypeClassName);
-        builder.addMethod(methodBuilder("setAuditedEntity")
+        builder.addMethod(methodBuilder("setAuditEntity")
                                   .addModifiers(PUBLIC)
                                   .returns(auditPropTypeClassName)
                                   .addParameter(auditEntityClassName, "entity", FINAL)

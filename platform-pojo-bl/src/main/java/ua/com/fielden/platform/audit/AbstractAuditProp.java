@@ -23,9 +23,9 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 @KeyType(DynamicEntityKey.class)
 public abstract class AbstractAuditProp<AE extends AbstractAuditEntity<?>> extends AbstractEntity<DynamicEntityKey> {
 
-    public abstract AE getAuditedEntity();
+    public abstract AE getAuditEntity();
 
-    public abstract AbstractAuditProp<AE> setAuditedEntity(AE entity);
+    public abstract AbstractAuditProp<AE> setAuditEntity(AE entity);
 
     public abstract PropertyDescriptor<AE> getProperty();
 
