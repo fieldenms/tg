@@ -12,4 +12,9 @@ public interface IAuditEntityCompanionGenerator {
      */
     Class<?> generateCompanion(Class<? extends AbstractAuditEntity> type);
 
+    /**
+     * Generates a companion object implementation for the specified audit-prop entity type.
+     */
+    Class<?> generateCompanionForAuditProp(Class<? extends AbstractAuditProp> type);
+
 }

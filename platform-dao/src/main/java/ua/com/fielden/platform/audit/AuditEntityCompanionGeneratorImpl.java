@@ -21,4 +21,16 @@ final class AuditEntityCompanionGeneratorImpl implements IAuditEntityCompanionGe
                 .getLoaded();
     }
 
+    @Override
+    public Class<?> generateCompanionForAuditProp(final Class<? extends AbstractAuditProp> type) {
+        return new ByteBuddy()
+                .subclass(CommonAuditPropDao.class)
+                .annotateType(AnnotationDescription.Builder.ofType(EntityType.class)
+                                      .define("value", type)
+                                      .build())
+                .make()
+                .load(type.getClassLoader())
+                .getLoaded();
+    }
+
 }
