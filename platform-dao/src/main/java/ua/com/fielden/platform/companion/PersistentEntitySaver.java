@@ -7,6 +7,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
+import ua.com.fielden.platform.audit.IAuditEntityDao;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
@@ -50,6 +52,8 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
+import static ua.com.fielden.platform.audit.AuditUtils.getAuditType;
+import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -203,8 +207,16 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
+        final T savedEntity = result._2;
+
         // this call never throws any exceptions
-        processAfterSaveEvent.accept(result._2, dirtyProperties);
+        processAfterSaveEvent.accept(savedEntity, dirtyProperties);
+
+        // Auditing
+        if (isAudited(entityType)) {
+            final IAuditEntityDao<T, AbstractAuditEntity<T>> coAudit = coFinder.find(getAuditType(entityType));
+            coAudit.audit(savedEntity, transactionGuid.get(), dirtyProperties);
+        }
 
         return result;
     }
