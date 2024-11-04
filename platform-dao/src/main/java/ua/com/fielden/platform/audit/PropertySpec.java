@@ -13,6 +13,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static javax.lang.model.element.Modifier.*;
 
@@ -100,7 +101,12 @@ final class PropertySpec {
                                                                .build())
                                          .addModifiers(FINAL);
                              },
-                             () -> builder.addAnnotation(environment.javaPoet().getAnnotation(IsProperty.class)));
+                             () -> ifPropertyDescriptorOrElse(environment,
+                                                              entityTypeName ->
+                                                                      builder.addAnnotation(AnnotationSpec.builder(IsProperty.class)
+                                                                                                    .addMember("value", "$T.class", entityTypeName)
+                                                                                                    .build()),
+                                                              () -> builder.addAnnotation(environment.javaPoet().getAnnotation(IsProperty.class))));
 
         return builder.build();
     }
@@ -194,6 +200,21 @@ final class PropertySpec {
             Optional.ofNullable(environment.javaPoet().reflectType(paramTypeName.rawType))
                     .filter(EntityUtils::isCollectional)
                     .ifPresentOrElse($ -> collectionalAction.accept(paramTypeName.rawType, paramTypeName.typeArguments.getFirst()),
+                                     elseAction);
+        } else {
+            elseAction.run();
+        }
+    }
+
+    private void ifPropertyDescriptorOrElse(
+            final GeneratorEnvironment environment,
+            final Consumer<? super TypeName> propDescriptorAction,
+            final Runnable elseAction)
+    {
+        if (typeName instanceof ParameterizedTypeName paramTypeName && paramTypeName.typeArguments.size() == 1) {
+            Optional.ofNullable(environment.javaPoet().reflectType(paramTypeName.rawType))
+                    .filter(EntityUtils::isPropertyDescriptor)
+                    .ifPresentOrElse($ -> propDescriptorAction.accept(paramTypeName.typeArguments.getFirst()),
                                      elseAction);
         } else {
             elseAction.run();
