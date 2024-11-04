@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.audit;
 
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Iterables;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -32,6 +33,17 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
     private final Class<AbstractAuditProp<AE>> auditPropType;
 
     private IDomainMetadata domainMetadata;
+    /**
+     * A bidirectional mapping between names of audited and audit properties.
+     * <p>
+     * Standard direction: keys - audited properties, values - audit properties.
+     * <p>
+     * Inverse direction: keys - audit properties, values - audited properties.
+     * <p>
+     * This field is effectively final, but cannot be declared so due to late initialisation; it depends on {@link #domainMetadata}
+     * which is provided via method injection.
+     */
+    private ImmutableBiMap<String, String> auditedToAuditPropertyNames;
 
     protected CommonAuditEntityDao() {
         super();
@@ -41,6 +53,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
     @Inject
     protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
+        this.auditedToAuditPropertyNames = makeAuditedToAuditPropertyNames(domainMetadata);
     }
 
     /**
@@ -48,9 +61,15 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
      * if the specified property is indeed audited; otherwise, returns {@code null}.
      */
     protected final @Nullable String getAuditPropertyName(final CharSequence auditedProperty) {
-        final var auditPropertyName = A3T + "_" + auditedProperty;
-        return domainMetadata.forEntity(getEntityType()).propertyOpt(auditPropertyName).isPresent() ? auditPropertyName : null;
-        // return auditedToAuditPropertyNames.get(auditedProperty.toString());
+        return auditedToAuditPropertyNames.get(auditedProperty.toString());
+    }
+
+    /**
+     * Returns the name of a property of the audited entity type that is audited by the specified property of this audit-entity type,
+     * if the specified property is an audit property; otherwise, returns {@code null}.
+     */
+    protected final @Nullable String getAuditedPropertyName(final CharSequence auditProperty) {
+        return auditedToAuditPropertyNames.inverse().get(auditProperty.toString());
     }
 
     @Override
@@ -91,14 +110,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
         audit.setAuditedTransactionGuid(transactionGuid);
 
         // specific, audited properties
-        final var auditEntityMetadata = domainMetadata.forEntity(getEntityType());
-        for (final var auditProp : auditEntityMetadata.properties()) {
-            // Audited properties can be identified by their names
-            final var auditedPropName = substringAfter(auditProp.name(), A3T + "_");
-            if (!auditedPropName.isEmpty()) {
-                audit.set(auditProp.name(), auditedEntity.get(auditedPropName));
-            }
-        }
+        auditedToAuditPropertyNames.forEach((auditedProp, auditProp) -> audit.set(auditProp, auditedEntity.get(auditedProp)));
 
         audit.endInitialising();
         return audit;
@@ -122,6 +134,18 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
             throw new EntityCompanionException("The current user is not defined.");
         }
         return user;
+    }
+
+    private ImmutableBiMap<String, String> makeAuditedToAuditPropertyNames(final IDomainMetadata domainMetadata) {
+        final var auditEntityMetadata = domainMetadata.forEntity(getEntityType());
+        final var builder = ImmutableBiMap.<String, String> builderWithExpectedSize(auditEntityMetadata.properties().size() - 6);
+        for (final PropertyMetadata property : auditEntityMetadata.properties()) {
+            final var auditedPropName = substringAfter(property.name(), A3T + "_");
+            if (!auditedPropName.isEmpty()) {
+                builder.put(auditedPropName, property.name());
+            }
+        }
+        return builder.buildOrThrow();
     }
 
 }
