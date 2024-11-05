@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.test_utils.compile;
 
+import com.google.common.collect.ImmutableList;
+
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,13 +24,16 @@ public final class CompilationResult {
     private final List<Diagnostic<? extends JavaFileObject>> diagnostics;
     private final List<Throwable> processingErrors;
     private final List<? extends JavaFileObject> generatedSources;
+    private final List<ClassFile> outputClasses;
 
     CompilationResult(final boolean success, final List<Diagnostic<? extends JavaFileObject>> diagnostics,
-                      final List<Throwable> processingErrors, final Collection<? extends JavaFileObject> generatedSources) {
+                      final List<Throwable> processingErrors, final Collection<? extends JavaFileObject> generatedSources,
+                      final List<ClassFile> outputClasses) {
         this.success = success;
         this.diagnostics = new ArrayList<>(diagnostics);
         this.processingErrors = new ArrayList<>(processingErrors);
         this.generatedSources = List.copyOf(generatedSources);
+        this.outputClasses = ImmutableList.copyOf(outputClasses);
     }
 
     public boolean success() {
@@ -44,6 +50,10 @@ public final class CompilationResult {
 
     public List<? extends JavaFileObject> generatedSources() {
         return generatedSources;
+    }
+
+    public List<ClassFile> outputClasses() {
+        return outputClasses;
     }
 
     /**
@@ -84,6 +94,22 @@ public final class CompilationResult {
     /** A convenient method that prints collected diagnostics to {@link System#out}. */
     public void printDiagnostics() {
         System.out.println(diagnostics.stream().map(Diagnostic::toString).collect(joining("\n")));
+    }
+
+    /**
+     * @param name  binary name of the class
+     * @param javaFileObject  {@link JavaFileObject} representing the class
+     */
+    public record ClassFile (String name, JavaFileObject javaFileObject) {
+
+        public byte[] getBytes() {
+            try (final var is = javaFileObject.openInputStream()) {
+                return is.readAllBytes();
+            } catch (final IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
 }
