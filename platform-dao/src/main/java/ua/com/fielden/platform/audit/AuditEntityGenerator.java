@@ -25,6 +25,21 @@ public interface AuditEntityGenerator {
      */
     record GeneratedResult (Path auditEntityPath, Path auditPropEntityPath) { }
 
+    /**
+     * For each specified audited entity type, generates source code for an audit-entity and its associated audit-prop entity.
+     *
+     * @return  a set of generated audit-entity and audit-prop entity types
+     */
+    Set<SourceInfo> generateSources(Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes);
+
+    /**
+     * Represents the source code of a top-level class or interface.
+     *
+     * @param className  fully-qualified name of the class or interface
+     * @param source  source code
+     */
+    record SourceInfo (String className, String source) {}
+
     // TODO: Display deltas
 
 }

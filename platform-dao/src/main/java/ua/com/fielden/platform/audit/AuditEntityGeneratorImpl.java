@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
@@ -52,7 +53,37 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         entityTypes.forEach(AuditEntityGeneratorImpl::validateAuditedType);
         return Streams.stream(entityTypes)
                 .parallel()
-                .map(type -> generate_(type, sourceRoot))
+                .map(type -> {
+                    final var result = generate_(type);
+                    final Path auditEntityPath;
+                    final Path auditPropPath;
+                    try {
+                        auditEntityPath = result.auditEntity.writeToPath(sourceRoot);
+                        auditPropPath = result.auditProp.writeToPath(sourceRoot);
+                    } catch (final IOException e) {
+                        throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(result.auditVersion, type.getTypeName()), e);
+                    }
+                    return new GeneratedResult(auditEntityPath, auditPropPath);
+                })
+                .collect(toImmutableSet());
+    }
+
+    @Override
+    public Set<SourceInfo> generateSources(final Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes) {
+        class $ {
+            static SourceInfo makeSourceInfo(final JavaFile javaFile) {
+                final var className = javaFile.packageName.isEmpty() ? javaFile.typeSpec.name : javaFile.packageName + '.' + javaFile.typeSpec.name;
+                return new SourceInfo(className, javaFile.toString());
+            }
+        }
+
+        entityTypes.forEach(AuditEntityGeneratorImpl::validateAuditedType);
+        return Streams.stream(entityTypes)
+                .parallel()
+                .flatMap(type -> {
+                    final var result = generate_(type);
+                    return Stream.of($.makeSourceInfo(result.auditEntity), $.makeSourceInfo(result.auditProp));
+                })
                 .collect(toImmutableSet());
     }
 
@@ -63,32 +94,32 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         }
     }
 
-    private GeneratedResult generate_(final Class<? extends AbstractEntity<?>> type, final Path sourceRoot) {
+    private LocalResult generate_(final Class<? extends AbstractEntity<?>> type) {
         final var auditTypePkg = type.getPackageName();
         // TODO multiple audit-entity versions
         final var auditTypeVersion = 1;
         final var auditTypeName = type.getSimpleName() + "_" + A3T + "_" + auditTypeVersion;
-        final var auditTypePath = sourceRoot.resolve(classNameToFilePath(auditTypePkg, auditTypeName));
         final var auditPropTypeName = auditTypeName + "_Prop";
-        final var auditPropTypePath = sourceRoot.resolve(classNameToFilePath(auditTypePkg, auditPropTypeName));
 
+        final JavaFile auditEntity;
+        final JavaFile auditProp;
         try {
-            generateAuditEntity(type, auditTypePkg, auditTypeName, ClassName.get(auditTypePkg, auditPropTypeName), sourceRoot);
-            generateAuditPropEntity(type, ClassName.get(auditTypePkg, auditTypeName), auditTypePkg, auditPropTypeName, sourceRoot);
+            auditEntity = generateAuditEntity(type, auditTypePkg, auditTypeName, ClassName.get(auditTypePkg, auditPropTypeName));
+            auditProp = generateAuditPropEntity(type, ClassName.get(auditTypePkg, auditTypeName), auditTypePkg, auditPropTypeName);
         } catch (final Exception e) {
             throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(auditTypeVersion, type.getTypeName()), e);
         }
 
-        return new GeneratedResult(auditTypePath, auditPropTypePath);
+        return new LocalResult(auditEntity, auditProp, auditTypeVersion);
     }
 
-    private void generateAuditEntity(
+    record LocalResult(JavaFile auditEntity, JavaFile auditProp, int auditVersion) {}
+
+    private JavaFile generateAuditEntity(
             final Class<? extends AbstractEntity<?>> type,
             final String auditTypePkg,
             final String auditTypeName,
-            final ClassName auditPropTypeName,
-            final Path sourceRoot)
-        throws IOException
+            final ClassName auditPropTypeName)
     {
         final var auditTypeClassName = ClassName.get(auditTypePkg, auditTypeName);
 
@@ -139,9 +170,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .forEach(a3tBuilder::addProperty);
 
         final var typeSpec = a3tBuilder.build(addSkipEntityExistsValidation);
-        final var javaFile = JavaFile.builder(auditTypePkg, typeSpec)
-                .build();
-        javaFile.writeTo(sourceRoot);
+        return JavaFile.builder(auditTypePkg, typeSpec).build();
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -242,13 +271,11 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     // : Audit-prop entity generation
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    private void generateAuditPropEntity(
+    private JavaFile generateAuditPropEntity(
             final Class<? extends AbstractEntity<?>> auditedType,
             final TypeName auditEntityClassName,
             final String auditPropTypePkg,
-            final String auditPropTypeName,
-            final Path sourceRoot)
-        throws IOException
+            final String auditPropTypeName)
     {
         final var auditPropTypeClassName = ClassName.get(auditPropTypePkg, auditPropTypeName);
 
@@ -293,13 +320,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final var typeSpec = builder.build();
 
-        final var javaFile = JavaFile.builder(auditPropTypePkg, typeSpec)
-                .build();
-        javaFile.writeTo(sourceRoot);
-    }
-
-    private static Path classNameToFilePath(final String packageName, final String classSimpleName) {
-        return Path.of(packageName.replace('.', '/'), classSimpleName + ".java");
+        return JavaFile.builder(auditPropTypePkg, typeSpec).build();
     }
 
 }
