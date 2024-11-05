@@ -5,9 +5,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
-import ua.com.fielden.platform.processors.test_utils.Compilation;
-import ua.com.fielden.platform.processors.test_utils.CompilationResult;
-import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
+import ua.com.fielden.platform.test_utils.compile.Compilation;
+import ua.com.fielden.platform.test_utils.compile.CompilationResult;
+import ua.com.fielden.platform.test_utils.compile.CompilationException;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import javax.lang.model.element.*;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.test_utils.compile.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.utils.CollectionUtil.areEqualByContents;
 
 /**

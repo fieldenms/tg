@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.test_utils;
+package ua.com.fielden.platform.test_utils.compile;
 
 import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject.Kind;

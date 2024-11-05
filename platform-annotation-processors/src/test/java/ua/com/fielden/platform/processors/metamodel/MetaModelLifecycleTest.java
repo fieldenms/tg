@@ -15,7 +15,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
-import ua.com.fielden.platform.processors.test_utils.Compilation;
+import ua.com.fielden.platform.test_utils.compile.Compilation;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 
 import javax.annotation.processing.ProcessingEnvironment;

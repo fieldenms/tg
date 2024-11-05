@@ -3,6 +3,8 @@ package ua.com.fielden.platform.processors.test_utils;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import ua.com.fielden.platform.test_utils.compile.Compilation;
+import ua.com.fielden.platform.test_utils.compile.InMemoryJavaFileObjects;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
@@ -12,7 +14,7 @@ import javax.tools.JavaFileObject;
 import java.util.Collection;
 import java.util.List;
 
-import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.test_utils.compile.Compilation.OPTION_PROC_ONLY;
 
 /**
  * Implementation of {@link org.junit.rules.TestRule} that runs test methods during the last round of annotation processing.

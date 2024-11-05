@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.test_utils.exceptions;
+package ua.com.fielden.platform.test_utils.compile;
 
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 

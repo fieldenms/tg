@@ -1,7 +1,6 @@
-package ua.com.fielden.platform.processors.test_utils;
+package ua.com.fielden.platform.test_utils.compile;
 
 import com.google.testing.compile.ForwardingStandardJavaFileManager;
-import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
 
 import javax.annotation.processing.AbstractProcessor;

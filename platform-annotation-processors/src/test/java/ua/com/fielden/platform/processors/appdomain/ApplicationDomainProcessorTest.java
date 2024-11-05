@@ -5,9 +5,9 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.*;
-import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.test_utils.compile.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
-import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
+import static ua.com.fielden.platform.test_utils.compile.InMemoryJavaFileObjects.createJavaSource;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 
@@ -36,7 +36,7 @@ import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistr
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
-import ua.com.fielden.platform.processors.test_utils.Compilation;
+import ua.com.fielden.platform.test_utils.compile.Compilation;
 import ua.com.fielden.platform.processors.test_utils.CompilationTestUtils;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;

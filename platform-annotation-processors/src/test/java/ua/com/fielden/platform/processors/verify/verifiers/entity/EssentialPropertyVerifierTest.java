@@ -24,7 +24,7 @@ import javax.lang.model.element.Modifier;
 import java.util.*;
 import java.util.function.Function;
 
-import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.test_utils.compile.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.compileWithTempStorage;
 import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
