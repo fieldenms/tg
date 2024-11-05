@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
 
 public final class AuditUtils {
@@ -185,6 +186,36 @@ public final class AuditUtils {
     @Nullable Class<AE> getAuditTypeForAuditPropTypeOrNull(final Class<AP> auditPropType)
     {
         return (Class<AE>) auditPropType.getAnnotation(AuditPropFor.class).value();
+    }
+
+    /**
+     * Locates and returns the audited entity type for the specified audit-entity type.
+     * Throws an exception if the audited type cannot be located.
+     * <p>
+     * This method is the inverse of {@link #getAuditType(Class)}.
+     */
+    public static <E extends AbstractEntity<?>, AE extends AbstractAuditEntity<E>>
+    Class<E> getAuditedType(final Class<AE> auditType)
+    {
+        // TODO Support multiple versions of audit-entity types
+        final var atAuditType = auditType.getAnnotation(AuditFor.class);
+        if (atAuditType == null) {
+            throw new EntityDefinitionException(format("Audit-entity [%s] is missing required annotation @%s",
+                                                       auditType.getTypeName(), AuditFor.class.getTypeName()));
+        }
+        return (Class<E>) atAuditType.value();
+    }
+
+    /**
+     * Locates and returns the audited entity type for the specified audit-prop entity type.
+     * Throws an exception if the audited type cannot be located.
+     * <p>
+     * This method is the inverse of {@link #getAuditPropType(Class)}.
+     */
+    public static <E extends AbstractEntity<?>, AE extends AbstractAuditEntity<E>, AP extends AbstractAuditProp<AE>>
+    Class<E> getAuditedTypeForAuditPropType(final Class<AP> auditPropType)
+    {
+        return getAuditedType(getAuditTypeForAuditPropType(auditPropType));
     }
 
     private AuditUtils() {}
