@@ -9,7 +9,11 @@ import java.lang.reflect.Method;
  * 
  */
 public enum Mutator {
-    SETTER("set"), INCREMENTOR("addTo"), DECREMENTOR("removeFrom");
+    SETTER("set"),
+    @Deprecated(since = "2.0.0; Mutation of collectional properties is not used in practice and will be removed.", forRemoval = true)
+    INCREMENTOR("addTo"),
+    @Deprecated(since = "2.0.0; Mutation of collectional properties is not used in practice and will be removed.", forRemoval = true)
+    DECREMENTOR("removeFrom");
 
     public final String startsWith;
 
