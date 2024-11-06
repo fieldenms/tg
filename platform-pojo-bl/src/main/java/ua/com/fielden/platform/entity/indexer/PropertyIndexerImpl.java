@@ -33,21 +33,21 @@ import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
 
 /**
  * Property indices are built by reusing method handles as much as possible.
- * In general, there will be a single pair of method handles for each property (for its accessor and setter).
+ * In general, there will be a single pair of method handles for each property (for its getter and setter).
  * This holds for inherited properties as well.
  * For example, all indices will share the same method handles for properties of {@link AbstractEntity}.
  * <p>
  * One benefit of this extensive reuse is that derived (generated) entity types, which have no additional/modified properties,
  * get property indices for free by reusing those of their original entity types.
  *
- * <h4> Accessors </h4>
+ * <h4> Getters </h4>
  * <p>
- * Accessors in a property index are method handles that read directly from a {@linkplain VarHandle property's field}.
- * Although this violates encapsulation by ignoring the declared property accessor methods, no disadvantages are observed
- * in practice for the majority of property types due to the simplicity of their accessors.
- * The only exception is collectional properties, where accessors return an unmodifiable view instead of the immediate property value.
+ * Getters in a property index are method handles that read directly from a {@linkplain VarHandle property's field}.
+ * Although this violates encapsulation by ignoring the declared property getter methods, no disadvantages are observed
+ * in practice for the majority of property types due to the simplicity of their getters.
+ * The only exception is collectional properties, where getters return an unmodifiable view instead of the immediate property value.
  * <p>
- * This is subject to change, with the goal of actually using property accessors.
+ * This is subject to change, with the goal of actually using property getters.
  * However, currently the platform relies on collectional values being read directly from the property's field, which poses a challenge for the implementation of the new approach.
  *
  * <h4> Overridden setters </h4>
@@ -65,9 +65,9 @@ import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
 public class PropertyIndexerImpl implements IPropertyIndexer {
 
     private static final String ERR_MISSING_SETTER = "Missing setter for property [%s] in entity [%s].";
-    private static final String ERR_MISSING_ACCESSOR = "Missing accessor for property [%s] in entity [%s].";
+    private static final String ERR_MISSING_GETTER = "Missing getter for property [%s] in entity [%s].";
     private static final String ERR_RESOLVING_COMMON_PROPS_FOR_UNION_ENTITY = "Failed to resolve common property [%s] in union entity [%s] with active entity [%s].";
-    private static final String ERR_RESOLVING_SETTER_FOR_COMMON_PROP_OF_UNINION_ENTITY = "Failed to resolve a setter for common property [%s] in union entity [%s] with active entity [%s].";
+    private static final String ERR_RESOLVING_SETTER_FOR_COMMON_PROP_OF_UNION_ENTITY = "Failed to resolve a setter for common property [%s] in union entity [%s] with active entity [%s].";
 
     private static final Field ID_FIELD = getFieldByName(AbstractEntity.class, ID);
     private static final Field VERSION_FIELD = getFieldByName(AbstractEntity.class, VERSION);
@@ -98,7 +98,7 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
                 ? Stream.concat(streamDeclaredProperties(entityType), Stream.of(ID_FIELD, VERSION_FIELD))
                 : streamDeclaredProperties(entityType);
         return properties.collect(Collectors.teeing(
-                toImmutableMap(Field::getName, lookupProvider::unreflectAccessor),
+                toImmutableMap(Field::getName, lookupProvider::unreflectGetter),
                 toImmutableMap(Field::getName, prop -> lookupProvider.unreflectSetter(entityType, prop)),
                 StandardPropertyIndex::makeIndex));
     }
@@ -111,7 +111,7 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
             return top;
         }
 
-        return makeIndex(overlayMap(top.accessors(), bottom.accessors()),
+        return makeIndex(overlayMap(top.getters(), bottom.getters()),
                          overlayMap(top.setters(), bottom.setters()));
     }
 
@@ -131,24 +131,24 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
     }
 
     /**
-     * @param accessors  for reading property values, keyed on property names
+     * @param getters  for reading property values, keyed on property names
      * @param setters  for writing property values, keyed on property names
      */
     record StandardPropertyIndex(
-            Map<String, MethodHandle> accessors,
+            Map<String, MethodHandle> getters,
             Map<String, MethodHandle> setters)
             implements PropertyIndex
     {
         private static final StandardPropertyIndex EMPTY_INDEX = new StandardPropertyIndex(ImmutableMap.of(), ImmutableMap.of());
 
-        public static StandardPropertyIndex makeIndex(final Map<String, MethodHandle> accessors,
+        public static StandardPropertyIndex makeIndex(final Map<String, MethodHandle> getters,
                                               final Map<String, MethodHandle> setters) {
-            return (accessors.isEmpty() && setters.isEmpty()) ? EMPTY_INDEX : new StandardPropertyIndex(accessors, setters);
+            return (getters.isEmpty() && setters.isEmpty()) ? EMPTY_INDEX : new StandardPropertyIndex(getters, setters);
         }
 
         @Override
-        public MethodHandle accessor(final String prop) {
-            return accessors.get(prop);
+        public MethodHandle getter(final String prop) {
+            return getters.get(prop);
         }
 
         @Nullable
@@ -158,7 +158,7 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
         }
 
         public boolean isEmpty() {
-            return accessors.isEmpty() && setters.isEmpty();
+            return getters.isEmpty() && setters.isEmpty();
         }
     }
 
@@ -174,11 +174,11 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
     private StandardPropertyIndex buildUnionEntityIndex(final Class<? extends AbstractUnionEntity> entityType) {
         final var lookupProvider = new CachingPrivateLookupProvider();
 
-        final var accessors = ImmutableMap.<String, MethodHandle>builder();
+        final var getters = ImmutableMap.<String, MethodHandle>builder();
         final var setters = ImmutableMap.<String, MethodHandle>builder();
 
         for (final Field unionProp : AbstractUnionEntity.unionProperties(entityType)) {
-            accessors.put(unionProp.getName(), lookupProvider.unreflectAccessor(unionProp));
+            getters.put(unionProp.getName(), lookupProvider.unreflectGetter(unionProp));
             setters.put(unionProp.getName(), lookupProvider.unreflect(obtainPropertySetter(entityType, unionProp.getName())));
         }
 
@@ -186,37 +186,37 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
         Stream.concat(AbstractUnionEntity.commonProperties(entityType).stream(), Stream.of(KEY, ID, DESC))
                .distinct()
                .forEach(commonPropName -> {
-                   // accessors for this common property in all union members
-                   final Map<Class<?>, MethodHandle> commonPropAccessors = unionMembers.stream()
+                   // getters for this common property in all union members
+                   final Map<Class<?>, MethodHandle> commonPropGetters = unionMembers.stream()
                            .collect(toMap(Function.identity(),
-                                          ty -> lookupProvider.unreflectAccessor(getFieldByName(ty, commonPropName))));
+                                          ty -> lookupProvider.unreflectGetter(getFieldByName(ty, commonPropName))));
                    final Map<Class<?>, MethodHandle> commonPropSetters = unionMembers.stream()
                            .collect(toMap(Function.identity(),
                                           ty -> lookupProvider.unreflect(obtainPropertySetter(ty, commonPropName))));
                    // this is where we create closures
-                   accessors.put(commonPropName, MethodHandles.insertArguments(mh_getCommonProperty, 0, commonPropName, commonPropAccessors));
+                   getters.put(commonPropName, MethodHandles.insertArguments(mh_getCommonProperty, 0, commonPropName, commonPropGetters));
                    setters.put(commonPropName, MethodHandles.insertArguments(mh_setCommonProperty, 0, commonPropName, commonPropSetters));
                });
 
-        return makeIndex(accessors.buildOrThrow(), setters.buildOrThrow());
+        return makeIndex(getters.buildOrThrow(), setters.buildOrThrow());
     }
 
     /**
      * Reads the value of a common property from a union entity instance.
      * <p>
      * This method is used to build union entity indices.
-     * Ultimately, it gets transformed into a method handle representing an accessor, expecting one argument of a union-entity type.
+     * Ultimately, it gets transformed into a method handle representing a getter, expecting one argument of a union-entity type.
      * The rest of the arguments are taken care of in the process of a method handle transformation.
      * <p>
      * Another way to view this method is as a closure where all arguments except {@code entity} have been enclosed.
      *
      * @param prop  simple property name
-     * @param accessors  {@code {canonicalEntityType: accessor}}
+     * @param getters {@code {canonicalEntityType: getter}}
      * @param entity  entity to retrieve the property value from
      */
     private static Object getCommonProperty(
             final String prop,
-            final Map<Class<? extends AbstractEntity<?>>, MethodHandle> accessors,
+            final Map<Class<? extends AbstractEntity<?>>, MethodHandle> getters,
             final AbstractUnionEntity entity)
             throws Throwable
     {
@@ -225,13 +225,13 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
             return null;
         }
 
-        // active entity might be enhanced, but accessors are keyed on canonical entity types
-        final var accessor = accessors.get(activeEntity.getType());
-        if (accessor == null) {
+        // active entity might be enhanced, but getters are keyed on canonical entity types
+        final var getter = getters.get(activeEntity.getType());
+        if (getter == null) {
             throw new PropertyIndexerException(ERR_RESOLVING_COMMON_PROPS_FOR_UNION_ENTITY.formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
         }
 
-        return accessor.invoke(activeEntity);
+        return getter.invoke(activeEntity);
     }
 
     /**
@@ -241,7 +241,7 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
      * It gets transformed into a closure with 2 arguments – {@code entity} and {@code value}.
      *
      * @param prop  simple property name
-     * @param setters  {@code {canonicalEntityType: accessor}}
+     * @param setters {@code {canonicalEntityType: setter}}
      * @param entity  union entity to set the value into (effectively, its active entity)
      * @param value  new property value
      */
@@ -255,7 +255,7 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
         // active entity might be enhanced, but setters are keyed on canonical entity types
         final var setter = setters.get(activeEntity.getType());
         if (setter == null) {
-            throw new PropertyIndexerException(ERR_RESOLVING_SETTER_FOR_COMMON_PROP_OF_UNINION_ENTITY.formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
+            throw new PropertyIndexerException(ERR_RESOLVING_SETTER_FOR_COMMON_PROP_OF_UNION_ENTITY.formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
         }
 
         return setter.invoke(activeEntity, value);
@@ -296,11 +296,11 @@ public class PropertyIndexerImpl implements IPropertyIndexer {
             });
         }
 
-        public MethodHandle unreflectAccessor(final Field field) {
+        public MethodHandle unreflectGetter(final Field field) {
             try {
                 return apply(field.getDeclaringClass()).unreflectGetter(field);
             } catch (final IllegalAccessException ex) {
-                throw new ReflectionException(ERR_MISSING_ACCESSOR.formatted(field.getName(), field.getDeclaringClass().getTypeName()), ex);
+                throw new ReflectionException(ERR_MISSING_GETTER.formatted(field.getName(), field.getDeclaringClass().getTypeName()), ex);
             }
         }
 

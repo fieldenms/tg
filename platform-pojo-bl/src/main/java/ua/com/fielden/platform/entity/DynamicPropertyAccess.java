@@ -18,7 +18,7 @@ public final class DynamicPropertyAccess {
 
     public static final String ERR_PROP_ACCESS_INDEX = "Failed to build an index for entity [%s]";
     public static final String ERR_NO_PROP_SETTER = "Failed to resolve setter for property [%s] in entity [%s]";
-    public static final String ERR_NO_PROP_ACCESSOR = "Failed to resolve property [%s] in entity [%s]";
+    public static final String ERR_NO_PROP_GETTER = "Failed to resolve getter for property [%s] in entity [%s]";
 
     /**
      * Returns the value of the named property in {@code entity}.
@@ -67,12 +67,12 @@ public final class DynamicPropertyAccess {
             throw new DynamicPropertyAccessCriticalError(ERR_PROP_ACCESS_INDEX.formatted(entityType.getTypeName()), e);
         }
 
-        final var accessor = index.accessor(prop);
-        if (accessor == null) {
-            throw new EntityException(ERR_NO_PROP_ACCESSOR.formatted(prop, entityType.getTypeName()));
+        final var getter = index.getter(prop);
+        if (getter == null) {
+            throw new EntityException(ERR_NO_PROP_GETTER.formatted(prop, entityType.getTypeName()));
         }
 
-        return accessor.invoke(entity);
+        return getter.invoke(entity);
     }
 
     /**

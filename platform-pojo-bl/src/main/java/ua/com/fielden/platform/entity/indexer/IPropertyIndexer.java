@@ -13,7 +13,7 @@ public interface IPropertyIndexer {
     PropertyIndex indexFor(final Class<? extends AbstractEntity<?>> entityType);
 
     interface PropertyIndex {
-        @Nullable MethodHandle accessor(final String prop);
+        @Nullable MethodHandle getter(final String prop);
 
         @Nullable MethodHandle setter(final String prop);
 
