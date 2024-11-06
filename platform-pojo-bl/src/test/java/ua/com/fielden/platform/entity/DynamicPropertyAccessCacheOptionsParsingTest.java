@@ -14,7 +14,7 @@ import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.Options
 import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.Options.Caching.*;
 import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.options;
 
-public class DynamicPropertyAccessIocModuleTest {
+public class DynamicPropertyAccessCacheOptionsParsingTest {
 
     @Test
     public void caching_option_is_parsed_correctly() {
