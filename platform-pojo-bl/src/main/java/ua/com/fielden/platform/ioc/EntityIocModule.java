@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicPropertyAccessIocModule;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.web_api.GraphQLScalars;
 

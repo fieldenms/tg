@@ -1,7 +1,10 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.indexer;
 
 import com.google.common.collect.ImmutableMap;
-import ua.com.fielden.platform.entity.exceptions.EntityException;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.Mutator;
+import ua.com.fielden.platform.entity.exceptions.PropertyIndexerException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -23,7 +26,7 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.lang.invoke.MethodType.methodType;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
-import static ua.com.fielden.platform.entity.PropertyIndexerImpl.StandardIndex.makeIndex;
+import static ua.com.fielden.platform.entity.indexer.PropertyIndexerImpl.StandardPropertyIndex.makeIndex;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamDeclaredProperties;
 import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
@@ -59,7 +62,7 @@ import static ua.com.fielden.platform.reflection.Reflector.obtainPropertySetter;
  *   <li> <i>Canonical entity type</i> - an entity type without bytecode enhancements.
  * </ul>
  */
-class PropertyIndexerImpl implements PropertyIndexer {
+public class PropertyIndexerImpl implements IPropertyIndexer {
 
     private static final String ERR_MISSING_SETTER = "Missing setter for property [%s] in entity [%s].";
     private static final String ERR_MISSING_ACCESSOR = "Missing accessor for property [%s] in entity [%s].";
@@ -70,14 +73,14 @@ class PropertyIndexerImpl implements PropertyIndexer {
     private static final Field VERSION_FIELD = getFieldByName(AbstractEntity.class, VERSION);
 
     @Override
-    public StandardIndex indexFor(final Class<? extends AbstractEntity<?>> entityType) {
+    public StandardPropertyIndex indexFor(final Class<? extends AbstractEntity<?>> entityType) {
         if (EntityUtils.isUnionEntityType(entityType)) {
             return buildUnionEntityIndex((Class<? extends AbstractUnionEntity>) entityType);
         }
         return buildIndex(entityType);
     }
 
-    private StandardIndex buildIndex(final Class<? extends AbstractEntity<?>> entityType) {
+    private StandardPropertyIndex buildIndex(final Class<? extends AbstractEntity<?>> entityType) {
         // We could use Finder.streamRealProperties but that would diverge from the previous Reflection-based implementation.
         // Primarily, this is due to the conditional inclusion of properties "key" and "desc".
         // The current approach is already more limiting than the previous one, but reasonably so.
@@ -88,7 +91,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                 : overlayIndex(declaredPropsIndex, indexFor((Class<? extends AbstractEntity<?>>) entityType.getSuperclass()));
     }
 
-    private static StandardIndex buildDeclaredPropertiesIndex(final Class<? extends AbstractEntity<?>> entityType) {
+    private static StandardPropertyIndex buildDeclaredPropertiesIndex(final Class<? extends AbstractEntity<?>> entityType) {
         final var lookupProvider = new CachingPrivateLookupProvider();
         final var properties = (Class<?>) entityType == AbstractEntity.class
                 // Include id and version explicitly, since they lack @IsProperty.
@@ -97,10 +100,10 @@ class PropertyIndexerImpl implements PropertyIndexer {
         return properties.collect(Collectors.teeing(
                 toImmutableMap(Field::getName, lookupProvider::unreflectAccessor),
                 toImmutableMap(Field::getName, prop -> lookupProvider.unreflectSetter(entityType, prop)),
-                StandardIndex::makeIndex));
+                StandardPropertyIndex::makeIndex));
     }
 
-    private static StandardIndex overlayIndex(final StandardIndex top, final StandardIndex bottom) {
+    private static StandardPropertyIndex overlayIndex(final StandardPropertyIndex top, final StandardPropertyIndex bottom) {
         if (top.isEmpty()) {
             return bottom;
         }
@@ -131,16 +134,16 @@ class PropertyIndexerImpl implements PropertyIndexer {
      * @param accessors  for reading property values, keyed on property names
      * @param setters  for writing property values, keyed on property names
      */
-    record StandardIndex(
+    record StandardPropertyIndex(
             Map<String, MethodHandle> accessors,
             Map<String, MethodHandle> setters)
-            implements Index
+            implements PropertyIndex
     {
-        private static final StandardIndex EMPTY_INDEX = new StandardIndex(ImmutableMap.of(), ImmutableMap.of());
+        private static final StandardPropertyIndex EMPTY_INDEX = new StandardPropertyIndex(ImmutableMap.of(), ImmutableMap.of());
 
-        public static StandardIndex makeIndex(final Map<String, MethodHandle> accessors,
+        public static StandardPropertyIndex makeIndex(final Map<String, MethodHandle> accessors,
                                               final Map<String, MethodHandle> setters) {
-            return (accessors.isEmpty() && setters.isEmpty()) ? EMPTY_INDEX : new StandardIndex(accessors, setters);
+            return (accessors.isEmpty() && setters.isEmpty()) ? EMPTY_INDEX : new StandardPropertyIndex(accessors, setters);
         }
 
         @Override
@@ -168,7 +171,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
      *        These include properties {@code id}, {@code key} and {@code desc}.
      * </ol>
      */
-    private StandardIndex buildUnionEntityIndex(final Class<? extends AbstractUnionEntity> entityType) {
+    private StandardPropertyIndex buildUnionEntityIndex(final Class<? extends AbstractUnionEntity> entityType) {
         final var lookupProvider = new CachingPrivateLookupProvider();
 
         final var accessors = ImmutableMap.<String, MethodHandle>builder();
@@ -225,7 +228,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
         // active entity might be enhanced, but accessors are keyed on canonical entity types
         final var accessor = accessors.get(activeEntity.getType());
         if (accessor == null) {
-            throw new EntityException(ERR_RESOLVING_COMMON_PROPS_FOR_UNION_ENTITY.formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
+            throw new PropertyIndexerException(ERR_RESOLVING_COMMON_PROPS_FOR_UNION_ENTITY.formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
         }
 
         return accessor.invoke(activeEntity);
@@ -252,7 +255,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
         // active entity might be enhanced, but setters are keyed on canonical entity types
         final var setter = setters.get(activeEntity.getType());
         if (setter == null) {
-            throw new EntityException(ERR_RESOLVING_SETTER_FOR_COMMON_PROP_OF_UNINION_ENTITY.formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
+            throw new PropertyIndexerException(ERR_RESOLVING_SETTER_FOR_COMMON_PROP_OF_UNINION_ENTITY.formatted(prop, entity.getType().getSimpleName(), activeEntity.getType().getSimpleName()));
         }
 
         return setter.invoke(activeEntity, value);
@@ -269,7 +272,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                     .findStatic(PropertyIndexerImpl.class, "setCommonProperty",
                                 methodType(Object.class, String.class, Map.class, AbstractUnionEntity.class, Object.class));
         } catch (final NoSuchMethodException | IllegalAccessException ex) {
-            throw new ReflectionException(ex);
+            throw new PropertyIndexerException(ex);
         }
     }
 
@@ -288,7 +291,7 @@ class PropertyIndexerImpl implements PropertyIndexer {
                 try {
                     return MethodHandles.privateLookupIn(k, MethodHandles.lookup());
                 } catch (final IllegalAccessException ex) {
-                    throw new ReflectionException(ex);
+                    throw new PropertyIndexerException(ex);
                 }
             });
         }

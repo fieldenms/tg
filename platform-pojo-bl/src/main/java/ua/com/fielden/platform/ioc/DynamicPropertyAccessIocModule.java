@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.ioc;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.AbstractModule;
@@ -7,8 +7,12 @@ import com.google.inject.Key;
 import com.google.inject.Provides;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicPropertyAccess;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
-import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
+import ua.com.fielden.platform.entity.indexer.CachingPropertyIndexerImpl;
+import ua.com.fielden.platform.entity.indexer.IPropertyIndexer;
+import ua.com.fielden.platform.entity.indexer.PropertyIndexerImpl;
 import ua.com.fielden.platform.parser.ValueParser;
 
 import java.time.Duration;
@@ -168,7 +172,7 @@ public final class DynamicPropertyAccessIocModule extends AbstractPlatformIocMod
     }
 
     @Provides
-    PropertyIndexer providePropertyIndexer(final Workflows workflow, final Injector injector) {
+    IPropertyIndexer providePropertyIndexer(final Workflows workflow, final Injector injector) {
         final Options options = getOptions(injector);
         return switch (options.caching) {
             case ENABLED -> new CachingPropertyIndexerImpl(options.mainCacheConfig, options.tmpCacheConfig);

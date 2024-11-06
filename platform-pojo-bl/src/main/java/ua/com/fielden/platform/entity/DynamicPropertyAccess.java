@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity;
 import com.google.inject.Inject;
 import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessCriticalError;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
+import ua.com.fielden.platform.entity.indexer.IPropertyIndexer;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
@@ -13,7 +14,7 @@ import static ua.com.fielden.platform.utils.ArrayUtils.getLast;
 /**
  * Provides dynamic name-based access (read & write) to property values of entity instances.
  */
-final class DynamicPropertyAccess {
+public final class DynamicPropertyAccess {
 
     public static final String ERR_PROP_ACCESS_INDEX = "Failed to build an index for entity [%s]";
     public static final String ERR_NO_PROP_SETTER = "Failed to resolve setter for property [%s] in entity [%s]";
@@ -59,7 +60,7 @@ final class DynamicPropertyAccess {
     private Object getProperty_(final AbstractEntity<?> entity, final String prop) throws Throwable {
         final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
 
-        final PropertyIndexer.Index index;
+        final IPropertyIndexer.PropertyIndex index;
         try {
             index = indexer.indexFor(entityType);
         } catch (final Exception e) {
@@ -84,7 +85,7 @@ final class DynamicPropertyAccess {
     public void setProperty(final AbstractEntity<?> entity, final CharSequence prop, final Object value) throws Throwable {
         Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) entity.getClass();
 
-        final PropertyIndexer.Index index;
+        final IPropertyIndexer.PropertyIndex index;
         try {
             index = indexer.indexFor(entityType);
         } catch (final Exception ex) {
@@ -118,10 +119,10 @@ final class DynamicPropertyAccess {
 
     // --- Implementation
 
-    private final PropertyIndexer indexer;
+    private final IPropertyIndexer indexer;
 
     @Inject
-    DynamicPropertyAccess(final PropertyIndexer indexer) {
+    DynamicPropertyAccess(final IPropertyIndexer indexer) {
         this.indexer = indexer;
     }
 

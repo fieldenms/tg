@@ -26,7 +26,7 @@ public enum Mutator {
     /**
      * Identifies whether the specified method name indicates a mutator.
      * 
-     * @param method
+     * @param methodName
      * @return
      */
     public static boolean isMutator(final String methodName) {
@@ -67,7 +67,7 @@ public enum Mutator {
     /**
      * Deduces property name using the provided mutator name.
      * 
-     * @param method
+     * @param methodName
      * @return
      */
     public static String deducePropertyNameFromMutator(final String methodName) {
