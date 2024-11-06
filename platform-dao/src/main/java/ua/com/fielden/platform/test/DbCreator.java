@@ -33,12 +33,48 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 /**
- * This is an abstraction that capture the logic for the initial test case related db creation and its re-creation from a generated script for all individual tests in the same test case.
+ * A DB creator is responsible for data population in tests.
+ * Each test class is associated with a unique DB creator.
  * <p>
- * It is intended that each individual test case may reference an instance of this class to perform optimised (by means of scripting) test data population.
- * 
- * @author TG Team
+ * This is the base type for all DB creator implementations.
+ * The interaction with a database is abstracted, and should be provided by specific implementations.
  *
+ * <h5> Definition of test data </h5>
+ * <b>Test data</b> is data that is specific to a test class, and is the only data that exists before each test in a test class is run.
+ * By this definition each test in a test class has data isolation, i.e., it cannot affect data in other tests.
+ * <p>
+ * Each test class can specify a custom data population procedure by overriding {@link AbstractDomainDrivenTestCase#populateDomain()}.
+ * Additionally, test data may optionally be loaded from a file, if {@link AbstractDomainDrivenTestCase#useSavedDataPopulationScript()} returns true.
+ * The combined data from these two sources is called <b>test data</b>.
+ *
+ * <h5> How DB creator works </h5>
+ * A DB creator interoperates with the test class in the following manner:
+ * <ul>
+ *   <li> Before each test is run, the database contains only the test data of the test class.
+ *   <li> After each individual test finishes, the database is cleared by deleting all data.
+ * </ul>
+ * These actions effectively provide data isolation for individual tests in a test class.
+ * <p>
+ * The data population procedure in a test class is executed just once, before the first test is run.
+ * The resulting data is then extracted in the form of SQL INSERT statements, and stored by the DB creator so that it
+ * can be repopulated before each subsequent test is run.
+ * <p>
+ * Additonally, each test class can optionally choose to:
+ * <ul>
+ *   <li> Save test data to a file.
+ *        <p>
+ *        This is enabled if {@link AbstractDomainDrivenTestCase#saveDataPopulationScriptToFile()} returns {@code true}.
+ *   <li> Load test data from a file.
+ *        <p>
+ *        This is enabled if {@link AbstractDomainDrivenTestCase#useSavedDataPopulationScript()} returns {@code true}.
+ *        <p>
+ *        When this option is enabled, test data is first loaded from a file, then the custom data population procedure is run.
+ *        Therefore, it is common for the data population procedure to first check whether it needs to run by checking if the data to be populated already exists.
+ *        <p>
+ *        For this option to have an effect, test data should have been previously saved to a file.
+ * </ul>
+ *
+ * @author TG Team
  */
 public abstract class DbCreator {
     public static final String baseDir = "./src/test/resources/db";
