@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import org.junit.Test;
-import ua.com.fielden.platform.parser.ValueParsingException;
+import ua.com.fielden.platform.parser.exceptions.ValueParsingException;
 
 import java.time.Duration;
 import java.util.Map;
