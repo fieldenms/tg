@@ -43,7 +43,7 @@ import ua.com.fielden.platform.utils.DbUtils;
  */
 public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData, ISessionEnabled {
 
-    private DbCreator dbCreator;
+    // The following fields are reflectlively assigned only once, by the platform test runner.
     private static ICompanionObjectFinder coFinder;
     private static EntityFactory factory;
     private static Function<Class<?>, Object> instantiator;
@@ -54,7 +54,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     private static final DateFormat DATE_TIME_FORMAT_WITH_MILLIS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
-
+    private DbCreator dbCreator;
     private Session session;
     private String transactionGuid;
 

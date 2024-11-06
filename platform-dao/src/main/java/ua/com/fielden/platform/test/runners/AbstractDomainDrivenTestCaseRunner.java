@@ -33,11 +33,16 @@ import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
     public final Logger logger = getLogger(getClass());
-    
-    // the following two properties must be static to perform their allocation only once due to its memory and CPU intencity
-    private static Properties dbProps; // mainly used for db creation and population at the time of loading the test case classes
+
+    // The following fields are assigned only once during the initial creation of the test configuration.
+
+    /**
+     * Properties for the establishment of a database connection via Hibernate.
+     * Required to instantiate {@link DbCreator}.
+     */
+    private static Properties dbProps;
     private static IDomainDrivenTestCaseConfiguration config;
-    
+
     /** 
      * Need one DDL script for all instances of all test cases.
      * The intent is to create and cache it as a static variable upon instantiation of the first runner instance.
@@ -45,16 +50,11 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
      */
     private static final List<String> ddlScript = new ArrayList<>();
     
-    /**
-     * The name of the database to be used for testing.
-     */
+    /** The URI of the database to be used for testing. */
     public final String databaseUri;
     
     private final DbCreator dbCreator;
-    private static ICompanionObjectFinder coFinder;
-    private static EntityFactory factory;
 
-    
     public AbstractDomainDrivenTestCaseRunner(
             final Class<?> klass, 
             final Class<? extends DbCreator> dbCreatorType, 
@@ -109,12 +109,12 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         if (config == null) {
             dbProps = mkDbProps(databaseUri);
             config = testConfig.orElseGet(() -> createConfig(dbProps));
-            coFinder = config.getInstance(ICompanionObjectFinder.class);
-            factory = config.getInstance(EntityFactory.class);
             final Function<Class<?>, Object> instFun = type -> config.getInstance(type);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), instFun);
-            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("coFinder"), coFinder);
-            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("factory"), factory);
+            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("coFinder"),
+                         config.getInstance(ICompanionObjectFinder.class));
+            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("factory"),
+                         config.getInstance(EntityFactory.class));
         }
 
         // try loading the DDL script if applicable
