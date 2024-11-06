@@ -177,18 +177,15 @@ public final class DynamicPropertyAccessIocModule extends AbstractPlatformIocMod
             case DISABLED -> new PropertyIndexerImpl();
             case AUTO -> switch (workflow) {
                 case deployment, vulcanizing -> new CachingPropertyIndexerImpl(options.mainCacheConfig, options.tmpCacheConfig);
-                /*
-                 Caching during development can be enabled if we can guarantee that it won't get in the way of redefining
-                 entity types at runtime. So which entity types can be redefined?
-                 * Canonical entity types - if HotSpot is used, then no, because it doesn't support structural changes.
-                 If JBR (JetBrains Runtime) is used, then canonical entity types can indeed be redefined: properties
-                 can be removed, added and modified. However, the implications of such changes are far too wide, they
-                 would also affect other parts of the system (e.g., metadata). Therefore, since this isn't supported
-                 yet, we need not worry about it here.
-                 * Generated entity types - any live changes should result in generation of new entity types (e.g.,
-                 modifying an entity centre configuration). Since those types will be new, old cached types won't get
-                 in the way.
-                */
+                // Caching during development can be enabled if we can guarantee that it won't get in the way of redefining entity types at runtime.
+                // So which entity types can be redefined?
+                // 1. Canonical entity types – if HotSpot is used, then no, because it doesn't support structural changes.
+                //    If JBR (JetBrains Runtime) is used, then canonical entity types can indeed be redefined: properties can be removed, added and modified.
+                //    However, the implications of such changes are far too wide, and they would also affect other parts of the system (e.g., metadata).
+                //    Therefore, since this is not supported yet, we need not worry about it here.
+                // 2. Generated entity types – any live changes should result in generation of new entity types (e.g., modifying an entity centre configuration).
+                //    Since those types will be new, old cached types would not get in the way.
+                // Therefore, for now caching can be used in the development workflow.
                 case development -> new CachingPropertyIndexerImpl(options.mainCacheConfig, options.tmpCacheConfig);
             };
         };
