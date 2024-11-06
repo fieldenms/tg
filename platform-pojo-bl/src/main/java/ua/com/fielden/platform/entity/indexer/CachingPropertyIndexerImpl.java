@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.indexer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.CacheConfig;
 import ua.com.fielden.platform.entity.exceptions.PropertyIndexerException;
 
 import java.lang.invoke.MethodHandle;

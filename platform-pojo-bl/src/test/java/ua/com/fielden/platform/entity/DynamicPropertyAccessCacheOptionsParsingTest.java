@@ -8,8 +8,8 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.CacheOptions.expireAfterAccess;
-import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.CacheOptions.expireAfterWrite;
+import static ua.com.fielden.platform.entity.indexer.CacheConfig.CacheOptions.expireAfterAccess;
+import static ua.com.fielden.platform.entity.indexer.CacheConfig.CacheOptions.expireAfterWrite;
 import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.Options.*;
 import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.Options.Caching.*;
 import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.options;
