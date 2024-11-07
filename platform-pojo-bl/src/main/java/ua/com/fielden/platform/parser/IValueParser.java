@@ -35,13 +35,11 @@ public interface IValueParser<I, O> extends Function<I, IValueParser.Result<O>> 
 
     static <I, O> IValueParser<Object, O> typeChecking(final Class<I> type, final IValueParser<I, O> parser) {
         return value -> {
-            final I typedValue;
-            try {
-                typedValue = checkType(value, type);
-            } catch (Exception e) {
-                return error(e);
+            final var either = checkType(value, type);
+            if (either.isRight()) {
+                return parser.apply(either.asRight().value());
             }
-            return parser.apply(typedValue);
+            return error(either.asLeft().value());
         };
     }
 
