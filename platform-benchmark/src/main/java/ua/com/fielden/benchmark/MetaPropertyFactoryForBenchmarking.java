@@ -1,4 +1,4 @@
-package ua.com.fielden.deserialisation;
+package ua.com.fielden.benchmark;
 
 import com.google.inject.Inject;
 import jakarta.inject.Singleton;

@@ -1,4 +1,4 @@
-package ua.com.fielden.deserialisation;
+package ua.com.fielden.benchmark;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;

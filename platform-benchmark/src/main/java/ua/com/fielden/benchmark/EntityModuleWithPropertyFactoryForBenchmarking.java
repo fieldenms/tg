@@ -1,4 +1,4 @@
-package ua.com.fielden.deserialisation;
+package ua.com.fielden.benchmark;
 
 import com.google.inject.name.Names;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -8,6 +8,8 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
+import java.util.Properties;
+
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityIocModule}, this module binds {@link IMetaPropertyFactory}.
  * <p>
@@ -15,9 +17,13 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  * 
  * @author TG Team
  */
-class EntityModuleWithPropertyFactoryForBenchmarking extends EntityIocModule {
+public class EntityModuleWithPropertyFactoryForBenchmarking extends EntityIocModule {
 
     public EntityModuleWithPropertyFactoryForBenchmarking() {}
+
+    public EntityModuleWithPropertyFactoryForBenchmarking(final Properties properties) {
+        super(properties);
+    }
 
     /**
      * 

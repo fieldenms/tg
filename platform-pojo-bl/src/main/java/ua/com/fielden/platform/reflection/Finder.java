@@ -16,6 +16,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -23,6 +24,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -226,6 +228,11 @@ public class Finder {
         return getFieldsAnnotatedWith(entityType, true, IsProperty.class, annotations);
     }
 
+    public static Stream<Field> streamDeclaredProperties(final Class<?> entityType) {
+        return streamDeclaredFields(entityType)
+                .filter(field -> AnnotationReflector.isAnnotationPresent(field, IsProperty.class));
+    }
+
     /**
      * Returns "real" properties (fields annotated with {@link IsProperty}) for <code>entityType</code> that are also annotated with specified <code>annotations</code> (if any).
      * Refer issue <a href='https://github.com/fieldenms/tg/issues/1729'>#1729</a> for more details.
@@ -260,11 +267,6 @@ public class Finder {
         return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations)
                .filter(f -> (hasDesc          && !isUnion || !DESC.equals(f.getName()))  // if not hasDesc     or isUnion then exclude DESC
                          && (!hasCompositeKey && !isUnion || !KEY.equals(f.getName()))); // if hasCompositeKey or isUnion then exclude KEY
-    }
-
-    public static Stream<Field> streamDeclaredProperties(final Class<?> entityType) {
-        return streamDeclaredFields(entityType)
-                .filter(field -> AnnotationReflector.isAnnotationPresent(field, IsProperty.class));
     }
 
     /**
@@ -509,46 +511,43 @@ public class Finder {
 
     /**
      * Searches through the owner type hierarchy for all fields of the type assignable to the provided field type.
+     * This method excludes static fields.
      *
      * @param ownerType
      * @param fieldType
      * @return list of found fields, which can be empty
      */
-    public static List<Field> getFieldsOfSpecifiedType(final Class<?> ownerType, final Class<?> fieldType) {
-        return getFieldsOfSpecifiedTypes(ownerType, Arrays.<Class<?>> asList(fieldType));
+    public static SequencedSet<Field> getFieldsOfSpecifiedType(final Class<?> ownerType, final Class<?> fieldType) {
+        return getFieldsOfSpecifiedTypes(ownerType, CollectionUtil.linkedSetOf(fieldType));
     }
 
     /**
-     * Searches through the owner type hierarchy for all fields of the type assignable to the provided field type.
+     * Searches through the owner type hierarchy for all fields of the type assignable to one of the provided field types.
+     * This method excludes static fields.
      *
      * @param ownerType
      * @param fieldTypes
      * @return list of found fields, which can be empty
      */
-    public static List<Field> getFieldsOfSpecifiedTypes(final Class<?> ownerType, final List<Class<?>> fieldTypes) {
+    public static SequencedSet<Field> getFieldsOfSpecifiedTypes(final Class<?> ownerType, final SequencedSet<Class<?>> fieldTypes) {
         if (fieldTypes == null || fieldTypes.isEmpty()) {
             throw new IllegalArgumentException("The list of types should be non-empty.");
         }
-        final List<Field> fields = new ArrayList<>();
-        for (Class<?> klass = ownerType; klass != Object.class; klass = klass.getSuperclass()) {
-            // need to iterated thought hierarchy in order to retrieve fields from above the current instance
-            // iterate though the list of fields declared in the class represented by klass variable, and add those of the specified field type
-            final Field[] currFields = klass.getDeclaredFields();
-            for (final Field field : currFields) {
-                if (isAssignableFrom(field.getType(), fieldTypes)) {
-                    fields.add(field);
-                }
-            }
+        final SequencedSet<Field> fields = new LinkedHashSet<>();
+        // Need to iterated thought the type hierarchy to process all declared fields.
+        for (Class<?> type = ownerType; type != Object.class; type = type.getSuperclass()) {
+            // Iterate though the list of fields declared in the class represented by type variable, and add those of the specified field type
+            Arrays.stream(type.getDeclaredFields()).filter(field -> !Modifier.isStatic(field.getModifiers()) && isAssignableFrom(field.getType(), fieldTypes)).forEach(fields::add);
         }
         return fields;
     }
 
-    public static boolean isAssignableFrom(final Class<?> askedType, final List<Class<?>> fieldTypes) {
+    public static boolean isAssignableFrom(final Class<?> askedType, final SequencedSet<Class<?>> fieldTypes) {
         if (fieldTypes == null || fieldTypes.isEmpty()) {
             throw new IllegalArgumentException("The list of types should be non-empty.");
         }
-        for (final Class<?> t : fieldTypes) {
-            if (t.isAssignableFrom(askedType)) {
+        for (final Class<?> fType : fieldTypes) {
+            if (fType.isAssignableFrom(askedType)) {
                 return true;
             }
         }
@@ -804,6 +803,11 @@ public class Finder {
 
     // ========================================================================================================
     /////////////////////////////// Miscellaneous utilities ///////////////////////////////////////////////////
+
+    public static Stream<Class<? extends AbstractEntity<?>>> streamUnionMembers(final Class<? extends AbstractUnionEntity> unionEntityType) {
+        return unionProperties(unionEntityType).stream()
+                .map(field -> (Class<AbstractEntity<?>>) field.getType());
+    }
 
     /**
      * Returns a set of properties that are present in all of the types passed into the method.

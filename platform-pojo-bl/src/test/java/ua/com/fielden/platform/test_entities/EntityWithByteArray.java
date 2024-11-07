@@ -1,7 +1,8 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.test_entities;
 
 import java.util.Arrays;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;

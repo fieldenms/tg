@@ -1,4 +1,6 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.exceptions;
+
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
 
 /**
  * Runtime exception that should be thrown from within {@link AbstractFunctionalEntityForCollectionModificationProducer} implementation (and also in other logic pertaining collection
