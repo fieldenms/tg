@@ -9,10 +9,7 @@ import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.NoAuthorisation;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
-import ua.com.fielden.platform.test_entities.Entity;
-import ua.com.fielden.platform.test_entities.EntityExt;
-import ua.com.fielden.platform.test_entities.EntityWithOverridenSetter;
-import ua.com.fielden.platform.test_entities.OpenEntityMasterAction;
+import ua.com.fielden.platform.test_entities.*;
 
 import java.util.Properties;
 
@@ -242,8 +239,18 @@ public class DynamicPropertyAccessTest {
     }
 
     @Test
-    public void property_key_overriden_in_an_abstract_type_can_be_accessed() {
-        // AbstractFunctionalEntityToOpenCompoundMaster.key
+    public void redefined_property_key_can_be_accessed() {
+        // EntityWithRedefinedKey has property "key" redefined
+        final var entity = factory.newEntity(EntityWithRedefinedKey.class);
+        assertNull(entity.get("key"));
+        entity.set("key", "New Value");
+        assertEquals("New Value", entity.get("key"));
+        assertEquals("New Value", entity.getKey());
+    }
+
+    @Test
+    public void redefined_property_key_in_an_abstract_base_type_can_be_accessed() {
+        // AbstractFunctionalEntityToOpenCompoundMaster has property "key" redefined
         final var entity = factory.newEntity(OpenEntityMasterAction.class);
         assertNull(entity.get("key"));
         final var user = factory.newEntity(Entity.class);
@@ -253,11 +260,30 @@ public class DynamicPropertyAccessTest {
     }
 
     @Test
-    public void if_a_property_has_an_overriden_setter_then_it_is_invoked() {
+    public void if_a_property_has_an_overridden_setter_then_it_is_invoked() {
         final var entity = factory.newEntity(EntityWithOverridenSetter.class);
         assertEquals(0, entity.getWitness());
         entity.set("active", true);
         assertEquals(1, entity.getWitness());
+    }
+
+    @Test
+    public void getters_are_not_invoked_when_accessing_property_dynamically() {
+        final var entity = factory.newEntity(EntityWithRedefinedKey.class);
+        assertNull(entity.get("key"));
+        assertEquals("Dynamic property access does not invoke a getter.", 0, entity.getGetterWitness());
+        assertNull(entity.getKey());
+        assertEquals(1, entity.getGetterWitness());
+    }
+
+    @Test
+    public void setters_are_invoked_when_mutating_property_dynamically() {
+        final var entity = factory.newEntity(EntityWithRedefinedKey.class);
+        assertEquals(0, entity.getSetterWitness());
+        entity.set("key", "New Value");
+        assertEquals("Dynamic property setting invokes a setter.", 1, entity.getSetterWitness());
+        assertEquals("New Value", entity.get("key"));
+        assertEquals("New Value", entity.getKey());
     }
 
 }
