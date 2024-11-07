@@ -28,11 +28,11 @@ public class DynamicPropertyAccessTest {
         props.setProperty("dynamicPropertyAccess.tempTypeCache.expireAfterWrite", "10m");
     }
 
-    private final Injector injector = new ApplicationInjectorFactory(Workflows.development)
+    private static final Injector injector = new ApplicationInjectorFactory(Workflows.development)
             .add(new CommonEntityTestIocModuleWithPropertyFactory(props))
             .add($ -> $.bind(IAuthorisationModel.class).to(NoAuthorisation.class))
             .getInjector();
-    private final EntityFactory factory = injector.getInstance(EntityFactory.class);
+    private static final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     @Test
     public void value_of_declared_property_can_be_accessed() {
