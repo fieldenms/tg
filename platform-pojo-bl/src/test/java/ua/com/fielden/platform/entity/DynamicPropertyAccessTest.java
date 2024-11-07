@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import com.google.inject.Injector;
 import org.junit.Test;
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.*;
@@ -9,13 +10,25 @@ import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.NoAuthorisation;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
+import java.util.Properties;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 public class DynamicPropertyAccessTest {
 
-    private final Injector injector = new ApplicationInjectorFactory()
-            .add(new CommonEntityTestIocModuleWithPropertyFactory())
+    private static final Properties props = new Properties();
+    static {
+        // Cache configuration for the dynamic property access
+        props.setProperty("dynamicPropertyAccess.caching", "enabled");
+        props.setProperty("dynamicPropertyAccess.typeCache.concurrencyLevel", "100");
+        props.setProperty("dynamicPropertyAccess.typeCache.expireAfterAccess", "12h");
+        props.setProperty("dynamicPropertyAccess.tempTypeCache.maxSize", "2048");
+        props.setProperty("dynamicPropertyAccess.tempTypeCache.expireAfterWrite", "10m");
+    }
+
+    private final Injector injector = new ApplicationInjectorFactory(Workflows.development)
+            .add(new CommonEntityTestIocModuleWithPropertyFactory(props))
             .add($ -> $.bind(IAuthorisationModel.class).to(NoAuthorisation.class))
             .getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
