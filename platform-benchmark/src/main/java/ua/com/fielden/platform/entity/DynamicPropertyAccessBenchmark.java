@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.openjdk.jmh.annotations.Threads.MAX;
-import static ua.com.fielden.platform.utils.MiscUtilities.makeProperties;
+import static ua.com.fielden.platform.utils.MiscUtilities.mkProperties;
 
 @Fork(value = 3, jvmArgsAppend = "-Djmh.stack.lines=3")
 @Warmup(iterations = 3)
@@ -21,7 +21,7 @@ import static ua.com.fielden.platform.utils.MiscUtilities.makeProperties;
 public class DynamicPropertyAccessBenchmark {
 
     private static final Injector injector = new ApplicationInjectorFactory()
-            .add(new EntityModuleWithPropertyFactoryForBenchmarking(makeProperties(Map.of("dynamicPropertyAccess.caching", "enabled"))))
+            .add(new EntityModuleWithPropertyFactoryForBenchmarking(mkProperties(Map.of("dynamicPropertyAccess.caching", "enabled"))))
             .getInjector();
     private static final EntityFactory factory = injector.getInstance(EntityFactory.class);
 

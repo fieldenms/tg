@@ -150,7 +150,7 @@ public class MiscUtilities {
     /**
      * Creates a {@link Properties} instance populated with entries from the given map.
      */
-    public static Properties makeProperties(final Map<String, String> map) {
+    public static Properties mkProperties(final Map<String, String> map) {
         final var properties = new Properties();
         properties.putAll(map);
         return properties;
