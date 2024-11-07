@@ -24,6 +24,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.test_entities.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test_entities.*;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
@@ -630,11 +631,11 @@ public class AbstractEntityTest {
         final CorrectEntityWithDynamicEntityKey compositeEntity = factory.newEntity(CorrectEntityWithDynamicEntityKey.class, 12L);
         assertNotNull("Composite should not be null.", compositeEntity.getKey());
 
-        final Long orig1 = compositeEntity.getProperty1();
-        final Long orig2 = compositeEntity.getProperty2();
+        final Integer orig1 = compositeEntity.getProperty1();
+        final Integer orig2 = compositeEntity.getProperty2();
 
-        compositeEntity.setProperty1(1L);
-        compositeEntity.setProperty2(2L);
+        compositeEntity.setProperty1(1);
+        compositeEntity.setProperty2(2);
 
         compositeEntity.restoreToOriginal();
         assertEquals("Could not restore to original.", orig1, compositeEntity.getProperty1());
@@ -713,36 +714,36 @@ public class AbstractEntityTest {
     @Test
     public void test_copy_for_entities_with_dynamic_key() {
         final CorrectEntityWithDynamicEntityKey one = factory.newEntity(CorrectEntityWithDynamicEntityKey.class, 1L);
-        one.property1 = 38L;
-        one.property2 = 98L;
+        one.setProperty1(38);
+        one.setProperty2(98);
         final DynamicEntityKey keyOne = new DynamicEntityKey(one);
         one.setKey(keyOne);
 
         Object[] values = one.getKey().getKeyValues();
         assertEquals("Incorrect number of values.", 2, values.length);
-        assertEquals("Incorrect value for the first key property.", 38L, values[0]);
-        assertEquals("Incorrect value for the second key property.", 98L, values[1]);
-        assertEquals("Incorrect value for the first key property.", (Long) 38L, one.getProperty1());
-        assertEquals("Incorrect value for the second key property.", (Long) 98L, one.getProperty2());
+        assertEquals("Incorrect value for the first key property.", 38, values[0]);
+        assertEquals("Incorrect value for the second key property.", 98, values[1]);
+        assertEquals("Incorrect value for the first key property.", Integer.valueOf(38), one.getProperty1());
+        assertEquals("Incorrect value for the second key property.", Integer.valueOf(98), one.getProperty2());
 
         final CorrectEntityWithDynamicEntityKey copy = one.copy(CorrectEntityWithDynamicEntityKey.class);
 
         values = copy.getKey().getKeyValues();
         assertEquals("Incorrect number of values.", 2, values.length);
-        assertEquals("Incorrect value for the first key property.", 38L, values[0]);
-        assertEquals("Incorrect value for the second key property.", 98L, values[1]);
-        assertEquals("Incorrect value for the first key property.", (Long) 38L, copy.getProperty1());
-        assertEquals("Incorrect value for the second key property.", (Long) 98L, copy.getProperty2());
+        assertEquals("Incorrect value for the first key property.", 38, values[0]);
+        assertEquals("Incorrect value for the second key property.", 98, values[1]);
+        assertEquals("Incorrect value for the first key property.", Integer.valueOf(38), copy.getProperty1());
+        assertEquals("Incorrect value for the second key property.", Integer.valueOf(98), copy.getProperty2());
 
-        copy.setProperty1(40L);
-        copy.setProperty2(100L);
+        copy.setProperty1(40);
+        copy.setProperty2(100);
 
         values = copy.getKey().getKeyValues();
         assertEquals("Incorrect number of values.", 2, values.length);
-        assertEquals("Incorrect value for the first key property.", 40L, values[0]);
-        assertEquals("Incorrect value for the second key property.", 100L, values[1]);
-        assertEquals("Incorrect value for the first key property.", (Long) 40L, copy.getProperty1());
-        assertEquals("Incorrect value for the second key property.", (Long) 100L, copy.getProperty2());
+        assertEquals("Incorrect value for the first key property.", 40, values[0]);
+        assertEquals("Incorrect value for the second key property.", 100, values[1]);
+        assertEquals("Incorrect value for the first key property.", Integer.valueOf(40), copy.getProperty1());
+        assertEquals("Incorrect value for the second key property.", Integer.valueOf(100), copy.getProperty2());
     }
 
     @Test

@@ -9,6 +9,10 @@ import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.NoAuthorisation;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test_entities.Entity;
+import ua.com.fielden.platform.test_entities.EntityExt;
+import ua.com.fielden.platform.test_entities.EntityWithOverridenSetter;
+import ua.com.fielden.platform.test_entities.OpenEntityMasterAction;
 
 import java.util.Properties;
 

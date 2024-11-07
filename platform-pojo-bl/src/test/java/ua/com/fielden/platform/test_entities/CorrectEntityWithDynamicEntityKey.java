@@ -1,8 +1,10 @@
 /**
  *
  */
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.test_entities;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -14,26 +16,27 @@ public class CorrectEntityWithDynamicEntityKey extends AbstractEntity<DynamicEnt
 
     @IsProperty
     @CompositeKeyMember(1)
-    protected Long property1;
+    protected Integer property1;
+
     @IsProperty
     @CompositeKeyMember(2)
-    protected Long property2;
+    protected Integer property2;
 
-    public Long getProperty1() {
+    public Integer getProperty1() {
         return property1;
     }
 
     @Observable
-    public void setProperty1(final Long property1) {
+    public void setProperty1(final Integer property1) {
         this.property1 = property1;
     }
 
-    public Long getProperty2() {
+    public Integer getProperty2() {
         return property2;
     }
 
     @Observable
-    public void setProperty2(final Long property2) {
+    public void setProperty2(final Integer property2) {
         this.property2 = property2;
     }
 }

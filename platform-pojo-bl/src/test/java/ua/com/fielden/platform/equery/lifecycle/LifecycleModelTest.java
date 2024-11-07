@@ -10,7 +10,7 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.equery.lifecycle.IProperty.ITimeProperty;
 import ua.com.fielden.platform.equery.lifecycle.IProperty.IValueProperty;
