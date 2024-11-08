@@ -22,6 +22,8 @@ import javax.tools.Diagnostic.Kind;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.Optional.of;
+
 /**
  * Performs verification of a domain model with respect to the {@link KeyType} annotation.
  * <p>
@@ -64,8 +66,8 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
      */
     static class KeyTypePresence extends AbstractEntityVerifier {
 
-        static final String ENTITY_DEFINITION_IS_MISSING_KEY_TYPE = "Entity definition is missing @%s.".formatted(
-                AT_KEY_TYPE_CLASS.getSimpleName());
+        static final String ERR_ENTITY_DEFINITION_IS_MISSING_KEY_TYPE = "Entity definition is missing @%s.".formatted(AT_KEY_TYPE_CLASS.getSimpleName());
+        static final String ERR_KEY_TYPE_DEFINITION_REFERENCES_UNION_ENTITY = "Union entity types are not supported for @%s.".formatted(AT_KEY_TYPE_CLASS.getSimpleName());
 
         protected KeyTypePresence(ProcessingEnvironment processingEnv) {
             super(processingEnv);
@@ -76,7 +78,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             return roundEnv.findViolatingElements(new EntityVerifier(entityFinder));
         }
 
-        private class EntityVerifier extends AbstractEntityElementVerifier {
+        private static class EntityVerifier extends AbstractEntityElementVerifier {
 
             public EntityVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
@@ -84,9 +86,26 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
             @Override
             public Optional<ViolatingElement> verify(final EntityElement entity) {
+                // Concrete entity types must have @KeyType
                 if (!ElementFinder.isAbstract(entity) && entityFinder.findAnnotation(entity, AT_KEY_TYPE_CLASS).isEmpty()) {
-                    return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, ENTITY_DEFINITION_IS_MISSING_KEY_TYPE));
+                    return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, ERR_ENTITY_DEFINITION_IS_MISSING_KEY_TYPE));
                 }
+
+                // If @KeyType is present, then we need to verify that it is not of a Union Entity type.
+                final Optional<TypeMirror> maybeKeyType = entityFinder.determineKeyType(entity);
+                if (maybeKeyType.isEmpty()) {
+                    return Optional.empty();
+                }
+                final TypeMirror keyType = maybeKeyType.get();
+                if (keyType.getKind() == TypeKind.ERROR) {
+                    return Optional.empty();
+                }
+
+                // If the declared key type is of a Union Entity type, then report an error.
+                if (entityFinder.isUnionEntityType(keyType)) {
+                    return of(new ViolatingElement(entity.element(), Kind.ERROR, ERR_KEY_TYPE_DEFINITION_REFERENCES_UNION_ENTITY));
+                }
+
                 return Optional.empty();
             }
         }
@@ -283,6 +302,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 if (keyType.getKind() == TypeKind.ERROR) {
                     return Optional.empty();
                 }
+
                 // keyProp might have an unresolved type but we still let this verifier run because declaration of property
                 // key along with @KeyType(NoKey.class) is incorrect regardless of its type
                 if (elementFinder.isSameType(keyType, NoKey.class)) {

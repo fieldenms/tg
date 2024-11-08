@@ -1,22 +1,21 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
 import com.squareup.javapoet.*;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
 import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
-import ua.com.fielden.platform.processors.utils.CodeGenerationUtils;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
@@ -544,7 +543,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         public void simple_key_typed_with_a_union_entity_is_disallowed() {
             final var entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
-                    .addField(propertyBuilder(Union.class, "key").build())
+                    .addField(propertyBuilder(UnionEntity.class, "key").build())
                     .build();
 
             compileAndAssertErrors(List.of(entity),
@@ -556,7 +555,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         public void key_member_typed_with_a_union_entity_is_disallowed() {
             final var entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
-                    .addField(propertyBuilder(Union.class, "prop")
+                    .addField(propertyBuilder(UnionEntity.class, "prop")
                             .addAnnotation(buildAtCompositeKeyMember(1))
                             .build())
                     .build();
@@ -566,7 +565,6 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     errUnionEntityTypedKeyMember("prop"));
         }
 
-        public static class Union extends AbstractUnionEntity {}
     }
 
 }
