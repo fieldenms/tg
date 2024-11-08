@@ -27,6 +27,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 
@@ -97,7 +98,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 if (hasErrorType(property)) {
-                    return Optional.empty();
+                    return empty();
                 }
 
                 // accessor must be declared
@@ -127,7 +128,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                     }
                 }
 
-                return Optional.empty();
+                return empty();
             }
         }
 
@@ -173,35 +174,35 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 if (hasErrorType(property)) {
-                    return Optional.empty();
+                    return empty();
                 }
 
                 // setter should be declared
                 final Optional<ExecutableElement> maybeSetter = entityFinder.findDeclaredPropertySetter(entity, getSimpleName(property.element()));
                 if (maybeSetter.isEmpty()) {
-                    return Optional.of(new ViolatingElement(
+                    return of(new ViolatingElement(
                             property.element(), Kind.ERROR, errMissingSetter(getSimpleName(property.element()))));
                 }
 
                 final ExecutableElement setter = maybeSetter.get();
                 // should be annotated with @Observable
                 if (setter.getAnnotation(AT_OBSERVABLE_CLASS) == null) {
-                    return Optional.of(new ViolatingElement(setter, Kind.ERROR, errMissingObservable(getSimpleName(setter))));
+                    return of(new ViolatingElement(setter, Kind.ERROR, errMissingObservable(getSimpleName(setter))));
                 }
 
                 // should be public or protected
                 if (!ElementFinder.isPublic(setter) && !ElementFinder.isProtected(setter)) {
-                    return Optional.of(new ViolatingElement(setter, Kind.ERROR, errNotPublicNorProtected(getSimpleName(setter))));
+                    return of(new ViolatingElement(setter, Kind.ERROR, errNotPublicNorProtected(getSimpleName(setter))));
                 }
 
                 // should accept single argument of the property type
                 final List<? extends VariableElement> params =  setter.getParameters();
                 if (params.size() != 1 || !elementFinder.types.isSameType(params.get(0).asType(), property.getType())) {
-                    return Optional.of(new ViolatingElement(
+                    return of(new ViolatingElement(
                             setter, Kind.ERROR, errIncorrectParameters(getSimpleName(setter), property.getType().toString())));
                 }
 
-                return Optional.empty();
+                return empty();
             }
         }
     }
@@ -231,16 +232,16 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 if (hasErrorType(property)) {
-                    return Optional.empty();
+                    return empty();
                 }
                 if (!entityFinder.isCollectionalProperty(property)) {
-                    return Optional.empty();
+                    return empty();
                 }
                 if (!EntityFinder.isFinal(property.element())) {
-                    return Optional.of(new ViolatingElement(
+                    return of(new ViolatingElement(
                             property.element(), Kind.ERROR, errMustBeFinal(getSimpleName(property.element()))));
                 }
-                return Optional.empty();
+                return empty();
             }
         }
     }
@@ -324,31 +325,31 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 if (hasErrorType(property)) {
-                    return Optional.empty();
+                    return empty();
                 }
 
                 final TypeMirror propType = property.getType();
 
                 // 1. ordinary type
-                if (isAnyOf(propType, ORDINARY_TYPES)) return Optional.empty();
+                if (isAnyOf(propType, ORDINARY_TYPES)) return empty();
                 // 2. platform type
-                if (isAnyOf(propType, PLATFORM_TYPES)) return Optional.empty();
+                if (isAnyOf(propType, PLATFORM_TYPES)) return empty();
                 // 5. binary type
-                if (isAnyOf(propType, BINARY_TYPES)) return Optional.empty();
+                if (isAnyOf(propType, BINARY_TYPES)) return empty();
                 // 6. special case of collection-like types
-                if (isSpecialCollectionType(propType)) return Optional.empty();
+                if (isSpecialCollectionType(propType)) return empty();
                 // 3.2
-                if (isAnyOf(propType, SPECIAL_ENTITY_TYPES)) return Optional.empty();
+                if (isAnyOf(propType, SPECIAL_ENTITY_TYPES)) return empty();
                 // 3.3
-                if (isAnyOf(propType, PLATFORM_ENTITY_TYPES)) return Optional.empty();
+                if (isAnyOf(propType, PLATFORM_ENTITY_TYPES)) return empty();
 
                 if (entityFinder.isEntityType(propType)) {
                     final EntityElement propTypeEntityElt = entityFinder.newEntityElement(asTypeElementOfTypeMirror(propType));
                     // 3.1 all entity types, except some special ones, used as property types must be registered
                     if (propTypeEntityElt.isAbstract() || isEntityTypeRegistered(propTypeEntityElt)) {
-                        return Optional.empty();
+                        return empty();
                     } else {
-                        return Optional.of(new ViolatingElement(
+                        return of(new ViolatingElement(
                                 property.element(), Kind.ERROR,
                                 errEntityTypeMustBeRegistered(getSimpleName(property.element()), getSimpleName(propTypeEntityElt))));
                     }
@@ -366,28 +367,28 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                                 || isAnyOf(typeArg, PLATFORM_TYPES)
                                 || isAnyOf(typeArg, PLATFORM_ENTITY_TYPES)
                                 || isAnyOf(typeArg, SPECIAL_ENTITY_TYPES)) {
-                            return Optional.empty();
+                            return empty();
                         }
 
                         if (entityFinder.isEntityType(typeArg)) {
                             final EntityElement entityTypeElt = entityFinder.newEntityElement(asTypeElementOfTypeMirror(typeArg));
                             if (entityTypeElt.isAbstract() || isEntityTypeRegistered(entityTypeElt)) {
-                                return Optional.empty();
+                                return empty();
                             } else {
-                                return Optional.of(new ViolatingElement(
+                                return of(new ViolatingElement(
                                         property.element(), Kind.ERROR,
                                         errEntityTypeArgMustBeRegistered(getSimpleName(property.element()), getSimpleName(typeArg))));
                             }
                         }
                         // all valid type arguments were exhausted
-                        return Optional.of(new ViolatingElement(
+                        return of(new ViolatingElement(
                                 property.element(), Kind.ERROR, errInvalidCollectionTypeArg(getSimpleName(property.element()))));
                     }
-                    return Optional.empty(); // TODO process raw collection types
+                    return empty(); // TODO process raw collection types
                 }
 
                 // all supported types were exhausted
-                return Optional.of(new ViolatingElement(property.element(), Kind.ERROR, errUnsupportedType(getSimpleName(property.element()))));
+                return of(new ViolatingElement(property.element(), Kind.ERROR, errUnsupportedType(getSimpleName(property.element()))));
             }
 
             /**
@@ -415,11 +416,11 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             super(processingEnv);
         }
 
-        public static final String ERR_UNION_ENTITY_TYPED_SIMPLE_KEY =
-                "Union entity types are unsupported for property [key].";
+        public static final String ERR_UNION_ENTITY_TYPED_SIMPLE_KEY = "Union entity types are unsupported for property [key].";
+        public static final String ERR_UNSUPPORTED_TYPE_FOR_PROPERTY = "Unsupported type for property [%s]. Union entity types are unsupported for key members.";
 
         public static String errUnionEntityTypedKeyMember(final CharSequence propName) {
-            return "Unsuppored type for property [%s]. Union entity types are unsupported for key members.".formatted(propName);
+            return ERR_UNSUPPORTED_TYPE_FOR_PROPERTY.formatted(propName);
         }
 
         @Override
@@ -435,21 +436,19 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             @Override
             public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 if (hasErrorType(property)) {
-                    return Optional.empty();
+                    return empty();
                 }
 
                 if (entityFinder.isUnionEntityType(property.getType())) {
                     if (property.getSimpleName().contentEquals("key")) {
-                        return Optional.of(new ViolatingElement(
-                                property.element(), Kind.ERROR, ERR_UNION_ENTITY_TYPED_SIMPLE_KEY));
+                        return of(new ViolatingElement(property.element(), Kind.ERROR, ERR_UNION_ENTITY_TYPED_SIMPLE_KEY));
                     }
                     else if (hasAnnotation(property.element(), CompositeKeyMember.class)) {
-                        return Optional.of(new ViolatingElement(
-                                property.element(), Kind.ERROR, errUnionEntityTypedKeyMember(property.getSimpleName())));
+                        return of(new ViolatingElement(property.element(), Kind.ERROR, errUnionEntityTypedKeyMember(property.getSimpleName())));
                     }
                 }
 
-                return Optional.empty();
+                return empty();
             }
         }
     }
