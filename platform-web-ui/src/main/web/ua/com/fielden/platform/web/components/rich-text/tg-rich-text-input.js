@@ -1,6 +1,6 @@
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 
@@ -17,6 +17,8 @@ import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 
 import '/resources/components/rich-text/tg-rich-text-input-enhanced-styles.js';
+import '/resources/components/tg-link-dialog.js';
+import '/resources/components/tg-color-picker-dialog.js';
 import '/resources/images/tg-rich-text-editor-icons.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 
@@ -425,14 +427,6 @@ const template = html`
             --tg-responsove-toolbar-dropdown-content: {
                 padding: 8px 0 8px 8px;
             }
-        }
-        .toolbar-action {
-            flex-shrink: 0;
-            width: 18px;
-            height: 18px;
-            /*margin-right: 8px;*/
-            cursor: pointer;
-            color: var(--paper-input-container-color, var(--secondary-text-color));
         }
         .dropdown-content {
             background-color: white;

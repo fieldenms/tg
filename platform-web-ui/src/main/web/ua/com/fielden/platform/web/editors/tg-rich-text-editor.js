@@ -1,8 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
 import '/resources/components/rich-text/tg-rich-text-input.js';
-import '/resources/components/tg-link-dialog.js';
-import '/resources/components/tg-color-picker-dialog.js';
 
 import { html } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';

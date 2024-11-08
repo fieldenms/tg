@@ -10,7 +10,7 @@
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
         import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
-        import '/resources/components/tg-rich-text-input.js';
+        import '/resources/components/rich-text/tg-rich-text-input.js';
     </script>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
@@ -28,14 +28,30 @@
 <body unresolved class="fullbleed">
     <dom-bind>
         <template>
-            <tg-rich-text-input id="richTextInput"></tg-rich-text-input>
+            <tg-rich-text-input 
+                    id="richTextInput" 
+                    disabled="[[_disabled]]" 
+                    value="{{_editingValue}}"
+                    change-event-handler="[[_onChange]]"
+                    key-down-handler="[[_onKeydown]]" 
+                    on-focus="_onFocus"
+                    on-blur="_outFocus"
+                    tabindex="0"
+                    height="350px"
+                    min-height="16px"></tg-rich-text-input>
         </template>
     </dom-bind>
     <script>
         (function () {
             window.addEventListener('WebComponentsReady', function (e) {
                 const app = document.querySelector('dom-bind');
-                app.$.richTextInput.editor.setHTML("<h1>Hello world!</h1>", true);
+                app.disabled = false;
+                app._editingValue = "<h1>Hello world!</h1>";
+                app._onChange = (e) => {};
+                app._onKeydown = (e) => {};
+                app._onFocus = (e) => {};
+                app._outFocus = (e) => {};
+                app.$.richTextInput._editor.setHTML("<h1>Hello world!</h1>", true);
             });
         })();
     </script>
