@@ -64,7 +64,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void entity_can_ommit_KeyType_if_supertype_is_alredy_annotated() {
+        public void entity_can_omit_KeyType_if_supertype_is_already_annotated() {
             // build a supertype entity
             final TypeSpec superEntity = TypeSpec.classBuilder("EntityWithKeyType")
                     .addAnnotation(buildKeyType(String.class))
@@ -80,7 +80,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void abstract_entity_types_can_ommit_KeyType() {
+        public void abstract_entity_types_can_omit_KeyType() {
             // build an abstract entity
             final TypeSpec superEntity = TypeSpec.classBuilder("AbstractEntityWithoutKeyType")
                     .addModifiers(Modifier.ABSTRACT)

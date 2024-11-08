@@ -163,7 +163,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 }
                 // abstract entities accept a single type argument
                 else {
-                    final TypeMirror typeArg = parentTypeArgs.get(0);
+                    final TypeMirror typeArg = parentTypeArgs.getFirst();
                     if (typeArg.getKind() == TypeKind.ERROR) {
                         return Optional.empty();
                     }
