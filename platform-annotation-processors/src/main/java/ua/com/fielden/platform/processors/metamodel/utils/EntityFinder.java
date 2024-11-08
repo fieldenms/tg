@@ -400,7 +400,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public TypeMirror getKeyType(final KeyType atKeyType) {
-        return getAnnotationElementValueOfClassType(atKeyType, a -> a.value());
+        return getAnnotationElementValueOfClassType(atKeyType, KeyType::value);
     }
 
     /**

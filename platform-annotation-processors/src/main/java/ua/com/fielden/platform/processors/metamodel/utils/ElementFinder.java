@@ -417,6 +417,10 @@ public class ElementFinder {
                 .collect(toList());
     }
 
+    public static boolean hasAnnotation(final AnnotatedConstruct element, final Class<? extends Annotation> annotType) {
+        return element.getAnnotation(annotType) != null;
+    }
+
     public boolean hasAnyPresentAnnotation(final Element element, final Collection<? extends Class<? extends Annotation>> annotTypes) {
         return elements.getAllAnnotationMirrors(element).stream()
                 .anyMatch(am -> annotTypes.stream().anyMatch(at -> isSameType(am.getAnnotationType(), at)));
