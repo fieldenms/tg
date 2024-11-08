@@ -1,20 +1,20 @@
 package ua.com.fielden.platform.entity;
 
 import org.junit.Test;
-import ua.com.fielden.platform.parser.ValueParsingException;
+import ua.com.fielden.platform.parser.exceptions.ValueParsingException;
 
 import java.time.Duration;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static ua.com.fielden.platform.entity.DynamicPropertyAccessModule.CacheOptions.expireAfterAccess;
-import static ua.com.fielden.platform.entity.DynamicPropertyAccessModule.CacheOptions.expireAfterWrite;
-import static ua.com.fielden.platform.entity.DynamicPropertyAccessModule.Options.*;
-import static ua.com.fielden.platform.entity.DynamicPropertyAccessModule.Options.Caching.*;
-import static ua.com.fielden.platform.entity.DynamicPropertyAccessModule.options;
+import static ua.com.fielden.platform.entity.indexer.CacheConfig.CacheOptions.expireAfterAccess;
+import static ua.com.fielden.platform.entity.indexer.CacheConfig.CacheOptions.expireAfterWrite;
+import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.Options.*;
+import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.Options.Caching.*;
+import static ua.com.fielden.platform.ioc.DynamicPropertyAccessIocModule.options;
 
-public class DynamicPropertyAccessModuleTest {
+public class DynamicPropertyAccessCacheOptionsParsingTest {
 
     @Test
     public void caching_option_is_parsed_correctly() {

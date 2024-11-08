@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.test_entities.Entity;
 
 public class PojoValueMatcherTest {
 

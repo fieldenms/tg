@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
@@ -19,7 +20,8 @@ import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyType
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.ChildKeyTypeMatchesParentKeyType.keyTypeMustMatchTheSupertypesKeyType;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.DeclaredKeyPropertyTypeMatchesAtKeyTypeValue.ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.DeclaredKeyPropertyTypeMatchesAtKeyTypeValue.KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypePresence.ENTITY_DEFINITION_IS_MISSING_KEY_TYPE;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypePresence.ERR_ENTITY_DEFINITION_IS_MISSING_KEY_TYPE;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypePresence.ERR_KEY_TYPE_DEFINITION_REFERENCES_UNION_ENTITY;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE;
 
@@ -60,11 +62,24 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
 
             compileAndAssertErrors(List.of(entity),
                     errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), entity.name),
-                    ENTITY_DEFINITION_IS_MISSING_KEY_TYPE);
+                    ERR_ENTITY_DEFINITION_IS_MISSING_KEY_TYPE);
         }
 
         @Test
-        public void entity_can_ommit_KeyType_if_supertype_is_alredy_annotated() {
+        public void KeyType_cannot_be_parameterised_with_a_union_entity_type() {
+            // build an entity
+            final TypeSpec entity = TypeSpec.classBuilder("EntityWithUnionKey")
+                    .addAnnotation(buildKeyType(UnionEntity.class))
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .build();
+
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), entity.name),
+                    ERR_KEY_TYPE_DEFINITION_REFERENCES_UNION_ENTITY);
+        }
+
+        @Test
+        public void entity_can_omit_KeyType_if_supertype_is_already_annotated() {
             // build a supertype entity
             final TypeSpec superEntity = TypeSpec.classBuilder("EntityWithKeyType")
                     .addAnnotation(buildKeyType(String.class))
@@ -80,7 +95,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void abstract_entity_types_can_ommit_KeyType() {
+        public void abstract_entity_types_can_omit_KeyType() {
             // build an abstract entity
             final TypeSpec superEntity = TypeSpec.classBuilder("AbstractEntityWithoutKeyType")
                     .addModifiers(Modifier.ABSTRACT)

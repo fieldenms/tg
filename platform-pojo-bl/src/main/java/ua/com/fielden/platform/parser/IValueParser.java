@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.parser;
 
 import com.google.common.collect.Iterables;
+import ua.com.fielden.platform.parser.exceptions.ValueParsingException;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -11,8 +12,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
-import static ua.com.fielden.platform.parser.ValueParser.Result.error;
-import static ua.com.fielden.platform.parser.ValueParser.Result.ok;
+import static ua.com.fielden.platform.parser.IValueParser.Result.error;
+import static ua.com.fielden.platform.parser.IValueParser.Result.ok;
 import static ua.com.fielden.platform.utils.MiscUtilities.checkType;
 
 /**
@@ -23,28 +24,26 @@ import static ua.com.fielden.platform.utils.MiscUtilities.checkType;
  * @param <I>  parser input
  * @param <O>  parser output
  */
-public interface ValueParser<I, O> extends Function<I, ValueParser.Result<O>> {
+public interface IValueParser<I, O> extends Function<I, IValueParser.Result<O>> {
 
     /**
      * If this parser succeeds, feeds its output to the given parser.
      */
-    default <U> ValueParser<I, U> and(final ValueParser<O, U> parser) {
+    default <U> IValueParser<I, U> and(final IValueParser<O, U> parser) {
         return value -> this.apply(value).flatMap(parser);
     }
 
-    static <I, O> ValueParser<Object, O> typeChecking(final Class<I> type, final ValueParser<I, O> parser) {
+    static <I, O> IValueParser<Object, O> typeChecking(final Class<I> type, final IValueParser<I, O> parser) {
         return value -> {
-            final I typedValue;
-            try {
-                typedValue = checkType(value, type);
-            } catch (Exception e) {
-                return error(e);
+            final var either = checkType(value, type);
+            if (either.isRight()) {
+                return parser.apply(either.asRight().value());
             }
-            return parser.apply(typedValue);
+            return error(either.asLeft().value());
         };
     }
 
-    static ValueParser<Object, Integer> intParser() {
+    static IValueParser<Object, Integer> intParser() {
         return value -> {
             final int i;
             try {
@@ -56,7 +55,7 @@ public interface ValueParser<I, O> extends Function<I, ValueParser.Result<O>> {
         };
     }
 
-    static ValueParser<Object, Long> longParser() {
+    static IValueParser<Object, Long> longParser() {
         return value -> {
             final long l;
             try {
@@ -71,7 +70,7 @@ public interface ValueParser<I, O> extends Function<I, ValueParser.Result<O>> {
     /**
      * Parses an enum constant. The name must strictly match (by {@link String#equals(Object)}).
      */
-    static <E extends Enum<E>> ValueParser<Object, E> enumParser(final Class<E> enumType) {
+    static <E extends Enum<E>> IValueParser<Object, E> enumParser(final Class<E> enumType) {
         return value -> {
             requireNonNull(value);
             if (enumType.isInstance(value)) {
@@ -88,7 +87,7 @@ public interface ValueParser<I, O> extends Function<I, ValueParser.Result<O>> {
     /**
      * Parses one of the given enum constants ignoring case.
      */
-    static <E extends Enum<E>> ValueParser<Object, E> enumIgnoreCaseParser(final E[] enumValues) {
+    static <E extends Enum<E>> IValueParser<Object, E> enumIgnoreCaseParser(final E[] enumValues) {
         return oneOfParser(Arrays.asList(enumValues),
                            (e, value) -> e.name().equalsIgnoreCase(value.toString()));
     }
@@ -96,7 +95,7 @@ public interface ValueParser<I, O> extends Function<I, ValueParser.Result<O>> {
     /**
      * Parses the first item that satisfies a predicate.
      */
-    static <O> ValueParser<Object, O> oneOfParser(final Iterable<O> items, final BiPredicate<? super O, Object> test) {
+    static <O> IValueParser<Object, O> oneOfParser(final Iterable<O> items, final BiPredicate<? super O, Object> test) {
         return value -> {
             requireNonNull(value);
             return Iterables.tryFind(items, item -> test.test(item, value))
@@ -106,9 +105,9 @@ public interface ValueParser<I, O> extends Function<I, ValueParser.Result<O>> {
     }
 
     /**
-     * Parses the named property, fails if it's absent.
+     * Parses the named property, fails if it is absent.
      */
-    static <O> ValueParser<Properties, O> propertyParser(final String property, final ValueParser<Object, O> parser) {
+    static <O> IValueParser<Properties, O> propertyParser(final String property, final IValueParser<Object, O> parser) {
         return properties -> {
             final var value = properties.getProperty(property);
             return value == null
@@ -120,7 +119,7 @@ public interface ValueParser<I, O> extends Function<I, ValueParser.Result<O>> {
     /**
      * Parses the named property if it's present, otherwise the result is an empty optional.
      */
-    static <O> ValueParser<Properties, Optional<O>> optPropertyParser(final String property, final ValueParser<Object, O> parser) {
+    static <O> IValueParser<Properties, Optional<O>> optPropertyParser(final String property, final IValueParser<Object, O> parser) {
         return properties -> {
             final var value = properties.getProperty(property);
             return value == null
@@ -131,10 +130,13 @@ public interface ValueParser<I, O> extends Function<I, ValueParser.Result<O>> {
     }
 
     /**
-     * Equivalent to {@link #propertyParser(String, ValueParser)} but returns a default value instead of failing.
+     * Equivalent to {@link #propertyParser(String, IValueParser)} but returns a default value instead of failing.
      */
-    static <O> ValueParser<Properties, O> propertyParser(final String property, final ValueParser<Object, O> parser,
-                                                         final O defaultValue) {
+    static <O> IValueParser<Properties, O> propertyParser(
+            final String property,
+            final IValueParser<Object, O> parser,
+            final O defaultValue)
+    {
         return properties -> {
             final var value = properties.getProperty(property);
             return value == null
@@ -144,10 +146,13 @@ public interface ValueParser<I, O> extends Function<I, ValueParser.Result<O>> {
     }
 
     /**
-     * Equivalent to {@link #propertyParser(String, ValueParser)} but returns a default value instead of failing.
+     * Equivalent to {@link #propertyParser(String, IValueParser)} but returns a default value instead of failing.
      */
-    static <O> ValueParser<Properties, O> propertyParser(final String property, final ValueParser<Object, O> parser,
-                                                         final Supplier<O> defaultValue) {
+    static <O> IValueParser<Properties, O> propertyParser(
+            final String property,
+            final IValueParser<Object, O> parser,
+            final Supplier<O> defaultValue)
+    {
         return properties -> {
             final var value = properties.getProperty(property);
             return value == null

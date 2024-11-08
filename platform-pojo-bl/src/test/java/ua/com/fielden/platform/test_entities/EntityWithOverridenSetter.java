@@ -1,5 +1,6 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.test_entities;
 
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 

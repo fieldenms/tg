@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.parser;
+package ua.com.fielden.platform.parser.exceptions;
 
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 

@@ -1,4 +1,6 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.test_entities;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.Collections;
 import java.util.HashMap;

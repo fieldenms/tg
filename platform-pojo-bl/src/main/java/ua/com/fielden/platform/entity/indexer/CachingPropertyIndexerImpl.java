@@ -1,11 +1,13 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.indexer;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import ua.com.fielden.platform.entity.DynamicPropertyAccessModule.CacheConfig;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.PropertyIndexerException;
 
 import java.lang.invoke.MethodHandle;
 import java.time.Duration;
+import java.util.concurrent.ExecutionException;
 
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMockNotFoundType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isProxied;
@@ -14,20 +16,20 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isProx
  * <h4> On weak keys
  * <p>
  * Cache of the type used in this class won't benefit from weak keys due to key values ({@link Class} instances) being
- * strongly referenced by cached values: through {@link MethodHandle} in {@link StandardIndex}
- * ({@link java.lang.invoke.DirectMethodHandle#member} -> {@link java.lang.invoke.MemberName#clazz}).
+ * strongly referenced by cached values: through {@link MethodHandle} in {@link StandardPropertyIndex}
+ * ({@code java.lang.invoke.DirectMethodHandle#member} -> {@code java.lang.invoke.MemberName#clazz}).
  * <p>
  * Therefore, a time-based eviction strategy is required.
  */
-final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
+public final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
 
     /** Cache for lasting types (canonical entity types, generated entity types for centres, ...). */
-    private final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> mainTypeCache;
+    private final Cache<Class<? extends AbstractEntity<?>>, StandardPropertyIndex> mainTypeCache;
 
     /** Cache for temporary types (generated for a temporary purpose). */
-    private final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> tmpTypeCache;
+    private final Cache<Class<? extends AbstractEntity<?>>, StandardPropertyIndex> tmpTypeCache;
 
-    CachingPropertyIndexerImpl(final CacheConfig mainTypeCacheConf, final CacheConfig tmpTypeCacheConf) {
+    public CachingPropertyIndexerImpl(final CacheConfig mainTypeCacheConf, final CacheConfig tmpTypeCacheConf) {
         this.mainTypeCache = buildCache(CacheConfig.rightMerge(defaultMainTypeCacheConfig(), mainTypeCacheConf));
         this.tmpTypeCache = buildCache(CacheConfig.rightMerge(defaultTmpTypeCacheConfig(), tmpTypeCacheConf));
     }
@@ -54,32 +56,23 @@ final class CachingPropertyIndexerImpl extends PropertyIndexerImpl {
     }
 
     @Override
-    public StandardIndex indexFor(final Class<? extends AbstractEntity<?>> entityType) {
-        // performing a lookup in both caches first is faster than first determining which cache to use
-        final var cachedInMain = mainTypeCache.getIfPresent(entityType);
-        if (cachedInMain != null) {
-            return cachedInMain;
-        }
-        final var cachedInTmp = tmpTypeCache.getIfPresent(entityType);
-        if (cachedInTmp != null) {
-            return cachedInTmp;
-        }
-
-        final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> cache;
+    public StandardPropertyIndex indexFor(final Class<? extends AbstractEntity<?>> entityType) {
+        // First determine which cache to use so that an atomic operation can be performed on it.
+        final Cache<Class<? extends AbstractEntity<?>>, StandardPropertyIndex> cache;
         if (isProxied(entityType) || isMockNotFoundType(entityType)) {
             cache = tmpTypeCache;
         }
         else {
             cache = mainTypeCache;
         }
-        return storeIndex(entityType, cache);
-    }
 
-    private StandardIndex storeIndex(final Class<? extends AbstractEntity<?>> entityType,
-                                     final Cache<Class<? extends AbstractEntity<?>>, StandardIndex> cache) {
-        final var newIndex = super.indexFor(entityType);
-        cache.put(entityType, newIndex);
-        return newIndex;
+        try {
+            // super.indexFor may invoke this method recursively to build an index for the supertype of this entity type, causing a recursive load in the cache.
+            // This is ok as long as values are loaded for *different* keys as recursive loading of a value for the same key is unsupported by Guava Cache.
+            return cache.get(entityType, () -> super.indexFor(entityType));
+        } catch (final ExecutionException ex) {
+            throw new PropertyIndexerException(ex.getCause());
+        }
     }
 
 }

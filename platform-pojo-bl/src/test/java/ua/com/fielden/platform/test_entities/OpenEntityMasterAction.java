@@ -1,5 +1,6 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.test_entities;
 
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityToOpenCompoundMaster;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;

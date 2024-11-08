@@ -2,23 +2,23 @@ package ua.com.fielden.platform.utils;
 
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.types.either.Either;
 
 import javax.swing.filechooser.FileFilter;
 import java.io.*;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-
-import static java.lang.String.format;
 
 public class MiscUtilities {
 
     /**
      * Creates file filter for files with specified extensions and filter name.
      *
-     * @param extensionPattern
+     * @param extensionPatterns
      * @param filterName
      * @return
      */
@@ -146,6 +146,15 @@ public class MiscUtilities {
             return props;
         }
     }
+
+    /**
+     * Creates a {@link Properties} instance populated with entries from the given map.
+     */
+    public static Properties mkProperties(final Map<String, String> map) {
+        final var properties = new Properties();
+        properties.putAll(map);
+        return properties;
+    }
     
     /**
      * Returns a function accepting a format string and returning that string formatted with {@code args}.
@@ -160,20 +169,20 @@ public class MiscUtilities {
     }
 
     /**
-     * Checks if a non-null value has the given type. If it does, returns it, otherwise throws an exception.
+     * Checks if a non-null value has the given type.
+     * If it does, returns {@link Either} with the right value of the specified type, otherwise - {@link Either} with the left value as exception.
      */
-    public static <T> T checkType(final Object value, final Class<T> type) {
+    public static <T> Either<Exception, T> checkType(final Object value, final Class<T> type) {
         if (value == null) {
-            throw new InvalidArgumentException("Expected value of type [%s], but was: null");
+            return Either.left(new InvalidArgumentException("Expected value of type [%s], but was: null"));
         }
 
         if (type.isInstance(value)) {
-            return (T) value;
+            return Either.right((T) value);
         }
 
-        throw new InvalidArgumentException(
-                format("Expected value of type [%s], but was: [%s] of type [%s].",
-                       type.getTypeName(), value, value.getClass().getTypeName()));
+        final var msg = "Expected value of type [%s], but was: [%s] of type [%s].";
+        return Either.left(new InvalidArgumentException(msg.formatted(type.getTypeName(), value, value.getClass().getTypeName())));
     }
 
 }

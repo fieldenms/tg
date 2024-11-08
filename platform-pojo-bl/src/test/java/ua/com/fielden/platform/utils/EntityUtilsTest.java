@@ -23,6 +23,9 @@ import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test_entities.ChildEntity;
+import ua.com.fielden.platform.test_entities.Entity;
+import ua.com.fielden.platform.test_entities.EntityExt;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 
