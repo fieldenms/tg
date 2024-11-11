@@ -253,6 +253,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties entWith0CompKeyToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY12").setStringProp("ok").setIntegerProp(43).setEntityProp(savedDefaultEntity).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compWith0Saved).setDesc("Description for entity with key 12.").setRequiredValidatedProp(30);
         save(entWith0CompKeyToBeSaved);
 
+        save(new_(TgNote.class, "01").setText("hello"));
+        save(new_(TgNote.class, "02").setText("hello world"));
+        save(new_(TgNote.class, "03").setText("hello\nworld"));
+        save(new_(TgNote.class, "04").setText(" \tone  \n\u00a0\n  two  \n\n\n three\n"));
+        save(new_(TgNote.class, "05").setText("one & two\n1 < 2 && 4 > 0"));
+        save(new_(TgNote.class, "06").setText(">>> <<< &&& &> &< >< <abc> <&>"));
+
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
         save(new_composite(UserAndRoleAssociation.class, demo2, admin));

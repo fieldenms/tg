@@ -65,47 +65,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.sample.domain.ExportAction;
-import ua.com.fielden.platform.sample.domain.ExportActionProducer;
-import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
-import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
-import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
-import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
-import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
-import ua.com.fielden.platform.sample.domain.TgDeletionTestEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgDummyAction;
-import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependencyProducer;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptorExt;
-import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
-import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
-import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
-import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
-import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
-import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleActionProducer;
-import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityLocator;
 import ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction;
 import ua.com.fielden.platform.sample.domain.ui_actions.producers.MakeCompletedActionProducer;
@@ -262,6 +222,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         // Add entity centres
         MoreDataForDeleteEntityWebUiConfig.register(injector(), configApp());
         final TgEntityWithRichTextPropWebUiConfig tgEntityWithRichTextConfig = TgEntityWithRichTextPropWebUiConfig.register(injector(),configApp());
+        final var tgNoteConfig = TgNoteWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
@@ -1020,6 +981,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.addMenuItem("Tripple dec example").description("Tripple dec example").icon("icons:favorite-border").centre(configApp().getCentre(MiTgGeneratedEntityForTrippleDecAnalysis.class).get()).done()
                 /*  */.addMenuItem("Deletion Centre").description("Deletion centre description").icon("icons:find-in-page").centre(deletionTestCentre).done()
                 /*  */.addMenuItem("Rich Text Centre").description("Entity Centre with rich text property").icon("editor:text-fields").centre(tgEntityWithRichTextConfig.centre).done()
+                /*  */.addMenuItem("Note Centre").description("Entity Centre with note").icon("editor:text-fields").centre(tgNoteConfig.centre).done()
                 /*  */.addMenuItem("Last group").description("Last group").icon("icons:find-replace")
                 /*    */.addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 /*    */.addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()
