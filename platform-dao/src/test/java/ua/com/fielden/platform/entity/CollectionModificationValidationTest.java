@@ -29,39 +29,8 @@ import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEn
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token;
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token;
 import ua.com.fielden.platform.security.tokens.open_compound_master.OpenTgCompoundEntityMasterAction_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleDetailMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleDetailUnpersistedMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgCollectionalSerialisationParentMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgCompoundEntityDetailMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgDeletionTestEntityMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityForColourMasterMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityWithPropertyDependencyMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityWithTimeZoneDatesMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEntityForTrippleDecAnalysisMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEntityMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentCompositeEntityMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentEntityWithPropertiesMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityDetail_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntity_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntity_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent._CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent._CanRead_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.*;
+import ua.com.fielden.platform.security.tokens.persistent.*;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.ReUser_CanReadModel_Token;
@@ -405,6 +374,16 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             createTokenInfo.apply(TgGeneratedEntityMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentCompositeEntityMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentEntityWithPropertiesMaster_CanOpen_Token.class),
+
+            createTokenInfo.apply(TgEntityWithRichTextProp_CanRead_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextProp_CanSave_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextProp_CanReadModel_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextPropMaster_CanOpen_Token.class),
+
+            createTokenInfo.apply(TgNote_CanRead_Token.class),
+            createTokenInfo.apply(TgNote_CanSave_Token.class),
+            createTokenInfo.apply(TgNote_CanReadModel_Token.class),
+            createTokenInfo.apply(TgNoteMaster_CanOpen_Token.class),
 
             compoundModule, tgComoundEntity_CanDelete, tgCompoundEntity_CanSave, tgCompoundEntityChild_CanDelete, tgCompoundEntityChild_CanSave, tgCompoundEntityDetail_CanSave, openTgCompoundEntityMasterAction_CanOpen,
             tgCompoundEntityMaster_OpenMain_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess
