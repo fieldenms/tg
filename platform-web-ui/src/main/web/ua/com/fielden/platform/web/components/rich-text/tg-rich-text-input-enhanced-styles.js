@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-module.js';
 import '/resources/components/rich-text/tg-rich-text-input-styles.js';
+import '/resources/polymer/@polymer/paper-styles/typography.js';
 
 const styleElement = document.createElement('dom-module');
 styleElement.innerHTML = `
@@ -11,6 +12,7 @@ styleElement.innerHTML = `
             }
             .toastui-editor-defaultUI {
                 border: none !important;
+                @apply --paper-font-subhead;
             }
             .toastui-editor-toolbar {
                 display: none;
@@ -19,7 +21,11 @@ styleElement.innerHTML = `
                 padding: 0 !important;
             }
             .toastui-editor-contents {
-                font-size: inherit !important;
+                font-family: inherit !important;
+                font-size: 16px !important; /*this font size was taken from paper-style typography. It was taken from there because there is no other way to inherit or specify a proper font-size*/
+            }
+            .toastui-editor-contents li {
+                padding: 2px 0;
             }
             .toastui-editor-contents h1, .toastui-editor-contents h2 {
                 border-bottom: none !important;
@@ -28,15 +34,10 @@ styleElement.innerHTML = `
                 cursor: pointer !important;
             }
             .toastui-editor-contents .task-list-item:before {
-                top: calc(0.8em - 9px) !important;
+                top: 2px !important; /*should add 2px top because of padding for li element that also has 2px on top*/
             }
-            .toastui-editor-contents ul>li:before {
-                margin-top: 0 !important;
-                top: calc(0.8em - 2.5px);
-            }
-            .toastui-editor-contents :not(span, mark) {
-                box-sizing: content-box;
-                line-height: 160%;
+            .toastui-editor-contents :not(table){
+                line-height: normal;
             }
             del a span, del a {
                 text-decoration: line-through underline !important;

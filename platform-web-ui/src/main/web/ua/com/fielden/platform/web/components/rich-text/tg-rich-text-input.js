@@ -400,7 +400,6 @@ const template = html`
             background-color: rgba(31,  176, 255, 0.3);
         }
         mark {
-            display: inline-block;
             background-color: rgba(31,  176, 255, 0.3);
             color: inherit;
         }
