@@ -36,10 +36,10 @@ const template = html`
         action="null" validation-callback="[[_validationCallback]]">
     </tg-colour-picker>
     <div class="actions">
-        <paper-button raised roll="button" on-tap="_cancelColor" tooltip-text="Cancel text color">
+        <paper-button raised roll="button" on-tap="cancelCallback" tooltip-text="Cancel text color">
             <span>Cancel</span>
         </paper-button>
-        <paper-button raised roll="button" on-tap="_okColor" tooltip-text="Color the selected text">
+        <paper-button raised roll="button" on-tap="accept" tooltip-text="Color the selected text">
             <span>OK</span>
         </paper-button>
     </div>`;
@@ -143,12 +143,9 @@ export class TgColorPickerDialog extends PolymerElement {
         this.color = '';
     }
 
-    _cancelColor(e) {
-        this.cancelCallback && this.cancelCallback();
-        tearDownEvent(e);
-    }
+    cancel(e) {}
 
-    _okColor(e) {
+    accept(e) {
         this.$.colorEditor.commitIfChanged();
         if (!this.$.colorEditor._error) {
             this.okCallback && this.okCallback();
@@ -158,7 +155,7 @@ export class TgColorPickerDialog extends PolymerElement {
 
     _captureKeyDown(e) {
         if (e.keyCode === 13) {
-            this._okColor();
+            this.accept();
             tearDownEvent(e);
         }
     }

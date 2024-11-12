@@ -172,8 +172,7 @@ let shortPress = false;
 function runLinkIfPossible(el) {
     const a = findParentBy.bind(this)(el, isLink);
     if (a) {
-        const w = window.open(a.getAttribute('href'));
-        w.focus();
+        window.open(a.getAttribute('href'));
     }
 }
 
@@ -390,6 +389,19 @@ function scrollIntoView() {
     this._editor.wwEditor.view.dispatch(this._editor.wwEditor.view.state.tr.scrollIntoView());
 }
 
+function handleCancelEvent(e) {
+    if (e.composedPath()[0].tagName == "IRON-DROPDOWN") {
+        const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
+        if (dropDownContent && dropDownContent.cancel) {
+            dropDownContent.cancel(e.detail);
+        }
+    }
+    if (!(e.detail instanceof MouseEvent)) {
+        tearDownEvent(e.detail);
+        focusEditor.bind(this)();
+    }
+}
+
 const template = html`
     <style include='rich-text-enhanced-styles'>
         :host {
@@ -517,9 +529,9 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         super.ready();
         //Initialise link and color dialogs
         this.$.linkDropdown.positionTarget = document.body;
-        this._cancelLinkInsertion = function () {
+        this.$.linkDropdown.addEventListener('iron-overlay-canceled', handleCancelEvent.bind(this));
+        this._cancelLinkInsertion = function (e) {
             this.$.linkDropdown.cancel();
-            focusEditor.bind(this)();
         }.bind(this);
         this._acceptLink = function () {
             const link = initLinkEditing.bind(this)();
@@ -527,9 +539,9 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             this.$.linkDropdown.close();
         }.bind(this);
         this.$.colorDropdown.positionTarget = document.body;
-        this._cancelColorAction = function() {
+        this.$.colorDropdown.addEventListener('iron-overlay-canceled', handleCancelEvent.bind(this));
+        this._cancelColorAction = function(e) {
             this.$.colorDropdown.cancel();
-            focusEditor.bind(this)();
         }.bind(this);
         this._acceptColor = function() {
             initColorEditing.bind(this)();

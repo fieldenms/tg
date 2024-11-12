@@ -36,10 +36,10 @@ const template = html`
         action="null" validation-callback="[[validationCallback]]">
     </tg-hyperlink-editor>
     <div class="actions">
-        <paper-button raised roll="button" on-tap="_cancelLink" tooltip-text="Do not insert a link">
+        <paper-button raised roll="button" on-tap="cancelCallback" tooltip-text="Do not insert a link">
             <span>Cancel</span>
         </paper-button>
-        <paper-button raised roll="button" on-tap="_okLink" tooltip-text="Insert a link">
+        <paper-button raised roll="button" on-tap="accept" tooltip-text="Insert a link">
             <span>OK</span>
         </paper-button>
     </div>`;
@@ -143,12 +143,9 @@ export class TgLinkDialog extends PolymerElement {
         this.url = '';
     }
 
-    _cancelLink(e) {
-        this.cancelCallback && this.cancelCallback();
-        tearDownEvent(e);
-    }
+    cancel(e) {}
 
-    _okLink(e) {
+    accept(e) {
         this.$.urlEditor.commitIfChanged();
         if (!this.$.urlEditor._error) {
             this.okCallback && this.okCallback();
@@ -158,7 +155,7 @@ export class TgLinkDialog extends PolymerElement {
 
     _captureKeyDown(e) {
         if (e.keyCode === 13) {
-            this._okLink();
+            this.accept();
             tearDownEvent(e);
         }
     }
