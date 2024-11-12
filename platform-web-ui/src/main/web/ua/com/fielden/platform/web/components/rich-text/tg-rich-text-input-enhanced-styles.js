@@ -33,6 +33,12 @@ styleElement.innerHTML = `
             .toastui-editor-contents a {
                 cursor: pointer !important;
             }
+            .toastui-editor-contents .task-list-item {
+                cursor: pointer; /*Need to set this style to display pointer cursor on checkboxes of task lins on Safari*/
+            }
+            .toastui-editor-contents .task-list-item * {
+                cursor: auto; /*Set automatic cusrsor  on any element of task list to make pointer cursor available only on checkbox*/
+            }
             .toastui-editor-contents .task-list-item:before {
                 top: 2px !important; /*should add 2px top because of padding for li element that also has 2px on top*/
             }
