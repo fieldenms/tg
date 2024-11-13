@@ -3,6 +3,7 @@ import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polyme
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
+import { IronOverlayManager } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-manager.js';
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
@@ -402,6 +403,16 @@ function handleCancelEvent(e) {
     }
 }
 
+function handleAcceptEvent(e) {
+    const currentOverlay = IronOverlayManager.currentOverlay();
+    if (e.keyCode === 13 && currentOverlay && currentOverlay.tagName == "IRON-DROPDOWN") {
+        const dropDownContent = currentOverlay.$.content.assignedNodes()[0];
+        if (dropDownContent && dropDownContent.okCallback){
+            dropDownContent.okCallback(e);
+        }
+    }
+}
+
 const template = html`
     <style include='rich-text-enhanced-styles'>
         :host {
@@ -527,26 +538,34 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     ready() {
         super.ready();
+        //Bind some functions to use it for event handlers
+        this._handleAcceptEvent = handleAcceptEvent.bind(this);
         //Initialise link and color dialogs
         this.$.linkDropdown.positionTarget = document.body;
         this.$.linkDropdown.addEventListener('iron-overlay-canceled', handleCancelEvent.bind(this));
         this._cancelLinkInsertion = function (e) {
             this.$.linkDropdown.cancel();
         }.bind(this);
-        this._acceptLink = function () {
-            const link = initLinkEditing.bind(this)();
-            toggleLink.bind(this)(this.$.linkDialog.url, (link && link.text) || this.$.linkDialog.url);
-            this.$.linkDropdown.close();
+        this._acceptLink = function (e) {
+            if (this.$.linkDialog.accept(e)) {
+                const link = initLinkEditing.bind(this)();
+                toggleLink.bind(this)(this.$.linkDialog.url, (link && link.text) || this.$.linkDialog.url);
+                this.$.linkDropdown.close();
+            }
+            tearDownEvent(e);
         }.bind(this);
         this.$.colorDropdown.positionTarget = document.body;
         this.$.colorDropdown.addEventListener('iron-overlay-canceled', handleCancelEvent.bind(this));
         this._cancelColorAction = function(e) {
             this.$.colorDropdown.cancel();
         }.bind(this);
-        this._acceptColor = function() {
-            initColorEditing.bind(this)();
-            applyColor.bind(this)(this.$.colorDialog.color);
-            this.$.colorDropdown.close();
+        this._acceptColor = function(e) {
+            if (this.$.colorDialog.accept(e)) {
+                initColorEditing.bind(this)();
+                applyColor.bind(this)(this.$.colorDialog.color);
+                this.$.colorDropdown.close();
+            }
+            tearDownEvent(e);
         }.bind(this);
         // Create editor
         this._editor = new toastui.Editor({
@@ -603,6 +622,16 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             prevKeyBindingHandler(keyBindings, event);
         };
         this.addEventListener('keydown', focusOnKeyDown.bind(this));
+    }
+
+    connectedCallback () {
+        super.connectedCallback();
+        document.addEventListener("keydown", this._handleAcceptEvent, true);
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        document.removeEventListener("keydown", this._handleAcceptEvent, true);
     }
 
     makeEditable(editable) {

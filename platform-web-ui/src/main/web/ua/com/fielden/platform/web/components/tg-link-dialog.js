@@ -39,7 +39,7 @@ const template = html`
         <paper-button raised roll="button" on-tap="cancelCallback" tooltip-text="Do not insert a link">
             <span>Cancel</span>
         </paper-button>
-        <paper-button raised roll="button" on-tap="accept" tooltip-text="Insert a link">
+        <paper-button raised roll="button" on-tap="okCallback" tooltip-text="Insert a link">
             <span>OK</span>
         </paper-button>
     </div>`;
@@ -123,7 +123,6 @@ export class TgLinkDialog extends PolymerElement {
 
     ready () {
         super.ready();
-        this.addEventListener("keydown", this._captureKeyDown.bind(this));
     }
 
     set url(newUrl) {
@@ -147,19 +146,9 @@ export class TgLinkDialog extends PolymerElement {
 
     accept(e) {
         this.$.urlEditor.commitIfChanged();
-        if (!this.$.urlEditor._error) {
-            this.okCallback && this.okCallback();
-        }
-        tearDownEvent(e);
+        return !this.$.urlEditor._error;
     }
 
-    _captureKeyDown(e) {
-        if (e.keyCode === 13) {
-            this.accept();
-            tearDownEvent(e);
-        }
-    }
-    
     _onAddonAttached(e) {
         tearDownEvent(e);
     }
