@@ -1,5 +1,6 @@
 del "package-lock.json" && ^
 npm install && ^
+del node_modules\stacky && ^
 polymer build && ^
 rmdir /S /Q polymer & ^
 rename node_modules polymer && ^
@@ -8,3 +9,4 @@ rmdir /S /Q polymer\@google-web-components & ^
 move build\tg-custom-build\node_modules\@polymer polymer\ && ^
 move build\tg-custom-build\node_modules\@google-web-components polymer\ && ^
 rmdir /S /Q build & ^
+forfiles /p polymer /s /m package.json /c "cmd /c del @path" && ^

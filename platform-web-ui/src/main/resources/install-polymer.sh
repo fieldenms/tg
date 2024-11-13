@@ -9,3 +9,4 @@ rm -r -f polymer/@google-web-components
 mv build/tg-custom-build/node_modules/@polymer polymer/
 mv build/tg-custom-build/node_modules/@google-web-components polymer/
 rm -r -f build
+find polymer -type f -name "package.json" -delete
