@@ -549,7 +549,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._acceptLink = function (e) {
             if (this.$.linkDialog.accept(e)) {
                 const link = initLinkEditing.bind(this)();
-                toggleLink.bind(this)(this.$.linkDialog.url, (link && link.text) || this.$.linkDialog.url);
+                if ((link && link.detail) || this.$.linkDialog.url) {
+                    toggleLink.bind(this)(this.$.linkDialog.url, (link && link.text) || this.$.linkDialog.url);
+                } else {
+                    focusEditor.bind(this)();
+                }
                 this.$.linkDropdown.close();
             }
             tearDownEvent(e);
@@ -561,8 +565,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }.bind(this);
         this._acceptColor = function(e) {
             if (this.$.colorDialog.accept(e)) {
-                initColorEditing.bind(this)();
-                applyColor.bind(this)(this.$.colorDialog.color);
+                const textColorObj = initColorEditing.bind(this)();
+                if ((textColorObj && textColorObj.detail) || this.$.colorDialog.color) {
+                    applyColor.bind(this)(this.$.colorDialog.color);
+                } else {
+                    focusEditor.bind(this)();
+                }
                 this.$.colorDropdown.close();
             }
             tearDownEvent(e);

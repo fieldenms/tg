@@ -131,7 +131,7 @@ export class TgColorPickerDialog extends PolymerElement {
     }
 
     get color() {
-        return this._entity['colorProp'] ? `#${this._entity['colorProp'].hashlessUppercasedColourValue}` : '';
+        return this._entity['colorProp'] && this._entity['colorProp'].hashlessUppercasedColourValue ? `#${this._entity['colorProp'].hashlessUppercasedColourValue}` : '';
     }
 
     focusDefaultEditor() {
