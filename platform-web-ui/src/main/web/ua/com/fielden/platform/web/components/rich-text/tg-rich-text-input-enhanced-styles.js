@@ -27,6 +27,15 @@ styleElement.innerHTML = `
             .toastui-editor-contents h1, .toastui-editor-contents h2 {
                 border-bottom: none !important;
             }
+            .toastui-editor-contents h1 {
+                margin: 12px 0 5px !important;
+            }
+            .toastui-editor-contents h2 {
+                margin: 10px 0 3px !important;
+            }
+            .toastui-editor-contents h3 {
+                margin: 8px 0 2px !important;
+            }
             .toastui-editor-contents a {
                 cursor: pointer !important;
             }
