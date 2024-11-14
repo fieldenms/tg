@@ -500,7 +500,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
-    private void processAfterSaveEvent(final T entity, final List<String> dirtyProperties) {
+    private void processAfterSaveEvent(final T entity, final Set<String> dirtyProperties) {
         try {
             final AfterSave afterSave = AnnotationReflector.getAnnotation(getClass(), AfterSave.class);
             // if after save annotation is present then need to instantiate the declared event handler.

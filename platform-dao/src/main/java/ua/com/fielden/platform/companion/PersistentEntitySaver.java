@@ -97,7 +97,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
     
-    private final BiConsumer<T, List<String>> processAfterSaveEvent;
+    private final BiConsumer<T, Set<String>> processAfterSaveEvent;
     private final Consumer<MetaProperty<?>> assignBeforeSave;
 
     private final FindEntityById<T> findById;
@@ -113,7 +113,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             @Assisted final Supplier<String> transactionGuid,
             @Assisted final Class<T> entityType,
             @Assisted final Class<? extends Comparable<?>> keyType,
-            @Assisted final BiConsumer<T, List<String>> processAfterSaveEvent,
+            @Assisted final BiConsumer<T, Set<String>> processAfterSaveEvent,
             @Assisted final Consumer<MetaProperty<?>> assignBeforeSave,
             @Assisted final FindEntityById<T> findById,
             @Assisted final Function<EntityResultQueryModel<T>, Boolean> entityExists,
@@ -149,7 +149,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Supplier<String> transactionGuid,
                 final Class<E> entityType,
                 final Class<? extends Comparable<?>> keyType,
-                final BiConsumer<E, List<String>> processAfterSaveEvent,
+                final BiConsumer<E, Set<String>> processAfterSaveEvent,
                 final Consumer<MetaProperty<?>> assignBeforeSave,
                 final FindEntityById<E> findById,
                 final Function<EntityResultQueryModel<E>, Boolean> entityExists,
@@ -193,7 +193,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // need to capture names of dirty properties before the actual saving takes place and makes all properties not dirty
         // this is needed for executing after save event handler
-        final List<String> dirtyProperties = entity.getDirtyProperties().stream().map(MetaProperty::getName).collect(toList());
+        final Set<String> dirtyProperties = entity.getDirtyProperties().stream().map(MetaProperty::getName).collect(toSet());
 
         final T2<Long, T> savedEntityAndId;
         // let's try to save entity
@@ -222,18 +222,26 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         return savedEntityAndId;
     }
 
-    private FillModel buildFillModel(final T entity, final Collection<String> dirtyProperties) {
-        // now that we saved, restore values for dirty plain properties and reset their meta-state so that they are not
-        // dirty in the returned saved instance
+    /**
+     * Builds a {@link FillModel} based on the instance of an entity before it was saved.
+     * <p>
+     * The fill model is then used to restore values for dirty plain properties and reset their meta-state,
+     * so that they are not dirty in the returned saved instance.
+     *
+     * @param origDirtyEntity
+     * @param dirtyProperties
+     * @return
+     */
+    private FillModel buildFillModel(final T origDirtyEntity, final Collection<String> dirtyProperties) {
         if (!dirtyProperties.isEmpty()) {
-            final var entityMetadata = domainMetadata.forEntity(entity.getType());
+            final var entityMetadata = domainMetadata.forEntity(origDirtyEntity.getType());
             return FillModels.fill(builder -> {
-                for (final String prop : dirtyProperties) {
-                    final Optional<PropertyMetadata> propMetadata = entityMetadata.property(entity.getProperty(prop)).orElseThrow(Function.identity());
+                for (final String propName : dirtyProperties) {
+                    final Optional<PropertyMetadata> propMetadata = entityMetadata.property(origDirtyEntity.getProperty(propName)).orElseThrow(Function.identity());
                     if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
-                        final var value = entity.get(prop);
+                        final var value = origDirtyEntity.get(propName);
                         if (value != null) {
-                            builder.set(prop, value);
+                            builder.set(propName, value);
                         }
                     }
                 }
@@ -737,7 +745,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 final Supplier<String> transactionGuid,
                 final Class<E> entityType,
                 final Class<? extends Comparable<?>> keyType,
-                final BiConsumer<E, List<String>> processAfterSaveEvent,
+                final BiConsumer<E, Set<String>> processAfterSaveEvent,
                 final Consumer<MetaProperty<?>> assignBeforeSave,
                 final FindEntityById<E> findById,
                 final Function<EntityResultQueryModel<E>, Boolean> entityExists,
