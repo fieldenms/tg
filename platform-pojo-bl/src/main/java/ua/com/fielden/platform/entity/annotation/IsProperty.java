@@ -176,16 +176,22 @@ public @interface IsProperty {
     boolean trailingZeros() default DEFAULT_TRAILING_ZEROS;
 
     /**
-     * Defines the way the entity property will be displayed. Other than entity type will be ignored. The value of this property
-     * might be empty which means that the displayed value for this property should use default pattern (i.e composite entity property will be displayed with title-value pattern).
-     * Also this parameter might have specific pattern like: #1tv#2tv or #1vs#2vs, #1v, z. Where:
-     * #i -- the value of i-th key member; this must be the opening tag for a template;
-     * v -- key member value;
-     * t -- key member title;
-     * s -- key member separator; mutually exclusive with t
-     * z -- as per the default toString implementation
-     *
-     * This patterns for displayed value can be used only for composite entity property.
+     * Defines a template for displaying a value of a composite entity-typed property.
+     * Has no effect for other property types or for non-composite entities.
+     * The value of this attribute can be empty, which means that the displayed value would use the default pattern (i.e., composite entity property will be displayed with the title-value pattern).
+     * This attribute supports pattern like {@code #1tv#2tv}, {@code #1vs#2v}, {@code #1v}, {@code z}, where:
+     * <ol>
+     *  <li>{@code #i} – stand for the value of i-th key member (this must be the starting token for a display template),
+     *  <li>{@code t} – i-th key member title,
+     *  <li>{@code v} – i-th key member value,
+     *  <li>{@code s} – a key member separator (mutually exclusive with t),
+     * </ol>
+     * or
+     * <ul>
+     *     <li>{@code z} – a template value that stands for entity's {@code toString} (i.e., no special formatting).
+     * </ul>
+     * <p>
+     * The default value is {@code ""}, which is equivalent to applying template {@code #itv} to every key member.
      *
      * @return
      */
