@@ -14,8 +14,7 @@ import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.FillModel;
-import ua.com.fielden.platform.entity.query.model.FillModels;
+import ua.com.fielden.platform.entity.query.model.IFillModel;
 import ua.com.fielden.platform.pagination.IPage;
 
 import javax.annotation.Nullable;
@@ -81,7 +80,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param id -- ID of the entity to be loaded.
      * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
      */
-    T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel);
+    T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel);
 
     /**
      * Finds entity by its surrogate id.
@@ -110,7 +109,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param id -- ID of the entity to be loaded.
      * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
      */
-    default T findById(final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
+    default T findById(final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
         return findById(false, id, fetchModel, fillModel);
     }
 
@@ -118,7 +117,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
         return findByIdOptional(false, id, fetchModel, emptyFillModel());
     }
 
-    default Optional<T> findByIdOptional(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
+    default Optional<T> findByIdOptional(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
         return Optional.ofNullable(findById(filtered, id, fetchModel, fillModel));
     }
 

@@ -5,8 +5,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 @ImplementedBy(FillModelApplierImpl.class)
 @FunctionalInterface
-public interface FillModelApplier {
+public interface IFillModelApplier {
 
-    <E extends AbstractEntity<?>> E apply(FillModel model, E entity);
+    <E extends AbstractEntity<?>> E apply(IFillModel model, E entity);
 
 }

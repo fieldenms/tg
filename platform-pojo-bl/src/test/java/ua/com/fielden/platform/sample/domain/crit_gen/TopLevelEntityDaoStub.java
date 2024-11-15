@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.FillModel;
+import ua.com.fielden.platform.entity.query.model.IFillModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
 
@@ -44,7 +44,7 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public TopLevelEntity findById(final boolean filtered, final Long id, final fetch<TopLevelEntity> fetchModel, final FillModel fillModel) {
+    public TopLevelEntity findById(final boolean filtered, final Long id, final fetch<TopLevelEntity> fetchModel, final IFillModel fillModel) {
         return null;
     }
 

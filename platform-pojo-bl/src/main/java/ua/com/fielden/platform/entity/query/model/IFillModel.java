@@ -2,7 +2,6 @@ package ua.com.fielden.platform.entity.query.model;
 
 import ua.com.fielden.platform.types.tuples.T2;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -30,18 +29,14 @@ import java.util.stream.Stream;
  *
  * @see FillModels
  */
-public interface FillModel {
-
-    Map<String, Object> asMap();
+public interface IFillModel {
 
     /**
      * If a property is present in this fill model, returns a value to populate the property with, otherwise - an empty optional.
      *
      * @param property  simple property name
      */
-    default Optional<Object> getValue(CharSequence property) {
-        return Optional.ofNullable(asMap().get(property.toString()));
-    }
+    Optional<Object> getValue(CharSequence property);
 
     /**
      * If a property is present in this fill model, returns a value to populate the property with, otherwise throws.
@@ -53,9 +48,7 @@ public interface FillModel {
                 .orElseThrow(() -> new FillModelException("Requested property [%s] is absent in fill model.".formatted(property)));
     }
 
-    default boolean contains(CharSequence property) {
-        return asMap().containsKey(property.toString());
-    }
+    boolean contains(CharSequence property);
 
     /**
      * Returns all property-value pairs present in this fill model.
@@ -69,27 +62,19 @@ public interface FillModel {
      *
      * @param fn  transforms a property-value pair
      */
-    default <X> Stream<X> values(BiFunction<? super String, Object, X> fn) {
-        return asMap().entrySet().stream().map(entry -> fn.apply(entry.getKey(), entry.getValue()));
-    }
+    <X> Stream<X> values(BiFunction<? super String, Object, X> fn);
 
     /**
      * Returns all properties present in this fill model.
      */
-    default Set<String> properties() {
-        return asMap().keySet();
-    }
+    Set<String> properties();
 
-    default boolean isEmpty() {
-        return asMap().isEmpty();
-    }
+    boolean isEmpty();
 
     /**
      * Executes an action for each property-value pair in this fill model.
      */
-    default void forEach(BiConsumer<? super String, Object> fn) {
-        asMap().forEach(fn);
-    }
+    void forEach(BiConsumer<? super String, Object> fn);
 
     /**
      * Builds a fill model incrementally.
@@ -104,19 +89,14 @@ public interface FillModel {
         Builder set(CharSequence property, Object value);
 
         /**
-         * Includes all property-value pairs from the given fill model.
-         */
-        Builder include(FillModel fillModel);
-
-        /**
          * Bulds a fill model, throwing an exception if any property was specified more than once.
          */
-        FillModel build();
+        IFillModel build();
 
         /**
          * Bulds a fill model, using the last value for any property that was specified more than once.
          */
-        FillModel buildKeepingLast();
+        IFillModel buildKeepingLast();
     }
 
 }

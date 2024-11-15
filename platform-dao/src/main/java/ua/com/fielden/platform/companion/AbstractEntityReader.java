@@ -33,7 +33,7 @@ import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.FillModel;
+import ua.com.fielden.platform.entity.query.model.IFillModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.utils.Pair;
@@ -88,7 +88,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
-    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
+    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
         return fetchOneEntityInstance(filtered, id, fetchModel, fillModel);
     }
     
@@ -296,7 +296,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      *
      * @param filtered controls whether user-filtering is on
      */
-    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
+    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
         if (id == null) {
             throw new EntityCompanionException(ERR_MISSING_ID_VALUE.formatted(getEntityType().getName()));
         }

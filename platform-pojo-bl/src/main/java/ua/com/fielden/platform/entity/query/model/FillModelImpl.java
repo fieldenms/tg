@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
-final class FillModelImpl implements FillModel {
+final class FillModelImpl implements IFillModel {
 
     private final ImmutableMap<String, Object> values;
 
@@ -20,8 +20,8 @@ final class FillModelImpl implements FillModel {
     }
 
     @Override
-    public Map<String, Object> asMap() {
-        return values;
+    public boolean contains(final CharSequence property) {
+        return values.containsKey(property.toString());
     }
 
     @Override

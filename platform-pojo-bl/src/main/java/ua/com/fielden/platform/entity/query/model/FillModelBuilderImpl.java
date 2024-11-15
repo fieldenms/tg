@@ -4,12 +4,12 @@ import com.google.common.collect.ImmutableMap;
 
 import static ua.com.fielden.platform.entity.query.model.FillModels.emptyFillModel;
 
-final class FillModelBuilderImpl implements FillModel.Builder {
+final class FillModelBuilderImpl implements IFillModel.Builder {
 
     private final ImmutableMap.Builder<String, Object> valuesBuilder = ImmutableMap.builder();
 
     @Override
-    public FillModel.Builder set(final CharSequence property, final Object value) {
+    public IFillModel.Builder set(final CharSequence property, final Object value) {
         if (value == null) {
             throw new FillModelException("Property cannot be filled with null.");
         }
@@ -18,18 +18,12 @@ final class FillModelBuilderImpl implements FillModel.Builder {
     }
 
     @Override
-    public FillModel.Builder include(final FillModel fillModel) {
-        valuesBuilder.putAll(fillModel.asMap());
-        return this;
-    }
-
-    @Override
-    public FillModel build() {
+    public IFillModel build() {
         final var values = valuesBuilder.buildOrThrow();
         return values.isEmpty() ? emptyFillModel() : new FillModelImpl(values);
     }
 
-    public FillModel buildKeepingLast() {
+    public IFillModel buildKeepingLast() {
         final var values = valuesBuilder.buildKeepingLast();
         return values.isEmpty() ? emptyFillModel() : new FillModelImpl(values);
     }

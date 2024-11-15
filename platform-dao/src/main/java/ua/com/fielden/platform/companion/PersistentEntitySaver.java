@@ -29,7 +29,7 @@ import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.FillModel;
+import ua.com.fielden.platform.entity.query.model.IFillModel;
 import ua.com.fielden.platform.entity.query.model.FillModels;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -54,7 +54,6 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
@@ -203,7 +202,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             if (!isValid.isSuccessful()) {
                 throw isValid;
             }
-            final Supplier<FillModel> fillModel = () -> buildFillModel(entity, dirtyProperties);
+            final Supplier<IFillModel> fillModel = () -> buildFillModel(entity, dirtyProperties);
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
@@ -223,7 +222,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     }
 
     /**
-     * Builds a {@link FillModel} based on the instance of an entity before it was saved.
+     * Builds a {@link IFillModel} based on the instance of an entity before it was saved.
      * <p>
      * The fill model is then used to restore values for dirty plain properties and reset their meta-state,
      * so that they are not dirty in the returned saved instance.
@@ -232,7 +231,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param dirtyProperties
      * @return
      */
-    private FillModel buildFillModel(final T origDirtyEntity, final Collection<String> dirtyProperties) {
+    private IFillModel buildFillModel(final T origDirtyEntity, final Collection<String> dirtyProperties) {
         if (!dirtyProperties.isEmpty()) {
             final var entityMetadata = domainMetadata.forEntity(origDirtyEntity.getType());
             return FillModels.fill(builder -> {
@@ -289,7 +288,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param fillModel  will be applied only in presence of a fetch model
      */
     private T2<Long, T> saveModifiedEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch,
-                                           final Supplier<FillModel> fillModel, final Session session) {
+                                           final Supplier<IFillModel> fillModel, final Session session) {
         // let's first prevent not permissibly modifications that could not be checked any earlier than this,
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
@@ -546,7 +545,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param fillModel  will be applied only in presence of a fetch model
      */
     private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch,
-                                      final Supplier<FillModel> fillModel, final Session session) {
+                                      final Supplier<IFillModel> fillModel, final Session session) {
         // let's make sure that entity is not a duplicate
         if (entityExists.apply(createQueryByKey(dbVersionProvider.dbVersion(), entityType, keyType, false, entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", getEntityTitleAndDesc(entity.getType()).getKey(), entity));
@@ -761,7 +760,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     @FunctionalInterface
     public interface FindEntityById<E extends AbstractEntity<?>> {
 
-        E find(Long id, fetch<E> fetchModel, FillModel fillModel);
+        E find(Long id, fetch<E> fetchModel, IFillModel fillModel);
 
         default E find(Long id, fetch<E> fetchModel) {
             return find(id, fetchModel, emptyFillModel());
