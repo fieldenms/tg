@@ -162,16 +162,24 @@ function createCompositeTitle (entity, template, reflector) {
     const members = [];
     let currMember;
     let currMemberName;
+    let currSeparator = '';
 
     class Listener extends CompositeEntityFormatListener {
         exitNo (ctx) {
-            currMember = { separator: '' };
+            currMember = { separator: currSeparator };
             members.push(currMember);
             currMemberName = getKeyMemberName(entity, ctx.children[1].symbol.text);
         }
         exitTvPart (ctx) {
             currMember.title = entity.type().prop(currMemberName).title();
             currMember.value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
+        }
+        exitVPart (ctx) {
+            currMember.separator = currSeparator;
+            currMember.value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
+            if (!currSeparator) {
+                currSeparator = entity.type().compositeKeySeparator();
+            }
         }
     }
 
