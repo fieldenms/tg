@@ -24,6 +24,18 @@ export default class CompositeEntityFormatVisitor extends antlr4.tree.ParseTreeV
 	}
 
 
+	// Visit a parse tree produced by CompositeEntityFormatParser#vsTemplate.
+	visitVsTemplate(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by CompositeEntityFormatParser#vPart.
+	visitVPart(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by CompositeEntityFormatParser#no.
 	visitNo(ctx) {
 	  return this.visitChildren(ctx);

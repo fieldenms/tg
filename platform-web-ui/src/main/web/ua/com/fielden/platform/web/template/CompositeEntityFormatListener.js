@@ -32,6 +32,24 @@ export default class CompositeEntityFormatListener extends antlr4.tree.ParseTree
 	}
 
 
+	// Enter a parse tree produced by CompositeEntityFormatParser#vsTemplate.
+	enterVsTemplate(ctx) {
+	}
+
+	// Exit a parse tree produced by CompositeEntityFormatParser#vsTemplate.
+	exitVsTemplate(ctx) {
+	}
+
+
+	// Enter a parse tree produced by CompositeEntityFormatParser#vPart.
+	enterVPart(ctx) {
+	}
+
+	// Exit a parse tree produced by CompositeEntityFormatParser#vPart.
+	exitVPart(ctx) {
+	}
+
+
 	// Enter a parse tree produced by CompositeEntityFormatParser#no.
 	enterNo(ctx) {
 	}
