@@ -112,8 +112,8 @@ const customInputTemplate = html`
 const inputLayerTemplate = html`
     <div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
-            <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; white-space: pre;"><span>[[item.title]]</span>: </span>
             <span hidden$="[[!item.separator]]" style="white-space: pre;">[[item.separator]]</span>
+            <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; white-space: pre;"><span>[[item.title]]</span>: </span>
             <span>[[item.value]]</span>
         </template>
         <span style="color:#737373" hidden$="[[!_hasDesc(entity, propertyName)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity, propertyName)]]</i></span>
