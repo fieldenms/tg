@@ -13,7 +13,7 @@ const additionalTemplate = html`
     </style>`;
 const customLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
-        <span>[[propTitle]]</span>
+        <span on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 

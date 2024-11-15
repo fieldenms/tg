@@ -12,6 +12,7 @@ import '/resources/components/tg-confirmation-dialog.js';
 import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 
 import { tearDownEvent, allDefined, resultMessages, deepestActiveElement, isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
 
@@ -59,7 +60,7 @@ const hideCheckIconOnMouseLeave = function () {
 
 const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
-        <span>[[propTitle]]</span>
+        <span on-down="_labelDownEventHandler">[[propTitle]]</span>
         <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 
@@ -218,7 +219,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         </template>`;
 };
 
-export class TgEditor extends PolymerElement {
+export class TgEditor extends GestureEventListeners(PolymerElement) {
 
     static get properties() {
         return {
@@ -894,6 +895,14 @@ export class TgEditor extends PolymerElement {
             this.commit();
         }
         this._tryFireErrorMsg(this._error);
+    }
+
+    _labelDownEventHandler (event) {
+        if (this.shadowRoot.activeElement !== this.decoratedInput()) {
+            this.decoratedInput().select();
+        }
+        this.decoratedInput().focus();
+        tearDownEvent(event);
     }
 
     _copyTap () {
