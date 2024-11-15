@@ -1,5 +1,10 @@
 import {TgReflector} from '/app/tg-reflector.js';
 
+import antlr4 from '/resources/polymer/antlr4/dist/antlr4.web.mjs';
+import CompositeEntityFormatLexer from '/resources/template/CompositeEntityFormatLexer.js';
+import CompositeEntityFormatParser from '/resources/template/CompositeEntityFormatParser.js';
+import CompositeEntityFormatListener from '/resources/template/CompositeEntityFormatListener.js';
+
 const states = {
     's0': (entity, template, idx, reflector, titles) => {
         if (!template) {
@@ -106,6 +111,21 @@ function parseNumberAndReturnState (entity, template, idx, reflector, titles, st
     }
 }
 
+function getKeyMemberName (entity, strNumber) {
+    const keyNumberIdx = +strNumber;
+    if (!isNaN(keyNumberIdx)) {
+        const entityType = entity.type();
+        const keyName = entityType.compositeKeyNames()[keyNumberIdx - 1];
+        if (keyName) {
+            return keyName;
+        } else {
+            throw {msg: `Key with index: ${strNumber} does not exist in the ${entity.type().fullClassName()} entity`};
+        }
+    } else {
+        throw {msg: `${strNumber} should be a number.`};
+    }
+}
+
 export function composeEntityValue (entity, template) {
     if (entity.type().isCompositeEntity()) {
         return createCompositeTitle(entity, template, new TgReflector());
@@ -132,14 +152,42 @@ export function composeDefaultUnconvertedEntityValue(entity) {
 }
 
 function createCompositeTitle (entity, template, reflector) {
-    const titles = [];
-    let idx = 0;
-    let state = states['s0'](entity, template, idx, reflector, titles);
-    while(state) {
-        idx += 1;
-        state = states[state](entity, template, idx, reflector, titles);
+    const input = template;
+    const chars = new antlr4.InputStream(input);
+    const lexer = new CompositeEntityFormatLexer(chars);
+    const tokens = new antlr4.CommonTokenStream(lexer);
+    const parser = new CompositeEntityFormatParser(tokens);
+    const tree = parser.template();
+
+    const members = [];
+    let currMember;
+    let currMemberName;
+
+    class Listener extends CompositeEntityFormatListener {
+        exitNo (ctx) {
+            currMember = { separator: '' };
+            members.push(currMember);
+            currMemberName = getKeyMemberName(entity, ctx.children[1].symbol.text);
+        }
+        exitTvPart (ctx) {
+            currMember.title = entity.type().prop(currMemberName).title();
+            currMember.value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
+        }
     }
-    return titles;
+
+    const listener = new Listener();
+    antlr4.tree.ParseTreeWalker.DEFAULT.walk(listener, tree);
+
+    return members;
+
+//    const titles = [];
+//    let idx = 0;
+//    let state = states['s0'](entity, template, idx, reflector, titles);
+//    while(state) {
+//        idx += 1;
+//        state = states[state](entity, template, idx, reflector, titles);
+//    }
+//    return titles;
 }
 
 function composeDefaultValueObject(entity, reflector, titles) {
