@@ -33,15 +33,8 @@ const additionalTemplate = html`
         }
         #actionAvailability {
             display: none;
-            width: 18px;
-            height: 18px;
-            margin-left: 4px;
         }
-        label[action-available] iron-icon {
-            cursor: pointer;
-        }
-        :host(:hover) #actionAvailability[action-available],
-        #decorator[focused]  #actionAvailability[action-available] {
+        #actionAvailability[action-available] {
             display: unset;
         }
         #input.upper-case {
@@ -82,14 +75,13 @@ const additionalTemplate = html`
     <iron-ajax id="ajaxSearcher" headers="[[_headers]]" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" reject-with-request on-error="_processSearcherError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
 const customLabelTemplate = html`
-    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" 
-           action-available$="[[actionAvailable]]" 
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]"
            disabled$="[[_disabled]]" 
            slot="label"
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <span on-down="_labelDownEventHandler">[[_editorPropTitle]]</span>
-        <iron-icon id="actionAvailability" icon="[[_actionIcon(actionAvailable, entity, propertyName)]]" action-available$="[[actionAvailable]]" on-tap="_editNewTap"></iron-icon>
-        <iron-icon id="copyIcon" hidden$="[[noLabelFloat]]" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <iron-icon id="actionAvailability" class="label-action" icon="[[_actionIcon(actionAvailable, entity, propertyName)]]" action-available$="[[actionAvailable]]" on-tap="_editNewTap"></iron-icon>
+        <iron-icon id="copyIcon" class="label-action" hidden$="[[noLabelFloat]]" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -229,7 +221,7 @@ export class TgEntityEditor extends TgEditor {
              */
             actionAvailable: {
                 type: Boolean,
-                computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, propertyName, _disabled, currentState)'
+                computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, propertyName, _disabled)'
             },
 
             /**
@@ -1399,12 +1391,13 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Computes whether title action is available for tapping and visible.
      */
-    _computeActionAvailability (entityMaster, newEntityMaster, entity, propertyName, _disabled, currentState) {
-        if (!(entityMaster || newEntityMaster) || !entity || !propertyName || !currentState || typeof _disabled === 'undefined') {
+    _computeActionAvailability (entityMaster, newEntityMaster, entity, propertyName, _disabled) {
+        if (!(entityMaster || newEntityMaster) || !entity || !propertyName || typeof _disabled === 'undefined') {
             return false;
         }
-        return currentState === 'EDIT' // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
-            && (this._valueToEdit(entity, propertyName) ? !!entityMaster : (!_disabled && !!newEntityMaster));
+        const metaPropEditable = this.reflector().isEntity(entity) && !this.reflector().isDotNotated(propertyName) ? entity["@" + propertyName + "_editable"] : false;
+        
+        return this._valueToEdit(entity, propertyName) ? !!entityMaster : (metaPropEditable && !!newEntityMaster);
     }
 
     _actionIcon (actionAvailable, entity, propertyName) {

@@ -61,7 +61,7 @@ const hideCheckIconOnMouseLeave = function () {
 const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
         <span on-down="_labelDownEventHandler">[[propTitle]]</span>
-        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -86,18 +86,11 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 @apply --layout-horizontal;
                 @apply --layout-center;
             }
-            #copyIcon {
-                display: none;
+            .label-action {
                 width: 18px;
                 height: 18px;
                 margin-left: 4px;
-            }
-            label #copyIcon {
                 cursor: pointer;
-            }
-            :host(:hover) #copyIcon,
-            #decorator[focused]  #copyIcon {
-                display: unset;
             }
             .input-layer {
                 font-size: 16px;
