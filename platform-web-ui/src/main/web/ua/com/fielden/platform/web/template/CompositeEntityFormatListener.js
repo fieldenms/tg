@@ -1,6 +1,6 @@
 // Generated from /home/jhou/workspace-java/tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/template/CompositeEntityFormat.g4 by ANTLR 4.13.2
 // jshint ignore: start
-import antlr4 from 'antlr4';
+import antlr4 from '/resources/polymer/antlr4/dist/antlr4.web.mjs';
 
 // This class defines a complete listener for a parse tree produced by CompositeEntityFormatParser.
 export default class CompositeEntityFormatListener extends antlr4.tree.ParseTreeListener {
