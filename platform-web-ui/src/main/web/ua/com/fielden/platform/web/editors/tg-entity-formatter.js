@@ -184,26 +184,34 @@ function createCompositeTitle (entity, template, reflector) {
             }
         }
         exitNo (ctx) {
-            currMember = {};
-            members.push(currMember);
             currMemberName = getKeyMemberName(entity, ctx.children[1].symbol.text);
         }
         exitTvPart (ctx) {
-            if (currSeparator) {
-                currMember.separator = currSeparator;
-            } else {
-                currSeparator = ' ';
+            const value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
+            if (value) {
+                currMember = {};
+                if (currSeparator) {
+                    currMember.separator = currSeparator;
+                } else {
+                    currSeparator = ' ';
+                }
+                currMember.title = entity.type().prop(currMemberName).title();
+                currMember.value = value;
+                members.push(currMember);
             }
-            currMember.title = entity.type().prop(currMemberName).title();
-            currMember.value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
         }
         exitVPart (ctx) {
-            if (currSeparator) {
-                currMember.separator = currSeparator;
-            } else {
-                currSeparator = entity.type().compositeKeySeparator();
+            const value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
+            if (value) {
+                currMember = {};
+                if (currSeparator) {
+                    currMember.separator = currSeparator;
+                } else {
+                    currSeparator = entity.type().compositeKeySeparator();
+                }
+                currMember.value = value;
+                members.push(currMember);
             }
-            currMember.value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
         }
     }
 
