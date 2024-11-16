@@ -165,6 +165,21 @@ function createCompositeTitle (entity, template, reflector) {
     let currSeparator;
 
     class Listener extends CompositeEntityFormatListener {
+        exitTemplate (ctx) {
+            if (ctx.children.length === 1) { // <EOF>
+                createCompositeTitle(
+                    entity,
+                    entity.type().compositeKeyNames()
+                        .map((n, index) => `#${index + 1}tv`)
+                        .join(''),
+                    reflector
+                ).forEach(member => members.push(member));
+
+                if (members.length === 1) {
+                    delete members[0].title;
+                }
+            }
+        }
         exitNo (ctx) {
             currMember = {};
             members.push(currMember);
