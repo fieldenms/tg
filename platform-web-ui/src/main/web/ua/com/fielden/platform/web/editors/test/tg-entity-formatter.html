@@ -54,10 +54,10 @@
                     assert.strictEqual(2, defaultFormat.length, "The number of formatted value is incorrect");
                     assert.isUndefined(defaultFormat[0].title, "The first key title is incorrect");
                     assert.strictEqual("DEFAULT_KEY", defaultFormat[0].value, "The first key value is incorrect");
-                    assert.strictEqual(" ", defaultFormat[0].separator, "The first key separator is incorrect");
+                    assert.isUndefined(defaultFormat[0].separator, "The first key separator is incorrect");
                     assert.isUndefined(defaultFormat[1].title, "The second key title is incorrect");
                     assert.strictEqual("10", defaultFormat[1].value, "The second key value is incorrect");
-                    assert.isUndefined(defaultFormat[1].separator, "The second separator is incorrect");
+                    assert.strictEqual(" ", defaultFormat[1].separator, "The second separator is incorrect");
 
                     done();
 	            };
@@ -412,10 +412,10 @@
                     assert.strictEqual(2, defaultFormat.length, "The number of formatted value is incorrect");
                     assert.isUndefined(defaultFormat[0].title, "The first key title is incorrect");
                     assert.strictEqual("DEFAULT_KEY", defaultFormat[0].value, "The first key value is incorrect");
-                    assert.strictEqual(" ", defaultFormat[0].separator, "The first key separator is incorrect");
+                    assert.isUndefined(defaultFormat[0].separator, "The first key separator is incorrect");
                     assert.isUndefined(defaultFormat[1].title, "The second key title is incorrect");
                     assert.strictEqual("0", defaultFormat[1].value, "The second key value is incorrect");
-                    assert.isUndefined(defaultFormat[1].separator, "The second separator is incorrect");
+                    assert.strictEqual(" ", defaultFormat[1].separator, "The second separator is incorrect");
 
                     done();
 	            };

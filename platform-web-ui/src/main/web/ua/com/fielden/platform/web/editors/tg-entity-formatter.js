@@ -166,18 +166,21 @@ function createCompositeTitle (entity, template, reflector) {
 
     class Listener extends CompositeEntityFormatListener {
         exitTemplate (ctx) {
-            if (ctx.children.length === 1) { // <EOF>
-                createCompositeTitle(
-                    entity,
-                    entity.type().compositeKeyNames()
-                        .map((n, index) => `#${index + 1}tv`)
-                        .join(''),
-                    reflector
-                ).forEach(member => members.push(member));
+            const pushAllKeys = titlePart => createCompositeTitle(
+                entity,
+                entity.type().compositeKeyNames()
+                    .map((n, index) => `#${index + 1}${titlePart}v`)
+                    .join(''),
+                reflector
+            ).forEach(member => members.push(member));
 
+            if (ctx.children.length === 1) { // <EOF>
+                pushAllKeys('t');
                 if (members.length === 1) {
                     delete members[0].title;
                 }
+            } else if (ctx.children[0].symbol && ctx.children[0].symbol.text === 'z') { // ctx.children.length === 2 with 1-st being 'z' and second <EOF>
+                pushAllKeys('');
             }
         }
         exitNo (ctx) {
