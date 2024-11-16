@@ -1,24 +1,11 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
-
-import java.io.FileInputStream;
-import java.math.BigDecimal;
-import java.util.Currency;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.util.SortedSet;
-
+import fielden.test_app.close_leave.TgCloseLeaveExample;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.joda.time.DateTime;
-
-import fielden.test_app.close_leave.TgCloseLeaveExample;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
@@ -27,46 +14,27 @@ import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.persistence.HibernateUtil;
-import ua.com.fielden.platform.sample.domain.ITgPerson;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
-import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
-import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.DbUtils;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
+
+import java.io.FileInputStream;
+import java.math.BigDecimal;
+import java.util.*;
+
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -269,6 +237,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final TgPersistentEntityWithProperties entWith0CompKeyToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY12").setStringProp("ok").setIntegerProp(43).setEntityProp(savedDefaultEntity).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compWith0Saved).setDesc("Description for entity with key 12.").setRequiredValidatedProp(30);
         save(entWith0CompKeyToBeSaved);
+
+        final TgPersistentCompositeEntity ceWithEmptySecondKey = new_composite(TgPersistentCompositeEntity.class).setKey1(savedDefaultEntity);
+        ceWithEmptySecondKey.setDesc("Default composite entity description as a long text to demonstrate proper word wrapping as part of displaying the autocompleted values.");
+        final TgPersistentCompositeEntity compWithEmptySecondKey = save(ceWithEmptySecondKey);
+
+        final TgPersistentEntityWithProperties entWithCompWithEmptySecondKeyToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY13").setStringProp("ok").setIntegerProp(43).setEntityProp(savedDefaultEntity).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compWithEmptySecondKey).setDesc("Description for entity with key 12.").setRequiredValidatedProp(30);
+        save(entWithCompWithEmptySecondKeyToBeSaved);
 
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();

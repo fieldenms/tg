@@ -28,6 +28,7 @@ public class TgPersistentCompositeEntity extends AbstractEntity<DynamicEntityKey
     @MapTo
     @Title(value = "Composite Part 2", desc = "Composite Part 2")
     @CompositeKeyMember(2)
+    @Optional
     private Integer key2;
 
     @Observable
