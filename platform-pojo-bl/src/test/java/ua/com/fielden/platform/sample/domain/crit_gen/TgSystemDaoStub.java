@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.sample.domain.crit_gen;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -16,6 +10,12 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.sample.domain.ITgSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.security.user.User;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @EntityType(TgSystem.class)
 public class TgSystemDaoStub implements ITgSystem {
