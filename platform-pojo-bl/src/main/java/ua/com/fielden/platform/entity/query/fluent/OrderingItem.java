@@ -6,8 +6,8 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 /**
- * If Java had multiple inheritance, then would also extend {@link CompletedAndYielded}. We work around this by using
- * {@link CompletedAndYielded} as a delegate.
+ * If Java had multiple inheritance, then would also extend {@link CompletedAndYielded}.
+ * We work around this by using {@link CompletedAndYielded} as a delegate.
  */
 final class OrderingItem<ET extends AbstractEntity<?>>
         extends OrderingItem1<ET>
