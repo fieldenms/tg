@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
 public class PersistentEntitySaverTest extends AbstractDaoTestCase {
 
     @Test
-    public void non_persistent_dirty_properties_of_a_modified_persistent_entity_keep_their_values_and_arent_dirty_after_save() {
+    public void plain_dirty_properties_of_a_modified_persistent_entity_keep_their_values_and_arent_dirty_after_save() {
         final var savedNewEntityA = save(new_(PersistentEntityWithAllKindsOfProperties.class, "A"));
         final var persistTrivialEntity = save(new_(TrivialPersistentEntity.class, "T2"));
         final var trivialEntity = save(new_(TrivialPersistentEntity.class, "T1"));
@@ -50,7 +50,7 @@ public class PersistentEntitySaverTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void non_persistent_dirty_properties_of_a_new_persistent_entity_keep_their_values_and_arent_dirty_after_save() {
+    public void plain_dirty_properties_of_a_new_persistent_entity_keep_their_values_and_arent_dirty_after_save() {
         final var persistTrivialEntity = save(new_(TrivialPersistentEntity.class, "T2"));
         final var trivialEntity = save(new_(TrivialPersistentEntity.class, "T1"));
         final var persistStr = "Green";
