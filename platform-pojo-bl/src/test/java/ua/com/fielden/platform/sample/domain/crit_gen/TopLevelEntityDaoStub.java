@@ -44,7 +44,7 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public TopLevelEntity findById(final boolean filtered, final Long id, final fetch<TopLevelEntity> fetchModel, final IFillModel fillModel) {
+    public TopLevelEntity findById(final boolean filtered, final Long id, final fetch<TopLevelEntity> fetchModel, final IFillModel<TopLevelEntity> fillModel) {
         return null;
     }
 

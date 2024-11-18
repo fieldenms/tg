@@ -61,7 +61,7 @@ public class TgPersistentEntityWithPropertiesDaoStub implements ITgPersistentEnt
     }
 
     @Override
-    public TgPersistentEntityWithProperties findById(final boolean filtered, final Long id, final fetch<TgPersistentEntityWithProperties> fetchModel, final IFillModel fillModel) {
+    public TgPersistentEntityWithProperties findById(final boolean filtered, final Long id, final fetch<TgPersistentEntityWithProperties> fetchModel, final IFillModel<TgPersistentEntityWithProperties> fillModel) {
         return null;
     }
 

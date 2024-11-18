@@ -102,4 +102,8 @@ public interface IFillModel<T extends AbstractEntity<?>> {
             return entity;
         }
     };
+
+    static <T extends AbstractEntity<?>> IFillModel<T> emptyFillModel() {
+        return EMPTY_FILL_MODEL;
+    }
 }

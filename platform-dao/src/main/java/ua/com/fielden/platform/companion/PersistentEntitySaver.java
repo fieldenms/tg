@@ -62,7 +62,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.model.IFillModel.EMPTY_FILL_MODEL;
+import static ua.com.fielden.platform.entity.query.model.IFillModel.emptyFillModel;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
@@ -191,7 +191,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     final var dm = domainMetadata.forEntity(entityType);
                     final var plainProps = dm.properties().stream().filter(PropertyMetadata::isPlain).collect(toSet());
                     if (plainProps.isEmpty()) {
-                        entityToReturn = findById.find(entity.getId(), fetchModel, EMPTY_FILL_MODEL);
+                        entityToReturn = findById.find(entity.getId(), fetchModel, emptyFillModel());
                     }
                     else {
                         final var fillModelBld = new FillModelBuilder(domainMetadata);
@@ -233,7 +233,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             if (!isValid.isSuccessful()) {
                 throw isValid;
             }
-            final Supplier<IFillModel> fillModel = () -> buildFillModel(dirtyPlainProps);
+            final Supplier<IFillModel<T>> fillModel = () -> buildFillModel(dirtyPlainProps);
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
@@ -261,9 +261,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param dirtyPlainProps
      * @return
      */
-    private IFillModel buildFillModel(final Set<MetaProperty<?>> dirtyPlainProps) {
+    private IFillModel<T> buildFillModel(final Set<MetaProperty<?>> dirtyPlainProps) {
         if (dirtyPlainProps.isEmpty()) {
-            return EMPTY_FILL_MODEL;
+            return emptyFillModel();
         }
         final FillModelBuilder builder = new FillModelBuilder(domainMetadata);
         for (final MetaProperty<?> mp : dirtyPlainProps) {
@@ -320,7 +320,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final T entity,
             final boolean skipRefetching,
             final Optional<fetch<T>> maybeFetch,
-            final Supplier<IFillModel> fillModel,
+            final Supplier<IFillModel<T>> fillModel,
             final EntityMetadata entityMetadata,
             final Session session)
     {
@@ -584,7 +584,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final T entity,
             final boolean skipRefetching,
             final Optional<fetch<T>> maybeFetch,
-            final Supplier<IFillModel> fillModel,
+            final Supplier<IFillModel<T>> fillModel,
             final Session session)
     {
         // let's make sure that entity is not a duplicate
@@ -801,7 +801,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     @FunctionalInterface
     public interface FindEntityById<E extends AbstractEntity<?>> {
 
-        E find(Long id, fetch<E> fetchModel, IFillModel fillModel);
+        E find(Long id, fetch<E> fetchModel, IFillModel<E> fillModel);
 
     }
 

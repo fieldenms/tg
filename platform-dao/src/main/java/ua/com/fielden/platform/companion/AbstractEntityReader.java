@@ -81,7 +81,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
-    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
+    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel<T> fillModel) {
         return fetchOneEntityInstance(filtered, id, fetchModel, fillModel);
     }
     
