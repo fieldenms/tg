@@ -144,10 +144,10 @@ export class TgMultilineTextEditor extends TgEditor {
     }
 
     _labelDownEventHandler (event) {
-        if (this.shadowRoot.activeElement !== this.decoratedInput()) {
+        if (this.shadowRoot.activeElement !== this.decoratedInput() && !this._disabled) {
             this.decoratedInput().textarea.select();
+            this.decoratedInput().textarea.focus();
         }
-        this.decoratedInput().textarea.focus();
         tearDownEvent(event);
     }
 

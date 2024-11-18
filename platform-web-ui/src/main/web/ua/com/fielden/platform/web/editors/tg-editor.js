@@ -894,10 +894,10 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     }
 
     _labelDownEventHandler (event) {
-        if (this.shadowRoot.activeElement !== this.decoratedInput()) {
+        if (this.shadowRoot.activeElement !== this.decoratedInput() && !this._disabled) {
             this.decoratedInput().select();
+            this.decoratedInput().focus();
         }
-        this.decoratedInput().focus();
         tearDownEvent(event);
     }
 
