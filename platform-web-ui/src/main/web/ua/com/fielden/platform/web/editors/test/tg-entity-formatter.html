@@ -29,7 +29,7 @@
 
 		import '/app/tg-reflector.js';
         import { _millis } from '/resources/reflection/tg-date-utils.js';
-        import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js';
+        import { composeEntityValue } from '/resources/editors/tg-entity-formatter.js';
 		import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
 
 		suite('composite entity formatter', function() {
@@ -424,14 +424,14 @@
             });
 			test('works for no template with 0 key value', function (done) {
 		    	master.entityId = '100';
-		    	
+
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                // value ok?
 	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
 	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
 
                     const entityValue = entity.get("compositeProp");
-                    const defaultFormat = composeDefaultEntityValue(entityValue);
+                    const defaultFormat = composeEntityValue(entityValue, "");
 
 					assert.strictEqual(2, defaultFormat.length, "The number of formatted value is incorrect");
                     assert.strictEqual("Composite Part 1", defaultFormat[0].title, "The first key title is incorrect");
@@ -439,7 +439,7 @@
                     assert.strictEqual("Composite Part 2", defaultFormat[1].title, "The second key title is incorrect");
                     assert.strictEqual("0", defaultFormat[1].value, "The second key value is incorrect");
 					assert.isUndefined(defaultFormat[0].separator, "The first key separator is incorrect");
-                    assert.isUndefined(defaultFormat[1].separator, "The second separator is incorrect");
+                    assert.strictEqual(" ", defaultFormat[1].separator, "The second separator is incorrect");
 
                     done();
 	            };

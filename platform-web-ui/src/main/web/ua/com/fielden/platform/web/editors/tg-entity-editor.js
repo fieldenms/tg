@@ -16,7 +16,7 @@ import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js'
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { tearDownEvent, allDefined, isMobileApp, localStorageKey } from '/resources/reflection/tg-polymer-utils.js'
-import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
+import { composeEntityValue } from '/resources/editors/tg-entity-formatter.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const AUTOCOMPLETE_ACTIVE_ONLY_KEY = '@@activeOnly';
@@ -1427,7 +1427,7 @@ export class TgEntityEditor extends TgEditor {
                     return composeEntityValue(entityValue, metaProp.displayAs());
                 } catch (e) {
                     console.error(e.msg);
-                    return composeDefaultEntityValue(entityValue);
+                    return composeEntityValue(entityValue, '');
                 }
             }
         }
