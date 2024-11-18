@@ -9,6 +9,8 @@ import ua.com.fielden.platform.sample.domain.ReferenceHierarchyDaoStub;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.utils.IDates;
 
+import java.util.Properties;
+
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityIocModule}, this module binds
  * {@link IMetaPropertyFactory}.
@@ -18,6 +20,14 @@ import ua.com.fielden.platform.utils.IDates;
  * @author TG Team
  */
 public class EntityTestIocModuleWithPropertyFactory extends EntityIocModule {
+
+    public EntityTestIocModuleWithPropertyFactory() {
+        super();
+    }
+
+    public EntityTestIocModuleWithPropertyFactory(final Properties properties) {
+        super(properties);
+    }
 
     /**
      * 

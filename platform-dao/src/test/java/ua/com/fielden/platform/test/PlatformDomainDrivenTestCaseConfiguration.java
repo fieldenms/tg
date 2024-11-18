@@ -50,6 +50,12 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         // Custom Hibernate configuration properties
         props.setProperty("hibernate.show_sql", "false");
         props.setProperty("hibernate.format_sql", "true");
+        // Cache configuration for the dynamic property access
+        props.setProperty("dynamicPropertyAccess.caching", "enabled");
+        props.setProperty("dynamicPropertyAccess.typeCache.concurrencyLevel", "100");
+        props.setProperty("dynamicPropertyAccess.typeCache.expireAfterAccess", "12h");
+        props.setProperty("dynamicPropertyAccess.tempTypeCache.maxSize", "2048");
+        props.setProperty("dynamicPropertyAccess.tempTypeCache.expireAfterWrite", "10m");
         return props;
     }
 

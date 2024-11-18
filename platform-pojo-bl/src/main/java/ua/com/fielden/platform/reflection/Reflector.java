@@ -238,7 +238,7 @@ public final class Reflector {
     }
 
     /**
-     * Tries to obtain property setter for property, specified using dot-notation.
+     * Tries to find a property setter for property, specified using dot-expression.
      *
      * @param entityClass
      * @param dotNotationExp
@@ -334,9 +334,9 @@ public final class Reflector {
      * Converts a relative property path to an absolute path with respect to the provided context.
      *
      * @param context
-     *            -- the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+     *            a dot-expression for a property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param relativePropertyPath
-     *            -- relative property path, which may contain ← and dots for separating individual properties.
+     *            relative property path, which may contain ← and dots for separating individual properties.
      * @return
      */
     public static String fromRelative2AbsotulePath(final String context, final String relativePropertyPath) {
@@ -390,9 +390,9 @@ public final class Reflector {
      * Converts an absolute property path to a relative one in respect to the provided context.
      *
      * @param context
-     *            the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+     *            a dot-expression for a property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param absolutePropertyPath
-     *            -- an absolute property path, which needs to be converted to a relative path with respect to the specified context.
+     *            an absolute property path, which needs to be converted to a relative path with respect to the specified context.
      * @return
      */
     public static String fromAbsotule2RelativePath(final String context, final String absolutePropertyPath) {

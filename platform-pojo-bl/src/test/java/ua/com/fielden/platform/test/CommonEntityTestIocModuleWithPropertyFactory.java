@@ -12,6 +12,8 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
+import java.util.Properties;
+
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityIocModule}, this module binds
  * {@link IMetaPropertyFactory}.
@@ -22,14 +24,22 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  */
 public final class CommonEntityTestIocModuleWithPropertyFactory extends EntityTestIocModuleWithPropertyFactory {
 
+    public CommonEntityTestIocModuleWithPropertyFactory() {
+        super();
+    }
+
+    public CommonEntityTestIocModuleWithPropertyFactory(final Properties properties) {
+        super(properties);
+    }
+
     @Override
     protected void configure() {
         super.configure();
         
         bindConstant().annotatedWith(Names.named("app.name")).to("Unit Tests");
         bindConstant().annotatedWith(Names.named("email.smtp")).to("192.168.1.8");
-        bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tests@tg.org"); 
-        
+        bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tests@tg.org");
+
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
         bind(IDates.class).to(DatesForTesting.class);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);

@@ -14,8 +14,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-import static ua.com.fielden.platform.types.RichText._coreText;
-import static ua.com.fielden.platform.types.RichText._formattedText;
+import static ua.com.fielden.platform.types.RichText.CORE_TEXT;
+import static ua.com.fielden.platform.types.RichText.FORMATTED_TEXT;
 
 /**
  * Hibernate type mapping for component type {@link RichText}.
@@ -138,8 +138,8 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
         if (allArgumentsAreNull(arguments)) {
             return null;
         }
-        return new RichText.Persisted((String) arguments.get(_formattedText),
-                                      (String) arguments.get(_coreText));
+        return new RichText.Persisted((String) arguments.get(FORMATTED_TEXT),
+                                      (String) arguments.get(CORE_TEXT));
     }
 
     @Override
@@ -161,7 +161,7 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
 
     @Override
     public String[] getPropertyNames() {
-        return new String[] { _formattedText, _coreText };
+        return new String[] { FORMATTED_TEXT, CORE_TEXT };
     }
 
     @Override

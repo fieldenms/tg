@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.eql.meta.PropType.*;
 import static ua.com.fielden.platform.eql.stage1.sundries.Yield1.ABSENT_ALIAS;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertThrows;
 
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage1.sources.exceptions.InvalidYieldMatrixException;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.AverageOf3;
@@ -918,11 +920,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final var q2 = select().yield().val(100).as("x").yield().val(300).as("y").modelAsAggregate();
         final var union = select(q1, q2).yieldAll().modelAsAggregate();
 
-        assertThrows(() -> qry(union), EqlException.class, ex -> {
-            assertNotNull(ex.getMessage());
-            assertTrue(ex.getMessage().startsWith("Queries whose results are concatenated must have the same number of yields.")
-                    || ex.getMessage().startsWith("Incorrect models used as query source - their result types are different!"));
-        });
+        Assert.assertThrows(InvalidYieldMatrixException.class, () -> qry(union));
     }
 
  }

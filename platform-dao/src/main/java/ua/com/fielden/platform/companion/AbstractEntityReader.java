@@ -1,25 +1,6 @@
 package ua.com.fielden.platform.companion;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptyMap;
-import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.pagination.IPage.pageCount;
-import static ua.com.fielden.platform.pagination.IPage.realPageCount;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import org.hibernate.Session;
-
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
@@ -33,10 +14,22 @@ import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.FillModel;
+import ua.com.fielden.platform.entity.query.model.IFillModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
+import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.pagination.IPage.pageCount;
+import static ua.com.fielden.platform.pagination.IPage.realPageCount;
 
 /**
  * This is a base class that implements contract {@link IEntityReader}. 
@@ -88,7 +81,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
-    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
+    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
         return fetchOneEntityInstance(filtered, id, fetchModel, fillModel);
     }
     
@@ -296,13 +289,12 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      *
      * @param filtered controls whether user-filtering is on
      */
-    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
+    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
         if (id == null) {
             throw new EntityCompanionException(ERR_MISSING_ID_VALUE.formatted(getEntityType().getName()));
         }
 
-        final var query = select(getEntityType()).where().prop(ID).eq().val(id).model()
-                          .setFilterable(filtered);
+        final var query = select(getEntityType()).where().prop(ID).eq().val(id).model().setFilterable(filtered);
         final var qem = from(query).with(fetchModel).with(fillModel).lightweight(!instrumented()).model();
         try {
             return getEntity(qem);

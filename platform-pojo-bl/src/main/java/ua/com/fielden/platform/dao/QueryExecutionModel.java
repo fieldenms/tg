@@ -13,13 +13,13 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.query.model.FillModels.emptyFillModel;
+import static ua.com.fielden.platform.entity.query.model.IFillModel.EMPTY_FILL_MODEL;
 
 public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
     private final Q queryModel;
     private final OrderingModel orderModel;
     private final fetch<T> fetchModel;
-    private final FillModel fillModel;
+    private final IFillModel fillModel;
     private final Map<String, Object> paramValues;
     private final boolean lightweight;
     private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
@@ -34,7 +34,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         lightweight = false;
     }
     
-    protected QueryExecutionModel(final Q queryModel, final OrderingModel orderModel, final fetch<T> fetchModel, final FillModel fillModel, final Map<String, Object> paramValues, final boolean lightweight) {
+    protected QueryExecutionModel(final Q queryModel, final OrderingModel orderModel, final fetch<T> fetchModel, final IFillModel fillModel, final Map<String, Object> paramValues, final boolean lightweight) {
         this.queryModel = queryModel;
         this.orderModel = orderModel;
         this.fetchModel = fetchModel;
@@ -97,7 +97,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         return fetchModel;
     }
 
-    public FillModel getFillModel() {
+    public IFillModel getFillModel() {
         return fillModel;
     }
 
@@ -125,7 +125,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         private Q queryModel;
         private OrderingModel orderModel;
         private fetch<T> fetchModel;
-        private FillModel fillModel = emptyFillModel();
+        private IFillModel fillModel = EMPTY_FILL_MODEL;
         private Map<String, Object> paramValues = new HashMap<>();
         private boolean lightweight = false;
 
@@ -151,7 +151,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
             return this;
         }
 
-        public Builder<T, Q> with(final FillModel fillModel) {
+        public Builder<T, Q> with(final IFillModel fillModel) {
             this.fillModel = fillModel;
             return this;
         }

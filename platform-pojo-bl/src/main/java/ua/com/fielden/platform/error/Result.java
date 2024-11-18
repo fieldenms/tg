@@ -245,7 +245,7 @@ public class Result extends RuntimeException {
         this.ex = null;
     }
 
-    /** Creates failed result. */
+    /** Creates a failed result. */
     public Result(final Object instance, final Exception ex) {
         super(ex);
         this.instance = instance;
@@ -253,7 +253,7 @@ public class Result extends RuntimeException {
         this.ex = ex;
     }
 
-    /** Creates failed result. */
+    /** Creates a failed result. */
     public Result(final Exception ex) {
         super(ex);
         this.instance = null;
@@ -308,7 +308,7 @@ public class Result extends RuntimeException {
     }
 
     /**
-     * Copies this result with overridden instance.
+     * Copy this result with an overridden instance.
      *
      * @param anotherInstance
      * @return
@@ -324,13 +324,17 @@ public class Result extends RuntimeException {
     /**
      * A convenient construct to perform some action for a result that represents a failure.
      * For example, it could be used to throw an exception as it often happens in case of unsuccessful validations.
+     * <p>
+     * If {@code consumer} does not throw an exception or the result is successful, then {@code this} itself is returned for further use.
      *
      * @param consumer
+     * @return {@code this}
      */
-    public void ifFailure(final Consumer<? super Exception> consumer) {
+    public Result ifFailure(final Consumer<? super Exception> consumer) {
         if (!isSuccessful()) {
             consumer.accept(ex);
         }
+        return this;
     }
 
     /**

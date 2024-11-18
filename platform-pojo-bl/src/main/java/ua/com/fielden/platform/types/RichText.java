@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
 import java.util.*;
 
@@ -32,8 +33,8 @@ import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
  */
 public sealed class RichText permits RichText.Persisted {
 
-    public static final String _formattedText = "formattedText";
-    public static final String _coreText = "coreText";
+    public static final String FORMATTED_TEXT = "formattedText";
+    public static final String CORE_TEXT = "coreText";
 
     @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
@@ -55,8 +56,12 @@ public sealed class RichText permits RichText.Persisted {
      */
     // !!! KEEP THIS CONSTRUCTOR PACKAGE PRIVATE !!!
     RichText(final String formattedText, final String coreText) {
-        requireNonNull(formattedText);
-        requireNonNull(coreText);
+        if (formattedText == null) {
+            throw new InvalidArgumentException("Argument [formattedText] must not be null.");
+        }
+        if (coreText == null) {
+            throw new InvalidArgumentException("Argument [coreText] must not be null.");
+        }
         this.formattedText = formattedText;
         this.coreText = coreText;
     }

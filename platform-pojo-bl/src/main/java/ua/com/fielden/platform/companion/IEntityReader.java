@@ -1,12 +1,5 @@
 package ua.com.fielden.platform.companion;
 
-import static java.util.Collections.emptyMap;
-import static ua.com.fielden.platform.entity.query.model.FillModels.emptyFillModel;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -14,11 +7,16 @@ import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.FillModel;
-import ua.com.fielden.platform.entity.query.model.FillModels;
+import ua.com.fielden.platform.entity.query.model.IFillModel;
 import ua.com.fielden.platform.pagination.IPage;
 
 import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Collections.emptyMap;
+import static ua.com.fielden.platform.entity.query.model.IFillModel.EMPTY_FILL_MODEL;
 
 /**
  * The reader contract for entity companion objects, which should be implemented by companions of persistent or synthetic entities.
@@ -77,48 +75,50 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     /**
      * Finds entity by its surrogate id.
      *
-     * @param filtered -- <code>true</code> to turn filtering on.
-     * @param id -- ID of the entity to be loaded.
-     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @param filtered  {@code true} to turn filtering on.
+     * @param id  ID of the entity to be loaded.
+     * @param fetchModel  fetching model specifying the initialisation strategy (i.e., what properties should be retrieved).
+     * @param fillModel  a fill model to populate plain transient properties.
      */
-    T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel);
+    T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel);
 
     /**
      * Finds entity by its surrogate id.
      *
-     * @param filtered -- <code>true</code> to turn filtering on.
-     * @param id -- ID of the entity to be loaded.
-     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @param filtered  {@code true} to turn filtering on.
+     * @param id  ID of the entity to be loaded.
+     * @param fetchModel  fetching model specifying the initialisation strategy (i.e., what properties should be retrieved).
      */
     default T findById(final boolean filtered, final Long id, final fetch<T> fetchModel) {
-        return findById(filtered, id, fetchModel, emptyFillModel());
+        return findById(filtered, id, fetchModel, EMPTY_FILL_MODEL);
     }
 
     /**
      * Finds entity by its surrogate id.
      *
      * @param id -- ID of the entity to be loaded.
-     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e., what properties should be retrieved).
      */
     default T findById(final Long id, final fetch<T> fetchModel) {
-        return findById(id, fetchModel, emptyFillModel());
+        return findById(false, id, fetchModel, EMPTY_FILL_MODEL);
     }
 
     /**
      * Finds entity by its surrogate id.
      *
-     * @param id -- ID of the entity to be loaded.
-     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @param id  ID of the entity to be loaded.
+     * @param fetchModel  fetching model specifying the initialisation strategy (i.e., what properties should be retrieved).
+     * @param fillModel  a fill model to populate plain transient properties.
      */
-    default T findById(final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
+    default T findById(final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
         return findById(false, id, fetchModel, fillModel);
     }
 
     default Optional<T> findByIdOptional(final Long id, final fetch<T> fetchModel) {
-        return findByIdOptional(false, id, fetchModel, emptyFillModel());
+        return findByIdOptional(false, id, fetchModel);
     }
 
-    default Optional<T> findByIdOptional(final boolean filtered, final Long id, final fetch<T> fetchModel, final FillModel fillModel) {
+    default Optional<T> findByIdOptional(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
         return Optional.ofNullable(findById(filtered, id, fetchModel, fillModel));
     }
 
@@ -129,10 +129,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     /**
      * Finds entity by its surrogate id.
      *
-     * @param id
-     *            -- ID of the entity to be loaded.
-     * @param models
-     *            -- one or more fetching models specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @param id  ID of the entity to be loaded.
      * @return
      */
     T findById(final Long id);
@@ -142,8 +139,8 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     }
 
     /**
-     * Finds entity by its business key .
-     * If the key is composite then values of the key components should be passed in the same order as defined in the entity class using annotation {@link CompositeKeyMember}.
+     * Finds entity by its business key.
+     * If the key is composite, then values of the key components should be passed in the same order as defined in the entity class using annotation {@link CompositeKeyMember}.
      *
      * @param keyValues
      * @return
@@ -257,9 +254,9 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * Getting all entities matching the query may result in an excessive use of memory.
      * It should only be used if there is a certainty that the resultant list won't be too large.
      * <p>
-     * In all other cases consider using Stream API. 
+     * In all other cases, consider using Stream API.
      *
-     * @param quert
+     * @param query
      * @return
      * 
      */
@@ -301,7 +298,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     /**
      * Should return true if an entity with the provided key exists in the persistent state.
      *
-     * @param entity
+     * @param keyValues
      * @return
      */
     boolean entityWithKeyExists(final Object... keyValues);

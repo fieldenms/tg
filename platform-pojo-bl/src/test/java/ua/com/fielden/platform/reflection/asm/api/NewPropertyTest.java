@@ -23,7 +23,7 @@ import org.junit.Test;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.Generated;
