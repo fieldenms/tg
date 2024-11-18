@@ -34,9 +34,8 @@ final class FillModelImpl<T extends AbstractEntity<?>> implements IFillModel<T> 
         return Optional.ofNullable(values.get(propName.toString()));
     }
 
-    @Override
-    public <X> Stream<X> values(final BiFunction<? super String, Object, X> fn) {
-        return values.entrySet().stream().map(entry -> fn.apply(entry.getKey(), entry.getValue()));
+    public Map<String, Object> values() {
+        return values;
     }
 
     @Override
@@ -57,7 +56,7 @@ final class FillModelImpl<T extends AbstractEntity<?>> implements IFillModel<T> 
 
     @Override
     public boolean equals(final Object obj) {
-        return this == obj || obj instanceof FillModelImpl that && values.equals(that.values());
+        return this == obj || obj instanceof FillModelImpl that && values.equals(that.values);
     }
 
     @Override

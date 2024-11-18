@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.model;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -47,22 +48,18 @@ public interface IFillModel<T extends AbstractEntity<?>> {
     /**
      * Returns all property-value pairs present in this fill model.
      */
-    default Stream<T2<String, Object>> values() {
-        return values(T2::t2);
-    }
-
-    /**
-     * Returns all property-value pairs present in this fill model.
-     *
-     * @param fn  transforms a property-value pair
-     */
-    <X> Stream<X> values(BiFunction<? super String, Object, X> fn);
+    Map<String, Object> values();
 
     /**
      * Returns all properties present in this fill model.
      */
     Set<String> properties();
 
+    /**
+     * Identifies whether a fill model has any properties to fill.
+     *
+     * @return
+     */
     boolean isEmpty();
 
     /**
@@ -86,8 +83,8 @@ public interface IFillModel<T extends AbstractEntity<?>> {
         }
 
         @Override
-        public <X> Stream<X> values(BiFunction<? super String, Object, X> fn) {
-            return Stream.empty();
+        public Map<String, Object> values() {
+            return Map.of();
         }
 
         @Override
