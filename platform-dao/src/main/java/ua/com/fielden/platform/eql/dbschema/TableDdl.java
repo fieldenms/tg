@@ -132,6 +132,13 @@ public class TableDdl {
     }
 
     /**
+     * An alternative to {@link #getColumnDefinition(String)} that returns an empty optional if the specified property is not contained in this table.
+     */
+    public Optional<ColumnDefinition> getColumnDefinitionOpt(final String property) {
+        return Optional.ofNullable(columns.get(property));
+    }
+
+    /**
      * Generates DDL statements for all unique and non-unique indices, including those representing a business key.
      * 
      * @param dialect
@@ -185,7 +192,7 @@ public class TableDdl {
                 .collect(toList());
     }
 
-    private List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
+    public List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
         return cols
                 .filter(col -> col.requiresIndex || isPersistedEntityType(col.javaType))
