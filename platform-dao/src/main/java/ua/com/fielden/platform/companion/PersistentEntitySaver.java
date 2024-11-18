@@ -182,8 +182,29 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         } else if (!entity.isDirty()) {
             final Result isValid = validateEntity(entity);
             if (isValid.isSuccessful()) {
-                //logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
-                return t2(entity.getId(), skipRefetching ? entity : findById.find(entity.getId(), maybeFetch.orElseGet(() -> FetchModelReconstructor.reconstruct(entity))));
+                final T entityToReturn;
+                if (skipRefetching) {
+                    entityToReturn = entity;
+                }
+                else {
+                    final fetch<T> fetchModel = maybeFetch.orElseGet(() -> FetchModelReconstructor.reconstruct(entity));
+                    final var dm = domainMetadata.forEntity(entityType);
+                    final var plainProps = dm.properties().stream().filter(PropertyMetadata::isPlain).collect(toSet());
+                    if (plainProps.isEmpty()) {
+                        entityToReturn = findById.find(entity.getId(), fetchModel, EMPTY_FILL_MODEL);
+                    }
+                    else {
+                        final var fillModelBld = new FillModelBuilder(domainMetadata);
+                        plainProps.stream().forEach(dmp -> {
+                            final var value = entity.get(dmp.name());
+                            if (value != null) {
+                                fillModelBld.set(dmp.name(), value);
+                            }
+                        });
+                        entityToReturn = findById.find(entity.getId(), fetchModel, fillModelBld.build(entityType));
+                    }
+                }
+                return t2(entity.getId(), entityToReturn);
             } else {
                 throw isValid;
             }
@@ -781,10 +802,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     public interface FindEntityById<E extends AbstractEntity<?>> {
 
         E find(Long id, fetch<E> fetchModel, IFillModel fillModel);
-
-        default E find(Long id, fetch<E> fetchModel) {
-            return find(id, fetchModel, EMPTY_FILL_MODEL);
-        }
 
     }
 
