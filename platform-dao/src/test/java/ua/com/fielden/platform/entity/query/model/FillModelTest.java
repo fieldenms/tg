@@ -8,18 +8,33 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.model.EntityToFill.UpdatePlainPropDefiner.VALUE_FROM_DEFINER;
 
 public class FillModelTest extends AbstractDaoTestCase {
 
     @Test
-    public void applying_a_fill_model_to_plain_properties_results_in_specified_values_assigned_to_them() {
+    public void applying_a_fill_model_to_plain_properties_of_non_instrumented_entity_results_in_specified_values_assigned_to_them() {
+        final var trivialEntity = save(new_(TrivialPersistentEntity.class, "a"));
+        final var qem = from(select(EntityToFill.class).model())
+                .with(getInstance(FillModelBuilder.class).set("plainStr", "hello").set("plainEntity", trivialEntity).build(EntityToFill.class))
+                .model();
+        final var entity = co(EntityToFill.class).getFirstEntities(qem, 1).getFirst();
+        assertFalse(entity.isInstrumented());
+
+        assertEquals("hello", entity.getPlainStr());
+        assertEquals(trivialEntity, entity.getPlainEntity());
+    }
+
+    @Test
+    public void definers_take_precedence_over_fill_models_for_assigning_plain_properties_of_instrumented_entities() {
         final var trivialEntity = save(new_(TrivialPersistentEntity.class, "a"));
         final var qem = from(select(EntityToFill.class).model())
                 .with(getInstance(FillModelBuilder.class).set("plainStr", "hello").set("plainEntity", trivialEntity).build(EntityToFill.class))
                 .model();
         final var entity = co$(EntityToFill.class).getFirstEntities(qem, 1).getFirst();
+        assertTrue(entity.isInstrumented());
 
-        assertEquals("hello", entity.getPlainStr());
+        assertEquals(VALUE_FROM_DEFINER, entity.getPlainStr());
         assertFalse(entity.getProperty("plainStr").isDirty());
         assertEquals(trivialEntity, entity.getPlainEntity());
         assertFalse(entity.getProperty("plainEntity").isDirty());
