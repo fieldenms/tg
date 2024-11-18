@@ -12,10 +12,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequ
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -45,6 +42,7 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -255,10 +253,14 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     /**
-     * A helper method that identify whether {@code newValue} is {@code null}, blank (if string) or {@code false} (if boolean).
-     *
-     * @param newValue
-     * @return
+     * This predicate is true for values that represent the absence of a value.
+     * First and foremost, it is true for {@code null}.
+     * If {@code newValue} is not null, then the result depends on its type.
+     * <ul>
+     *   <li> String - true if the value is blank (empty or all whitespace).
+     *   <li> Boolean - true if the value is {@code false} or can be parsed as {@code false} with {@link Boolean#parseBoolean(String)}.
+     *   <li> RichText - true if the core text is blank.
+     * </ul>
      */
     private boolean isNullOrEmptyOrFalse(final T newValue /*, final T oldValue */) {
         // IMPORTANT : need to check NotNullValidator usage on existing logic. There is the case, when
@@ -267,7 +269,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // The current condition is essential for UI binding logic.
         return (newValue == null) || /* && (oldValue != null) */
                (isString(type) && StringUtils.isBlank(newValue.toString())) ||
-               (isBoolean(type) && !Boolean.parseBoolean(newValue.toString()));
+               (isBoolean(type) && !Boolean.parseBoolean(newValue.toString())) ||
+               (isRichText(type) && StringUtils.isBlank(((RichText) newValue).coreText()));
     }
 
     /**
