@@ -190,9 +190,18 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // logger.debug(format("Start saving entity %s (ID = %s)", entity, entity.getId())); is taking too much time for many saves
 
-        // need to capture names of dirty properties before the actual saving takes place and makes all properties not dirty
-        // this is needed for executing after save event handler
-        final Set<String> dirtyProperties = entity.getDirtyProperties().stream().map(MetaProperty::getName).collect(toSet());
+        // Need to capture names of dirty properties before the actual saving takes place and makes all properties not dirty.
+        // This is needed for executing after save event handler
+        // Also, collect dirty plain properties to be used for a fill model to populate those properties after saving.
+        final var dirtyPlainProps = new HashSet<MetaProperty<?>>();
+        final var entityMetadata = domainMetadata.forEntity(entity.getType());
+        final Set<String> dirtyPropNames = entity.getDirtyProperties().stream().map(mp -> {
+            final var propName = mp.getName();
+            if (entityMetadata.propertyOpt(propName).filter(PropertyMetadata::isPlain).isPresent()) {
+                dirtyPlainProps.add(mp);
+            }
+            return propName;
+        }).collect(toSet());
 
         final T2<Long, T> savedEntityAndId;
         // let's try to save entity
@@ -202,7 +211,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             if (!isValid.isSuccessful()) {
                 throw isValid;
             }
-            final Supplier<IFillModel> fillModel = () -> buildFillModel(entity, dirtyProperties);
+            final Supplier<IFillModel> fillModel = () -> buildFillModel(dirtyPlainProps);
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
@@ -216,38 +225,32 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         final T savedEntity = savedEntityAndId._2;
         // this call never throws any exceptions
-        processAfterSaveEvent.accept(savedEntity, dirtyProperties);
+        processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
         return savedEntityAndId;
     }
 
     /**
-     * Builds a {@link IFillModel} based on the instance of an entity before it was saved.
+     * Builds a {@link IFillModel} based on {@code dirtyPlainProps} for a dirty entity, before it was saved.
      * <p>
      * The fill model is then used to restore values for dirty plain properties and reset their meta-state,
      * so that they are not dirty in the returned saved instance.
      *
-     * @param origDirtyEntity
-     * @param dirtyProperties
+     * @param dirtyPlainProps
      * @return
      */
-    private IFillModel buildFillModel(final T origDirtyEntity, final Collection<String> dirtyProperties) {
-        if (!dirtyProperties.isEmpty()) {
-            final FillModelBuilder builder = new FillModelBuilder(domainMetadata);
-            final var entityMetadata = domainMetadata.forEntity(origDirtyEntity.getType());
-            for (final String propName : dirtyProperties) {
-                final Optional<PropertyMetadata> propMetadata = entityMetadata.property(origDirtyEntity.getProperty(propName)).orElseThrow(Function.identity());
-                if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
-                    final var value = origDirtyEntity.get(propName);
-                    if (value != null) {
-                        builder.set(propName, value);
-                    }
-                }
-            }
-            return builder.build(entityType);
-        } else {
+    private IFillModel buildFillModel(final Set<MetaProperty<?>> dirtyPlainProps) {
+        if (dirtyPlainProps.isEmpty()) {
             return EMPTY_FILL_MODEL;
         }
+        final FillModelBuilder builder = new FillModelBuilder(domainMetadata);
+        for (final MetaProperty<?> mp : dirtyPlainProps) {
+            final var value = mp.getValue();
+            if (value != null) {
+                builder.set(mp.getName(), value);
+            }
+        }
+        return builder.build(entityType);
     }
 
     /**
