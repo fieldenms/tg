@@ -79,7 +79,7 @@ const customLabelTemplate = html`
            disabled$="[[_disabled]]" 
            slot="label"
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
-        <span on-down="_labelDownEventHandler">[[_editorPropTitle]]</span>
+        <span class="label-title" on-down="_labelDownEventHandler">[[_editorPropTitle]]</span>
         <iron-icon id="actionAvailability" class="label-action" icon="[[_actionIcon(actionAvailable, entity, propertyName)]]" action-available$="[[actionAvailable]]" on-tap="_editNewTap"></iron-icon>
         <iron-icon id="copyIcon" class="label-action" hidden$="[[noLabelFloat]]" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
