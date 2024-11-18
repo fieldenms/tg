@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
@@ -20,6 +19,7 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.test_entities.*;
@@ -1213,58 +1213,6 @@ public class AbstractEntityTest {
     public void default_implementation_for_isDirty_does_not_thorow_exceptions_for_instrumented_entities() {
         final Entity entity = factory.newEntity(Entity.class);
         assertTrue(entity.isDirty());
-    }
-
-    @Test
-    public void withIgnoreEditableState_sets_the_ignore_flag_only_for_the_duration_of_the_computation() {
-        final var entity = factory.newEntity(Entity.class);
-
-        entity.setIgnoreEditableState(false);
-        assertFalse(entity.isIgnoreEditableState());
-        entity.withIgnoreEditableState(true, () -> {
-            assertTrue(entity.isIgnoreEditableState());
-        });
-        assertFalse(entity.isIgnoreEditableState());
-
-        entity.setIgnoreEditableState(true);
-        assertTrue(entity.isIgnoreEditableState());
-        entity.withIgnoreEditableState(false, () -> {
-            assertFalse(entity.isIgnoreEditableState());
-            return 0;
-        });
-        assertTrue(entity.isIgnoreEditableState());
-
-        entity.setIgnoreEditableState(false);
-        assertFalse(entity.isIgnoreEditableState());
-        entity.withIgnoreEditableState(false, () -> {
-            assertFalse(entity.isIgnoreEditableState());
-        });
-        assertFalse(entity.isIgnoreEditableState());
-
-        entity.setIgnoreEditableState(true);
-        assertTrue(entity.isIgnoreEditableState());
-        entity.withIgnoreEditableState(true, () -> {
-            assertTrue(entity.isIgnoreEditableState());
-            return 0;
-        });
-        assertTrue(entity.isIgnoreEditableState());
-    }
-
-    @Test
-    public void withIgnoreEditableState_restores_the_original_value_of_the_ignore_flag_if_computation_throws() {
-        class LocalException extends RuntimeException {}
-
-        final var entity = factory.newEntity(Entity.class);
-
-        entity.setIgnoreEditableState(false);
-        assertFalse(entity.isIgnoreEditableState());
-        assertThrows(LocalException.class, () -> {
-            entity.withIgnoreEditableState(true, () -> {
-                assertTrue(entity.isIgnoreEditableState());
-                throw new LocalException();
-            });
-        });
-        assertFalse(entity.isIgnoreEditableState());
     }
 
     private static DomainValidationConfig newDomainValidationConfig() {

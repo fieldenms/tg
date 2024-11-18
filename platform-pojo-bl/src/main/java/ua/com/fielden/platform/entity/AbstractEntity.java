@@ -1294,10 +1294,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty()).collect(toList());
     }
 
-    public final Stream<MetaProperty<?>> streamDirtyProperties() {
-        return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty());
-    }
-
     public AbstractEntity<?> resetMetaState() {
         nonProxiedProperties().forEach(MetaProperty::resetState);
         return this;
@@ -1492,52 +1488,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * The main intent of this method is to support entity modification in rare situation while it is being marked as read-only.
+     * The main intent of this method is to support entity modification in rare situations where it is being marked as read-only.
      * Should be used with great care as it may alter the intended domain behaviour if used carelessly.
-     * At this stage there is no reason for this setter to be used as part of the domain logic. */
+     * At this stage, there is no reason for this setter to be used as part of the domain logic.
+     */
     public void setIgnoreEditableState(final boolean ignoreEditableStateDuringSave) {
         this.ignoreEditableState = ignoreEditableStateDuringSave;
-    }
-
-    /**
-     * Runs the computation in an environment where the editable state of this entity may be ignored. The editable state
-     * prior to this call is restored after the computation completes or even if it throws an exception. In the latter
-     * case the exception is rethrown.
-     *
-     * @param ignore  whether to ignore the editable state while running the computation
-     * @see #setIgnoreEditableState(boolean)
-     */
-    public <T> T withIgnoreEditableState(final boolean ignore, final FailableComputation<T> computation) {
-        requireNonNull(computation, "computation");
-
-        final boolean prevState = this.ignoreEditableState;
-        this.ignoreEditableState = ignore;
-        final T result;
-        try {
-            result = computation.get();
-        } catch (final Exception ex) {
-            throw ex instanceof RuntimeException rex ? rex : new RuntimeException(ex);
-        } finally {
-            this.ignoreEditableState = prevState;
-        }
-        return result;
-    }
-
-    /**
-     * Equivalent to {@link #withIgnoreEditableState(boolean, FailableComputation)} but does not return any value.
-     */
-    public void withIgnoreEditableState(final boolean ignore, final FailableRunnable runnable) {
-        requireNonNull(runnable, "runnable");
-
-        final boolean prevIgnore = this.ignoreEditableState;
-        this.ignoreEditableState = ignore;
-        try {
-            runnable.run();
-        } catch (final Exception ex) {
-            throw ex instanceof RuntimeException rex ? rex : new RuntimeException(ex);
-        } finally {
-            this.ignoreEditableState = prevIgnore;
-        }
     }
 
     /**
