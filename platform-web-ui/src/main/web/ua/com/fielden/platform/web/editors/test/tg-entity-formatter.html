@@ -220,7 +220,7 @@
 	                    if (ex instanceof chai.AssertionError) {
 	                        throw ex;
 	                    }
-	                    assert.strictEqual(ex.msg, 'Unknown template symbol: k in template: k at 0 position');
+	                    assert.strictEqual(ex.msg, 'Error at position 0: token recognition error at: \'k\'.');
 	                }
                     done();
 	            };
@@ -245,7 +245,7 @@
 	                    if (ex instanceof chai.AssertionError) {
 	                        throw ex;
 	                    }
-	                    assert.strictEqual(ex.msg, 'e at 1 should be a number in #etv.');
+	                    assert.strictEqual(ex.msg, 'Error at position 1: token recognition error at: \'e\'.');
 	                }
                     done();
 	            };
@@ -270,7 +270,7 @@
 	                    if (ex instanceof chai.AssertionError) {
 	                        throw ex;
 	                    }
-	                    assert.strictEqual(ex.msg, 'Key with index: 3 specified at 1 does not exist in the ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity entity');
+	                    assert.strictEqual(ex.msg, 'Key with index 3 does not exist in TgPersistentCompositeEntity entity type.');
 	                }
                     done();
 	            };
@@ -294,7 +294,7 @@
 	                    if (ex instanceof chai.AssertionError) {
 	                        throw ex;
 	                    }
-	                    assert.strictEqual(ex.msg, "'t' or 'v' should be at 2 in #1sv");
+	                    assert.strictEqual(ex.msg, "Error at position 2: no viable alternative at input \'#1s\'.");
 	                }
                     done();
 	            };
@@ -319,7 +319,7 @@
 	                    if (ex instanceof chai.AssertionError) {
 	                        throw ex;
 	                    }
-	                    assert.strictEqual(ex.msg, "'v' should be at 3 in #1tt");
+	                    assert.strictEqual(ex.msg, "Error at position 3: mismatched input \'t\' expecting \'v\'.");
 	                }
                     done();
 	            };
@@ -343,7 +343,7 @@
 	                    if (ex instanceof chai.AssertionError) {
 	                        throw ex;
 	                    }
-	                    assert.strictEqual(ex.msg, "'#' should be at 4 in #1tvd");
+	                    assert.strictEqual(ex.msg, "Error at position 4: token recognition error at: \'d\'.");
 	                }
                     done();
 	            };
@@ -367,7 +367,7 @@
 	                    if (ex instanceof chai.AssertionError) {
 	                        throw ex;
 	                    }
-	                    assert.strictEqual(ex.msg, "'t' should be at 6 in #1tv#2s");
+	                    assert.strictEqual(ex.msg, "Error at position 6: mismatched input \'s\' expecting \'t\'.");
 	                }
                     done();
 	            };
@@ -391,7 +391,7 @@
 	                    if (ex instanceof chai.AssertionError) {
 	                        throw ex;
 	                    }
-	                    assert.strictEqual(ex.msg, "'s' should be at 3 in #1vv");
+	                    assert.strictEqual(ex.msg, "Error at position 3: extraneous input \'v\' expecting <EOF>.");
 	                }
                     done();
 	            };

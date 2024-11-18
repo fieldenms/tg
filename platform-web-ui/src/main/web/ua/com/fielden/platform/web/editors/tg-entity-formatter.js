@@ -111,7 +111,7 @@ function parseNumberAndReturnState (entity, template, idx, reflector, titles, st
     }
 }
 
-function getKeyMemberName (entity, strNumber) {
+function getKeyMemberName (entity, strNumber, reflector) {
     const keyNumberIdx = +strNumber;
     if (!isNaN(keyNumberIdx)) {
         const entityType = entity.type();
@@ -119,7 +119,7 @@ function getKeyMemberName (entity, strNumber) {
         if (keyName) {
             return keyName;
         } else {
-            throw {msg: `Key with index: ${strNumber} does not exist in the ${entity.type().fullClassName()} entity`};
+            throw { msg: `Key with index ${strNumber} does not exist in ${reflector.simpleClassName(entity.type().fullClassName())} entity type.` };
         }
     } else {
         throw {msg: `${strNumber} should be a number.`};
@@ -146,8 +146,24 @@ function createCompositeTitle (entity, template, reflector) {
     const input = template;
     const chars = new antlr4.InputStream(input);
     const lexer = new CompositeEntityFormatLexer(chars);
+
+    lexer.removeErrorListeners();
+    lexer.addErrorListener({
+        syntaxError: (recognizer, offendingSymbol, line, column, msg, err) => {
+            throw { msg: `Error at position ${column}: ${msg}.` };
+        }
+    });
+
     const tokens = new antlr4.CommonTokenStream(lexer);
     const parser = new CompositeEntityFormatParser(tokens);
+
+    parser.removeErrorListeners();
+    parser.addErrorListener({
+        syntaxError: (recognizer, offendingSymbol, line, column, msg, err) => {
+            throw { msg: `Error at position ${column}: ${msg}.` };
+        }
+    });
+
     const tree = parser.template();
 
     const members = [];
@@ -175,7 +191,7 @@ function createCompositeTitle (entity, template, reflector) {
             }
         }
         exitNo (ctx) {
-            currMemberName = getKeyMemberName(entity, ctx.children[1].symbol.text);
+            currMemberName = getKeyMemberName(entity, ctx.children[1].symbol.text, reflector);
         }
         exitTvPart (ctx) {
             const value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
