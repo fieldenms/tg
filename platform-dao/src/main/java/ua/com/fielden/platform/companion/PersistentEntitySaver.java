@@ -287,11 +287,19 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     /**
      * Saves previously persisted and now modified entity.
      *
+     * @param entity  an entity instance being saved
+     * @param skipRefetching  instructs whether re-fetching should be skipped
      * @param maybeFetch  fetch model to apply to an entity instance after saving
-     * @param fillModel  will be applied only in presence of a fetch model
+     * @param fillModel  will be applied only in the presence of a fetch model
+     * @param session  the current database session
      */
-    private T2<Long, T> saveModifiedEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch,
-                                           final Supplier<IFillModel> fillModel, final Session session) {
+    private T2<Long, T> saveModifiedEntity(
+            final T entity,
+            final boolean skipRefetching,
+            final Optional<fetch<T>> maybeFetch,
+            final Supplier<IFillModel> fillModel,
+            final Session session)
+    {
         // let's first prevent not permissibly modifications that could not be checked any earlier than this,
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
@@ -540,15 +548,23 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     }
 
     /**
-     * Persists an entity that was not persisted before. Self-references are not possible for new entities simply because non-persisted instances are not permitted as property
-     * values. Unless there is a special case of skipping entity exists validation, but then the developer would need to take case of that somehow specifically for each specific
-     * case.
+     * Persists an entity not persisted before.
+     * Self-references are not possible for new entities simply because non-persisted instances are not permitted as property values.
+     * Unless there is a special case of skipping entity exists validation, but then the developer would need to take care of that somehow specifically for each case.
      *
+     * @param entity  an entity instance being saved for the first time
+     * @param skipRefetching  instructs whether re-fetching should be skipped
      * @param maybeFetch  fetch model to apply to an entity instance after saving
-     * @param fillModel  will be applied only in presence of a fetch model
+     * @param fillModel  will be applied only in the presence of a fetch model
+     * @param session  the current database session
      */
-    private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch,
-                                      final Supplier<IFillModel> fillModel, final Session session) {
+    private T2<Long, T> saveNewEntity(
+            final T entity,
+            final boolean skipRefetching,
+            final Optional<fetch<T>> maybeFetch,
+            final Supplier<IFillModel> fillModel,
+            final Session session)
+    {
         // let's make sure that entity is not a duplicate
         if (entityExists.apply(createQueryByKey(dbVersionProvider.dbVersion(), entityType, keyType, false, entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", getEntityTitleAndDesc(entity.getType()).getKey(), entity));
