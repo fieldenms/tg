@@ -32,6 +32,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.FillModelBuilder;
 import ua.com.fielden.platform.entity.query.model.IFillModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -217,7 +218,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             if (!entity.isPersisted()) { // is it a new entity?
                 savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
             } else { // so, this is a modified entity
-                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
+                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
@@ -291,6 +292,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param skipRefetching  instructs whether re-fetching should be skipped
      * @param maybeFetch  fetch model to apply to an entity instance after saving
      * @param fillModel  will be applied only in the presence of a fetch model
+     * @param entityMetadata  entity domain metadata
      * @param session  the current database session
      */
     private T2<Long, T> saveModifiedEntity(
@@ -298,6 +300,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final boolean skipRefetching,
             final Optional<fetch<T>> maybeFetch,
             final Supplier<IFillModel> fillModel,
+            final EntityMetadata entityMetadata,
             final Session session)
     {
         // let's first prevent not permissibly modifications that could not be checked any earlier than this,
@@ -321,8 +324,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
-
-        final var entityMetadata = domainMetadata.forEntity(entity.getType());
 
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
