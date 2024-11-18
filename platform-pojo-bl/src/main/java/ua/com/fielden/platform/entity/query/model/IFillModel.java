@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.model;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.Optional;
@@ -15,40 +16,33 @@ import java.util.stream.Stream;
  * plain properties.
  *
  * <h2> Relation to fetch models </h2>
- * Unlike a fetch model, whose structure resembles a graph, <b>a fill model's structure is akin to a map</b>. This difference
- * deserves a more detailed explanation.
+ * Unlike a fetch model, whose structure resembles a graph, <b>a fill model's structure is akin to a map</b>.
+ * This difference deserves a more detailed explanation.
  * <p>
- * When an entity is retrieved from a database, what is retrieved is, in fact, a graph whose shape is described by a fetch
- * model. Such a graph may have arbitrary depth. For example, a fetch model can specify that an entity-typed property should
- * be retrieved with its own fetch model. This recursive nature of fetch models is possible because during retrieval from
- * a database <i>we know where to look for a data source of entity-typed properties</i> -- in a corresponding table.
+ * When an entity is retrieved from a database, what is retrieved is, in fact, a graph whose shape is described by a fetch model.
+ * Such a graph may have arbitrary depth.
+ * For example, a fetch model can specify that an entity-typed property should be retrieved with its own fetch model.
+ * This recursive nature of fetch models is possible because during retrieval from a database <i>we know where to look for a data source of entity-typed properties</i>.
  * <p>
- * Fill models, on the other hand, do not have the same recursive nature as fetch models. This is because there is <i>nowhere
- * to look for a data source of entity-typed properties</i>, fill models have no access to a database. Therefore, it wouldn't
- * make sense to specify a fill model for an entity-typed property -- how would we instantiate an entity for that property?
- *
- * @see FillModels
+ * Fill models, on the other hand, do not have the same recursive nature as fetch models.
+ * This is because there is <i>nowhere to look for a data source of entity-typed properties</i>, fill models have no access to a database.
+ * Therefore, it does not make sense to specify a fill model for an entity-typed property.
  */
-public interface IFillModel {
+public interface IFillModel<T extends AbstractEntity<?>> {
 
     /**
-     * If a property is present in this fill model, returns a value to populate the property with, otherwise - an empty optional.
+     * If {@code propName} is present in this fill model, returns a value to populate the property with, otherwise – an empty optional.
      *
-     * @param property  simple property name
+     * @param propName  a simple property name
      */
-    Optional<Object> getValue(CharSequence property);
+    Optional<Object> getValue(CharSequence propName);
 
     /**
-     * If a property is present in this fill model, returns a value to populate the property with, otherwise throws.
-     *
-     * @param property  simple property name
+     * Checks if {@code propName} is already present in the fill model.
+     * @param propName
+     * @return
      */
-    default Object requireValue(final CharSequence property) {
-        return getValue(property)
-                .orElseThrow(() -> new FillModelException("Requested property [%s] is absent in fill model.".formatted(property)));
-    }
-
-    boolean contains(CharSequence property);
+    boolean contains(CharSequence propName);
 
     /**
      * Returns all property-value pairs present in this fill model.
@@ -72,31 +66,43 @@ public interface IFillModel {
     boolean isEmpty();
 
     /**
-     * Executes an action for each property-value pair in this fill model.
+     * Fills {@code entity} based on the property-value pairs in this fill model.
      */
-    void forEach(BiConsumer<? super String, Object> fn);
+    T fill(final T entity);
 
     /**
-     * Builds a fill model incrementally.
+     * An empty fill model.
+     * It should be used in situations where no "filling" of the property values is needed.
      */
-    interface Builder {
+    IFillModel EMPTY_FILL_MODEL = new IFillModel<>() {
+        @Override
+        public Optional<Object> getValue(CharSequence propName) {
+            return Optional.empty();
+        }
 
-        /**
-         * Specifies that the named property should be filled with the given value.
-         *
-         * @param value  must not be null
-         */
-        Builder set(CharSequence property, Object value);
+        @Override
+        public boolean contains(CharSequence propName) {
+            return false;
+        }
 
-        /**
-         * Bulds a fill model, throwing an exception if any property was specified more than once.
-         */
-        IFillModel build();
+        @Override
+        public <X> Stream<X> values(BiFunction<? super String, Object, X> fn) {
+            return Stream.empty();
+        }
 
-        /**
-         * Bulds a fill model, using the last value for any property that was specified more than once.
-         */
-        IFillModel buildKeepingLast();
-    }
+        @Override
+        public Set<String> properties() {
+            return Set.of();
+        }
 
+        @Override
+        public boolean isEmpty() {
+            return true;
+        }
+
+        @Override
+        public AbstractEntity<?> fill(final AbstractEntity<?> entity) {
+            return entity;
+        }
+    };
 }

@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.query.model.FillModels.emptyFillModel;
+import static ua.com.fielden.platform.entity.query.model.IFillModel.EMPTY_FILL_MODEL;
 
 public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
     private final Q queryModel;
@@ -125,7 +125,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         private Q queryModel;
         private OrderingModel orderModel;
         private fetch<T> fetchModel;
-        private IFillModel fillModel = emptyFillModel();
+        private IFillModel fillModel = EMPTY_FILL_MODEL;
         private Map<String, Object> paramValues = new HashMap<>();
         private boolean lightweight = false;
 

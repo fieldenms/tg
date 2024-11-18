@@ -29,8 +29,8 @@ import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.FillModelBuilder;
 import ua.com.fielden.platform.entity.query.model.IFillModel;
-import ua.com.fielden.platform.entity.query.model.FillModels;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -61,7 +61,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.model.FillModels.emptyFillModel;
+import static ua.com.fielden.platform.entity.query.model.IFillModel.EMPTY_FILL_MODEL;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
@@ -233,20 +233,20 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      */
     private IFillModel buildFillModel(final T origDirtyEntity, final Collection<String> dirtyProperties) {
         if (!dirtyProperties.isEmpty()) {
+            final FillModelBuilder builder = new FillModelBuilder(domainMetadata);
             final var entityMetadata = domainMetadata.forEntity(origDirtyEntity.getType());
-            return FillModels.fill(builder -> {
-                for (final String propName : dirtyProperties) {
-                    final Optional<PropertyMetadata> propMetadata = entityMetadata.property(origDirtyEntity.getProperty(propName)).orElseThrow(Function.identity());
-                    if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
-                        final var value = origDirtyEntity.get(propName);
-                        if (value != null) {
-                            builder.set(propName, value);
-                        }
+            for (final String propName : dirtyProperties) {
+                final Optional<PropertyMetadata> propMetadata = entityMetadata.property(origDirtyEntity.getProperty(propName)).orElseThrow(Function.identity());
+                if (propMetadata.filter(PropertyMetadata::isPlain).isPresent()) {
+                    final var value = origDirtyEntity.get(propName);
+                    if (value != null) {
+                        builder.set(propName, value);
                     }
                 }
-            });
+            }
+            return builder.build(entityType);
         } else {
-            return emptyFillModel();
+            return EMPTY_FILL_MODEL;
         }
     }
 
@@ -763,7 +763,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         E find(Long id, fetch<E> fetchModel, IFillModel fillModel);
 
         default E find(Long id, fetch<E> fetchModel) {
-            return find(id, fetchModel, emptyFillModel());
+            return find(id, fetchModel, EMPTY_FILL_MODEL);
         }
 
     }

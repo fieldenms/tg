@@ -1,17 +1,22 @@
 package ua.com.fielden.platform.entity.query.model;
 
 import com.google.common.collect.ImmutableMap;
+import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
-final class FillModelImpl implements IFillModel {
+/**
+ * Default immutable implementation of {@link IFillModel}.
+ *
+ * @param <T> an entity type for which the model provides the filling information.
+ */
+final class FillModelImpl<T extends AbstractEntity<?>> implements IFillModel<T> {
 
     private final ImmutableMap<String, Object> values;
 
@@ -20,13 +25,13 @@ final class FillModelImpl implements IFillModel {
     }
 
     @Override
-    public boolean contains(final CharSequence property) {
-        return values.containsKey(property.toString());
+    public boolean contains(final CharSequence propName) {
+        return values.containsKey(propName.toString());
     }
 
     @Override
-    public Optional<Object> getValue(final CharSequence property) {
-        return Optional.ofNullable(values.get(property.toString()));
+    public Optional<Object> getValue(final CharSequence propName) {
+        return Optional.ofNullable(values.get(propName.toString()));
     }
 
     @Override
@@ -45,8 +50,9 @@ final class FillModelImpl implements IFillModel {
     }
 
     @Override
-    public void forEach(final BiConsumer<? super String, Object> fn) {
-        values.forEach(fn);
+    public T fill(final T entity) {
+        values.forEach(entity::set);
+        return entity;
     }
 
     @Override

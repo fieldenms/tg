@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.exceptions.EntityFetcherException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.IFillModel;
-import ua.com.fielden.platform.entity.query.model.IFillModelApplier;
 import ua.com.fielden.platform.eql.retrieval.IEntityContainerFetcher;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
@@ -33,18 +32,15 @@ final class EntityFetcher implements IEntityFetcher {
     private final IEntityContainerFetcher entityContainerFetcher;
     private final IDomainMetadata domainMetadata;
     private final EntityFactory entityFactory;
-    private final IFillModelApplier fillModelApplier;
 
     @Inject
     EntityFetcher(final IEntityContainerFetcher entityContainerFetcher,
                   final IDomainMetadata domainMetadata,
-                  final EntityFactory entityFactory,
-                  final IFillModelApplier fillModelApplier)
+                  final EntityFactory entityFactory)
     {
         this.entityContainerFetcher = entityContainerFetcher;
         this.domainMetadata = domainMetadata;
         this.entityFactory = entityFactory;
-        this.fillModelApplier = fillModelApplier;
     }
 
     @Override
@@ -119,12 +115,12 @@ final class EntityFetcher implements IEntityFetcher {
 
     private <E extends AbstractEntity<?>> List<E> instantiateFromContainers(
             final List<EntityContainer<E>> containers,
-            final IFillModel fillModel)
+            final IFillModel<E> fillModel)
     {
         final var result = new ArrayList<E>();
         final var instantiator = new EntityFromContainerInstantiator(entityFactory);
         for (final EntityContainer<E> entityContainer : containers) {
-            result.add(fillModelApplier.apply(fillModel, instantiator.instantiate(entityContainer)));
+            result.add(fillModel.fill(instantiator.instantiate(entityContainer)));
         }
         return definersExecutor(fillModel.properties()).execute(result);
     }
