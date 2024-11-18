@@ -35,6 +35,8 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.try_wrapper.FailableComputation;
+import ua.com.fielden.platform.types.try_wrapper.FailableRunnable;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -47,6 +49,7 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
@@ -309,6 +312,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     private boolean ignoreEditableState = false;
 
     private final Class<K> keyType;
+    /** Type of this entity with all non-structural enhancements removed. */
     private final Class<? extends AbstractEntity<?>> actualEntityType;
     /**
      * A reference to the application specific {@link EntityFactory} instance responsible for instantiation of this and other entities. It is also used for entity cloning.
@@ -1484,9 +1488,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * The main intent of this method is to support entity modification in rare situation while it is being marked as read-only.
+     * The main intent of this method is to support entity modification in rare situations where it is being marked as read-only.
      * Should be used with great care as it may alter the intended domain behaviour if used carelessly.
-     * At this stage there is no reason for this setter to be used as part of the domain logic. */
+     * At this stage, there is no reason for this setter to be used as part of the domain logic.
+     */
     public void setIgnoreEditableState(final boolean ignoreEditableStateDuringSave) {
         this.ignoreEditableState = ignoreEditableStateDuringSave;
     }

@@ -1,17 +1,18 @@
 package ua.com.fielden.platform.sample.domain.crit_gen;
 
+import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.IFillModel;
+import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.security.user.User;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-
-import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.security.user.User;
 
 public class LastLevelEntityDaoStub implements ILastLevelEntity {
 
@@ -46,7 +47,7 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public LastLevelEntity findById(final boolean filtered, final Long id, final fetch<LastLevelEntity> fetchModel) {
+    public LastLevelEntity findById(final boolean filtered, final Long id, final fetch<LastLevelEntity> fetchModel, final IFillModel fillModel) {
         // TODO Auto-generated method stub
         return null;
     }

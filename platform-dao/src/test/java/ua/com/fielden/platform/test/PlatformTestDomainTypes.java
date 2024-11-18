@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.companion.PersistentEntityWithAllKindsOfProperties;
+import ua.com.fielden.platform.sample.domain.TrivialPersistentEntity;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.EntityToFill;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequiredness;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
@@ -219,6 +222,9 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgUnionType1.class);
         add(TgUnionType2.class);
         add(TgUnionCommonType.class);
+        add(PersistentEntityWithAllKindsOfProperties.class);
+        add(TrivialPersistentEntity.class);
+        add(EntityToFill.class);
     }
 
     @Override
