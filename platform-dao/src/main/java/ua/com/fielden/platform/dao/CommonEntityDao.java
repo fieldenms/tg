@@ -117,7 +117,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Inject
-    protected void setPersistentEntitySaverFactory(final Provider<PersistentEntitySaver.Factory> factory) {
+    protected void setPersistentEntitySaverFactory(final Provider<PersistentEntitySaver.IFactory> factory) {
         entitySaver = lazySupplier(() -> factory.get().create(
                 this::getSession,
                 this::getTransactionGuid,

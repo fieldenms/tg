@@ -143,7 +143,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     }
 
     @ImplementedBy(FactoryImpl.class)
-    public interface Factory {
+    public interface IFactory {
         <E extends AbstractEntity<?>> PersistentEntitySaver<E> create(
                 final Supplier<Session> session,
                 final Supplier<String> transactionGuid,
@@ -736,7 +736,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
     // This factory must be implemented by hand since com.google.inject.assistedinject.FactoryModuleBuilder
     // does not support generic factory methods.
-    static final class FactoryImpl implements Factory {
+    static final class FactoryImpl implements IFactory {
         private final IDbVersionProvider dbVersionProvider;
         private final IEntityFetcher entityFetcher;
         private final IUserProvider userProvider;
