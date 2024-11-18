@@ -894,10 +894,13 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     }
 
     _labelDownEventHandler (event) {
+        //Select text inside editor and focus it if it is enabled and not yet focused.
+        //Selection of text on focusing is consistent with on-tap action on editor or focus gain logic when tabbing between editors.
         if (this.shadowRoot.activeElement !== this.decoratedInput() && !this._disabled) {
             this.decoratedInput().select();
             this.decoratedInput().focus();
         }
+        //Should tear down the event to remain editor focused.
         tearDownEvent(event);
     }
 

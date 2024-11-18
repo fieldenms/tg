@@ -221,7 +221,7 @@ export class TgEntityEditor extends TgEditor {
              */
             actionAvailable: {
                 type: Boolean,
-                computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, propertyName, _disabled)'
+                computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, propertyName)'
             },
 
             /**
@@ -1391,12 +1391,15 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Computes whether title action is available for tapping and visible.
      */
-    _computeActionAvailability (entityMaster, newEntityMaster, entity, propertyName, _disabled) {
-        if (!(entityMaster || newEntityMaster) || !entity || !propertyName || typeof _disabled === 'undefined') {
+    _computeActionAvailability (entityMaster, newEntityMaster, entity, propertyName) {
+        if (!(entityMaster || newEntityMaster) || !entity || !propertyName) {
             return false;
         }
+        //Compute editability of editor. The editability should be defined by meta information of property in the given entity instance. The _disabled property should not be used
+        //for that purpose, because it meight be changed during entity editing cycle.
         const metaPropEditable = this.reflector().isEntity(entity) && !this.reflector().isDotNotated(propertyName) ? entity["@" + propertyName + "_editable"] : false;
         
+        //Action is available if it has value to edit and editing master or if it is editable and has newMaster
         return this._valueToEdit(entity, propertyName) ? !!entityMaster : (metaPropEditable && !!newEntityMaster);
     }
 
