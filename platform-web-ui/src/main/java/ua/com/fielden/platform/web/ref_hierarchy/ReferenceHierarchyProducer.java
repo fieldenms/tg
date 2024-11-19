@@ -53,6 +53,7 @@ public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext
             final AbstractEntity<?> refetchedEntity = co(entityType).findById(selectedEntity.getId(), hasDescProperty(entityType) ? fetchModel.with("desc") : fetchModel);
             entity.setRefEntityId(refetchedEntity.getId());
             entity.setLoadedHierarchyLevel(REFERENCE_INSTANCE);
+            entity.setActiveOnly(true);
             entity.setTitle(refetchedEntity.getKey() + (StringUtils.isEmpty(refetchedEntity.getDesc()) ? "" : ": " + refetchedEntity.getDesc()));
         }
         return entity;

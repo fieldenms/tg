@@ -41,6 +41,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("components/tg-reference-hierarchy");
         importPaths.add("editors/tg-singleline-text-editor");
+        importPaths.add("editors/tg-boolean-editor");
         importPaths.add("actions/tg-ui-action");
 
 
@@ -65,12 +66,27 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 .attr("current-state", "[[currentState]]")
                 .attr("toaster", "[[toaster]]");
 
+        final DomElement activeOnlyEditor = new DomElement("tg-boolean-editor")
+                .attr("id", "activeOnlyEditor")
+                .attr("class", "active-only-editor")
+                .attr("slot", "active-only-editor")
+                .attr("entity", "{{_currBindingEntity}}")
+                .attr("original-entity", "{{_originalBindingEntity}}")
+                .attr("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]")
+                .attr("property-name", "activeOnly")
+                .attr("validation-callback", "[[doNotValidate]]")
+                .attr("prop-title", "Show active only?")
+                .attr("prop-desc", "Designates whether to show only active entities or all")
+                .attr("current-state", "[[currentState]]")
+                .attr("toaster", "[[toaster]]");
+
         final DomElement referenceHierarchyDom = new DomElement("tg-reference-hierarchy")
                 .attr("id", "refrenceHierarchy")
                 .attr("entity", "{{_currBindingEntity}}")
                 .attr("on-tg-load-refrence-hierarchy", "_loadSubReferenceHierarchy")
                 .attr("centre-uuid", "[[uuid]]")
-                .add(hierarchyFilter);
+                .add(hierarchyFilter)
+                .add(activeOnlyEditor);
 
         //Generating action's DOM and JS functions
         final StringBuilder customActionObjects = new StringBuilder();
@@ -159,7 +175,10 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 + "}.bind(self);\n"
                 + "self._loadSubReferenceHierarchy = function (e) {\n"
                 + "    this.save();\n"
-                + "}.bind(self);\n";
+                + "}.bind(self);\n"
+                + "self.$.activeOnlyEditor.addEventListener('change', function (e) {\n"
+                + "    this.$.refrenceHierarchy.reload();\n"
+                + "}.bind(self));\n";
     }
 
     @Override

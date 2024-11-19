@@ -182,7 +182,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         final Class<? extends AbstractEntity<?>> entityClass = entity.getEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getEntityType()));
         final Class<? extends AbstractEntity<?>> refEntityClass = entity.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getRefEntityType()));
         final List<Field> propFields = getReferenceProperties(entityClass);
-        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), refEntityClass, entityClass, generateReferenceFetchModel(entityClass, propFields));
+        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), refEntityClass, entityClass, generateReferenceFetchModel(entityClass, propFields), entity.isActiveOnly());
         final IPage<EntityAggregates> loadedPage;
         if (entity.getPageNumber() == 0) {
             loadedPage = coAggregates.firstPage(qem, entity.getPageSize());
@@ -214,7 +214,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
 
     private List<TypeLevelHierarchyEntry> generateTypeLevelHierarchy(final ReferenceHierarchy entity) {
         final Class<? extends AbstractEntity<?>> entityType = entity.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getRefEntityType()));
-        final Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> model = queryForDependentTypesSummary(dependenciesMetadata, entity.getRefEntityId(), entityType);
+        final Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> model = queryForDependentTypesSummary(dependenciesMetadata, entity.getRefEntityId(), entityType, entity.isActiveOnly());
         final List<EntityAggregates> result = model.map(qem -> coAggregates.getAllEntities(qem)).orElse(emptyList());
         return createTypeHierarchyEntries(entity, result);
 

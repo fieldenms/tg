@@ -12,12 +12,7 @@ import java.util.Optional;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.NoKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.EntityTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
@@ -50,6 +45,10 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     @IsProperty
     @Title(value = "Reference Hierarchy Filter", desc = "Text to match entity types or entity instances")
     private String referenceHierarchyFilter;
+
+    @IsProperty
+    @Title(value = "Show active only?", desc = "Designates whether to show only active entities or all")
+    private boolean activeOnly;
 
     @IsProperty(AbstractEntity.class)
     @Title(value = "Generated Hierarchy", desc = "Generated type or instance level of hierarchy")
@@ -176,6 +175,16 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
 
     public ReferenceHierarchy() {
         setKey(NO_KEY);
+    }
+
+    public boolean isActiveOnly() {
+        return activeOnly;
+    }
+
+    @Observable
+    public ReferenceHierarchy setActiveOnly(final boolean activeOnly) {
+        this.activeOnly = activeOnly;
+        return this;
     }
 
     @Observable
