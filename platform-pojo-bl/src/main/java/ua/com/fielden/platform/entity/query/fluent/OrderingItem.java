@@ -45,17 +45,17 @@ final class OrderingItem<ET extends AbstractEntity<?>>
 
     @Override
     public IOrderByOffset<ET> limit(final long n) {
-        return new OrderingItem<>(builder.limit(n));
+        return new OrderByOffset<>(builder.limit(n));
     }
 
     @Override
     public IOrderByOffset<ET> limit(final Limit limit) {
-        return new OrderingItem<>(builder.limit(limit));
+        return new OrderByOffset<>(builder.limit(limit));
     }
 
     @Override
     public ICompletedAndYielded<ET> offset(final long n) {
-        return new OrderingItem<>(builder.offset(n));
+        return new CompletedAndYielded<>(builder.offset(n));
     }
 
 }

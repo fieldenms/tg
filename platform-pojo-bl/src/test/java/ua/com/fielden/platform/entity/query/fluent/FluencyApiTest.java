@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
@@ -112,6 +111,12 @@ public class FluencyApiTest {
         Assert.assertNull(result, result);
     }
 
+    /**
+     * This method is provided to address a limitation of the current approach for testing progressive completions.
+     * The limitation applies when a fluent interface implementation is broader than the interface, i.e., implements other fluent interfaces.
+     * This results in {@link #getMethods(Class)} picking up additional methods, failing the asserted expectations.
+     * This method addresses this by accepting an expected contract type {@code queryInterfaceType} for the the partial query instance.
+     */
     public static void checkFluency(final Object queryInterface, final Class<?> queryInterfaceType, final String[]... methods) {
         assertTrue("Query interface does not match expected type.", queryInterfaceType.isAssignableFrom(queryInterface.getClass()));
         final String result = compare(getMethods(queryInterfaceType), methods);
@@ -262,17 +267,8 @@ public class FluencyApiTest {
                 select(TgVehicle.class).as("veh").orderBy().prop("initDate").asc(),
                 array(order, limit, offset, model, prop, extProp, param, iParam, val, iVal, expr, beginExpr, yield, yieldAll, modelAsEntity, modelAsAggregate), functions);
 
-        // The limitation of the approach for testing progressive completions is illustrated below:
-        // Completions for limi1 are constrained by contract EntityQueryProgressiveInterfaces.IOrderByOffset.
-        // The actual class implementing this contract, which is the class for limit1, is OrderingItem.
-        // Class OrderingItem is much broader than IOrderByOffset, implementing other contracts with other methods, but which cannot be completed on limit1.
-        // However, getMethods(limit1.getClass()) picks them up, failing the asserted expectations.
-        // We can use overloaded method checkFluency that accepts an expected contact type for the partial query instance as it is done below.
-        // Alternatively, we could approach implementation of the progressive interfaces more granular, which would require separating OrderingItem into several classes.
-        final EntityQueryProgressiveInterfaces.IOrderByOffset<TgVehicle> limit1 = select(TgVehicle.class).as("veh").orderBy().prop("initDate").asc().limit(1);
         checkFluency(
-                limit1,
-                EntityQueryProgressiveInterfaces.IOrderByOffset.class,
+                select(TgVehicle.class).as("veh").orderBy().prop("initDate").asc().limit(1),
                 array(offset, yield, yieldAll, model, modelAsEntity, modelAsAggregate));
 
     }
