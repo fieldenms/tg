@@ -115,7 +115,9 @@ public class FluencyApiTest {
      * This method is provided to address a limitation of the current approach for testing progressive completions.
      * The limitation applies when a fluent interface implementation is broader than the interface, i.e., implements other fluent interfaces.
      * This results in {@link #getMethods(Class)} picking up additional methods, failing the asserted expectations.
-     * This method addresses this by accepting an expected contract type {@code queryInterfaceType} for the the partial query instance.
+     * This method addresses this by accepting an expected contract type {@code queryInterfaceType} for the partial query instance.
+     * <p>
+     * However, it should be preferred to implement fluent interfaces with high granularity to avoid the need for using this method.
      */
     public static void checkFluency(final Object queryInterface, final Class<?> queryInterfaceType, final String[]... methods) {
         assertTrue("Query interface does not match expected type.", queryInterfaceType.isAssignableFrom(queryInterface.getClass()));
@@ -254,7 +256,6 @@ public class FluencyApiTest {
         assertEquals(qryStmt, equalQryStmt);
     }
 
-    // TODO complete this test
     @Test
     public void orderBy_progressive_completions() {
         checkFluency(
@@ -266,11 +267,12 @@ public class FluencyApiTest {
         checkFluency(
                 select(TgVehicle.class).as("veh").orderBy().prop("initDate").asc(),
                 array(order, limit, offset, model, prop, extProp, param, iParam, val, iVal, expr, beginExpr, yield, yieldAll, modelAsEntity, modelAsAggregate), functions);
-
         checkFluency(
                 select(TgVehicle.class).as("veh").orderBy().prop("initDate").asc().limit(1),
                 array(offset, yield, yieldAll, model, modelAsEntity, modelAsAggregate));
-
+        checkFluency(
+                select(TgVehicle.class).as("veh").orderBy().prop("initDate").asc().limit(1).offset(1),
+                array(yield, yieldAll, model, modelAsEntity, modelAsAggregate));
     }
 
 }
