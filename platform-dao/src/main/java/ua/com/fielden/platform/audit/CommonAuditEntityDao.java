@@ -108,7 +108,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
         audit.setAuditedVersion(auditedEntity.getVersion());
         // Alternatively, annotate AbstractAuditEntity.auditDate with @IsProperty(assignBeforeSave = true)
         audit.setAuditDate(now().toDate());
-        // Alternatively, annotate AbstractAuditEntity.auditDate with @IsProperty(assignBeforeSave = true)
+        // Alternatively, annotate AbstractAuditEntity.user with @IsProperty(assignBeforeSave = true)
         audit.setUser(getUserOrThrow());
         audit.setAuditedTransactionGuid(transactionGuid);
 
