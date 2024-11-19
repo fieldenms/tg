@@ -64,7 +64,7 @@ public class ReferenceHierarchyDaoStub implements IReferenceHierarchy, ICanReadU
     }
 
     @Override
-    public ReferenceHierarchy findById(final boolean filtered, final Long id, final fetch<ReferenceHierarchy> fetchModel, final IFillModel fillModel) {
+    public ReferenceHierarchy findById(final boolean filtered, final Long id, final fetch<ReferenceHierarchy> fetchModel, final IFillModel<ReferenceHierarchy> fillModel) {
         return null;
     }
 

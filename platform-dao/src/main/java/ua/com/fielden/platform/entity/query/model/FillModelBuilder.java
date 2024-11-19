@@ -38,7 +38,7 @@ public class FillModelBuilder {
         return this;
     }
 
-    public IFillModel build(final Class<? extends AbstractEntity<?>> entityType) {
+    public <T extends AbstractEntity<?>> IFillModel<T> build(final Class<T> entityType) {
         final var values = valuesBuilder.buildOrThrow();
         if (values.isEmpty()) {
             return EMPTY_FILL_MODEL;
@@ -49,7 +49,7 @@ public class FillModelBuilder {
             if (!nonPlainProps.isEmpty()) {
                 throw new FillModelException(ERR_NON_PLAIN_PROPS.formatted(entityType.getSimpleName(), nonPlainProps.toString()));
             }
-            return new FillModelImpl(values);
+            return new FillModelImpl<T>(values);
         }
     }
 

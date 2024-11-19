@@ -46,7 +46,7 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
     @Override
-    public TgSystem findById(final boolean filtered, final Long id, final fetch<TgSystem> fetchModel, final IFillModel fillModel) {
+    public TgSystem findById(final boolean filtered, final Long id, final fetch<TgSystem> fetchModel, final IFillModel<TgSystem> fillModel) {
         return null;
     }
 

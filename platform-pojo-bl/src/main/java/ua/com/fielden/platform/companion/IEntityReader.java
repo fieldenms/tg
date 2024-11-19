@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static java.util.Collections.emptyMap;
-import static ua.com.fielden.platform.entity.query.model.IFillModel.EMPTY_FILL_MODEL;
+import static ua.com.fielden.platform.entity.query.model.IFillModel.emptyFillModel;
 
 /**
  * The reader contract for entity companion objects, which should be implemented by companions of persistent or synthetic entities.
@@ -80,7 +80,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param fetchModel  fetching model specifying the initialisation strategy (i.e., what properties should be retrieved).
      * @param fillModel  a fill model to populate plain transient properties.
      */
-    T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel);
+    T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel<T> fillModel);
 
     /**
      * Finds entity by its surrogate id.
@@ -90,7 +90,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param fetchModel  fetching model specifying the initialisation strategy (i.e., what properties should be retrieved).
      */
     default T findById(final boolean filtered, final Long id, final fetch<T> fetchModel) {
-        return findById(filtered, id, fetchModel, EMPTY_FILL_MODEL);
+        return findById(filtered, id, fetchModel, emptyFillModel());
     }
 
     /**
@@ -100,7 +100,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param fetchModel -- fetching model specifying the initialisation strategy (i.e., what properties should be retrieved).
      */
     default T findById(final Long id, final fetch<T> fetchModel) {
-        return findById(false, id, fetchModel, EMPTY_FILL_MODEL);
+        return findById(false, id, fetchModel, emptyFillModel());
     }
 
     /**
@@ -110,7 +110,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param fetchModel  fetching model specifying the initialisation strategy (i.e., what properties should be retrieved).
      * @param fillModel  a fill model to populate plain transient properties.
      */
-    default T findById(final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
+    default T findById(final Long id, final fetch<T> fetchModel, final IFillModel<T> fillModel) {
         return findById(false, id, fetchModel, fillModel);
     }
 
@@ -118,7 +118,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
         return findByIdOptional(false, id, fetchModel);
     }
 
-    default Optional<T> findByIdOptional(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
+    default Optional<T> findByIdOptional(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel<T> fillModel) {
         return Optional.ofNullable(findById(filtered, id, fetchModel, fillModel));
     }
 
