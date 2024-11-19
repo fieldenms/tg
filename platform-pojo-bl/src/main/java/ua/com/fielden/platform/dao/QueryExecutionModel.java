@@ -26,7 +26,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
     private static final Logger logger = getLogger(QueryExecutionModel.class);
 
-    protected QueryExecutionModel() {
+    private QueryExecutionModel() {
         queryModel = null;
         orderModel = null;
         fetchModel = null;
@@ -35,7 +35,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         lightweight = false;
     }
     
-    protected QueryExecutionModel(final Q queryModel, final OrderingModel orderModel, final fetch<T> fetchModel, final IFillModel<T> fillModel, final Map<String, Object> paramValues, final boolean lightweight) {
+    private QueryExecutionModel(final Q queryModel, final OrderingModel orderModel, final fetch<T> fetchModel, final IFillModel<T> fillModel, final Map<String, Object> paramValues, final boolean lightweight) {
         this.queryModel = queryModel;
         this.orderModel = orderModel;
         this.fetchModel = fetchModel;
@@ -58,7 +58,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     /**
      * A convenient copy method.
      * 
-     * @return
+     * @return a copy of this query execution model
      */
     public QueryExecutionModel<T, Q> copy() {
         return new QueryExecutionModel<>(this.queryModel, this.orderModel, this.fetchModel, this.fillModel, this.paramValues, this.lightweight);
@@ -123,11 +123,11 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     }
     
     public static class Builder<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
-        private Q queryModel;
+        private final Q queryModel;
         private OrderingModel orderModel;
         private fetch<T> fetchModel;
         private IFillModel<T> fillModel = emptyFillModel();
-        private Map<String, Object> paramValues = new HashMap<>();
+        private final Map<String, Object> paramValues = new HashMap<>();
         private boolean lightweight = false;
 
         private Builder(final EntityResultQueryModel<T> queryModel) {
@@ -186,7 +186,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     @Override
     public boolean equals(final Object obj) {
         return this == obj ||
-               obj instanceof QueryExecutionModel that
+               obj instanceof QueryExecutionModel<?,?> that
                && lightweight == that.lightweight
                && Objects.equals(orderModel, that.orderModel)
                && Objects.equals(queryModel, that.queryModel)
