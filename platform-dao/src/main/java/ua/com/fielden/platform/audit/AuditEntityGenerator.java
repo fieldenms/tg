@@ -2,12 +2,29 @@ package ua.com.fielden.platform.audit;
 
 import com.google.inject.ImplementedBy;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 
 import java.nio.file.Path;
 import java.util.Set;
 
 @ImplementedBy(AuditEntityGeneratorImpl.class)
 public interface AuditEntityGenerator {
+
+    /**
+     * Properties of base entity types that are excluded from auditing.
+     */
+    Set<String> NON_AUDITED_PROPERTIES = Set.of(
+            // id is captured by the audited entity reference property
+            AbstractEntity.ID,
+            AbstractEntity.VERSION,
+            AbstractPersistentEntity.CREATED_BY,
+            AbstractPersistentEntity.CREATED_DATE,
+            AbstractPersistentEntity.CREATED_TRANSACTION_GUID,
+            AbstractPersistentEntity.LAST_UPDATED_BY,
+            AbstractPersistentEntity.LAST_UPDATED_DATE,
+            AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID,
+            ActivatableAbstractEntity.REF_COUNT);
 
     default Set<GeneratedResult> generate(Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes) {
         return generate(entityTypes, Path.of("src/main/java"));

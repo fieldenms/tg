@@ -4,8 +4,6 @@ import com.google.common.collect.Streams;
 import com.squareup.javapoet.*;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -191,21 +189,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     };
 
     private static boolean isAudited(final PropertyMetadata.Persistent property) {
-        class $ {
-            static final Set<String> IGNORED_PROPERTIES = Set.of(
-                    // id is captured by the audited entity reference property
-                    AbstractEntity.ID,
-                    AbstractEntity.VERSION,
-                    AbstractPersistentEntity.CREATED_BY,
-                    AbstractPersistentEntity.CREATED_DATE,
-                    AbstractPersistentEntity.CREATED_TRANSACTION_GUID,
-                    AbstractPersistentEntity.LAST_UPDATED_BY,
-                    AbstractPersistentEntity.LAST_UPDATED_DATE,
-                    AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID,
-                    ActivatableAbstractEntity.REF_COUNT);
-        }
-
-        return !$.IGNORED_PROPERTIES.contains(property.name());
+        return !AuditEntityGenerator.NON_AUDITED_PROPERTIES.contains(property.name());
     }
 
     private final class AuditEntityBuilder {
