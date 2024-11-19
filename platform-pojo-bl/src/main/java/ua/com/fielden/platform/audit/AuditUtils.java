@@ -3,17 +3,21 @@ package ua.com.fielden.platform.audit;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
 
 public final class AuditUtils {
 
+    /**
+     * This predicate is true for entity types that are audited.
+     * This includes canonical entity types annotated with {@link Audited} and generated entity types based on them.
+     */
     public static boolean isAudited(final Class<? extends AbstractEntity<?>> type) {
-        return isAnnotationPresentForClass(Audited.class, type);
+        return PropertyTypeDeterminator.baseEntityType(type).getDeclaredAnnotation(Audited.class) != null;
     }
 
     /**
