@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.query.fetching;
+package ua.com.fielden.platform.entity.query;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,49 +27,41 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 public class OrderByTest extends AbstractDaoTestCase {
 
-    private final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     private static final String TEST_DATA_KEY_PREFIX = "TEST_ORDER_BY_";
-    private final ConditionModel testDataCond = cond().prop("key").like().val(TEST_DATA_KEY_PREFIX + "%").model();
+    private static final ConditionModel testDataCond = cond().prop("key").like().val(TEST_DATA_KEY_PREFIX + "%").model();
+    public static final int MAX_ENTITY_KEY_INDEX = 5;
 
     @Test
     public void orderBy_can_be_used_in_a_top_level_query() {
-        final var entities = rangeClosed(1, 3)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
+        final var entities = allEntities();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
-                $ -> $.prop("key").asc().model(),
-                $ -> $.prop("key").asc().model(),
-                qem -> assertEquals(entities, co(TgPersonName.class).getAllEntities(qem)));
+                $ -> $.prop("key").desc().model(),
+                $ -> $.prop("key").desc().model(),
+                qem -> assertEquals(entities.reversed(), co(TgPersonName.class).getAllEntities(qem)));
     }
 
     @Test
     public void orderBy_can_be_used_in_a_subquery() {
-        final var entities = rangeClosed(1, 3)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
+        final var entities = allEntities();
 
-        final var qem = from(
-                select(select(TgPersonName.class).where().condition(testDataCond)
-                               .orderBy().prop("key").asc()
-                               .model())
-                        .model())
-                .model();
-        assertEquals(entities, co(TgPersonName.class).getAllEntities(qem));
-
+        final var query = select(select(TgPersonName.class).where().condition(testDataCond)
+                                 .orderBy().prop("key").desc()
+                                 .model())
+                          .model();
+        assertEquals(entities.reversed(), co(TgPersonName.class).getAllEntities(from(query).model()));
     }
 
     @Test
     public void ordering_model_cannot_be_specified_both_as_standalone_and_as_part_of_a_query() {
         final var qem = from(
+                // an ordered query
                 select(TgPersonName.class).where().condition(testDataCond)
                         .orderBy().prop("key").desc()
                         .model())
+                // an orderBy model that conflicts with the ordered query
                 .with(orderBy().prop("id").asc().model())
                 .model();
 
@@ -78,15 +70,24 @@ public class OrderByTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void ordering_model_can_be_used_together_with_ordering_in_subqueries() {
+        final var entities = allEntities();
+
+        // select data ordered by key descending
+        final var orderedSubquery = select(TgPersonName.class).where().condition(testDataCond).orderBy().prop("key").desc().model();
+        final var qem = from(select(orderedSubquery).model())
+                        // ordering of the result by key ascending, which is the reversal of the ordering in subquery
+                        .with(orderBy().prop("key").asc().model())
+                        .model();
+        assertEquals(entities, co(TgPersonName.class).getAllEntities(qem));
+    }
+
+    @Test
     public void query_with_limit_returns_the_specified_number_of_rows_if_the_total_number_of_rows_is_greater_than_limit() {
-        final var total = 3;
-        final var limit = 2;
+        final var entities = allEntities();
+        final var total = entities.size();
+        final var limit = total - 1;
         assertTrue(limit < total);
-        final var entities = rangeClosed(1, total)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").desc().limit(limit).model(),
@@ -96,31 +97,23 @@ public class OrderByTest extends AbstractDaoTestCase {
 
     @Test
     public void query_with_limit_returns_all_rows_if_the_total_number_of_rows_is_less_than_limit() {
-        final var total = 1;
-        final var limit = 2;
+        final var entities = allEntities();
+        final var total = entities.size();
+        final var limit = total + 1;
         assertTrue(limit > total);
-        final var entities = rangeClosed(1, total)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").asc().limit(limit).model(),
                 $ -> $.prop("key").asc().limit(limit).model(),
-                qem -> assertEquals(entities.subList(0, total), co(TgPersonName.class).getAllEntities(qem)));
+                qem -> assertEquals(entities, co(TgPersonName.class).getAllEntities(qem)));
     }
 
     @Test
     public void query_with_limit_returns_all_rows_if_the_total_number_of_rows_is_equal_to_limit() {
-        final var total = 2;
-        final var limit = 2;
-        assertTrue(limit == total);
-        final var entities = rangeClosed(1, total)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
+        final var entities = allEntities();
+        final var total = entities.size();
+        final var limit = total;
+        assertTrue(limit == total && limit > 0);
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").asc().limit(limit).model(),
@@ -130,11 +123,7 @@ public class OrderByTest extends AbstractDaoTestCase {
 
     @Test
     public void query_with_limit_all_returns_all_rows() {
-        final var entities = rangeClosed(1, 3)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
+        final var entities = allEntities();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").desc().limit(Limit.all()).model(),
@@ -143,14 +132,10 @@ public class OrderByTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void query_with_offset_skips_specified_number_of_rows_from_start() {
+    public void query_with_offset_skips_specified_number_of_rows() {
+        final var entities = allEntities();
+        final var total = entities.size();
         final var offset = 1;
-        final var total = 3;
-        final var entities = rangeClosed(1, total)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
 
         // ascending order
         withQem(select(TgPersonName.class).where().condition(testDataCond),
@@ -166,15 +151,10 @@ public class OrderByTest extends AbstractDaoTestCase {
    }
 
     @Test
-    public void query_with_zero_offset_doesnt_skip_anything() {
+    public void query_with_zero_offset_does_not_skip_anything() {
+        final var entities = allEntities();
         final var offset = 0;
-        final var total = 3;
         assertTrue(offset == 0);
-        final var entities = rangeClosed(1, total)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").asc().offset(offset).model(),
@@ -184,14 +164,10 @@ public class OrderByTest extends AbstractDaoTestCase {
 
     @Test
     public void query_with_offset_greater_than_total_number_of_rows_returns_nothing() {
-        final var offset = 2;
-        final var total = 1;
+        final var entities = allEntities();
+        final var total = entities.size();
+        final var offset = total + 1;
         assertTrue(offset > total);
-        final var entities = rangeClosed(1, total)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
 
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").desc().offset(offset).model(),
@@ -201,38 +177,28 @@ public class OrderByTest extends AbstractDaoTestCase {
 
     @Test
     public void query_with_limit_and_offset_applies_both() {
-        final var limit = 3;
+        final var entities = allEntities();
+        final var total = entities.size();
+        final var limit = total - 2;
         final var offset = 1;
-        final var total = 5;
-        final var entities = rangeClosed(1, total)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
 
         // ascending order
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").asc().limit(limit).offset(offset).model(),
                 $ -> $.prop("key").asc().limit(limit).offset(offset).model(),
-                qem -> assertEquals(entities.subList(offset, offset + limit),
-                                    co(TgPersonName.class).getAllEntities(qem)));
+                qem -> assertEquals(entities.subList(offset, offset + limit), co(TgPersonName.class).getAllEntities(qem)));
 
         // descending order
         withQem(select(TgPersonName.class).where().condition(testDataCond),
                 $ -> $.prop("key").desc().limit(limit).offset(offset).model(),
                 $ -> $.prop("key").desc().limit(limit).offset(offset).model(),
-                qem -> assertEquals(entities.reversed().subList(offset, offset + limit),
-                                    co(TgPersonName.class).getAllEntities(qem)));
+                qem -> assertEquals(entities.reversed().subList(offset, offset + limit), co(TgPersonName.class).getAllEntities(qem)));
     }
 
     @Test
     public void orderBy_can_be_applied_to_multiple_subqueries() {
-        final var total = 3;
-        final var entities = rangeClosed(1, total)
-                .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
-                .map(key -> new_(TgPersonName.class, key))
-                .map(this::save)
-                .toList();
+        final var entities = allEntities();
+        final var total = entities.size();
 
         // first 2 + last 1
         withQem(select(select(TgPersonName.class).where().condition(testDataCond)
@@ -241,7 +207,7 @@ public class OrderByTest extends AbstractDaoTestCase {
                                .model(),
                        select(TgPersonName.class).where().condition(testDataCond)
                                .orderBy().prop("key").asc()
-                               .limit(1)
+                               .limit(3)
                                .offset(2)
                                .model()),
                 $ -> $.prop("key").asc().model(),
@@ -249,12 +215,33 @@ public class OrderByTest extends AbstractDaoTestCase {
                 qem -> assertEquals(entities, co(TgPersonName.class).getAllEntities(qem)));
     }
 
+    @Test
+    public void sanity_check_for_the_order_of_allEntities() {
+        final var entities = allEntities();
+        assertEquals(MAX_ENTITY_KEY_INDEX, entities.size());
+        for (int index = 0; index < entities.size(); index++) {
+            assertEquals(TEST_DATA_KEY_PREFIX + (index + 1), entities.get(index).getKey());
+        }
+    }
+
     /**
-     * Runs an action twice: once with a {@linkplain QueryExecutionModel QEM} built with an odering model inside a query,
-     * and once with a QEM built with a standalone ordering model. This doubles test coverage while reducing the amount
-     * of tests.
+     * A helper method to retrieve all test entities in the specific order.
      *
-     * @param query  base query to which an ordering model will be applied
+     * @return
+     */
+    private List<TgPersonName> allEntities() {
+        final var query = select(TgPersonName.class).where().condition(testDataCond).model();
+        final var orderBy = orderBy().prop("key").asc().model();
+        final var qem = from(query).with(orderBy).model();
+        return co(TgPersonName.class).getAllEntities(qem);
+    }
+
+    /**
+     * Runs an action twice: once with a {@linkplain QueryExecutionModel QEM} built with an ordering model inside a query,
+     * and once with a QEM built with a standalone ordering model.
+     * This doubles test coverage while reducing the number of tests.
+     *
+     * @param query  base query to which an ordering model is applied
      * @param inQuery  builds an ordering model inside a query
      * @param standalone  builds a standalone ordering model
      * @param action  action to execute
@@ -265,22 +252,36 @@ public class OrderByTest extends AbstractDaoTestCase {
             final Function<StandaloneOrderBy.IOrderingItem, OrderingModel> standalone,
             final Consumer<QueryExecutionModel<E, ?>> action)
     {
-        // don't wrap caught exceptions to avoid messing with tools that parse JUnit assertion failures, instead use a logger
+        // Do not wrap caught exceptions to avoid messing with tools that parse JUnit assertion failures, instead use a logger.
         final var queryWithOrderBy = from(inQuery.apply(query.orderBy())).model();
         try {
             action.accept(queryWithOrderBy);
-        } catch (final Throwable e) {
+        } catch (final Throwable ex) {
             logger.error("Failure while testing with an order by inside a query.");
-            throw e;
+            throw ex;
         }
 
         final var queryWithStandaloneOrderBy = from(query.model()).with(standalone.apply(orderBy())).model();
         try {
             action.accept(queryWithStandaloneOrderBy);
-        } catch (final Throwable e) {
+        } catch (final Throwable ex) {
             logger.error("Failure while testing with a standalone order by.");
-            throw e;
+            throw ex;
         }
     }
 
+    @Override
+    protected void populateDomain() {
+        super.populateDomain();
+
+        if (useSavedDataPopulationScript()) {
+            return;
+        }
+
+        rangeClosed(1, MAX_ENTITY_KEY_INDEX)
+        .mapToObj(i -> TEST_DATA_KEY_PREFIX + i)
+        .map(key -> new_(TgPersonName.class, key))
+        .forEach(this::save);
+
+    }
 }
