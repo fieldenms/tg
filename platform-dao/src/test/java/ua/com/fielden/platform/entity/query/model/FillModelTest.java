@@ -2,13 +2,14 @@ package ua.com.fielden.platform.entity.query.model;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException;
+import ua.com.fielden.platform.entity.query.test_entities.EntityToFill;
 import ua.com.fielden.platform.sample.domain.TrivialPersistentEntity;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.model.EntityToFill.UpdatePlainPropDefiner.VALUE_FROM_DEFINER;
+import static ua.com.fielden.platform.entity.query.test_entities.EntityToFill.UpdatePlainPropDefiner.VALUE_FROM_DEFINER;
 
 public class FillModelTest extends AbstractDaoTestCase {
 
