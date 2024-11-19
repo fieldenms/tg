@@ -289,7 +289,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      *
      * @param filtered controls whether user-filtering is on
      */
-    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel fillModel) {
+    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel<T> fillModel) {
         if (id == null) {
             throw new EntityCompanionException(ERR_MISSING_ID_VALUE.formatted(getEntityType().getName()));
         }
