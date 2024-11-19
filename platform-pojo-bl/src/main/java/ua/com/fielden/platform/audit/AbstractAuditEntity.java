@@ -28,6 +28,13 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
 
     public static final String A3T = "a3t";
 
+    // References to property names declared in this type
+    public static final String
+            AUDITED_VERSION = "auditedVersion",
+            AUDIT_DATE = "auditDate",
+            USER = "user",
+            AUDITED_TRANSACTION_GUID = "auditedTransactionGuid";
+
     static final int NEXT_COMPOSITE_KEY_MEMBER = 2;
 
     public abstract E getAuditedEntity();
