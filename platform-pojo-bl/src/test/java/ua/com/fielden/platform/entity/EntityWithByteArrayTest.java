@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test_entities.EntityWithByteArray;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;

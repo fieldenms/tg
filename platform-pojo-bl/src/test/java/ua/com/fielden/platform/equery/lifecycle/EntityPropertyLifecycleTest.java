@@ -17,7 +17,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;

@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
 import java.util.*;
 
@@ -55,8 +56,12 @@ public sealed class RichText permits RichText.Persisted {
      */
     // !!! KEEP THIS CONSTRUCTOR PACKAGE PRIVATE !!!
     RichText(final String formattedText, final String coreText) {
-        requireNonNull(formattedText);
-        requireNonNull(coreText);
+        if (formattedText == null) {
+            throw new InvalidArgumentException("Argument [formattedText] must not be null.");
+        }
+        if (coreText == null) {
+            throw new InvalidArgumentException("Argument [coreText] must not be null.");
+        }
         this.formattedText = formattedText;
         this.coreText = coreText;
     }

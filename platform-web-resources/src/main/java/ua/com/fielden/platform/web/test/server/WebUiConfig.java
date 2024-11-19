@@ -160,7 +160,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String envWatermarkCss;
 
     public WebUiConfig(final Properties props) {
-        super("TG Test and Demo Application", Workflows.valueOf(props.getProperty("workflow")), new String[0], Boolean.valueOf(props.getProperty("independent.time.zone")));
+        super("TG Test and Demo Application",
+                Workflows.valueOf(props.getProperty("workflow")),
+                new String[0],
+                Boolean.valueOf(props.getProperty("independent.time.zone")),
+                Optional.empty(),
+                Optional.of("https://www.google.com"));
         if (StringUtils.isEmpty(props.getProperty("web.domain")) || StringUtils.isEmpty(props.getProperty("web.path"))) {
             throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
         }

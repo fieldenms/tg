@@ -54,7 +54,7 @@ class DdlGeneratorImpl implements IDdlGenerator {
 
         types.filter(EntityUtils::isPersistedEntityType).forEach(entityType -> {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
-            ddlTables.add(tableDefinition.createTableSchema(dialect, ""));
+            ddlTables.add(tableDefinition.createTableSchema(dialect));
             ddlTables.add(tableDefinition.createPkSchema(dialect));
             ddlTables.addAll(tableDefinition.createIndicesSchema(dialect));
             ddlFKs.addAll(tableDefinition.createFkSchema(dialect));

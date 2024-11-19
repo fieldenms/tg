@@ -99,12 +99,11 @@ public class TableDdl {
      * @param dialect
      * @return
      */
-    public String createTableSchema(final Dialect dialect, final String colDelimeter) {
+    public String createTableSchema(final Dialect dialect) {
         final StringBuilder sb = new StringBuilder();
-        sb.append(format("CREATE TABLE %s (", this.tableName));
-        sb.append("    " + colDelimeter);
-        sb.append(columnDefinitions().stream().map(col -> "\n    " + col.schemaString(dialect)).collect(Collectors.joining("," + colDelimeter)));
-        sb.append("\n);\n");
+        sb.append("CREATE TABLE %s ( ".formatted(this.tableName));
+        sb.append(columnDefinitions().stream().map(col -> col.schemaString(dialect)).collect(Collectors.joining(", ")));
+        sb.append(" );");
         return sb.toString();
     }
 
@@ -156,12 +155,13 @@ public class TableDdl {
     }
 
     private String createUniqueCompositeIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
+        final String tableName = tableName(entityType);
         final String keyMembersStr = cols
                 .filter(col -> col.compositeKeyMemberOrder.isPresent())
                 .sorted(Comparator.comparingInt(col -> col.compositeKeyMemberOrder.get()))
                 .map(col -> col.name)
                 .collect(Collectors.joining(", "));
-        return "CREATE UNIQUE INDEX KUI_%1$s ON %1$s(%2$s);%n".formatted(this.tableName, keyMembersStr);
+        return "CREATE UNIQUE INDEX KUI_%1$s ON %1$s(%2$s);".formatted(this.tableName, keyMembersStr);
     }
 
     private List<String> createUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
@@ -205,7 +205,7 @@ public class TableDdl {
                         return true;
                     }
                 })
-                .map(col -> "CREATE INDEX I_%1$s_%2$s ON %1$s(%2$s);%n".formatted(this.tableName, col.name))
+                .map(col -> "CREATE INDEX I_%1$s_%2$s ON %1$s(%2$s);".formatted(this.tableName, col.name))
                 .collect(toList());
     }
 
@@ -217,10 +217,7 @@ public class TableDdl {
      */
     public String createPkSchema(final Dialect dialect) {
         // This statement should be suitable for the majority of SQL dialects
-        return """
-               ALTER TABLE %1$s
-               ADD CONSTRAINT PK_%1$s_ID PRIMARY KEY (_ID);
-               """.formatted(this.tableName);
+        return "ALTER TABLE %1$s ADD CONSTRAINT PK_%1$s_ID PRIMARY KEY (_ID);".formatted(this.tableName);
     }
 
     /**
@@ -249,10 +246,7 @@ public class TableDdl {
     }
 
     private static String fkConstraint(final Dialect dialect, final String thisTableName, final String colName, final String thatTableName) {
-        return """
-               ALTER TABLE %1$s
-               ADD CONSTRAINT FK_%1$s_%2$s FOREIGN KEY (%2$s) REFERENCES %3$s (_ID);
-               """.formatted(thisTableName, colName, thatTableName);
+        return "ALTER TABLE %1$s ADD CONSTRAINT FK_%1$s_%2$s FOREIGN KEY (%2$s) REFERENCES %3$s (_ID);".formatted(thisTableName, colName, thatTableName);
     }
 
     /**

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity;
 import java.util.Collection;
 import java.util.Optional;
 
+import ua.com.fielden.platform.entity.exceptions.CollectionModificationException;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**

@@ -1,12 +1,5 @@
 package ua.com.fielden.platform.ioc.session;
 
-import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
-
-import java.util.stream.Stream;
-
 import com.google.inject.Provider;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -16,13 +9,19 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
 import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToThrowable;
 import ua.com.fielden.platform.security.user.User;
+
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.UUID.randomUUID;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
 
 /**
  * Intercepts methods annotated with {@link SessionRequired} to inject Hibernate session before the actual method execution. Nested invocation of methods annotated with
@@ -64,13 +63,13 @@ public class SessionInterceptor implements MethodInterceptor {
         final User user = invocationOwner.getUser();
 
         try {
-            // This variable indicates whether transaction commit should be handled in this method invocation.
-            // Basically, if transaction is activated in this method then it should be committed only in this method.
-            // Therefore, shouldCommit is assigned true only when transaction is activated here.
+            // This variable indicates whether a transaction commit should be handled in this method invocation.
+            // Basically, if a transaction is activated in this method, then it should be committed only in this method.
+            // Therefore, shouldCommit is assigned true only when the transaction is activated here.
             final boolean shouldCommit = initTransaction(invocationOwner, session, tr, user);
             
-            // if should not commit, which means the session was initiated earlier in the calls stack, 
-            // and support for nested calls is not allowed then an exception should be thrown.
+            // if should not commit, which means the session was initiated earlier in the call stack,
+            // and support for nested calls is not allowed, then an exception should be thrown.
             if (!shouldCommit && !invocation.getStaticPart().getAnnotation(SessionRequired.class).allowNestedScope()) {
                 throw new SessionScopingException(format(ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED, invocation.getMethod().getDeclaringClass().getName(), invocation.getMethod().getName()));
             }
@@ -78,13 +77,13 @@ public class SessionInterceptor implements MethodInterceptor {
             // now let's proceed with the actual method invocation, which may throw an exception... or even a throwable...
             final Object result = invocation.proceed();
             
-            // if this is the invocation that activated the current transaction then we should commit it
-            // but only of the result of invocation is not a stream -- in that case closing of the session is the responsibility of that stream
+            // if this is the invocation that activated the current transaction, then we should commit it,
+            // but only if the result of invocation is not a stream -- in that case, closing of the session is the responsibility of that stream
             if (shouldCommit && tr.isActive()) {
-                // if the result is a stream than the current transaction becomes associated with that stream
+                // if the result is a stream, then the current transaction becomes associated with that stream
                 // and needs to be committed once the stream has been processed
-                if (result instanceof Stream) {
-                    ((Stream<?>) result).onClose(() -> {
+                if (result instanceof Stream stream) {
+                    return stream.onClose(() -> {
                         try {
                             LOGGER.debug(format("[%s] Committing DB transaction on stream close.", user));
                             commitTransactionAndCloseSession(session, tr, user);
@@ -94,15 +93,19 @@ public class SessionInterceptor implements MethodInterceptor {
                             throw ex;
                         }
                     });
-                } else { // otherwise, commit the current transaction
+                }
+                // otherwise, commit the current transaction
+                else {
                     LOGGER.debug(format("[%s] Committing DB transaction", user));
                     commitTransactionAndCloseSession(session, tr, user);
                     LOGGER.debug(format("[%s] Committed DB transaction", user));
+                    return result;
                 }
-            } else if (session.isOpen()) {
-                // this is the case of a nested transaction
-                // should flush only if the current session is still open
-                // this check was not needed before migrating off Hibernate 3.2.6 GA
+            }
+            // otherwise, this is the case of a nested transaction
+            // should flush only if the current session is still open
+            // this check was not needed before migrating off Hibernate 3.2.6 GA
+            if (session.isOpen()) {
                 session.flush();
             }
             return result;
