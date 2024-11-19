@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.audit;
 
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
@@ -9,6 +10,7 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 public final class AuditUtils {
 
@@ -18,6 +20,32 @@ public final class AuditUtils {
      */
     public static boolean isAudited(final Class<? extends AbstractEntity<?>> type) {
         return PropertyTypeDeterminator.baseEntityType(type).getDeclaredAnnotation(Audited.class) != null;
+    }
+
+    /**
+     * The specified property name is assumed to be the name of an audited property.
+     * This method constructs a name for a corresponding property of an audit-entity.
+     */
+    public static String auditPropertyName(final CharSequence auditedPropertyName) {
+        return "a3t_" + auditedPropertyName;
+    }
+
+    /**
+     * If the specified property name was constructed with {@link #auditPropertyName(CharSequence)}, this method works as an inverse,
+     * and returns the name of the audited property.
+     * Otherwise, {@code null} is returned.
+     * <p>
+     * It is an error if {@code auditedPropertyName} is {@code null} or blank.
+     */
+    public static @Nullable String auditedPropertyName(final CharSequence auditPropertyName) {
+        if (auditPropertyName == null) {
+            throw new InvalidArgumentException("Argument [auditPropertyName] must not be null.");
+        }
+        if (StringUtils.isBlank(auditPropertyName)) {
+            throw new InvalidArgumentException("Argument [auditPropertyName] must not be blank.");
+        }
+        final var result = substringAfter(auditPropertyName.toString(), "a3t_");
+        return result.isEmpty() ? null : result;
     }
 
     /**

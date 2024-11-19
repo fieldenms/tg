@@ -143,8 +143,8 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
         final var auditEntityMetadata = domainMetadata.forEntity(getEntityType());
         final var builder = ImmutableBiMap.<String, String> builderWithExpectedSize(auditEntityMetadata.properties().size() - 6);
         for (final PropertyMetadata property : auditEntityMetadata.properties()) {
-            final var auditedPropName = substringAfter(property.name(), A3T + "_");
-            if (!auditedPropName.isEmpty()) {
+            final var auditedPropName = AuditUtils.auditedPropertyName(property.name());
+            if (auditedPropName != null) {
                 builder.put(auditedPropName, property.name());
             }
         }
