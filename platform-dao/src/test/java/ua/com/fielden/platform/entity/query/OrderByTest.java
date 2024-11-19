@@ -198,9 +198,8 @@ public class OrderByTest extends AbstractDaoTestCase {
     @Test
     public void orderBy_can_be_applied_to_multiple_subqueries() {
         final var entities = allEntities();
-        final var total = entities.size();
 
-        // first 2 + last 1
+        // first 2 + last 3
         withQem(select(select(TgPersonName.class).where().condition(testDataCond)
                                .orderBy().prop("key").asc()
                                .limit(2)
