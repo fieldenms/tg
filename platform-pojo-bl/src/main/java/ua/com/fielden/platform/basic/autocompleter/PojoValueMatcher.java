@@ -1,27 +1,29 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
+import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.ExpExec;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.ExpExec;
-
 /**
- * Provides a collection-based implementation of the {@link IValueMatcher} with wild card support. This implementation should be convenient in cases where there is a list of
- * instances of type T that needs to be used for autocomplition.
+ * Provides a collection-based implementation of the {@link IValueMatcher} with wild card support.
+ * This implementation should be convenient in cases where there is a list of entity instances, which is used to value autocompletion.
  *
- * @author TG Team
- *
- * @param <T>
+ * @param <T>  a type of entities being matched.
  */
 public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher<T> {
+
+    public static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
+
     private final Collection<T> instances;
     private final ExpExec<T> exec = new ExpExec<>("pojo");
     private final boolean isCaseSensitive;
+
     /**
      * Controls the number of values that can be returned as the result of matching.
      */
@@ -39,7 +41,7 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
     }
 
     /*
-     * Two protected getters to make this class overridable
+     * Two protected getters to make this class overridable.
      */
     protected Collection<T> getInstances() {
         return instances;
@@ -48,8 +50,6 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
     protected ExpExec<T> getExec() {
         return exec;
     }
-
-    public static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
     
     @Override
     public List<T> findMatches(final String v) {
@@ -63,9 +63,9 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
         // * if string does not start with % then prepend ^
         // * if string does not end with % then append $
         // * substitute all occurrences of % with .*
-        final String prefex = value.startsWith("%") ? "" : "^";
+        final String prefix = value.startsWith("%") ? "" : "^";
         final String postfix = value.endsWith("%") ? "" : "$";
-        final String strPattern = prefex + value.replaceAll("\\%", ".*") + postfix;
+        final String strPattern = prefix + value.replaceAll("%", ".*") + postfix;
 
         final Pattern pattern = Pattern.compile(strPattern);
         for (final T instance : instances) {
@@ -85,10 +85,8 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
     }
 
     /**
-     * Returns the maximum number of values that could be returned by the matcher instance. For example, of there are 100 matching values, but the limit is 10 then only 10 values
-     * will be returned from method findMatches().
-     *
-     * @return
+     * Returns the maximum number of values that could be returned by the matcher instance.
+     * For example, if there are 100 matching values, but the limit is 10 than only 10 values would be returned from method findMatches().
      */
     @Override
     public Integer getPageSize() {
