@@ -1395,11 +1395,14 @@ export class TgEntityEditor extends TgEditor {
         if (!(entityMaster || newEntityMaster) || !entity || !propertyName) {
             return false;
         }
-        //Compute editability of editor. The editability should be defined by meta information of property in the given entity instance. The _disabled property should not be used
-        //for that purpose, because it meight be changed during entity editing cycle.
-        const metaPropEditable = this.reflector().isEntity(entity) && !this.reflector().isDotNotated(propertyName) ? entity["@" + propertyName + "_editable"] : false;
-        
-        //Action is available if it has value to edit and editing master or if it is editable and has newMaster
+        // Compute editor's editability.
+        // The editability should be defined by meta information of the property in the given entity instance.
+        // The _disabled property should not be used for that purpose, because it might be changed during the entity editing cycle.
+        const metaPropEditable = this.reflector().isEntity(entity) && !this.reflector().isDotNotated(propertyName)
+                                 ? entity["@" + propertyName + "_editable"]
+                                 : false;
+
+        // Action is available if it has a value to edit and an entity master, or if it is editable and has newMaster.
         return this._valueToEdit(entity, propertyName) ? !!entityMaster : (metaPropEditable && !!newEntityMaster);
     }
 
