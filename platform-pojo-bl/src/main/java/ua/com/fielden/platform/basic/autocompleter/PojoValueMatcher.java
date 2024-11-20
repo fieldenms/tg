@@ -4,10 +4,8 @@ import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.regex.Matcher;
+import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
 /**
@@ -21,8 +19,7 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
     public static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
 
     private final Collection<T> instances;
-    private final boolean isCaseSensitive;
-    private final String propName;
+    private final BiPredicate<Pattern, T> matchingPredicate;
 
     /**
      * Controls the number of values that can be returned as the result of matching.
@@ -30,14 +27,13 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
     private final int limit;
 
     public PojoValueMatcher(final Collection<T> instances, final String propNameToMatchBy, final int limit) {
-        this(instances, propNameToMatchBy, limit, false);
+        this(instances, matchByPropPredicate(propNameToMatchBy), limit);
     }
 
-    public PojoValueMatcher(final Collection<T> instances, final String propNameToMatchBy, final int limit, final boolean isCaseSensitive) {
+    public PojoValueMatcher(final Collection<T> instances, final BiPredicate<Pattern, T> matchingPredicate, final int limit) {
         this.instances = ImmutableList.copyOf(instances);
-        this.propName = propNameToMatchBy;
         this.limit = limit;
-        this.isCaseSensitive = isCaseSensitive;
+        this.matchingPredicate = matchingPredicate;
     }
 
     public Collection<T> getInstances() {
@@ -46,11 +42,11 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
 
     @Override
     public List<T> findMatches(final String v) {
-        final String searchText = SPECIAL_REGEX_CHARS.matcher(isCaseSensitive ? v : v.toUpperCase()).replaceAll("\\\\$0");
-        final var possibleEntities = new ArrayList<T>();
+        final String searchText = SPECIAL_REGEX_CHARS.matcher(v.toUpperCase()).replaceAll("\\\\$0");
+        final var matchingEntities = new ArrayList<T>();
         final int substringLen = searchText.length();
         if (substringLen == 0) {
-            return possibleEntities;
+            return matchingEntities;
         }
 
         // * if string does not start with % then prepend ^
@@ -61,19 +57,14 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
         final String searchPattern = prefix + searchText.replaceAll("%", ".*") + postfix;
 
         final Pattern pattern = Pattern.compile(searchPattern);
-        for (final T instance : instances) {
-            if (possibleEntities.size() < limit) {
-                final var propValue = instance.get(propName);
-                if (propValue != null) {
-                    final String value = isCaseSensitive ? propValue.toString() : propValue.toString().toUpperCase();
-                    final Matcher matcher = pattern.matcher(value);
-                    if (matcher.find()) {
-                        possibleEntities.add(instance);
-                    }
+        for (final T entity : instances) {
+            if (matchingEntities.size() < limit) {
+                if (matchingPredicate.test(pattern, entity)) {
+                    matchingEntities.add(entity);
                 }
             }
         }
-        return possibleEntities;
+        return matchingEntities;
 
     }
 
@@ -84,6 +75,19 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
     @Override
     public Integer getPageSize() {
         return limit;
+    }
+
+    public static <T extends AbstractEntity<?>> BiPredicate<Pattern, T> matchByPropPredicate(final String propNameToMatchBy) {
+        return matchByAnyPropPredicate(Set.of(propNameToMatchBy));
+    }
+
+    public static <T extends AbstractEntity<?>> BiPredicate<Pattern, T> matchByAnyPropPredicate(final Set<String> propNamesToMatchBy) {
+        return (pattern, entity) -> {
+            return propNamesToMatchBy.stream()
+                    .map(entity::get)
+                    .filter(Objects::nonNull)
+                    .anyMatch(value -> pattern.matcher(value.toString().toUpperCase()).find());
+        };
     }
 
 }
