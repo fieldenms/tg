@@ -20,13 +20,12 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.lang.String.format;
-import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static org.apache.commons.lang3.StringUtils.uncapitalize;
-import static ua.com.fielden.platform.audit.AbstractAuditEntity.A3T;
+import static ua.com.fielden.platform.audit.AbstractAuditEntity.*;
+import static ua.com.fielden.platform.audit.AbstractAuditProp.AUDIT_ENTITY;
+import static ua.com.fielden.platform.audit.AbstractAuditProp.PROPERTY;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
@@ -123,8 +122,9 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final var a3tBuilder = new AuditEntityBuilder(auditTypeClassName, type);
 
-        // Property for the reference to the audited entity
-        final var auditedEntityProp = propertyBuilder(uncapitalize(type.getSimpleName()), type)
+        // Property for the reference to the audited entity.
+        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
+        final var auditedEntityProp = propertyBuilder(AUDITED_ENTITY, type)
                 .addAnnotation(AnnotationSpecs.compositeKeyMember(AbstractAuditEntity.NEXT_COMPOSITE_KEY_MEMBER))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .addAnnotation(javaPoet.getAnnotation(Required.class))
@@ -133,28 +133,13 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .build();
 
         // Collectional property to model one-to-many association with the audit-prop entity
-        final var changedPropsProp = propertyBuilder("changedProps", ParameterizedTypeName.get(javaPoet.getClassName(Set.class), auditPropTypeName))
+        final var changedPropsProp = propertyBuilder(CHANGED_PROPS, ParameterizedTypeName.get(javaPoet.getClassName(Set.class), auditPropTypeName))
                 .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of an audit event."))
                 .initializer("new $T<>()", javaPoet.getClassName(HashSet.class))
                 .build();
 
         a3tBuilder.addProperty(auditedEntityProp);
         a3tBuilder.addProperty(changedPropsProp);
-
-        // Abstract methods in the base audit entity type
-        a3tBuilder.addMethod(methodBuilder("getAuditedEntity")
-                                     .addModifiers(PUBLIC)
-                                     .returns(javaPoet.getClassName(type))
-                                     .addAnnotation(javaPoet.getAnnotation(Override.class))
-                                     .addStatement("return %s()".formatted(auditedEntityProp.getAccessorSpec(environment).name))
-                                     .build());
-        a3tBuilder.addMethod(methodBuilder("setAuditedEntity")
-                                     .addModifiers(PUBLIC)
-                                     .addParameter(javaPoet.getClassName(type), "entity", FINAL)
-                                     .returns(auditTypeClassName)
-                                     .addAnnotation(javaPoet.getAnnotation(Override.class))
-                                     .addStatement("return %s(%s)".formatted(auditedEntityProp.getSetterSpec(environment, auditTypeClassName).name, "entity"))
-                                     .build());
 
         // Audited properties
         final var auditedEntityMetadata = domainMetadata.forEntity(type);
@@ -270,37 +255,20 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(AnnotationSpecs.auditPropFor(auditEntityClassName))
                 .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class));
 
-        final var auditEntityProp = propertyBuilder(uncapitalize(auditedType.getSimpleName()) + "Audit", auditEntityClassName)
+        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
+        final var auditEntityProp = propertyBuilder(AUDIT_ENTITY, auditEntityClassName)
                 .addAnnotation(AnnotationSpecs.compositeKeyMember(1))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .build();
 
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
-        final var pdProp = propertyBuilder("property", ParameterizedTypeName.get(
+        final var pdProp = propertyBuilder(PROPERTY, ParameterizedTypeName.get(
                 javaPoet.getClassName(PropertyDescriptor.class), auditEntityClassName))
                 .addAnnotation(AnnotationSpecs.compositeKeyMember(2))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .build();
 
         PropertySpec.addProperties(environment, builder, auditPropTypeClassName, auditEntityProp, pdProp);
-
-        // Abstract methods in the base type
-
-        // AE getAuditEntity();
-        final var auditEntityPropAccessor = auditEntityProp.getAccessorSpec(environment);
-        builder.addMethod(methodBuilder("getAuditEntity")
-                                  .addModifiers(PUBLIC)
-                                  .returns(auditEntityProp.type())
-                                  .addStatement("return %s()".formatted(auditEntityPropAccessor.name))
-                                  .build());
-        // AbstractAuditProp<AE> setAuditEntity(AE entity);
-        final var auditEntityPropSetter = auditEntityProp.getSetterSpec(environment, auditPropTypeClassName);
-        builder.addMethod(methodBuilder("setAuditEntity")
-                                  .addModifiers(PUBLIC)
-                                  .returns(auditPropTypeClassName)
-                                  .addParameter(auditEntityClassName, "entity", FINAL)
-                                  .addStatement("return %s(entity)".formatted(auditEntityPropSetter.name))
-                                  .build());
 
         final var typeSpec = builder.build();
 

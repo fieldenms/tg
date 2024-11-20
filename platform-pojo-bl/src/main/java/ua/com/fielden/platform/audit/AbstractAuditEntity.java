@@ -12,12 +12,12 @@ import java.util.Set;
 /**
  * Base type for all audit-entity types.
  * <p>
- * It is expected that in a typical scenario an audit-entity type has a key-member property representing a reference to the audited entity.
- * However, to provide more control in atypical scenarios, this base type leaves it up to specific audit-entity types to declare such a property.
+ * It is expected that an audit-entity type declares key-member property {@link #AUDITED_ENTITY} that represents a reference to the audited entity.
+ * This property cannot be declared in this base type due to a limitation on using type variables in property types.
  * <p>
  * It is also expected that each audit-entity type will participate in a one-to-many association with an entity type derived
  * from {@link AbstractAuditProp}, to represent properties, values of which changed during an audit event.
- * Thus, all audit-types are expected to declare a corresponding collectional property and implement its accessor - {@link #getChangedProps()};
+ * Thus, all audit-entity types are expected to declare collectional property {@link #CHANGED_PROPS} and implement its accessor - {@link #getChangedProps()};
  * an abstract setter is not declared in this base type because there is no suitable type for the setter's parameter
  * (method types are contravariant in the parameter type).
  *
@@ -35,12 +35,39 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
             USER = "user",
             AUDITED_TRANSACTION_GUID = "auditedTransactionGuid";
 
+    /**
+     * Name of the property that is declared by specific audit-entity types.
+     * This property is a key-member representing a reference to the audited entity.
+     * Its type is the type of the audited entity.
+     * <p>
+     * For example, audit-entity {@code VehicleAudit} is expected to declare property {@code auditedEntity} of type {@code Vehicle}.
+     */
+    public static final String AUDITED_ENTITY = "auditedEntity";
+
+    /**
+     * Name of the property that is declared by specific audit-entity types.
+     * This property models the one-to-many relationship between an audit-entity and {@linkplain AbstractAuditProp audit-prop} entities.
+     * Its type is a {@link Set} parameterised with a corresponding audit-prop type subclassed from {@link AbstractAuditProp}.
+     * <p>
+     * For example, audit-entity {@code VehicleAudit} is expected to declare property {@code changedProps} of type {@code Set<VehicleAuditProp>}.
+     */
+    public static final String CHANGED_PROPS = "changedProps";
+
     static final int NEXT_COMPOSITE_KEY_MEMBER = 2;
 
+    /**
+     * Getter for property {@link #AUDITED_ENTITY}.
+     */
     public abstract E getAuditedEntity();
 
+    /**
+     * Setter for property {@link #AUDITED_ENTITY}.
+     */
     public abstract AbstractAuditEntity<E> setAuditedEntity(E auditedEntity);
 
+    /**
+     * Getter for property {@link #CHANGED_PROPS}.
+     */
     public abstract Set<? extends AbstractAuditProp<? extends AbstractAuditEntity<E>>> getChangedProps();
 
     @IsProperty

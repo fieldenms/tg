@@ -6,29 +6,53 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 
 /**
- * Base type for entity types that model a one-2-many association with an audit-entity to represent properties of the audited entity that were modified as part of an audit event.
+ * Base type for entity types that model a one-2-many association with an audit-entity to represent properties of the audited entity whose values were changed as part of an audit event.
  * <p>
- * This type does not declare any properties due to limited support for generically-typed properties.
- * Therefore, it is up to specific entity types to declare the required properties, which are:
- * <ol>
- *   <li> {@code auditEntity: AE}; composite key-member.
- *   <li> {@code property: PropertyDescriptor<AE>}; composite key-member.
- *        <p>
- *        Audit-entity type is used to parameterise the property descriptor because of the evolutionary model of audit-entity types.
- *        The audited type cannot be used as it could result in a persisted property descriptor becoming invalid due to structural changes to the audited type.
- * </ol>
+ * Specific types derived from this one are expected to declare properties {@link #AUDIT_ENTITY} and {@link #PROPERTY}.
+ * These properties cannot be declared in this base type due to a limitation on using type variables in property types.
  *
  * @param <AE>  type of the audit-entity
  */
 @KeyType(DynamicEntityKey.class)
 public abstract class AbstractAuditProp<AE extends AbstractAuditEntity<?>> extends AbstractEntity<DynamicEntityKey> {
 
+    /**
+     * Name of the property that is declared by specific audit-prop types.
+     * This property is a key-member representing a reference to the audit-entity.
+     * Its type is the type of the audit-entity.
+     * <p>
+     * For example, audit-prop type {@code VehicleAuditProp} is expected to declare property {@code auditEntity} of type {@code VehicleAudit}.
+     */
+    public static final String AUDIT_ENTITY = "auditEntity";
+
+    /**
+     * Name of the property that is declared by specific audit-prop types.
+     * This property is a key-member representing a changed property.
+     * <p>
+     * Its type is a {@link PropertyDescriptor} parameterised with the type of the audit-entity.
+     * The choice of the type parameter is motivated by the evolutionary model of audit-entity types.
+     * An audited entity type cannot be used because it could result in a persisted property descriptor becoming invalid due to structural changes to that audited type.
+     */
+    public static final String PROPERTY = "property";
+
+    /**
+     * Getter for property {@link #AUDIT_ENTITY}.
+     */
     public abstract AE getAuditEntity();
 
+    /**
+     * Setter for property {@link #AUDIT_ENTITY}.
+     */
     public abstract AbstractAuditProp<AE> setAuditEntity(AE entity);
 
+    /**
+     * Getter for property {@link #PROPERTY}.
+     */
     public abstract PropertyDescriptor<AE> getProperty();
 
+    /**
+     * Setter for property {@link #PROPERTY}.
+     */
     public abstract AbstractAuditProp<AE> setProperty(PropertyDescriptor<AE> propertyDescriptor);
 
 }
