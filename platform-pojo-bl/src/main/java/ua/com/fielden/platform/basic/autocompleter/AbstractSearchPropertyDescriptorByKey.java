@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
+import static ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher.matchByAnyPropPredicate;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -67,7 +70,7 @@ abstract class AbstractSearchPropertyDescriptorByKey<T extends AbstractEntity<?>
     protected List<PropertyDescriptor<T>> findPropertyDescriptorMatches(final String searchString) {
         final List<PropertyDescriptor<T>> allPropertyDescriptors = getPropertyDescriptors(enclosingEntityType, this::shouldSkip);
         allPropertyDescriptors.sort(null); // let's represent the matching property in alphabetic order
-        return new PojoValueMatcher<>(allPropertyDescriptors, KEY, allPropertyDescriptors.size()).findMatches(searchString);
+        return new PojoValueMatcher<>(allPropertyDescriptors, matchByAnyPropPredicate(Set.of(KEY, DESC)), allPropertyDescriptors.size()).findMatches(searchString);
     }
 
     @Override
