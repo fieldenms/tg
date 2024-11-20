@@ -8,6 +8,7 @@ import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.CompoundSingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 
@@ -31,8 +32,8 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
         final TransformationResultFromStage2To3<? extends ISingleOperand3> firstTr = first.transform(context);
         TransformationContextFromStage2To3 currentContext = firstTr.updatedContext;
         for (final CompoundSingleOperand2 item : items) {
-            final TransformationResultFromStage2To3<? extends ISingleOperand3> itemTr = item.operand.transform(currentContext);
-            transformed.add(new CompoundSingleOperand3(itemTr.item, item.operator));
+            final TransformationResultFromStage2To3<? extends ISingleOperand3> itemTr = item.operand().transform(currentContext);
+            transformed.add(new CompoundSingleOperand3(itemTr.item, item.operator()));
             currentContext = itemTr.updatedContext;
         }
         return new TransformationResultFromStage2To3<>(new Expression3(firstTr.item, transformed, type), currentContext);
@@ -43,7 +44,7 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
         final Set<Prop2> result = new HashSet<>();
         result.addAll(first.collectProps());
         for (final CompoundSingleOperand2 item : items) {
-            result.addAll(item.operand.collectProps());
+            result.addAll(item.operand().collectProps());
         }
         
         return result;
@@ -52,7 +53,7 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return concat(
-                items.stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream),
+                items.stream().map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream),
                 first.collectEntityTypes().stream())
                 .collect(toSet());
     }
@@ -71,7 +72,7 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
         final Set<PropType> types = new HashSet<>();
         types.add(first.type());
         for (final CompoundSingleOperand2 item : items) {
-            types.add(item.operand.type());
+            types.add(item.operand().type());
         }
         
         return types;
@@ -88,17 +89,17 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Expression2)) {
-            return false;
-        }
-        
-        final Expression2 other = (Expression2) obj;
-        
-        return Objects.equals(first, other.first) &&
-                Objects.equals(items, other.items);
+        return this == obj
+               || obj instanceof Expression2 that
+                  && Objects.equals(first, that.first)
+                  && Objects.equals(items, that.items);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("first", first)
+                .add("rest", items);
+    }
+
 }

@@ -15,12 +15,15 @@ import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sources.enhance.PropChunk;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.*;
 import java.util.Map.Entry;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
 import static ua.com.fielden.platform.eql.stage2.sources.enhance.PathToTreeTransformerUtils.isHeaderProperty;
@@ -42,7 +45,12 @@ public class DependentCalcPropsOrder {
 
     private DependentCalcPropsOrder() {}
 
-    public static List<String> orderDependentCalcProps(final QuerySourceInfoProvider querySourceInfoProvider, final QueryModelToStage1Transformer gen, final QuerySourceInfo<?> querySourceInfo) {
+    public static List<String> orderDependentCalcProps(
+            final QuerySourceInfoProvider querySourceInfoProvider,
+            final IDomainMetadata domainMetadata,
+            final QueryModelToStage1Transformer gen,
+            final QuerySourceInfo<?> querySourceInfo)
+    {
 
         // TODO provide more explicit way to determine dependencies between calc props for different kinds of SEs
         //      currently it works for persistent entities and may work for SE types
@@ -59,7 +67,7 @@ public class DependentCalcPropsOrder {
                             calcPropChunk.data().expression.expressionModel().getTokenSource(),
                             EqlCompilationResult.StandaloneExpression.class)
                     .model();
-            final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider).cloneWithAdded(source);
+            final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(source);
             try {
                 final Expression2 exp2 = exp1.transform(prc);
                 final Set<Prop2> expProps = exp2.collectProps();
@@ -75,7 +83,13 @@ public class DependentCalcPropsOrder {
             }
         }
 
-        return orderDependentCalcProps(calcPropsOfEntityType, propDependencies);
+        try {
+            return orderDependentCalcProps(calcPropsOfEntityType, propDependencies);
+        } catch (final TopologicalSortException $) {
+            throw new EqlException(format("There are cyclic dependencies between calculated properties of [%s]. Properties: [%s]",
+                                          querySourceInfo.javaType().getSimpleName(),
+                                          CollectionUtil.toString(calcPropsOfEntityType, ",")));
+        }
     }
 
     /**
@@ -100,7 +114,7 @@ public class DependentCalcPropsOrder {
         return result;
     }
 
-    private static List<String> orderDependentCalcProps(final List<String> calcPropsOfEntityType, final Map<String, T2<Set<String>, Set<String>>> calcPropDependencies) {
+    private static List<String> orderDependentCalcProps(final List<String> calcPropsOfEntityType, final Map<String, T2<Set<String>, Set<String>>> calcPropDependencies) throws TopologicalSortException {
         final Map<String, Set<String>> mapOfDependencies = new HashMap<>();
 
         for (final String propName : calcPropsOfEntityType) {

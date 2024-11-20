@@ -27,6 +27,7 @@ import ua.com.fielden.platform.eql.stage3.sundries.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -56,7 +57,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     private static <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem) {
-        return EqlQueryTransformer.transform(qem, filter, empty(), dates, metadata(), eqlTables(), querySourceInfoProvider()).item;
+        return EqlQueryTransformer.transform(qem, filter, empty(), dates, eqlTables(), querySourceInfoProvider(), metadata()).item;
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
@@ -262,19 +263,19 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     protected static SubQuery3 subqry(final IJoinNode3 sources, final Yields3 yields, final PropType resultType) {
-        return new SubQuery3(new QueryComponents3(sources, null, yields, null, null), resultType);
+        return new SubQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, null), resultType);
     }
 
     protected static SubQuery3 subqry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final PropType resultType) {
-        return new SubQuery3(new QueryComponents3(sources, conditions, yields, null, null), resultType);
+        return new SubQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryComponents3(sources, null, yields, null, null), resultType);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, null), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryComponents3(sources, conditions, yields, null, null), resultType);
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
     }
 
     //    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
@@ -282,7 +283,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     private static SourceQuery3 sourceQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new SourceQuery3(new QueryComponents3(sources, conditions, yields, null, null), resultType);
+        return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
     }
 
     //    protected static EntQuery3 qry(final IQrySources3 sources, final Class<?> resultType) {

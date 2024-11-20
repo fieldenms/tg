@@ -44,7 +44,7 @@ final class YieldsVisitor extends AbstractEqlVisitor<YieldsVisitor.Result> {
                 final List<Yield1> yields = new ArrayList<>(1 + tailCtx.restYields.size());
                 yields.add(compileAliasedYield(ctx.firstYield, tailCtx.firstAlias));
                 tailCtx.restYields.stream().map(YieldsVisitor.this::compileAliasedYield).forEach(yields::add);
-                return new Result(new Yields1(yields), false);
+                return new Result(Yields1.yields(yields), false);
             }
         });
     }

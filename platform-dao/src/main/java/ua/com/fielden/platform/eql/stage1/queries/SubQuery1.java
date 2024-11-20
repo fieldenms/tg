@@ -48,19 +48,18 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
 
     @Override
     public SubQuery2 transform(final TransformationContextFromStage1To2 context) {
-
-        if (joinRoot == null) {
-            final QueryComponents2 qb = transformSourceless(context);
-            return new SubQuery2(qb, enhance(null, qb.yields()), false);
-        }
-
-        final QueryComponents2 queryComponents2 = transformQueryComponents(context);
-        return new SubQuery2(queryComponents2, enhance(resultType, queryComponents2.yields()), isRefetchOnlyQuery());
+        return maybeJoinRoot.map(joinRoot -> {
+            final var queryComponents2 = transformQueryComponents(context, joinRoot);
+            return new SubQuery2(queryComponents2, enhance(resultType, queryComponents2.yields()), isRefetchOnlyQuery());
+        }).orElseGet(() -> {
+            final var queryComponents2 = transformSourceless(context);
+            return new SubQuery2(queryComponents2, enhance(null, queryComponents2.yields()), false);
+        });
     }
 
     private static PropType enhance(final Class<?> resultType, final Yields2 yields) {
         return resultType == null
-               ? yields.getYields().iterator().next().operand.type() // the case of modelAsPrimitive() no ResultType provided
+               ? yields.getYields().iterator().next().operand().type() // the case of modelAsPrimitive() no ResultType provided
                : propType(resultType, H_ENTITY); // the case of modelAsEntity(..)
     }
 

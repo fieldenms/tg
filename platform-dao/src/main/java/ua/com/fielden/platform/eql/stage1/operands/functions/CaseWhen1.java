@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.operands.functions;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -11,20 +12,27 @@ import ua.com.fielden.platform.eql.stage2.operands.functions.CaseWhen2;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ToString;
 
-import java.util.*;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
-public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
+public record CaseWhen1 (List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs,
+                         @Nullable ISingleOperand1<? extends ISingleOperand2<?>> elseOperand,
+                         ITypeCast typeCast)
+        implements IFunction1<CaseWhen2>, ToString.IFormattable
+{
 
-    private List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs = new ArrayList<>();
-    /** Can be null. */
-    public final ISingleOperand1<? extends ISingleOperand2<?>> elseOperand;
-    private final ITypeCast typeCast;
-
-    public CaseWhen1(final List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs, final ISingleOperand1<? extends ISingleOperand2<?>> elseOperand, final ITypeCast typeCast) {
-        this.whenThenPairs.addAll(whenThenPairs);
+    public CaseWhen1(final List<T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>>> whenThenPairs,
+                     final ISingleOperand1<? extends ISingleOperand2<?>> elseOperand,
+                     final ITypeCast typeCast)
+    {
+        this.whenThenPairs = ImmutableList.copyOf(whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;
     }
@@ -55,29 +63,19 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
         
         return result;
     }
-    
+
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((elseOperand == null) ? 0 : elseOperand.hashCode());
-        result = prime * result + ((typeCast == null) ? 0 : typeCast.hashCode());
-        result = prime * result + whenThenPairs.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof CaseWhen1)) {
-            return false;
-        }
-        
-        final CaseWhen1 other = (CaseWhen1) obj;
-        
-        return Objects.equals(whenThenPairs, other.whenThenPairs) && Objects.equals(elseOperand, other.elseOperand) && Objects.equals(typeCast, other.typeCast);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("whenThenPairs", whenThenPairs)
+                .addIfNotNull("else", elseOperand)
+                .addIfNotNull("typeCast", typeCast)
+                .$();
     }
+
 }

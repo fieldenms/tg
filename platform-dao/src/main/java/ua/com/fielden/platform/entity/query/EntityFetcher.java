@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.exceptions.EntityFetcherException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.IFillModel;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.retrieval.IEntityContainerFetcher;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
@@ -19,6 +20,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.IRetrievalModel.createRetrievalModel;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.utils.DefinersExecutor.definersExecutor;
 
@@ -31,15 +33,18 @@ final class EntityFetcher implements IEntityFetcher {
 
     private final IEntityContainerFetcher entityContainerFetcher;
     private final IDomainMetadata domainMetadata;
+    private final QuerySourceInfoProvider qsip;
     private final EntityFactory entityFactory;
 
     @Inject
     EntityFetcher(final IEntityContainerFetcher entityContainerFetcher,
                   final IDomainMetadata domainMetadata,
+                  final QuerySourceInfoProvider qsip,
                   final EntityFactory entityFactory)
     {
         this.entityContainerFetcher = entityContainerFetcher;
         this.domainMetadata = domainMetadata;
+        this.qsip = qsip;
         this.entityFactory = entityFactory;
     }
 
@@ -63,27 +68,29 @@ final class EntityFetcher implements IEntityFetcher {
 
         return instantiateFromContainers(containers, queryModel.getFillModel());
     }
-    
+
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> getContainers(
             final Session session,
             final QueryExecutionModel<E, ?> queryModel,
             final Integer pageNumber,
             final Integer pageCapacity)
     {
-        final var fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType());
+        final var fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType(), domainMetadata, qsip);
         final var qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), fm, queryModel.getParamValues(), queryModel.isLightweight());
         return entityContainerFetcher.listAndEnhanceContainers(session, qpm, pageNumber, pageCapacity);
     }
 
     private <E extends AbstractEntity<?>> IRetrievalModel<E> produceRetrievalModel(
             final fetch<E> fetchModel,
-            final Class<E> resultType)
+            final Class<E> resultType,
+            final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider qsip)
     {
-        return fetchModel == null
-                ? (resultType.equals(EntityAggregates.class) ? null : new EntityRetrievalModel<E>(fetch(resultType), domainMetadata))
-                : (resultType.equals(EntityAggregates.class)
-                    ? new EntityAggregatesRetrievalModel<E>(fetchModel, domainMetadata)
-                    : new EntityRetrievalModel<E>(fetchModel, domainMetadata));
+        if (fetchModel == null) {
+            return resultType == EntityAggregates.class ? null : new EntityRetrievalModel<>(fetch(resultType), domainMetadata, qsip);
+        } else {
+            return createRetrievalModel(fetchModel, domainMetadata, qsip);
+        }
     }
 
     @Override
@@ -93,7 +100,7 @@ final class EntityFetcher implements IEntityFetcher {
             final Optional<Integer> fetchSize)
     {
         try {
-            final IRetrievalModel<E> fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType());
+            final IRetrievalModel<E> fm = produceRetrievalModel(queryModel.getFetchModel(), queryModel.getQueryModel().getResultType(), domainMetadata, qsip);
             final QueryProcessingModel<E, ?> qpm = new QueryProcessingModel<>(queryModel.getQueryModel(), queryModel.getOrderModel(), fm, queryModel.getParamValues(), queryModel.isLightweight());
             return entityContainerFetcher
                         .streamAndEnhanceContainers(session, qpm, fetchSize)

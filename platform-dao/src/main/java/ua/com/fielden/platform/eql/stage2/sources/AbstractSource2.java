@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.sources;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
+import ua.com.fielden.platform.utils.ToString;
 
-public abstract class AbstractSource2 {
+import java.util.Objects;
+
+public abstract class AbstractSource2 implements ToString.IFormattable {
     public final Integer id;
     /** Alias or {@code null}. */
     public final String alias;
@@ -59,16 +60,34 @@ public abstract class AbstractSource2 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof AbstractSource2)) {
-            return false;
-        }
-        
-        final AbstractSource2 other = (AbstractSource2) obj;
-
-        return Objects.equals(id, other.id) && Objects.equals(alias, other.alias) && Objects.equals(querySourceInfo, other.querySourceInfo) && (isExplicit == other.isExplicit) && (isPartOfCalcProp == other.isPartOfCalcProp);
+        return this == obj
+               || obj instanceof AbstractSource2 that
+                  && Objects.equals(id, that.id)
+                  && Objects.equals(alias, that.alias)
+                  && Objects.equals(querySourceInfo, that.querySourceInfo)
+                  && isExplicit == that.isExplicit
+                  && isPartOfCalcProp == that.isPartOfCalcProp;
    }
+
+   @Override
+   public String toString() {
+       return toString(ToString.separateLines);
+   }
+
+   @Override
+   public String toString(final ToString.IFormat format) {
+       return format.toString(this)
+               .add("id", id)
+               .addIfNotNull("alias", alias)
+               .add("isExplicit", isExplicit)
+               .add("isPartOfCalcProp", isPartOfCalcProp)
+               .add("querySourceInfo", querySourceInfo)
+               .pipe(this::addToString)
+               .$();
+   }
+
+   protected ToString addToString(final ToString toString) {
+       return toString;
+   }
+
 }

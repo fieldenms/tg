@@ -6,11 +6,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
@@ -19,14 +18,13 @@ import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.orderBys2;
 /**
  * To identify empty order-bys with no limit and no offset, {@link #EMPTY_ORDER_BYS} can be compared with {@code ==}
  * (due to only static methods available for creating instances).
+ * <p>
+ * Prefer static methods for instantiation over the constructor.
  */
-public class OrderBys1 {
+public record OrderBys1 (List<OrderBy1> models, Limit limit, long offset) implements ToString.IFormattable {
+
     public static final long NO_OFFSET = 0;
     public static final OrderBys1 EMPTY_ORDER_BYS = new OrderBys1(ImmutableList.of(), Limit.all(), NO_OFFSET);
-
-    private final List<OrderBy1> models;
-    private final Limit limit;
-    private final long offset;
 
     public static OrderBys1 orderBys1(final List<OrderBy1> models, final Limit limit, final long offset) {
         if (models.isEmpty() && limit instanceof Limit.All && offset == NO_OFFSET) {
@@ -39,7 +37,7 @@ public class OrderBys1 {
         return models.isEmpty() ? EMPTY_ORDER_BYS : new OrderBys1(models, Limit.all(), NO_OFFSET);
     }
 
-    private OrderBys1(final List<OrderBy1> models, final Limit limit, final long offset) {
+    public OrderBys1(final List<OrderBy1> models, final Limit limit, final long offset) {
         this.models = ImmutableList.copyOf(models);
         this.limit = limit;
         this.offset = offset;
@@ -57,38 +55,27 @@ public class OrderBys1 {
         return models.isEmpty()
                 ? ImmutableSet.of()
                 : models.stream()
-                        .filter(el -> el.operand != null)
-                        .map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream)
+                        .filter(el -> el.operand() != null)
+                        .map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream)
                         .collect(toImmutableSet());
-    }
-
-    public Stream<OrderBy1> models() {
-        return models.stream();
-    }
-
-    public Limit limit() {
-        return limit;
-    }
-
-    public long offset() {
-        return offset;
     }
 
     public boolean isEmpty() {
         return models.isEmpty();
     }
-    
+
     @Override
-    public int hashCode() {
-        return Objects.hash(models, limit, offset);
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        return this == obj || obj instanceof OrderBys1 that
-                              && offset == that.offset
-                              && limit.equals(that.limit)
-                              && models.equals(that.models);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("limit", limit)
+                .add("offset", offset)
+                .add("models", models)
+                .$();
     }
 
 }

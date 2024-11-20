@@ -12,6 +12,7 @@ import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.CaseWhen3;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 
@@ -98,16 +99,19 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!(obj instanceof CaseWhen2)) {
-            return false;
-        }
-
-        final CaseWhen2 other = (CaseWhen2) obj;
-
-        return Objects.equals(whenThenPairs, other.whenThenPairs) && Objects.equals(elseOperand, other.elseOperand) && Objects.equals(typeCast, other.typeCast);
+        return this == obj
+               || obj instanceof CaseWhen2 that
+                  && Objects.equals(whenThenPairs, that.whenThenPairs)
+                  && Objects.equals(elseOperand, that.elseOperand)
+                  && Objects.equals(typeCast, that.typeCast);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("whenThenPairs", whenThenPairs)
+                .addIfNotNull("else", elseOperand)
+                .addIfNotNull("typeCast", typeCast);
+    }
+
 }

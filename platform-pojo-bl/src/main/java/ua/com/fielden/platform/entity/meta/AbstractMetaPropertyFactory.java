@@ -50,8 +50,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new HashMap<>();
     protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new HashMap<>();
     protected final Map<Integer, MaxValueValidator> maxValueValidators = new HashMap<>();
-    protected final Map<Class<?>, Map<String, RangePropertyValidator>> geRangeValidators = new HashMap<>();
-    protected final Map<Class<?>, Map<String, RangePropertyValidator>> leRangeValidators = new HashMap<>();
+    protected final Map<Class<?>, Map<String, GePropertyValidator<?>>> geRangeValidators = new HashMap<>();
+    protected final Map<Class<?>, Map<String, LePropertyValidator<?>>> leRangeValidators = new HashMap<>();
     // type, property, array of handlers
     protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = new HashMap<>();
     protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = new HashMap<>();
@@ -115,9 +115,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         case GREATER_OR_EQUAL:
             return new IBeforeChangeEventHandler[] { createGreaterOrEqualValidator(((GreaterOrEqual) annotation).value()) };
         case LE_PROPETY:
-            return new IBeforeChangeEventHandler[] { createLePropertyValidator(entity, propertyName, ((LeProperty) annotation).value(), dates) };
+            return new IBeforeChangeEventHandler[] { createLePropertyValidator(entity, propertyName, propertyType, ((LeProperty) annotation).value()) };
         case GE_PROPETY:
-            return new IBeforeChangeEventHandler[] { createGePropertyValidator(entity, ((GeProperty) annotation).value(), propertyName, dates) };
+            return new IBeforeChangeEventHandler[] { createGePropertyValidator(entity, propertyName, propertyType, ((GeProperty) annotation).value()) };
         case MAX:
             if (Number.class.isAssignableFrom(propertyType) || double.class == propertyType || int.class == propertyType) {
                 return new IBeforeChangeEventHandler[] { createMaxValueValidator(((Max) annotation).value()) };
@@ -440,17 +440,26 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         }
     }
 
-
-    private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty, final IDates dates) {
+    private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity,
+                                                                   final String upperBoundaryProperty,
+                                                                   final Class<?> upperBoundaryPropertyType,
+                                                                   final String[] lowerBoundaryProperties) {
         return geRangeValidators
                 .computeIfAbsent(entity.getType(), key -> new HashMap<>())
-                .computeIfAbsent(upperBoundaryProperty, key -> new RangePropertyValidator(lowerBoundaryProperties, true, dates));
+                .computeIfAbsent(upperBoundaryProperty,
+                                 key -> new GePropertyValidator<>(lowerBoundaryProperties,
+                                                                  injector.getInstance(RangeValidatorFunction.forPropertyType(upperBoundaryPropertyType))));
     }
 
-    private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties, final IDates dates) {
+    private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity,
+                                                                   final String lowerBoundaryProperty,
+                                                                   final Class<?> lowerBoundaryPropertyType,
+                                                                   final String[] upperBoundaryProperties) {
         return leRangeValidators
                 .computeIfAbsent(entity.getType(), key -> new HashMap<>())
-                .computeIfAbsent(lowerBoundaryProperty, key -> new RangePropertyValidator(upperBoundaryProperties, false, dates));
+                .computeIfAbsent(lowerBoundaryProperty,
+                                 key -> new LePropertyValidator<>(upperBoundaryProperties,
+                                                                  injector.getInstance(RangeValidatorFunction.forPropertyType(lowerBoundaryPropertyType))));
 
     }
 

@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Objects;
@@ -51,5 +52,10 @@ public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
     public boolean equals(final Object obj) {
         return this == obj || obj instanceof SubQuery3 that && super.equals(that) && Objects.equals(type, that.type);
     }
-    
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("type", type);
+    }
+
 }

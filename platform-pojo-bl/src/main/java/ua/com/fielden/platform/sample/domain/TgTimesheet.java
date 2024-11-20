@@ -38,6 +38,7 @@ public class TgTimesheet extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Start Date", desc = "Date when the TgTimesheet  entry was made")
     @Dependent("finishDate")
+    @LeProperty("finishDate")
     @CompositeKeyMember(2)
     private Date startDate;
 
@@ -45,6 +46,7 @@ public class TgTimesheet extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Finish Date", desc = "Date when the TgTimesheet entry was completed")
     @Dependent("startDate")
+    @GeProperty("startDate")
     private Date finishDate;
 
     @IsProperty
@@ -69,7 +71,6 @@ public class TgTimesheet extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    @GeProperty("startDate")
     public TgTimesheet setFinishDate(final Date finishDate) {
         this.finishDate = finishDate;
         return this;
@@ -80,7 +81,6 @@ public class TgTimesheet extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    @LeProperty("finishDate")
     public TgTimesheet setStartDate(final Date startDate) {
         this.startDate = startDate;
         return this;

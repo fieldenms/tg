@@ -38,7 +38,7 @@ final class OrderByOperandVisitor extends AbstractEqlVisitor<Stream<OrderBy1>> {
         final OrderBys1 innerModel = new EqlCompiler(transformer).compile(orderToken.model.getTokenSource(),
                                                                           EqlCompilationResult.StandaloneOrderBy.class)
                 .model();
-        return innerModel.models();
+        return innerModel.models().stream();
     }
 
     private static boolean isDesc(final EQLParser.OrderContext ctx) {
