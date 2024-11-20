@@ -194,17 +194,22 @@ function createCompositeTitle (entity, template, reflector) {
             const constructPath = (entity, dotNoPairs, acc) => {
                 if (dotNoPairs.length === 0) {
                     return acc;
+                } else if (!entity) {
+                    return undefined;
                 } else {
                     const nameRoot = getKeyMemberName(entity, dotNoPairs[1].symbol.text, reflector);
                     return constructPath(entity.get(nameRoot), dotNoPairs.slice(2), acc + '.' + nameRoot);
                 }
             };
-            prevMemberName = currMemberName;
+            if (currMemberName) {
+                prevMemberName = currMemberName;
+            }
             const currMemberNameRoot = getKeyMemberName(entity, ctx.children[1].symbol.text, reflector);
-            currMemberName = currMemberNameRoot + constructPath(entity.get(currMemberNameRoot), ctx.children.slice(2), '');
+            const constructedPath = constructPath(entity.get(currMemberNameRoot), ctx.children.slice(2), '');
+            currMemberName = constructedPath === undefined ? undefined : currMemberNameRoot + constructedPath;
         }
         exitTvPart (ctx) {
-            const value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
+            const value = currMemberName ? reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName) : undefined;
             if (value) {
                 currMember = {};
                 if (currSeparator) {
@@ -218,7 +223,7 @@ function createCompositeTitle (entity, template, reflector) {
             }
         }
         exitVPart (ctx) {
-            const value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
+            const value = currMemberName ? reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName) : undefined;
             if (value) {
                 currMember = {};
                 const determineSeparator = (prevMemberName, currMemberName) => {

@@ -41,6 +41,7 @@ public class TgRollingStockMinorComponent extends AbstractPersistentEntity<Dynam
     @MapTo
     @CompositeKeyMember(2)
     @Title("Minor Component")
+    @Optional
     private TgMinorComponent minorComponent;
 
     @Observable

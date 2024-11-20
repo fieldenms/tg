@@ -40,6 +40,7 @@ public class TgRollingStockMajorComponent extends AbstractPersistentEntity<Dynam
     @MapTo
     @CompositeKeyMember(2)
     @Title("Major Component")
+    @Optional
     private String majorComponent;
 
     @Observable
