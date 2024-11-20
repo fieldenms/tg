@@ -57,7 +57,7 @@ public class ReferenceHierarchyWebUiConfig {
 
     /**
      * Produces a new reference hierarchy action configuration as property action for master.
-     * This action will open reference hierarchy for master entity if property is not of entity type,
+     * This action will open reference hierarchy for master entity if property is not of an entity type,
      * otherwise reference hierarchy will be opened for entity value specified in the entity editor.
      *
      * @return

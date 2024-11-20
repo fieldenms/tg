@@ -68,8 +68,10 @@ public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext
     }
 
     private AbstractEntity<?> extractReferenceEntity(final ReferenceHierarchy entity) {
+        //Computation has the highest precedence if it is present
         if (computation().isPresent()) {
             final Object computed = computation().get().apply(entity, (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) getContext());
+            // computation function should return an entity
             if (computed instanceof AbstractEntity<?>) {
                 return (AbstractEntity<?>) computed;
             } else {
@@ -83,7 +85,10 @@ public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext
             if (chosenPropertyEmpty()) {
                 return masterEntity();
             } else {
-                Class<?> propType = determinePropertyType(masterEntity().getType(), chosenProperty());
+                //If master entity is present and chosen property is of an entity type then return entity even if it is invalid,
+                //otherwise inform that only an existent entity can be used for reference hierarchy.
+                //If property editor is not of an entity type then use master entity for reference hierarchy.
+                final Class<?> propType = determinePropertyType(masterEntity().getType(), chosenProperty());
                 if (!AbstractEntity.class.isAssignableFrom(propType)) {
                     return masterEntity();
                 } else if (masterEntity().getProperty(chosenProperty()).getLastAttemptedValue() == null ||
