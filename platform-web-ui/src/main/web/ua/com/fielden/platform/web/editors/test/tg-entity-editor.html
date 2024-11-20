@@ -137,6 +137,21 @@
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
             })();
 
+            (() => {
+                const target = '#1.2tv#2tv', result = 'Major Component: Electrical Equipment Minor Component: Batteries:Lithium-Ion';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2v#2v', result = 'Electrical Equipment Batteries:Lithium-Ion';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2v#2.1v', result = 'Electrical Equipment Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
         });
     </script>
 </body>

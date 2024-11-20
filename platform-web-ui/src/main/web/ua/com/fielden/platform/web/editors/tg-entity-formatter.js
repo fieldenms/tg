@@ -232,11 +232,11 @@ function createCompositeTitle (entity, template, reflector) {
                             if (str1 === '' || str2 === '') {
                                 return acc;
                             } else {
-                                const prefixOf = prop => prop.substring(0, prop.indexOf('.'));
+                                const prefixOf = prop => prop.substring(0, prop.indexOf('.') < 0 ? prop.length : prop.indexOf('.'));
                                 const prefix1 = prefixOf(str1);
                                 const prefix2 = prefixOf(str2);
                                 if (prefix1 === prefix2) {
-                                    const suffixOf = prop => prop.substring(prop.indexOf('.'));
+                                    const suffixOf = prop => prop.indexOf('.') < 0 ? '' : prop.substring(prop.indexOf('.'));
                                     return commonPrefix(suffixOf(str1), suffixOf(str2), acc === '' ? prefix1 : acc + '.' + prefix1);
                                 } else {
                                     return acc;
