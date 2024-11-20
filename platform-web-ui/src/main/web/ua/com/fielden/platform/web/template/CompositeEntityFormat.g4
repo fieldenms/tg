@@ -9,4 +9,4 @@ vsTemplate : vPart ('s'? vPart)* ;
 vPart : no 'v' ;
 
 no : '#' I ('.' I)* ;
-I : [0-9] ;
+I : [1-9] ;
