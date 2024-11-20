@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.ExpExec;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,41 +21,34 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
     public static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
 
     private final Collection<T> instances;
-    private final ExpExec<T> exec = new ExpExec<>("pojo");
     private final boolean isCaseSensitive;
+    private final String propName;
 
     /**
      * Controls the number of values that can be returned as the result of matching.
      */
     private final int limit;
 
-    public PojoValueMatcher(final Collection<T> instances, final String expression, final int limit) {
-        this(instances, expression, limit, false);
+    public PojoValueMatcher(final Collection<T> instances, final String propNameToMatchBy, final int limit) {
+        this(instances, propNameToMatchBy, limit, false);
     }
 
-    public PojoValueMatcher(final Collection<T> instances, final String expression, final int limit, final boolean isCaseSensitive) {
-        this.instances = instances;
-        exec.add(expression);
+    public PojoValueMatcher(final Collection<T> instances, final String propNameToMatchBy, final int limit, final boolean isCaseSensitive) {
+        this.instances = ImmutableList.copyOf(instances);
+        this.propName = propNameToMatchBy;
         this.limit = limit;
         this.isCaseSensitive = isCaseSensitive;
     }
 
-    /*
-     * Two protected getters to make this class overridable.
-     */
-    protected Collection<T> getInstances() {
+    public Collection<T> getInstances() {
         return instances;
     }
 
-    protected ExpExec<T> getExec() {
-        return exec;
-    }
-    
     @Override
     public List<T> findMatches(final String v) {
-        final String value = SPECIAL_REGEX_CHARS.matcher(isCaseSensitive ? v : v.toUpperCase()).replaceAll("\\\\$0");
-        final List<T> possibleEntities = new ArrayList<T>();
-        final int substringLen = value.length();
+        final String searchText = SPECIAL_REGEX_CHARS.matcher(isCaseSensitive ? v : v.toUpperCase()).replaceAll("\\\\$0");
+        final var possibleEntities = new ArrayList<T>();
+        final int substringLen = searchText.length();
         if (substringLen == 0) {
             return possibleEntities;
         }
@@ -63,17 +56,17 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
         // * if string does not start with % then prepend ^
         // * if string does not end with % then append $
         // * substitute all occurrences of % with .*
-        final String prefix = value.startsWith("%") ? "" : "^";
-        final String postfix = value.endsWith("%") ? "" : "$";
-        final String strPattern = prefix + value.replaceAll("%", ".*") + postfix;
+        final String prefix = searchText.startsWith("%") ? "" : "^";
+        final String postfix = searchText.endsWith("%") ? "" : "$";
+        final String searchPattern = prefix + searchText.replaceAll("%", ".*") + postfix;
 
-        final Pattern pattern = Pattern.compile(strPattern);
+        final Pattern pattern = Pattern.compile(searchPattern);
         for (final T instance : instances) {
             if (possibleEntities.size() < limit) {
-                final Object entryValue = exec.eval(instance, 0);
-                if (entryValue != null) {
-                    final String listEntry = isCaseSensitive ? entryValue.toString() : entryValue.toString().toUpperCase();
-                    final Matcher matcher = pattern.matcher(listEntry);
+                final var propValue = instance.get(propName);
+                if (propValue != null) {
+                    final String value = isCaseSensitive ? propValue.toString() : propValue.toString().toUpperCase();
+                    final Matcher matcher = pattern.matcher(value);
                     if (matcher.find()) {
                         possibleEntities.add(instance);
                     }

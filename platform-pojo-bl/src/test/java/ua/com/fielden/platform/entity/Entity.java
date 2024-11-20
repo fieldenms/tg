@@ -283,6 +283,7 @@ public class Entity extends AbstractEntity<String> {
         super.setId(id);
     }
 
+    @Observable
     @Override
     public Entity setKey(String key) {
         super.setKey(key);
