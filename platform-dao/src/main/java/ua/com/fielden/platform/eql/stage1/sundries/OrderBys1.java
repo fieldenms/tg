@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
-import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
 
@@ -41,12 +40,6 @@ public class OrderBys1 {
     }
 
     private OrderBys1(final List<OrderBy1> models, final Limit limit, final long offset) {
-        if (limit instanceof Limit.Count (var n) && n < 0) {
-            throw new EqlStage1ProcessingException("Limit must be a non-negative integer, but was: %s".formatted(n));
-        }
-        if (offset < 0) {
-            throw new EqlStage1ProcessingException("Offset must be a non-negative integer, but was: %s".formatted(offset));
-        }
         this.models = ImmutableList.copyOf(models);
         this.limit = limit;
         this.offset = offset;

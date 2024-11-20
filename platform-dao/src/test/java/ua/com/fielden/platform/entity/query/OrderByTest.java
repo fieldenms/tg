@@ -5,16 +5,20 @@ import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlValidationException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem1;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.Limit;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.stage0.OrderingModelConflictException;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -32,6 +36,46 @@ public class OrderByTest extends AbstractDaoTestCase {
     private static final String TEST_DATA_KEY_PREFIX = "TEST_ORDER_BY_";
     private static final ConditionModel testDataCond = cond().prop("key").like().val(TEST_DATA_KEY_PREFIX + "%").model();
     public static final int MAX_ENTITY_KEY_INDEX = 5;
+
+    @Test
+    public void limit_must_be_non_negative() {
+        final var negativeLimit = -1;
+        try {
+            select(TgPersonName.class).where().condition(testDataCond)
+                    .orderBy().prop("key").desc().limit(negativeLimit)
+                    .model();
+            fail();
+        } catch (final EqlValidationException ex) {
+            assertEquals(EqlValidationException.ERR_LIMIT_NON_NEGATIVE.formatted(negativeLimit), ex.getMessage());
+        }
+
+        try {
+            orderBy().prop("key").asc().limit(negativeLimit).model();
+            fail();
+        } catch (final EqlValidationException ex) {
+            assertEquals(EqlValidationException.ERR_LIMIT_NON_NEGATIVE.formatted(negativeLimit), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void offset_must_be_non_negative() {
+        final var negativeOffset = -1;
+        try {
+            select(TgPersonName.class).where().condition(testDataCond)
+                    .orderBy().prop("key").desc().offset(negativeOffset)
+                    .model();
+            fail();
+        } catch (final EqlValidationException ex) {
+            assertEquals(EqlValidationException.ERR_OFFSET_NON_NEGATIVE.formatted(negativeOffset), ex.getMessage());
+        }
+
+        try {
+            orderBy().prop("key").asc().offset(negativeOffset).model();
+            fail();
+        } catch (final EqlValidationException ex) {
+            assertEquals(EqlValidationException.ERR_OFFSET_NON_NEGATIVE.formatted(negativeOffset), ex.getMessage());
+        }
+    }
 
     @Test
     public void orderBy_can_be_used_in_a_top_level_query() {

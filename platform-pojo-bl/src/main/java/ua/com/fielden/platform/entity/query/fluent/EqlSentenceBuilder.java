@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.exceptions.EqlValidationException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
@@ -16,6 +17,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlValidationException.ERR_LIMIT_NON_NEGATIVE;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlValidationException.ERR_OFFSET_NON_NEGATIVE;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.*;
 import static ua.com.fielden.platform.eql.antlr.tokens.IValToken.iValToken;
 import static ua.com.fielden.platform.eql.antlr.tokens.ValToken.valToken;
@@ -573,14 +576,23 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder limit(final long limit) {
+        if (limit < 0) {
+            throw new EqlValidationException(ERR_LIMIT_NON_NEGATIVE.formatted(limit));
+        }
         return _add(LimitToken.limit(limit));
     }
 
     public EqlSentenceBuilder limit(final Limit limit) {
+        if (limit instanceof Limit.Count (var n) && n < 0) {
+            throw new EqlValidationException(ERR_LIMIT_NON_NEGATIVE.formatted(n));
+        }
         return _add(LimitToken.limit(limit));
     }
 
     public EqlSentenceBuilder offset(final long offset) {
+        if (offset < 0) {
+            throw new EqlValidationException(ERR_OFFSET_NON_NEGATIVE.formatted(offset));
+        }
         return _add(new OffsetToken(offset));
     }
 
