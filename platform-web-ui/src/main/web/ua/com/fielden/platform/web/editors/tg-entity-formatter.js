@@ -168,7 +168,7 @@ function createCompositeTitle (entity, template, reflector) {
 
     const members = [];
     let currMember;
-    let currMemberName;
+    let currMemberName, prevMemberName;
     let currSeparator;
 
     class Listener extends CompositeEntityFormatListener {
@@ -191,7 +191,15 @@ function createCompositeTitle (entity, template, reflector) {
             }
         }
         exitNo (ctx) {
-            currMemberName = getKeyMemberName(entity, ctx.children[1].symbol.text, reflector);
+            const constructPath = (dotNoPairs, acc) => {
+                if (dotNoPairs.length === 0) {
+                    return acc;
+                } else {
+                    return constructPath(dotNoPairs.slice(2), acc + '.' + getKeyMemberName(entity, dotNoPairs[1].symbol.text, reflector));
+                }
+            };
+            prevMemberName = currMemberName;
+            currMemberName = getKeyMemberName(entity, ctx.children[1].symbol.text, reflector) + constructPath(ctx.children.slice(2), '');
         }
         exitTvPart (ctx) {
             const value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
@@ -211,10 +219,34 @@ function createCompositeTitle (entity, template, reflector) {
             const value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
             if (value) {
                 currMember = {};
-                if (currSeparator) {
-                    currMember.separator = currSeparator;
-                } else {
-                    currSeparator = entity.type().compositeKeySeparator();
+                const determineSeparator = (prevMemberName, currMemberName) => {
+                    if (!prevMemberName) {
+                        return undefined;
+                    } else {
+                        const penultPropOf = prop => reflector.isDotNotated(prop) ? prop.substring(0, prop.lastIndexOf('.')) : '';
+                        const currContext = penultPropOf(currMemberName);
+                        const prevContext = penultPropOf(prevMemberName);
+                        const commonPrefix = (str1, str2, acc) => {
+                            if (str1 === '' || str2 === '') {
+                                return acc;
+                            } else {
+                                const prefixOf = prop => prop.substring(0, prop.indexOf('.'));
+                                const prefix1 = prefixOf(str1);
+                                const prefix2 = prefixOf(str2);
+                                if (prefix1 === prefix2) {
+                                    const suffixOf = prop => prop.substring(prop.indexOf('.'));
+                                    return commonPrefix(suffixOf(str1), suffixOf(str2), acc === '' ? prefix1 : acc + '.' + prefix1);
+                                } else {
+                                    return acc;
+                                }
+                            }
+                        };
+                        return entity.get(commonPrefix(currContext, prevContext, '')).type().compositeKeySeparator();
+                    }
+                };
+                const separator = determineSeparator(prevMemberName, currMemberName);
+                if (separator) {
+                    currMember.separator = separator;
                 }
                 currMember.value = value;
                 members.push(currMember);

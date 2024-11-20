@@ -8,5 +8,5 @@ tvPart : no 't' 'v' ;
 vsTemplate : vPart ('s'? vPart)* ;
 vPart : no 'v' ;
 
-no : '#' I ;
+no : '#' I ('.' I)* ;
 I : [0-9] ;
