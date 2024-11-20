@@ -1,24 +1,25 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItemCloseable;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
 
-final class SingleOperandOrderable //
-        extends AbstractQueryLink //
-        implements ISingleOperandOrderable {
+final class SingleOperandOrderable<ET extends AbstractEntity<?>>
+        extends AbstractQueryLink
+        implements ISingleOperandOrderable<ET> {
 
     public SingleOperandOrderable(final EqlSentenceBuilder builder) {
         super(builder);
     }
 
     @Override
-    public IOrderingItemCloseable asc() {
-        return new OrderingItemCloseable(builder.asc());
+    public IOrderingItem<ET> asc() {
+        return new OrderingItem<>(builder.asc());
     }
 
     @Override
-    public IOrderingItemCloseable desc() {
-        return new OrderingItemCloseable(builder.desc());
+    public IOrderingItem<ET> desc() {
+        return new OrderingItem<>(builder.desc());
     }
 
 }

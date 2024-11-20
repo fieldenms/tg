@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.query.model;
+package ua.com.fielden.platform.entity.query.test_entities;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;

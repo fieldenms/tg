@@ -9,11 +9,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromNone;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.*;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -63,8 +59,8 @@ public class EntityQueryUtils {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static IOrderingItem orderBy() {
-        return new OrderingItem(new EqlSentenceBuilder().orderBy());
+    public static StandaloneOrderBy.IOrderingItem orderBy() {
+        return new StandaloneOrderBy_OrderingItem(new EqlSentenceBuilder().orderBy());
     }
 
     public static <T extends AbstractEntity<?>> Builder<T, EntityResultQueryModel<T>> from(
