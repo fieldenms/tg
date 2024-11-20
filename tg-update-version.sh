@@ -56,7 +56,7 @@ info() {
 }
 
 ###########################
-####### Releasing #########
+######## Updating #########
 ###########################
 
 info "Update module versions to ${NEW_VERSION}"
