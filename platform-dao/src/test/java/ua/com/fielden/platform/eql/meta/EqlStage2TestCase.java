@@ -54,12 +54,12 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 public abstract class EqlStage2TestCase extends EqlTestCase {
 
-    protected static AbstractQuerySourceItem<?> pi(final Class<?> type, final String propName) {
-        return querySourceInfoProvider().getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
+    protected static AbstractQuerySourceItem<?> pi(final Class<? extends AbstractEntity<?>> type, final String propName) {
+        return querySourceInfoProvider().getModelledQuerySourceInfo(type).getProps().get(propName);
     }
 
-    protected static AbstractQuerySourceItem<?> pi(final Class<?> type, final String propName, final String subPropName) {
-        final AbstractQuerySourceItem<?> querySourceInfoItem = querySourceInfoProvider().getModelledQuerySourceInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
+    protected static AbstractQuerySourceItem<?> pi(final Class<? extends AbstractEntity<?>> type, final String propName, final String subPropName) {
+        final AbstractQuerySourceItem<?> querySourceInfoItem = querySourceInfoProvider().getModelledQuerySourceInfo(type).getProps().get(propName);
         if (querySourceInfoItem instanceof QuerySourceItemForComponentType) {
             return ((QuerySourceItemForComponentType<?>) querySourceInfoItem).getSubitems().get(subPropName);
         } else if (querySourceInfoItem instanceof QuerySourceItemForUnionType) {

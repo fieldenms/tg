@@ -1,66 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Math.min;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.UUID.randomUUID;
-import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.pagination.IPage.pageCount;
-import static ua.com.fielden.platform.pagination.IPage.realPageCount;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusive2Default;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusiveDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrGroupDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
-import static ua.com.fielden.platform.types.either.Either.left;
-import static ua.com.fielden.platform.types.either.Either.right;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.AUTO_RUN;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createQueryEnhancerAndContext;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.enhanceResultEntitiesWithDynamicPropertyValues;
-import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -100,11 +42,7 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.CentreUtils;
-import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
-import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.*;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -114,6 +52,41 @@ import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSette
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.Boolean.FALSE;
+import static java.lang.Math.min;
+import static java.util.Optional.*;
+import static java.util.UUID.randomUUID;
+import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.pagination.IPage.pageCount;
+import static ua.com.fielden.platform.pagination.IPage.realPageCount;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.*;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.*;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.CHANGED;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaIndication.NONE;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.*;
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.*;
 
 /**
  * This utility class contains the methods that are shared across {@link CentreResource} and {@link CriteriaResource}.
@@ -149,9 +122,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static final String META_VALUES = "metaValues";
     /**
-     * The key for customObject's value, which either contains a message for stale criteria or is empty if no criteria are stale.
+     * The key for customObject's value, which contains {@link CriteriaIndication}.
      */
-    static final String STALE_CRITERIA_MESSAGE = "staleCriteriaMessage";
+    static final String CRITERIA_INDICATION = "criteriaIndication";
     /**
      * The key for customObject's value containing the preferred view index.
      */
@@ -202,7 +175,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Creates the 'custom object' that contains 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean, int)},
+     * Creates the 'custom object' that contains 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean)},
      * optional 'saveAsName' value, optional 'saveAsDesc' value, optional 'configUuid' value and optional 'shareError' value.
      *
      * @param criteriaMetaValues
@@ -211,7 +184,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param configUuid -- represents uuid of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param autoRun -- represents autoRun parameter of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
-     * @param staleCriteriaMessage
+     * @param criteriaIndicationOpt -- optional {@link CriteriaIndication} for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI if not empty
      * @param preferredView -- represents a configuration preferred view index to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param shareError -- represents a configuration sharing error message to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      *
@@ -224,7 +197,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Optional<Optional<String>> configUuid,
         final Optional<Boolean> autoRun,
         final Optional<Optional<String>> saveAsDesc,
-        final Optional<Optional<String>> staleCriteriaMessage,
+        final Optional<CriteriaIndication> criteriaIndicationOpt,
         final Optional<Integer> preferredView,
         final User user,
         final Optional<Optional<String>> shareError
@@ -242,8 +215,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         saveAsDesc.ifPresent(desc -> {
             customObject.put(SAVE_AS_DESC, desc.orElse(""));
         });
-        staleCriteriaMessage.ifPresent(message -> {
-            customObject.put(STALE_CRITERIA_MESSAGE, message.orElse(null));
+        criteriaIndicationOpt.ifPresent(criteriaIndication -> {
+            customObject.put(CRITERIA_INDICATION, criteriaIndication);
         });
         preferredView.ifPresent(prefView -> {
             customObject.put(PREFERRED_VIEW, prefView);
@@ -256,19 +229,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Creates the 'custom object' that contain 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean, int)}) and 'staleCriteriaMessage'.
+     * Creates the 'custom object' that contain 'critMetaValues', 'centreDirty' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean)}) and 'criteriaIndication'.
      *
      * @param criteriaMetaValues
      * @param centreDirty
-     * @param staleCriteriaMessage
-     *            -- if not <code>null</code> then the criteria is stale and the user will be informed about that ('orange' config button), otherwise (if <code>null</code>) -- the
-     *            criteria were not changed and the user will be informed about that ('black' config button).
+     * @param criteriaIndication -- contains actual {@link CriteriaIndication} for currently loaded centre configuration and its result-set; this indication will be promoted to 'Show selection criteria' button in EGI
      *
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean centreDirty, final String staleCriteriaMessage) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean centreDirty, final CriteriaIndication criteriaIndication) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
-        customObject.put(STALE_CRITERIA_MESSAGE, staleCriteriaMessage);
+        customObject.put(CRITERIA_INDICATION, criteriaIndication);
         return customObject;
     }
 
@@ -620,13 +591,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
 
         // returns whether centre (defined by 'specificSaveAsName, freshCentreSupplier' arguments) is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
-        validationPrototype.setCentreDirtyCalculator(specificSaveAsName -> freshCentreSupplier ->
+        validationPrototype.setCentreDirtyCalculatorWithSavedSupplier(savedCentreSupplier -> specificSaveAsName -> freshCentreSupplier ->
             isDefaultOrLink(specificSaveAsName) // this is very cheap operation
             || isFreshCentreChanged( // this operation has been chosen to be calculated before isInherited as it is assumed to be slightly cheaper than isInherited
                 freshCentreSupplier.get(),
-                updateCentre(user, miType, SAVED_CENTRE_NAME, specificSaveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
+                savedCentreSupplier.get()
             )
             || isInherited(specificSaveAsName, validationPrototype)
+        );
+        validationPrototype.setCentreDirtyCalculator(specificSaveAsName -> freshCentreSupplier ->
+            validationPrototype.centreDirtyCalculatorWithSavedSupplier()
+                .apply(() -> updateCentre(user, miType, SAVED_CENTRE_NAME, specificSaveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder))
+                .apply(specificSaveAsName)
+                .apply(freshCentreSupplier)
         );
 
         // returns whether centre is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
@@ -654,7 +631,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 configUuid,
                 of(false), // even though configuration can be runAutomatically, do not perform auto-running on any action (except Load, see CentreConfigLoadActionDao)
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
-                empty(),
+                empty(), // do not calculate criteria indication on any action (except SAVE for save-as config, see CentreConfigSaveActionProducer)
                 preferredView,
                 user,
                 shareError
@@ -698,6 +675,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setFreshCentreSaver(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             commitCentreWithoutConflicts(user, miType, SAVED_CENTRE_NAME, saveAsName, device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return (customObject, criteriaIndicationName) -> {
+                if (CHANGED.name().equals(criteriaIndicationName)) {
+                    customObject.put(CRITERIA_INDICATION, NONE);
+                }
+                return customObject;
+            };
         });
         // overrides FRESH default centre configuration by FRESH current centre configuration; makes default config as preferred -- 'duplicates' centre
         validationPrototype.setConfigDuplicateAction(() -> {

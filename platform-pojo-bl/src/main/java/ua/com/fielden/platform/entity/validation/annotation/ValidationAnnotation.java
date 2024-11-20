@@ -7,6 +7,8 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 
+import javax.annotation.Nullable;
+
 /**
  * Defines all annotation types, which represent validation annotations.
  *
@@ -36,13 +38,22 @@ public enum ValidationAnnotation {
 
     /**
      * Looks for enumeration value associated with the specified validation annotation type.
-     *
-     * @param annotation
-     * @return
      */
-    public static ValidationAnnotation getValueByType(final Annotation annotation) {
+    public static @Nullable ValidationAnnotation getValueByType(final Annotation annotation) {
         for (final ValidationAnnotation value : values()) {
             if (value.getType() == annotation.annotationType()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Looks for enumeration value associated with the specified validation annotation type.
+     */
+    public static @Nullable ValidationAnnotation getValueByType(final Class<? extends Annotation> type) {
+        for (final ValidationAnnotation value : values()) {
+            if (value.getType() == type) {
                 return value;
             }
         }

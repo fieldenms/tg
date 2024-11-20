@@ -1,27 +1,8 @@
 package ua.com.fielden.deserialisation;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.openjdk.jmh.annotations.Threads.MAX;
-import static ua.com.fielden.platform.serialisation.api.impl.Serialiser.createSerialiserWithJackson;
-import static ua.com.fielden.platform.web.test.config.ApplicationDomain.entityTypesSet;
-
-import java.io.ByteArrayInputStream;
-import java.util.Date;
-import java.util.Map;
-
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Level;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.annotations.Threads;
-import org.openjdk.jmh.annotations.Warmup;
-import org.openjdk.jmh.infra.Blackhole;
-
 import com.google.inject.Injector;
-
+import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
 import ua.com.fielden.benchmark.EntityModuleWithPropertyFactoryForBenchmarking;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -36,12 +17,21 @@ import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 
+import java.io.ByteArrayInputStream;
+import java.util.Date;
+import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.openjdk.jmh.annotations.Threads.MAX;
+import static ua.com.fielden.platform.serialisation.api.impl.Serialiser.createSerialiserWithJackson;
+import static ua.com.fielden.platform.web.test.config.ApplicationDomain.entityTypesSet;
+
 /**
  * Benchmark for all major cases for deserialising JSON objects from TG Web UI using Jackson serialiser engine.
  * 
  * All {@link Map}-based deserialisation is quick and performs almost purely with Jackson.
- * {@link CentreContextHolder} and {@link SavingInforHolder} deserialisation is much more involved and uses {@link EntityJsonDeserialiser} with {@link References}.
- * However, the latter covers much more cases including transporting of action contexts (aka Entity Master retrieve), Entity Master validate / save and Entity Centre processes (except validation / discarding).
+ * {@link CentreContextHolder} and {@link SavingInfoHolder} deserialisation is much more involved and uses {@link EntityJsonDeserialiser} with {@link References}.
+ * However, the latter covers many more cases including transporting of action contexts (aka Entity Master retrieve), Entity Master validate / save and Entity Centre processes (except validation / discarding).
  * 
  * @author TG Team
  *

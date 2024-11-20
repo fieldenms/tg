@@ -1,19 +1,19 @@
 package ua.com.fielden.platform.sample.domain.crit_gen;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.FillModel;
+import ua.com.fielden.platform.entity.query.model.IFillModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @EntityType(TopLevelEntity.class)
 public class TopLevelEntityDaoStub implements ITopLevelEntity {
@@ -44,7 +44,7 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public TopLevelEntity findById(final boolean filtered, final Long id, final fetch<TopLevelEntity> fetchModel, final FillModel fillModel) {
+    public TopLevelEntity findById(final boolean filtered, final Long id, final fetch<TopLevelEntity> fetchModel, final IFillModel<TopLevelEntity> fillModel) {
         return null;
     }
 

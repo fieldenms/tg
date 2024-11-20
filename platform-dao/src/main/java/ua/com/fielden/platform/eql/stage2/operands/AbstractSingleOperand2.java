@@ -1,20 +1,13 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import static ua.com.fielden.platform.eql.meta.PropType.BIGDECIMAL_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.DATETIME_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.DATE_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.INT_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.UTCDATETIME_PROP_TYPE;
-
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.ToString;
+
+import java.util.Set;
+
+import static ua.com.fielden.platform.eql.meta.PropType.*;
 
 public abstract class AbstractSingleOperand2 implements ToString.IFormattable {
     public final PropType type;
@@ -44,7 +37,9 @@ public abstract class AbstractSingleOperand2 implements ToString.IFormattable {
             return INTEGER_PROP_TYPE;
         } else if (types.contains(INT_PROP_TYPE)){
             return INT_PROP_TYPE;
-        } else if (types.contains(STRING_PROP_TYPE)){
+        } else if (types.contains(NSTRING_PROP_TYPE)) {
+            return NSTRING_PROP_TYPE;
+        } else if (types.contains(STRING_PROP_TYPE)) {
             return STRING_PROP_TYPE;
         } else {
             throw new EqlException("Can't determine type with highest precedence among {%s}".formatted(CollectionUtil.toString(types, ", ")));

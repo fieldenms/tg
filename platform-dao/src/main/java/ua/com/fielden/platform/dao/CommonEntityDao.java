@@ -117,7 +117,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Inject
-    protected void setPersistentEntitySaverFactory(final Provider<PersistentEntitySaver.Factory> factory) {
+    protected void setPersistentEntitySaverFactory(final Provider<PersistentEntitySaver.IFactory> factory) {
         entitySaver = lazySupplier(() -> factory.get().create(
                 this::getSession,
                 this::getTransactionGuid,
@@ -290,7 +290,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Returns a session instances without any checks. It is intended mainly for testing purposes to ensure correct session state after various db operations.
+     * Returns a session instances without any checks.
+     * It is intended mainly for testing purposes to ensure correctness of the session state after various db operations.
      *
      * @return
      */
@@ -499,7 +500,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
-    private void processAfterSaveEvent(final T entity, final List<String> dirtyProperties) {
+    private void processAfterSaveEvent(final T entity, final Set<String> dirtyProperties) {
         try {
             final AfterSave afterSave = AnnotationReflector.getAnnotation(getClass(), AfterSave.class);
             // if after save annotation is present then need to instantiate the declared event handler.

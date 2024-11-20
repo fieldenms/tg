@@ -9,7 +9,11 @@ import java.lang.reflect.Method;
  * 
  */
 public enum Mutator {
-    SETTER("set"), INCREMENTOR("addTo"), DECREMENTOR("removeFrom");
+    SETTER("set"),
+    @Deprecated(since = "2.0.0; Mutation of collectional properties is not used in practice and will be removed.", forRemoval = true)
+    INCREMENTOR("addTo"),
+    @Deprecated(since = "2.0.0; Mutation of collectional properties is not used in practice and will be removed.", forRemoval = true)
+    DECREMENTOR("removeFrom");
 
     public final String startsWith;
 
@@ -26,7 +30,7 @@ public enum Mutator {
     /**
      * Identifies whether the specified method name indicates a mutator.
      * 
-     * @param method
+     * @param methodName
      * @return
      */
     public static boolean isMutator(final String methodName) {
@@ -67,7 +71,7 @@ public enum Mutator {
     /**
      * Deduces property name using the provided mutator name.
      * 
-     * @param method
+     * @param methodName
      * @return
      */
     public static String deducePropertyNameFromMutator(final String methodName) {
