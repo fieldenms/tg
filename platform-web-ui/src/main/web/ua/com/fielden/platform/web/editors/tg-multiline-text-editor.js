@@ -4,6 +4,7 @@ import '/resources/polymer/@polymer/iron-autogrow-textarea/iron-autogrow-textare
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -140,6 +141,14 @@ export class TgMultilineTextEditor extends TgEditor {
         suffix.style.alignSelf = "flex-start";
         this.decoratedInput().textarea.addEventListener("change", this._onChange);
         this.decoratedInput().textarea.style.cursor = "text";
+    }
+
+    _labelDownEventHandler (event) {
+        if (this.shadowRoot.activeElement !== this.decoratedInput() && !this._disabled) {
+            this.decoratedInput().textarea.select();
+            this.decoratedInput().textarea.focus();
+        }
+        tearDownEvent(event);
     }
 
     _disabledChanged (newValue, oldValue) {
