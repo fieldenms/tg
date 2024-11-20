@@ -5,15 +5,13 @@ import static java.util.stream.Collectors.toMap;
 import java.util.Map;
 import java.util.Optional;
 
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
+import ua.com.fielden.platform.audit.AuditUtils;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromNone;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperand;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.*;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -49,6 +47,73 @@ public class EntityQueryUtils {
 
     public static <T extends AbstractEntity<?>> IFromNone<T> select() {
         return new FromNone<>(new EqlSentenceBuilder().from());
+    }
+
+    /**
+     * Constructs a partial query whose source is an audit-entity type corresponding to the specified audited entity type.
+     * <p>
+     * It is an error if the specified entity type is not audited.
+     */
+    public static <T extends AbstractEntity<?>> IFromAlias<AbstractAuditEntity<T>> selectAudits(final Class<T> auditedEntityType) {
+        return select(AuditUtils.getAuditType(auditedEntityType));
+    }
+
+    /**
+     * Constructs a partial query whose source is an audit-entity type corresponding to the specified audited entity type,
+     * and applies a condition that selects audit records associated with the specified audited entity ID.
+     * <p>
+     * It is an error if the specified entity type is not audited.
+     */
+    public static <T extends AbstractEntity<?>> ICompoundCondition0<AbstractAuditEntity<T>> selectAudits(
+            final Class<T> auditedEntityType,
+            final Long auditedEntityId)
+    {
+        return select(AuditUtils.getAuditType(auditedEntityType))
+                .where()
+                .prop(AbstractAuditEntity.AUDITED_ENTITY).eq().val(auditedEntityId);
+    }
+
+    /**
+     * Constructs a partial query whose source is an audit-entity type corresponding to the specified audited entity type,
+     * and applies a condition that selects audit records associated with the specified audited entity ID and version.
+     * <p>
+     * It is an error if the specified entity type is not audited.
+     */
+    public static <T extends AbstractEntity<?>> ICompoundCondition0<AbstractAuditEntity<T>> selectAudits(
+            final Class<T> auditedEntityType,
+            final Long auditedEntityId,
+            final Long auditedEntityVersion)
+    {
+        return select(AuditUtils.getAuditType(auditedEntityType))
+                .where()
+                .prop(AbstractAuditEntity.AUDITED_ENTITY).eq().val(auditedEntityId)
+                .and()
+                .prop(AbstractAuditEntity.AUDITED_VERSION).eq().val(auditedEntityVersion);
+    }
+
+    /**
+     * Constructs a partial query that selects all audit records associated with the specified entity.
+     * <p>
+     * It is an error if the specified entity's type is not audited.
+     */
+    public static <T extends AbstractEntity<?>> ICompoundCondition0<AbstractAuditEntity<T>> selectAudits(final T auditedEntity) {
+        final Class<T> auditedEntityType = (Class<T>) auditedEntity.getType();
+        return selectAudits(auditedEntityType, auditedEntity.getId());
+    }
+
+    /**
+     * Constructs a partial query that selects all audit records associated with the specified entity and version.
+     * <p>
+     * It is an error if the specified entity's type is not audited.
+     *
+     * @param auditedEntityVersion  version of the specified audited entity that is used instead of its current version
+     */
+    public static <T extends AbstractEntity<?>> ICompoundCondition0<AbstractAuditEntity<T>> selectAudits(
+            final T auditedEntity,
+            final Long auditedEntityVersion)
+    {
+        final Class<T> auditedEntityType = (Class<T>) auditedEntity.getType();
+        return selectAudits(auditedEntityType, auditedEntity.getId(), auditedEntityVersion);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
