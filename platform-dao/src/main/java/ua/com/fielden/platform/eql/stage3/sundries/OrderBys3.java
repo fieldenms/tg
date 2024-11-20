@@ -59,8 +59,8 @@ public class OrderBys3 {
             }
             case MSSQL -> {
                 sb.append(modelsStr);
-                // 1. limit (FETCH) can only appear after OFFSET, so we need offset if we have limit
-                // 2. If this is a subquery, then OFFSET must be specified, even if it's zero.
+                // 1. Limit (FETCH) can only appear after OFFSET, so there needs to be OFFSET if there is FETCH.
+                // 2. If this is a subquery, then OFFSET must be specified, even if it is zero.
                 // SQL Server will reject ORDER BY in a subquery without OFFSET or TOP.
                 if (offset != NO_OFFSET || limit instanceof Limit.Count || isSubQuery(enclosingQuery)) {
                     sb.append(" OFFSET ").append(offset).append(" ROWS ");

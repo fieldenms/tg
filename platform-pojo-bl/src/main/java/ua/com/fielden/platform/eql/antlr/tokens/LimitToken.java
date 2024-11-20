@@ -46,7 +46,6 @@ public abstract sealed class LimitToken extends AbstractParameterisedEqlToken {
         public final Limit limit;
 
         public WithLimit(final Limit limit) {
-            requireNotNullArgument(limit, "limit");
             this.limit = limit;
         }
 

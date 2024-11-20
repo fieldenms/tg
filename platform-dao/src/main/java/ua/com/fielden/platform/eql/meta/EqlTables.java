@@ -38,7 +38,7 @@ public class EqlTables {
         final Map<String, String> columns = entityMetadata.properties().stream()
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                 .flatMap(prop -> {
-                    if (prop.type().isComposite() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
+                    if (prop.type().isComponent() || pmUtils.isPropEntityType(prop, EntityMetadata::isUnion)) {
                         return pmUtils.subProperties(prop).stream()
                                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                                 .map(subProp -> t2(prop.name() + "." + subProp.name(), subProp.data().column().name));

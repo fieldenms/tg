@@ -47,14 +47,14 @@ class DdlGeneratorImpl implements IDdlGenerator {
     }
 
     private List<String> generateDatabaseDdl_(final Dialect dialect, final Stream<? extends Class<? extends AbstractEntity<?>>> types) {
-        final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibernateTypeMappings);
+        final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibernateTypeMappings, dialect);
 
         final Set<String> ddlTables = new LinkedHashSet<>();
         final Set<String> ddlFKs = new LinkedHashSet<>();
 
         types.filter(EntityUtils::isPersistedEntityType).forEach(entityType -> {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
-            ddlTables.add(tableDefinition.createTableSchema(dialect, ""));
+            ddlTables.add(tableDefinition.createTableSchema(dialect));
             ddlTables.add(tableDefinition.createPkSchema(dialect));
             ddlTables.addAll(tableDefinition.createIndicesSchema(dialect));
             ddlFKs.addAll(tableDefinition.createFkSchema(dialect));

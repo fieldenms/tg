@@ -16,12 +16,12 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 
 /**
- * A stress test for the getting the original type from generated classes.
+ * A stress test for getting the original type from generated classes.
  * This test aims at simulating a thread-contention problem that occurs when many threads are trying to obtain the original type for the generated ones.
  * If the problem exists, it can be observed by running the test, attaching YourKit to that process and review the result of section "Threads". 
  * Lots of solid "red" segments (not the segments with flames) would indicate that problem exists, and selecting one of those "red" sections should show the following stack trace:
@@ -32,6 +32,9 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
  * ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType(Class) DynamicEntityClassLoader.java:142
  * </pre>   
  * If the problem does not exist (i.e. it was resolve) then no "red" sections should be observed.
+ *
+ * TODO: Refactor to a benchmark test in platform-benchmark.
+ *
  * @author TG Team
  *
  */
@@ -82,7 +85,7 @@ public class GetOriginalTypeStressTest {
     }
 
     /**
-     * A task to access original type multiple times.
+     * A task to access the original type multiple times.
      *
      */
     static class AccessOriginalType implements Runnable {

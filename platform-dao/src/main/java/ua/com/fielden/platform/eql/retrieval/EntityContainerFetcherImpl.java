@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -58,7 +57,8 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     @Inject
     EntityContainerFetcherImpl(
-            final IDomainMetadata domainMetadata, final IDbVersionProvider dbVersionProvider,
+            final IDomainMetadata domainMetadata,
+            final IDbVersionProvider dbVersionProvider,
             final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider,
             final IFilter filter,
@@ -80,8 +80,10 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     @Override
     public <E extends AbstractEntity<?>> List<EntityContainer<E>> listAndEnhanceContainers(
-            final Session session, final QueryProcessingModel<E, ?> queryModel,
-            final Integer pageNumber, final Integer pageCapacity)
+            final Session session,
+            final QueryProcessingModel<E, ?> queryModel,
+            final Integer pageNumber,
+            final Integer pageCapacity)
     {
         final QueryModelResult<E> modelResult = EqlQueryTransformer.getModelResult(
                 queryModel, dbVersionProvider.dbVersion(), filter, userProvider.getUsername(), dates, domainMetadata,
@@ -99,7 +101,9 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     @Override
     public <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(
-            final Session session, final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize)
+            final Session session,
+            final QueryProcessingModel<E, ?> queryModel,
+            final Optional<Integer> fetchSize)
     {
         final QueryModelResult<E> modelResult = EqlQueryTransformer.getModelResult(
                 queryModel, dbVersionProvider.dbVersion(), filter, userProvider.getUsername(), dates, domainMetadata,
@@ -118,8 +122,11 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersForIdOnlyQuery(
-            final Session session, final QueryProcessingModel<E, ?> queryModel,
-            final Class<E> resultType, final Integer pageNumber, final Integer pageCapacity)
+            final Session session,
+            final QueryProcessingModel<E, ?> queryModel,
+            final Class<E> resultType,
+            final Integer pageNumber,
+            final Integer pageCapacity)
     {
         final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop(ID).in().model((SingleResultQueryModel<?>) queryModel.queryModel).model();
 
@@ -129,12 +136,14 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersAsIs(
-            final Session session, final QueryModelResult<E> modelResult,
-            final Integer pageNumber, final Integer pageCapacity)
+            final Session session,
+            final QueryModelResult<E> modelResult,
+            final Integer pageNumber,
+            final Integer pageCapacity)
     {
         final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
 
-        final Query query = produceQueryWithPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity);
+        final Query query = produceQueryWithPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity, dbVersionProvider.dbVersion());
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(entityFactory);
 
@@ -142,14 +151,16 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
         final DateTime st = new DateTime();
         final List<?> res = query.list();
         final Period pd = new Period(st, new DateTime());
-        logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType().getSimpleName()));
+        // logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType().getSimpleName()));
 
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
 
     private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersForIdOnlyQuery(
-            final Session session, final QueryProcessingModel<E, ?> queryModel,
-            final Class<E> resultType, final Optional<Integer> fetchSize)
+            final Session session,
+            final QueryProcessingModel<E, ?> queryModel,
+            final Class<E> resultType,
+            final Optional<Integer> fetchSize)
     {
         final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop(ID).in().model((SingleResultQueryModel<?>) queryModel.queryModel).model();
 
@@ -159,18 +170,20 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersAsIs(
-            final Session session, final QueryModelResult<E> modelResult, final Optional<Integer> fetchSize)
+            final Session session,
+            final QueryModelResult<E> modelResult,
+            final Optional<Integer> fetchSize)
     {
         final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
         final int batchSize = fetchSize.orElse(100);
-        final Query query = produceQueryWithoutPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues())
-                .setFetchSize(batchSize);
+        final Query query = produceQueryWithoutPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), dbVersionProvider.dbVersion())
+                            .setFetchSize(batchSize);
         final Stream<Object[]> stream = ScrollableResultStream.streamOf(query.scroll(ScrollMode.FORWARD_ONLY));
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(entityFactory);
 
-        return SequentialGroupingStream.stream(stream, (el, group) -> group.size() < batchSize, Optional.of(batchSize)) //
-                .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
+        return SequentialGroupingStream.stream(stream, (el, group) -> group.size() < batchSize, Optional.of(batchSize))
+                                       .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
     }
 
     private static boolean idOnlyQuery(final QueryModelResult<?> queryModelResult) {

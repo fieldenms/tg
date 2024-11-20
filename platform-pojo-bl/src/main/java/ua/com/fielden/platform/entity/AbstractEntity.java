@@ -1,23 +1,60 @@
 package ua.com.fielden.platform.entity;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessCriticalError;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
+import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
+import ua.com.fielden.platform.entity.validation.ICustomValidator;
+import ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator;
+import ua.com.fielden.platform.entity.validation.annotation.*;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.ioc.EntityIocModule;
+import ua.com.fielden.platform.ioc.ObservableMutatorInterceptor;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
+import ua.com.fielden.platform.reflection.*;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.StreamUtils;
+
+import javax.annotation.Nullable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.stream.Stream;
+
 import static java.lang.String.format;
 import static java.util.Collections.*;
-import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.*;
 import static ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_LINK_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.COLLECTIONAL_PROP_MISSING_TYPE_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_FOR_PRECITION_AND_SCALE_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_NUMERIC_PARAMS_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
-import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
+import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.*;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -31,62 +68,6 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripI
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.stream.Stream;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-
-import com.google.inject.Inject;
-
-import ua.com.fielden.platform.entity.annotation.*;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Optional;
-import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
-import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
-import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessGraveError;
-import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
-import ua.com.fielden.platform.entity.exceptions.EntityException;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.ioc.EntityModule;
-import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
-import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
-import ua.com.fielden.platform.entity.proxy.StrictProxyException;
-import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-import ua.com.fielden.platform.entity.validation.ICustomValidator;
-import ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator;
-import ua.com.fielden.platform.entity.validation.annotation.*;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.error.Warning;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.EntityMetadata;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.types.RichText;
-import ua.com.fielden.platform.types.try_wrapper.FailableComputation;
-import ua.com.fielden.platform.types.try_wrapper.FailableRunnable;
-import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.CollectionUtil;
-import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.StreamUtils;
-
-import javax.annotation.Nullable;
 
 /**
  * <h3>General Info</h3>
@@ -178,7 +159,7 @@ import javax.annotation.Nullable;
  * A similar situation is with support of property change event handling. Any setter annotated with {@link Observable} should be intercepted by {@link ObservableMutatorInterceptor},
  * which can be achieved by using appropriately configured Guice module.
  *
- * Please refer {@link EntityModule} for more details.
+ * Please refer {@link EntityIocModule} for more details.
  *
  * <h3>Property mutators</h3>
  * The <i>property</i> specification as defined in JavaBeans does not cover fully the needs identified by our team for working with business entities where properties have loosely coupled validation logic and change observation.
@@ -254,6 +235,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     public static final String ERR_IS_EDITABLE_UNINSTRUMENTED = "Uninstrumented instance is not suitable for editing.";
     public static final String ERR_ENSURE_INSTRUMENTED = "Meta-properties for this instance of entity [%s] do not exist as it was not instrumented.";
+    public static final String ERR_COULD_NOT_GET_PROP_VALUE = "Could not get the value for property [%s] in instance %s.";
+    public static final String PROP_TEMPLATE_FOR_MESSAGES = "[%s]@[%s]";
+    public static final String ERR_COULD_NOT_SET_PROP_VALUE = "Error setting value [%s] into property [%s] for entity " + PROP_TEMPLATE_FOR_MESSAGES + ".";
+    public static final String ERR_CANNOT_GET_VALUE_FOR_PROXIED_PROPERTY = "Cannot get value for proxied property [%s] of entity [%s].";
 
     protected final Logger logger;
 
@@ -530,31 +515,28 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public <T> T get(final String propertyName) {
         if (Reflector.isPropertyProxied(this, propertyName)) {
-            throw new StrictProxyException(format("Cannot get value for proxied property [%s] of entity [%s].", propertyName, getType().getName()));
+            throw new StrictProxyException(ERR_CANNOT_GET_VALUE_FOR_PROXIED_PROPERTY.formatted(propertyName, getType().getName()));
         }
         try {
             return (T) dynamicPropertyAccess.getProperty(this, propertyName);
-        } catch (final Throwable e) {
-            // There are cases where this.toString() may fail such as for non-initialized union entities. Need to degrade
-            // gracefully in order to to hide the original exception. Also, don't try toString() if dynamic property access
-            // fails gravely since toString() itself may require it (e.g., with DynamicEntityKey).
+        } catch (final Throwable ex) {
+            // There are cases where this.toString() may fail such as for non-initialized union entities.
+            // Need to degrade gracefully to hide the original exception.
+            // Also, do not try toString() if dynamic property access fails critically.
+            // This is because toString() itself may require access to that property (e.g., in case of DynamicEntityKey).
             @Nullable String thisToString;
-            if (e instanceof DynamicPropertyAccessGraveError) {
+            if (ex instanceof DynamicPropertyAccessCriticalError) {
                 thisToString = null;
             }
             else {
                 try {
                     thisToString = this.toString();
-                } catch (final Exception ex) {
+                } catch (final Throwable _$) {
                     thisToString = null;
                 }
             }
-            throw new EntityException(format("Could not get the value for property [%s] in instance %s.",
-                                             propertyName,
-                                             thisToString == null
-                                                     ? '[' + getType().getTypeName() + ']'
-                                                     : "[%s]@[%s]".formatted(thisToString, getType().getTypeName())),
-                                      e);
+            throw new EntityException(ERR_COULD_NOT_GET_PROP_VALUE.formatted(propertyName, thisToString == null ? '[' + getType().getTypeName() + ']' : PROP_TEMPLATE_FOR_MESSAGES.formatted(thisToString, getType().getTypeName())),
+                                      ex);
         }
     }
 
@@ -578,13 +560,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         try {
             dynamicPropertyAccess.setProperty(this, propertyName, value);
             return this;
-        } catch (final Throwable e) {
-            if (e instanceof Result result) {
+        } catch (final Throwable ex) {
+            if (ex instanceof Result result) {
                 throw result;
             }
             else {
-                throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].",
-                                                 value, propertyName, this, getType().getName()), e);
+                throw new EntityException(ERR_COULD_NOT_SET_PROP_VALUE.formatted(value, propertyName, this, getType().getName()), ex);
             }
         }
     }
@@ -964,7 +945,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 metaProperty.setRequired(
                         AnnotationReflector.isAnnotationPresent(field, Required.class) ||
                         (AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class) &&
-                        !AnnotationReflector.isAnnotationPresent(field, Optional.class)));
+                        !AnnotationReflector.isAnnotationPresent(field, ua.com.fielden.platform.entity.annotation.Optional.class)));
             }
 
             if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {
@@ -1297,10 +1278,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty()).collect(toList());
     }
 
-    public final Stream<MetaProperty<?>> streamDirtyProperties() {
-        return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty());
-    }
-
     public AbstractEntity<?> resetMetaState() {
         nonProxiedProperties().forEach(MetaProperty::resetState);
         return this;
@@ -1495,52 +1472,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * The main intent of this method is to support entity modification in rare situation while it is being marked as read-only.
+     * The main intent of this method is to support entity modification in rare situations where it is being marked as read-only.
      * Should be used with great care as it may alter the intended domain behaviour if used carelessly.
-     * At this stage there is no reason for this setter to be used as part of the domain logic. */
+     * At this stage, there is no reason for this setter to be used as part of the domain logic.
+     */
     public void setIgnoreEditableState(final boolean ignoreEditableStateDuringSave) {
         this.ignoreEditableState = ignoreEditableStateDuringSave;
-    }
-
-    /**
-     * Runs the computation in an environment where the editable state of this entity may be ignored. The editable state
-     * prior to this call is restored after the computation completes or even if it throws an exception. In the latter
-     * case the exception is rethrown.
-     *
-     * @param ignore  whether to ignore the editable state while running the computation
-     * @see #setIgnoreEditableState(boolean)
-     */
-    public <T> T withIgnoreEditableState(final boolean ignore, final FailableComputation<T> computation) {
-        requireNonNull(computation, "computation");
-
-        final boolean prevState = this.ignoreEditableState;
-        this.ignoreEditableState = ignore;
-        final T result;
-        try {
-            result = computation.get();
-        } catch (final Exception ex) {
-            throw ex instanceof RuntimeException rex ? rex : new RuntimeException(ex);
-        } finally {
-            this.ignoreEditableState = prevState;
-        }
-        return result;
-    }
-
-    /**
-     * Equivalent to {@link #withIgnoreEditableState(boolean, FailableComputation)} but does not return any value.
-     */
-    public void withIgnoreEditableState(final boolean ignore, final FailableRunnable runnable) {
-        requireNonNull(runnable, "runnable");
-
-        final boolean prevIgnore = this.ignoreEditableState;
-        this.ignoreEditableState = ignore;
-        try {
-            runnable.run();
-        } catch (final Exception ex) {
-            throw ex instanceof RuntimeException rex ? rex : new RuntimeException(ex);
-        } finally {
-            this.ignoreEditableState = prevIgnore;
-        }
     }
 
     /**

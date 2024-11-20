@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
@@ -28,7 +28,7 @@ import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.UnsupportedTypeException;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -617,7 +617,7 @@ public class DynamicQueryBuilderTest {
 
     @Test
     public void QueryProperty_for_critOnly_property_with_submodel_in_generated_type_is_critOnlyWithModel() {
-        final var injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+        final var injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).getInjector();
         final var domainTreeEnhancer = new DomainTreeEnhancer(injector.getInstance(EntityFactory.class), setOf(EntityForQueryPropertyTesting.class));
         domainTreeEnhancer.addCalculatedProperty(EntityForQueryPropertyTesting.class, "", "COUNT(SELF)", "Kount", "Kount", NO_ATTR, "SELF", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         domainTreeEnhancer.apply();

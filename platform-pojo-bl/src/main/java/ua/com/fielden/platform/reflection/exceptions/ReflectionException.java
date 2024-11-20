@@ -15,7 +15,11 @@ public class ReflectionException extends AbstractPlatformRuntimeException {
     public ReflectionException(final String msg) {
         super(msg);
     }
-    
+
+    public ReflectionException(final Throwable cause) {
+        super(cause);
+    }
+
     public ReflectionException(final String msg, final Throwable cause) {
         super(msg, cause);
     }

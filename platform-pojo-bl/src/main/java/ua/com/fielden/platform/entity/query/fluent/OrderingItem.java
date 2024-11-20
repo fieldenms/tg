@@ -6,8 +6,8 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 /**
- * If Java had multiple inheritance, then would also extend {@link CompletedAndYielded}. We work around this by using
- * {@link CompletedAndYielded} as a delegate.
+ * If Java had multiple inheritance, then would also extend {@link CompletedAndYielded}.
+ * We work around this by using {@link CompletedAndYielded} as a delegate.
  */
 final class OrderingItem<ET extends AbstractEntity<?>>
         extends OrderingItem1<ET>
@@ -45,17 +45,17 @@ final class OrderingItem<ET extends AbstractEntity<?>>
 
     @Override
     public IOrderByOffset<ET> limit(final long n) {
-        return new OrderingItem<>(builder.limit(n));
+        return new OrderByOffset<>(builder.limit(n));
     }
 
     @Override
     public IOrderByOffset<ET> limit(final Limit limit) {
-        return new OrderingItem<>(builder.limit(limit));
+        return new OrderByOffset<>(builder.limit(limit));
     }
 
     @Override
     public ICompletedAndYielded<ET> offset(final long n) {
-        return new OrderingItem<>(builder.offset(n));
+        return new CompletedAndYielded<>(builder.offset(n));
     }
 
 }

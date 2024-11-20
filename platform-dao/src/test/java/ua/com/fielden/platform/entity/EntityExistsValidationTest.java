@@ -24,11 +24,11 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestModule;
+import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestIocModule;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 public class EntityExistsValidationTest extends AbstractDaoTestCase {
-    private final CriteriaGeneratorTestModule module = new CriteriaGeneratorTestModule();
+    private final CriteriaGeneratorTestIocModule module = new CriteriaGeneratorTestIocModule();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory entityFactory = injector.getInstance(EntityFactory.class);
     private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(entityFactory, new HashSet<>(asList(TgSystem.class)));

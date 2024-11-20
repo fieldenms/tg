@@ -1,7 +1,22 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import org.joda.time.DateTime;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.mutator.*;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.exceptions.PropertyBceOrAceDefinitionException;
+import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
+import ua.com.fielden.platform.entity.validation.*;
+import ua.com.fielden.platform.entity.validation.annotation.*;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.utils.StringConverter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -9,33 +24,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.inject.Inject;
-import org.joda.time.DateTime;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.inject.Injector;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.mutator.*;
-import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
-import ua.com.fielden.platform.entity.exceptions.PropertyBceOrAceDefinitionException;
-import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.validation.*;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.Final;
-import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
-import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
-import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
-import ua.com.fielden.platform.entity.validation.annotation.Max;
-import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.StringConverter;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 
 /**
  * Base implementation for {@link IMetaPropertyFactory}.
@@ -56,26 +47,27 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final FinalValidator[] persistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(true, false)};
     protected final FinalValidator[] persistedOnlyAndNullIsValueFinalValidator = new FinalValidator[]{new FinalValidator(true, true)};
     protected final Cache<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = CacheBuilder.newBuilder().weakKeys().initialCapacity(300).concurrencyLevel(50).build();
-    protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new ConcurrentHashMap<>();
-    protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new ConcurrentHashMap<>();
-    protected final Map<Integer, MaxValueValidator> maxValueValidators = new ConcurrentHashMap<>();
-    protected final Map<Class<?>, Map<String, GePropertyValidator<?>>> geRangeValidators = new ConcurrentHashMap<>();
-    protected final Map<Class<?>, Map<String, LePropertyValidator<?>>> leRangeValidators = new ConcurrentHashMap<>();
+    protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new HashMap<>();
+    protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new HashMap<>();
+    protected final Map<Integer, MaxValueValidator> maxValueValidators = new HashMap<>();
+    protected final Map<Class<?>, Map<String, GePropertyValidator<?>>> geRangeValidators = new HashMap<>();
+    protected final Map<Class<?>, Map<String, LePropertyValidator<?>>> leRangeValidators = new HashMap<>();
     // type, property, array of handlers
-    protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = new ConcurrentHashMap<>();
-    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = new HashMap<>();
+    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = new HashMap<>();
 
+    // *** INJECTABLE FIELDS
     private Injector injector;
-
-    protected DomainValidationConfig domainConfig;
+    protected DomainValidationConfig domainValidationConfig;
     protected DomainMetaPropertyConfig domainMetaConfig;
     private IDates dates;
+    // ***
 
     protected AbstractMetaPropertyFactory() {}
 
     @Inject
-    void setDomainConfig(final DomainValidationConfig domainConfig) {
-        this.domainConfig = domainConfig;
+    void setDomainValidationConfig(final DomainValidationConfig domainValidationConfig) {
+        this.domainValidationConfig = domainValidationConfig;
     }
 
     @Inject
@@ -86,6 +78,11 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     @Inject
     void setDates(final IDates dates) {
         this.dates = dates;
+    }
+
+    @Inject
+    public void setInjector(final Injector injector) {
+        this.injector = injector;
     }
 
     @Override
@@ -129,7 +126,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             }
             throw new RuntimeException("Property " + propertyName + " of type " + propertyType.getName() + " does not support Max validation.");
         case DOMAIN:
-            return new IBeforeChangeEventHandler[] { domainConfig.getValidator(entity.getType(), propertyName) };
+            return new IBeforeChangeEventHandler[] { domainValidationConfig.getValidator(entity.getType(), propertyName) };
         case BEFORE_CHANGE:
             return createBeforeChange(entity, propertyName, (BeforeChange) annotation);
         case UNIQUE:
@@ -448,7 +445,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
                                                                    final Class<?> upperBoundaryPropertyType,
                                                                    final String[] lowerBoundaryProperties) {
         return geRangeValidators
-                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(entity.getType(), key -> new HashMap<>())
                 .computeIfAbsent(upperBoundaryProperty,
                                  key -> new GePropertyValidator<>(lowerBoundaryProperties,
                                                                   injector.getInstance(RangeValidatorFunction.forPropertyType(upperBoundaryPropertyType))));
@@ -459,7 +456,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
                                                                    final Class<?> lowerBoundaryPropertyType,
                                                                    final String[] upperBoundaryProperties) {
         return leRangeValidators
-                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(entity.getType(), key -> new HashMap<>())
                 .computeIfAbsent(lowerBoundaryProperty,
                                  key -> new LePropertyValidator<>(upperBoundaryProperties,
                                                                   injector.getInstance(RangeValidatorFunction.forPropertyType(lowerBoundaryPropertyType))));
@@ -488,7 +485,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         if (handler != null) {
             return handler;
         }
-        // if not provided then need to follow the new way of instantiating and caching ACE handlers
+        // if not provided, then need to follow the new way of instantiating and caching ACE handlers
         final Class<?> type = entity.getType();
         Map<String, IAfterChangeEventHandler<?>> typeHandlers = afterChangeEventHandlers.get(type);
         if (typeHandlers == null) {
@@ -521,11 +518,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         }
 
         return propHandler;
-    }
-
-    @Inject
-    public void setInjector(final Injector injector) {
-        this.injector = injector;
     }
 
 }

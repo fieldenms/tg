@@ -20,7 +20,7 @@ import java.util.Set;
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.utils.CollectionUtil.append1;
+import static ua.com.fielden.platform.utils.CollectionUtil.append;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 public class Prop1 implements ISingleOperand1<Prop2> {
@@ -58,10 +58,10 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         final AbstractQuerySourceItem<?> last = originalPath.get(originalPath.size() - 1);
         if (last instanceof QuerySourceItemForComponentType<?> lastComponent) {
             if (lastComponent.getSubitems().size() == 1) {
-                return append1(originalPath, lastComponent.getSubitems().values().iterator().next());
+                return append(originalPath, lastComponent.getSubitems().values().iterator().next());
             }
             else if (lastComponent.javaType() == RichText.class) {
-                return append1(originalPath, lastComponent.getSubitems().get(RichText._coreText));
+                return append(originalPath, lastComponent.getSubitems().get(RichText.CORE_TEXT));
             }
         }
         return originalPath;

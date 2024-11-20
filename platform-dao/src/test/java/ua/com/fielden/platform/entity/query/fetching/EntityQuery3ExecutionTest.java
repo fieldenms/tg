@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -963,6 +964,18 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     @Test
     public void eql3_query_executes_correctly109() {
         run(select(TeVehicle.class).where().anyOfProps("modelMakeKey8").isNotNull());
+    }
+
+    @Test
+    public void union_members_can_be_yielded_with_dot_expression() {
+        final var query = select(TgBogie.class)
+                .where().prop("key").eq().val("BOGIE1")
+                .yield().prop("location.workshop").as("workshop")
+                .modelAsAggregate();
+        final var fetch = fetchAggregates().with("workshop", fetch(TgWorkshop.class).with("key"));
+        final var result = aggregateDao.getEntity(from(query).with(fetch).model());
+        assertNotNull(result);
+        assertEquals("WSHOP1", result.<TgWorkshop>get("workshop").getKey());
     }
 
     @Test

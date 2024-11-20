@@ -11,15 +11,16 @@ import java.util.Optional;
 /**
  * Represents entity type metadata.
  * <p>
- * Each entity type is classified according to its nature. A nature may specify essential metadata that is attributed an
- * entity type. This essential data can be accessed via {@link #data()}.
+ * Each entity type is classified according to its nature.
+ * A nature may specify essential metadata, attributed to an entity type.
+ * This essential data can be accessed via {@link #data()}.
  * Matching on the nature can be performed with the {@code switch} statement or via {@link #match(EntityMetadataVisitor)}.
  * <p>
- * The set of properties includes both declared and inherited ones.
+ * A set of metadata for properties pertains to both declared and inherited ones.
  * <p>
- * No metadata exists for entity nature {@link EntityNature.Other}.
+ * No metadata exists for entities of nature {@link EntityNature.Other}.
  */
-sealed public interface EntityMetadata extends TypeMetadata {
+public sealed interface EntityMetadata extends TypeMetadata {
 
     @Override
     Class<? extends AbstractEntity<?>> javaType();

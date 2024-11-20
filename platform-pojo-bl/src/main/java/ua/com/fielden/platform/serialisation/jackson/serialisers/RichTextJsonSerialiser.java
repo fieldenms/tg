@@ -18,9 +18,9 @@ public class RichTextJsonSerialiser extends StdSerializer<RichText> {
             throws IOException
     {
         generator.writeStartObject();
-        generator.writeFieldName(RichText._formattedText);
+        generator.writeFieldName(RichText.FORMATTED_TEXT);
         generator.writeObject(richText.formattedText());
-        generator.writeFieldName(RichText._coreText);
+        generator.writeFieldName(RichText.CORE_TEXT);
         generator.writeObject(richText.coreText());
         generator.writeEndObject();
     }

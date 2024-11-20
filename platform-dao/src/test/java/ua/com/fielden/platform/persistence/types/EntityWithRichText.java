@@ -13,6 +13,20 @@ public class EntityWithRichText extends AbstractEntity<String> {
     @MapTo
     private RichText text;
 
+    @IsProperty
+    @MapTo
+    private String plainText;
+
+    public String getPlainText() {
+        return plainText;
+    }
+
+    @Observable
+    public EntityWithRichText setPlainText(final String plainText) {
+        this.plainText = plainText;
+        return this;
+    }
+
     public RichText getText() {
         return text;
     }

@@ -16,6 +16,7 @@ import ua.com.fielden.platform.meta.test_entities.Entity_OverridesProperty;
 import ua.com.fielden.platform.meta.test_entities.Entity_OverridesProperty_Super;
 import ua.com.fielden.platform.meta.test_entities.Entity_PropertyDescriptor;
 import ua.com.fielden.platform.meta.test_entities.Entity_UnknownPropertyTypes;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.sample.domain.*;
@@ -26,14 +27,19 @@ import java.util.List;
 import java.util.SortedSet;
 
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
-import static ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings.PLATFORM_HIBERNATE_TYPE_MAPPINGS;
 
 public class EntityMetadataTest {
 
-    private final TestDomainMetadataGenerator generator = TestDomainMetadataGenerator.wrap(
-            new DomainMetadataGenerator(PLATFORM_HIBERNATE_TYPE_MAPPINGS, constantDbVersion(DbVersion.MSSQL)));
+    private final TestDomainMetadataGenerator generator;
+
+    public EntityMetadataTest() {
+        final var dbVersionProvider = constantDbVersion(DbVersion.MSSQL);
+        generator = TestDomainMetadataGenerator.wrap(new DomainMetadataGenerator(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+                                                                                 dbVersionProvider));
+    }
 
     @Test
     public void entity_annotated_with_MapEntityTo_gets_persistent_nature() {
@@ -59,7 +65,7 @@ public class EntityMetadataTest {
     @Test
     public void id_is_generated_as_persistent_for_persistent_entities() {
         EntityA.of(generator.forEntity(TgPerson.class))
-                .assertProperty("id", p -> p
+                .assertProperty(ID, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(Long.class)));
     }
@@ -67,7 +73,7 @@ public class EntityMetadataTest {
     @Test
     public void id_is_generated_as_persistent_for_synthetic_based_on_persistent_entities() {
         EntityA.of(generator.forEntity(TgReVehicleModel.class))
-                .assertProperty("id", p -> p
+                .assertProperty(ID, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(Long.class)));
     }
@@ -75,31 +81,31 @@ public class EntityMetadataTest {
     @Test
     public void id_is_generated_as_calculated_for_synthetic_entities_with_entity_typed_key() {
         EntityA.of(generator.forEntity(TgMakeCount.class))
-                .assertProperty("id", p -> p
+                .assertProperty(ID, p -> p
                         .assertIs(Calculated.class)
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(Long.class)));
     }
 
     @Test
-    public void one2one_entity_property_key() {
+    public void one2one_entity_property_key_is_persistent_and_of_correct_entity_type() {
         EntityA.of(generator.forEntity(TgVehicleTechDetails.class))
-                .assertProperty("key", p -> p
+                .assertProperty(KEY, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgVehicle.class)));
     }
 
     @Test
-    public void synthetic_entity_property_key() {
+    public void synthetic_entity_property_key_is_transient_and_of_correct_entity_type() {
         EntityA.of(generator.forEntity(TgAverageFuelUsage.class))
-                .assertProperty("key", p -> p
+                .assertProperty(KEY, p -> p
                         .assertIs(Transient.class)
                         .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgVehicle.class)));
     }
 
     @Test
-    public void entity_with_DynamicEntityKey() {
+    public void composite_entity_has_calculated_composite_key_with_all_members_included() {
         EntityA.of(generator.forEntity(TgOrgUnit2.class))
-                .assertProperty("key", p -> p
+                .assertProperty(KEY, p -> p
                         .assertIs(Calculated.class)
                         .assertType(t -> t.assertIs(CompositeKey.class).assertJavaType(String.class)))
                 .assertProperty("parent", p -> p.assertHasKey(KEY_MEMBER))
@@ -109,7 +115,7 @@ public class EntityMetadataTest {
     @Test
     public void version_is_generated_as_persistent_for_persistent_entities() {
         EntityA.of(generator.forEntity(TgPerson.class))
-                .assertProperty("version", p -> p
+                .assertProperty(VERSION, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(Long.class)));
     }
@@ -117,7 +123,7 @@ public class EntityMetadataTest {
     @Test
     public void version_is_generated_as_persistent_for_synthetic_based_on_persistent_entities() {
         EntityA.of(generator.forEntity(TgReVehicleModel.class))
-                .assertProperty("version", p -> p
+                .assertProperty(VERSION, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(Long.class)));
     }
@@ -143,7 +149,7 @@ public class EntityMetadataTest {
                         .assertType(t -> t.assertIs(Primitive.class).assertJavaType(boolean.class)))
                 .assertProperty("moneySingle", p -> p
                         .assertIs(CritOnly.class)
-                        .assertType(t -> t.assertIs(PropertyTypeMetadata.Composite.class).assertJavaType(Money.class)))
+                        .assertType(t -> t.assertIs(PropertyTypeMetadata.Component.class).assertJavaType(Money.class)))
                 .assertProperty("orgunitCritOnly", p -> p
                         .assertIs(CritOnly.class)
                         .assertType(t -> t.assertIs(PropertyTypeMetadata.Entity.class).assertJavaType(TgOrgUnit1.class)));
@@ -184,7 +190,7 @@ public class EntityMetadataTest {
     }
 
     @Test
-    public void metadata_is_not_generated_for_entity_types_with_no_exact_nature() {
+    public void metadata_is_not_generated_for_entity_types_without_exact_nature() {
         generator.assertNotGenerated(EntityAggregates.class);
         generator.assertNotGenerated(DomainTreeEntity.class);
         generator.assertNotGenerated(TypeLevelHierarchyEntry.class);
@@ -203,7 +209,7 @@ public class EntityMetadataTest {
     }
 
     @Test
-    public void overriding_property_is_inlcuded_instead_of_the_overriden_one() {
+    public void overriding_property_is_included_instead_of_the_overridden_one() {
         EntityA.of(generator.forEntity(Entity_OverridesProperty.class))
                 .assertProperty("name", p -> p.assertIs(PropertyMetadata.Persistent.class))
                 .peek(em -> assertEquals("Expected a single property [name]",

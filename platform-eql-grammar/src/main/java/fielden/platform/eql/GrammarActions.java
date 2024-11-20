@@ -23,7 +23,7 @@ final class GrammarActions {
           generate antlr4 DIR -- generates an ANTLR4 grammar for the BNF in the specified directory.
           generate text [FILE] -- generates a human-readable text for the BNF, which gets saved to FILE is specified.
           verify -- verifies the BNF for correctness
-          """);
+        """);
     }
 
     public static void main(String[] args) throws IOException {
@@ -42,7 +42,7 @@ final class GrammarActions {
                         var result = new BnfToG4(canonical_bnf, "EQL").bnfToG4();
                         final String dir = args[2];
                         BnfToG4.writeResult(result, Path.of(dir));
-                        System.out.println("ANTLR4 files generated in %s".formatted(dir));
+                        System.out.printf("ANTLR4 files generated in %s%n", dir);
                         return;
                     }
                 }
@@ -63,7 +63,7 @@ final class GrammarActions {
                         out.println(new BnfToText().bnfToText(canonical_bnf));
                     }
 
-                    System.out.println("Output written to %s".formatted(outName));
+                    System.out.printf("Output written to %s%n", outName);
                     return;
                 }
             }
@@ -73,7 +73,7 @@ final class GrammarActions {
             return;
         }
         else {
-            System.err.println("Unrecognised command: %s".formatted(command));
+            System.err.printf("Unrecognised command: %s%n", command);
             return;
         }
 

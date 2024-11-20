@@ -2,8 +2,8 @@ package ua.com.fielden.platform.test;
 
 import com.google.inject.Injector;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
-import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
+import ua.com.fielden.platform.test.ioc.PlatformTestServerIocModule;
 
 import java.util.Properties;
 
@@ -20,11 +20,11 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         try {
             final var appDomainProvider = new PlatformTestDomainTypes();
             injector = new ApplicationInjectorFactory()
-                    .add(new PlatformTestServerModule(
+                    .add(new PlatformTestServerIocModule(
                             appDomainProvider,
                             appDomainProvider.entityTypes(),
                             getProperties(properties)))
-                    .add(new NewUserNotifierMockBindingModule())
+                    .add(new NewUserEmailNotifierTestIocModule())
                     .getInjector();
 
         } catch (final Exception e) {
@@ -50,6 +50,12 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         // Custom Hibernate configuration properties
         props.setProperty("hibernate.show_sql", "false");
         props.setProperty("hibernate.format_sql", "true");
+        // Cache configuration for the dynamic property access
+        props.setProperty("dynamicPropertyAccess.caching", "enabled");
+        props.setProperty("dynamicPropertyAccess.typeCache.concurrencyLevel", "100");
+        props.setProperty("dynamicPropertyAccess.typeCache.expireAfterAccess", "12h");
+        props.setProperty("dynamicPropertyAccess.tempTypeCache.maxSize", "2048");
+        props.setProperty("dynamicPropertyAccess.tempTypeCache.expireAfterWrite", "10m");
         return props;
     }
 

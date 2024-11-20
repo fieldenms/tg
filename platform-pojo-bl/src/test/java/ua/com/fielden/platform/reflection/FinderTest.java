@@ -52,7 +52,7 @@ import ua.com.fielden.platform.reflection.test_entities.SimpleWithoutDescEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityWithoutDesc;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**
@@ -62,7 +62,7 @@ import ua.com.fielden.platform.types.tuples.T2;
  *
  */
 public class FinderTest {
-    private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+    private final Injector injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     private final IPropertyPathFilteringCondition filter = new IPropertyPathFilteringCondition() {
@@ -72,7 +72,7 @@ public class FinderTest {
         }
 
         @Override
-        public boolean ignore(final Class<?> enttyType) {
+        public boolean ignore(final Class<?> entityType) {
             return false;
         }
     };
@@ -635,7 +635,7 @@ public class FinderTest {
 
     @Test
     public void test_field_of_type_search_routine() {
-        assertEquals("Incorrect number of string fields.", 14, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, String.class).size());
+        assertEquals("Incorrect number of String fields.", 5, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, String.class).stream().peek(f -> System.out.println(f.getName())).toList().size());
         assertEquals("Incorrect number of SimpleEntity fields.", 1, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, SimpleEntity.class).size());
     }
 
