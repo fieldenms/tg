@@ -583,6 +583,7 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder limit(final Limit limit) {
+        requireNotNullArgument(limit, "limit");
         if (limit instanceof Limit.Count (var n) && n < 0) {
             throw new EqlValidationException(ERR_LIMIT_NON_NEGATIVE.formatted(n));
         }
