@@ -127,6 +127,16 @@
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
             })();
 
+            (() => {
+                const target = '#1.2tv', result = 'Major Component: Electrical Equipment';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2v', result = 'Electrical Equipment';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
         });
     </script>
 </body>

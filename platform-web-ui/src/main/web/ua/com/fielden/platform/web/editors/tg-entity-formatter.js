@@ -191,15 +191,17 @@ function createCompositeTitle (entity, template, reflector) {
             }
         }
         exitNo (ctx) {
-            const constructPath = (dotNoPairs, acc) => {
+            const constructPath = (entity, dotNoPairs, acc) => {
                 if (dotNoPairs.length === 0) {
                     return acc;
                 } else {
-                    return constructPath(dotNoPairs.slice(2), acc + '.' + getKeyMemberName(entity, dotNoPairs[1].symbol.text, reflector));
+                    const nameRoot = getKeyMemberName(entity, dotNoPairs[1].symbol.text, reflector);
+                    return constructPath(entity.get(nameRoot), dotNoPairs.slice(2), acc + '.' + nameRoot);
                 }
             };
             prevMemberName = currMemberName;
-            currMemberName = getKeyMemberName(entity, ctx.children[1].symbol.text, reflector) + constructPath(ctx.children.slice(2), '');
+            const currMemberNameRoot = getKeyMemberName(entity, ctx.children[1].symbol.text, reflector);
+            currMemberName = currMemberNameRoot + constructPath(entity.get(currMemberNameRoot), ctx.children.slice(2), '');
         }
         exitTvPart (ctx) {
             const value = reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName);
