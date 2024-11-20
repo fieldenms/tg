@@ -273,6 +273,9 @@ public class FluencyApiTest {
         checkFluency(
                 select(TgVehicle.class).as("veh").orderBy().prop("initDate").asc().limit(1).offset(1),
                 array(yield, yieldAll, model, modelAsEntity, modelAsAggregate));
+        checkFluency(
+                select(TgVehicle.class).as("veh").orderBy().prop("initDate").asc().offset(1),
+                array(yield, yieldAll, model, modelAsEntity, modelAsAggregate));
     }
 
 }
