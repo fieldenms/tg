@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.*;
 @CompanionObject(ITgPersistentCompositeEntity.class)
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
-@DisplayDescription
 public class TgPersistentCompositeEntity extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
