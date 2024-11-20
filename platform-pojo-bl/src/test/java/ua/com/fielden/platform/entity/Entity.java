@@ -1,26 +1,6 @@
 package ua.com.fielden.platform.entity;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.Dependent;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.Invisible;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Monitoring;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
@@ -30,6 +10,12 @@ import ua.com.fielden.platform.equery.lifecycle.Categorizer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.types.Money;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 /**
  * Entity class used for testing.
@@ -295,6 +281,13 @@ public class Entity extends AbstractEntity<String> {
     @Override
     public void setId(Long id) {
         super.setId(id);
+    }
+
+    @Observable
+    @Override
+    public Entity setKey(String key) {
+        super.setKey(key);
+        return this;
     }
 
 }
