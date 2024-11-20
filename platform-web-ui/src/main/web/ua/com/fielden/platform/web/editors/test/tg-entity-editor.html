@@ -152,6 +152,51 @@
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
             })();
 
+            (() => {
+                const target = '#1.2tv#2.1tv', result = 'Major Component: Electrical Equipment Minor Component: Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2v#2.2v#2.1v', result = 'Electrical Equipment Lithium-Ion:Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2tv#2.2tv#2.1tv', result = 'Major Component: Electrical Equipment Type: Lithium-Ion Minor Component: Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2v#1.2v#2.1v', result = 'Lithium-Ion Electrical Equipment Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2tv#1.2tv#2.1tv', result = 'Type: Lithium-Ion Major Component: Electrical Equipment Minor Component: Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2v#1v#2.1v', result = 'Lithium-Ion Locomotive / Electrical Equipment Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2tv#1tv#2.1tv', result = 'Type: Lithium-Ion Major Component: Locomotive / Electrical Equipment Minor Component: Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2v#1.2v#1.1v#2.1v', result = 'Lithium-Ion Electrical Equipment / Locomotive Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2tv#1.2tv#1.1tv#2.1tv', result = 'Type: Lithium-Ion Major Component: Electrical Equipment Rolling Stock Type: Locomotive Minor Component: Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
         });
     </script>
 </body>
