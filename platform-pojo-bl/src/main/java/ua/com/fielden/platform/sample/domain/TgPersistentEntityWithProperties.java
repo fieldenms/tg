@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.sample.domain.composite.TgRollingStockMinorComponent;
 import ua.com.fielden.platform.sample.domain.definers.CosWithACEDefiner;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
 import ua.com.fielden.platform.sample.domain.definers.TgPersistentEntityWithPropertiesEntityPropDefiner;
@@ -92,10 +93,14 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
     @Title(value = "Conflicting prop", desc = "Conflicting prop desc")
     private String conflictingProp;
 
-    @IsProperty(displayAs = "#2v#1v")
+    @IsProperty(displayAs = "#2vs#1v")
     @MapTo
     @Title(value = "Composite prop", desc = "Composite prop desc")
     private TgPersistentCompositeEntity compositeProp;
+
+    @IsProperty
+    @MapTo
+    private TgRollingStockMinorComponent compProp;
 
     @IsProperty
     @MapTo
@@ -684,6 +689,16 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
 
     public TgPersistentEntityWithProperties getCritOnlyEntityProp() {
         return critOnlyEntityProp;
+    }
+
+    @Observable
+    public TgPersistentEntityWithProperties setCompProp(final TgRollingStockMinorComponent value) {
+        compProp = value;
+        return this;
+    }
+
+    public TgRollingStockMinorComponent getCompProp() {
+        return compProp;
     }
 
     @Observable

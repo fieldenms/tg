@@ -15,6 +15,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.sample.domain.composite.TgMinorComponent;
+import ua.com.fielden.platform.sample.domain.composite.TgRollingStockMajorComponent;
+import ua.com.fielden.platform.sample.domain.composite.TgRollingStockMinorComponent;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -244,6 +247,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final TgPersistentEntityWithProperties entWithCompWithEmptySecondKeyToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY13").setStringProp("ok").setIntegerProp(43).setEntityProp(savedDefaultEntity).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compWithEmptySecondKey).setDesc("Description for entity with key 12.").setRequiredValidatedProp(30);
         save(entWithCompWithEmptySecondKeyToBeSaved);
+
+        var major = save(new_composite(TgRollingStockMajorComponent.class, "Locomotive", "Electrical Equipment"));
+        var minor = save(new_composite(TgMinorComponent.class, "Batteries", "Lithium-Ion"));
+        var compProp = save(new_composite(TgRollingStockMinorComponent.class, major, minor));
+
+        exampleEnt1.setCompProp(compProp);
+        save(exampleEnt1);
 
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
