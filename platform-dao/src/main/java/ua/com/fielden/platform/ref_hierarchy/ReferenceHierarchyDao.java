@@ -63,6 +63,8 @@ import ua.com.fielden.platform.utils.Pair;
 @EntityType(ReferenceHierarchy.class)
 public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> implements IReferenceHierarchy {
     public static final String ERR_ENTITY_TYPE_NOT_FOUND = "Entity type [%s] could not be found.";
+    public static final String ERR_REFERENCE_ENTITY_SHOULD_EXIST = "Please select at least one entity to open reference hierarchy.";
+    public static final String ERR_NO_ASSOCIATED_GENERATOR_FUNCTION = "There is no associated generator function for level: %s";
 
     private final IEntityAggregatesOperations coAggregates;
     private final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata;
@@ -86,13 +88,13 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     public ReferenceHierarchy save(final ReferenceHierarchy entity) {
         entity.isValid().ifFailure(Result::throwRuntime);
         if (entity.getRefEntityId() == null) {
-            throw failuref("Please select at least one entity to open reference hierarchy.");
+            throw failuref(ERR_REFERENCE_ENTITY_SHOULD_EXIST);
         } else {
             final ReferenceHierarchyLevel nextLevel = entity.getLoadedHierarchyLevel().nextLevel();
             if (this.generateFunctions.containsKey(nextLevel)) {
                 entity.setGeneratedHierarchy(this.generateFunctions.get(nextLevel).apply(entity));
             } else {
-                throw failuref("There is no associated generator function for level: %s", nextLevel);
+                throw failuref(ERR_NO_ASSOCIATED_GENERATOR_FUNCTION, nextLevel);
             }
         }
         entity.setResetFilter(false);
