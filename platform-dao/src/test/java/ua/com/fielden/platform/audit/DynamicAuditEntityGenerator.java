@@ -6,11 +6,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.test_utils.compile.Compilation;
 import ua.com.fielden.platform.test_utils.compile.InMemoryJavaFileObjects;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.lang.invoke.MethodType.methodType;
@@ -40,6 +42,23 @@ public final class DynamicAuditEntityGenerator {
                 .toList();
         final var compilation = Compilation.newInMemory(jfos);
         final var compilationResult = compilation.compile();
+
+        compilationResult.throwIfFailed(compilerMsg -> """
+            Failed to compile dynamically generated audit types [%s].
+            Their source code is reported below, followed by the compilation errors.
+            %s
+            
+            %s
+            """.formatted(CollectionUtil.toString(sourceInfos, AuditEntityGenerator.SourceInfo::className, ", "),
+                          sourceInfos.stream()
+                                  .map(si -> """
+                                             >>>>> BEGIN %1$s
+                                             %2$s
+                                             <<<<< END %1$s
+                                             """.formatted(si.className(), si.source()))
+                                  .collect(Collectors.joining("\n")),
+                          compilerMsg));
+
         return compilationResult.outputClasses().stream()
                 .map(classFile -> defineClass(entityType.getClassLoader(), classFile.name(), classFile.getBytes()))
                 .collect(toImmutableSet());
