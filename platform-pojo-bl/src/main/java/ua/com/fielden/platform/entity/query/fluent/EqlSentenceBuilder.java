@@ -17,7 +17,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
-import static ua.com.fielden.platform.entity.query.exceptions.EqlValidationException.ERR_LIMIT_NON_NEGATIVE;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlValidationException.ERR_LIMIT_GREATER_THAN_ZERO;
 import static ua.com.fielden.platform.entity.query.exceptions.EqlValidationException.ERR_OFFSET_NON_NEGATIVE;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.*;
 import static ua.com.fielden.platform.eql.antlr.tokens.IValToken.iValToken;
@@ -576,16 +576,16 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder limit(final long limit) {
-        if (limit < 0) {
-            throw new EqlValidationException(ERR_LIMIT_NON_NEGATIVE.formatted(limit));
+        if (limit <= 0) {
+            throw new EqlValidationException(ERR_LIMIT_GREATER_THAN_ZERO.formatted(limit));
         }
         return _add(LimitToken.limit(limit));
     }
 
     public EqlSentenceBuilder limit(final Limit limit) {
         requireNotNullArgument(limit, "limit");
-        if (limit instanceof Limit.Count (var n) && n < 0) {
-            throw new EqlValidationException(ERR_LIMIT_NON_NEGATIVE.formatted(n));
+        if (limit instanceof Limit.Count (var n) && n <= 0) {
+            throw new EqlValidationException(ERR_LIMIT_GREATER_THAN_ZERO.formatted(n));
         }
         return _add(LimitToken.limit(limit));
     }

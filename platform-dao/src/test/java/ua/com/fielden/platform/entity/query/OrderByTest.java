@@ -48,7 +48,7 @@ public class OrderByTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void limit_must_be_non_negative() {
+    public void limit_cannot_be_negative() {
         final var negativeLimit = -1;
         try {
             select(TgPersonName.class).where().condition(testDataCond)
@@ -56,14 +56,66 @@ public class OrderByTest extends AbstractDaoTestCase {
                     .model();
             fail();
         } catch (final EqlValidationException ex) {
-            assertEquals(EqlValidationException.ERR_LIMIT_NON_NEGATIVE.formatted(negativeLimit), ex.getMessage());
+            assertEquals(EqlValidationException.ERR_LIMIT_GREATER_THAN_ZERO.formatted(negativeLimit), ex.getMessage());
+        }
+
+        try {
+            select(TgPersonName.class).where().condition(testDataCond)
+                    .orderBy().prop("key").desc().limit(Limit.count(negativeLimit))
+                    .model();
+            fail();
+        } catch (final EqlValidationException ex) {
+            assertEquals(EqlValidationException.ERR_LIMIT_GREATER_THAN_ZERO.formatted(negativeLimit), ex.getMessage());
         }
 
         try {
             orderBy().prop("key").asc().limit(negativeLimit).model();
             fail();
         } catch (final EqlValidationException ex) {
-            assertEquals(EqlValidationException.ERR_LIMIT_NON_NEGATIVE.formatted(negativeLimit), ex.getMessage());
+            assertEquals(EqlValidationException.ERR_LIMIT_GREATER_THAN_ZERO.formatted(negativeLimit), ex.getMessage());
+        }
+
+        try {
+            orderBy().prop("key").asc().limit(Limit.count(negativeLimit)).model();
+            fail();
+        } catch (final EqlValidationException ex) {
+            assertEquals(EqlValidationException.ERR_LIMIT_GREATER_THAN_ZERO.formatted(negativeLimit), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void limit_cannot_be_zero() {
+        final var zeroLimit = 0;
+        try {
+            select(TgPersonName.class).where().condition(testDataCond)
+                    .orderBy().prop("key").desc().limit(zeroLimit)
+                    .model();
+            fail();
+        } catch (final EqlValidationException ex) {
+            assertEquals(EqlValidationException.ERR_LIMIT_GREATER_THAN_ZERO.formatted(zeroLimit), ex.getMessage());
+        }
+
+        try {
+            select(TgPersonName.class).where().condition(testDataCond)
+                    .orderBy().prop("key").desc().limit(Limit.count(zeroLimit))
+                    .model();
+            fail();
+        } catch (final EqlValidationException ex) {
+            assertEquals(EqlValidationException.ERR_LIMIT_GREATER_THAN_ZERO.formatted(zeroLimit), ex.getMessage());
+        }
+
+        try {
+            orderBy().prop("key").asc().limit(zeroLimit).model();
+            fail();
+        } catch (final EqlValidationException ex) {
+            assertEquals(EqlValidationException.ERR_LIMIT_GREATER_THAN_ZERO.formatted(zeroLimit), ex.getMessage());
+        }
+
+        try {
+            orderBy().prop("key").asc().limit(Limit.count(zeroLimit)).model();
+            fail();
+        } catch (final EqlValidationException ex) {
+            assertEquals(EqlValidationException.ERR_LIMIT_GREATER_THAN_ZERO.formatted(zeroLimit), ex.getMessage());
         }
     }
 
