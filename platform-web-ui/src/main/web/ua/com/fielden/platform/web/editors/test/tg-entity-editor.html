@@ -88,6 +88,46 @@
                 assertCopiedValueForTemplate("#2tv", "Composite Part 2: 10", done);
             });
         });
+
+        suite('layer formats text from', function() {
+            let master, reflector;
+
+            setup(function() {
+                master = fixture('MasterFixture');
+                  reflector = document.querySelector('#reflector');
+            });
+
+            const correctlyConverts = function (template, expectedKeyValue, done) {
+                master.entityId = '16';
+                const compPropEditor = master.$.editor_4_compProp;
+
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    const compProp = reflector.getEntityTypeProp(reflector.tg_getFullEntity(bindingEntity), "compProp");
+                    compProp._displayAs = template;
+                    master.retrieve();
+                    master.postRetrieved = function (entity, bindingEntity, customObject) {
+                        setTimeout(() => {
+                            const editorText = compPropEditor.getInputLayerText();
+                            assert.strictEqual(template, reflector.getEntityTypeProp(reflector.tg_getFullEntity(bindingEntity), "compProp")._displayAs, `The template should be '${template}'`);
+                            assert.strictEqual(`${expectedKeyValue}`, editorText, "The copied value is incorrect");
+                            done();
+                        }, 1);
+                    };
+                }
+                master.retrieve();
+            };
+
+            (() => {
+                const target = '', result = 'Major Component: Locomotive / Electrical Equipment Minor Component: Batteries:Lithium-Ion';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = 'z', result = 'Locomotive / Electrical Equipment Batteries:Lithium-Ion';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+        });
     </script>
 </body>
 
