@@ -7,17 +7,22 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.substringAfter;
-import static ua.com.fielden.platform.audit.AbstractAuditEntity.A3T;
+import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
+import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_VERSION;
 import static ua.com.fielden.platform.audit.AuditUtils.getAuditPropTypeForAuditType;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failuref;
 
 /**
@@ -117,6 +122,44 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
 
         audit.endInitialising();
         return audit;
+    }
+
+    @Override
+    public Stream<AE> streamAudits(final Long auditedEntityId, @Nullable final fetch<AE> fetchModel) {
+        final var query = select(getEntityType())
+                .where()
+                .prop(AUDITED_ENTITY).eq().val(auditedEntityId)
+                .model();
+        return stream(from(query).with(fetchModel).model());
+    }
+
+    @Override
+    public Stream<AE> streamAudits(final Long auditedEntityId, final int fetchSize, @Nullable final fetch<AE> fetchModel) {
+        final var query = select(getEntityType())
+                .where()
+                .prop(AUDITED_ENTITY).eq().val(auditedEntityId)
+                .model();
+        return stream(from(query).with(fetchModel).model(), fetchSize);
+    }
+
+    @Override
+    public List<AE> getAudits(final Long auditedEntityId, @Nullable final fetch<AE> fetchModel) {
+        final var query = select(getEntityType())
+                .where()
+                .prop(AUDITED_ENTITY).eq().val(auditedEntityId)
+                .model();
+        return getAllEntities(from(query).with(fetchModel).model());
+    }
+
+    @Override
+    public @Nullable AE getAudit(final Long auditedEntityId, final Long version, @Nullable final fetch<AE> fetchModel) {
+        final var query = select(getEntityType())
+                .where()
+                    .prop(AUDITED_ENTITY).eq().val(auditedEntityId)
+                    .and()
+                    .prop(AUDITED_VERSION).eq().val(version)
+                .model();
+        return getEntity(from(query).with(fetchModel).model());
     }
 
     @Override
