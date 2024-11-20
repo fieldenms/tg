@@ -51,16 +51,6 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
         return new Pair<Session, Session>(ses, getSessionUnsafe());
     }
     
-    @SessionRequired
-    public long streamProcessingWithinTransaction(final EntityResultQueryModel<EntityWithMoney> query) {
-        long result = 0;
-        try(final Stream<EntityWithMoney> stream = stream(from(query).model())) {
-            result = result + stream.count();
-        }
-        result = result + count(query);
-        return result;
-    }
-
     // @SessionRequired -- deliberately not annotated
     public EntityWithMoney superSave(final EntityWithMoney entity) {
         return super.save(entity);

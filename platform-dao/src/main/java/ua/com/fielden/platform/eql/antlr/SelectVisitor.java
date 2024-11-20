@@ -16,10 +16,12 @@ import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.*;
 import ua.com.fielden.platform.eql.stage1.sundries.GroupBys1;
+import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
@@ -41,6 +43,7 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
                 compileWhere(ctx.where()),
                 yieldsResult.yields(),
                 compileGroups(ctx.groupBy()),
+                compileOrderBy(ctx.orderBy()),
                 yieldsResult.yieldAll());
     }
 
@@ -50,6 +53,12 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
                 : new GroupByVisitor(transformer).visitGroupBy(groupByContext);
     }
 
+    private OrderBys1 compileOrderBy(final OrderByContext orderByContext) {
+        return orderByContext == null
+                ? OrderBys1.EMPTY_ORDER_BYS
+                : new OrderByVisitor(transformer).visitOrderBy(orderByContext);
+    }
+
     private YieldsVisitor.Result compileYields(final SelectEndContext selectEndContext) {
         return switch (selectEndContext) {
             case SelectEnd_AnyYieldContext ctx -> ctx.anyYield().accept(new YieldsVisitor(transformer));
@@ -57,7 +66,7 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
         };
     }
 
-    private IJoinNode1<? extends IJoinNode2<?>> compileJoinRoot(final SelectContext ctx) {
+    private Optional<IJoinNode1<? extends IJoinNode2<?>>> compileJoinRoot(final SelectContext ctx) {
         final String alias = ctx.alias == null ? null : ((AsToken) ctx.alias).alias;
 
         final ISource1<?> firstSource;
@@ -67,12 +76,12 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
             case SelectToken.Values $ -> {
                 // TODO replace null by singleton of new ISource1 or IJoinNode1 subtype
                 // we can return early because sourceless selects can't have joins
-                return null;
+                return Optional.empty();
             }
             case SelectToken.Models tok -> firstSource = compileModelsSource(tok.models, alias);
         }
 
-        return compileJoin(new JoinLeafNode1(firstSource), ctx.join());
+        return Optional.of(compileJoin(new JoinLeafNode1(firstSource), ctx.join()));
     }
 
     /**

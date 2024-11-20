@@ -11,15 +11,19 @@ import javax.annotation.Nullable;
  */
 public class NoSuchPropertyException extends AbstractPlatformRuntimeException {
     private static final long serialVersionUID = 1L;
+    public static final String ERR_NO_SUCH_PROP = "No such property [%s] in type [%s].";
 
     public static NoSuchPropertyException noSuchPropertyException(final Class<?> type, final CharSequence property) {
         return noSuchPropertyException(type, property, null);
     }
 
-    public static NoSuchPropertyException noSuchPropertyException(final Class<?> type, final CharSequence property,
-                                                                  final @Nullable Throwable cause) {
-        final var typeName = type == null ? "null" : type.getTypeName();
-        return new NoSuchPropertyException("No such property [%s] in type [%s]".formatted(property, typeName), cause);
+    public static NoSuchPropertyException noSuchPropertyException(
+            final Class<?> type,
+            final CharSequence property,
+            final @Nullable Throwable cause)
+    {
+        final var typeName = type == null ? "null" : type.getSimpleName();
+        return new NoSuchPropertyException(ERR_NO_SUCH_PROP.formatted(property, typeName), cause);
     }
 
     public NoSuchPropertyException(final String msg) {

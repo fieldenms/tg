@@ -4,6 +4,7 @@ import fielden.platform.bnf.BNF;
 import fielden.platform.bnf.Terminal;
 import fielden.platform.bnf.Variable;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.entity.query.model.*;
 
 import static fielden.platform.bnf.FluentBNF.start;
@@ -35,7 +36,7 @@ public final class CanonicalEqlGrammar {
         start(Query).
 
         specialize(Query).
-            into(Select, StandaloneExpression, StandaloneCondExpr, OrderBy).
+            into(Select, StandaloneExpression, StandaloneCondExpr, StandaloneOrderBy).
 
         specialize(Select).
             into(SelectFrom, SourcelessSelect).
@@ -46,6 +47,7 @@ public final class CanonicalEqlGrammar {
                opt(Join),
                opt(Where),
                opt(GroupBy),
+               opt(OrderBy),
                SelectEnd).
 
         derive(SelectSource).
@@ -308,8 +310,11 @@ public final class CanonicalEqlGrammar {
         derive(OrStandaloneCondition).
             to(label("left", StandaloneCondition), or, label("right", StandaloneCondition)).
 
+        derive(StandaloneOrderBy).
+            to(orderBy, repeat1(listLabel("operands", OrderByOperand)), opt(Limit), opt(Offset), model).
+
         derive(OrderBy).
-            to(orderBy, repeat1(listLabel("operands", OrderByOperand)), model).
+            to(orderBy, repeat1(listLabel("operands", OrderByOperand)), opt(Limit), opt(Offset)).
 
         specialize(OrderByOperand).
             into(OrderByOperand_Single, OrderByOperand_Yield, OrderByOperand_OrderingModel).
@@ -326,13 +331,19 @@ public final class CanonicalEqlGrammar {
         derive(Order).
             to(asc).or(desc).
 
+        derive(Limit).
+            to(label("limit", limit.with(long.class))).
+            or(label("limit", limit.with(ua.com.fielden.platform.entity.query.fluent.Limit.class))).
+
+        derive(Offset).
+            to(label("offset", offset.with(long.class))).
 
         annotate(Select, inline()).
         annotate(SelectFrom, inline()).
         annotate(SelectSource, inline()).
         annotate(StandaloneExpression, inline()).
         annotate(StandaloneCondExpr, inline()).
-        annotate(OrderBy, inline()).
+        annotate(StandaloneOrderBy, inline()).
 
         annotate(AndCondition, inline()).
         annotate(OrCondition, inline()).
@@ -372,6 +383,8 @@ public final class CanonicalEqlGrammar {
         annotate(OrderByOperand_Single, inline()).
         annotate(OrderByOperand_Yield, inline()).
         annotate(OrderByOperand_OrderingModel, inline()).
+        annotate(Limit, inline()).
+        annotate(Offset, inline()).
 
         build();
     // @formatter:on
@@ -395,10 +408,14 @@ public final class CanonicalEqlGrammar {
         UnaryPredicate,
         ComparisonPredicate, QuantifiedComparisonPredicate, LikePredicate, StandaloneCondExpr,
         StandaloneCondition, OrStandaloneCondition, AndStandaloneCondition,
-        OrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, DateIntervalUnit,
+        StandaloneOrderBy, Order, OrderByOperand, SelectFrom, SelectSource, SelectEnd, SourcelessSelect, DateIntervalUnit,
         YieldAll, YieldSome, YieldTail, Yield1Tail, YieldManyTail, AliasedYield, YieldManyModel, Yield1Model,
         YieldOperandExpr,
-        OrderByOperand_Yield, OrderByOperand_OrderingModel, OrderByOperand_Single, MembershipPredicate
+        OrderByOperand_Yield, OrderByOperand_OrderingModel, OrderByOperand_Single,
+        OrderBy,
+        Offset,
+        Limit,
+        MembershipPredicate
     }
 
     public enum EqlTerminal implements Terminal {
@@ -448,7 +465,7 @@ public final class CanonicalEqlGrammar {
         beginExpr, endExpr,
         join, leftJoin, on,
         yield, yieldAll,
-        groupBy, asc, desc, order, cond, orderBy, beginYieldExpr, endYieldExpr,
+        groupBy, asc, desc, order, cond, orderBy, beginYieldExpr, endYieldExpr, limit, offset,
     }
 
     private CanonicalEqlGrammar() {}

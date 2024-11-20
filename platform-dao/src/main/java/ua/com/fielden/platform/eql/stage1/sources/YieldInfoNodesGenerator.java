@@ -2,8 +2,8 @@ package ua.com.fielden.platform.eql.stage1.sources;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage1.sources.exceptions.InvalidYieldMatrixException;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.NullPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.AbstractSingleOperand2;
@@ -77,7 +77,7 @@ public class YieldInfoNodesGenerator {
     private static List<YieldInfo> generateYieldInfos(final List<SourceQuery2> models) {
         if (models.size() == 1) {
             return models.getFirst().yields.getYields().stream()
-                    .map(yield -> new YieldInfo(yield.alias, yield.operand.type(), determineNonnullability(new YieldAndConditions(yield, models.getFirst().whereConditions))))
+                    .map(yield -> new YieldInfo(yield.alias(), yield.operand().type(), determineNonnullability(new YieldAndConditions(yield, models.getFirst().whereConditions))))
                     .toList();
         } else {
             final Map<String, List<YieldAndConditions>> yieldMatrix = generateYieldsMatrix(models);
@@ -89,7 +89,7 @@ public class YieldInfoNodesGenerator {
     }
 
     private static boolean determineNonnullability(final YieldAndConditions yieldAndConditions) {
-        return yieldAndConditions.yield().hasNonnullableHint || yieldAndConditions.yield().operand.isNonnullableEntity() || yieldAndConditions.conditions().conditionIsSatisfied(new NullPredicate2(yieldAndConditions.yield().operand, true));
+        return yieldAndConditions.yield().hasNonnullableHint() || yieldAndConditions.yield().operand().isNonnullableEntity() || yieldAndConditions.conditions().conditionIsSatisfied(new NullPredicate2(yieldAndConditions.yield().operand(), true));
     }
 
     private static boolean determineNonnullability(final List<YieldAndConditions> yieldVariants) {
@@ -98,7 +98,7 @@ public class YieldInfoNodesGenerator {
 
     private static PropType determinePropType(final List<YieldAndConditions> yieldVariants) {
         final Set<PropType> propTypes = yieldVariants.stream()
-                .map(yv -> yv.yield.operand.type())
+                .map(yv -> yv.yield.operand().type())
                 .filter(PropType::isNotNull)
                 .collect(toSet());
 
@@ -108,7 +108,7 @@ public class YieldInfoNodesGenerator {
     private static Map<String, List<YieldAndConditions>> generateYieldsMatrix(final List<SourceQuery2> models) {
         return models.stream()
                 .flatMap(m -> m.yields.getYields().stream().map(y -> new YieldAndConditions(y, m.whereConditions)))
-                .collect(groupingBy(yac -> yac.yield.alias));
+                .collect(groupingBy(yac -> yac.yield.alias()));
     }
 
     private static void validateYieldsMatrix(final Map<String, List<YieldAndConditions>> yieldMatrix, final List<SourceQuery2> models) {
@@ -119,7 +119,7 @@ public class YieldInfoNodesGenerator {
                 .collect(toImmutableList());
 
         if (!invalidYields.isEmpty()) {
-            final var exception = new EqlStage1ProcessingException(
+            final var exception = new InvalidYieldMatrixException(
                     ERR_INVALID_YIELDS_MATRIX.formatted(invalidYields.stream().map(t2 -> t2.map("\"%s\" (occurs %s times)"::formatted)).collect(joining(", ")),
                                                         models.size()));
             LOGGER.error("Source queries:\n%s".formatted(enumerated(models.stream(), "%s. %s"::formatted)), exception);

@@ -4,18 +4,19 @@ import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
-import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.ToString;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 
 public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries> {
@@ -73,7 +74,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     }
 
     private static boolean allGenerated(final List<SourceQuery2> models) {
-        return models.stream().allMatch(model -> model.yields.allGenerated);
+        return models.stream().allMatch(model -> model.yields.allGenerated());
     }
 
     @Override
@@ -92,26 +93,18 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof Source1BasedOnQueries)) {
-            return false;
-        }
-
-        final Source1BasedOnQueries other = (Source1BasedOnQueries) obj;
-
-        return Objects.equals(models, other.models) && Objects.equals(isSyntheticEntity, other.isSyntheticEntity);
+        return this == obj ||
+               obj instanceof Source1BasedOnQueries that
+               && Objects.equals(models, that.models)
+               && isSyntheticEntity == that.isSyntheticEntity
+               && super.equals(that);
     }
 
     @Override
-    public String toString() {
-        return "Source(%s, alias=%s, id=%s, models=(%s))".formatted(sourceType().getTypeName(), alias, id, CollectionUtil.toString(models, "; "));
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("isSyntheticEntity", isSyntheticEntity)
+                .add("models", models);
     }
 
 }

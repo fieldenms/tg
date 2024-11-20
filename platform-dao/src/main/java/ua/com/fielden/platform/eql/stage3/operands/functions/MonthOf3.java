@@ -18,9 +18,9 @@ public class MonthOf3 extends SingleOperandFunction3 {
         switch (dbVersion) {
         case H2:
         case MSSQL:
-            return format("MONTH(%s)", operand.sql(metadata, dbVersion));
+            return String.format("MONTH(%s)", operand.sql(metadata, dbVersion));
         case POSTGRESQL:
-            return format("CAST(EXTRACT(MONTH FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
+            return String.format("CAST(EXTRACT(MONTH FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
         default:
             return super.sql(metadata, dbVersion);
         }

@@ -1,19 +1,20 @@
 package ua.com.fielden.platform.sample.domain;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.IFillModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Just a stub for companion to be able to run deserialisation of instrumented instance in pojo-bl's EntityDeserialisationWithJacksonTest.
@@ -60,7 +61,7 @@ public class TgPersistentEntityWithPropertiesDaoStub implements ITgPersistentEnt
     }
 
     @Override
-    public TgPersistentEntityWithProperties findById(final boolean filtered, final Long id, final fetch<TgPersistentEntityWithProperties> fetchModel) {
+    public TgPersistentEntityWithProperties findById(final boolean filtered, final Long id, final fetch<TgPersistentEntityWithProperties> fetchModel, final IFillModel<TgPersistentEntityWithProperties> fillModel) {
         return null;
     }
 

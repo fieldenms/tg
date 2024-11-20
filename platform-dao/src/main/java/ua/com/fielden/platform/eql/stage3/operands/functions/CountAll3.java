@@ -7,7 +7,7 @@ import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
 
 public class CountAll3 extends AbstractFunction3 {
     
-    public static CountAll3 INSTANCE = new CountAll3();
+    public static final CountAll3 INSTANCE = new CountAll3();
     
     private CountAll3() {
         super(INTEGER_PROP_TYPE);

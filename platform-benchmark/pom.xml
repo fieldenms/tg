@@ -15,7 +15,7 @@
     <description>
         A module to house various TG-specific microbenchmarks and it should not be used as a dependency for any project.
 
-        This module needs to be packaged firts with "mvn clean package", which produces uber jar "benchmarks.jar".
+        This module needs to be packaged first with "mvn clean package", which produces uber jar "benchmarks.jar".
         Then this jar can be executed with "java -jar target/benchmarks.jar" to start the benchmarking.
     </description>
 
@@ -28,68 +28,68 @@
         <uberjar.name>benchmarks</uberjar.name>
     </properties>
 
-	<dependencies>
-		<!-- platform dependencies -->
-		<dependency>
-			<groupId>fielden</groupId>
-			<artifactId>platform-dao</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>fielden</groupId>
-			<artifactId>platform-dao</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>
-		<dependency>
-			<groupId>fielden</groupId>
-			<artifactId>platform-pojo-bl</artifactId>
-			<version>${project.version}</version>
-			<type>test-jar</type>
-		</dependency>
-		<!-- other dependencies -->
-		<!-- Java Microbenchmark Harness -->
-		<!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core -->
-		<dependency>
-			<groupId>org.openjdk.jmh</groupId>
-			<artifactId>jmh-core</artifactId>
-			<version>${jmh.version}</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-generator-annprocess -->
-		<dependency>
-			<groupId>org.openjdk.jmh</groupId>
-			<artifactId>jmh-generator-annprocess</artifactId>
-			<version>${jmh.version}</version>
-			<scope>provided</scope>
-		</dependency>
+    <dependencies>
+        <!-- platform dependencies -->
+        <dependency>
+            <groupId>fielden</groupId>
+            <artifactId>platform-dao</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>fielden</groupId>
+            <artifactId>platform-dao</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>fielden</groupId>
+            <artifactId>platform-pojo-bl</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+        </dependency>
+        <!-- other dependencies -->
+        <!-- Java Microbenchmark Harness -->
+        <!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core -->
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>${jmh.version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-generator-annprocess -->
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>${jmh.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>${posgresql.version}</version>
-			<scope>runtime</scope>
-		</dependency>
+        <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <version>${posgresql.version}</version>
+          <scope>runtime</scope>
+        </dependency>
+    </dependencies>
 
-	</dependencies>
-	<build>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<excludes>
-					<exclude>**/log4j.xml</exclude>
-				</excludes>
-			</resource>
-			<resource>
-				<directory>src/main/java</directory>
-				<excludes>
-					<exclude>**/*.java</exclude>
-				</excludes>
-			</resource>
-		</resources>
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>**/log4j.xml</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/java</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </resource>
+        </resources>
 
-		<plugins>
+        <plugins>
 
-			<plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.4</version>
@@ -135,7 +135,7 @@
                 </configuration>
             </plugin>
 
-		</plugins>
+        </plugins>
 
-	</build>
+    </build>
 </project>

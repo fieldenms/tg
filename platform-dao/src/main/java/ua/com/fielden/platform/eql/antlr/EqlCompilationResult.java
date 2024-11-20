@@ -8,14 +8,17 @@ import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.sundries.Yields1;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 
+import java.util.Optional;
+
 public sealed interface EqlCompilationResult {
 
     String description();
 
-    record Select(IJoinNode1<? extends IJoinNode2<?>> joinRoot,
+    record Select(Optional<IJoinNode1<? extends IJoinNode2<?>>> maybeJoinRoot,
                   Conditions1 whereConditions,
                   Yields1 yields,
                   GroupBys1 groups,
+                  OrderBys1 orderBys,
                   boolean yieldAll)
             implements EqlCompilationResult
     {
@@ -39,10 +42,10 @@ public sealed interface EqlCompilationResult {
         }
     }
 
-    record OrderBy(OrderBys1 model) implements EqlCompilationResult {
+    record StandaloneOrderBy(OrderBys1 model) implements EqlCompilationResult {
         @Override
         public String description() {
-            return "Order By";
+            return "Standalone Order By";
         }
     }
 

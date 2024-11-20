@@ -113,7 +113,7 @@ public final class Reflector {
      * @return
      * @throws NoSuchMethodException
      */
-    protected static Method getMethodForClass(final Class<?> startWithClass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
+    public static Method getMethodForClass(final Class<?> startWithClass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         Class<?> klass = startWithClass;
         while (klass != Object.class) { // need to iterated thought hierarchy in
             // order to retrieve fields from above
@@ -238,7 +238,7 @@ public final class Reflector {
     }
 
     /**
-     * Tries to obtain property setter for property, specified using dot-notation.
+     * Tries to find a property setter for property, specified using dot-expression.
      *
      * @param entityClass
      * @param dotNotationExp
@@ -288,7 +288,7 @@ public final class Reflector {
     public static Pair<Integer, Integer> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
         final Field field = Finder.findFieldByName(entity.getType(), propertyName);
         Integer min = null, max = null;
-        final Set<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
+        final Set<Annotation> propertyValidationAnotations = entity.findValidationAnnotationsForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName));
         for (final Annotation annotation : propertyValidationAnotations) {
             if (annotation instanceof GreaterOrEqual) {
                 min = ((GreaterOrEqual) annotation).value();
@@ -334,9 +334,9 @@ public final class Reflector {
      * Converts a relative property path to an absolute path with respect to the provided context.
      *
      * @param context
-     *            -- the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+     *            a dot-expression for a property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param relativePropertyPath
-     *            -- relative property path, which may contain ← and dots for separating individual properties.
+     *            relative property path, which may contain ← and dots for separating individual properties.
      * @return
      */
     public static String fromRelative2AbsotulePath(final String context, final String relativePropertyPath) {
@@ -390,9 +390,9 @@ public final class Reflector {
      * Converts an absolute property path to a relative one in respect to the provided context.
      *
      * @param context
-     *            the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+     *            a dot-expression for a property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param absolutePropertyPath
-     *            -- an absolute property path, which needs to be converted to a relative path with respect to the specified context.
+     *            an absolute property path, which needs to be converted to a relative path with respect to the specified context.
      * @return
      */
     public static String fromAbsotule2RelativePath(final String context, final String absolutePropertyPath) {

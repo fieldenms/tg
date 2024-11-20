@@ -1,5 +1,14 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
 import static java.lang.String.format;
 import static java.util.stream.Collectors.partitioningBy;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
@@ -7,26 +16,13 @@ import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityIdentity;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-
 /**
- * Finalises initialisation of the specified entity instance by traversing an object graph to execute ACE handlers and assign original property values. 
- * Method {@link #execute(LinkedHashSet)} can be conveniently used to finalise initialisation of multiple dependent entities.
+ * Finalises initialisation of the specified entity instance by traversing an object graph to execute ACE handlers and assign original property values.
  * <p>
- * The process of finalising entity initialisation consists of:<br>
+ * An instance of this class can be created with one of the static methods {@link #definersExecutor()}.
+ * Method {@link #execute(List)} can be conveniently used to finalise initialisation of multiple dependent entities.
+ * <p>
+ * The process of finalising entity initialisation consists of:
  * <ul>
  *  <li>Execution of ACE handlers.
  *  <li>(re)Setting of property original values.
@@ -34,22 +30,42 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
  * </ul>
  * 
  * @author TG Team
- *
  */
 public class DefinersExecutor {
-    private DefinersExecutor() {}
+
+    /**
+     * Entity-typed properties that should not be explored. The effect is that definers are not executed further down
+     * the graph.
+     */
+    private final Set<String> noExploreProps;
+
+    private DefinersExecutor(final Collection<String> noExploreProps) {
+        this.noExploreProps = ImmutableSet.copyOf(noExploreProps);
+    }
+
+    /**
+     * @param noExploreProps  entity-typed properties that should not be explored, which will prevent execution of definers
+     *                        further down the graph
+     */
+    public static DefinersExecutor definersExecutor(final Collection<String> noExploreProps) {
+        return noExploreProps.isEmpty() ? definersExecutor() : new DefinersExecutor(noExploreProps);
+    }
+
+    public static DefinersExecutor definersExecutor() {
+        return DEFAULT_INSTANCE;
+    }
+
+    private static final DefinersExecutor DEFAULT_INSTANCE = new DefinersExecutor(ImmutableSet.of());
 
     /**
      * Employs the DFS algorithm to traverse the object graph starting with a node represented by <code>entity</code>. 
      * The boundary of an object graph is outlined by <code>proxied</code> properties and <code>non-entity typed</code> properties.
      *
      * @param entity -- an instance to finalise the initialisation for.
-     * 
-     * @return
      */
-    public static <T extends AbstractEntity<?>> T execute(final T entity) {
+    public <T extends AbstractEntity<?>> T execute(final T entity) {
         if (entity != null) {
-            execute(Arrays.asList(entity));
+            execute(ImmutableList.of(entity));
         }
         return entity;
     }
@@ -58,10 +74,8 @@ public class DefinersExecutor {
      * The same as {@link #execute(AbstractEntity)}, but for a list of entities.
      * 
      * @param entities -- instances to finalise the initialisation for.
-     * 
-     * @return
      */
-    public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities) {
+    public <T extends AbstractEntity<?>> List<T> execute(final List<T> entities) {
         if (entities == null || entities.isEmpty()) {
             return entities;
         }
@@ -87,15 +101,8 @@ public class DefinersExecutor {
     
     /**
      * Executes definers recursively traversing the object graph using DFS algorithm.
-     *
-     * @param frontier
-     * @param explored
-     * @return
      */
-    private static void explore(
-            final Deque<AbstractEntity<?>> frontier, 
-            final Set<String> explored) {
-        
+    private void explore(final Deque<AbstractEntity<?>> frontier, final Set<String> explored) {
         if (frontier.isEmpty()) {
             throw new DefinersExecutorException("There is nothing to process.");
         }
@@ -144,28 +151,29 @@ public class DefinersExecutor {
         final List<Field> nonProxiedPropFields = propFieldsToProcess.get(false);
         for (final Field propField : nonProxiedPropFields) {
             final String propName = propField.getName();
-            final boolean isEntity = AbstractEntity.class.isAssignableFrom(propField.getType());
-            final boolean isCollectional = Collection.class.isAssignableFrom(propField.getType());
-
             final Object propertyValue = entity.get(propName);
 
-            if (isCollectional) { // handle collectional properties
-                if (propertyValue != null) {
-                    final Collection<?> collection = (Collection<?>) propertyValue;
-                    for (final Object item: collection) {
-                        if (item != null && item instanceof AbstractEntity) {
-                            final AbstractEntity<?> value = (AbstractEntity<?>) item;
-                            frontier.push(value);
-                            explore(frontier, explored);
+            if (shouldExplore(propName)) {
+                final boolean isEntity = AbstractEntity.class.isAssignableFrom(propField.getType());
+                final boolean isCollectional = Collection.class.isAssignableFrom(propField.getType());
+                if (isCollectional) { // handle collectional properties
+                    if (propertyValue != null) {
+                        final Collection<?> collection = (Collection<?>) propertyValue;
+                        for (final Object item : collection) {
+                            if (item != null && item instanceof AbstractEntity) {
+                                final AbstractEntity<?> value = (AbstractEntity<?>) item;
+                                frontier.push(value);
+                                explore(frontier, explored);
+                            }
                         }
                     }
-                }
-            } else if (isEntity) { // handle entity-typed properties
-                if (propertyValue != null) {
-                    final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
-                    // produce fetch
-                    frontier.push(value);
-                    explore(frontier, explored);
+                } else if (isEntity) { // handle entity-typed properties
+                    if (propertyValue != null) {
+                        final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
+                        // produce fetch
+                        frontier.push(value);
+                        explore(frontier, explored);
+                    }
                 }
             }
             
@@ -175,7 +183,10 @@ public class DefinersExecutor {
 
         entity.endInitialising();
     }
-    
+
+    private boolean shouldExplore(final String property) {
+        return !noExploreProps.contains(property);
+    }
 
     private static boolean isValueProxied(final AbstractEntity<?> entity, final Field field) {
         Object value;
@@ -187,7 +198,7 @@ public class DefinersExecutor {
             throw new DefinersExecutorException("Could not filter property by value during checking if it is id-only proxy.", new ReflectionException(format("Could not obtain value for property [%s] in entity [%s].", field.getName(), entity.getType().getName())));
         }
         
-        return value instanceof AbstractEntity ? ((AbstractEntity<?>) value).isIdOnlyProxy() : false;
+        return value instanceof AbstractEntity entityValue && entityValue.isIdOnlyProxy();
     }
 
     private static <T> void handleOriginalValueAndACE(final MetaProperty<T> metaProp, final T propertyValue, final boolean isEntityPersisted) {

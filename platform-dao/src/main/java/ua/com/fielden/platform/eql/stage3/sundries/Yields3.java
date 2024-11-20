@@ -5,25 +5,26 @@ import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.function.Function;
 
-import static java.util.Collections.unmodifiableCollection;
-import static java.util.Collections.unmodifiableSortedMap;
+import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
+import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
-public class Yields3 {
-
-    private final SortedMap<String, Yield3> yieldsMap = new TreeMap<>();
+public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.IFormattable {
 
     public Yields3(final List<Yield3> yields) {
-        for (final Yield3 yield : yields) {
-            yieldsMap.put(yield.alias, yield);
-        }
+        this(yields.stream().collect(toImmutableSortedMap(naturalOrder(), Yield3::alias, Function.identity())));
+    }
+
+    public boolean isEmpty() {
+        return yieldsMap.isEmpty();
     }
 
     public int size() {
@@ -31,11 +32,7 @@ public class Yields3 {
     }
     
     public Collection<Yield3> getYields() {
-        return unmodifiableCollection(yieldsMap.values());
-    }
-
-    public SortedMap<String, Yield3> getYieldsMap() {
-        return unmodifiableSortedMap(yieldsMap);
+        return yieldsMap.values();
     }
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final List<PropType> expectedTypes) {
@@ -58,25 +55,15 @@ public class Yields3 {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + yieldsMap.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Yields3)) {
-            return false;
-        }
-        
-        final Yields3 other = (Yields3) obj;
-
-        return yieldsMap.equals(other.yieldsMap);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("yields", yieldsMap)
+                .$();
     }
+
 }

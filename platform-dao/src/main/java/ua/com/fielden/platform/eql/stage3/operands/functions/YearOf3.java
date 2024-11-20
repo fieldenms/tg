@@ -18,9 +18,9 @@ public class YearOf3 extends SingleOperandFunction3 {
         switch (dbVersion) {
         case H2:
         case MSSQL:
-            return format("YEAR(%s)", operand.sql(metadata, dbVersion));
+            return String.format("YEAR(%s)", operand.sql(metadata, dbVersion));
         case POSTGRESQL:
-            return format("CAST(EXTRACT(YEAR FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
+            return String.format("CAST(EXTRACT(YEAR FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
         default:
             return super.sql(metadata, dbVersion);
         }

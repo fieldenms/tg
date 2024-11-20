@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.Token;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.exceptions.EqlValidationException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.*;
 import ua.com.fielden.platform.eql.antlr.tokens.*;
@@ -16,6 +17,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlValidationException.ERR_LIMIT_GREATER_THAN_ZERO;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlValidationException.ERR_OFFSET_NON_NEGATIVE;
 import static ua.com.fielden.platform.eql.antlr.EQLLexer.*;
 import static ua.com.fielden.platform.eql.antlr.tokens.IValToken.iValToken;
 import static ua.com.fielden.platform.eql.antlr.tokens.ValToken.valToken;
@@ -28,6 +31,7 @@ import static ua.com.fielden.platform.eql.antlr.tokens.util.SimpleTokens.token;
  * @author TG Team
  */
 final class EqlSentenceBuilder {
+    public static final String ERR_NO_MODELS_WERE_SPECIFIED_AS_A_SOURCE_IN_THE_FROM_STATEMENT = "No models were specified as a source in the FROM statement!";
     private final List<Token> tokens;
     private final State state;
 
@@ -56,8 +60,7 @@ final class EqlSentenceBuilder {
     private EqlSentenceBuilder makeCopy(final State newState) {
         final List<Token> newTokens = new ArrayList<>(tokens.size() + 1);
         newTokens.addAll(tokens);
-        final EqlSentenceBuilder copy = new EqlSentenceBuilder(newTokens, newState);
-        return copy;
+        return new EqlSentenceBuilder(newTokens, newState);
     }
 
     private EqlSentenceBuilder _add(final Token token) {
@@ -115,7 +118,7 @@ final class EqlSentenceBuilder {
         return _add(token(ENDYIELDEXPR));
     }
 
-    public EqlSentenceBuilder exists(final boolean negated, final QueryModel model) {
+    public EqlSentenceBuilder exists(final boolean negated, final QueryModel<?> model) {
         return _add(negated ? new NotExistsToken(model) : new ExistsToken(model));
     }
 
@@ -132,8 +135,10 @@ final class EqlSentenceBuilder {
     }
 
     public EqlSentenceBuilder critCondition(
-            final ICompoundCondition0<?> collectionQueryStart, final CharSequence propName, final CharSequence critPropName,
-            final Optional<Object> defaultValue)
+            final ICompoundCondition0<?> collectionQueryStart,
+            final CharSequence propName,
+            final CharSequence critPropName,
+            final Optional<?> defaultValue)
     {
         return _add(new CritConditionToken(collectionQueryStart, propName.toString(), critPropName.toString(), defaultValue));
     }
@@ -226,7 +231,7 @@ final class EqlSentenceBuilder {
         return _add(new QueryModelToken<>(model));
     }
 
-    public EqlSentenceBuilder model(final SingleResultQueryModel model) {
+    public EqlSentenceBuilder model(final SingleResultQueryModel<?> model) {
         return _add(new QueryModelToken<>(model));
     }
 
@@ -338,11 +343,11 @@ final class EqlSentenceBuilder {
         return _add(new AllOfExpressionsToken(expressions));
     }
 
-    public EqlSentenceBuilder any(final SingleResultQueryModel subQuery) {
+    public EqlSentenceBuilder any(final SingleResultQueryModel<?> subQuery) {
         return _add(new AnyToken(subQuery));
     }
 
-    public EqlSentenceBuilder all(final SingleResultQueryModel subQuery) {
+    public EqlSentenceBuilder all(final SingleResultQueryModel<?> subQuery) {
         return _add(new AllToken(subQuery));
     }
 
@@ -570,6 +575,28 @@ final class EqlSentenceBuilder {
         return _add(token(DESC));
     }
 
+    public EqlSentenceBuilder limit(final long limit) {
+        if (limit <= 0) {
+            throw new EqlValidationException(ERR_LIMIT_GREATER_THAN_ZERO.formatted(limit));
+        }
+        return _add(LimitToken.limit(limit));
+    }
+
+    public EqlSentenceBuilder limit(final Limit limit) {
+        requireNotNullArgument(limit, "limit");
+        if (limit instanceof Limit.Count (var n) && n <= 0) {
+            throw new EqlValidationException(ERR_LIMIT_GREATER_THAN_ZERO.formatted(n));
+        }
+        return _add(LimitToken.limit(limit));
+    }
+
+    public EqlSentenceBuilder offset(final long offset) {
+        if (offset < 0) {
+            throw new EqlValidationException(ERR_OFFSET_NON_NEGATIVE.formatted(offset));
+        }
+        return _add(new OffsetToken(offset));
+    }
+
     public EqlSentenceBuilder on() {
         return _add(token(ON));
     }
@@ -635,7 +662,7 @@ final class EqlSentenceBuilder {
 
     public EqlSentenceBuilder from(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length == 0) {
-            throw new EqlException("No models were specified as a source in the FROM statement!");
+            throw new EqlException(ERR_NO_MODELS_WERE_SPECIFIED_AS_A_SOURCE_IN_THE_FROM_STATEMENT);
         }
         return _add(SelectToken.models(List.of(sourceModels)), state.withMainSourceType(EntityAggregates.class));
     }
@@ -643,7 +670,7 @@ final class EqlSentenceBuilder {
     @SafeVarargs
     public final <T extends AbstractEntity<?>> EqlSentenceBuilder from(final EntityResultQueryModel<T>... sourceModels) {
         if (sourceModels.length == 0) {
-            throw new EqlException("No models were specified as a source in the FROM statement!");
+            throw new EqlException(ERR_NO_MODELS_WERE_SPECIFIED_AS_A_SOURCE_IN_THE_FROM_STATEMENT);
         }
         return _add(SelectToken.models(List.of(sourceModels)), state.withMainSourceType(sourceModels[0].getResultType()));
     }
@@ -660,15 +687,16 @@ final class EqlSentenceBuilder {
         if (sourceModels.length >= 1) {
             return _add(JoinToken.models(ImmutableList.copyOf(sourceModels)));
         } else {
-            throw new EqlException("No models were specified as a source in the FROM statement!");
+            throw new EqlException(ERR_NO_MODELS_WERE_SPECIFIED_AS_A_SOURCE_IN_THE_FROM_STATEMENT);
         }
     }
 
-    public <E extends AbstractEntity<?>> EqlSentenceBuilder innerJoin(final EntityResultQueryModel<E>... sourceModels) {
+    @SafeVarargs
+    public final <E extends AbstractEntity<?>> EqlSentenceBuilder innerJoin(final EntityResultQueryModel<E>... sourceModels) {
         if (sourceModels.length >= 1) {
             return _add(JoinToken.models(ImmutableList.copyOf(sourceModels)));
         } else {
-            throw new EqlException("No models were specified as a source in the FROM statement!");
+            throw new EqlException(ERR_NO_MODELS_WERE_SPECIFIED_AS_A_SOURCE_IN_THE_FROM_STATEMENT);
         }
     }
 
@@ -676,7 +704,7 @@ final class EqlSentenceBuilder {
         if (sourceModels.length >= 1) {
             return _add(LeftJoinToken.models(ImmutableList.copyOf(sourceModels)));
         } else {
-            throw new EqlException("No models were specified as a source in the FROM statement!");
+            throw new EqlException(ERR_NO_MODELS_WERE_SPECIFIED_AS_A_SOURCE_IN_THE_FROM_STATEMENT);
         }
     }
 
@@ -685,7 +713,7 @@ final class EqlSentenceBuilder {
         if (sourceModels.length >= 1) {
             return _add(LeftJoinToken.models(ImmutableList.copyOf(sourceModels)));
         } else {
-            throw new EqlException("No models were specified as a source in the FROM statement!");
+            throw new EqlException(ERR_NO_MODELS_WERE_SPECIFIED_AS_A_SOURCE_IN_THE_FROM_STATEMENT);
         }
     }
 
