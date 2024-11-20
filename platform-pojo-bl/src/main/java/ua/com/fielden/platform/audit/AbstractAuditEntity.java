@@ -70,6 +70,29 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     @Required
     private String auditedTransactionGuid;
 
+    /**
+     * Dynamic getter for accessing values of audited properties.
+     * Given the name of an audited property as declared in the audited entity, this method accesses the value of a corresponding property in this audit-entity.
+     * It is an error if the specified property is not audited by this audit-entity.
+     *
+     * @param property  simple property name
+     */
+    public final <T> T getA3t(final CharSequence property) {
+        return get(AuditUtils.auditPropertyName(property));
+    }
+
+    /**
+     * Dynamic setter for setting values of audited properties.
+     * Given the name of an audited property as declared in the audited entity, this method sets the value of a corresponding property in this audit-entity.
+     * It is an error if the specified property is not audited by this audit-entity.
+     *
+     * @param property  simple property name
+     */
+    public final AbstractAuditEntity<E> setA3t(final CharSequence property, final Object value) {
+        set(AuditUtils.auditPropertyName(property), value);
+        return this;
+    }
+
     public String getAuditedTransactionGuid() {
         return auditedTransactionGuid;
     }
