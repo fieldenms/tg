@@ -142,28 +142,52 @@ export function composeDefaultUnconvertedEntityValue(entity) {
     return createSimpleTitle(entity, false);
 }
 
+/**
+ * Removes default ANTLR console-based error reporting and adds our custom.
+ */
+function customiseErrorHandling (processor) {
+    processor.removeErrorListeners(); // removes console error reporter
+    processor.addErrorListener({
+        syntaxError: (recognizer, offendingSymbol, line, column, msg, err) => {
+            throw { msg: `Error at position ${column}: ${msg}.` }; // re-throw the error object with the specified position in a message
+        }
+    });
+};
+
+/**
+ * Creates an array of { separator, title?, value } objects with ordered key member (including nested) representations
+ *  for the 'entity' according to 'template'.
+ *
+ * For #itv templates there will always be 'Title: Value' pairs glued together with ' ' separator (no separator for first member).
+ * For #iv[s] templates only 'Value' will be present but glued together with appropriate (see entity definition) separator (no separator for first member too).
+ *
+ * See specification in 'tg-entity-editor.html' web test suites (and 'tg-entity-formatter.html' too).
+ *
+ * Example entities:
+ * [[Locomotive] / [Electrical Equipment]] [[Batteries]:[Lithium-Ion]]
+ * [[Wagon] / [Electrical Equipment]][[][]]
+ * [[Wagon][]] [[Batteries]:[Lead-Acid]]
+ *
+ * Example templates:
+ * '' = '#1tv#2tv'
+ * 'z' = '#1v#2v' = '#1vs#2v'
+ * '#1.2tv#2tv'
+ * '#1.2v#2v' = '#1.2vs#2v'
+ * '#2.2v#1.2v#1.1v#2.1v'
+ * '#2.2tv#1.2tv#1.1tv#2.1tv'
+ *
+ * Notes:
+ * 1. tv and v[s] templates can not be mixed;
+ * 2. 's' token in v[s] can be omitted; preserve it for clarity if needed
+ */
 function createCompositeTitle (entity, template, reflector) {
     const input = template;
     const chars = new antlr4.InputStream(input);
     const lexer = new CompositeEntityFormatLexer(chars);
-
-    lexer.removeErrorListeners();
-    lexer.addErrorListener({
-        syntaxError: (recognizer, offendingSymbol, line, column, msg, err) => {
-            throw { msg: `Error at position ${column}: ${msg}.` };
-        }
-    });
-
+    customiseErrorHandling(lexer);
     const tokens = new antlr4.CommonTokenStream(lexer);
     const parser = new CompositeEntityFormatParser(tokens);
-
-    parser.removeErrorListeners();
-    parser.addErrorListener({
-        syntaxError: (recognizer, offendingSymbol, line, column, msg, err) => {
-            throw { msg: `Error at position ${column}: ${msg}.` };
-        }
-    });
-
+    customiseErrorHandling(parser);
     const tree = parser.template();
 
     const members = [];
