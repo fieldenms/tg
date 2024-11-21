@@ -327,7 +327,7 @@ Polymer({
                 }
             } else {
                 if (!parent) {
-                    //If parent is not present then it means that all tree is loading or reloading after mode change.
+                    // If parent is not present then it means that a complete tree is loading or reloading after the mode change.
                     this.refType = newEntity.get('refEntityType');
                     this.refId = newEntity.get('refEntityId');
                 }
