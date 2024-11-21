@@ -73,7 +73,7 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                 .add(new Prop(CHANGED_PROPS, newParameterizedType(Set.class, auditPropType), PLAIN))
                 .addAll(persistentPropertiesOfTgVehicle.stream()
                                 .filter(pm -> !NON_AUDITED_PROPERTIES.contains(pm.name()))
-                                .map(pm -> new Prop(AuditUtils.auditPropertyName(pm.name()), pm.type().javaType(), PERSISTENT))
+                                .map(pm -> new Prop(AuditUtils.auditPropertyName(pm.name()), pm.type().genericJavaType(), PERSISTENT))
                                 .toList())
                 .build()
                 .stream()
@@ -81,7 +81,7 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                 .toList();
 
         final var actualProps = auditTypeMetadata.properties().stream()
-                .map(p -> new Prop(p.name(), p.type().javaType(), p.nature()))
+                .map(p -> new Prop(p.name(), p.type().genericJavaType(), p.nature()))
                 .sorted(Comparator.comparing(Prop::name))
                 .toList();
 

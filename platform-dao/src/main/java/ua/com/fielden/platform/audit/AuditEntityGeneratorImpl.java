@@ -146,7 +146,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         auditedEntityMetadata.properties().stream()
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                 .filter(AuditEntityGeneratorImpl::isAudited)
-                .map(pm -> propertyBuilder(AuditUtils.auditPropertyName(pm.name()), pm.type().javaType())
+                .map(pm -> propertyBuilder(AuditUtils.auditPropertyName(pm.name()), pm.type().genericJavaType())
                         .addAnnotation(AnnotationSpecs.mapTo((AuditUtils.auditPropertyName(pm.name())).toUpperCase()))
                         .addAnnotation(javaPoet.getAnnotation(Final.class))
                         .build())

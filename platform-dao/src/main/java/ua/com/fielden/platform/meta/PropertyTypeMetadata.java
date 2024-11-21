@@ -32,7 +32,23 @@ import java.util.Optional;
  */
 public sealed interface PropertyTypeMetadata {
 
-    Type javaType();
+    /**
+     * Returns a {@link Class} object that identifies the declared property type.
+     * <p>
+     * If the property type is parameterised, its raw type is returned.
+     *
+     * @see #genericJavaType()
+     */
+    Class<?> javaType();
+
+    /**
+     * Returns a {@link Type} object that identifies the declared property type.
+     * <p>
+     * If the property type is parameterised, the returned type is a {@link ParameterizedType}.
+     *
+     * @see #javaType()
+     */
+    Type genericJavaType();
 
     default boolean isPrimitive() {
         return this instanceof Primitive;
@@ -92,6 +108,11 @@ public sealed interface PropertyTypeMetadata {
     non-sealed interface Primitive extends PropertyTypeMetadata {
         @Override
         Class<?> javaType();
+
+        @Override
+        default Class<?> genericJavaType() {
+            return javaType();
+        }
     }
 
     /**
@@ -122,8 +143,13 @@ public sealed interface PropertyTypeMetadata {
         }
 
         @Override
-        default ParameterizedType javaType() {
-            return Reflector.newParameterizedType(collectionType(), elementType().javaType());
+        default Class<?> javaType() {
+            return collectionType();
+        }
+
+        @Override
+        default ParameterizedType genericJavaType() {
+            return Reflector.newParameterizedType(collectionType(), elementType().genericJavaType());
         }
     }
 
@@ -155,6 +181,11 @@ public sealed interface PropertyTypeMetadata {
         }
 
         @Override
+        public Class<String> genericJavaType() {
+            return javaType();
+        }
+
+        @Override
         public String toString() {
             return "CompositeKey";
         }
@@ -168,6 +199,11 @@ public sealed interface PropertyTypeMetadata {
         @Override
         public Class<ua.com.fielden.platform.entity.NoKey> javaType() {
             return ua.com.fielden.platform.entity.NoKey.class;
+        }
+
+        @Override
+        public Class<ua.com.fielden.platform.entity.NoKey> genericJavaType() {
+            return javaType();
         }
 
         @Override

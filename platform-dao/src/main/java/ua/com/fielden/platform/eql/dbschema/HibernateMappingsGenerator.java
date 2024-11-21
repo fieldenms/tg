@@ -119,7 +119,7 @@ public class HibernateMappingsGenerator {
     }
 
     private static String generateUnionEntityPropertyMapping(final PropertyMetadata pm, final PropertyMetadataUtils pmUtils) {
-        final var entityType = (Class<?>) pm.type().javaType();
+        final var entityType = pm.type().javaType();
 
         final var sb = new StringBuffer();
         sb.append("\t<component name=\"" + pm.name() + "\" class=\"" + entityType.getName() + "\">\n");
@@ -127,7 +127,7 @@ public class HibernateMappingsGenerator {
         pmUtils.subProperties(pm).stream()
                 .flatMap(spm -> spm.asPersistent().stream())
                 .map(spm -> {
-                    final var spType = (Class<?>) spm.type().javaType();
+                    final var spType = spm.type().javaType();
                     return "\t\t<many-to-one name=\"" + spm.name() + "\" class=\"" + spType.getName() + "\" column = \"" + spm.data().column().name.toUpperCase() + "\"/>\n";
                 })
                 .forEach(sb::append);
