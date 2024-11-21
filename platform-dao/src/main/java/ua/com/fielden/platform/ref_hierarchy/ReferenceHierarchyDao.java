@@ -85,8 +85,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
                 throw failuref(ERR_NO_ASSOCIATED_GENERATOR_FUNCTION, nextLevel);
             }
         }
-        entity.setResetFilter(false);
-        return entity;
+        return entity.setResetFilter(false);
     }
 
     private List<ReferenceHierarchyEntry> generateReferenceGroup(final ReferenceHierarchy entity) {
