@@ -1,21 +1,10 @@
 package ua.com.fielden.platform.web.view.master.hierarchy;
 
-import static java.util.Optional.empty;
-import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
-import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
-
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder;
@@ -24,6 +13,18 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+
+import static java.util.Optional.empty;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 /**
  * Master implementation for reference hierarchy.
@@ -66,6 +67,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 .attr("current-state", "[[currentState]]")
                 .attr("toaster", "[[toaster]]");
 
+        final var activeOnlyTitleAndDesc = TitlesDescsGetter.getTitleAndDesc("activeOnly", ReferenceHierarchy.class);
         final DomElement activeOnlyEditor = new DomElement("tg-boolean-editor")
                 .attr("id", "activeOnlyEditor")
                 .attr("class", "active-only-editor")
@@ -75,8 +77,8 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 .attr("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]")
                 .attr("property-name", "activeOnly")
                 .attr("validation-callback", "[[doNotValidate]]")
-                .attr("prop-title", "Show active only?")
-                .attr("prop-desc", "Designates whether to show only active entities or all")
+                .attr("prop-title", activeOnlyTitleAndDesc.getKey())
+                .attr("prop-desc", activeOnlyTitleAndDesc.getValue())
                 .attr("current-state", "[[currentState]]")
                 .attr("toaster", "[[toaster]]");
 
@@ -125,60 +127,62 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
     }
 
     private String readyCallback() {
-        return "self.classList.add('layout');\n"
-                + "self.classList.add('vertical');\n"
-                + "self.classList.remove('canLeave');\n"
-                + "self._showDataLoadingPromt = function (msg) {\n"
-                + "    this.$.refrenceHierarchy.lock = true;\n"
-                + "    this._toastGreeting().text = msg;\n"
-                + "    this._toastGreeting().hasMore = false;\n"
-                + "    this._toastGreeting().showProgress = true;\n"
-                + "    this._toastGreeting().msgHeading = 'Info';\n"
-                + "    this._toastGreeting().isCritical = false;\n"
-                + "    this._toastGreeting().show();\n"
-                + "}.bind(self);\n"
-                + "self._showDataLoadedPromt = function (msg) {\n"
-                + "    this.$.refrenceHierarchy.lock = false;\n"
-                + "    this._toastGreeting().text = msg;\n"
-                + "    this._toastGreeting().hasMore = false;\n"
-                + "    this._toastGreeting().showProgress = false;\n"
-                + "    this._toastGreeting().msgHeading = 'Info';\n"
-                + "    this._toastGreeting().isCritical = false;\n"
-                + "    this._toastGreeting().show();\n"
-                + "}.bind(self);\n"
-                +"//Locks/Unlocks tg-reference-hierarchy's lock layer during insertion point activation\n"
-                + "self.disableViewForDescendants = function () {\n"
-                + "    TgEntityBinderBehavior.disableViewForDescendants.call(this);\n"
-                + "    self._showDataLoadingPromt('Loading reference hierarchy...');\n"
-                + "}.bind(self);\n"
-                + "self.enableViewForDescendants = function () {\n"
-                + "    TgEntityBinderBehavior.enableViewForDescendants.call(this);\n"
-                + "    self._showDataLoadedPromt('Loading completed successfully');\n"
-                + "}.bind(self);\n"
-                + "//Need for security marix editors binding.\n"
-                + "self._isNecessaryForConversion = function (propertyName) { \n"
-                + "    return ['referenceHierarchyFilter','refEntityId', 'refEntityType', 'entityType', 'loadedHierarchy', 'pageSize', 'pageNumber', 'pageCount', 'loadedLevel'].indexOf(propertyName) >= 0; \n"
-                + "}; \n"
-                + "self.$.referenceHierarchyFilter._onInput = function () {\n"
-                + "    // clear hierarchy filter timer if it is in progress.\n"
-                + "    this._cancelHierarchyFilterTimer();\n"
-                + "    this._hierarchyFilterTimer = this.async(this._filterHierarchy, 500);\n"
-                + "}.bind(self);\n"
-                + "self._cancelHierarchyFilterTimer = function () {\n"
-                + "    if (this._hierarchyFilterTimer) {\n"
-                + "        this.cancelAsync(this._hierarchyFilterTimer);\n"
-                + "        this._hierarchyFilterTimer = null;\n"
-                + "    }\n"
-                + "}.bind(self);\n"
-                + "self._filterHierarchy = function () {\n"
-                + "    this.$.refrenceHierarchy.filterHierarchy(this.$.referenceHierarchyFilter._editingValue);\n"
-                + "}.bind(self);\n"
-                + "self._loadSubReferenceHierarchy = function (e) {\n"
-                + "    this.save();\n"
-                + "}.bind(self);\n"
-                + "self.$.activeOnlyEditor.addEventListener('change', function (e) {\n"
-                + "    this.$.refrenceHierarchy.reload();\n"
-                + "}.bind(self));\n";
+        return """
+                self.classList.add('layout');
+                self.classList.add('vertical');
+                self.classList.remove('canLeave');
+                self._showDataLoadingPromt = function (msg) {
+                    this.$.refrenceHierarchy.lock = true;
+                    this._toastGreeting().text = msg;
+                    this._toastGreeting().hasMore = false;
+                    this._toastGreeting().showProgress = true;
+                    this._toastGreeting().msgHeading = 'Info';
+                    this._toastGreeting().isCritical = false;
+                    this._toastGreeting().show();
+                }.bind(self);
+                self._showDataLoadedPromt = function (msg) {
+                    this.$.refrenceHierarchy.lock = false;
+                    this._toastGreeting().text = msg;
+                    this._toastGreeting().hasMore = false;
+                    this._toastGreeting().showProgress = false;
+                    this._toastGreeting().msgHeading = 'Info';
+                    this._toastGreeting().isCritical = false;
+                    this._toastGreeting().show();
+                }.bind(self);
+                //Locks/Unlocks tg-reference-hierarchy's lock layer during insertion point activation
+                self.disableViewForDescendants = function () {
+                    TgEntityBinderBehavior.disableViewForDescendants.call(this);
+                    self._showDataLoadingPromt('Loading reference hierarchy...');
+                }.bind(self);
+                self.enableViewForDescendants = function () {
+                    TgEntityBinderBehavior.enableViewForDescendants.call(this);
+                    self._showDataLoadedPromt('Loading completed successfully');
+                }.bind(self);
+                //Need for security marix editors binding.
+                self._isNecessaryForConversion = function (propertyName) {\s
+                    return ['referenceHierarchyFilter','refEntityId', 'refEntityType', 'entityType', 'loadedHierarchy', 'pageSize', 'pageNumber', 'pageCount', 'loadedLevel'].indexOf(propertyName) >= 0;\s
+                };\s
+                self.$.referenceHierarchyFilter._onInput = function () {
+                    // clear hierarchy filter timer if it is in progress.
+                    this._cancelHierarchyFilterTimer();
+                    this._hierarchyFilterTimer = this.async(this._filterHierarchy, 500);
+                }.bind(self);
+                self._cancelHierarchyFilterTimer = function () {
+                    if (this._hierarchyFilterTimer) {
+                        this.cancelAsync(this._hierarchyFilterTimer);
+                        this._hierarchyFilterTimer = null;
+                    }
+                }.bind(self);
+                self._filterHierarchy = function () {
+                    this.$.refrenceHierarchy.filterHierarchy(this.$.referenceHierarchyFilter._editingValue);
+                }.bind(self);
+                self._loadSubReferenceHierarchy = function (e) {
+                    this.save();
+                }.bind(self);
+                self.$.activeOnlyEditor.addEventListener('change', function (e) {
+                    this.$.refrenceHierarchy.reload();
+                }.bind(self));
+                """;
     }
 
     @Override
