@@ -131,8 +131,18 @@ public class DataDependencyQueriesGenerator {
             final Class<? extends AbstractEntity<?>> detailType,
             final ICompoundCondition0<? extends AbstractEntity<?>> queryToEnhance,
             final boolean activeOnly) {
-        return activeOnly && ActivatableAbstractEntity.class.isAssignableFrom(detailType)
-               ? queryToEnhance.and().prop(ACTIVE).eq().val(true)
-               : queryToEnhance;
+        // The case for an activatable entity.
+        if (ActivatableAbstractEntity.class.isAssignableFrom(detailType)) {
+            return activeOnly
+                   ? queryToEnhance.and().prop(ACTIVE).eq().val(true)
+                   : queryToEnhance;
+
+        }
+        // The case for a non-activatable entity, where all such entities should be filtered out if activeOnly is true.
+        else {
+            return activeOnly
+                   ? queryToEnhance.and().val(false).eq().val(true) // filter-out condition
+                   : queryToEnhance;
+        }
     }
 }

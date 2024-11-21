@@ -48,7 +48,7 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     private String referenceHierarchyFilter;
 
     @IsProperty
-    @Title(value = "Show active only?", desc = "If true, only active and non-activatable references are displayed in the “Referenced By” sections.")
+    @Title(value = "Show active only?", desc = "Check to show only active references in “Referenced By”, skipping any references from non-activatable entities.")
     private boolean activeOnly;
 
     @IsProperty(AbstractEntity.class)
@@ -56,19 +56,19 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     private final List<AbstractEntity<?>> generatedHierarchy = new ArrayList<>();
 
     @IsProperty(Long.class)
-    @Title(value = "Loaded hiererchy", desc = "The indexes of tree items on each level where returned hieararchy should be inserted")
+    @Title(value = "Loaded hierarchy", desc = "The indexes of the tree items at each level where returned reference data should be inserted.")
     private final List<Long> loadedHierarchy = new ArrayList<>();
 
     @IsProperty
-    @Title(value = "Page Size", desc = "Page size of inctances to load")
+    @Title(value = "Page Size", desc = "The page size of instances to load.")
     private Integer pageSize;
 
     @IsProperty
-    @Title(value = "Page Number", desc = "Page number of instances to load")
+    @Title(value = "Page Number", desc = "The page number of instances to load.")
     private Integer pageNumber;
 
     @IsProperty
-    @Title(value = "Page Count", desc = "The data page count")
+    @Title(value = "Page Count", desc = "The count of data pages.")
     private Integer pageCount;
 
     @IsProperty
