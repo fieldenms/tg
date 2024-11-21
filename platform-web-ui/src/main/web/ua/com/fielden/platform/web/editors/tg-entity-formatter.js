@@ -192,10 +192,10 @@ function createCompositeTitle (entity, template, reflector) {
         }
         exitNo (ctx) {
             const constructPath = (entity, dotNoPairs, acc) => {
-                if (dotNoPairs.length === 0) {
-                    return acc;
-                } else if (!entity) {
+                if (entity === null) {
                     return undefined;
+                } else if (dotNoPairs.length === 0) {
+                    return acc;
                 } else {
                     const nameRoot = getKeyMemberName(entity, dotNoPairs[1].symbol.text, reflector);
                     return constructPath(entity.get(nameRoot), dotNoPairs.slice(2), acc + '.' + nameRoot);

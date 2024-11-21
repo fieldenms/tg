@@ -308,6 +308,116 @@
             })();
 
         });
+
+        suite('layer formats text (first member second sub-member empty) from', function() {
+            let master, reflector;
+
+            setup(function() {
+                master = fixture('MasterFixture');
+                  reflector = document.querySelector('#reflector');
+            });
+
+            const correctlyConverts = function (template, expectedKeyValue, done) {
+                master.entityId = '6';
+                const compPropEditor = master.$.editor_4_compProp;
+
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    const compProp = reflector.getEntityTypeProp(reflector.tg_getFullEntity(bindingEntity), "compProp");
+                    compProp._displayAs = template;
+                    master.retrieve();
+                    master.postRetrieved = function (entity, bindingEntity, customObject) {
+                        setTimeout(() => {
+                            const editorText = compPropEditor.getInputLayerText();
+                            assert.strictEqual(template, reflector.getEntityTypeProp(reflector.tg_getFullEntity(bindingEntity), "compProp")._displayAs, `The template should be '${template}'`);
+                            assert.strictEqual(`${expectedKeyValue}`, editorText, "The copied value is incorrect");
+                            done();
+                        }, 1);
+                    };
+                }
+                master.retrieve();
+            };
+
+            (() => {
+                const target = '', result = 'Major Component: Wagon Minor Component: Batteries:Lead-Acid';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = 'z', result = 'Wagon Batteries:Lead-Acid';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2tv', result = '';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2v', result = '';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2tv#2tv', result = 'Minor Component: Batteries:Lead-Acid';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2v#2v', result = 'Batteries:Lead-Acid';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2v#2.1v', result = 'Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2tv#2.1tv', result = 'Minor Component: Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2v#2.2v#2.1v', result = 'Lead-Acid:Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#1.2tv#2.2tv#2.1tv', result = 'Type: Lead-Acid Minor Component: Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2v#1.2v#2.1v', result = 'Lead-Acid:Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2tv#1.2tv#2.1tv', result = 'Type: Lead-Acid Minor Component: Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2v#1v#2.1v', result = 'Lead-Acid Wagon Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2tv#1tv#2.1tv', result = 'Type: Lead-Acid Major Component: Wagon Minor Component: Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2v#1.2v#1.1v#2.1v', result = 'Lead-Acid Wagon Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2tv#1.2tv#1.1tv#2.1tv', result = 'Type: Lead-Acid Rolling Stock Type: Wagon Minor Component: Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+        });
     </script>
 </body>
 

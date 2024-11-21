@@ -261,6 +261,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         ent1.setCompProp(compPropOpt);
         save(ent1);
 
+        var majorOpt2 = save(new_composite(TgRollingStockMajorComponent.class, "Wagon", null));
+        var minorOpt2 = save(new_composite(TgMinorComponent.class, "Batteries", "Lead-Acid"));
+        var compPropOpt2 = save(new_composite(TgRollingStockMinorComponent.class, majorOpt2, minorOpt2));
+
+        ent2.setCompProp(compPropOpt2);
+        save(ent2);
+
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
         save(new_composite(UserAndRoleAssociation.class, demo2, admin));
