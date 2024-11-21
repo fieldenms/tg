@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 import java.io.IOException;
@@ -123,6 +124,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final var a3tBuilder = new AuditEntityBuilder(auditTypeClassName, type);
 
+        a3tBuilder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(TitlesDescsGetter.getEntityTitle(type))));
+
         // Property for the reference to the audited entity.
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
         final var auditedEntityTitle = TitlesDescsGetter.getEntityTitle(type);
@@ -194,12 +197,14 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         private final Class<? extends AbstractEntity<?>> auditedType;
         private final ArrayList<PropertySpec> properties;
         private final ArrayList<MethodSpec> methods;
+        private final ArrayList<AnnotationSpec> annotations;
 
         private AuditEntityBuilder(final ClassName className, final Class<? extends AbstractEntity<?>> auditedType) {
             this.className = className;
             this.auditedType = auditedType;
             this.properties = new ArrayList<>();
             this.methods = new ArrayList<>();
+            this.annotations = new ArrayList<>();
         }
 
         public TypeSpec build(final Processor processor) {
@@ -209,7 +214,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                     .addAnnotation(AnnotationSpecs.auditFor(auditedType))
                     // TODO Meta-model is not needed. Meta-model processor needs to support a new annotation - WithoutMetaModel.
                     .addAnnotation(MapEntityTo.class)
-                    .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class));
+                    .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class))
+                    .addAnnotations(annotations);
             properties.stream()
                     .map(prop -> processor.processProperty(this, prop))
                     .forEach(propSpec -> {
@@ -243,6 +249,11 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             return this;
         }
 
+        public AuditEntityBuilder addAnnotation(final AnnotationSpec annotation) {
+            annotations.add(annotation);
+            return this;
+        }
+
         interface Processor {
             PropertySpec processProperty(AuditEntityBuilder builder, PropertySpec property);
         }
@@ -258,11 +269,14 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final String auditPropTypePkg,
             final String auditPropTypeName)
     {
+        final var auditedEntityTitle = getEntityTitle(auditedType);
         final var auditPropTypeClassName = ClassName.get(auditPropTypePkg, auditPropTypeName);
 
         final var builder = classBuilder(auditPropTypeClassName)
                 .addModifiers(PUBLIC)
                 .superclass(ParameterizedTypeName.get(javaPoet.getClassName(AbstractAuditProp.class), auditEntityClassName))
+                .addAnnotation(AnnotationSpecs.entityTitle("%s Audit Changed Property".formatted(auditedEntityTitle)))
+                .addAnnotation(AnnotationSpecs.keyTitle("%s Audit and Changed Property".formatted(auditedEntityTitle)))
                 .addAnnotation(javaPoet.getAnnotation(MapEntityTo.class))
                 .addAnnotation(AnnotationSpecs.auditPropFor(auditEntityClassName))
                 .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class));
@@ -271,7 +285,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final var auditEntityProp = propertyBuilder(AUDIT_ENTITY, auditEntityClassName)
                 .addAnnotation(AnnotationSpecs.compositeKeyMember(1))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
-                .addAnnotation(AnnotationSpecs.title("%s Audit".formatted(getEntityTitle(auditedType)),
+                .addAnnotation(AnnotationSpecs.title("%s Audit".formatted(auditedEntityTitle),
                                                      "The audit event associated with this changed property."))
                 .build();
 

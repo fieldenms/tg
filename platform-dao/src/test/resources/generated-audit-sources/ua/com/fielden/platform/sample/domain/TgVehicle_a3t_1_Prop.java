@@ -4,13 +4,17 @@ import ua.com.fielden.platform.audit.AbstractAuditProp;
 import ua.com.fielden.platform.audit.AuditPropFor;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 
+@EntityTitle("Tg Vehicle Audit Changed Property")
+@KeyTitle("Tg Vehicle Audit and Changed Property")
 @MapEntityTo
 @AuditPropFor(TgVehicle_a3t_1.class)
 @CompanionIsGenerated

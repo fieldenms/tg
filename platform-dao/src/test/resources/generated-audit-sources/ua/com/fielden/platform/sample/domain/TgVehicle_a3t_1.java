@@ -10,6 +10,7 @@ import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.audit.AuditFor;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.types.Money;
 @AuditFor(TgVehicle.class)
 @MapEntityTo
 @CompanionIsGenerated
+@EntityTitle("Tg Vehicle Audit")
 public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
   @CompositeKeyMember(2)
   @MapTo
@@ -38,7 +40,7 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
 
   @Title(
       value = "Changed Properties",
-      desc = "Properties changed as part of an audit event."
+      desc = "Properties changed as part of the audit event."
   )
   @IsProperty(TgVehicle_a3t_1_Prop.class)
   private final Set<TgVehicle_a3t_1_Prop> changedProps = new HashSet<>();
