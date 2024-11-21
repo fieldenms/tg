@@ -167,19 +167,19 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         return entry;
     }
 
-    private List<ReferencedByLevelHierarchyEntry> generateReferenceByInstanceLevelHierarchy(final ReferenceHierarchy entity) {
-        final Class<? extends AbstractEntity<?>> entityClass = entity.getEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getEntityType()));
-        final Class<? extends AbstractEntity<?>> refEntityClass = entity.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getRefEntityType()));
+    private List<ReferencedByLevelHierarchyEntry> generateReferenceByInstanceLevelHierarchy(final ReferenceHierarchy action) {
+        final Class<? extends AbstractEntity<?>> entityClass = action.getEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, action.getEntityType()));
+        final Class<? extends AbstractEntity<?>> refEntityClass = action.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, action.getRefEntityType()));
         final List<Field> propFields = getReferenceProperties(entityClass);
-        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), refEntityClass, entityClass, generateReferenceFetchModel(entityClass, propFields), entity.isActiveOnly());
+        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = queryForDependentTypeDetails(dependenciesMetadata, action.getRefEntityId(), refEntityClass, entityClass, generateReferenceFetchModel(entityClass, propFields), action.isActiveOnly());
         final IPage<EntityAggregates> loadedPage;
-        if (entity.getPageNumber() == 0) {
-            loadedPage = coAggregates.firstPage(qem, entity.getPageSize());
+        if (action.getPageNumber() == 0) {
+            loadedPage = coAggregates.firstPage(qem, action.getPageSize());
         } else {
-            loadedPage = coAggregates.getPage(qem, entity.getPageNumber(), entity.getPageSize());
+            loadedPage = coAggregates.getPage(qem, action.getPageNumber(), action.getPageSize());
         }
-        entity.setPageCount(loadedPage.numberOfPages());
-        entity.setPageNumber(loadedPage.no());
+        action.setPageCount(loadedPage.numberOfPages());
+        action.setPageNumber(loadedPage.no());
 
         return createInstanceHierarchy(loadedPage.data(), propFields);
     }
