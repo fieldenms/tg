@@ -1,37 +1,6 @@
 package ua.com.fielden.platform.ref_hierarchy;
 
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypeDetails;
-import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypesSummary;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.failuref;
-import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyActions.EDIT;
-import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyActions.REFERENCE_HIERARCHY;
-import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel.REFERENCES;
-import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel.REFERENCE_BY_INSTANCE;
-import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel.REFERENCE_GROUP;
-import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel.TYPE;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
@@ -51,9 +20,28 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.function.Function;
+
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypeDetails;
+import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypesSummary;
+import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyActions.EDIT;
+import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyActions.REFERENCE_HIERARCHY;
+import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel.*;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 /**
  * DAO implementation for companion object {@link IReferenceHierarchy}.
  *
