@@ -71,6 +71,7 @@ public class ReferenceHierarchyWebUiConfig {
 
     /**
      * Produces a new reference hierarchy action configuration as a property action for an entity master, which opens reference hierarchy for the master entity.
+     * If the master entity is activatable and the action is associated with property `active` then action's `activeOnly` is set to `true`.
      */
     public static EntityActionConfig mkPropActionForMasterEntity() {
         final CentreContextConfig contextConfig = context().withMasterEntity().withComputation((action, context) -> {
