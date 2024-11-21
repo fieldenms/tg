@@ -1,27 +1,36 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
+import com.google.inject.Injector;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test_entities.Entity;
 
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher.matchByAnyPropPredicate;
-import ua.com.fielden.platform.test_entities.Entity;
 
 public class PojoValueMatcherTest {
 
+    private static final Injector injector = new ApplicationInjectorFactory()
+            .add(new CommonEntityTestIocModuleWithPropertyFactory())
+            .getInjector();
+    private static final EntityFactory factory = injector.getInstance(EntityFactory.class);
+
     private static final List<Entity> entities = List.of(
-        new Entity().setKey("ORDINARY VALUE 1").setDesc("Description 1"),
-        new Entity().setKey("ORDINARY VALUE 2").setDesc("Description 2"),
-        new Entity().setKey("SPECIAL SYMBOL (hrs)"),
-        new Entity().setKey("SPECIAL SYMBOL 2 *").setDesc("Description *"),
-        new Entity().setKey("Non special symbol --"),
-        new Entity().setKey("MIxed CaSe"),
-        new Entity().setKey("some more [symbols]"),
-        new Entity().setKey("some more {symbols}"),
-        new Entity().setKey("some more /symbols/"),
-        new Entity().setKey("some more \\symbols\\"));
+            factory.newEntity(Entity.class).setKey("ORDINARY VALUE 1").setDesc("Description 1"),
+            factory.newEntity(Entity.class).setKey("ORDINARY VALUE 2").setDesc("Description 2"),
+            factory.newEntity(Entity.class).setKey("SPECIAL SYMBOL (hrs)"),
+            factory.newEntity(Entity.class).setKey("SPECIAL SYMBOL 2 *").setDesc("Description *"),
+            factory.newEntity(Entity.class).setKey("Non special symbol --"),
+            factory.newEntity(Entity.class).setKey("MIxed CaSe"),
+            factory.newEntity(Entity.class).setKey("some more [symbols]"),
+            factory.newEntity(Entity.class).setKey("some more {symbols}"),
+            factory.newEntity(Entity.class).setKey("some more /symbols/"),
+            factory.newEntity(Entity.class).setKey("some more \\symbols\\"));
 
     @Test
     public void exact_search_for_a_single_value_is_supported() {
