@@ -155,6 +155,39 @@ function customiseErrorHandling (processor) {
 };
 
 /**
+ * Determines gluing separator between two dot-notated key members [prevMemberName, currMemberName] of 'entity'.
+ */
+function determineSeparator (prevMemberName, currMemberName, entity, reflector) {
+    if (!prevMemberName) {
+        return undefined;
+    } else {
+        // Function to get penult property name for 'prop'; including '' (aka root) for non-dot-notated ones.
+        const penultPropOf = prop => reflector.isDotNotated(prop) ? prop.substring(0, prop.lastIndexOf('.')) : '';
+        const currContext = penultPropOf(currMemberName);
+        const prevContext = penultPropOf(prevMemberName);
+        // Function to determine common path prefix between two dot-notated paths.
+        const commonPrefix = (str1, str2, acc) => {
+            if (str1 === '' || str2 === '') {
+                return acc;
+            } else {
+                // Function to determine prefix for path before first dot or to the end of string if there is none.
+                const prefixOf = prop => prop.substring(0, prop.indexOf('.') < 0 ? prop.length : prop.indexOf('.'));
+                const prefix1 = prefixOf(str1);
+                const prefix2 = prefixOf(str2);
+                if (prefix1 === prefix2) {
+                    // Function to determine suffix for path after first dot or '' if there is none.
+                    const suffixOf = prop => prop.indexOf('.') < 0 ? '' : prop.substring(prop.indexOf('.'));
+                    return commonPrefix(suffixOf(str1), suffixOf(str2), acc === '' ? prefix1 : acc + '.' + prefix1);
+                } else {
+                    return acc;
+                }
+            }
+        };
+        return entity.get(commonPrefix(currContext, prevContext, '')).type().compositeKeySeparator();
+    }
+};
+
+/**
  * Creates an array of { separator, title?, value } objects with ordered key member (including nested) representations
  *  for the 'entity' according to 'template'.
  *
@@ -181,6 +214,7 @@ function customiseErrorHandling (processor) {
  * 2. 's' token in v[s] can be omitted; preserve it for clarity if needed
  */
 function createCompositeTitle (entity, template, reflector) {
+    // Create lexer, parser and tree from 'template'.
     const input = template;
     const chars = new antlr4.InputStream(input);
     const lexer = new CompositeEntityFormatLexer(chars);
@@ -190,12 +224,18 @@ function createCompositeTitle (entity, template, reflector) {
     customiseErrorHandling(parser);
     const tree = parser.template();
 
-    const members = [];
-    let currMemberName, prevMemberName, currMemberValue;
+    // Define state for a custom ANTLR listener.
+    const members = []; // resulting key member objects
+    let currMemberName, prevMemberName, currMemberValue; // currently / previously processed key member dot-notation names; and current value
 
     class Listener extends CompositeEntityFormatListener {
+
+        /**
+         * Root 'template' rule processor that handles '' and 'z' template cases.
+         */
         exitTemplate (ctx) {
-            const pushAllKeys = titlePart => createCompositeTitle(
+            // Function to add all resulting key member objects to 'members' for all first-level keys.
+            const pushAllKeys = titlePart => createCompositeTitle( // works recursively by generating and processing #i[t]v or #iv template
                 entity,
                 entity.type().compositeKeyNames()
                     .map((n, index) => `#${index + 1}${titlePart}v`)
@@ -203,32 +243,41 @@ function createCompositeTitle (entity, template, reflector) {
                 reflector
             ).forEach(member => members.push(member));
 
-            if (ctx.children.length === 1) { // <EOF>
-                pushAllKeys('t');
+            if (ctx.children.length === 1) { // <EOF> -- means '' template
+                pushAllKeys('t'); // generates '#itv' template
                 if (members.length === 1) {
                     delete members[0].title;
                 }
-            } else if (ctx.children[0].symbol && ctx.children[0].symbol.text === 'z') { // ctx.children.length === 2 with 1-st being 'z' and second <EOF>
-                pushAllKeys('');
+            } else if (ctx.children[0].symbol && ctx.children[0].symbol.text === 'z') { // ctx.children.length === 2 with 1-st being 'z' and second <EOF> -- means 'z' template
+                pushAllKeys(''); // generates '#iv' template
             }
         }
+
+        /**
+         * 'no' rule processor that handles [currMemberName, currMemberValue] determination (current / previous key member dot-notation names; and current value's string representation).
+         */
         exitNo (ctx) {
+            // Function to construct dot-notation path to a key member and its value's string representation.
             const constructPathAndValue = (value, dotNoPairs, acc) => {
                 const convertedValue = reflector.tg_toString(value, entity.type(), acc);
-                if (!convertedValue) {
-                    return [undefined, undefined];
-                } else if (dotNoPairs.length === 0) {
+                if (!convertedValue) { // convertedValue is empty (most likely '')
+                    return [undefined, undefined]; // return undefined to indicate the need to skip this key member
+                } else if (dotNoPairs.length === 0) { // dotNoPairs are empty -- processing ended successfully
                     return [acc, convertedValue];
                 } else {
-                    const nameRoot = getKeyMemberName(value, dotNoPairs[1].symbol.text, reflector);
-                    return constructPathAndValue(value.get(nameRoot), dotNoPairs.slice(2), acc === '' ? nameRoot : acc + '.' + nameRoot);
+                    const nameRoot = getKeyMemberName(value, dotNoPairs[1].symbol.text, reflector); // retrieve second symbol out of two first (.i.j.k...) and determine key member name
+                    return constructPathAndValue(value.get(nameRoot), dotNoPairs.slice(2), acc === '' ? nameRoot : acc + '.' + nameRoot); // go to the level below recursively by skipping (.i) from (.i.j.k...) and enhancing path accumulator
                 }
             };
             if (currMemberName) {
                 prevMemberName = currMemberName;
             }
-            [currMemberName, currMemberValue] = constructPathAndValue(entity, ['.', ...ctx.children.slice(1)], '');
+            [currMemberName, currMemberValue] = constructPathAndValue(entity, ['.' /* fake dot before first no */, ...ctx.children.slice(1) /* crop # symbol */], '' /* acc */);
         }
+
+        /**
+         * 'tvPart' rule processor that creates key member object (if string value representation is not empty).
+         */
         exitTvPart (ctx) {
             if (currMemberValue) {
                 const currMember = {};
@@ -240,35 +289,14 @@ function createCompositeTitle (entity, template, reflector) {
                 members.push(currMember);
             }
         }
+
+        /**
+         * 'vPart' rule processor that creates key member object (if string value representation is not empty).
+         */
         exitVPart (ctx) {
             if (currMemberValue) {
                 const currMember = {};
-                const determineSeparator = (prevMemberName, currMemberName) => {
-                    if (!prevMemberName) {
-                        return undefined;
-                    } else {
-                        const penultPropOf = prop => reflector.isDotNotated(prop) ? prop.substring(0, prop.lastIndexOf('.')) : '';
-                        const currContext = penultPropOf(currMemberName);
-                        const prevContext = penultPropOf(prevMemberName);
-                        const commonPrefix = (str1, str2, acc) => {
-                            if (str1 === '' || str2 === '') {
-                                return acc;
-                            } else {
-                                const prefixOf = prop => prop.substring(0, prop.indexOf('.') < 0 ? prop.length : prop.indexOf('.'));
-                                const prefix1 = prefixOf(str1);
-                                const prefix2 = prefixOf(str2);
-                                if (prefix1 === prefix2) {
-                                    const suffixOf = prop => prop.indexOf('.') < 0 ? '' : prop.substring(prop.indexOf('.'));
-                                    return commonPrefix(suffixOf(str1), suffixOf(str2), acc === '' ? prefix1 : acc + '.' + prefix1);
-                                } else {
-                                    return acc;
-                                }
-                            }
-                        };
-                        return entity.get(commonPrefix(currContext, prevContext, '')).type().compositeKeySeparator();
-                    }
-                };
-                const separator = determineSeparator(prevMemberName, currMemberName);
+                const separator = determineSeparator(prevMemberName, currMemberName, entity, reflector);
                 if (separator) {
                     currMember.separator = separator;
                 }
