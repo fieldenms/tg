@@ -167,9 +167,7 @@ function createCompositeTitle (entity, template, reflector) {
     const tree = parser.template();
 
     const members = [];
-    let currMember;
-    let currMemberName, prevMemberName;
-    let currSeparator;
+    let currMemberName, prevMemberName, currMemberValue;
 
     class Listener extends CompositeEntityFormatListener {
         exitTemplate (ctx) {
@@ -191,41 +189,36 @@ function createCompositeTitle (entity, template, reflector) {
             }
         }
         exitNo (ctx) {
-            const constructPath = (entity, dotNoPairs, acc) => {
-                if (entity === null) {
-                    return undefined;
+            const constructPathAndValue = (value, dotNoPairs, acc) => {
+                const convertedValue = reflector.tg_toString(value, entity.type(), acc);
+                if (!convertedValue) {
+                    return [undefined, undefined];
                 } else if (dotNoPairs.length === 0) {
-                    return acc;
+                    return [acc, convertedValue];
                 } else {
-                    const nameRoot = getKeyMemberName(entity, dotNoPairs[1].symbol.text, reflector);
-                    return constructPath(entity.get(nameRoot), dotNoPairs.slice(2), acc + '.' + nameRoot);
+                    const nameRoot = getKeyMemberName(value, dotNoPairs[1].symbol.text, reflector);
+                    return constructPathAndValue(value.get(nameRoot), dotNoPairs.slice(2), acc === '' ? nameRoot : acc + '.' + nameRoot);
                 }
             };
             if (currMemberName) {
                 prevMemberName = currMemberName;
             }
-            const currMemberNameRoot = getKeyMemberName(entity, ctx.children[1].symbol.text, reflector);
-            const constructedPath = constructPath(entity.get(currMemberNameRoot), ctx.children.slice(2), '');
-            currMemberName = constructedPath === undefined ? undefined : currMemberNameRoot + constructedPath;
+            [currMemberName, currMemberValue] = constructPathAndValue(entity, ['.', ...ctx.children.slice(1)], '');
         }
         exitTvPart (ctx) {
-            const value = currMemberName ? reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName) : undefined;
-            if (value) {
-                currMember = {};
-                if (currSeparator) {
-                    currMember.separator = currSeparator;
-                } else {
-                    currSeparator = ' ';
+            if (currMemberValue) {
+                const currMember = {};
+                if (prevMemberName) {
+                    currMember.separator = ' ';
                 }
                 currMember.title = entity.type().prop(currMemberName).title();
-                currMember.value = value;
+                currMember.value = currMemberValue;
                 members.push(currMember);
             }
         }
         exitVPart (ctx) {
-            const value = currMemberName ? reflector.tg_toString(entity.get(currMemberName), entity.type(), currMemberName) : undefined;
-            if (value) {
-                currMember = {};
+            if (currMemberValue) {
+                const currMember = {};
                 const determineSeparator = (prevMemberName, currMemberName) => {
                     if (!prevMemberName) {
                         return undefined;
@@ -255,7 +248,7 @@ function createCompositeTitle (entity, template, reflector) {
                 if (separator) {
                     currMember.separator = separator;
                 }
-                currMember.value = value;
+                currMember.value = currMemberValue;
                 members.push(currMember);
             }
         }
