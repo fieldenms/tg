@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 
 @MapEntityTo
@@ -16,11 +17,19 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 public class TgVehicle_a3t_1_Prop extends AbstractAuditProp<TgVehicle_a3t_1> {
   @CompositeKeyMember(1)
   @MapTo
+  @Title(
+      value = "Tg Vehicle Audit",
+      desc = "The audit event associated with this changed property."
+  )
   @IsProperty
   private TgVehicle_a3t_1 auditEntity;
 
   @CompositeKeyMember(2)
   @MapTo
+  @Title(
+      value = "Changed Property",
+      desc = "The property that was changed as part of the audit event."
+  )
   @IsProperty(TgVehicle_a3t_1.class)
   private PropertyDescriptor<TgVehicle_a3t_1> property;
 

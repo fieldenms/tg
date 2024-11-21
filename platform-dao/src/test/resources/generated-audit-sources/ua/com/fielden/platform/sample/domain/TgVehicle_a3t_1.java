@@ -30,7 +30,7 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
   @Final
   @Title(
       value = "Tg Vehicle",
-      desc = "Tg Vehicle entity"
+      desc = "The audited Tg Vehicle."
   )
   @SkipEntityExistsValidation
   @IsProperty
@@ -50,54 +50,94 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
 
   @MapTo("A3T_INITDATE")
   @Final
+  @Title(
+      value = "Init Date",
+      desc = "[Init Date] at the time of the audited event."
+  )
   @IsProperty
   private Date a3t_initDate;
 
   @MapTo("A3T_REPLACEDBY")
   @Final
+  @Title(
+      value = "Tg Vehicle",
+      desc = "[Tg Vehicle] at the time of the audited event."
+  )
   @SkipEntityExistsValidation
   @IsProperty
   private TgVehicle a3t_replacedBy;
 
   @MapTo("A3T_STATION")
   @Final
+  @Title(
+      value = "Tg Org Unit5",
+      desc = "[Tg Org Unit5] at the time of the audited event."
+  )
   @SkipEntityExistsValidation
   @IsProperty
   private TgOrgUnit5 a3t_station;
 
   @MapTo("A3T_MODEL")
   @Final
+  @Title(
+      value = "Model",
+      desc = "[Model] at the time of the audited event."
+  )
   @SkipEntityExistsValidation
   @IsProperty
   private TgVehicleModel a3t_model;
 
   @MapTo("A3T_PRICE")
   @Final
+  @Title(
+      value = "Price",
+      desc = "[Price] at the time of the audited event."
+  )
   @IsProperty
   private Money a3t_price;
 
   @MapTo("A3T_PURCHASEPRICE")
   @Final
+  @Title(
+      value = "Purchase Price",
+      desc = "[Purchase Price] at the time of the audited event."
+  )
   @IsProperty
   private Money a3t_purchasePrice;
 
   @MapTo("A3T_ACTIVE")
   @Final
+  @Title(
+      value = "Active",
+      desc = "[Active] at the time of the audited event."
+  )
   @IsProperty
   private boolean a3t_active;
 
   @MapTo("A3T_LEASED")
   @Final
+  @Title(
+      value = "Leased?",
+      desc = "[Leased?] at the time of the audited event."
+  )
   @IsProperty
   private boolean a3t_leased;
 
   @MapTo("A3T_LASTMETERREADING")
   @Final
+  @Title(
+      value = "Last meter reading",
+      desc = "[Last meter reading] at the time of the audited event."
+  )
   @IsProperty
   private BigDecimal a3t_lastMeterReading;
 
   @MapTo("A3T_DESC")
   @Final
+  @Title(
+      value = "Description",
+      desc = "[Description] at the time of the audited event."
+  )
   @IsProperty
   private String a3t_desc;
 

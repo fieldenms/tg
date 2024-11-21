@@ -193,16 +193,27 @@ public class TitlesDescsGetter {
     }
 
     /**
-     * Returns {@link Pair} with key set to entity title and value set to entity description. Traverses <code>entityType</code> hierarchy bottom-up in search of the specified
-     * entity title and description.
-     *
-     * @param entityType
-     * @return
+     * Returns the title and description of the specified entity type.
+     * <p>
+     * The most specific {@link EntityTitle} in the hierarchy is used.
+     * If there is no such annotation, entity type's name is used.
      */
     public static Pair<String, String> getEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> entityType) {
         return AnnotationReflector.getAnnotationOptionally(entityType, EntityTitle.class)
                .map(annotation -> pair(annotation.value(), annotation.desc()))
                .orElseGet(() -> getDefaultEntityTitleAndDesc(entityType));
+    }
+
+    /**
+     * Returns the title of the specified entity type.
+     * <p>
+     * The most specific {@link EntityTitle} in the hierarchy is used.
+     * If there is no such annotation, entity type's name is used.
+     */
+    public static String getEntityTitle(final Class<? extends AbstractEntity<?>> entityType) {
+        return AnnotationReflector.getAnnotationOptionally(entityType, EntityTitle.class)
+                .map(EntityTitle::value)
+                .orElseGet(() -> getDefaultEntityTitle(entityType));
     }
 
     /**
@@ -214,11 +225,22 @@ public class TitlesDescsGetter {
     }
 
     /**
-     * Provides default values of title and description for entity. (e.g. "VehicleFinDetails.class" => "Vehicle Fin Details" and "Vehicle Fin Details entity")
+     * Provides default title and description for the specified entity type.
+     * <p>
+     * (E.g. {@code VehicleFinDetails.class} => "Vehicle Fin Details" and "Vehicle Fin Details entity")
      */
     public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> klass) {
-        final String s = breakClassName(klass.getSimpleName());
+        final String s = getDefaultEntityTitle(klass);
         return pair(s, s + " entity");
+    }
+
+    /**
+     * Provides a default title for the specified entity type.
+     * <p>
+     * (E.g. {@code VehicleFinDetails.class} => "Vehicle Fin Details")
+     */
+    public static String getDefaultEntityTitle(final Class<? extends AbstractEntity<?>> klass) {
+        return breakClassName(klass.getSimpleName());
     }
 
     /**
