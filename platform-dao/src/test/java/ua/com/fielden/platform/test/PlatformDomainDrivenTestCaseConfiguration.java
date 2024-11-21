@@ -20,6 +20,7 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.test.ioc.AuditingTestIocModule.GENERATED_AUDIT_SOURCES_PATH;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /**
@@ -118,6 +119,8 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         // Custom Hibernate configuration properties
         props.setProperty("hibernate.show_sql", "false");
         props.setProperty("hibernate.format_sql", "true");
+
+        props.setProperty(GENERATED_AUDIT_SOURCES_PATH, "src/test/resources/generated-audit-sources");
 
         for (final var pair : properties) {
             props.setProperty(pair._1, pair._2);

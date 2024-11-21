@@ -47,12 +47,15 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
     private static final Logger LOGGER = LogManager.getLogger(PlatformTestServerIocModule.class);
 
+    private final Properties props;
+
     public PlatformTestServerIocModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Properties props)
     {
         super(applicationDomainProvider, domainEntityTypes, props);
+        this.props = props;
     }
 
     @Override
@@ -68,6 +71,8 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
+
+        install(new AuditingTestIocModule(props));
     }
 
     @Override
