@@ -179,12 +179,13 @@ public @interface IsProperty {
      * Defines a template for displaying a value of a composite entity-typed property.
      * Has no effect for other property types or for non-composite entities.
      * The value of this attribute can be empty, which means that the displayed value would use the default pattern (i.e., composite entity property will be displayed with the title-value pattern).
-     * This attribute supports pattern like {@code #1tv#2tv}, {@code #1vs#2v}, {@code #1v}, {@code z}, where:
+     * This attribute supports pattern like {@code #1tv#2tv}, {@code #1vs#2v}, {@code #1v}, {@code z}, {@code #1.2tv#2tv}, {@code #1.2.3v} where:
      * <ol>
      *  <li>{@code #i} – stand for the value of i-th key member (this must be the starting token for a display template),
+     *  <li>{@code i.j} – stand for the value of j-th key member of i-th key member,
      *  <li>{@code t} – i-th key member title,
      *  <li>{@code v} – i-th key member value,
-     *  <li>{@code s} – a key member separator (mutually exclusive with t),
+     *  <li>{@code s} – an optional key member separator (mutually exclusive with t),
      * </ol>
      * or
      * <ul>
