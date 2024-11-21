@@ -43,12 +43,6 @@ const additionalTemplate = html`
         }
     </style>`;
 
-const customLabelTemplate = html`
-    <label id="editorLabel" style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">
-        <span>[[propTitle]]</span>
-        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" action-title="Copy" tooltip-text="Copy content" on-down="_preventEvent" on-tap="_copyTap"></iron-icon>
-    </label>`;
-
 const customInputTemplate = html`
     <tg-rich-text-input id="input" 
         class="custom-input paper-input-input"
@@ -68,7 +62,7 @@ const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"
 export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     static get template() { 
-        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate, customLabelTemplate);
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
     }
 
     static get properties() {
@@ -128,19 +122,6 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _formatTooltipText(value) {
         return '';
-    }
-
-    /**
-     * Returns tooltip for action
-     */
-    _getActionTooltip () {
-        const actions = [...this.$.editorLabel.children].slice(1, 2);//remove first child that is lable title.
-        const actionStr = actions.map(action => `<b>${action.getAttribute("action-title")}</b><br>${action.getAttribute("tooltip-text")}`);
-
-        return `<div style='display:flex;'>
-            <div style='margin-right:10px;'>With action: </div>
-            <div style='flex-grow:1;'>${actionStr.join('<br><br>')}</div>
-            </div>`
     }
 
     _resizeInput (event) {
@@ -233,6 +214,13 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         } else if (this.toaster) {
             this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);
         }
+    }
+
+    _labelDownEventHandler (event) {
+        if (!this.decoratedInput().shadowRoot.activeElement && !this._disabled) {
+            this.decoratedInput().focusInput();
+        }
+        tearDownEvent(event);
     }
 }
 

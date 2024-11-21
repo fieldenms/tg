@@ -262,12 +262,7 @@ function focusOnKeyDown(event) {
     }
 }
 
-function focusEditor() {
-    if (this._editor) {
-        this._editor.focus();
-    }
-}
-
+//TODO consider whether this method is needed. focusEditor might be used instead. 
 function focusView() {
     if (this._editor) {
         this._editor.wwEditor.view.focus();
@@ -399,7 +394,7 @@ function handleCancelEvent(e) {
     }
     if (!(e.detail instanceof MouseEvent)) {
         tearDownEvent(e.detail);
-        focusEditor.bind(this)();
+        this.focusInput();
     }
 }
 
@@ -552,7 +547,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
                 if ((link && link.detail) || this.$.linkDialog.url) {
                     toggleLink.bind(this)(this.$.linkDialog.url, (link && link.text) || this.$.linkDialog.url);
                 } else {
-                    focusEditor.bind(this)();
+                    this.focusInput();
                 }
                 this.$.linkDropdown.close();
             }
@@ -569,7 +564,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
                 if ((textColorObj && textColorObj.detail) || this.$.colorDialog.color) {
                     applyColor.bind(this)(this.$.colorDialog.color);
                 } else {
-                    focusEditor.bind(this)();
+                    this.focusInput();
                 }
                 this.$.colorDropdown.close();
             }
@@ -648,6 +643,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     getHeight() {
         return this._editor && this._editor.getHeight();
+    }
+
+    focusInput() {
+        if (this._editor) {
+            this._editor.focus();
+        }
     }
 
     _stopKeyboradEvent(event) {
