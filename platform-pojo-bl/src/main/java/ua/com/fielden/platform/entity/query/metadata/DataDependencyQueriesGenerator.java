@@ -1,38 +1,31 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
-import static java.util.Arrays.asList;
-import static java.util.Optional.empty;
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
-
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
+import static java.util.Optional.empty;
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 
 /**
  * Provides static methods for generating EQL queries, which are used for inspecting references between entity instances.
@@ -42,8 +35,8 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
  */
 public class DataDependencyQueriesGenerator {
 
-    public static Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> queryForDependentTypesSummary(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Long entityId, final Class<? extends AbstractEntity<?>> entityType) {
-        final AggregatedResultQueryModel[] queries = produceQueries(dependenciesMetadata, entityType, entityId).toArray(new AggregatedResultQueryModel[] {});
+    public static Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> queryForDependentTypesSummary(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Long entityId, final Class<? extends AbstractEntity<?>> entityType, final boolean activeOnly) {
+        final AggregatedResultQueryModel[] queries = produceQueries(dependenciesMetadata, entityType, entityId, activeOnly).toArray(new AggregatedResultQueryModel[] {});
         // if no property references to the specified entity type exists, then there is nothing to query
         if (queries.length == 0) {
             return empty();
@@ -53,25 +46,32 @@ public class DataDependencyQueriesGenerator {
         return Optional.of(from(qry).with(orderBy().yield("qty").desc().model()).model());
     }
 
-    public static QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryForDependentTypeDetails(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Long entityId, final Class<? extends AbstractEntity<?>> entityType, final Class<? extends AbstractEntity<?>> detailsType, final fetch<? extends AbstractEntity<?>> fetchModel) {
-        final PrimitiveResultQueryModel[] detailsQueries = produceDetailsQueries(dependenciesMetadata, detailsType).toArray(new PrimitiveResultQueryModel[] {});
-        final ExpressionModel hasDependencies = detailsQueries.length > 0 ? expr().caseWhen().existsAnyOf(detailsQueries).then().val("Y").otherwise().val("N").end().model()
+    public static QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryForDependentTypeDetails(
+            final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata,
+            final Long entityId,
+            final Class<? extends AbstractEntity<?>> entityType,
+            final Class<? extends AbstractEntity<?>> detailsType,
+            final fetch<? extends AbstractEntity<?>> fetchModel,
+            final boolean activeOnly)
+    {
+        final PrimitiveResultQueryModel[] detailsQueries = produceDetailsQueries(dependenciesMetadata, detailsType, activeOnly).toArray(new PrimitiveResultQueryModel[] {});
+        final ExpressionModel hasDependencies = detailsQueries.length > 0
+                ? expr().caseWhen().existsAnyOf(detailsQueries).then().val("Y").otherwise().val("N").end().model()
                 : expr().val("N").model();
-        final AggregatedResultQueryModel qry = select(detailsType).
-                where().
-                anyOfProps(dependenciesMetadata.get(detailsType).get(entityType).toArray(new String[] {})).eq().val(entityId).
-                yield().model(select(detailsType).where().prop(ID).eq().extProp(ID).model()).as("entity").
-                yield().expr(hasDependencies).as("hasDependencies").
-                modelAsAggregate();
+        final var partialQ = select(detailsType).where().anyOfProps(dependenciesMetadata.get(detailsType).get(entityType).toArray(new String[] {})).eq().val(entityId);
+        final var qry = enhanceQueryWithActiveCondition(detailsType, partialQ, activeOnly).
+                        yield().model(select(detailsType).where().prop(ID).eq().extProp(ID).model()).as("entity").
+                        yield().expr(hasDependencies).as("hasDependencies").
+                        modelAsAggregate();
         qry.setFilterable(true);
         return from(qry).with(fetchAggregates().with("hasDependencies").with("entity", fetchModel)).with(orderBy().prop("key").asc().model()).model();
     }
 
     /**
-     * Generates map between persistent entity types and persistent entity types referenced by its properties (represented as map between types and set of prop names (as type can contain several props of the same type)).
+     * Generates a map between persistent entity types and persistent entity types referenced by their properties.
+     * This relationship is represented as a map between types and a set of property names to cater to situations where an entity type has several props of the same type.
      *
-     * @param entityTypes
-     * @return
+     * @param entityTypes  entity types for which mapping would be performed.
      */
     @SuppressWarnings("unchecked")
     public static Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> produceDependenciesMetadata(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
@@ -84,7 +84,7 @@ public class DataDependencyQueriesGenerator {
                 for (final Field ep : findRealProperties(entityType)) {
                     if (ep.isAnnotationPresent(MapTo.class) && !KEY.equals(ep.getName()) && (AbstractPersistentEntity.class.isAssignableFrom(ep.getType()) || AbstractUnionEntity.class.isAssignableFrom(ep.getType()))) {
                         final boolean isUnionEntityProp = AbstractUnionEntity.class.isAssignableFrom(ep.getType());
-                        final List<Field> props = isUnionEntityProp ? unionProperties((Class<? extends AbstractUnionEntity>) ep.getType()) : asList(ep);
+                        final List<Field> props = isUnionEntityProp ? unionProperties((Class<? extends AbstractUnionEntity>) ep.getType()) : List.of(ep);
                         for (final Field subProp : props) {
                             Set<String> existing = pmd.get(subProp.getType());
                             if (existing == null) {
@@ -104,17 +104,45 @@ public class DataDependencyQueriesGenerator {
         return result;
     }
 
-    private static List<AggregatedResultQueryModel> produceQueries(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Class<? extends AbstractEntity<?>> entityType, final Long entityId) {
+    private static List<AggregatedResultQueryModel> produceQueries(
+            final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata,
+            final Class<? extends AbstractEntity<?>> entityType,
+            final Long entityId,
+            final boolean activeOnly)
+    {
         return dependenciesMetadata.entrySet().stream()
-        .filter(el -> el.getValue().containsKey(entityType))
-        .map(el -> select(el.getKey()).where().anyOfProps(el.getValue().get(entityType).toArray(new String[] {})).eq().val(entityId).yield().val(el.getKey().getName()).as("type").yield().prop(ID).as("entity").modelAsAggregate())
-        .collect(toList());
+               .filter(el -> el.getValue().containsKey(entityType))
+               .map(el -> enhanceQueryWithActiveCondition(el.getKey(), select(el.getKey()).where().anyOfProps(el.getValue().get(entityType).toArray(new String[] {})).eq().val(entityId), activeOnly).yield().val(el.getKey().getName()).as("type").yield().prop(ID).as("entity").modelAsAggregate())
+               .toList();
     }
 
-    private static List<PrimitiveResultQueryModel> produceDetailsQueries(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Class<? extends AbstractEntity<?>> entityType) {
+    private static List<PrimitiveResultQueryModel> produceDetailsQueries(
+            final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata,
+            final Class<? extends AbstractEntity<?>> entityType,
+            boolean activeOnly)
+    {
         return dependenciesMetadata.entrySet().stream()
-        .filter(el -> el.getValue().containsKey(entityType))
-        .map(el -> select(el.getKey()).where().anyOfProps(el.getValue().get(entityType).toArray(new String[] {})).eq().extProp(ID).yield().prop(ID).modelAsPrimitive())
-        .collect(toList());
+               .filter(el -> el.getValue().containsKey(entityType))
+               .map(el -> enhanceQueryWithActiveCondition(el.getKey(), select(el.getKey()).where().anyOfProps(el.getValue().get(entityType).toArray(new String[] {})).eq().extProp(ID), activeOnly).yield().prop(ID).modelAsPrimitive())
+               .toList();
+    }
+
+    private static ICompoundCondition0<? extends AbstractEntity<?>> enhanceQueryWithActiveCondition(
+            final Class<? extends AbstractEntity<?>> detailType,
+            final ICompoundCondition0<? extends AbstractEntity<?>> queryToEnhance,
+            final boolean activeOnly) {
+        // The case for an activatable entity.
+        if (ActivatableAbstractEntity.class.isAssignableFrom(detailType)) {
+            return activeOnly
+                   ? queryToEnhance.and().prop(ACTIVE).eq().val(true)
+                   : queryToEnhance;
+
+        }
+        // The case for a non-activatable entity, where all such entities should be filtered out if activeOnly is true.
+        else {
+            return activeOnly
+                   ? queryToEnhance.and().val(false).eq().val(true) // filter-out condition
+                   : queryToEnhance;
+        }
     }
 }
