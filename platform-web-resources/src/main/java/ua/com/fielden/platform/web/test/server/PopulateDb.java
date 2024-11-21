@@ -258,8 +258,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         var majorOpt = save(new_composite(TgRollingStockMajorComponent.class, "Wagon", "Electrical Equipment"));
         var compPropOpt = save(new_composite(TgRollingStockMinorComponent.class, majorOpt, null));
 
-        ent1.setCompProp(compPropOpt);
-        save(ent1);
+        ent3.setCompProp(compPropOpt);
+        save(ent3);
 
         var majorOpt2 = save(new_composite(TgRollingStockMajorComponent.class, "Wagon", null));
         var minorOpt2 = save(new_composite(TgMinorComponent.class, "Batteries", "Lead-Acid"));

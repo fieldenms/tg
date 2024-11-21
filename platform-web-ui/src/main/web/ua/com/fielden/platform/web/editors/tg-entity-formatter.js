@@ -125,6 +125,7 @@ function createCompositeTitle (entity, template, reflector) {
     const members = []; // resulting key member objects
     let currMemberName, prevMemberName, currMemberValue; // currently / previously processed key member dot-notation names; and current value
 
+    // Define custom ANTLR listener.
     class Listener extends CompositeEntityFormatListener {
 
         /**
@@ -203,6 +204,7 @@ function createCompositeTitle (entity, template, reflector) {
         }
     }
 
+    // Traverse tree and fill 'members' in.
     const listener = new Listener();
     antlr4.tree.ParseTreeWalker.DEFAULT.walk(listener, tree);
 
