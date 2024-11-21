@@ -468,57 +468,57 @@
                     done();
                 };
                 
-	            master.retrieve();
+                master.retrieve();
             });
             test('fails for "#0v" format', function (done) {
-		    	master.entityId = '16';
+                master.entityId = '16';
 
-	            master.postRetrieved = function(entity, bindingEntity, customObject) {
-	                // value ok?
-	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
-	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    // value ok?
+                    assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+                    assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
 
                     const entityValue = entity.get("compositeProp");
 
                     try {
-	                    const defaultFormat = composeEntityValue(entityValue, "#0v");
-	                    assert.fail('', '', 'Formatter should throw exception.');
-	                } catch (ex) {
-	                    if (ex instanceof chai.AssertionError) {
-	                        throw ex;
-	                    }
-	                    assert.strictEqual(ex.msg, "Error at position 1: token recognition error at: \'0\'.");
-	                }
+                        const defaultFormat = composeEntityValue(entityValue, "#0v");
+                        assert.fail('', '', 'Formatter should throw exception.');
+                    } catch (ex) {
+                        if (ex instanceof chai.AssertionError) {
+                            throw ex;
+                        }
+                        assert.strictEqual(ex.msg, "Error at position 1: token recognition error at: \'0\'.");
+                    }
                     done();
-	            };
+                };
 
-	            master.retrieve();
+                master.retrieve();
             });
             test('fails for "#0tv" format', function (done) {
-		    	master.entityId = '16';
+                master.entityId = '16';
 
-	            master.postRetrieved = function(entity, bindingEntity, customObject) {
-	                // value ok?
-	                assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
-	                assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    // value ok?
+                    assert.ok(entity.get('compositeProp'), 'The property should be initialised.');
+                    assert.instanceOf(entity.get('compositeProp'), reflector.getEntityPrototype(), 'The property should be of entity type.');
 
                     const entityValue = entity.get("compositeProp");
 
                     try {
-	                    const defaultFormat = composeEntityValue(entityValue, "#0tv");
-	                    assert.fail('', '', 'Formatter should throw exception.');
-	                } catch (ex) {
-	                    if (ex instanceof chai.AssertionError) {
-	                        throw ex;
-	                    }
-	                    assert.strictEqual(ex.msg, "Error at position 1: token recognition error at: \'0\'.");
-	                }
+                        const defaultFormat = composeEntityValue(entityValue, "#0tv");
+                        assert.fail('', '', 'Formatter should throw exception.');
+                    } catch (ex) {
+                        if (ex instanceof chai.AssertionError) {
+                            throw ex;
+                        }
+                        assert.strictEqual(ex.msg, "Error at position 1: token recognition error at: \'0\'.");
+                    }
                     done();
-	            };
+                };
 
-	            master.retrieve();
+                master.retrieve();
             });
-		});
+        });
     </script>
 </body>
 
