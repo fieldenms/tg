@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
+import static ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher.matchByAnyPropPredicate;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -24,9 +27,9 @@ abstract class AbstractSearchPropertyDescriptorByKey<T extends AbstractEntity<?>
     private final Class<T> enclosingEntityType;
 
     /**
-     * Creates matcher for {@link PropertyDescriptor}s using enclosing entity type.
+     * Creates matcher for {@link PropertyDescriptor}s using an enclosing entity type.
      * 
-     * @param enclosingEntityType
+     * @param enclosingEntityType  an entity for which property definitions are obtained.
      */
     public AbstractSearchPropertyDescriptorByKey(final Class<T> enclosingEntityType) {
         this.enclosingEntityType = enclosingEntityType;
@@ -49,7 +52,7 @@ abstract class AbstractSearchPropertyDescriptorByKey<T extends AbstractEntity<?>
      * No properties are excluded by default. 
      * Override this method to provide a domain-specific logic for excluding properties from the matcher consideration.
      *  
-     * @param field
+     * @param field a field representing a property, which should be skipped.
      */
     protected boolean shouldSkip(final Field field) {
         return false;
@@ -61,13 +64,13 @@ abstract class AbstractSearchPropertyDescriptorByKey<T extends AbstractEntity<?>
      * <p>
      * Override this method to provide fully custom behaviour.
      * 
-     * @param searchString
+     * @param searchString  a searching string used for matching properties.
      * @return
      */
     protected List<PropertyDescriptor<T>> findPropertyDescriptorMatches(final String searchString) {
         final List<PropertyDescriptor<T>> allPropertyDescriptors = getPropertyDescriptors(enclosingEntityType, this::shouldSkip);
         allPropertyDescriptors.sort(null); // let's represent the matching property in alphabetic order
-        return new PojoValueMatcher<>(allPropertyDescriptors, KEY, allPropertyDescriptors.size()).findMatches(searchString);
+        return new PojoValueMatcher<>(allPropertyDescriptors, matchByAnyPropPredicate(Set.of(KEY, DESC)), allPropertyDescriptors.size()).findMatches(searchString);
     }
 
     @Override

@@ -12,6 +12,7 @@ import '/resources/components/tg-confirmation-dialog.js';
 import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 
 import { tearDownEvent, allDefined, resultMessages, deepestActiveElement, isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
 
@@ -59,8 +60,8 @@ const hideCheckIconOnMouseLeave = function () {
 
 const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
-        <span>[[propTitle]]</span>
-        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <span class="label-title" on-down="_labelDownEventHandler">[[propTitle]]</span>
+        <iron-icon class="label-action" hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -85,18 +86,14 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 @apply --layout-horizontal;
                 @apply --layout-center;
             }
-            #copyIcon {
-                flex-shrink: 0;
-                display: none;
+            .label-title {
+                margin-right: 4px;
+            }
+            .label-action {
                 width: 18px;
                 height: 18px;
-                margin-left: 4px;
-            }
-            label #copyIcon {
+                padding: 0 4px;
                 cursor: pointer;
-            }
-            :host(:hover) #copyIcon,#decorator[focused]  #copyIcon {
-                display: unset;
             }
             .input-layer {
                 font-size: 16px;
@@ -218,7 +215,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         </template>`;
 };
 
-export class TgEditor extends PolymerElement {
+export class TgEditor extends GestureEventListeners(PolymerElement) {
 
     static get properties() {
         return {
@@ -900,6 +897,17 @@ export class TgEditor extends PolymerElement {
             this.commit();
         }
         this._tryFireErrorMsg(this._error);
+    }
+
+    _labelDownEventHandler (event) {
+        // Select text inside editor and focus it, if it is enabled and not yet focused.
+        // Selection of the text on-focus is consistent with on-tap action in the editor or focus gain logic when tabbing between editors.
+        if (this.shadowRoot.activeElement !== this.decoratedInput() && !this._disabled) {
+            this.decoratedInput().select();
+            this.decoratedInput().focus();
+        }
+        // Need to tear down the event for the editor to remain focused.
+        tearDownEvent(event);
     }
 
     _copyTap () {
