@@ -2,6 +2,7 @@ package ua.com.fielden.platform.audit;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyNature;
@@ -81,6 +82,43 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                 .toList();
 
         final var actualProps = auditTypeMetadata.properties().stream()
+                .map(p -> new Prop(p.name(), p.type().genericJavaType(), p.nature()))
+                .sorted(Comparator.comparing(Prop::name))
+                .toList();
+
+        assertEquals(expectedProps, actualProps);
+    }
+
+    /**
+     * This test asserts that the actual structure of properties in a generated audit-prop entity type matches the expected structure.
+     */
+    @Test
+    public void properties_of_audit_prop_entity_type() {
+        record Prop (String name, Type type, PropertyNature nature) {
+            @Override
+            public String toString() {
+                return "%s %s (%s)".formatted(type.getTypeName(), name, nature);
+            }
+        }
+
+        final var auditType = getAuditType(TgVehicle.class);
+        final var auditPropType = getAuditPropType(TgVehicle.class);
+
+        final var domainMetadata = getInstance(IDomainMetadata.class);
+        final var auditPropTypeMetadata = domainMetadata.forEntity(auditPropType);
+
+        final var expectedProps = ImmutableList.<Prop>builder()
+                .add(new Prop(AbstractAuditProp.AUDIT_ENTITY, auditType, PERSISTENT))
+                .add(new Prop(AbstractAuditProp.PROPERTY, newParameterizedType(PropertyDescriptor.class, auditType), PERSISTENT))
+                .add(new Prop(KEY, String.class, CALCULATED))
+                .add(new Prop(ID, Long.class, PERSISTENT))
+                .add(new Prop(VERSION, Long.class, PERSISTENT))
+                .build()
+                .stream()
+                .sorted(Comparator.comparing(Prop::name))
+                .toList();
+
+        final var actualProps = auditPropTypeMetadata.properties().stream()
                 .map(p -> new Prop(p.name(), p.type().genericJavaType(), p.nature()))
                 .sorted(Comparator.comparing(Prop::name))
                 .toList();
