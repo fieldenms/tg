@@ -52,35 +52,44 @@ function customiseErrorHandling (processor) {
 };
 
 /**
+ * Splits 'str' into two substrings: the first one ends just before the first occurence of 'separator', the second one - after it.
+ * If 'separator' doesn't occur in 'str', the first substring is 'str' and the second one - an empty string.
+ */
+function splitOnFirst(str, separator) {
+    const idx = str.indexOf(separator);
+    if (idx < 0) {
+        return [str, ''];
+    } else {
+        return [str.substring(0, idx), str.substring(idx + 1)]
+    }
+}
+
+/**
  * Determines gluing separator between two dot-notated key members [prevMemberPath, currMemberPath] of 'entity'.
  */
 function determineSeparator (prevMemberPath, currMemberPath, entity, reflector) {
     if (!prevMemberPath) {
         return undefined;
     } else {
-        // Function to get penult property name for 'prop'; including '' (aka root) for non-dot-notated ones.
-        const penultPropOf = prop => reflector.isDotNotated(prop) ? prop.substring(0, prop.lastIndexOf('.')) : '';
-        const currContext = penultPropOf(currMemberPath);
-        const prevContext = penultPropOf(prevMemberPath);
         // Function to determine common path prefix between two dot-notated paths.
-        const commonPrefix = (str1, str2, acc) => {
-            if (str1 === '' || str2 === '') {
+        const commonPrefix = (path1, path2, acc) => {
+            if (path1 === '' || path2 === '') {
                 return acc;
             } else {
                 // Function to determine prefix for path before first dot or to the end of string if there is none.
-                const prefixOf = prop => prop.substring(0, prop.indexOf('.') < 0 ? prop.length : prop.indexOf('.'));
-                const prefix1 = prefixOf(str1);
-                const prefix2 = prefixOf(str2);
-                if (prefix1 === prefix2) {
-                    // Function to determine suffix for path after first dot or '' if there is none.
-                    const suffixOf = prop => prop.indexOf('.') < 0 ? '' : prop.substring(prop.indexOf('.'));
-                    return commonPrefix(suffixOf(str1), suffixOf(str2), acc === '' ? prefix1 : acc + '.' + prefix1);
+                const [path1Head, path1Tail] = splitOnFirst(path1, '.');
+                const [path2Head, path2Tail] = splitOnFirst(path2, '.');
+                if (path1Head === path2Head) {
+                    return commonPrefix(path1Tail, path2Tail, acc === '' ? path1Head : acc + '.' + path1Head);
                 } else {
                     return acc;
                 }
             }
         };
-        return entity.get(commonPrefix(currContext, prevContext, '')).type().compositeKeySeparator();
+        // Function to get penult property name for 'prop'; including '' (aka root) for non-dot-notated ones.
+        const penultPropOf = prop => reflector.isDotNotated(prop) ? prop.substring(0, prop.lastIndexOf('.')) : '';
+        debugger;
+        return entity.get(commonPrefix(penultPropOf(currMemberPath), penultPropOf(prevMemberPath), '')).type().compositeKeySeparator();
     }
 };
 
