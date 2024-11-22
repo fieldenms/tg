@@ -122,6 +122,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
     @Override
     protected void populateDomain() {
+        // NOTE: If new test entities need to be populated, it must be done at the very end of this method.
+        //       This is because Web UI tests rely on a specific order of entity IDs.
+
         LOGGER.info("Creating and populating the development database...");
 
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
