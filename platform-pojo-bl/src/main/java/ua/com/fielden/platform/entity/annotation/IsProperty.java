@@ -179,22 +179,20 @@ public @interface IsProperty {
      * Defines a template for displaying a value of a composite entity-typed property.
      * Has no effect for other property types or for non-composite entities.
      * The value of this attribute can be empty, which means that the displayed value would use the default pattern (i.e., composite entity property will be displayed with the title-value pattern).
-     * This attribute supports pattern like {@code #1tv#2tv}, {@code #1vs#2v}, {@code #1v}, {@code z}, {@code #1.2tv#2tv}, {@code #1.2.3v} where:
+     * This attribute supports patterns like {@code #1tv#2tv}, {@code #1vs#2v}, {@code #1v}, {@code z}, {@code #1.2tv#2tv}, {@code #1.2.3v}, where:
      * <ol>
-     *  <li>{@code #i} – stand for the value of i-th key member (this must be the starting token for a display template),
-     *  <li>{@code i.j} – stand for the value of j-th key member of i-th key member,
-     *  <li>{@code t} – i-th key member title,
-     *  <li>{@code v} – i-th key member value,
-     *  <li>{@code s} – an optional key member separator (mutually exclusive with t),
+     *  <li>{@code #i} – the i-th key member (this must be the starting token in a template);
+     *  <li>{@code i.j} – the j-th key member in the i-th key member (the i-th key member must be a composite entity).
+     *      Arbitrary depth of key members is supported (e.g., {@code i.*.z}, where {@code *} may be replaced with any number of key members).
+     *  <li>{@code t} – title of a preceeding key member
+     *      (e.g., {@code #1t} represents the title of the 1st key member, {@code #1.2t} - title of the 2nd key member in the 1st key member);
+     *  <li>{@code v} – value of a preceeding key member
+     *      (e.g., {@code #1v} represents the value of the 1st key member, {@code #1.2v} - value of the 2nd key member in the 1st key member);
+     *  <li>{@code s} – an optional key member separator (mutually exclusive with {@code t}).
      * </ol>
-     * or
-     * <ul>
-     *     <li>{@code z} – a template value that stands for entity's {@code toString} (i.e., no special formatting).
-     * </ul>
+     * Alternatively, a template may consist of a single {@code z} character, serving as a {@code toString} representation of the displayed entity.
      * <p>
-     * The default value is {@code ""}, which is equivalent to applying template {@code #itv} to every key member.
-     *
-     * @return
+     * The default template is {@code ""}, which is equivalent to applying template {@code #itv} to every key member.
      */
     String displayAs() default DEFAULT_DISPLAY_AS;
 }
