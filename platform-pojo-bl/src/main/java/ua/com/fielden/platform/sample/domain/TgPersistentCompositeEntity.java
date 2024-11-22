@@ -50,4 +50,11 @@ public class TgPersistentCompositeEntity extends AbstractEntity<DynamicEntityKey
         return key1;
     }
 
+    @Override
+    @Observable
+    public TgPersistentCompositeEntity setDesc(final String desc) {
+        super.setDesc(desc);
+        return this;
+    }
+
 }
