@@ -146,7 +146,7 @@ function createCompositeTitle (entity, template, reflector) {
                 if (members.length === 1) {
                     delete members[0].title;
                 }
-            } else if (ctx.children[0].symbol && ctx.children[0].symbol.text === 'z') { // ctx.children.length === 2 with 1-st being 'z' and second <EOF> -- means 'z' template
+            } else if (ctx.zed) {
                 pushAllKeys(''); // generates '#iv' template
             }
         }
@@ -156,21 +156,23 @@ function createCompositeTitle (entity, template, reflector) {
          */
         exitNo (ctx) {
             // Function to construct dot-notation path to a key member and its value's string representation.
-            const constructPathAndValue = (value, dotNoPairs, acc) => {
+            const constructPathAndValue = (value, numbers, acc) => {
                 const convertedValue = reflector.tg_toString(value, entity.type(), acc);
                 if (!convertedValue) { // convertedValue is empty (most likely '')
                     return [undefined, undefined]; // return undefined to indicate the need to skip this key member
-                } else if (dotNoPairs.length === 0) { // dotNoPairs are empty -- processing ended successfully
+                } else if (numbers.length === 0) { // numbers are empty -- processing ended successfully
                     return [acc, convertedValue];
                 } else {
-                    const nameRoot = getKeyMemberName(value, dotNoPairs[1].symbol.text, reflector); // retrieve second symbol out of two first (.i.j.k...) and determine key member name
-                    return constructPathAndValue(value.get(nameRoot), dotNoPairs.slice(2), acc === '' ? nameRoot : acc + '.' + nameRoot); // go to the level below recursively by skipping (.i) from (.i.j.k...) and enhancing path accumulator
+                    const [numbersHead, ...numbersTail] = numbers;
+                    const nameRoot = getKeyMemberName(value, numbersHead.text, reflector);
+                    // Proceed to the next key member
+                    return constructPathAndValue(value.get(nameRoot), numbersTail, acc === '' ? nameRoot : acc + '.' + nameRoot);
                 }
             };
             if (currMemberName) {
                 prevMemberName = currMemberName;
             }
-            [currMemberName, currMemberValue] = constructPathAndValue(entity, ['.' /* fake dot before first no */, ...ctx.children.slice(1) /* crop # symbol */], '' /* acc */);
+            [currMemberName, currMemberValue] = constructPathAndValue(entity, ctx.numbers, '' /* acc */);
         }
 
         /**

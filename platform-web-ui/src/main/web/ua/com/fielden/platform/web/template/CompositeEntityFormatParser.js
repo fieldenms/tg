@@ -1,9 +1,7 @@
-// Generated from /home/jhou/workspace-java/tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/template/CompositeEntityFormat.g4 by ANTLR 4.13.2
+// Generated from /home/lambda/fielden/git/tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/template/CompositeEntityFormat.g4 by ANTLR 4.13.2
 // jshint ignore: start
 import antlr4 from '/resources/polymer/antlr4/dist/antlr4.web.mjs';
 import CompositeEntityFormatListener from './CompositeEntityFormatListener.js';
-import CompositeEntityFormatVisitor from './CompositeEntityFormatVisitor.js';
-
 const serializedATN = [4,1,7,51,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,
 2,5,7,5,1,0,1,0,1,0,3,0,16,8,0,1,0,1,0,1,1,4,1,21,8,1,11,1,12,1,22,1,2,1,
 2,1,2,1,2,1,3,1,3,3,3,31,8,3,1,3,5,3,34,8,3,10,3,12,3,37,9,3,1,4,1,4,1,4,
@@ -62,7 +60,7 @@ export default class CompositeEntityFormatParser extends antlr4.Parser {
 
 	        } else if(la_===3) {
 	            this.state = 14;
-	            this.match(CompositeEntityFormatParser.T__0);
+	            localctx.zed = this.match(CompositeEntityFormatParser.T__0);
 
 	        }
 	        this.state = 17;
@@ -218,7 +216,8 @@ export default class CompositeEntityFormatParser extends antlr4.Parser {
 	        this.state = 41;
 	        this.match(CompositeEntityFormatParser.T__4);
 	        this.state = 42;
-	        this.match(CompositeEntityFormatParser.I);
+	        localctx._I = this.match(CompositeEntityFormatParser.I);
+	        localctx.numbers.push(localctx._I);
 	        this.state = 47;
 	        this._errHandler.sync(this);
 	        _la = this._input.LA(1);
@@ -226,7 +225,8 @@ export default class CompositeEntityFormatParser extends antlr4.Parser {
 	            this.state = 43;
 	            this.match(CompositeEntityFormatParser.T__5);
 	            this.state = 44;
-	            this.match(CompositeEntityFormatParser.I);
+	            localctx._I = this.match(CompositeEntityFormatParser.I);
+	            localctx.numbers.push(localctx._I);
 	            this.state = 49;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
@@ -276,6 +276,7 @@ class TemplateContext extends antlr4.ParserRuleContext {
         super(parent, invokingState);
         this.parser = parser;
         this.ruleIndex = CompositeEntityFormatParser.RULE_template;
+        this.zed = null;
     }
 
 	EOF() {
@@ -300,14 +301,6 @@ class TemplateContext extends antlr4.ParserRuleContext {
 	    if(listener instanceof CompositeEntityFormatListener ) {
 	        listener.exitTemplate(this);
 		}
-	}
-
-	accept(visitor) {
-	    if ( visitor instanceof CompositeEntityFormatVisitor ) {
-	        return visitor.visitTemplate(this);
-	    } else {
-	        return visitor.visitChildren(this);
-	    }
 	}
 
 
@@ -352,14 +345,6 @@ class TvTemplateContext extends antlr4.ParserRuleContext {
 		}
 	}
 
-	accept(visitor) {
-	    if ( visitor instanceof CompositeEntityFormatVisitor ) {
-	        return visitor.visitTvTemplate(this);
-	    } else {
-	        return visitor.visitChildren(this);
-	    }
-	}
-
 
 }
 
@@ -393,14 +378,6 @@ class TvPartContext extends antlr4.ParserRuleContext {
 	    if(listener instanceof CompositeEntityFormatListener ) {
 	        listener.exitTvPart(this);
 		}
-	}
-
-	accept(visitor) {
-	    if ( visitor instanceof CompositeEntityFormatVisitor ) {
-	        return visitor.visitTvPart(this);
-	    } else {
-	        return visitor.visitChildren(this);
-	    }
 	}
 
 
@@ -445,14 +422,6 @@ class VsTemplateContext extends antlr4.ParserRuleContext {
 		}
 	}
 
-	accept(visitor) {
-	    if ( visitor instanceof CompositeEntityFormatVisitor ) {
-	        return visitor.visitVsTemplate(this);
-	    } else {
-	        return visitor.visitChildren(this);
-	    }
-	}
-
 
 }
 
@@ -488,14 +457,6 @@ class VPartContext extends antlr4.ParserRuleContext {
 		}
 	}
 
-	accept(visitor) {
-	    if ( visitor instanceof CompositeEntityFormatVisitor ) {
-	        return visitor.visitVPart(this);
-	    } else {
-	        return visitor.visitChildren(this);
-	    }
-	}
-
 
 }
 
@@ -513,6 +474,8 @@ class NoContext extends antlr4.ParserRuleContext {
         super(parent, invokingState);
         this.parser = parser;
         this.ruleIndex = CompositeEntityFormatParser.RULE_no;
+        this._I = null;
+        this.numbers = [];
     }
 
 	I = function(i) {
@@ -537,14 +500,6 @@ class NoContext extends antlr4.ParserRuleContext {
 	    if(listener instanceof CompositeEntityFormatListener ) {
 	        listener.exitNo(this);
 		}
-	}
-
-	accept(visitor) {
-	    if ( visitor instanceof CompositeEntityFormatVisitor ) {
-	        return visitor.visitNo(this);
-	    } else {
-	        return visitor.visitChildren(this);
-	    }
 	}
 
 

@@ -1,6 +1,6 @@
 grammar CompositeEntityFormat;
 
-template : (tvTemplate | vsTemplate | 'z')? EOF ;
+template : (tvTemplate | vsTemplate | zed='z')? EOF ;
 
 tvTemplate : tvPart+ ;
 tvPart : no 't' 'v' ;
@@ -8,5 +8,5 @@ tvPart : no 't' 'v' ;
 vsTemplate : vPart ('s'? vPart)* ;
 vPart : no 'v' ;
 
-no : '#' I ('.' I)* ;
+no : '#' numbers+=I ('.' numbers+=I)* ;
 I : [1-9] ;
