@@ -187,6 +187,7 @@ function mouseDownHandler(e) {
             shortPress = false;
             setTimeout( () => {runLinkIfPossible.bind(this)(el)}, 1);
         }, 1000);
+        tearDownEvent(e);
     }
 }
 
@@ -202,6 +203,7 @@ function mouseUpHandler(e) {
         longPress = false;
         shortPress = false;
         mouseTimer = null;
+        tearDownEvent(e);
     }
 }
 
@@ -259,13 +261,6 @@ function isPositionInBox(style, offsetX, offsetY) {
 function focusOnKeyDown(event) {
     if (event.keyCode === 13 && !this.shadowRoot.activeElement) {
         this._editor.moveCursorToStart(true);
-    }
-}
-
-//TODO consider whether this method is needed. focusEditor might be used instead. 
-function focusView() {
-    if (this._editor) {
-        this._editor.wwEditor.view.focus();
     }
 }
 
@@ -330,7 +325,7 @@ function toggleLink(url, text) {
 }
 
  function applyColor(selectedColor) {
-    focusView.bind(this)();
+    this.focusInput();
     if (selectedColor) {
         this._editor.exec("color", {selectedColor: selectedColor});
     } else {
@@ -600,9 +595,9 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         //Add event listener to handle case when clicking on task list checkbox
         this._getEditableContent().addEventListener("mousedown", handleTaskListItemStatusChange.bind(this));
         //Add event listeners to make link clickable and with proper cursor
-        this._getEditableContent().addEventListener("mousedown", mouseDownHandler.bind(this));
+        this._getEditableContent().addEventListener("mousedown", mouseDownHandler.bind(this), true);
         this._getEditableContent().addEventListener("mouseup", mouseUpHandler.bind(this));
-        this._getEditableContent().addEventListener("touchstart", mouseDownHandler.bind(this));
+        this._getEditableContent().addEventListener("touchstart", mouseDownHandler.bind(this), true);
         this._getEditableContent().addEventListener("touchend", mouseUpHandler.bind(this));
         //Add key down to prevent tab key on list
         this._getEditableContent().addEventListener("keydown", preventListIdentation.bind(this), true);
