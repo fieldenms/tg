@@ -152,9 +152,9 @@ function createCompositeTitle (entity, template, reflector) {
         }
 
         /**
-         * 'no' rule processor that handles [currMemberPath, currMemberValue] determination (current / previous key member dot-notation paths; and current value's string representation).
+         * 'number' rule processor that handles [currMemberPath, currMemberValue] determination (current / previous key member dot-notation paths; and current value's string representation).
          */
-        exitNo (ctx) {
+        exitNumber (ctx) {
             // Function to construct dot-notation path to a key member and its value's string representation.
             const constructPathAndValue = (value, numbers, acc) => {
                 const convertedValue = reflector.tg_toString(value, entity.type(), acc);

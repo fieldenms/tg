@@ -3,10 +3,10 @@ grammar CompositeEntityFormat;
 template : (tvTemplate | vsTemplate | zed='z')? EOF ;
 
 tvTemplate : tvPart+ ;
-tvPart : no 't' 'v' ;
+tvPart : number 't' 'v' ;
 
 vsTemplate : vPart ('s'? vPart)* ;
-vPart : no 'v' ;
+vPart : number 'v' ;
 
-no : '#' numbers+=I ('.' numbers+=I)* ;
+number : '#' numbers+=I ('.' numbers+=I)* ;
 I : [1-9] ;

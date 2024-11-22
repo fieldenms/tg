@@ -30,7 +30,7 @@ export default class CompositeEntityFormatParser extends antlr4.Parser {
     static literalNames = [ null, "'z'", "'t'", "'v'", "'s'", "'#'", "'.'" ];
     static symbolicNames = [ null, null, null, null, null, null, null, "I" ];
     static ruleNames = [ "template", "tvTemplate", "tvPart", "vsTemplate", 
-                         "vPart", "no" ];
+                         "vPart", "number" ];
 
     constructor(input) {
         super(input);
@@ -119,7 +119,7 @@ export default class CompositeEntityFormatParser extends antlr4.Parser {
 	    try {
 	        this.enterOuterAlt(localctx, 1);
 	        this.state = 24;
-	        this.no();
+	        this.number();
 	        this.state = 25;
 	        this.match(CompositeEntityFormatParser.T__1);
 	        this.state = 26;
@@ -188,7 +188,7 @@ export default class CompositeEntityFormatParser extends antlr4.Parser {
 	    try {
 	        this.enterOuterAlt(localctx, 1);
 	        this.state = 38;
-	        this.no();
+	        this.number();
 	        this.state = 39;
 	        this.match(CompositeEntityFormatParser.T__2);
 	    } catch (re) {
@@ -207,9 +207,9 @@ export default class CompositeEntityFormatParser extends antlr4.Parser {
 
 
 
-	no() {
-	    let localctx = new NoContext(this, this._ctx, this.state);
-	    this.enterRule(localctx, 10, CompositeEntityFormatParser.RULE_no);
+	number() {
+	    let localctx = new NumberContext(this, this._ctx, this.state);
+	    this.enterRule(localctx, 10, CompositeEntityFormatParser.RULE_number);
 	    var _la = 0;
 	    try {
 	        this.enterOuterAlt(localctx, 1);
@@ -262,7 +262,7 @@ CompositeEntityFormatParser.RULE_tvTemplate = 1;
 CompositeEntityFormatParser.RULE_tvPart = 2;
 CompositeEntityFormatParser.RULE_vsTemplate = 3;
 CompositeEntityFormatParser.RULE_vPart = 4;
-CompositeEntityFormatParser.RULE_no = 5;
+CompositeEntityFormatParser.RULE_number = 5;
 
 class TemplateContext extends antlr4.ParserRuleContext {
 
@@ -364,8 +364,8 @@ class TvPartContext extends antlr4.ParserRuleContext {
         this.ruleIndex = CompositeEntityFormatParser.RULE_tvPart;
     }
 
-	no() {
-	    return this.getTypedRuleContext(NoContext,0);
+	number() {
+	    return this.getTypedRuleContext(NumberContext,0);
 	};
 
 	enterRule(listener) {
@@ -441,8 +441,8 @@ class VPartContext extends antlr4.ParserRuleContext {
         this.ruleIndex = CompositeEntityFormatParser.RULE_vPart;
     }
 
-	no() {
-	    return this.getTypedRuleContext(NoContext,0);
+	number() {
+	    return this.getTypedRuleContext(NumberContext,0);
 	};
 
 	enterRule(listener) {
@@ -462,7 +462,7 @@ class VPartContext extends antlr4.ParserRuleContext {
 
 
 
-class NoContext extends antlr4.ParserRuleContext {
+class NumberContext extends antlr4.ParserRuleContext {
 
     constructor(parser, parent, invokingState) {
         if(parent===undefined) {
@@ -473,7 +473,7 @@ class NoContext extends antlr4.ParserRuleContext {
         }
         super(parent, invokingState);
         this.parser = parser;
-        this.ruleIndex = CompositeEntityFormatParser.RULE_no;
+        this.ruleIndex = CompositeEntityFormatParser.RULE_number;
         this._I = null;
         this.numbers = [];
     }
@@ -492,13 +492,13 @@ class NoContext extends antlr4.ParserRuleContext {
 
 	enterRule(listener) {
 	    if(listener instanceof CompositeEntityFormatListener ) {
-	        listener.enterNo(this);
+	        listener.enterNumber(this);
 		}
 	}
 
 	exitRule(listener) {
 	    if(listener instanceof CompositeEntityFormatListener ) {
-	        listener.exitNo(this);
+	        listener.exitNumber(this);
 		}
 	}
 
@@ -513,4 +513,4 @@ CompositeEntityFormatParser.TvTemplateContext = TvTemplateContext;
 CompositeEntityFormatParser.TvPartContext = TvPartContext; 
 CompositeEntityFormatParser.VsTemplateContext = VsTemplateContext; 
 CompositeEntityFormatParser.VPartContext = VPartContext; 
-CompositeEntityFormatParser.NoContext = NoContext; 
+CompositeEntityFormatParser.NumberContext = NumberContext; 

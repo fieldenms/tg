@@ -50,12 +50,12 @@ export default class CompositeEntityFormatListener extends antlr4.tree.ParseTree
 	}
 
 
-	// Enter a parse tree produced by CompositeEntityFormatParser#no.
-	enterNo(ctx) {
+	// Enter a parse tree produced by CompositeEntityFormatParser#number.
+	enterNumber(ctx) {
 	}
 
-	// Exit a parse tree produced by CompositeEntityFormatParser#no.
-	exitNo(ctx) {
+	// Exit a parse tree produced by CompositeEntityFormatParser#number.
+	exitNumber(ctx) {
 	}
 
 
