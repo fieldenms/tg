@@ -52,16 +52,16 @@ function customiseErrorHandling (processor) {
 };
 
 /**
- * Determines gluing separator between two dot-notated key members [prevMemberName, currMemberName] of 'entity'.
+ * Determines gluing separator between two dot-notated key members [prevMemberPath, currMemberPath] of 'entity'.
  */
-function determineSeparator (prevMemberName, currMemberName, entity, reflector) {
-    if (!prevMemberName) {
+function determineSeparator (prevMemberPath, currMemberPath, entity, reflector) {
+    if (!prevMemberPath) {
         return undefined;
     } else {
         // Function to get penult property name for 'prop'; including '' (aka root) for non-dot-notated ones.
         const penultPropOf = prop => reflector.isDotNotated(prop) ? prop.substring(0, prop.lastIndexOf('.')) : '';
-        const currContext = penultPropOf(currMemberName);
-        const prevContext = penultPropOf(prevMemberName);
+        const currContext = penultPropOf(currMemberPath);
+        const prevContext = penultPropOf(prevMemberPath);
         // Function to determine common path prefix between two dot-notated paths.
         const commonPrefix = (str1, str2, acc) => {
             if (str1 === '' || str2 === '') {
@@ -123,7 +123,7 @@ function createCompositeTitle (entity, template, reflector) {
 
     // Define state for a custom ANTLR listener.
     const members = []; // resulting key member objects
-    let currMemberName, prevMemberName, currMemberValue; // currently / previously processed key member dot-notation names; and current value
+    let currMemberPath, prevMemberPath, currMemberValue; // currently / previously processed key member dot-notation paths; and current value
 
     // Define custom ANTLR listener.
     class Listener extends CompositeEntityFormatListener {
@@ -152,7 +152,7 @@ function createCompositeTitle (entity, template, reflector) {
         }
 
         /**
-         * 'no' rule processor that handles [currMemberName, currMemberValue] determination (current / previous key member dot-notation names; and current value's string representation).
+         * 'no' rule processor that handles [currMemberPath, currMemberValue] determination (current / previous key member dot-notation paths; and current value's string representation).
          */
         exitNo (ctx) {
             // Function to construct dot-notation path to a key member and its value's string representation.
@@ -169,10 +169,10 @@ function createCompositeTitle (entity, template, reflector) {
                     return constructPathAndValue(value.get(nameRoot), numbersTail, acc === '' ? nameRoot : acc + '.' + nameRoot);
                 }
             };
-            if (currMemberName) {
-                prevMemberName = currMemberName;
+            if (currMemberPath) {
+                prevMemberPath = currMemberPath;
             }
-            [currMemberName, currMemberValue] = constructPathAndValue(entity, ctx.numbers, '' /* acc */);
+            [currMemberPath, currMemberValue] = constructPathAndValue(entity, ctx.numbers, '' /* acc */);
         }
 
         /**
@@ -181,10 +181,10 @@ function createCompositeTitle (entity, template, reflector) {
         exitTvPart (ctx) {
             if (currMemberValue) {
                 const currMember = {};
-                if (prevMemberName) {
+                if (prevMemberPath) {
                     currMember.separator = ' ';
                 }
-                currMember.title = entity.type().prop(currMemberName).title();
+                currMember.title = entity.type().prop(currMemberPath).title();
                 currMember.value = currMemberValue;
                 members.push(currMember);
             }
@@ -196,7 +196,7 @@ function createCompositeTitle (entity, template, reflector) {
         exitVPart (ctx) {
             if (currMemberValue) {
                 const currMember = {};
-                const separator = determineSeparator(prevMemberName, currMemberName, entity, reflector);
+                const separator = determineSeparator(prevMemberPath, currMemberPath, entity, reflector);
                 if (separator) {
                     currMember.separator = separator;
                 }
