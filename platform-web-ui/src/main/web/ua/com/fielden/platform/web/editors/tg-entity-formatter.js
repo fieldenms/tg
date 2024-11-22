@@ -88,7 +88,6 @@ function determineSeparator (prevMemberPath, currMemberPath, entity, reflector) 
         };
         // Function to get penult property name for 'prop'; including '' (aka root) for non-dot-notated ones.
         const penultPropOf = prop => reflector.isDotNotated(prop) ? prop.substring(0, prop.lastIndexOf('.')) : '';
-        debugger;
         return entity.get(commonPrefix(penultPropOf(currMemberPath), penultPropOf(prevMemberPath), '')).type().compositeKeySeparator();
     }
 };
