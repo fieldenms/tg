@@ -190,8 +190,10 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     }
 
     _resetHeight(e) {
-        //TODO implement
-        console.log("Height was reset");
+        if (e.detail.sourceEvent.detail && e.detail.sourceEvent.detail === 2) {
+            localStorage.removeItem(this._generateKey());
+            this.$.input.height = this.height;
+        }
     }
 
     _saveHeight(height) {
