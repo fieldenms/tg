@@ -1,6 +1,14 @@
 package ua.com.fielden.platform.entity.validation.custom;
 
-import static java.lang.String.format;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+
+import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.Set;
+
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
@@ -8,15 +16,6 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-
-import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.Set;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 
 /**
  * Identifies activatable dependencies for an entity of the specified type.
@@ -40,10 +39,6 @@ public class DomainEntityDependencies {
         }
     }
 
-    public Set<DomainEntityDependency> getDependencies() {
-        return dependencies;
-    }
-
     public Set<DomainEntityDependency> getActivatableDependencies() {
         return dependencies.stream().filter(d -> d.shouldBeCheckedDuringDeactivation && !(automaticallyDeactivatedDependencies.contains(d.entityType) && d.belongsToEntityKey)).collect(toSet());
     }
@@ -56,6 +51,8 @@ public class DomainEntityDependencies {
      * A convenient struct to represent a single property that is an activatable dependency.
      */
     public class DomainEntityDependency {
+        public static final String INFO_ENTITY_DEPENDENCIES = "Entity [%s] has dependency in entity [%s] as property [%s], checked during deactivation [%s], belongs to entity key [%s].";
+
         public final Class<? extends AbstractEntity<?>> entityType;
         public final String entityTitle;
         public final String propName;
@@ -71,13 +68,13 @@ public class DomainEntityDependencies {
             this.belongsToEntityKey = getKeyMembers(entityType).contains(propField);
             
             final SkipEntityExistsValidation seevAnnotation = propField.getAnnotation(SkipEntityExistsValidation.class);
-            final boolean skipActiveOnly = seevAnnotation != null ? seevAnnotation.skipActiveOnly() : false;        
+            final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
             this.shouldBeCheckedDuringDeactivation = isActivatableEntityType(entityType) && isNotSpecialActivatableToBeSkipped(propField) && !skipActiveOnly;
         }
         
         @Override
         public String toString() {
-            return format("Entity [%s] has dependency in entity [%s] as property [%s], checked during deactivation [%s], belongs to entity key [%s].", DomainEntityDependencies.this.entityType.getName(), entityType.getName(), propName, shouldBeCheckedDuringDeactivation, belongsToEntityKey);
+            return INFO_ENTITY_DEPENDENCIES.formatted(DomainEntityDependencies.this.entityType.getName(), entityType.getName(), propName, shouldBeCheckedDuringDeactivation, belongsToEntityKey);
         }
     }
 }

@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.validation;
 import com.google.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -44,12 +44,11 @@ import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 
 
 /**
- * A validator for property <code>active</code> on class {@link ActivatableAbstractEntity} to prevent deactivation of entities with active dependencies.
+ * A validator for property {@code active} on class {@link ActivatableAbstractEntity} to prevent deactivation of entities with active dependencies.
  *
  * @author TG Team
  *
  */
-
 public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Boolean> {
     private static final Logger LOGGER = getLogger(ActivePropertyValidator.class);
     private static final String PAD_STR = "\u00A0";
@@ -58,12 +57,10 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     public static final String INFO_DEPENDENCY = "<tt>%s%s\u00A0%s</tt>";
     public static final String ERR_INACTIVE_REFERENCES = "Property [%s] in %s [%s] references inactive %s [%s].";
 
-    private final ICompanionObjectFinder coFinder;   
     private final IApplicationDomainProvider applicationDomainProvider;
 
     @Inject
     public ActivePropertyValidator(final ICompanionObjectFinder coFinder, final IApplicationDomainProvider applicationDomainProvider) {
-        this.coFinder = coFinder;
         this.applicationDomainProvider = applicationDomainProvider;
     }
 
@@ -74,7 +71,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         // A persisted entity is being deactivated, but it may still be referenced.
         if (!newValue && entity.isPersisted()) {
             // Check refCount... it could potentially be stale...
-            final IEntityDao<?> co = coFinder.find(entity.getType());
+            final IEntityReader<?> co = co(entity.getType());
             final int count;
             if (!co.isStale(entity.getId(), entity.getVersion())) {
                 count = entity.getRefCount();
