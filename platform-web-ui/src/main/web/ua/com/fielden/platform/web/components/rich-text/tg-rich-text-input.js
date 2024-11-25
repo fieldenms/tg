@@ -187,7 +187,10 @@ function mouseDownHandler(e) {
             shortPress = false;
             setTimeout( () => {runLinkIfPossible.bind(this)(el)}, 1);
         }, 1000);
-        tearDownEvent(e);
+        //This prevents selection of node and making it draggable
+        if (e.button === 0 && (e.ctrlKey ||  e.metaKey)) {
+            tearDownEvent(e);
+        }
     }
 }
 
@@ -203,7 +206,6 @@ function mouseUpHandler(e) {
         longPress = false;
         shortPress = false;
         mouseTimer = null;
-        tearDownEvent(e);
     }
 }
 
@@ -597,7 +599,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         //Add event listeners to make link clickable and with proper cursor
         this._getEditableContent().addEventListener("mousedown", mouseDownHandler.bind(this), true);
         this._getEditableContent().addEventListener("mouseup", mouseUpHandler.bind(this));
-        this._getEditableContent().addEventListener("touchstart", mouseDownHandler.bind(this), true);
+        this._getEditableContent().addEventListener("touchstart", mouseDownHandler.bind(this));
         this._getEditableContent().addEventListener("touchend", mouseUpHandler.bind(this));
         //Add key down to prevent tab key on list
         this._getEditableContent().addEventListener("keydown", preventListIdentation.bind(this), true);
