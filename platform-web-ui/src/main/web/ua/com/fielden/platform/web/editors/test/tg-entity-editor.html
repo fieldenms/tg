@@ -150,6 +150,11 @@
             })();
 
             (() => {
+                const target = '#1.2vs#2v', result = 'Electrical Equipment Batteries:Lithium-Ion';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
                 const target = '#1.2v#2.1v', result = 'Electrical Equipment Batteries';
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
             })();
@@ -171,6 +176,21 @@
 
             (() => {
                 const target = '#2.2v#1.2v#2.1v', result = 'Lithium-Ion Electrical Equipment Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2vs#1.2v#2.1v', result = 'Lithium-Ion Electrical Equipment Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2vs#1.2vs#2.1v', result = 'Lithium-Ion Electrical Equipment Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2v#1.2vs#2.1v', result = 'Lithium-Ion Electrical Equipment Batteries';
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
             })();
 
@@ -261,6 +281,11 @@
             })();
 
             (() => {
+                const target = '#1.2vs#2v', result = 'Electrical Equipment';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
                 const target = '#1.2v#2.1v', result = 'Electrical Equipment';
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
             })();
@@ -285,6 +310,20 @@
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
             })();
 
+            (() => {
+                const target = '#2.2vs#1.2v#2.1v', result = 'Electrical Equipment';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2vs#1.2vs#2.1v', result = 'Electrical Equipment';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2v#1.2vs#2.1v', result = 'Electrical Equipment';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
             (() => {
                 const target = '#2.2tv#1.2tv#2.1tv', result = 'Major Component: Electrical Equipment';
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
@@ -372,6 +411,11 @@
             })();
 
             (() => {
+                const target = '#1.2vs#2v', result = 'Batteries:Lead-Acid';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
                 const target = '#1.2v#2.1v', result = 'Batteries';
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
             })();
@@ -396,6 +440,20 @@
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
             })();
 
+            (() => {
+                const target = '#2.2vs#1.2v#2.1v', result = 'Lead-Acid:Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2vs#1.2vs#2.1v', result = 'Lead-Acid:Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
+
+            (() => {
+                const target = '#2.2v#1.2vs#2.1v', result = 'Lead-Acid:Batteries';
+                test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
+            })();
             (() => {
                 const target = '#2.2tv#1.2tv#2.1tv', result = 'Type: Lead-Acid Minor Component: Batteries';
                 test(`[${target}] to [${result}]`, done => correctlyConverts(target, result, done));
