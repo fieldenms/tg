@@ -199,6 +199,12 @@ public class ClassesRetriever {
      * @throws ClassNotFoundException
      */
     private static List<Class<?>> getFromDirectory(final File directory, final String packageName, final Predicate<Class<?>> typePredicate) throws ClassNotFoundException {
+        class $ {
+            static String joinNames(final String a, final String b) {
+                return a.isEmpty() ? b : a + '.' + b;
+            }
+        }
+
         final List<Class<?>> classes = new ArrayList<>();
         final List<Pair<File, String>> directories = new ArrayList<>();
         directories.add(new Pair<File, String>(directory, packageName));
@@ -207,13 +213,13 @@ public class ClassesRetriever {
             if (nextDirectory.getKey().exists()) {
                 for (final File file : nextDirectory.getKey().listFiles()) {
                     if (file.getName().endsWith(".class")) {
-                        final String name = nextDirectory.getValue() + '.' + stripFilenameExtension(file.getName());
+                        final String name = $.joinNames(nextDirectory.getValue(), stripFilenameExtension(file.getName()));
                         final Class<?> clazz = URL_CLASS_LOADER.loadClass(name);
                         if (typePredicate == null || typePredicate.test(clazz)) {
                             classes.add(clazz);
                         }
                     } else if (file.isDirectory() && hasNoSpaces(file.getName())) {
-                        directories.add(new Pair<File, String>(file, nextDirectory.getValue() + '.' + file.getName()));
+                        directories.add(new Pair<File, String>(file, $.joinNames(nextDirectory.getValue(), file.getName())));
                     }
                 }
             }
@@ -236,13 +242,14 @@ public class ClassesRetriever {
      * Returns all classes in the package and it's sub packages from the *.jar archive according to condition specified by {@code typePredicate}.
      *
      * @param jar
-     * @param packageName
+     * @param packagePath
      * @param typePredicate
      * @return
      * @throws ClassNotFoundException
      * @throws IOException
      */
-    private static List<Class<?>> getFromJarFile(final String jar, final String packageName, final Predicate<Class<?>> typePredicate) throws ClassNotFoundException, IOException {
+    private static List<Class<?>> getFromJarFile(final String jar, final String packagePath, final Predicate<Class<?>> typePredicate) throws ClassNotFoundException, IOException {
+        final String packagePrefix = packagePath.isEmpty() ? "" : packagePath + "/";
         final List<Class<?>> classes = new ArrayList<>();
         try (final JarInputStream jarFile = new JarInputStream(new FileInputStream(jar))) {
             JarEntry jarEntry;
@@ -252,7 +259,7 @@ public class ClassesRetriever {
                     String className = jarEntry.getName();
                     if (className.endsWith(".class")) {
                         className = stripFilenameExtension(className);
-                        if (className.startsWith(packageName + "/")) {
+                        if (className.startsWith(packagePrefix)) {
                             final Class<?> clazz = URL_CLASS_LOADER.loadClass(className.replace('/', '.'));
                             if (typePredicate != null && typePredicate.test(clazz)) {
                                 classes.add(clazz);
