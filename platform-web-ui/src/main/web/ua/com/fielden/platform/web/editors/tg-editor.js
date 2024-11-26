@@ -418,7 +418,8 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
              */
             _refreshCycleStarted: {
                 type: Boolean, 
-                value: false
+                value: false,
+                observer: '_refreshCycleStartedChanged'
             },
             
             /**
@@ -723,7 +724,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                     newEditedProps[prop] = prevEditedProps[prop];
                 }
             }
-            if (!this.reflector().equalsEx(this._editingValue, _originalEditingValue)) {
+            if (!this._equalToOriginalValue(this._editingValue, _originalEditingValue)) {
                 newEditedProps[this.propertyName] = true;
             } else {
                 delete newEditedProps[this.propertyName];
@@ -732,7 +733,13 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
             // if ('some_name' === this.propertyName) { console.error('_identifyModification: prop [', this.propertyName, '] originalEditingValue = [', _originalEditingValue, '] editingValue = [', _editingValue, '] newEditedProps [', newEditedProps, ']'); }
         }
     }
-    
+
+    _equalToOriginalValue (_editingValue, _originalEditingValue) {
+        return this.reflector().equalsEx(_editingValue, _originalEditingValue);
+    }
+
+    _refreshCycleStartedChanged (newValue, oldValue) {}
+
     /**
      * Extracts 'original' version of editing value taking into account the erroneous properties.
      *

@@ -97,6 +97,11 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
                     return this._handleCopy.bind(this);
                 }
             },
+
+            _transformedOriginalEditingValue: {
+                type: String,
+                value: null
+            }
         }
     }
 
@@ -224,6 +229,29 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         }
         tearDownEvent(event);
     }
+
+    _entityChanged (newValue, oldValue) {
+        this._transformedOriginalEditingValue = null;
+        super._entityChanged(newValue, oldValue);
+    }
+
+    _refreshCycleStartedChanged (newValue, oldValue) {
+        if (newValue === false && oldValue === true && this._transformedOriginalEditingValue === null) {
+            this._transformedOriginalEditingValue = this._editingValue;
+        }
+    }
+
+//    _editingValueChanged (newValue, oldValue) {
+//        if (this._refreshCycleStarted === true && this._transformedOriginalEditingValue === null) {
+//            this._transformedOriginalEditingValue = newValue;
+//        }
+//        super._editingValueChanged(newValue, oldValue);
+//    }
+
+    _equalToOriginalValue (_editingValue, _originalEditingValue) {
+        return this.reflector().equalsEx(_editingValue, this._transformedOriginalEditingValue);
+    }
+
 }
 
 customElements.define('tg-rich-text-editor', TgRichTextEditor);
