@@ -4,8 +4,10 @@ import com.google.inject.Injector;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test_entities.Entity;
+import ua.com.fielden.platform.types.RichText;
 
 import java.util.List;
 import java.util.Set;
@@ -148,6 +150,17 @@ public class PojoValueMatcherTest {
         assertEquals(entities.get(2), result.get(0));
         assertEquals(entities.get(3), result.get(1));
         assertEquals(entities.get(4), result.get(2));
+    }
+
+    @Test
+    public void search_by_RichText_property_matches_against_core_text() {
+        final var entities = List.of(
+                factory.newByKey(EntityWithRichText.class, "1").setText(RichText.fromHtml("The <b>blue</b> sky")),
+                factory.newByKey(EntityWithRichText.class, "2").setText(RichText.fromHtml("The<br>big<br><p>bang</p>")));
+        final var matcher = new PojoValueMatcher<>(entities, "text", entities.size());
+
+        assertEquals("Incorrect matches.", List.of(entities.get(0)), matcher.findMatches("%blue sky%"));
+        assertEquals("Incorrect matches.", List.of(entities.get(1)), matcher.findMatches("%big bang%"));
     }
 
 }

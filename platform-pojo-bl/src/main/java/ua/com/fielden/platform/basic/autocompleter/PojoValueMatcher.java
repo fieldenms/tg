@@ -3,8 +3,12 @@ package ua.com.fielden.platform.basic.autocompleter;
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.types.RichText;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
@@ -85,9 +89,20 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
         return (pattern, entity) -> {
             return propNamesToMatchBy.stream()
                     .map(entity::get)
-                    .filter(Objects::nonNull)
-                    .anyMatch(value -> pattern.matcher(value.toString().toUpperCase()).find());
+                    .anyMatch(value -> valueMatches(value, pattern));
         };
+    }
+
+    private static boolean valueMatches(final Object value, final Pattern pattern) {
+        if (value == null) {
+            return false;
+        }
+        if (value instanceof RichText richText) {
+            return pattern.matcher(richText.coreText().toUpperCase()).find();
+        }
+        else {
+            return pattern.matcher(value.toString().toUpperCase()).find();
+        }
     }
 
 }
