@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.security.tokens.persistent;
 
-import ua.com.fielden.platform.sample.domain.TgEntityWithRichTextProp;
 import ua.com.fielden.platform.sample.domain.TgNote;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.Template;

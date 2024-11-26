@@ -53,6 +53,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgPerson.class);
         add(TgPersistentEntityWithProperties.class);
         add(TgEntityWithRichTextProp.class);
+        add(TgEntityWithRichTextRef.class);
         add(TgPersistentEntityWithPropertiesAttachment.class);
         add(TgExportFunctionalEntity.class);
         add(TgPersistentCompositeEntity.class);

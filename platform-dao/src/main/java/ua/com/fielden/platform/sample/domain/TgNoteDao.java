@@ -6,7 +6,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.persistent.TgEntityWithRichTextProp_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgNote_CanSave_Token;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -23,7 +23,7 @@ public class TgNoteDao extends CommonEntityDao<TgNote> implements TgNoteCo {
 
     @Override
     @SessionRequired
-    @Authorise(TgEntityWithRichTextProp_CanSave_Token.class)
+    @Authorise(TgNote_CanSave_Token.class)
     public TgNote save(final TgNote entity) {
         return super.save(entity);
     }
