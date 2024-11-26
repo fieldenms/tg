@@ -230,14 +230,16 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         tearDownEvent(event);
     }
 
-    _entityChanged (newValue, oldValue) {
-        this._transformedOriginalEditingValue = null;
-        super._entityChanged(newValue, oldValue);
-    }
+//    _entityChanged (newValue, oldValue) {
+//        this._transformedOriginalEditingValue = null;
+//        super._entityChanged(newValue, oldValue);
+//    }
 
     _refreshCycleStartedChanged (newValue, oldValue) {
-        if (newValue === false && oldValue === true && this._transformedOriginalEditingValue === null) {
-            this._transformedOriginalEditingValue = this._editingValue;
+        if (oldValue === false && newValue === true) { // refreshCycle process started
+            this._transformedOriginalEditingValue = null; // transformed value not yet known -- reset it and wait until refreshCycle will be completed
+        } else if (oldValue === true && newValue === false /*&& this._transformedOriginalEditingValue === null*/) { // refreshCycle process completed
+            this._transformedOriginalEditingValue = this._editingValue; // transformed value is already inside _editingValue
         }
     }
 
