@@ -1,16 +1,6 @@
 package ua.com.fielden.platform.entity.activatable;
 
-import static java.util.stream.Collectors.toSet;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -22,24 +12,29 @@ import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
 
+import java.util.List;
+
+import static java.util.stream.Collectors.toSet;
+import static org.junit.Assert.*;
+
 public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase {
 
     @Test
-    public void active_person_with_active_authoriser_and_originator_deactivatable_dependencies_and_one_tangenital_dependeny_should_have_one_ref_count() {
+    public void active_person_with_active_authoriser_and_originator_deactivatable_dependencies_and_one_tangenital_dependency_has_one_ref_count() {
         final TgPerson person = co$(TgPerson.class).findByKey("P1");
 
         assertEquals(Integer.valueOf(1), person.getRefCount());
     }
 
     @Test
-    public void active_person_with_acitve_authoriser_and_inactive_originator_deactivatable_dependencies_should_have_zero_ref_count() {
+    public void active_person_with_active_authoriser_and_inactive_originator_deactivatable_dependencies_has_zero_ref_count() {
         final TgPerson person = co$(TgPerson.class).findByKey("P2");
 
         assertEquals(Integer.valueOf(0), person.getRefCount());
     }
 
     @Test
-    public void deactivating_authoriser_that_references_active_person_should_not_change_its_ref_count() {
+    public void deactivating_authoriser_that_references_active_person_does_not_change_its_ref_count() {
         final TgPerson person = co$(TgPerson.class).findByKey("P1");
         assertEquals(Integer.valueOf(1), person.getRefCount());
         final TgAuthoriser auth = co$(TgAuthoriser.class).findByKey(person);
@@ -74,7 +69,7 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivation_of_person_with_only_acitve_authoriser_and_originator_deactivatable_dependencies_should_be_permitted() {
+    public void deactivation_of_person_with_only_active_authoriser_and_originator_deactivatable_dependencies_is_permitted() {
         final TgPerson person = co$(TgPerson.class).findByKey("P2");
 
         final TgPerson savedPerson = save(person.setActive(false));
@@ -82,18 +77,19 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivation_of_person_with_deactivatable_dependencies_that_is_not_part_of_a_key_should_be_prevented() {
+    public void deactivation_of_person_with_deactivatable_dependencies_that_is_not_part_of_a_key_is_prevented() {
         final TgPerson person = co$(TgPerson.class).findByKey("P1");
 
         try {
             save(person.setActive(false));
             fail();
         } catch (final Result ex) {
+            assertTrue(ex.getMessage().startsWith("Tg Person [P1] has 1 active dependency:"));
         }
     }
 
     @Test
-    public void deactivating_originator_that_references_two_active_persons_should_not_change_ref_count_for_one_where_it_is_dependable_and_should_change_for_the_other() {
+    public void deactivating_originator_that_references_two_active_persons_should_not_change_ref_count_for_one_where_it_is_dependable_and_changes_for_the_other() {
         final TgPerson p3 = co$(TgPerson.class).findByKey("P3");
         assertEquals(Integer.valueOf(0), p3.getRefCount());
         final TgOriginator orig = co$(TgOriginator.class).findByKey(p3);
@@ -105,7 +101,7 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void activating_originator_that_references_two_active_persons_should_not_change_ref_count_for_one_where_it_is_dependable_and_should_change_for_the_other() {
+    public void activating_originator_that_references_two_active_persons_does_not_change_ref_count_for_one_where_it_is_dependable_and_does_change_for_the_other() {
         final TgPerson p2 = co$(TgPerson.class).findByKey("P2");
         final TgOriginator orig = co$(TgOriginator.class).findByKey(p2);
 
@@ -116,7 +112,7 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivation_of_person_p3_with_originators_assistant_as_p1_should_decrement_p1s_ref_count() {
+    public void deactivation_of_person_p3_with_originators_assistant_as_p1_does_decrement_p1s_ref_count() {
         final TgPerson p1 = co$(TgPerson.class).findByKey("P1");
         assertEquals("Test pre condition should validate", Integer.valueOf(1), p1.getRefCount());
         final TgPerson p3 = save(co$(TgPerson.class).findByKey("P3").setActive(false));
@@ -126,7 +122,7 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void activation_of_inactive_authoriser_should_increase_ref_count_for_referenced_category_and_decrease_it_upon_automatic_deactivation() {
+    public void activation_of_inactive_authoriser_increases_ref_count_for_referenced_category_and_decreases_it_upon_automatic_deactivation() {
         final TgPerson p3 = co$(TgPerson.class).findByKey("P3");
         final TgAuthoriser auth = co$(TgAuthoriser.class).findByKey(p3);
         assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey("CAT1").getRefCount());
