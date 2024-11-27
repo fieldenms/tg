@@ -12,8 +12,5 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public interface TgEntityWithRichTextRefCo extends IEntityDao<TgEntityWithRichTextRef> {
 
     static final IFetchProvider<TgEntityWithRichTextRef> FETCH_PROVIDER = EntityUtils.fetch(TgEntityWithRichTextRef.class).with(
-            // TODO uncomment the following line and specify properties required for UI. Then remove the line after it.
-            // MetaModels.TgEntityWithRichTextRef_.key(), MetaModels.TgEntityWithRichTextRef_.desc());
-            "Please specify properties required for UI");
-
+            "key", "desc", "richTextRef");
 }
