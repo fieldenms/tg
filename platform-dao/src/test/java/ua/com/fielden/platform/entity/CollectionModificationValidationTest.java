@@ -374,12 +374,14 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             createTokenInfo.apply(TgGeneratedEntityMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentCompositeEntityMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentEntityWithPropertiesMaster_CanOpen_Token.class),
-
             createTokenInfo.apply(TgEntityWithRichTextProp_CanRead_Token.class),
             createTokenInfo.apply(TgEntityWithRichTextProp_CanSave_Token.class),
             createTokenInfo.apply(TgEntityWithRichTextProp_CanReadModel_Token.class),
             createTokenInfo.apply(TgEntityWithRichTextPropMaster_CanOpen_Token.class),
-
+            createTokenInfo.apply(TgEntityWithRichTextRef_CanRead_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextRef_CanSave_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextRef_CanReadModel_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextRefMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgNote_CanRead_Token.class),
             createTokenInfo.apply(TgNote_CanSave_Token.class),
             createTokenInfo.apply(TgNote_CanReadModel_Token.class),
