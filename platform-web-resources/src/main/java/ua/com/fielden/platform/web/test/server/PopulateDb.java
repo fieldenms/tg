@@ -274,7 +274,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY3").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY3</p>")).setDesc("rich text desc 3"));
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY4").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY4</p>")).setDesc("rich text desc 4"));
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY5</p>")).setDesc("rich text desc 5"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY6").setRichTextProp(fromHtml("hello world")).setDesc("rich text desc 6"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY6").setRichTextProp(fromHtml("hello world")).setDesc("rich text desc 6")); // deliberate value without paragraph tags to induce Toast UI transformation; used to test SAVE disablement
     }
 
     private void populateGraphQlData() {

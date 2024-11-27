@@ -98,6 +98,16 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
                 }
             },
 
+            /**
+             * Value for originally appearing _editingValue after Toast UI transformations (e.g. 'hello world' => '<p>hello world</p>').
+             * This value is used to compare current '_editingValue' with already transformed one -- not to show SAVE enabled for such purely editor-induced transformations.
+             * This will affect 'identifyModification' logic and prevent making RichText editor '@editedProps'.
+             *
+             * Note, that binding value in '_currBindingEntity' and derived 'modifiedPropsHolder' ('_extractModifiedPropertiesHolder') are not affected in any way.
+             * This means that binding values will be { ..., fomattedText: 'hello world' } for both '_currBindingEntity' and '_originalBindingEntity' and
+             *   thus leaving them unchanged in terms of '_bindingEntityModified' and subsequent '_bindingEntityNotPersistentOrNotPersistedOrModified'.
+             * Also this means that no change will be made on server against RichText property with untransformed value.
+             */
             _transformedOriginalEditingValue: {
                 type: String,
                 value: null
@@ -230,26 +240,33 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         tearDownEvent(event);
     }
 
-//    _entityChanged (newValue, oldValue) {
-//        this._transformedOriginalEditingValue = null;
-//        super._entityChanged(newValue, oldValue);
-//    }
-
+    /**
+     * Initialises '_transformedOriginalEditingValue' in cases where '_editingValue' kept unchanged, i.e. '_editingValueChanged' not actually invoked.
+     */
     _refreshCycleStartedChanged (newValue, oldValue) {
-        if (oldValue === false && newValue === true) { // refreshCycle process started
-            this._transformedOriginalEditingValue = null; // transformed value not yet known -- reset it and wait until refreshCycle will be completed
-        } else if (oldValue === true && newValue === false /*&& this._transformedOriginalEditingValue === null*/) { // refreshCycle process completed
+        if (oldValue === false && newValue === true) { // refreshCycle process just started
+            this._transformedOriginalEditingValue = null; // transformed value not yet known -- reset it and wait until refreshCycle will be completed (especially important because of Entity Master caching)
+        } else if (oldValue === true && newValue === false) { // refreshCycle process just completed
             this._transformedOriginalEditingValue = this._editingValue; // transformed value is already inside _editingValue
         }
     }
 
+    /**
+     * Initialises '_transformedOriginalEditingValue' with '_editingValue'.
+     *  Note that there are two '_editingValueChanged' calls. Both of them are with already transformed value.
+     *  First call is triggered by 'tg-rich-text-input._htmlContentChanged' during 'this.value = htmlText;'.
+     *  The second are from 'this._editingValue = newEditingValue;' in `tg-editor._entityChanged`.
+     */
     _editingValueChanged (newValue, oldValue) {
-        if (this._refreshCycleStarted === true /*&& this._transformedOriginalEditingValue === null*/) {
+        if (this._refreshCycleStarted === true) {
             this._transformedOriginalEditingValue = newValue;
         }
         super._editingValueChanged(newValue, oldValue);
     }
 
+    /**
+     * Compares current '_editingValue' with already transformed by Toast UI original editing value. See 'identifyModification'.
+     */
     _equalToOriginalValue (_editingValue, _originalEditingValue) {
         return this.reflector().equalsEx(_editingValue, this._transformedOriginalEditingValue === null ? _originalEditingValue : this._transformedOriginalEditingValue);
     }

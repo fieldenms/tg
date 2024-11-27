@@ -734,10 +734,19 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
         }
     }
 
+    /**
+     * Returns 'true' in case if '_editingValue' is equal to original during typing (no validation request phase).
+     *   This method may be overridden in case if some fine tuning for SAVE disablement logic is needed.
+     *   E.g. some third party component (Toast UI in Rich Text editor) may provide some transformations to _editingValue ('hello world' => '<p>hello world</p>'), which we consider insignificant and don't want to show to the user.
+     */
     _equalToOriginalValue (_editingValue, _originalEditingValue) {
         return this.reflector().equalsEx(_editingValue, _originalEditingValue);
     }
 
+    /**
+     * Observer for 'refresh cycle' stage changes.
+     *   This method may be overridden in case if some fine tuning is required to be performed when 'refresh cycle' started / completed.
+     */
     _refreshCycleStartedChanged (newValue, oldValue) {}
 
     /**
