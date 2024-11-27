@@ -19,6 +19,7 @@ import ua.com.fielden.platform.utils.Pair;
 @MapEntityTo
 @KeyTitle("Rich Text Key")
 @DescTitle("Rich Text Description")
+@DisplayDescription
 public class TgEntityWithRichTextProp extends AbstractPersistentEntity<String> {
 
     private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TgEntityWithRichTextProp.class);
