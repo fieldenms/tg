@@ -227,12 +227,19 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
      // @Override
     _equalToOriginalValue (_editingValue, _originalEditingValue) {
-        // _editingValue is obtained from the ToastUi editor.
-        // _originalEditingValue may be the value retrieved from a database.
-        // Even without the user changing anything, _editingValue may be different from the original one due to being
-        // transformed by the ToastUI editor.
-        // Therefore, the original value has to be transformed as well, before comparison.
-        return this.reflector().equalsEx(_editingValue, this.$.input.convertToEditorValue(_originalEditingValue));
+        // Before comparing values, coerce them to a form as seen by the editor.
+        // * For the original value this is strictly necessary because it may be a value just received from the server,
+        //   which may be seen differently by the editor (e.g., received "hello" but the editor sees "<p>hello</p>").
+        // * For _editingValue this is not strictly necessary because it is assumed that it is always in an already coerced state.
+        //   However, if this assumption is violated, then we risk getting stuck in a state where this value is considered
+        //   to be different from the original, even without the user changing anything.
+        //   Therefore, we also coerce this value to protect against such cases.
+        //   And in doing so we bear a lesser risk - failing to recognise very specific classes of user changes until the user tabs off
+        //   (when a user tabs off, all properties are compared to their true original values).
+        //   For example, if the ToastUI editor was not configured to preserve whitespace, then a situation describes by this lesser risk could occur.
+        //   In other words, under current assumptions the result of coercing _editingValue should be equal to _editingValue.
+        return this.reflector().equalsEx(this.$.input.convertToEditorValue(_editingValue),
+                                         this.$.input.convertToEditorValue(_originalEditingValue));
     }
 
     _asTransformed (value) { return value; }
