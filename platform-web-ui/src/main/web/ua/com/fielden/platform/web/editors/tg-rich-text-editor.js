@@ -242,8 +242,6 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
                                          this.$.input.convertToEditorValue(_originalEditingValue));
     }
 
-    _asTransformed (value) { return value; }
-
 }
 
 customElements.define('tg-rich-text-editor', TgRichTextEditor);
