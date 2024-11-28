@@ -489,13 +489,12 @@ const template = html`
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, &#x2318;+Z" on-down="_stopMouseEvent" on-tap="_undo"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, &#x2318;+Y" on-down="_stopMouseEvent" on-tap="_redo"></iron-icon>
     </tg-responsive-toolbar>
-    <div id="editor"></div>
-    <div hidden id="hiddenEditor"></div>`;
+    <div id="editor"></div>`;
 
 // ***** Primary and hidden ToastUI editors *****
 //
 // <div id="editor"> is the primary ToastUI editor.
-// <div id="hiddenEditor"> is the hidden ToastUI editor. It is crucial that it stays hidden.
+// The hidden ToastUI editor is associated with a dynamically created HTML element.
 //
 // The hidden editor has a single purpose - to enable the API that, given a value, provides that value "as seen by the ToastUI editor".
 // This is required because a ToastUI editor performs internal transformations on values that are inserted into it.
@@ -637,8 +636,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         // to achieve equivalence of HTML rendering in both editors.
         const hiddenToastUiEditorOptions = {
             // ToastUI editor must be attached to some HTML element.
-            // It is crucial that the chosen element is hidden.
-            el: this.$.hiddenEditor,
+            el: document.createElement("div"),
             initialEditType: toastUiEditorOptions.initialEditType,
             // Plugins are able to affect HTML rendering.
             plugins: toastUiEditorOptions.plugins,
