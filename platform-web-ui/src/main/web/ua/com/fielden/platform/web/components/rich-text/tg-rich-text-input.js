@@ -645,13 +645,24 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             usageStatistics: false,
         };
 
+        // Additional configuration for the ToastUI editor.
+        // It must be applied to both primary and hidden editors.
+        function configureToastUiEditor(editor) {
+            // Preserve whitespace after loading HTML into the editor.
+            editor.wwEditor.schema.cached.domParser.rules.forEach(r => r.preserveWhitespace = "full");
+        }
+
         // Create the primary editor.
         this._editor = new toastui.Editor(toastUiEditorOptions);
+        configureToastUiEditor(this._editor);
+
+        // Create the hidden editor.
+        this._hiddenEditor = new toastui.Editor(hiddenToastUiEditorOptions);
+        configureToastUiEditor(this._hiddenEditor);
+
         //trigger tooltips manually
         this.triggerManual = true;
-        //The following code is nedded to preserve whitespaces after loading html into editor.
-        this._editor.wwEditor.schema.cached.domParser.rules.forEach(r => r.preserveWhitespace = "full");
-        //Make editable container not tabbable. It will remain focusable with mouse pointer. 
+        //Make editable container not tabbable. It will remain focusable with mouse pointer.
         this._getEditableContent().setAttribute('tabindex', '-1');
         //Add event listeners for tooltips on editor
         this._getEditableContent().addEventListener("mouseover", mouseOverHandler.bind(this));
@@ -683,9 +694,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             prevKeyBindingHandler(keyBindings, event);
         };
         this.addEventListener('keydown', focusOnKeyDown.bind(this));
-
-        // Create the hidden editor.
-        this._hiddenEditor = new toastui.Editor(hiddenToastUiEditorOptions);
     }
 
     connectedCallback () {
