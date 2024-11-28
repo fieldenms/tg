@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
@@ -69,12 +70,18 @@ public class DomainEntitiesDependenciesUtils {
      * As a result, each entity type (call it a target entity) gets associated with an instance of [DomainEntityDependencies],
      * which contains a set of [DomainEntityDependency], representing pairs of entity types and their properties of the target entity type.
      *
-     * @param domainEntityTypes  a collection of domain entities to be analysed; usually a complete domain is expected;
-     * @return  a map between persistent entity types and their persistent dependencies.
+     * @param domainEntityTypes
+     *          A collection of domain entities to be analysed; usually a complete domain is expected;
+     * @param entityTypePredicate
+     *          An inclusive predicate to identify types that should be considered for dependency analysis.
+     * @return  A map between persistent entity types and their persistent dependencies.
      */
-    public static Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> entityDependencyMap(final Collection<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
+    public static Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> entityDependencyMap(
+            final Collection<Class<? extends AbstractEntity<?>>> domainEntityTypes,
+            final Predicate<Class<? extends AbstractEntity<?>>> entityTypePredicate)
+    {
         final var map = new HashMap<Class<? extends AbstractEntity<?>>, DomainEntityDependencies>();
-        domainEntityTypes.stream().filter(EntityUtils::isPersistedEntityType)
+        domainEntityTypes.stream().filter(entityTypePredicate)
         .forEach(entType -> {
             streamRealProperties(entType, MapTo.class).filter(field -> EntityUtils.isPersistedEntityType(field.getType())).forEach(field -> {
                 if (!map.containsKey(field.getType())) {
@@ -96,4 +103,12 @@ public class DomainEntitiesDependenciesUtils {
 
         return map;
     }
+
+    /**
+     * Equivalent to {@link #entityDependencyMap(Collection, Predicate)}, where {@code predicate} simply tests that entity is persistent.
+     */
+    public static Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> entityDependencyMap(final Collection<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
+        return entityDependencyMap(domainEntityTypes, EntityUtils::isPersistedEntityType);
+    }
+
 }
