@@ -287,6 +287,15 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY3").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY3</p>")).setDesc("rich text desc 3"));
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY4").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY4</p>")).setDesc("rich text desc 4"));
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY5</p>")).setDesc("rich text desc 5"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY6")
+                     .setRichTextProp(fromHtml("hello world"))
+                     .setDesc("Rich text that is expected to be internally transformed by the editor."));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY7")
+                     .setRichTextProp(fromHtml(""))
+                     .setDesc("Empty rich text."));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY8")
+                     .setRichTextProp(fromHtml(" \n \t   "))
+                     .setDesc("Non-empty, blank rich text."));
     }
 
     private void populateGraphQlData() {
