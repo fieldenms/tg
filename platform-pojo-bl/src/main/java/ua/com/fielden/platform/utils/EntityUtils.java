@@ -617,7 +617,7 @@ public class EntityUtils {
     public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
         if (isEntityType(keyType)) {
-            return isPersistedEntityType(keyType);
+            return isPersistentEntityType(keyType);
         } else {
             return false;
         }
@@ -635,25 +635,33 @@ public class EntityUtils {
 
     /**
      * Determines whether the provided entity type represents a persistent entity that can be stored in a database.
-     *
-     * @return
      */
-    public static boolean isPersistedEntityType(final Class<?> type) {
+    public static boolean isPersistentEntityType(final Class<?> type) {
         if (type == null) {
             return false;
         } else {
             try {
                 return persistentTypes.get(type, () ->
                         isEntityType(type)
-                        && !isUnionEntityType(type)
-                        && !isSyntheticEntityType(type)
-                        && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null);
+                                && !isUnionEntityType(type)
+                                && !isSyntheticEntityType(type)
+                                && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null);
             } catch (final Exception ex) {
                 final String msg = format("Could not determine persistent nature of entity type [%s].", type.getSimpleName());
                 logger.error(msg, ex);
                 throw new ReflectionException(msg, ex);
             }
         }
+    }
+
+    /**
+     * This was the original method, which had a typo in its name – `persisted` instead of `persistent`.
+     * Method {@link #isPersistentEntityType(Class)} should be used instead.
+     * In time, this method will be removed.
+     */
+    @Deprecated(forRemoval = true, since = "1.7.0")
+    public static boolean isPersistedEntityType(final Class<?> type) {
+        return isPersistentEntityType(type);
     }
 
     /**
@@ -666,7 +674,7 @@ public class EntityUtils {
     public static Optional<Class<? extends AbstractEntity<?>>> findFirstPersistentTypeInHierarchyFor(final Class<? extends AbstractEntity<?>> entityType) {
         Class<?> type = entityType;
         while (type != AbstractEntity.class) {
-            if (isPersistedEntityType(type)) {
+            if (isPersistentEntityType(type)) {
                 return Optional.of((Class<? extends AbstractEntity<?>>) type);
             }
             type = type.getSuperclass();
@@ -736,7 +744,7 @@ public class EntityUtils {
         // Due to the fact that a generated type can be based on a generated that is based on... etc., type hierarchy traversal is required.
         Class<?> superType = type.getSuperclass();
         while (superType != AbstractEntity.class) {
-            if (isPersistedEntityType(superType)) {
+            if (isPersistentEntityType(superType)) {
                 return true;
             }
             superType = superType.getSuperclass();
@@ -791,7 +799,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isIntrospectionAllowed(final Class<? extends AbstractEntity<?>> type) {
-        return !isIntrospectionDenied(type) && (isSyntheticEntityType(type) || isPersistedEntityType(type));
+        return !isIntrospectionDenied(type) && (isSyntheticEntityType(type) || isPersistentEntityType(type));
     }
 
     /**
@@ -1366,7 +1374,7 @@ public class EntityUtils {
         for (final Field keyMember : getKeyMembers(entityType)) {
             final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER + keyMember.getName()).orElse(keyMember.getName());
             final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(entityType, keyMember.getName());
-            if (!isPersistedEntityType(propType)) {
+            if (!isPersistentEntityType(propType)) {
                 // Let's explicitly expand money types property path with its single subproperty "amount".
                 // This will facilitate the usage of the keyPaths(..) method within KeyPropertyExtractor logic, which in its turn requires explicit "amount" to be specified.
                 final var enhancedPathToSubprop = propType.equals(Money.class) ? pathToSubprop + ".amount" : pathToSubprop;
