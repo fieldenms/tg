@@ -13,11 +13,13 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import static java.lang.Math.max;
 import static java.util.stream.Collectors.joining;
@@ -87,8 +89,11 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             }
             // Otherwise, need to identify active dependencies, preventing deactivation.
             else {
-                // TODO: Optimise by considering only activatable dependencies.
-                final var domainDependency = entityDependencyMap(applicationDomainProvider.entityTypes());
+                // Consider only activatable persistent entities as dependencies.
+                // Hypothetically speaking, every activatable entity is also persistent.
+                // However, this may change in the future, which is why the type's persistence should also be tested.
+                final Predicate<Class<? extends AbstractEntity<?>>> activatableEntityType = EntityUtils::isActivatableEntityType;
+                final var domainDependency = entityDependencyMap(applicationDomainProvider.entityTypes(), activatableEntityType.and(EntityUtils::isPersistentEntityType));
                 // TODO: At the moment deactivatable entities, associated with the current entity are excluded not to count transitive references/dependencies.
                 //       However, it is now required to count such transitive references, which in turn requires recursive analysis of dependencies.
                 //       This is to cater for rare, but possible cases of having deactivatable dependencies on top of deactivatable dependencies.
