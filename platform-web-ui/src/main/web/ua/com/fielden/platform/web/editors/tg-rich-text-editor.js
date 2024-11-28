@@ -224,6 +224,19 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         }
         tearDownEvent(event);
     }
+
+     // @Override
+    _equalToOriginalValue (_editingValue, _originalEditingValue) {
+        // _editingValue is obtained from the ToastUi editor.
+        // _originalEditingValue may be the value retrieved from a database.
+        // Even without the user changing anything, _editingValue may be different from the original one due to being
+        // transformed by the ToastUI editor.
+        // Therefore, the original value has to be transformed as well, before comparison.
+        return this.reflector().equalsEx(_editingValue, this.$.input.convertToEditorValue(_originalEditingValue));
+    }
+
+    _asTransformed (value) { return value; }
+
 }
 
 customElements.define('tg-rich-text-editor', TgRichTextEditor);

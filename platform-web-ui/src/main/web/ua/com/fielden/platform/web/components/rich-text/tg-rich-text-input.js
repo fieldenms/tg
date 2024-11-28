@@ -405,6 +405,26 @@ function handleAcceptEvent(e) {
     }
 }
 
+/**
+ * Returns the specified value as seen by the specified ToastUI editor.
+ * If 'value' is not a string, it is immediately returned.
+ *
+ * The effect of calling this function is that the current value in 'editor` is temporarily replaced by the specified value.
+ * The original value in 'editor' is always restored.
+ */
+function convertToToastUiEditorValue(editor, value) {
+    if (typeof value === "string") {
+        const prevEditorValue = editor.getHTML();
+        editor.setHTML(value);
+        const convertedValue = editor.getHTML();
+        editor.setHTML(prevEditorValue);
+        return convertedValue;
+    }
+    else {
+        return value;
+    }
+}
+
 const template = html`
     <style include='rich-text-enhanced-styles'>
         :host {
@@ -469,7 +489,29 @@ const template = html`
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, &#x2318;+Z" on-down="_stopMouseEvent" on-tap="_undo"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, &#x2318;+Y" on-down="_stopMouseEvent" on-tap="_redo"></iron-icon>
     </tg-responsive-toolbar>
-    <div id="editor"></div>`; 
+    <div id="editor"></div>
+    <div hidden id="hiddenEditor"></div>`;
+
+// ***** Primary and hidden ToastUI editors *****
+//
+// <div id="editor"> is the primary ToastUI editor.
+// <div id="hiddenEditor"> is the hidden ToastUI editor. It is crucial that it stays hidden.
+//
+// The hidden editor has a single purpose - to enable the API that, given a value, provides that value "as seen by the ToastUI editor".
+// This is required because a ToastUI editor performs internal transformations on values that are inserted into it.
+// For example, it was observed that after doing editor.setHTML("hello"), the result of editor.getHTML() is "<p>hello</p>".
+// The value resulting from internal tranformations is required to correctly tell apart changes made by users from those
+// resulting from internal transformations by the editor.
+// The ToastUI library does not provide such an API.
+//
+// The hidden editor is used to implement this API as follows:
+// 1. A given value is inserted into the hidden editor (via setHTML), which causes the hidden editor to interpret it as it sees fit
+//    (e.g., it may add HTML paragraph elements).
+// 2. The hidden editor is asked to give the value back (via getHTML). This gives us the value we just inserted but with
+//    all internal transformations already applied by the editor.
+//
+// The primary editor is not used for this because we want to avoid temporarily changing its contents, which could harm user experience
+// (e.g., by flickering with the temporarily inserted contents).
 
 class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKeysBehavior, TgTooltipBehavior], PolymerElement) {
 
@@ -515,6 +557,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             _fakeSelection: {
                 type: Array,
             },
+
+            _hiddenEditor: Object,
 
             _cancelLinkInsertion: Function,
             _acceptLink: Function,
@@ -567,8 +611,10 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             }
             tearDownEvent(e);
         }.bind(this);
-        // Create editor
-        this._editor = new toastui.Editor({
+
+        // Options for the primary ToastUI editor.
+        // Any changes to these options that affect HTML rendering must be propagated to the options for the hidden ToastUI editor.
+        const toastUiEditorOptions = {
             el: this.$.editor,
             height: this.height,
             minHeight: this.minHeight,
@@ -585,7 +631,24 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             usageStatistics: false,
             toolbarItems: [],
             hideModeSwitch: true
-        });
+        };
+
+        // Options for the hidden ToastUI editor, which must be synchronised with the options for the primary editor
+        // to achieve equivalence of HTML rendering in both editors.
+        const hiddenToastUiEditorOptions = {
+            // ToastUI editor must be attached to some HTML element.
+            // It is crucial that the chosen element is hidden.
+            el: this.$.hiddenEditor,
+            initialEditType: toastUiEditorOptions.initialEditType,
+            // Plugins are able to affect HTML rendering.
+            plugins: toastUiEditorOptions.plugins,
+            // It is not fully understood whether this affects HTML rendering, but let's play on the safe side.
+            linkAttributes: {target: "_blank"},
+            usageStatistics: false,
+        };
+
+        // Create the primary editor.
+        this._editor = new toastui.Editor(toastUiEditorOptions);
         //trigger tooltips manually
         this.triggerManual = true;
         //The following code is nedded to preserve whitespaces after loading html into editor.
@@ -622,6 +685,9 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             prevKeyBindingHandler(keyBindings, event);
         };
         this.addEventListener('keydown', focusOnKeyDown.bind(this));
+
+        // Create the hidden editor.
+        this._hiddenEditor = new toastui.Editor(hiddenToastUiEditorOptions);
     }
 
     connectedCallback () {
@@ -834,6 +900,16 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _getActionStyle() {
         return `width: 18px;height:18px;cursor:pointer;margin-right:8px;color:var(--paper-input-container-color, var(--secondary-text-color));`;
+    }
+
+    /**
+     * Returns the specified value as seen by this editor.
+     * For example, if 'value' is "hello world", the editor may see it as "<p>hello world</p>".
+     *
+     * This function is pure with respect to this editor (i.e., the state of this editor is not affected).
+     */
+    convertToEditorValue(value) {
+        return convertToToastUiEditorValue(this._hiddenEditor, value);
     }
 }
 
