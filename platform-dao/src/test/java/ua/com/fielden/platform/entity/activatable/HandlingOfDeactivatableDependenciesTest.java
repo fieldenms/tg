@@ -84,7 +84,7 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
             save(person.setActive(false));
             fail();
         } catch (final Result ex) {
-            assertTrue(ex.getMessage().startsWith("Tg Person [P1] has 1 active dependency:"));
+            assertTrue(ex.getMessage().startsWith("Tg Person [P1] has 1 active dependency."));
         }
     }
 

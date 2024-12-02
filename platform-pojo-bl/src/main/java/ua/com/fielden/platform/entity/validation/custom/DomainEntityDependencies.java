@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.validation.custom;
 
+import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
@@ -9,7 +10,6 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
@@ -26,7 +26,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 public class DomainEntityDependencies {
     public final Class<? extends AbstractEntity<?>> entityType;
     public final boolean activatable;
-    private final Set<Class<? extends ActivatableAbstractEntity<?>>> automaticallyDeactivatedDependencies = new HashSet<>();
+    private final Set<Class<? extends ActivatableAbstractEntity<?>>> automaticallyDeactivatedDependencies;
     private final Set<DomainEntityDependency> dependencies = new HashSet<>();
 
     public DomainEntityDependencies(final Class<? extends AbstractEntity<?>> entityType) {
@@ -35,12 +35,29 @@ public class DomainEntityDependencies {
 
         if (activatable && entityType.isAnnotationPresent(DeactivatableDependencies.class)) {
             final DeactivatableDependencies annotation = ((Class<? extends ActivatableAbstractEntity<?>>) entityType).getAnnotation(DeactivatableDependencies.class);
-            automaticallyDeactivatedDependencies.addAll(asList(annotation.value()));
+            automaticallyDeactivatedDependencies = ImmutableSet.copyOf(annotation.value());
+        }
+        else {
+            automaticallyDeactivatedDependencies = ImmutableSet.of();
         }
     }
 
+    /**
+     * Returns a subset of activatable dependencies.
+     */
     public Set<DomainEntityDependency> getActivatableDependencies() {
-        return dependencies.stream().filter(d -> d.shouldBeCheckedDuringDeactivation && !(automaticallyDeactivatedDependencies.contains(d.entityType) && d.belongsToEntityKey)).collect(toSet());
+        return dependencies.stream()
+               .filter(dep -> dep.shouldBeCheckedDuringDeactivation && !(automaticallyDeactivatedDependencies.contains(dep.entityType) && dep.belongsToEntityKey))
+               .collect(toSet());
+    }
+
+    /**
+     * Returns a subset of deactivatable dependencies.
+     */
+    public Set<DomainEntityDependency> getDeactivatableDependencies() {
+        return dependencies.stream()
+                .filter(dep -> dep.shouldBeCheckedDuringDeactivation && automaticallyDeactivatedDependencies.contains(dep.entityType))
+                .collect(toSet());
     }
 
     public void addDependency(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
@@ -51,30 +68,61 @@ public class DomainEntityDependencies {
      * A convenient struct to represent a single property that is an activatable dependency.
      */
     public class DomainEntityDependency {
-        public static final String INFO_ENTITY_DEPENDENCIES = "Entity [%s] has dependency in entity [%s] as property [%s], checked during deactivation [%s], belongs to entity key [%s].";
-
         public final Class<? extends AbstractEntity<?>> entityType;
         public final String entityTitle;
         public final String propName;
+        public final String propPath;
         public final String propTitle;
         public final boolean shouldBeCheckedDuringDeactivation;
         public final boolean belongsToEntityKey;
 
-        private DomainEntityDependency(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
+        private DomainEntityDependency(
+                Class<? extends AbstractEntity<?>> entityType,
+                String entityTitle,
+                String propName,
+                String propPath,
+                String propTitle,
+                boolean shouldBeCheckedDuringDeactivation,
+                boolean belongsToEntityKey)
+        {
             this.entityType = entityType;
-            this.entityTitle = getEntityTitleAndDesc(entityType).getKey();
-            this.propName = propField.getName();
-            this.propTitle = getTitleAndDesc(propName, entityType).getKey();
-            this.belongsToEntityKey = getKeyMembers(entityType).contains(propField);
-            
+            this.entityTitle = entityTitle;
+            this.propName = propName;
+            this.propPath = propPath;
+            this.propTitle = propTitle;
+            this.shouldBeCheckedDuringDeactivation = shouldBeCheckedDuringDeactivation;
+            this.belongsToEntityKey = belongsToEntityKey;
+
+
+        }
+
+        private DomainEntityDependency(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
+            this(entityType,
+                 getEntityTitleAndDesc(entityType).getKey(),
+                 propField.getName(),
+                 propField.getName(),
+                 getTitleAndDesc(propField.getName(), entityType).getKey(),
+                 checkDuringDeactivation(entityType, propField),
+                 getKeyMembers(entityType).contains(propField));
+
+        }
+
+        public DomainEntityDependency updatePropPath(final CharSequence propPathSuffix) {
+            return  new DomainEntityDependency(entityType, entityTitle, propName, propPath + "." + propPathSuffix, propTitle, belongsToEntityKey, shouldBeCheckedDuringDeactivation);
+        }
+
+        private static boolean checkDuringDeactivation(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
             final SkipEntityExistsValidation seevAnnotation = propField.getAnnotation(SkipEntityExistsValidation.class);
             final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
-            this.shouldBeCheckedDuringDeactivation = isActivatableEntityType(entityType) && isNotSpecialActivatableToBeSkipped(propField) && !skipActiveOnly;
+            return isActivatableEntityType(entityType) && isNotSpecialActivatableToBeSkipped(propField) && !skipActiveOnly;
+
         }
-        
+
+        public static final String INFO_ENTITY_DEPENDENCIES = "Entity [%s] has dependency in entity [%s] as property [%s] (full path [%s], checked during deactivation [%s], belongs to entity key [%s].";
         @Override
         public String toString() {
-            return INFO_ENTITY_DEPENDENCIES.formatted(DomainEntityDependencies.this.entityType.getName(), entityType.getName(), propName, shouldBeCheckedDuringDeactivation, belongsToEntityKey);
+            return INFO_ENTITY_DEPENDENCIES.formatted(entityType.getName(), entityType.getName(), propName, propPath, shouldBeCheckedDuringDeactivation, belongsToEntityKey);
         }
+
     }
 }
