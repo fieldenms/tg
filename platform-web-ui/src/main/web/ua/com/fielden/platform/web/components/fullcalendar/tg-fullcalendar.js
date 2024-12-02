@@ -213,7 +213,12 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
             height: 'auto',
             firstDay: this._appConfig.firstDayOfWeek,
             plugins: [ momentTimezonePlugin ],
-            timeZone: 'Pacific/Auckland'
+            timeZone: 'Pacific/Auckland',
+            now: function() {
+                // return new Date().toISOString(); // default impl
+                const nowMoment = moment(moment().tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'));
+                return nowMoment.toDate().toISOString(); // Return in ISO 8601 format
+            }
           });
           this._calendar.render();
           this.currentView = 'dayGridMonth';
