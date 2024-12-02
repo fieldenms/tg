@@ -5,7 +5,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('leaflet')) :
   typeof define === 'function' && define.amd ? define(['exports', 'leaflet'], factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory((global.L = global.L || {}, global.L.esri = {}), global.L));
-})(this, (function (exports, leaflet) { 'use strict';
+})(window /* TG #2329 this */, (function (exports, leaflet) { 'use strict';
 
   var name = "esri-leaflet";
   var description = "Leaflet plugins for consuming ArcGIS Online and ArcGIS Server services.";
