@@ -405,6 +405,59 @@ function handleAcceptEvent(e) {
     }
 }
 
+// ***** Primary and hidden ToastUI editors *****
+//
+// <div id="editor"> in the template is the primary ToastUI editor.
+// The hidden ToastUI editor is associated with a dynamically created HTML element.
+//
+// The hidden editor has a single purpose - to enable the API that, given a value, provides that value "as seen by the ToastUI editor".
+// This is required because a ToastUI editor performs internal transformations on values that are inserted into it.
+// For example, it was observed that after doing editor.setHTML("hello"), the result of editor.getHTML() is "<p>hello</p>".
+// The value resulting from internal tranformations is required to correctly tell apart changes made by users from those
+// resulting from internal transformations by the editor.
+// The ToastUI library does not provide such an API.
+//
+// The hidden editor is used to implement this API as follows:
+// 1. A given value is inserted into the hidden editor (via setHTML), which causes the hidden editor to interpret it as it sees fit
+//    (e.g., it may add HTML paragraph elements).
+// 2. The hidden editor is asked to give the value back (via getHTML). This gives us the value we just inserted but with
+//    all internal transformations already applied by the editor.
+//
+// The primary editor is not used for this because we want to avoid temporarily changing its contents, which could harm user experience
+// (e.g., by flickering with the temporarily inserted contents).
+
+// ***** ToastUI Editor configuration *****
+
+// Common options for primary and hidden editors.
+// Any options that affect HTML rendering must be the same for both editors to achieve equivalence of HTML rendering.
+const commonToastUiEditorOptions = {
+    initialEditType: 'wysiwyg',
+    // Plugins are able to affect HTML rendering.
+    plugins: [colorTextPlugin, fakeSelection],
+    // It is not fully understood whether this affects HTML rendering, but let's play on the safe side.
+    linkAttributes: {target: "_blank"},
+};
+
+// Options for the hidden ToastUI editor.
+const hiddenToastUiEditorOptions = {
+    ...commonToastUiEditorOptions,
+    // ToastUI editor must be attached to some HTML element.
+    el: document.createElement("div"),
+    usageStatistics: false,
+};
+
+// Additional configuration for the ToastUI editor.
+// It must be applied to both primary and hidden editors.
+function configureToastUiEditor(editor) {
+    // Preserve whitespace after loading HTML into the editor.
+    editor.wwEditor.schema.cached.domParser.rules.forEach(r => r.preserveWhitespace = "full");
+}
+
+// Singleton hidden ToastUI editor.
+// Due to a single-threaded model of web browsers, there should be no risk of concurrent use of this editor by different instances of entity masters.
+const hiddenEditor = new toastui.Editor(hiddenToastUiEditorOptions);
+configureToastUiEditor(hiddenEditor);
+
 /**
  * Returns the specified value as seen by the specified ToastUI editor.
  * If 'value' is not a string, it is immediately returned.
@@ -491,27 +544,6 @@ const template = html`
     </tg-responsive-toolbar>
     <div id="editor"></div>`;
 
-// ***** Primary and hidden ToastUI editors *****
-//
-// <div id="editor"> is the primary ToastUI editor.
-// The hidden ToastUI editor is associated with a dynamically created HTML element.
-//
-// The hidden editor has a single purpose - to enable the API that, given a value, provides that value "as seen by the ToastUI editor".
-// This is required because a ToastUI editor performs internal transformations on values that are inserted into it.
-// For example, it was observed that after doing editor.setHTML("hello"), the result of editor.getHTML() is "<p>hello</p>".
-// The value resulting from internal tranformations is required to correctly tell apart changes made by users from those
-// resulting from internal transformations by the editor.
-// The ToastUI library does not provide such an API.
-//
-// The hidden editor is used to implement this API as follows:
-// 1. A given value is inserted into the hidden editor (via setHTML), which causes the hidden editor to interpret it as it sees fit
-//    (e.g., it may add HTML paragraph elements).
-// 2. The hidden editor is asked to give the value back (via getHTML). This gives us the value we just inserted but with
-//    all internal transformations already applied by the editor.
-//
-// The primary editor is not used for this because we want to avoid temporarily changing its contents, which could harm user experience
-// (e.g., by flickering with the temporarily inserted contents).
-
 class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKeysBehavior, TgTooltipBehavior], PolymerElement) {
 
     static get template() { 
@@ -556,8 +588,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             _fakeSelection: {
                 type: Array,
             },
-
-            _hiddenEditor: Object,
 
             _cancelLinkInsertion: Function,
             _acceptLink: Function,
@@ -612,53 +642,27 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }.bind(this);
 
         // Options for the primary ToastUI editor.
-        // Any changes to these options that affect HTML rendering must be propagated to the options for the hidden ToastUI editor.
+        // Any changes to these options that affect HTML rendering must be included in the common options.
         const toastUiEditorOptions = {
+            ...commonToastUiEditorOptions,
             el: this.$.editor,
             height: this.height,
             minHeight: this.minHeight,
-            initialEditType: 'wysiwyg',
             events: {
                 change: this._htmlContentChanged.bind(this),
                 blur: this._focusLost.bind(this),
                 focus: this._focusGain.bind(this),
                 keydown: (viewType, event) => this.keyDownHandler(event)
             },
-            plugins: [colorTextPlugin, fakeSelection],
-            linkAttributes: {target: "_blank"},
             useCommandShortcut: false,
             usageStatistics: false,
             toolbarItems: [],
             hideModeSwitch: true
         };
 
-        // Options for the hidden ToastUI editor, which must be synchronised with the options for the primary editor
-        // to achieve equivalence of HTML rendering in both editors.
-        const hiddenToastUiEditorOptions = {
-            // ToastUI editor must be attached to some HTML element.
-            el: document.createElement("div"),
-            initialEditType: toastUiEditorOptions.initialEditType,
-            // Plugins are able to affect HTML rendering.
-            plugins: toastUiEditorOptions.plugins,
-            // It is not fully understood whether this affects HTML rendering, but let's play on the safe side.
-            linkAttributes: {target: "_blank"},
-            usageStatistics: false,
-        };
-
-        // Additional configuration for the ToastUI editor.
-        // It must be applied to both primary and hidden editors.
-        function configureToastUiEditor(editor) {
-            // Preserve whitespace after loading HTML into the editor.
-            editor.wwEditor.schema.cached.domParser.rules.forEach(r => r.preserveWhitespace = "full");
-        }
-
         // Create the primary editor.
         this._editor = new toastui.Editor(toastUiEditorOptions);
         configureToastUiEditor(this._editor);
-
-        // Create the hidden editor.
-        this._hiddenEditor = new toastui.Editor(hiddenToastUiEditorOptions);
-        configureToastUiEditor(this._hiddenEditor);
 
         //trigger tooltips manually
         this.triggerManual = true;
@@ -915,7 +919,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
      * This function is pure with respect to this editor (i.e., the state of this editor is not affected).
      */
     convertToEditorValue(value) {
-        return convertToToastUiEditorValue(this._hiddenEditor, value);
+        return convertToToastUiEditorValue(hiddenEditor, value);
     }
 }
 
