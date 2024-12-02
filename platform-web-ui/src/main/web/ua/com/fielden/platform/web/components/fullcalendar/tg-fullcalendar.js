@@ -1,4 +1,5 @@
-import {FullCalendar} from '/resources/components/fullcalendar/fullcalendar-component.js';
+import '/resources/components/moment-lib.js';
+import { FullCalendar, momentTimezonePlugin } from '/resources/components/fullcalendar/fullcalendar-component.js';
 import '/resources/components/fullcalendar/fullcalendar-style.js';
 import '/resources/components/tg-dropdown-switch.js';
 import '/resources/layout/tg-flex-layout.js';
@@ -210,7 +211,9 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
                 hour12: false
             },
             height: 'auto',
-            firstDay: this._appConfig.firstDayOfWeek
+            firstDay: this._appConfig.firstDayOfWeek,
+            plugins: [ momentTimezonePlugin ],
+            timeZone: 'Pacific/Auckland'
           });
           this._calendar.render();
           this.currentView = 'dayGridMonth';
