@@ -20,10 +20,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static java.lang.Math.max;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -39,18 +39,15 @@ import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 
-
 /**
  * A validator for property {@code active} on class {@link ActivatableAbstractEntity} to prevent deactivation of entities with active dependencies.
- *
- * @author TG Team
- *
  */
 public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Boolean> {
     private static final Logger LOGGER = getLogger(ActivePropertyValidator.class);
     private static final String PAD_STR = "\u00A0";
     public static final String WARN_ENTITY_HAS_NO_ACTIVATABLE_DEPENDENCIES = "Entity [%s] has no activatable dependencies at the domain level, but has refCount > 0.";
-    public static final String INFO_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s:%n%n<br><br>%s<hr>%n<br>%s";
+    public static final String ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s.";
+    public static final String ERR_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s:%n%n<br><br>%s<hr>%n<br>%s";
     public static final String INFO_DEPENDENCY = "<tt>%s%s\u00A0%s</tt>";
     public static final String ERR_INACTIVE_REFERENCES = "Property [%s] in %s [%s] references inactive %s [%s].";
 
@@ -62,55 +59,52 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     }
 
     @Override
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Result handle(final MetaProperty<Boolean> property, final Boolean newValue, final Set<Annotation> mutatorAnnotations) {
         final ActivatableAbstractEntity<?> entity = property.getEntity();
         // A persisted entity is being deactivated, but it may still be referenced.
         if (!newValue && entity.isPersisted()) {
             // Check refCount... it could potentially be stale...
             final IEntityReader<?> co = co(entity.getType());
-            final int count;
-            if (!co.isStale(entity.getId(), entity.getVersion())) {
-                count = entity.getRefCount();
-            }
-            // If an entity is stale, need to retrieve the latest refCount.
-            else {
-                final fetch fetch = fetchOnly(entity.getType()).with(REF_COUNT);
-                final ActivatableAbstractEntity<?> updatedEntity = (ActivatableAbstractEntity<?>) co.findById(entity.getId(), fetch);
-                count = updatedEntity.getRefCount();
-            }
-
             // TODO: refCount excludes deactivatable dependencies.
             //       In light of issue #2316, this condition is no longer sufficient.
             //       Issue #1745 already touched on that, suggesting converting refCount to a function and removing all refCount-related computations.
-            // If refCount indicates 0 references, return success, permitting deactivation.
-            if (count == 0) {
+            // Consider only activatable persistent entities as dependencies.
+            // Hypothetically speaking, every activatable entity is also persistent.
+            // However, this may change in the future, which is why the type's persistence should also be tested.
+            final Predicate<Class<? extends AbstractEntity<?>>> activatableEntityType = EntityUtils::isActivatableEntityType;
+            final var domainDependencies = entityDependencyMap(applicationDomainProvider.entityTypes(), activatableEntityType.and(EntityUtils::isPersistentEntityType));
+            // TODO: At the moment deactivatable entities, associated with the current entity are excluded not to count transitive references/dependencies.
+            //       However, it is now required to count such transitive references, which in turn requires recursive analysis of dependencies.
+            //       This is to cater for rare, but possible cases of having deactivatable dependencies on top of deactivatable dependencies.
+            final var domainEntityDependencies = domainDependencies.get(entity.getType());
+            // Direct dependencies.
+            final var directActivatableDependenciesForEntity = domainEntityDependencies.getActivatableDependencies();
+            // First level transitive dependencies
+            // TODO: Implement recursive traversal of transitive dependencies.
+            final var transitiveActivatableDependenciesForEntity = domainEntityDependencies.getDeactivatableDependencies().stream()
+                .flatMap(dep -> domainDependencies.get(dep.entityType).getActivatableDependencies().stream().map(d -> d.updatePropPath(dep.propPath)));
+            // Merge direct and transitive dependencies for processing.
+            final var dependencies = Stream.concat(directActivatableDependenciesForEntity.stream(), transitiveActivatableDependenciesForEntity).collect(toSet());
+
+            // There can be cases where the domain model evolved and entity dependencies were relaxed/removed, but refCount has not been updated.
+            // In such cases, there will be no dependencies identified in the domain model, and thus there is no reason to report any errors.
+            if (dependencies.isEmpty()) {
+                LOGGER.warn(WARN_ENTITY_HAS_NO_ACTIVATABLE_DEPENDENCIES.formatted(entity.getType().getSimpleName()));
                 return successful();
-            }
-            // Otherwise, need to identify active dependencies, preventing deactivation.
-            else {
-                // Consider only activatable persistent entities as dependencies.
-                // Hypothetically speaking, every activatable entity is also persistent.
-                // However, this may change in the future, which is why the type's persistence should also be tested.
-                final Predicate<Class<? extends AbstractEntity<?>>> activatableEntityType = EntityUtils::isActivatableEntityType;
-                final var domainDependency = entityDependencyMap(applicationDomainProvider.entityTypes(), activatableEntityType.and(EntityUtils::isPersistentEntityType));
-                // TODO: At the moment deactivatable entities, associated with the current entity are excluded not to count transitive references/dependencies.
-                //       However, it is now required to count such transitive references, which in turn requires recursive analysis of dependencies.
-                //       This is to cater for rare, but possible cases of having deactivatable dependencies on top of deactivatable dependencies.
-                final var activatableDependencies = domainDependency.get(entity.getType()).getActivatableDependencies();
-                // There can be cases where the domain model evolved and entity dependencies were relaxed/removed, but refCount has not been updated.
-                // In such cases, there will be no dependencies identified in the domain model, and thus there is no reason to report any errors.
-                if (activatableDependencies.isEmpty()) {
-                    LOGGER.warn(WARN_ENTITY_HAS_NO_ACTIVATABLE_DEPENDENCIES.formatted(entity.getType().getSimpleName()));
-                    return successful();
-                } else {
-                    // Exclude inactive dependencies to guarantee that only records with dependency COUNT > 0 are returned.
-                    final var query = dependencyCountQuery(activatableDependencies, true);
-                    // TODO: Ordering would need to take into account the presence of deactivatable dependencies somehow,
-                    //       so that the output would be a linearised tree structure of dependencies.
-                    //       It would potentially be useful to make deactivatable dependencies obvious in the resultant message.
-                    final var orderBy = orderBy().yield(COUNT).desc().yield(ENTITY_TYPE_TITLE).asc().yield(DEPENDENT_PROP_TITLE).asc().model();
-                    return failure(count, mkErrorMsg(entity, count, co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model())));
+            } else {
+                // Count active dependencies.
+                // Excluding inactive dependencies guarantees that only records with dependency COUNT > 0 are returned.
+                final var query = dependencyCountQuery(dependencies, true);
+                // TODO: Ordering would need to take into account the presence of deactivatable dependencies somehow,
+                //       so that the output would be a linearised tree structure of dependencies.
+                //       It would potentially be useful to make transitive dependencies obvious in the resultant message.
+                final var orderBy = orderBy().yield(COUNT).desc().yield(ENTITY_TYPE_TITLE).asc().yield(DEPENDENT_PROP_TITLE).asc().model();
+                final List<EntityAggregates> dependnencyStats = co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model());
+                final var count = dependnencyStats.stream().mapToInt(eg -> eg.get(COUNT)).sum();
+                if (count > 0) {
+                    final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
+                    final var shortErrMsg = ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES.formatted(entityTitle, entity, count, singleOrPlural(count, "dependency", "dependencies"));
+                    return Result.failureEx(shortErrMsg, mkErrorMsg(entity, count, dependnencyStats));
                 }
             }
         }
@@ -147,7 +141,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
                 .collect(joining("\n<br>"));
         final String columns = depMsg("Entity", "Property", "Qty", lengths);
         final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
-        return INFO_ENTITY_HAS_ACTIVE_DEPENDENCIES.formatted(entityTitle, entity, count, singleOrPlural(count, "dependency", "dependencies"), columns, deps);
+        return ERR_ENTITY_HAS_ACTIVE_DEPENDENCIES.formatted(entityTitle, entity, count, singleOrPlural(count, "dependency", "dependencies"), columns, deps);
     }
 
     private static String depMsg(final String val1, final String val2, final String val3, final T3<Integer, Integer, Integer> lengths) {
