@@ -643,11 +643,11 @@ public class EntityUtils {
             try {
                 return persistentTypes.get(type, () ->
                         isEntityType(type)
-                                && !isUnionEntityType(type)
-                                && !isSyntheticEntityType(type)
-                                && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null);
+                        && !isUnionEntityType(type)
+                        && !isSyntheticEntityType(type)
+                        && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null);
             } catch (final Exception ex) {
-                final String msg = format("Could not determine persistent nature of entity type [%s].", type.getSimpleName());
+                final String msg = "Could not determine persistent nature of entity type [%s].".formatted(type.getSimpleName());
                 logger.error(msg, ex);
                 throw new ReflectionException(msg, ex);
             }

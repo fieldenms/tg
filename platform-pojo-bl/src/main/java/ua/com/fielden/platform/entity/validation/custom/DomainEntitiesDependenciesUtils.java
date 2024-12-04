@@ -71,7 +71,7 @@ public class DomainEntitiesDependenciesUtils {
     /**
      * Method {@link #entityDependencyMap(Collection)} or {@link #entityDependencyMap(Collection, Predicate)} should be used instead.
      */
-    @Deprecated(forRemoval = true)
+    @Deprecated(forRemoval = true, since = "1.7.0")
     public static Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> getEntityDependantsMap(final Collection<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
         return entityDependencyMap(domainEntityTypes);
     }
