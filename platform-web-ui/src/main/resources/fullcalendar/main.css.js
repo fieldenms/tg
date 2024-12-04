@@ -372,7 +372,7 @@ When it's NOT activated, the fc-button classes won't even be in the DOM.
 
   }
 .fc .fc-scrollgrid-section-liquid > td {
-      height: 100%; /* better than `auto`, for firefox */
+      height: 100%; /*TG #1750*/ /* better than \`auto\`, for firefox */
     }
 .fc .fc-scrollgrid-section > * {
     border-top-width: 0;
@@ -717,7 +717,7 @@ A HORIZONTAL event
     }
 .fc .fc-daygrid-day-frame {
     position: relative;
-    min-height: 100%; /* seems to work better than `height` because sets height after rows/cells naturally do it */
+    min-height: 100%; /*TG #1750*/ /* seems to work better than \`height\` because sets height after rows/cells naturally do it */
   }
 .fc {
 
