@@ -59,7 +59,7 @@ var FullCalendarMomentTimezone = (function (exports, common, moment) {
     common.globalPlugins.push(plugin);
 
     exports.default = plugin;
-    FullCalendar.momentTimezonePlugin = plugin;
+    /*TG #1750*/ FullCalendar.momentTimezonePlugin = plugin;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
