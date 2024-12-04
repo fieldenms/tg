@@ -92,9 +92,6 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
                 // Count active dependencies.
                 // Excluding inactive dependencies guarantees that only records with dependency COUNT > 0 are returned.
                 final var query = dependencyCountQuery(dependencies, true);
-                // TODO: Ordering would need to take into account the presence of deactivatable dependencies somehow,
-                //       so that the output would be a linearised tree structure of dependencies.
-                //       It would potentially be useful to make transitive dependencies obvious in the resultant message.
                 final var orderBy = orderBy().yield(COUNT).desc().yield(ENTITY_TYPE_TITLE).asc().yield(DEPENDENT_PROP_TITLE).asc().model();
                 final List<EntityAggregates> dependencyStats = co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model());
                 final var count = dependencyStats.stream().mapToInt(eg -> eg.get(COUNT)).sum();
