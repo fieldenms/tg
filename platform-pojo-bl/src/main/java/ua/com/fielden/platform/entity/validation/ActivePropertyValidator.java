@@ -64,17 +64,11 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         if (!newValue && entity.isPersisted()) {
             // Check refCount... it could potentially be stale...
             final IEntityReader<?> co = co(entity.getType());
-            // TODO: refCount excludes deactivatable dependencies.
-            //       In light of issue #2316, this condition is no longer sufficient.
-            //       Issue #1745 already touched on that, suggesting converting refCount to a function and removing all refCount-related computations.
             // Consider only activatable persistent entities as dependencies.
             // Hypothetically speaking, every activatable entity is also persistent.
             // However, this may change in the future, which is why the type's persistence should also be tested.
             final Predicate<Class<? extends AbstractEntity<?>>> activatableEntityType = EntityUtils::isActivatableEntityType;
             final var domainDependencies = entityDependencyMap(applicationDomainProvider.entityTypes(), activatableEntityType.and(EntityUtils::isPersistentEntityType));
-            // TODO: At the moment deactivatable entities, associated with the current entity are excluded not to count transitive references/dependencies.
-            //       However, it is now required to count such transitive references, which in turn requires recursive analysis of dependencies.
-            //       This is to cater for rare, but possible cases of having deactivatable dependencies on top of deactivatable dependencies.
             final var domainEntityDependencies = domainDependencies.get(entity.getType());
             // Direct dependencies.
             final var directActivatableDependenciesForEntity = domainEntityDependencies.getActivatableDependencies();
