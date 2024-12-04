@@ -42,7 +42,7 @@ const tgMarkerClusterStyles = `
         float: left;
     }
 `;
-import { createStyleModule } from '/resources/gis/tg-gis-utils.js';
+import { createStyleModule } from '/resources/reflection/tg-polymer-utils.js';
 export const tgMarkerClusterStylesName = 'tg-marker-cluster-styles';
 createStyleModule(tgMarkerClusterStylesName, tgMarkerClusterStyles);
 

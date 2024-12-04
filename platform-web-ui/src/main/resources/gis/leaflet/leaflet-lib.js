@@ -1,5 +1,5 @@
 import leafletStyles from '/resources/gis/leaflet/leaflet.css.js';
-import { createStyleModule } from '/resources/gis/tg-gis-utils.js';
+import { createStyleModule } from '/resources/reflection/tg-polymer-utils.js';
 export const leafletStylesName = 'leaflet-styles';
 createStyleModule(leafletStylesName, leafletStyles);
 

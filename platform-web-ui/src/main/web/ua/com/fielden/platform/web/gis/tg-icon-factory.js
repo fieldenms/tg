@@ -5,7 +5,7 @@ const tgIconFactoryStyles = `
         background-color: transparent;
     }
 `;
-import { createStyleModule } from '/resources/gis/tg-gis-utils.js';
+import { createStyleModule } from '/resources/reflection/tg-polymer-utils.js';
 export const tgIconFactoryStylesName = 'tg-icon-factory-styles';
 createStyleModule(tgIconFactoryStylesName, tgIconFactoryStyles);
 
