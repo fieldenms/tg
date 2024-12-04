@@ -1,5 +1,8 @@
 import { TgReflector } from '/app/tg-reflector.js';
 
+import '/resources/polymer/@polymer/polymer/lib/elements/custom-style.js';
+import '/resources/polymer/@polymer/polymer/lib/elements/dom-module.js';
+
 /**
  * Generates the unique identifier.
  */

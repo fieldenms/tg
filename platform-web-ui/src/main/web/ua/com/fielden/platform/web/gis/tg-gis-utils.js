@@ -1,3 +1,15 @@
+export {
+    /**
+     * @deprecated since version 1.7.0 -- use 'tg-polymer-utils.createStyleModule' instead
+     *
+     * Creates style module with concrete 'moduleId' that can later be included using <style include='module-id'></style> into shadow DOM of some target element.
+     * 
+     * @param moduleId -- a name of style module being created
+     * @param styleStrings -- a couple of style strings to be concatenated into the style module
+     */
+    createStyleModule
+} from '/resources/reflection/tg-polymer-utils.js';
+
 /**
  * There are feautures of two types: 
  * 1) features derived from real entities (Message etc.)
