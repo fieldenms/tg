@@ -2,6 +2,50 @@ import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.j
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 
+function moveChildren(from, to) {
+    while(from.hasChildNodes()) {
+        to.appendChild(from.firstChild);
+    }
+    return to;
+}
+
+function convertHeader(header) {
+    const bold = document.createElement('b');
+    return moveChildren(header, bold);
+}
+
+function convertNode(root) {
+    let nextNode = root.firstChild;
+    while (nextNode) {
+        if (nextNode.tagName) {
+            const nodeToReplace = nextNode;
+            const convertedNode = RichTextConverter[nextNode.tagName](nodeToReplace);
+            nextNode = nodeToReplace.nextSibling;
+            if (convertedNode) {
+                root.replaceChild(convertedNode, nodeToReplace);
+            } else {
+                root.removeChild(nodeToReplace);
+            }
+        } else {
+            nextNode = nextNode.nextSibling;
+        }
+    }
+    [...root.childNodes].forEach(child => convertNode(child));
+    return root;
+}
+
+function inlineRichText(richText) {
+    const root = document.createElement('div');
+    root.innerHTML = richText;
+    return convertNode(root).innerHTML;
+}
+
+RichTextConverter = {
+    'H1': convertHeader,
+    'H2': convertHeader,
+    'H3': convertHeader,
+}
+
 export const TgEgiDataRetrievalBehavior = {
 
     created: function () {
