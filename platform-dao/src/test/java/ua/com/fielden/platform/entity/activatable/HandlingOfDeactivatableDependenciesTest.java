@@ -4,11 +4,9 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.sample.domain.TgAuthoriser;
-import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.sample.domain.TgOriginator;
-import ua.com.fielden.platform.sample.domain.TgPerson;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
 
@@ -16,6 +14,7 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 
 public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase {
 
@@ -135,6 +134,36 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
         assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey("CAT1").getRefCount());
     }
 
+    @Test
+    public void transitive_deactivatable_dependencies_are_considered_when_validating_property_active() {
+        final var part1 = co$(TgInventoryPart.class).findByKey("Part1");
+        assertNotNull(part1);
+        part1.setActive(false);
+        assertTrue(part1.isActive());
+        final MetaProperty<Boolean> mpActive = part1.getProperty(ACTIVE);
+        assertFalse(mpActive.isValid());
+        assertEquals("""
+                        Inventory Part [Part1] has 3 active dependencies.<extended/>Inventory Part [Part1] has 3 active dependencies:
+                        
+                        <br><br><tt>Entity              Qty Property       </tt><hr>
+                        <br><tt>Tg Inventory Issue    2 Inventory Bin  </tt>
+                        <br><tt>Tg Inventory Issue    1 Tg Inventory   </tt>\
+                        """,
+                        mpActive.validationResult().getMessage());
+        // let's now deactivate the culprits and try deactivating the part again
+        final var issue1Part1 = co$(TgInventoryIssue.class).findByKey("Part1 01/12/2024 13:30");
+        assertNotNull(issue1Part1);
+        save(issue1Part1.setActive(false));
+        final var issue2Part1 = co$(TgInventoryIssue.class).findByKey("Part1 04/12/2024 13:30");
+        assertNotNull(issue2Part1);
+        save(issue2Part1.setActive(false));
+
+        part1.setActive(false);
+        assertFalse(part1.isActive());
+        final var inactivePart1 = save(part1);
+        assertFalse(inactivePart1.isActive());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
@@ -150,6 +179,12 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
         final TgPerson p3 = save(new_(TgPerson.class, "P3").setActive(true));
         save(new_composite(TgOriginator.class, p3).setAssistant(p1).setActive(true));
         save(new_composite(TgAuthoriser.class, p3).setActive(false).setCategory(save(new_(TgCategory.class, "CAT1").setActive(true))));
+
+        final var part1 = save(new_composite(TgInventoryPart.class, "Part1").setActive(true).setDesc("Part 1 description"));
+        final var invPart1 = save(new_composite(TgInventory.class, part1).setActive(true));
+        final var invBinPart1 = save(new_composite(TgInventoryBin.class, invPart1).setActive(true));
+        final var issue1Part1 = save(new_composite(TgInventoryIssue.class, invBinPart1, date("2024-12-01 13:30:00")).setQty(1).setSupersededInventory(invPart1).setActive(true));
+        final var issue2Part1 = save(new_composite(TgInventoryIssue.class, invBinPart1, date("2024-12-04 13:30:00")).setQty(10).setActive(true));
     }
 
 }

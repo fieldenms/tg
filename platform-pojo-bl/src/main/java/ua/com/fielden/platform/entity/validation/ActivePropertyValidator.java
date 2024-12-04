@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -27,8 +26,8 @@ import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
 import static ua.com.fielden.platform.error.Result.*;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
@@ -79,12 +78,10 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             final var domainEntityDependencies = domainDependencies.get(entity.getType());
             // Direct dependencies.
             final var directActivatableDependenciesForEntity = domainEntityDependencies.getActivatableDependencies();
-            // First level transitive dependencies
-            // TODO: Implement recursive traversal of transitive dependencies.
-            final var transitiveActivatableDependenciesForEntity = domainEntityDependencies.getDeactivatableDependencies().stream()
-                .flatMap(dep -> domainDependencies.get(dep.entityType).getActivatableDependencies().stream().map(d -> d.updatePropPath(dep.propPath)));
-            // Merge direct and transitive dependencies for processing.
-            final var dependencies = Stream.concat(directActivatableDependenciesForEntity.stream(), transitiveActivatableDependenciesForEntity).collect(toSet());
+            // Deactivatable dependencies, which are calculated by recursively traversing all deactivatable dependencies for the current entity, all deactivatable dependencies for them, and so on.
+            final var deactivatableActivatableDependenciesForEntity = domainEntityDependencies.getAllDeactivatableDependencies(domainDependencies);
+            // Merge direct and deactivatable dependencies for processing.
+            final var dependencies = Stream.concat(directActivatableDependenciesForEntity.stream(), deactivatableActivatableDependenciesForEntity).collect(toSet());
 
             // There can be cases where the domain model evolved and entity dependencies were relaxed/removed, but refCount has not been updated.
             // In such cases, there will be no dependencies identified in the domain model, and thus there is no reason to report any errors.
@@ -99,12 +96,12 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
                 //       so that the output would be a linearised tree structure of dependencies.
                 //       It would potentially be useful to make transitive dependencies obvious in the resultant message.
                 final var orderBy = orderBy().yield(COUNT).desc().yield(ENTITY_TYPE_TITLE).asc().yield(DEPENDENT_PROP_TITLE).asc().model();
-                final List<EntityAggregates> dependnencyStats = co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model());
-                final var count = dependnencyStats.stream().mapToInt(eg -> eg.get(COUNT)).sum();
+                final List<EntityAggregates> dependencyStats = co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model());
+                final var count = dependencyStats.stream().mapToInt(eg -> eg.get(COUNT)).sum();
                 if (count > 0) {
                     final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
                     final var shortErrMsg = ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES.formatted(entityTitle, entity, count, singleOrPlural(count, "dependency", "dependencies"));
-                    return Result.failureEx(shortErrMsg, mkErrorMsg(entity, count, dependnencyStats));
+                    return Result.failureEx(shortErrMsg, mkErrorMsg(entity, count, dependencyStats));
                 }
             }
         }

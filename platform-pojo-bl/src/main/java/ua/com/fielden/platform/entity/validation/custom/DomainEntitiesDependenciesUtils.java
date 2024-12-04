@@ -16,7 +16,6 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
@@ -67,6 +66,14 @@ public class DomainEntitiesDependenciesUtils {
                .yield().prop(DEPENDENT_PROP_TITLE).as(DEPENDENT_PROP_TITLE)
                .yield().countAll().as(COUNT)
                .modelAsAggregate();
+    }
+
+    /**
+     * Method {@link #entityDependencyMap(Collection)} or {@link #entityDependencyMap(Collection, Predicate)} should be used instead.
+     */
+    @Deprecated(forRemoval = true)
+    public static Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> getEntityDependantsMap(final Collection<Class<? extends AbstractEntity<?>>> domainEntityTypes) {
+        return entityDependencyMap(domainEntityTypes);
     }
 
     /**
