@@ -87,12 +87,12 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
                 // Excluding inactive dependencies guarantees that only records with dependency COUNT > 0 are returned.
                 final var query = dependencyCountQuery(dependencies, true);
                 final var orderBy = orderBy().yield(COUNT).desc().yield(ENTITY_TYPE_TITLE).asc().yield(DEPENDENT_PROP_TITLE).asc().model();
-                final List<EntityAggregates> dependencyStats = co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model());
+                final var dependencyStats = co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model());
                 final var count = dependencyStats.stream().mapToInt(eg -> eg.get(COUNT)).sum();
                 if (count > 0) {
                     final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
                     final var shortErrMsg = ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES.formatted(entityTitle, entity, count, singleOrPlural(count, "dependency", "dependencies"));
-                    return Result.failureEx(shortErrMsg, mkErrorMsg(entity, count, dependencyStats));
+                    return failureEx(shortErrMsg, mkErrorMsg(entity, count, dependencyStats));
                 }
             }
         }
@@ -109,9 +109,9 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableProps) {
                 final ActivatableAbstractEntity<?> value = prop.getValue();
                 if (!value.isActive()) {
-                    final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
-                    final String propTitle = getTitleAndDesc(prop.getName(), entity.getType()).getKey();
-                    final String valueEntityTitle = getEntityTitleAndDesc(value.getType()).getKey();
+                    final var entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
+                    final var propTitle = getTitleAndDesc(prop.getName(), entity.getType()).getKey();
+                    final var valueEntityTitle = getEntityTitleAndDesc(value.getType()).getKey();
                     return failuref(ERR_INACTIVE_REFERENCES, propTitle, entityTitle, entity, valueEntityTitle, value);
                 }
             }
@@ -124,11 +124,11 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         final var lengths = dependencies.stream()
                 .map(dep -> t3(dep.get(ENTITY_TYPE_TITLE).toString().length(), dep.get(DEPENDENT_PROP_TITLE).toString().length(), dep.get(COUNT).toString().length()))
                 .reduce(t3(0, 0, 0), (accum, val) -> t3(max(accum._1, val._1), max(accum._2, val._2), max(accum._3, val._3)), (v1, v2) -> {throw failure("Should not happen");}); 
-        final String deps = dependencies.stream()
+        final var deps = dependencies.stream()
                 .map(dep -> depMsg(dep.get(ENTITY_TYPE_TITLE), dep.get(DEPENDENT_PROP_TITLE), dep.get(COUNT).toString(), lengths))
                 .collect(joining("\n<br>"));
-        final String columns = depMsg("Entity", "Property", "Qty", lengths);
-        final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
+        final var columns = depMsg("Entity", "Property", "Qty", lengths);
+        final var entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
         return ERR_ENTITY_HAS_ACTIVE_DEPENDENCIES.formatted(entityTitle, entity, count, singleOrPlural(count, "dependency", "dependencies"), columns, deps);
     }
 
