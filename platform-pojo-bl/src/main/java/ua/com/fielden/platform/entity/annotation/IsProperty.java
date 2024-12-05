@@ -93,8 +93,6 @@ public @interface IsProperty {
 
     /**
      * This setting should be used to identify a type parameter of the property type. For example, it could indicate an element type for collectional properties.
-     *
-     * @return
      */
     Class<?> value() default Void.class;
 
@@ -122,15 +120,11 @@ public @interface IsProperty {
      *   serviced : Vehicle
      *     ...
      * </pre>
-     *
-     * @return
      */
     String linkProperty() default DEFAULT_LINK_PROPERTY;
 
     /**
      * Declares property as such that should be assigned automatically before entity is saved for the first time.
-     *
-     * @return
      */
     boolean assignBeforeSave() default false;
 
@@ -145,8 +139,6 @@ public @interface IsProperty {
      * For example, for PostgreSQL type {@code text} and for SQL Server type {@code varchar(max)} would be used.
      * <p>
      * Also, length can be combined with pre-condition {@code MaxLengthValidator} to enforce the length integrity constraint on properties of type {@code String}.
-     * 
-     * @return
      */
     int length() default DEFAULT_LENGTH;
 
@@ -154,7 +146,6 @@ public @interface IsProperty {
      * Precision is the number of digits in a number. For example, the number 123.45 has a precision of 5.
      * <p>
      * This parameter is applicable only to properties of type <code>BigDecimal</code>.
-     * @return
      */
     int precision() default DEFAULT_PRECISION;
 
@@ -163,15 +154,12 @@ public @interface IsProperty {
      * Scale is the number of digits to the right of the decimal point in a number. For example, the number 123.45 has a scale of 2.
      * <p>
      * This parameter is applicable only to properties of type <code>BigDecimal</code>.
-     * @return
      */
     int scale() default DEFAULT_SCALE;
 
     /**
      * This parameter should be used to indicate whether trailing zeros have any significance for decimal properties (including Money).
      * Such information can be used by, for example, UI logic for displaying or hind the trailing zeros.
-     *
-     * @return
      */
     boolean trailingZeros() default DEFAULT_TRAILING_ZEROS;
 

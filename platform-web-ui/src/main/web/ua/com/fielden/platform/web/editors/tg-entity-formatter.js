@@ -19,7 +19,7 @@ function getKeyMemberName (entity, strNumber, reflector) {
             throw { msg: `Key with index ${strNumber} does not exist in ${reflector.simpleClassName(entity.type().fullClassName())} entity type.` };
         }
     } else {
-        throw {msg: `${strNumber} should be a number.`};
+        throw { msg: `${strNumber} should be a number.` };
     }
 }
 
