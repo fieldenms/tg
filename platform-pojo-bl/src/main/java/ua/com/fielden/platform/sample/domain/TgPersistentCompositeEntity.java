@@ -2,16 +2,7 @@ package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 
 /**
  * One-2-Many entity object.
@@ -36,6 +27,7 @@ public class TgPersistentCompositeEntity extends AbstractEntity<DynamicEntityKey
     @MapTo
     @Title(value = "Composite Part 2", desc = "Composite Part 2")
     @CompositeKeyMember(2)
+    @Optional
     private Integer key2;
 
     @Observable
@@ -56,6 +48,13 @@ public class TgPersistentCompositeEntity extends AbstractEntity<DynamicEntityKey
 
     public TgPersistentEntityWithProperties getKey1() {
         return key1;
+    }
+
+    @Override
+    @Observable
+    public TgPersistentCompositeEntity setDesc(final String desc) {
+        super.setDesc(desc);
+        return this;
     }
 
 }
