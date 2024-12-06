@@ -294,6 +294,25 @@ public final class AuditUtils {
         return getAuditedType(getAuditTypeForAuditPropType(auditPropType));
     }
 
+    /**
+     * Returns the version of the specified audit-entity type, which must be annotated with {@link AuditFor}.
+     */
+    public static int getAuditEntityTypeVersion(Class<? extends AbstractAuditEntity<?>> type) {
+        final var atAuditFor = type.getAnnotation(AuditFor.class);
+        if (atAuditFor == null) {
+            throw new EntityDefinitionException(format("Audit-entity [%s] is missing required annotation @%s",
+                                                       type.getTypeName(), AuditFor.class.getSimpleName()));
+        }
+        return atAuditFor.version();
+    }
+
+    /**
+     * Returns the version of the specified audit-prop type, which must be associted with an audit-entity type.
+     */
+    public static int getAuditPropTypeVersion(Class<? extends AbstractAuditProp<?>> type) {
+        return getAuditEntityTypeVersion(getAuditTypeForAuditPropType(type));
+    }
+
     private AuditUtils() {}
 
 }

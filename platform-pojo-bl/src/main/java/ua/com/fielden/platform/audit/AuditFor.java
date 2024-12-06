@@ -19,4 +19,9 @@ public @interface AuditFor {
      */
     Class<? extends AbstractEntity<?>> value();
 
+    /**
+     * The version of this audit-entity type.
+     */
+    int version();
+
 }

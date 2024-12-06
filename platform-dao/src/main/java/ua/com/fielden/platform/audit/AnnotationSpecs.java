@@ -8,9 +8,10 @@ import ua.com.fielden.platform.utils.Pair;
 
 final class AnnotationSpecs {
 
-    public static AnnotationSpec auditFor(final Class<? extends AbstractEntity<?>> entityType) {
+    public static AnnotationSpec auditFor(final Class<? extends AbstractEntity<?>> entityType, final int version) {
         return AnnotationSpec.builder(AuditFor.class)
                 .addMember("value", "$T.class", entityType)
+                .addMember("version", "$L", version)
                 .build();
     }
 

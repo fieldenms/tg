@@ -103,7 +103,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final JavaFile auditEntity;
         final JavaFile auditProp;
         try {
-            auditEntity = generateAuditEntity(type, auditTypePkg, auditTypeName, ClassName.get(auditTypePkg, auditPropTypeName));
+            auditEntity = generateAuditEntity(type, auditTypePkg, auditTypeName, ClassName.get(auditTypePkg, auditPropTypeName), auditTypeVersion);
             auditProp = generateAuditPropEntity(type, ClassName.get(auditTypePkg, auditTypeName), auditTypePkg, auditPropTypeName);
         } catch (final Exception e) {
             throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(auditTypeVersion, type.getTypeName()), e);
@@ -118,11 +118,12 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final Class<? extends AbstractEntity<?>> type,
             final String auditTypePkg,
             final String auditTypeName,
-            final ClassName auditPropTypeName)
+            final ClassName auditPropTypeName,
+            final int auditTypeVersion)
     {
         final var auditTypeClassName = ClassName.get(auditTypePkg, auditTypeName);
 
-        final var a3tBuilder = new AuditEntityBuilder(auditTypeClassName, type);
+        final var a3tBuilder = new AuditEntityBuilder(auditTypeClassName, type, auditTypeVersion);
 
         a3tBuilder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(TitlesDescsGetter.getEntityTitle(type))));
 
@@ -198,10 +199,16 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         private final ArrayList<PropertySpec> properties;
         private final ArrayList<MethodSpec> methods;
         private final ArrayList<AnnotationSpec> annotations;
+        private final int auditVersion;
 
-        private AuditEntityBuilder(final ClassName className, final Class<? extends AbstractEntity<?>> auditedType) {
+        private AuditEntityBuilder(
+                final ClassName className,
+                final Class<? extends AbstractEntity<?>> auditedType,
+                final int auditVersion)
+        {
             this.className = className;
             this.auditedType = auditedType;
+            this.auditVersion = auditVersion;
             this.properties = new ArrayList<>();
             this.methods = new ArrayList<>();
             this.annotations = new ArrayList<>();
@@ -211,7 +218,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final var builder = classBuilder(className)
                     .addModifiers(PUBLIC)
                     .superclass(ParameterizedTypeName.get(AbstractAuditEntity.class, auditedType))
-                    .addAnnotation(AnnotationSpecs.auditFor(auditedType))
+                    .addAnnotation(AnnotationSpecs.auditFor(auditedType, auditVersion))
                     // TODO Meta-model is not needed. Meta-model processor needs to support a new annotation - WithoutMetaModel.
                     .addAnnotation(MapEntityTo.class)
                     .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class))

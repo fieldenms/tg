@@ -21,7 +21,10 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.types.Money;
 
-@AuditFor(TgVehicle.class)
+@AuditFor(
+    value = TgVehicle.class,
+    version = 1
+)
 @MapEntityTo
 @CompanionIsGenerated
 @EntityTitle("Tg Vehicle Audit")
