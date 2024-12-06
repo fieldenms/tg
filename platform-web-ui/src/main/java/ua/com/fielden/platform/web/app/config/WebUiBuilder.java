@@ -1,17 +1,6 @@
 package ua.com.fielden.platform.web.app.config;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
-
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
@@ -22,6 +11,16 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
+
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  * Implementation of the {@link IWebUiBuilder}.
@@ -233,6 +232,27 @@ public class WebUiBuilder implements IWebUiBuilder {
                 // Need to inject the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
                 // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from  IDates.
                 .replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
+    }
+
+    /**
+     * Generates tg-fullcalendar element with timezone enhancements based on independent time-zone mode setting.
+     */
+    public String genFullcalendarElement(final boolean independentTimeZoneMode) {
+        return ResourceLoader.getText("ua/com/fielden/platform/web/components/fullcalendar/tg-fullcalendar.js").
+            replace("@genImport", independentTimeZoneMode ? """
+                import '/resources/components/moment-lib.js';
+                import { momentTimezonePlugin } from '/resources/fullcalendar/moment-timezone/fullcalendar-with-timezones-lib.js';
+            """ : "").
+            replace("@genConfig", independentTimeZoneMode ? """
+                ,
+                plugins: [ momentTimezonePlugin ],
+                timeZone: '%s',
+                now: function() {
+                    // return new Date().toISOString(); // default impl
+                    const nowMoment = moment(moment().tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'));
+                    return nowMoment.toDate().toISOString(); // Return in ISO 8601 format
+                }
+            """.formatted(TimeZone.getDefault().getID()) : "");
     }
 
     @Override

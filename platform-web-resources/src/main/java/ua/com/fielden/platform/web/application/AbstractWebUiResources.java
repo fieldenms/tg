@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.application;
 
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,36 +12,12 @@ import org.restlet.Restlet;
 import org.restlet.routing.Router;
 import org.restlet.routing.Template;
 import org.restlet.security.Authenticator;
-
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.factories.webui.AppIndexResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.ApplicationStartupResourcesComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.CustomViewResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.GraphiQLResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.ServiceWorkerResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.WebClientErrorLoggerResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.*;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
@@ -129,6 +108,7 @@ public abstract class AbstractWebUiResources extends Application {
         guardedRouter.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
         guardedRouter.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, dates));
+        guardedRouter.attach("/resources/components/fullcalendar/tg-fullcalendar.js", new FullcalendarResourceFactory(webResourceLoader, deviceProvider, dates));
         // type meta info resource
         guardedRouter.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(webResourceLoader, deviceProvider, dates));
