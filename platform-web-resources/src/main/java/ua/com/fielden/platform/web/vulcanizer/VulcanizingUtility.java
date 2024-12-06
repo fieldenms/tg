@@ -330,6 +330,7 @@ public class VulcanizingUtility {
         }
         downloadSource("app", "tg-app-config.js", webResourceLoader);
         downloadSource("app", "tg-app.js", webResourceLoader);
+        downloadSource("resources/components/fullcalendar", "tg-fullcalendar.js", webResourceLoader);
         LOGGER.info("\t\t\tDownloading generated resource 'application-startup-resources.js'...");
         downloadSource("app", "application-startup-resources.js", webResourceLoader);
         LOGGER.info("\tDownloaded generated resources.");
