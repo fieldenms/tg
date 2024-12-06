@@ -44,7 +44,6 @@ import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Boolean> {
     private static final Logger LOGGER = getLogger(ActivePropertyValidator.class);
     private static final String PAD_STR = "\u00A0";
-    public static final String WARN_ENTITY_HAS_NO_ACTIVATABLE_DEPENDENCIES = "Entity [%s] has no activatable dependencies at the domain level, but has refCount > 0.";
     public static final String ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s.";
     public static final String ERR_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s:%n%n<br><br>%s<hr>%n<br>%s";
     public static final String INFO_DEPENDENCY = "<tt>%s%s\u00A0%s</tt>";
@@ -62,7 +61,6 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         final ActivatableAbstractEntity<?> entity = property.getEntity();
         // A persisted entity is being deactivated, but it may still be referenced.
         if (!newValue && entity.isPersisted()) {
-            // Check refCount... it could potentially be stale...
             final IEntityReader<?> co = co(entity.getType());
             // Consider only activatable persistent entities as dependencies.
             // Hypothetically speaking, every activatable entity is also persistent.
@@ -77,10 +75,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             // Merge direct and deactivatable dependencies for processing.
             final var dependencies = Stream.concat(directActivatableDependenciesForEntity.stream(), deactivatableActivatableDependenciesForEntity).collect(toSet());
 
-            // There can be cases where the domain model evolved and entity dependencies were relaxed/removed, but refCount has not been updated.
-            // In such cases, there will be no dependencies identified in the domain model, and thus there is no reason to report any errors.
             if (dependencies.isEmpty()) {
-                LOGGER.warn(WARN_ENTITY_HAS_NO_ACTIVATABLE_DEPENDENCIES.formatted(entity.getType().getSimpleName()));
                 return successful();
             } else {
                 // Count active dependencies.
