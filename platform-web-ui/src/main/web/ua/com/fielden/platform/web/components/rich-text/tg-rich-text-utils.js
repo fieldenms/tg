@@ -15,7 +15,7 @@ function convertHeader(header) {
 }
 
 function convertParagraph(paragraph) {
-    const fragment = document.createDocumentFragment();
+    const fragment = document.createElement('span');
     moveChildren(paragraph, fragment).appendChild(document.createTextNode(' '));
     return fragment;
 }
