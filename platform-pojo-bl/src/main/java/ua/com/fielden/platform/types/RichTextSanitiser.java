@@ -6,6 +6,7 @@ import org.commonmark.parser.IncludeSourceSpans;
 import org.commonmark.parser.Parser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
+import org.owasp.html.CssSchema;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import ua.com.fielden.platform.error.Result;
@@ -21,7 +22,8 @@ import java.util.regex.Pattern;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
-import static org.owasp.html.Sanitizers.*;
+import static org.owasp.html.Sanitizers.BLOCKS;
+import static org.owasp.html.Sanitizers.IMAGES;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
@@ -107,7 +109,7 @@ public final class RichTextSanitiser {
      * Sanitisation is performed in a <i>validation mode</i>.
      * This means that the output will differ from the input only if the input explicitly violated the sanitisation policy (i.e., it contained an unsafe element).
      * The main motivation behind this choice is to avoid unnecessary modifications of the input (due to normalisation: dropped comments, normalised tag names),
-     * which has been observed to conflict with the client-side processing of HTML in Markdown.
+     * which has been observed to conflict with the client-side processing of HTML.
      * <p>
      * The sanitisation policy is specified via {@link #POLICY_FACTORY}.
      *
@@ -169,6 +171,28 @@ public final class RichTextSanitiser {
     }
 
     // @formatter:off
+
+    /**
+     * @see Hyperlink.SupportedProtocols
+     */
+    private static PolicyFactory allowLinks() {
+        return new HtmlPolicyBuilder()
+                .allowUrlProtocols("http", "https", "mailto", "ftp", "ftps")
+
+                .allowElements("a")
+                .allowAttributes("href", "target", "rel", "attributionsrc", "attributionsourceid", "hreflang",
+                                 "referrerpolicy", "type", "charset", "coords", "name", "rev", "shape")
+                    .onElements("a")
+
+                .allowElements("link")
+                .allowAttributes("href", "rel", "as", "blocking", "crossorigin", "disabled", "fetchpriority", "hreflang",
+                                 "imagesizes", "imagesrcset", "integrity", "media", "referrerpolicy", "sizes", "title",
+                                 "type", "target", "charset", "rev")
+                    .onElements("link")
+
+                .toFactory();
+    }
+
     private static PolicyFactory allowLists() {
         return new HtmlPolicyBuilder()
                 .allowElements(
@@ -203,36 +227,114 @@ public final class RichTextSanitiser {
     }
 
     /**
-     * Creates a policy that allows common attributes.
+     * Creates a policy that allows a safe subset of <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes">global attributes</a>.
      */
-    private static PolicyFactory allowCommonAttributes() {
+    private static PolicyFactory allowGlobalAttributes() {
         return new HtmlPolicyBuilder()
-                .allowAttributes("class")
+                .allowAttributes(
+                        "xml:lang", "xml:base",
+                        "role",
+                        "accesskey",
+                        "anchor",
+                        "autocapitalize",
+                        "autocorrect",
+                        "autofocus",
+                        "class",
+                        "contenteditable",
+                        "dir",
+                        "draggable",
+                        "exportparts",
+                        "hidden",
+                        "id",
+                        "inert",
+                        "inputmode",
+                        "is",
+                        "itemid",
+                        "itemprop",
+                        "itemref",
+                        "itemscope",
+                        "itemtype",
+                        "lang",
+                        "nonce",
+                        "part",
+                        "popover",
+                        "spellcheck",
+                        "tabindex",
+                        "title",
+                        "translate",
+                        "virtualkeyboardpolicy",
+                        "writingsuggestions",
+                        // ARIA
+                        "aria-autocomplete",
+                        "aria-checked",
+                        "aria-disabled",
+                        "aria-errormessage",
+                        "aria-expanded",
+                        "aria-haspopup",
+                        "aria-hidden",
+                        "aria-invalid",
+                        "aria-label",
+                        "aria-level",
+                        "aria-modal",
+                        "aria-multiline",
+                        "aria-multiselectable",
+                        "aria-orientation",
+                        "aria-placeholder",
+                        "aria-pressed",
+                        "aria-readonly",
+                        "aria-required",
+                        "aria-selected",
+                        "aria-sort",
+                        "aria-valuemax",
+                        "aria-valuemin",
+                        "aria-valuenow",
+                        "aria-valuetext",
+                        "aria-busy",
+                        "aria-live",
+                        "aria-relevant",
+                        "aria-atomic",
+                        "aria-dropeffect",
+                        "aria-grabbed",
+                        "aria-activedescendant",
+                        "aria-colcount",
+                        "aria-colindex",
+                        "aria-colspan",
+                        "aria-controls",
+                        "aria-describedby",
+                        "aria-description",
+                        "aria-details",
+                        "aria-errormessage",
+                        "aria-flowto",
+                        "aria-labelledby",
+                        "aria-owns",
+                        "aria-posinset",
+                        "aria-rowcount",
+                        "aria-rowindex",
+                        "aria-rowspan",
+                        "aria-setsize",
+                        "aria-atomic",
+                        "aria-busy",
+                        "aria-controls",
+                        "aria-current",
+                        "aria-describedby",
+                        "aria-description",
+                        "aria-details",
+                        "aria-disabled",
+                        "aria-dropeffect",
+                        "aria-errormessage",
+                        "aria-flowto",
+                        "aria-grabbed",
+                        "aria-haspopup",
+                        "aria-hidden",
+                        "aria-invalid",
+                        "aria-keyshortcuts",
+                        "aria-label",
+                        "aria-labelledby",
+                        "aria-live",
+                        "aria-owns",
+                        "aria-relevant",
+                        "aria-roledescription")
                 .globally()
-                .toFactory();
-    }
-
-    /**
-     * Creates a policy that allows the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link#target">{@code link}</a> element.
-     */
-    private static PolicyFactory allowLink() {
-        return new HtmlPolicyBuilder()
-                .allowElements("link")
-                .allowAttributes("href", "rel", "as", "disabled", "fetchpriority", "hreflang", "imagesizes",
-                        "imagesrcset", "integrity", "media", "referrerpolicy", "sizes", "title", "type",
-                        "target", "charset", "rev")
-                .onElements("link")
-                .toFactory();
-    }
-
-    /**
-     * Creates a policy that allows the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a">{@code <a>}</a> element.
-     */
-    private static PolicyFactory allowA() {
-        return new HtmlPolicyBuilder()
-                .allowElements("a")
-                .allowAttributes("target")
-                .onElements("a")
                 .toFactory();
     }
 
@@ -286,14 +388,59 @@ public final class RichTextSanitiser {
                 .toFactory();
     }
 
+    private static PolicyFactory allowStyles() {
+        // Extend the default CSS schema with additional safe properties.
+        final var cssSchema = CssSchema.withProperties(Set.of("display"));
+
+        return new HtmlPolicyBuilder()
+                .allowStyling(CssSchema.union(CssSchema.DEFAULT, cssSchema))
+                .toFactory();
+    }
+
+    /**
+     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table#visual_layout_of_table_contents">The Table element</a>
+     */
+    private static PolicyFactory allowTables() {
+        return new HtmlPolicyBuilder()
+                .allowElements(
+                        "table", "tr", "td", "th",
+                        "colgroup", "caption", "col",
+                        "thead", "tbody", "tfoot")
+                .allowAttributes("summary", "align", "valign", "bgcolor", "border", "cellpadding", "cellspacing", "frame", "rules", "width")
+                    .onElements("table")
+                .allowAttributes("align", "valign")
+                    .onElements("caption")
+                .allowAttributes("align", "bgcolor", "char", "charoff", "valign")
+                    .onElements("thead")
+                .allowAttributes("span", "align", "bgcolor", "char", "charoff", "valign", "width")
+                    .onElements("colgroup")
+                .allowAttributes("span", "align", "bgcolor", "char", "charoff", "valign", "width")
+                    .onElements("col")
+                .allowAttributes("abbr", "colspan", "headers", "rowspan", "scope", "align", "valign", "axis", "bgcolor",
+                                 "char", "charoff", "height", "width")
+                    .onElements("th")
+                .allowAttributes("align", "valign", "bgcolor", "char", "charoff")
+                    .onElements("tr")
+                .allowAttributes("align", "valign", "bgcolor", "char", "charoff")
+                    .onElements("tbody")
+                .allowAttributes("abbr", "colspan", "headers", "rowspan", "scope", "align", "valign", "axis", "bgcolor",
+                                 "char", "charoff", "height", "width")
+                    .onElements("td")
+                .allowAttributes("align", "valign", "axis", "bgcolor", "char", "charoff")
+                    .onElements("tfoot")
+                .allowTextIn("table")
+                .toFactory();
+    }
+
     private static final PolicyFactory POLICY_FACTORY =
-            LINKS.and(TABLES).and(STYLES).and(IMAGES).and(BLOCKS)
+            IMAGES.and(BLOCKS)
+            .and(allowTables())
+            .and(allowStyles())
             .and(allowLists())
             .and(allowBlockquote())
-            .and(allowCommonAttributes())
+            .and(allowGlobalAttributes())
             .and(allowEmptyElementsPolicy())
-            .and(allowLink())
-            .and(allowA())
+            .and(allowLinks())
             .and(allowCommonElements())
             .and(allowToastUi());
 
