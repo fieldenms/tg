@@ -93,6 +93,18 @@ const template = html`
             margin-right: 3px;
             color: #aaa;
         }
+        del a span, del a {
+            text-decoration: line-through underline;
+        }
+        del span {
+            text-decoration: line-through;  
+        }
+        a span {
+            text-decoration: underline;
+        }
+        del {
+            color: #999;
+        }
     </style>
     <div class="cell-background" style$="[[_backgroundRendHints]]" modified$="[[_modified]]"></div>
     <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" icon="[[_value]]"></iron-icon>
