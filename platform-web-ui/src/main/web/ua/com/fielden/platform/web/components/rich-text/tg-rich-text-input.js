@@ -642,6 +642,10 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         return this._editor && this._editor.getHeight();
     }
 
+    getText() {
+        return this._getEditableContent().innerText;
+    }
+
     focusInput() {
         if (this._editor) {
             this._editor.focus();
