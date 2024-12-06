@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.validation;
 import com.google.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -61,7 +60,6 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         final ActivatableAbstractEntity<?> entity = property.getEntity();
         // A persisted entity is being deactivated, but it may still be referenced.
         if (!newValue && entity.isPersisted()) {
-            final IEntityReader<?> co = co(entity.getType());
             // Consider only activatable persistent entities as dependencies.
             // Hypothetically speaking, every activatable entity is also persistent.
             // However, this may change in the future, which is why the type's persistence should also be tested.
