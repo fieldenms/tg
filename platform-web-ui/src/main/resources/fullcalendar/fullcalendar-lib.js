@@ -7,8 +7,3 @@ export const fullcalendarStyles = html`<style include='fullcalendar-styles'></st
 
 import '/resources/fullcalendar/main.js';
 export const FullCalendar = window.FullCalendar;
-
-import '/resources/components/moment-lib.js';
-
-import '/resources/fullcalendar/moment-timezone/main.global.js';
-export const momentTimezonePlugin = FullCalendar.momentTimezonePlugin;

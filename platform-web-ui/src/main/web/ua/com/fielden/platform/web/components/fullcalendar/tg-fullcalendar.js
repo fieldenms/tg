@@ -1,5 +1,5 @@
 import '/resources/components/moment-lib.js';
-import { fullcalendarStyles, FullCalendar, momentTimezonePlugin } from '/resources/fullcalendar/fullcalendar-with-timezones-lib.js';
+import { fullcalendarStyles, FullCalendar, momentTimezonePlugin } from '/resources/fullcalendar/moment-timezone/fullcalendar-with-timezones-lib.js';
 import '/resources/components/tg-dropdown-switch.js';
 import '/resources/layout/tg-flex-layout.js';
 import '/resources/images/tg-icons.js';
