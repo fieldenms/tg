@@ -20,6 +20,7 @@ import java.util.Properties;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 import static ua.com.fielden.platform.test.ioc.AuditingTestIocModule.GENERATED_AUDIT_SOURCES_PATH;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -112,6 +113,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         props.setProperty("domain.package", "ua.com.fielden.platform");
         props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
         props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
+        props.setProperty(AUDIT_PATH, "../platform-pojo-bl/target/classes");
         props.setProperty("attachments.location", "src/test/resources/attachments");
         props.setProperty("email.smtp", "non-existing-server");
         props.setProperty("email.fromAddress", "platform@fielden.com.au");

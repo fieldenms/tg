@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test;
 
+import com.google.inject.name.Names;
 import ua.com.fielden.platform.companion.IEntityCompanionGenerator;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
@@ -9,6 +10,8 @@ import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;
 import ua.com.fielden.platform.sample.domain.ReferenceHierarchyDaoStub;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.utils.IDates;
+
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityIocModule}, this module binds
@@ -35,6 +38,8 @@ public class EntityTestIocModuleWithPropertyFactory extends EntityIocModule {
         bind(IDates.class).to(DatesForTesting.class);
 
         bind(IEntityCompanionGenerator.class).to(EntityCompanionGeneratorStub.class);
+
+        bindConstant().annotatedWith(Names.named(AUDIT_PATH)).to("../platform-pojo-bl/target/classes");
     }
 
 }

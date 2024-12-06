@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_VERSION;
-import static ua.com.fielden.platform.audit.AuditUtils.getAuditPropTypeForAuditType;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.failuref;
@@ -35,7 +34,11 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
         extends CommonEntityDao<AE>
         implements IAuditEntityDao<E, AE>
 {
-    private final Class<AbstractAuditProp<AE>> auditPropType;
+
+    /**
+     * This field is effectively final, but cannot be declared so due to late initialisation; see {@link #setAuditTypeFinder(IAuditTypeFinder)}.
+     */
+    private Class<AbstractAuditProp<AE>> auditPropType;
 
     private IDomainMetadata domainMetadata;
     /**
@@ -50,9 +53,9 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
      */
     private ImmutableBiMap<String, String> auditedToAuditPropertyNames;
 
-    protected CommonAuditEntityDao() {
-        super();
-        auditPropType = getAuditPropTypeForAuditType(getEntityType());
+    @Inject
+    protected void setAuditTypeFinder(final IAuditTypeFinder a3tFinder) {
+        auditPropType = a3tFinder.getAuditPropTypeForAuditEntity(getEntityType());
     }
 
     @Inject

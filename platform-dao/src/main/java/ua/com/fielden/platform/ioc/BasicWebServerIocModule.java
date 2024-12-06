@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.ioc;
 
+import com.google.inject.Provides;
 import com.google.inject.Stage;
 import com.google.inject.name.Names;
+import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.audit.AbstractAuditProp;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -29,12 +32,12 @@ import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Properties;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.audit.AuditUtils.*;
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
 
@@ -79,7 +82,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
     {
         super(props, domainEntityTypes);
         this.props = props;
-        this.applicationDomainProvider = registerAuditTypes(applicationDomainProvider, props.getProperty(GEN_AUDIT_MODE) != null);
+        this.applicationDomainProvider = applicationDomainProvider;
         // Currently there is no good way of binding the default implementation of IAuthorisationModel other than having multiple constructors in this module.
         // Good old @ImplementedBy cannot be used because the default implementation resides in platform-dao, while the interface is in platform-pojo-bl.
         this.authorisationModelType = ServerAuthorisationModel.class;
@@ -129,9 +132,10 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("dates.weekStart")).to(Integer.valueOf(props.getProperty("dates.weekStart", "1"))); // 1 - Monday
         bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.valueOf(props.getProperty("dates.finYearStartDay", "1"))); // 1 - the first day of the month
         bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.valueOf(props.getProperty("dates.finYearStartMonth", "7"))); // 7 - July, the 1st of July is the start of Fin Year in Australia
+        // Auditing
+        bindConstant().annotatedWith(Names.named(AUDIT_PATH)).to(props.getProperty(AUDIT_PATH));
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class);
-        bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
         requireBinding(ISecurityTokenProvider.class);
         // serialisation related binding
         requireBinding(ISerialisationClassProvider.class);
@@ -156,24 +160,26 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         return props;
     }
 
-    /**
-     * Returns a new application domain provider that adds an audit-entity type and a corresponding audit-prop type
-     * to each audited entity type in the specified provider.
-     */
-    private static IApplicationDomainProvider registerAuditTypes(
-            final IApplicationDomainProvider applicationDomainProvider,
-            final boolean ignoreMissingAuditTypes)
-    {
+    @Provides
+    @Singleton
+    IApplicationDomainProvider provideApplicationDomain(final IAuditTypeFinder auditTypeFinder) {
+        final boolean isGenAuditMode = props.getProperty(GEN_AUDIT_MODE) != null;
+
         final var newEntityTypes = applicationDomainProvider.entityTypes().stream()
                 .<Class<? extends AbstractEntity<?>>> mapMulti((type, sink) -> {
                     sink.accept(type);
+                    // For audited types, register their audit types, which must exist, unless we are running in the audit generation mode.
                     if (isAudited(type)) {
-                        if (ignoreMissingAuditTypes) {
-                            findAuditType(type).ifPresent(sink::accept);
-                            findAuditPropType(type).ifPresent(sink::accept);
+                        if (isGenAuditMode) {
+                            auditTypeFinder.findAllAuditEntityTypesFor(type).forEach(a3tType -> {
+                                sink.accept(a3tType);
+                                findAuditPropTypeForAuditType(a3tType).ifPresent(sink);
+                            });
                         } else {
-                            sink.accept(getAuditType(type));
-                            sink.accept(getAuditPropType(type));
+                            auditTypeFinder.getAllAuditEntityTypesFor(type).forEach(a3tType -> {
+                                sink.accept(a3tType);
+                                sink.accept(getAuditPropTypeForAuditType(a3tType));
+                            });
                         }
                     }
                 })

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.ioc;
 
+import ua.com.fielden.platform.audit.AuditingIocModule;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.web_api.GraphQLScalars;
@@ -28,6 +29,8 @@ public abstract class EntityIocModule extends AbstractPlatformIocModule {
         // static injection occurs at the time when an injector is created
         // this guarantees that different implementations of IDates will be injected based on IDates binding in IoC modules that define the binding configuration;
         requestStaticInjection(GraphQLScalars.class);
+
+        install(new AuditingIocModule());
     }
 
 }

@@ -9,6 +9,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.audit.IAuditEntityDao;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
@@ -91,6 +92,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final IEntityFetcher entityFetcher;
     private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
+    private final IAuditTypeFinder a3tFinder;
     
     private final BiConsumer<T, List<String>> processAfterSaveEvent;
     private final Consumer<MetaProperty<?>> assignBeforeSave;
@@ -117,7 +119,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final IEntityFetcher entityFetcher,
             final IUserProvider userProvider,
             final IUniversalConstants universalConstants,
-            final ICompanionObjectFinder coFinder)
+            final ICompanionObjectFinder coFinder,
+            final IAuditTypeFinder a3tFinder)
     {
         this.session = session;
         this.transactionGuid = transactionGuid;
@@ -133,6 +136,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.userProvider = userProvider;
         this.now = universalConstants::now;
         this.coFinder = coFinder;
+        this.a3tFinder = a3tFinder;
     }
 
     @ImplementedBy(FactoryImpl.class)
@@ -214,7 +218,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // Auditing
         if (isAudited(entityType)) {
-            final IAuditEntityDao<T, AbstractAuditEntity<T>> coAudit = coFinder.find(getAuditType(entityType));
+            final IAuditEntityDao<T, AbstractAuditEntity<T>> coAudit = coFinder.find(a3tFinder.getAuditEntityType(entityType));
             coAudit.audit(savedEntity, transactionGuid.get(), dirtyProperties);
         }
 
@@ -686,18 +690,22 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         private final IUserProvider userProvider;
         private final IUniversalConstants universalConstants;
         private final ICompanionObjectFinder coFinder;
+        private final IAuditTypeFinder a3tFinder;
 
         @Inject
         FactoryImpl(final IDbVersionProvider dbVersionProvider,
                     final IEntityFetcher entityFetcher,
                     final IUserProvider userProvider,
                     final IUniversalConstants universalConstants,
-                    final ICompanionObjectFinder coFinder) {
+                    final ICompanionObjectFinder coFinder,
+                    final IAuditTypeFinder a3tFinder)
+        {
             this.dbVersionProvider = dbVersionProvider;
             this.entityFetcher = entityFetcher;
             this.userProvider = userProvider;
             this.universalConstants = universalConstants;
             this.coFinder = coFinder;
+            this.a3tFinder = a3tFinder;
         }
 
         public <E extends AbstractEntity<?>> PersistentEntitySaver<E> create(
@@ -713,7 +721,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         {
             return new PersistentEntitySaver<>(session, transactionGuid, entityType, keyType, processAfterSaveEvent,
                                                assignBeforeSave, findById, entityExists, logger,
-                                               dbVersionProvider, entityFetcher, userProvider, universalConstants, coFinder);
+                                               dbVersionProvider, entityFetcher, userProvider, universalConstants, coFinder, a3tFinder);
         }
     }
 

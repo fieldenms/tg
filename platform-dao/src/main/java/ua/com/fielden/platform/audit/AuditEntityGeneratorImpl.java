@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 import java.io.IOException;
@@ -28,6 +27,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.*;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.AUDIT_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.PROPERTY;
+import static ua.com.fielden.platform.audit.AuditUtils.getAuditEntityTypeVersion;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 
@@ -36,10 +36,12 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     private final IDomainMetadata domainMetadata;
     private final GeneratorEnvironment environment;
     private final JavaPoet javaPoet;
+    private final IAuditTypeFinder auditTypeFinder;
 
     @Inject
-    AuditEntityGeneratorImpl(final IDomainMetadata domainMetadata) {
+    AuditEntityGeneratorImpl(final IDomainMetadata domainMetadata, final IAuditTypeFinder auditTypeFinder) {
         this.domainMetadata = domainMetadata;
+        this.auditTypeFinder = auditTypeFinder;
         environment = new GeneratorEnvironment();
         javaPoet = environment.javaPoet();
     }
@@ -94,22 +96,24 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     }
 
     private LocalResult generate_(final Class<? extends AbstractEntity<?>> type) {
+        final var newAuditTypeVersion = auditTypeFinder.findAuditEntityType(type)
+                .map(auditEntityType -> getAuditEntityTypeVersion(auditEntityType) + 1)
+                .orElse(1);
+
         final var auditTypePkg = type.getPackageName();
-        // TODO multiple audit-entity versions
-        final var auditTypeVersion = 1;
-        final var auditTypeName = type.getSimpleName() + "_" + A3T + "_" + auditTypeVersion;
+        final var auditTypeName = type.getSimpleName() + "_" + A3T + "_" + newAuditTypeVersion;
         final var auditPropTypeName = auditTypeName + "_Prop";
 
         final JavaFile auditEntity;
         final JavaFile auditProp;
         try {
-            auditEntity = generateAuditEntity(type, auditTypePkg, auditTypeName, ClassName.get(auditTypePkg, auditPropTypeName), auditTypeVersion);
+            auditEntity = generateAuditEntity(type, auditTypePkg, auditTypeName, ClassName.get(auditTypePkg, auditPropTypeName), newAuditTypeVersion);
             auditProp = generateAuditPropEntity(type, ClassName.get(auditTypePkg, auditTypeName), auditTypePkg, auditPropTypeName);
         } catch (final Exception e) {
-            throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(auditTypeVersion, type.getTypeName()), e);
+            throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(newAuditTypeVersion, type.getTypeName()), e);
         }
 
-        return new LocalResult(auditEntity, auditProp, auditTypeVersion);
+        return new LocalResult(auditEntity, auditProp, newAuditTypeVersion);
     }
 
     record LocalResult(JavaFile auditEntity, JavaFile auditProp, int auditVersion) {}
