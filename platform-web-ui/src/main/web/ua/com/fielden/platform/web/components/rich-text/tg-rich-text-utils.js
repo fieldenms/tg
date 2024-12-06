@@ -3,7 +3,8 @@ const RichTextConverter = {
     'H2': convertHeader,
     'H3': convertHeader,
     'P': convertParagraph,
-    'UL': converUnorderedList,
+    'UL': convertUnorderedList,
+    'OL': convertOrderedList,
     'LI': convertListItem
 }
 
@@ -19,23 +20,28 @@ function convertParagraph(paragraph) {
     return fragment;
 }
 
-function converUnorderedList(unorderdList) {
+function convertUnorderedList(unorderedList) {
     const unorderedSpan = document.createElement('span');
     unorderedSpan.classList.add('unordered-list');
-    return moveChildren(unorderdList, unorderedSpan);
+    return moveChildren(unorderedList, unorderedSpan);
+}
+
+function convertOrderedList(orderedList) {
+    const orderedSpan = document.createElement('span');
+    orderedSpan.classList.add('ordered-list');
+    return moveChildren(orderedList, orderedSpan);
 }
 
 function convertListItem(listItem) {
-    let spanItem;
+    const spanItem = document.createElement('span');
     if (listItem.parentElement.tagName === 'UL') {
-        spanItem = document.createElement('span');
         if (listItem.classList.contains('task-list-item')) {
             [...listItem.classList].forEach(classItem => spanItem.classList.add(classItem));
         } else {
             spanItem.classList.add('unordered-list-item');
         }
     } else if (listItem.parentElement.tagName === 'OL') {
-        //TODO generate list item for ordered list
+        spanItem.classList.add('ordered-list-item');
     }
     return moveChildren(listItem, spanItem);
 }
