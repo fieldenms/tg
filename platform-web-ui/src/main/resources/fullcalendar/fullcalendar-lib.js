@@ -1,5 +1,5 @@
 import fullcalendarStyleStrings from '/resources/fullcalendar/main.css.js';
-import { createStyleModule } from '/resources/reflection/tg-polymer-utils.js';
+import { createStyleModule } from '/resources/reflection/tg-style-utils.js';
 createStyleModule('fullcalendar-styles', fullcalendarStyleStrings);
 
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';

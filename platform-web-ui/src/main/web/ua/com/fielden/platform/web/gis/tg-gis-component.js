@@ -13,7 +13,7 @@ import '/resources/gis/leaflet/subgroup/leaflet-subgroup-lib.js';
 import { TgReflector, _isEntity } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
-import { createStyleModule, appendStylesTo } from '/resources/reflection/tg-polymer-utils.js';
+import { createStyleModule, appendStylesTo } from '/resources/reflection/tg-style-utils.js';
 
 const tgGisComponentStyles = `
     .leaflet-container {
