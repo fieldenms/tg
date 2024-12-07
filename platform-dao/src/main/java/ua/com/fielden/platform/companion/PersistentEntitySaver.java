@@ -423,7 +423,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     }
 
     /**
-     * This is a convenient predicate method that identifies whether the specified property need to be processed as an activatable reference.
+     * This is a convenient predicate method that identifies whether the specified property needs to be processed as an activatable reference.
      *
      * @param entity
      * @param prop
@@ -432,10 +432,21 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private boolean shouldProcessAsActivatable(final T entity, final MetaProperty<?> prop) {
         final boolean shouldProcessAsActivatable;
         if (prop.isActivatable() && entity instanceof ActivatableAbstractEntity && isNotSpecialActivatableToBeSkipped(prop)) {
-            final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
-            final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
+            final Class<? extends ActivatableAbstractEntity<?>> propType = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
+            final DeactivatableDependencies ddAnnotation = propType.getAnnotation(DeactivatableDependencies.class);
             if (ddAnnotation != null && prop.isKey()) {
-                shouldProcessAsActivatable = !Arrays.asList(ddAnnotation.value()).contains(entity.getType());
+                // If the type of the referencing property has deactivatable dependencies that include the type of the entity, which is being saved,
+                // and the property is a key or a key member, then such property should be excluded from processing.
+                //
+                // Consider an example of activatable entity `Manager`, which has a key member `person: Person`.
+                // Entity `Person` is activatable and includes `Manager` in its `@DeactivatableDependencies`.
+                // Now imagine a scenario where an entity instance of `Manager` is being deactivated.
+                // Property `Manager.person` would be considered for processing as it is of activatable type `Person`.
+                // However, `Manager` is a specialisation of `Person`.
+                // This is signified by the fact that `Manager.person` is a key member and `Person` includes `Manager` in its `@DeactivatableDependencies`.
+                // Activation/deactivation of a `Manager` should not affect `refCount` for `Person`.
+                // That is why, property `Manager.person` needs to be excluded from activatable processing.
+                shouldProcessAsActivatable = !Set.of(ddAnnotation.value()).contains(entity.getType());
             } else {
                 shouldProcessAsActivatable = true;
             }
