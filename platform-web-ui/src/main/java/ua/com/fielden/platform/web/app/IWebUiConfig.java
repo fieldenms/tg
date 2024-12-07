@@ -92,7 +92,7 @@ public interface IWebUiConfig extends IMenuRetriever {
     String genWebUiPreferences();
 
     /**
-     * Generates app-specific Fullcalendar element.
+     * Generates app-specific 'tg-fullcalendar' element source.
      *
      * @return
      */

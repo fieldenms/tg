@@ -9,6 +9,12 @@ import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.FullcalendarResource;
 
+/**
+ * Factory for {@link FullcalendarResource}.
+ *
+ * @author TG Team
+ *
+ */
 public class FullcalendarResourceFactory extends Restlet {
     private final IWebResourceLoader webResourceLoader;
     private final IDeviceProvider deviceProvider;

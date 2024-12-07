@@ -14,7 +14,7 @@ import static ua.com.fielden.platform.web.application.AbstractWebUiResources.FUL
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
 /**
- * Responds to GET requests with generated application specific Fullcalendar component.
+ * Responds to GET requests with generated application-specific 'tg-fullcalendar' component.
  *
  * @author TG Team
  *

@@ -235,7 +235,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
 
     /**
-     * Generates tg-fullcalendar element with timezone enhancements based on independent time-zone mode setting.
+     * Generates 'tg-fullcalendar' element source with timezone enhancements based on independent time-zone mode setting.
      */
     public String genFullcalendarElement(final boolean independentTimeZoneMode) {
         return ResourceLoader.getText("ua/com/fielden/platform/web/components/fullcalendar/tg-fullcalendar.js").
