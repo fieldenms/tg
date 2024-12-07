@@ -240,17 +240,15 @@ public class WebUiBuilder implements IWebUiBuilder {
     public String genFullcalendarElement(final boolean independentTimeZoneMode) {
         return ResourceLoader.getText("ua/com/fielden/platform/web/components/fullcalendar/tg-fullcalendar.js").
             replace("@genImport", independentTimeZoneMode ? """
-                import '/resources/components/moment-lib.js';
                 import { momentTimezonePlugin } from '/resources/fullcalendar/moment-timezone/fullcalendar-with-timezones-lib.js';
+                import { now } from '/resources/reflection/tg-date-utils.js';
             """ : "").
             replace("@genConfig", independentTimeZoneMode ? """
                 ,
                 plugins: [ momentTimezonePlugin ],
                 timeZone: '%s',
                 now: function() {
-                    // return new Date().toISOString(); // default impl
-                    const nowMoment = moment(moment().tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'));
-                    return nowMoment.toDate().toISOString(); // Return in ISO 8601 format
+                    return now().toDate().toISOString(); // Return in ISO 8601 string format, as per default implementation
                 }
             """.formatted(TimeZone.getDefault().getID()) : "");
     }
