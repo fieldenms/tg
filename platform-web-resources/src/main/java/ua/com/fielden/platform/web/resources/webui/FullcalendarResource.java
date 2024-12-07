@@ -10,6 +10,7 @@ import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 import static org.restlet.data.MediaType.TEXT_JAVASCRIPT;
+import static ua.com.fielden.platform.web.application.AbstractWebUiResources.FULLCALENDAR_PATH;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
 /**
@@ -29,7 +30,7 @@ public class FullcalendarResource extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        return createRepresentation(webResourceLoader, TEXT_JAVASCRIPT, "/resources/components/fullcalendar/tg-fullcalendar.js", getReference().getRemainingPart());
+        return createRepresentation(webResourceLoader, TEXT_JAVASCRIPT, FULLCALENDAR_PATH, getReference().getRemainingPart());
     }
 
 }

@@ -6,6 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
@@ -22,17 +23,20 @@ import java.util.stream.Stream;
 
 import static java.io.File.pathSeparator;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.lang.System.arraycopy;
 import static java.lang.System.getenv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.io.FileUtils.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.cypher.Checksum.sha1;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.web.application.AbstractWebUiResources.FULLCALENDAR_PATH;
 
 /**
  * A set of utilities to facilitate Web UI application vulcanization.
@@ -330,10 +334,19 @@ public class VulcanizingUtility {
         }
         downloadSource("app", "tg-app-config.js", webResourceLoader);
         downloadSource("app", "tg-app.js", webResourceLoader);
-        downloadSource("resources/components/fullcalendar", "tg-fullcalendar.js", webResourceLoader);
+        final var pathAndName = pathAndName(FULLCALENDAR_PATH);
+        downloadSource(pathAndName._1, pathAndName._2, webResourceLoader);
         LOGGER.info("\t\t\tDownloading generated resource 'application-startup-resources.js'...");
         downloadSource("app", "application-startup-resources.js", webResourceLoader);
         LOGGER.info("\tDownloaded generated resources.");
+    }
+
+    /**
+     * Splits full path to 'path' and 'name'. Delimited by "/". Can also be prepended with "/".
+     */
+    private static T2<String, String> pathAndName(final String fullPath) {
+        final var path = stream(fullPath.split("/")).filter(not(String::isBlank)).toList();
+        return T2.t2(join("/", path.subList(0, path.size() - 1)), path.getLast());
     }
 
     /**
