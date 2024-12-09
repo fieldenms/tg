@@ -53,7 +53,6 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
-import static ua.com.fielden.platform.audit.AuditUtils.getAuditType;
 import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;

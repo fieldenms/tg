@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.audit;
 
+import com.google.inject.Inject;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
@@ -14,15 +15,20 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.CHANGED_PROPS;
-import static ua.com.fielden.platform.audit.AuditUtils.getAuditPropType;
-import static ua.com.fielden.platform.audit.AuditUtils.getAuditType;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 public class AuditingTest extends AbstractDaoTestCase {
 
-    private final Class<AbstractAuditEntity<TgVehicle>> tgVehicleAuditType = getAuditType(TgVehicle.class);
-    private final IAuditEntityDao<TgVehicle, AbstractAuditEntity<TgVehicle>> coTgVehicleAudit = co(tgVehicleAuditType);
-    private final Class<AbstractAuditProp<AbstractAuditEntity<TgVehicle>>> tgVehicleAuditPropType = getAuditPropType(TgVehicle.class);
+    private Class<AbstractAuditEntity<TgVehicle>> tgVehicleAuditType;
+    private IAuditEntityDao<TgVehicle, AbstractAuditEntity<TgVehicle>> coTgVehicleAudit;
+    private Class<AbstractAuditProp<AbstractAuditEntity<TgVehicle>>> tgVehicleAuditPropType;
+
+    @Inject
+    void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
+        tgVehicleAuditType = auditTypeFinder.getAuditEntityType(TgVehicle.class);
+        coTgVehicleAudit = co(tgVehicleAuditType);
+        tgVehicleAuditPropType = auditTypeFinder.getAuditPropTypeForAuditEntity(tgVehicleAuditType);
+    }
 
     @Test
     public void audit_record_is_created_when_new_TgVehicle_is_saved() {

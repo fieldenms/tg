@@ -12,6 +12,11 @@ import java.util.Optional;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
+/**
+ * Static utilities for auditing.
+ * <p>
+ * To locate audit types for audited entity types, {@link IAuditTypeFinder} should be used.
+ */
 public final class AuditUtils {
 
     /**
@@ -48,134 +53,13 @@ public final class AuditUtils {
         return result.isEmpty() ? null : result;
     }
 
-    /**
-     * Locates and returns the audit-entity type for the specified entity type using the specified class loader.
-     * Returns an empty optional if the audit type cannot be located.
-     *
-     * @see #getAuditType(Class)
-     */
-    public static <E extends AbstractEntity<?>> Optional<Class<AbstractAuditEntity<E>>> findAuditType(
-            final Class<E> entityType,
-            final ClassLoader classLoader)
-    {
-        try {
-            return Optional.of(getAuditTypeOrThrow(entityType, classLoader));
-        } catch (final ClassNotFoundException e) {
-            return Optional.empty();
-        }
-    }
-
-    /**
-     * Equivalent to {@link #findAuditType(Class, ClassLoader)} using the class loader of the specified entity.
-     */
-    public static <E extends AbstractEntity<?>> Optional<Class<AbstractAuditEntity<E>>> findAuditType(final Class<E> entityType) {
-        return findAuditType(entityType, entityType.getClassLoader());
-    }
-
-    /**
-     * Locates and returns the audit-entity type for the specified entity using the specified class loader.
-     * Throws an exception if the audit type cannot be located.
-     * <p>
-     * The return type of this method deliberately doesn't contain wildcards, as that would greatly reduce the ergonomics around its usage.
-     *
-     * @see #findAuditType(Class)
-     */
-    public static <E extends AbstractEntity<?>> Class<AbstractAuditEntity<E>> getAuditType(
-            final Class<E> entityType,
-            final ClassLoader classLoader)
-    {
-        try {
-            return getAuditTypeOrThrow(entityType, classLoader);
-        } catch (final ClassNotFoundException e) {
-            throw new InvalidArgumentException("Audit-entity type doesn't exist for entity type [%s]".formatted(entityType.getTypeName()), e);
-        }
-    }
-
-    /**
-     * Equivalent to {@link #getAuditType(Class, ClassLoader)} using the class loader of the specified entity type.
-     */
-    public static <E extends AbstractEntity<?>> Class<AbstractAuditEntity<E>> getAuditType(final Class<E> entityType) {
-        return getAuditType(entityType, entityType.getClassLoader());
-    }
-
-    private static <E extends AbstractEntity<?>> Class<AbstractAuditEntity<E>> getAuditTypeOrThrow(
-            final Class<E> entityType,
-            final ClassLoader classLoader)
-        throws ClassNotFoundException
-    {
-        // TODO Support multiple versions of audit-entity types
-        final var auditTypeName = getAuditTypeName(entityType, 1);
-        // TODO verify type is really audit-type
-        return (Class<AbstractAuditEntity<E>>) classLoader.loadClass(auditTypeName);
-    }
-
-    static String getAuditTypeName(final Class<? extends AbstractEntity<?>> type, final int version) {
+    public static String getAuditTypeName(final Class<? extends AbstractEntity<?>> type, final int version) {
         final var simpleName = type.getSimpleName() + "_" + AbstractAuditEntity.A3T + "_" + version;
         return type.getPackageName() + "." + simpleName;
     }
 
     public static boolean isAuditEntityType(final Class<?> type) {
         return AbstractAuditEntity.class.isAssignableFrom(type);
-    }
-
-    /**
-     * Locates and returns the {@linkplain AbstractAuditProp audit-prop entity type} for the specified entity type using the specified class loader.
-     * Returns an empty optional if the audit-prop type cannot be located.
-     *
-     * @see #getAuditPropType(Class)
-     */
-    public static <E extends AbstractEntity<?>> Optional<Class<AbstractAuditProp<AbstractAuditEntity<E>>>> findAuditPropType(
-            final Class<E> entityType,
-            final ClassLoader classLoader)
-    {
-        try {
-            return Optional.of(getAuditPropTypeOrThrow(entityType, classLoader));
-        } catch (final ClassNotFoundException e) {
-            return Optional.empty();
-        }
-    }
-
-    /**
-     * Equivalent to {@link #findAuditPropType(Class, ClassLoader)} using the class loader of the specified entity type.
-     */
-    public static <E extends AbstractEntity<?>> Optional<Class<AbstractAuditProp<AbstractAuditEntity<E>>>> findAuditPropType(final Class<E> entityType) {
-        return findAuditPropType(entityType, entityType.getClassLoader());
-    }
-
-    /**
-     * Locates and returns the {@linkplain AbstractAuditProp audit-prop entity type} for the specified entity type using the specified class loader.
-     * Throws an exception if the audit-prop type cannot be located.
-     * <p>
-     * The return type of this method deliberately doesn't contain wildcards, as that would greatly reduce the ergonomics around its usage.
-     *
-     * @see #findAuditPropType(Class)
-     */
-    public static <E extends AbstractEntity<?>> Class<AbstractAuditProp<AbstractAuditEntity<E>>> getAuditPropType(
-            final Class<E> entityType,
-            final ClassLoader classLoader)
-    {
-        try {
-            return getAuditPropTypeOrThrow(entityType, classLoader);
-        } catch (final ClassNotFoundException e) {
-            throw new InvalidArgumentException("Audit-prop entity type doesn't exist for entity type [%s]".formatted(entityType.getTypeName()), e);
-        }
-    }
-
-    /**
-     * Equivalent to {@link #getAuditPropType(Class, ClassLoader)} using the class loader of the specified entity type.
-     */
-    public static <E extends AbstractEntity<?>> Class<AbstractAuditProp<AbstractAuditEntity<E>>> getAuditPropType(final Class<E> entityType) {
-        return getAuditPropType(entityType, entityType.getClassLoader());
-    }
-
-    private static <E extends AbstractEntity<?>> Class<AbstractAuditProp<AbstractAuditEntity<E>>> getAuditPropTypeOrThrow(
-            final Class<E> entityType,
-            final ClassLoader classLoader)
-        throws ClassNotFoundException
-    {
-        // TODO Support multiple versions of audit-entity types
-        final var auditPropTypeName = getAuditPropTypeName(entityType, 1);
-        return (Class<AbstractAuditProp<AbstractAuditEntity<E>>>) classLoader.loadClass(auditPropTypeName);
     }
 
     /**
@@ -196,9 +80,10 @@ public final class AuditUtils {
 
     /**
      * Locates and returns the {@linkplain AbstractAuditProp audit-prop entity type} for the specified audit-entity type using the class loader of the latter.
-     * Throws an exception if the audit-prop type cannot be located.
+     * <p>
+     * It is an error if the audit-prop type cannot be located.
      *
-     * @see #findAuditPropType(Class)
+     * @see #findAuditPropTypeForAuditType(Class)
      */
     public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
     Class<AP> getAuditPropTypeForAuditType(final Class<AE> auditType)
@@ -214,13 +99,8 @@ public final class AuditUtils {
     Class<AP> getAuditPropTypeForAuditTypeOrThrow(final Class<AE> auditType)
             throws ClassNotFoundException
     {
-        // TODO Support multiple versions of audit-entity types
         final var auditPropTypeName = auditType.getName() + "_Prop";
         return (Class<AP>) auditType.getClassLoader().loadClass(auditPropTypeName);
-    }
-
-    static String getAuditPropTypeName(final Class<? extends AbstractEntity<?>> type, final int version) {
-        return getAuditTypeName(type, version) + "_Prop";
     }
 
     public static boolean isAuditPropEntityType(final Class<?> type) {
@@ -230,8 +110,8 @@ public final class AuditUtils {
     /**
      * Locates and returns the audit-entity type for the specified audit-prop entity type.
      * Returns an empty optional if the audit type cannot be located.
-     *
-     * @see #getAuditTypeForAuditPropType(Class)
+     * <p>
+     * This method is the inverse of {@link #findAuditPropTypeForAuditType(Class)}.
      */
     public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
     Optional<Class<AE>> findAuditTypeForAuditPropType(final Class<AP> auditEntity)
@@ -241,11 +121,12 @@ public final class AuditUtils {
 
     /**
      * Locates and returns the audit-entity type for the specified audit-prop entity type.
-     * Throws an exception if the audit type cannot be located.
+     * <p>
+     * It is an error if the audit type cannot be located.
+     * <p>
+     * This method is the inverse of {@link #getAuditPropTypeForAuditType(Class)}.
      * <p>
      * The return type of this method deliberately doesn't contain wildcards, as that would greatly reduce the ergonomics around its usage.
-     *
-     * @see #findAuditTypeForAuditPropType(Class)
      */
     public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
     Class<AE> getAuditTypeForAuditPropType(final Class<AP> auditPropType)
@@ -266,27 +147,28 @@ public final class AuditUtils {
 
     /**
      * Locates and returns the audited entity type for the specified audit-entity type.
-     * Throws an exception if the audited type cannot be located.
      * <p>
-     * This method is the inverse of {@link #getAuditType(Class)}.
+     * It is an error if the audited type cannot be located.
+     *
+     * @see #getAuditedTypeForAuditPropType(Class)
      */
     public static <E extends AbstractEntity<?>, AE extends AbstractAuditEntity<E>>
     Class<E> getAuditedType(final Class<AE> auditType)
     {
-        // TODO Support multiple versions of audit-entity types
-        final var atAuditType = auditType.getAnnotation(AuditFor.class);
-        if (atAuditType == null) {
+        final var atAuditFor = auditType.getAnnotation(AuditFor.class);
+        if (atAuditFor == null) {
             throw new EntityDefinitionException(format("Audit-entity [%s] is missing required annotation @%s",
                                                        auditType.getTypeName(), AuditFor.class.getTypeName()));
         }
-        return (Class<E>) atAuditType.value();
+        return (Class<E>) atAuditFor.value();
     }
 
     /**
      * Locates and returns the audited entity type for the specified audit-prop entity type.
-     * Throws an exception if the audited type cannot be located.
      * <p>
-     * This method is the inverse of {@link #getAuditPropType(Class)}.
+     * It is an error if the audited type cannot be located.
+     *
+     * @see #getAuditedType(Class)
      */
     public static <E extends AbstractEntity<?>, AE extends AbstractAuditEntity<E>, AP extends AbstractAuditProp<AE>>
     Class<E> getAuditedTypeForAuditPropType(final Class<AP> auditPropType)

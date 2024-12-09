@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.audit;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -27,16 +28,23 @@ import static ua.com.fielden.platform.reflection.Reflector.newParameterizedType;
 
 public class AuditEntityStructureTest extends AbstractDaoTestCase {
 
+    private Class<AbstractAuditEntity<TgVehicle>> tgVehicleAuditType;
+    private Class<AbstractAuditProp<AbstractAuditEntity<TgVehicle>>> tgVehicleAuditPropType;
+
+    @Inject
+    void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
+        tgVehicleAuditType = auditTypeFinder.getAuditEntityType(TgVehicle.class);
+        tgVehicleAuditPropType = auditTypeFinder.getAuditPropTypeForAuditEntity(tgVehicleAuditType);
+    }
+
     @Test
     public void audit_entity_and_audit_prop_types_are_generated_for_TgVehicle() {
-        final var auditType = getAuditType(TgVehicle.class);
-        assertTrue(AbstractAuditEntity.class.isAssignableFrom(auditType));
-        assertEquals(TgVehicle.class, getAuditedType(auditType));
+        assertTrue(AbstractAuditEntity.class.isAssignableFrom(tgVehicleAuditType));
+        assertEquals(TgVehicle.class, getAuditedType(tgVehicleAuditType));
 
-        final var auditPropType = getAuditPropType(TgVehicle.class);
-        assertNotNull(auditPropType);
-        assertTrue(AbstractAuditProp.class.isAssignableFrom(auditPropType));
-        assertEquals(TgVehicle.class, getAuditedTypeForAuditPropType(auditPropType));
+        assertNotNull(tgVehicleAuditPropType);
+        assertTrue(AbstractAuditProp.class.isAssignableFrom(tgVehicleAuditPropType));
+        assertEquals(TgVehicle.class, getAuditedTypeForAuditPropType(tgVehicleAuditPropType));
     }
 
     /**
@@ -51,11 +59,8 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
             }
         }
 
-        final var auditType = getAuditType(TgVehicle.class);
-        final var auditPropType = getAuditPropType(TgVehicle.class);
-
         final var domainMetadata = getInstance(IDomainMetadata.class);
-        final var auditTypeMetadata = domainMetadata.forEntity(auditType);
+        final var auditTypeMetadata = domainMetadata.forEntity(tgVehicleAuditType);
 
         final var persistentPropertiesOfTgVehicle = domainMetadata.forEntity(TgVehicle.class)
                 .properties().stream()
@@ -71,7 +76,7 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                 .add(new Prop(ID, Long.class, PERSISTENT))
                 .add(new Prop(VERSION, Long.class, PERSISTENT))
                 .add(new Prop(AUDITED_ENTITY, TgVehicle.class, PERSISTENT))
-                .add(new Prop(CHANGED_PROPS, newParameterizedType(Set.class, auditPropType), PLAIN))
+                .add(new Prop(CHANGED_PROPS, newParameterizedType(Set.class, tgVehicleAuditPropType), PLAIN))
                 .addAll(persistentPropertiesOfTgVehicle.stream()
                                 .filter(pm -> !NON_AUDITED_PROPERTIES.contains(pm.name()))
                                 .map(pm -> new Prop(AuditUtils.auditPropertyName(pm.name()), pm.type().genericJavaType(), PERSISTENT))
@@ -101,15 +106,12 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
             }
         }
 
-        final var auditType = getAuditType(TgVehicle.class);
-        final var auditPropType = getAuditPropType(TgVehicle.class);
-
         final var domainMetadata = getInstance(IDomainMetadata.class);
-        final var auditPropTypeMetadata = domainMetadata.forEntity(auditPropType);
+        final var auditPropTypeMetadata = domainMetadata.forEntity(tgVehicleAuditPropType);
 
         final var expectedProps = ImmutableList.<Prop>builder()
-                .add(new Prop(AbstractAuditProp.AUDIT_ENTITY, auditType, PERSISTENT))
-                .add(new Prop(AbstractAuditProp.PROPERTY, newParameterizedType(PropertyDescriptor.class, auditType), PERSISTENT))
+                .add(new Prop(AbstractAuditProp.AUDIT_ENTITY, tgVehicleAuditType, PERSISTENT))
+                .add(new Prop(AbstractAuditProp.PROPERTY, newParameterizedType(PropertyDescriptor.class, tgVehicleAuditType), PERSISTENT))
                 .add(new Prop(KEY, String.class, CALCULATED))
                 .add(new Prop(ID, Long.class, PERSISTENT))
                 .add(new Prop(VERSION, Long.class, PERSISTENT))
