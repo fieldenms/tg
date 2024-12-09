@@ -310,7 +310,7 @@ public final class AuditUtils {
      * Returns the version of the specified audit-prop type, which must be associted with an audit-entity type.
      */
     public static int getAuditPropTypeVersion(Class<? extends AbstractAuditProp<?>> type) {
-        return getAuditEntityTypeVersion(getAuditTypeForAuditPropType(type));
+        return getAuditEntityTypeVersion(getAuditTypeForAuditPropType((Class) type));
     }
 
     private AuditUtils() {}
