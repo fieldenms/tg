@@ -13,22 +13,23 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.*;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.AUDIT_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.PROPERTY;
 import static ua.com.fielden.platform.audit.AuditUtils.getAuditEntityTypeVersion;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 
 final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
@@ -159,6 +160,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .map(pm -> {
                     final var propBuilder = propertyBuilder(AuditUtils.auditPropertyName(pm.name()),
                                                             pm.type().genericJavaType())
+                            .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, type, pm.name())))
                             .addAnnotation(
                                     AnnotationSpecs.mapTo((AuditUtils.auditPropertyName(pm.name())).toUpperCase()))
                             .addAnnotation(javaPoet.getAnnotation(Final.class));
@@ -174,6 +176,45 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final var typeSpec = a3tBuilder.build(addSkipEntityExistsValidation);
         return JavaFile.builder(auditTypePkg, typeSpec).build();
+    }
+
+    private AnnotationSpec mkIsPropertyForAudit(final IsProperty isProperty) {
+        final var builder = AnnotationSpec.builder(IsProperty.class);
+
+        if (isProperty.value() != IsProperty.DEFAULT_VALUE) {
+            builder.addMember("value", "$T.class", isProperty.value());
+        }
+        if (!Objects.equals(isProperty.linkProperty(), IsProperty.DEFAULT_LINK_PROPERTY)) {
+            builder.addMember("linkProperty", "$S", isProperty.linkProperty());
+        }
+        // assignBeforeSave is ignored, its semantics should not be applied to audit-entities
+        if (isProperty.length() != IsProperty.DEFAULT_LENGTH) {
+            builder.addMember("length", "$L", isProperty.length());
+        }
+        if (isProperty.precision() != IsProperty.DEFAULT_PRECISION) {
+            builder.addMember("precision", "$L", isProperty.precision());
+        }
+        if (isProperty.scale() != IsProperty.DEFAULT_SCALE) {
+            builder.addMember("scale", "$L", isProperty.scale());
+        }
+        if (isProperty.trailingZeros() != IsProperty.DEFAULT_TRAILING_ZEROS) {
+            builder.addMember("trailingZeros", "$L", isProperty.trailingZeros());
+        }
+        if (!Objects.equals(isProperty.displayAs(), IsProperty.DEFAULT_DISPLAY_AS)) {
+            builder.addMember("displayAs", "$S", isProperty.displayAs());
+        }
+
+        return builder.build();
+    }
+
+    private static <A extends Annotation> A requirePropertyAnnotation(
+            final Class<A> annotationType,
+            final Class<?> enclosingType,
+            final CharSequence propertyPath)
+    {
+        return requireNonNull(getPropertyAnnotation(annotationType, enclosingType, propertyPath.toString()),
+                              () -> "Missing annotation @%s on property [%s] in [%s]"
+                                      .formatted(annotationType.getSimpleName(), propertyPath, enclosingType.getSimpleName()));
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

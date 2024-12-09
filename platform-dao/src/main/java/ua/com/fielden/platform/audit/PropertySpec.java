@@ -6,18 +6,20 @@ import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import static javax.lang.model.element.Modifier.*;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 final class PropertySpec {
+
+    private static final TypeName TYPE_NAME_IS_PROPERTY = TypeName.get(IsProperty.class);
 
     private final String name;
     private final TypeName typeName;
@@ -86,29 +88,36 @@ final class PropertySpec {
         final var builder = FieldSpec.builder(typeName, name, PRIVATE)
                 .addAnnotations(annotations);
 
+        asCollectionalType(environment).ifPresent($ -> builder.addModifiers(FINAL));
+
         if (initializer != null) {
             builder.initializer(initializer);
         }
 
-        ifCollectionalOrElse(environment,
-                             (collTypeName, eltTypeName) -> {
-                                 if (initializer == null) {
-                                     throw new IllegalStateException("Collectional property must have an initialiser.");
-                                 }
-
-                                 builder.addAnnotation(AnnotationSpec.builder(IsProperty.class)
-                                                               .addMember("value", "$T.class", eltTypeName)
-                                                               .build())
-                                         .addModifiers(FINAL);
-                             },
-                             () -> ifPropertyDescriptorOrElse(environment,
-                                                              entityTypeName ->
-                                                                      builder.addAnnotation(AnnotationSpec.builder(IsProperty.class)
-                                                                                                    .addMember("value", "$T.class", entityTypeName)
-                                                                                                    .build()),
-                                                              () -> builder.addAnnotation(environment.javaPoet().getAnnotation(IsProperty.class))));
+        // Use a default IsProperty annotation if none was specified.
+        if (annotations.stream().noneMatch(a -> a.type.equals(environment.javaPoet().getTypeName(IsProperty.class)))) {
+            builder.addAnnotation(mkIsPropertyAnnotation(environment));
+        }
 
         return builder.build();
+    }
+
+    private AnnotationSpec mkIsPropertyAnnotation(final GeneratorEnvironment environment) {
+        return asCollectionalType(environment)
+                .map(collTy -> collTy.map((collTypeName, eltTypeName) -> {
+                    if (initializer == null) {
+                        throw new IllegalStateException("Collectional property must have an initialiser.");
+                    }
+
+                    return AnnotationSpec.builder(IsProperty.class)
+                            .addMember("value", "$T.class", eltTypeName)
+                            .build();
+                }))
+                .orElseGet(() -> asPropertyDescriptor(environment)
+                        .map(entityTypeName -> AnnotationSpec.builder(IsProperty.class)
+                                .addMember("value", "$T.class", entityTypeName)
+                                .build())
+                        .orElseGet(() -> environment.javaPoet().getAnnotation(IsProperty.class)));
     }
 
     public MethodSpec getAccessorSpec(final GeneratorEnvironment environment) {
@@ -117,15 +126,15 @@ final class PropertySpec {
                 .addModifiers(PUBLIC)
                 .returns(typeName);
 
-        ifCollectionalOrElse(environment,
-                             (collTypeName, eltTypeName) -> {
-                                    final var collectionsMethodName = switch (CollectionType.fromName(collTypeName.canonicalName())) {
-                                        case LIST -> "unmodifiableList";
-                                        case SET -> "unmodifiableSet";
-                                    };
-                                 builder.addStatement("return $T.%s(this.%s)".formatted(collectionsMethodName, name), Collections.class);
-                             },
-                             () -> builder.addStatement("return this.%s".formatted(name)));
+        asCollectionalType(environment)
+                .ifPresentOrElse(collTy -> collTy.run((collTypeName, eltTypeName) -> {
+                                     final var collectionsMethodName = switch (CollectionType.fromName(collTypeName.canonicalName())) {
+                                         case LIST -> "unmodifiableList";
+                                         case SET -> "unmodifiableSet";
+                                     };
+                                     builder.addStatement("return $T.%s(this.%s)".formatted(collectionsMethodName, name), Collections.class);
+                                 }),
+                                 () -> builder.addStatement("return this.%s".formatted(name)));
 
         return builder.build();
     }
@@ -137,14 +146,14 @@ final class PropertySpec {
                 .addAnnotation(Observable.class)
                 .addParameter(typeName, name, FINAL);
 
-        ifCollectionalOrElse(environment,
-                             (collTypeName, eltTypeName) -> builder
-                                     .addStatement("this.%s.clear()".formatted(name))
-                                     .addStatement("this.%s.addAll(%s)".formatted(name, name))
-                                     .addStatement("return this"),
-                             () -> builder
-                                     .addStatement("this.%s = %s".formatted(name, name))
-                                     .addStatement("return this"));
+        asCollectionalType(environment)
+                .ifPresentOrElse(collTy -> collTy.run((collTypeName, eltTypeName) -> builder
+                                         .addStatement("this.%s.clear()".formatted(name))
+                                         .addStatement("this.%s.addAll(%s)".formatted(name, name))
+                                         .addStatement("return this")),
+                                 () -> builder
+                                         .addStatement("this.%s = %s".formatted(name, name))
+                                         .addStatement("return this"));
 
         return builder.build();
     }
@@ -191,35 +200,26 @@ final class PropertySpec {
                "annotations=" + annotations + ']';
     }
 
-    private void ifCollectionalOrElse(
-            final GeneratorEnvironment environment,
-            final BiConsumer<? super ClassName, ? super TypeName> collectionalAction,
-            final Runnable elseAction)
-    {
+    private Optional<T2<ClassName, TypeName>> asCollectionalType(final GeneratorEnvironment environment) {
         if (typeName instanceof ParameterizedTypeName paramTypeName && paramTypeName.typeArguments.size() == 1) {
-            Optional.ofNullable(environment.javaPoet().reflectType(paramTypeName.rawType))
+            return Optional.ofNullable(environment.javaPoet().reflectType(paramTypeName.rawType))
                     .filter(EntityUtils::isCollectional)
-                    .ifPresentOrElse($ -> collectionalAction.accept(paramTypeName.rawType, paramTypeName.typeArguments.getFirst()),
-                                     elseAction);
+                    .map($ -> t2(paramTypeName.rawType, paramTypeName.typeArguments.getFirst()));
         } else {
-            elseAction.run();
+            return Optional.empty();
         }
     }
 
-    private void ifPropertyDescriptorOrElse(
-            final GeneratorEnvironment environment,
-            final Consumer<? super TypeName> propDescriptorAction,
-            final Runnable elseAction)
-    {
+    private Optional<TypeName> asPropertyDescriptor(final GeneratorEnvironment environment) {
         if (typeName instanceof ParameterizedTypeName paramTypeName && paramTypeName.typeArguments.size() == 1) {
-            Optional.ofNullable(environment.javaPoet().reflectType(paramTypeName.rawType))
+            return Optional.ofNullable(environment.javaPoet().reflectType(paramTypeName.rawType))
                     .filter(EntityUtils::isPropertyDescriptor)
-                    .ifPresentOrElse($ -> propDescriptorAction.accept(paramTypeName.typeArguments.getFirst()),
-                                     elseAction);
+                    .map($ -> paramTypeName.typeArguments.getFirst());
         } else {
-            elseAction.run();
+            return Optional.empty();
         }
     }
+
 
     private enum CollectionType {
         LIST (List.class.getCanonicalName()),

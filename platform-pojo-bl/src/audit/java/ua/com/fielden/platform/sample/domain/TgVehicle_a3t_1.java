@@ -48,20 +48,21 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
   @IsProperty(TgVehicle_a3t_1_Prop.class)
   private final Set<TgVehicle_a3t_1_Prop> changedProps = new HashSet<>();
 
+  @IsProperty
   @MapTo("A3T_KEY")
   @Final
-  @IsProperty
   private String a3t_key;
 
+  @IsProperty
   @MapTo("A3T_INITDATE")
   @Final
   @Title(
       value = "Init Date",
       desc = "[Init Date] at the time of the audited event."
   )
-  @IsProperty
   private Date a3t_initDate;
 
+  @IsProperty
   @MapTo("A3T_REPLACEDBY")
   @Final
   @Title(
@@ -69,9 +70,9 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
       desc = "[Tg Vehicle] at the time of the audited event."
   )
   @SkipEntityExistsValidation
-  @IsProperty
   private TgVehicle a3t_replacedBy;
 
+  @IsProperty
   @MapTo("A3T_STATION")
   @Final
   @Title(
@@ -79,9 +80,9 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
       desc = "[Tg Org Unit5] at the time of the audited event."
   )
   @SkipEntityExistsValidation
-  @IsProperty
   private TgOrgUnit5 a3t_station;
 
+  @IsProperty
   @MapTo("A3T_MODEL")
   @Final
   @Title(
@@ -89,61 +90,63 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
       desc = "[Model] at the time of the audited event."
   )
   @SkipEntityExistsValidation
-  @IsProperty
   private TgVehicleModel a3t_model;
 
+  @IsProperty
   @MapTo("A3T_PRICE")
   @Final
   @Title(
       value = "Price",
       desc = "[Price] at the time of the audited event."
   )
-  @IsProperty
   private Money a3t_price;
 
+  @IsProperty
   @MapTo("A3T_PURCHASEPRICE")
   @Final
   @Title(
       value = "Purchase Price",
       desc = "[Purchase Price] at the time of the audited event."
   )
-  @IsProperty
   private Money a3t_purchasePrice;
 
+  @IsProperty
   @MapTo("A3T_ACTIVE")
   @Final
   @Title(
       value = "Active",
       desc = "[Active] at the time of the audited event."
   )
-  @IsProperty
   private boolean a3t_active;
 
+  @IsProperty
   @MapTo("A3T_LEASED")
   @Final
   @Title(
       value = "Leased?",
       desc = "[Leased?] at the time of the audited event."
   )
-  @IsProperty
   private boolean a3t_leased;
 
+  @IsProperty(
+      precision = 10,
+      scale = 3
+  )
   @MapTo("A3T_LASTMETERREADING")
   @Final
   @Title(
       value = "Last meter reading",
       desc = "[Last meter reading] at the time of the audited event."
   )
-  @IsProperty
   private BigDecimal a3t_lastMeterReading;
 
+  @IsProperty
   @MapTo("A3T_DESC")
   @Final
   @Title(
       value = "Description",
       desc = "[Description] at the time of the audited event."
   )
-  @IsProperty
   private String a3t_desc;
 
   public TgVehicle getAuditedEntity() {

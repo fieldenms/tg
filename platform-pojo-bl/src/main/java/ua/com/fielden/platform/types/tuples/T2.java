@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.types.tuples;
 
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.lang.String.format;
@@ -48,6 +50,32 @@ public class T2<T_1, T_2> {
 
     public <R> R map(final BiFunction<? super T_1, ? super T_2, R> mapper) {
         return mapper.apply(this._1, this._2);
+    }
+    ////////////////////////////////////
+
+    ////////////////////////////////////
+    //////// Running functions /////////
+    ////////////////////////////////////
+
+    /**
+     * Applies the specified action to the first value.
+     */
+    public void run1(final Consumer<? super T_1> action) {
+        action.accept(_1);
+    }
+
+    /**
+     * Applies the specified action to the second value.
+     */
+    public void run2(final Consumer<? super T_2> action) {
+        action.accept(_2);
+    }
+
+    /**
+     * Applies the specified action to the contents of this tuple.
+     */
+    public void run(final BiConsumer<? super T_1, ? super T_2> action) {
+        action.accept(_1, _2);
     }
     ////////////////////////////////////
 
