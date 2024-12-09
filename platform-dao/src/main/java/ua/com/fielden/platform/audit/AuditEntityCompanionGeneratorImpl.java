@@ -13,6 +13,7 @@ final class AuditEntityCompanionGeneratorImpl implements IAuditEntityCompanionGe
     {
         return new ByteBuddy()
                 .subclass(CommonAuditEntityDao.class)
+                .name(type.getCanonicalName() + "Dao")
                 .annotateType(AnnotationDescription.Builder.ofType(EntityType.class)
                                       .define("value", type)
                                       .build())
@@ -25,6 +26,7 @@ final class AuditEntityCompanionGeneratorImpl implements IAuditEntityCompanionGe
     public Class<?> generateCompanionForAuditProp(final Class<? extends AbstractAuditProp> type) {
         return new ByteBuddy()
                 .subclass(CommonAuditPropDao.class)
+                .name(type.getCanonicalName() + "Dao")
                 .annotateType(AnnotationDescription.Builder.ofType(EntityType.class)
                                       .define("value", type)
                                       .build())
