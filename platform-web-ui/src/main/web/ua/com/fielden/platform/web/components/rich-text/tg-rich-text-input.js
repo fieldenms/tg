@@ -288,8 +288,9 @@ function rgbToHex(rgbString) {
         .join("");
 }
 
-function preventListIdentation(event) {
-    if (event.keyCode === 9 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) {
+function preventUnwantedKeyboradEvents(event) {
+    if ((event.keyCode === 9 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) || 
+        ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/)) {
         event.preventDefault();
     }
 }
@@ -602,8 +603,9 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._getEditableContent().addEventListener("touchstart", mouseDownHandler.bind(this));
         this._getEditableContent().addEventListener("touchend", mouseUpHandler.bind(this));
         //Add key down to prevent tab key on list
-        this._getEditableContent().addEventListener("keydown", preventListIdentation.bind(this), true);
+        this._getEditableContent().addEventListener("keydown", preventUnwantedKeyboradEvents.bind(this), true);
         //Initiate key binding and key event target
+        this.addOwnKeyBinding('ctrl+a meta+a', '_selectAll');
         this.addOwnKeyBinding('ctrl+b meta+b', '_applyBold');
         this.addOwnKeyBinding('ctrl+i meta+i', '_applyItalic');
         this.addOwnKeyBinding('ctrl+s meta+s', '_applyStrikethough');
@@ -674,6 +676,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _applyParagraph(event) {
         this._editor.exec('heading', { level: 0 });
+    }
+
+    _selectAll(event) {
+        const from = 1, to = this._editor.wwEditor.view.state.tr.doc.content.size - 1;
+        this._editor.setSelection(from, to);
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     _applyBold(event) {
