@@ -588,7 +588,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             useCommandShortcut: false,
             usageStatistics: false,
             toolbarItems: [],
-            hideModeSwitch: true
+            hideModeSwitch: true,
+            autofocus: false
         });
         //trigger tooltips manually
         this.triggerManual = true;
@@ -770,6 +771,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         const selection = this._editor.getSelection();
         const cursorPosition = selection ? selection[1] : 0;
         this._editor.setSelection(cursorPosition, cursorPosition);
+        this._editor.blur();
         this.focus();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
