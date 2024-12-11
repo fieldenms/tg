@@ -299,7 +299,8 @@ function preventUnwantedKeyboradEvents(event) {
 }
 
 function getEditorHTMLText() {
-    return this._editor.getHTML().replace(/<mark>(.*?)<\/mark>/g, '$1');
+    const html = this._editor.getHTML();
+    return this._fakeSelection ? html.replace(/<mark>(.*?)<\/mark>/g, '$1') : html;
 }
 
 function applyFakeSelection(selection) {
@@ -615,8 +616,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.addOwnKeyBinding('ctrl+s meta+s', '_applyStrikethough');
         this.addOwnKeyBinding('ctrl+z meta+z', '_undo');
         this.addOwnKeyBinding('ctrl+y meta+y', '_redo');
-        this.addOwnKeyBinding('tab', '_stopKeyboradEvent');
-        this.addOwnKeyBinding('shift+tab', '_stopKeyboradEvent');
+        this.addOwnKeyBinding('tab', '_stopKeyboardEvent');
+        this.addOwnKeyBinding('shift+tab', '_stopKeyboardEvent');
         this.addOwnKeyBinding('ctrl+u meta+u', '_createBulletList');
         this.addOwnKeyBinding('ctrl+o meta+o', '_createOrderedList');
         this.addOwnKeyBinding('esc', '_stopEditing');
@@ -624,7 +625,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         //Adjust key event handler to be able to process events from _editor when event was prevented
         const prevKeyBindingHandler = this._onKeyBindingEvent.bind(this);
         this._onKeyBindingEvent = function (keyBindings, event) {
-            Object.defineProperty(event, 'defaultPrevented', {value: false})
+            Object.defineProperty(event, 'defaultPrevented', {value: false});
             prevKeyBindingHandler(keyBindings, event);
         };
         this.addEventListener('keydown', focusOnKeyDown.bind(this));
@@ -658,7 +659,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }
     }
 
-    _stopKeyboradEvent(event) {
+    _stopKeyboardEvent(event) {
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
