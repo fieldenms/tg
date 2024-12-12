@@ -261,8 +261,11 @@ function isPositionInBox(style, offsetX, offsetY) {
 }
 
 function focusOnKeyDown(event) {
-    if (event.keyCode === 13 && !this.shadowRoot.activeElement) {
+    if ((event.keyCode === 13 || event.key.length === 1) && !this.shadowRoot.activeElement) {
         this._editor.moveCursorToStart(true);
+        if (event.key.length === 1) {
+            setTimeout(() => {this._editor.insertText(event.key)}, 1);
+        }
     }
 }
 
@@ -288,14 +291,16 @@ function rgbToHex(rgbString) {
         .join("");
 }
 
-function preventListIdentation(event) {
-    if (event.keyCode === 9 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) {
+function preventUnwantedKeyboradEvents(event) {
+    if ((event.keyCode === 9 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) || 
+        ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/)) {
         event.preventDefault();
     }
 }
 
 function getEditorHTMLText() {
-    return this._editor.getHTML().replace(/<mark>(.*?)<\/mark>/g, '$1');
+    const html = this._editor.getHTML();
+    return this._fakeSelection ? html.replace(/<mark>(.*?)<\/mark>/g, '$1') : html;
 }
 
 function applyFakeSelection(selection) {
@@ -584,7 +589,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             useCommandShortcut: false,
             usageStatistics: false,
             toolbarItems: [],
-            hideModeSwitch: true
+            hideModeSwitch: true,
+            autofocus: false
         });
         //trigger tooltips manually
         this.triggerManual = true;
@@ -602,15 +608,16 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._getEditableContent().addEventListener("touchstart", mouseDownHandler.bind(this));
         this._getEditableContent().addEventListener("touchend", mouseUpHandler.bind(this));
         //Add key down to prevent tab key on list
-        this._getEditableContent().addEventListener("keydown", preventListIdentation.bind(this), true);
+        this._getEditableContent().addEventListener("keydown", preventUnwantedKeyboradEvents.bind(this), true);
         //Initiate key binding and key event target
+        this.addOwnKeyBinding('ctrl+a meta+a', '_selectAll');
         this.addOwnKeyBinding('ctrl+b meta+b', '_applyBold');
         this.addOwnKeyBinding('ctrl+i meta+i', '_applyItalic');
         this.addOwnKeyBinding('ctrl+s meta+s', '_applyStrikethough');
         this.addOwnKeyBinding('ctrl+z meta+z', '_undo');
         this.addOwnKeyBinding('ctrl+y meta+y', '_redo');
-        this.addOwnKeyBinding('tab', '_stopKeyboradEvent');
-        this.addOwnKeyBinding('shift+tab', '_stopKeyboradEvent');
+        this.addOwnKeyBinding('tab', '_stopKeyboardEvent');
+        this.addOwnKeyBinding('shift+tab', '_stopKeyboardEvent');
         this.addOwnKeyBinding('ctrl+u meta+u', '_createBulletList');
         this.addOwnKeyBinding('ctrl+o meta+o', '_createOrderedList');
         this.addOwnKeyBinding('esc', '_stopEditing');
@@ -618,7 +625,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         //Adjust key event handler to be able to process events from _editor when event was prevented
         const prevKeyBindingHandler = this._onKeyBindingEvent.bind(this);
         this._onKeyBindingEvent = function (keyBindings, event) {
-            Object.defineProperty(event, 'defaultPrevented', {value: false})
+            Object.defineProperty(event, 'defaultPrevented', {value: false});
             prevKeyBindingHandler(keyBindings, event);
         };
         this.addEventListener('keydown', focusOnKeyDown.bind(this));
@@ -642,13 +649,17 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         return this._editor && this._editor.getHeight();
     }
 
+    getText() {
+        return this._getEditableContent().innerText;
+    }
+
     focusInput() {
         if (this._editor) {
             this._editor.focus();
         }
     }
 
-    _stopKeyboradEvent(event) {
+    _stopKeyboardEvent(event) {
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
@@ -670,6 +681,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _applyParagraph(event) {
         this._editor.exec('heading', { level: 0 });
+    }
+
+    _selectAll(event) {
+        const from = 1, to = this._editor.wwEditor.view.state.tr.doc.content.size - 1;
+        this._editor.setSelection(from, to);
+        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     _applyBold(event) {
@@ -755,6 +772,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         const selection = this._editor.getSelection();
         const cursorPosition = selection ? selection[1] : 0;
         this._editor.setSelection(cursorPosition, cursorPosition);
+        this._editor.blur();
         this.focus();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }

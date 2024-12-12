@@ -226,7 +226,11 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
     _copyTap() {
         // copy to clipboard should happen only if there is something to copy
         if (navigator.clipboard && this._editingValue) {
-            navigator.clipboard.writeText(this._editingValue);
+            const clipboardItem = new ClipboardItem({ 
+                'text/html': new Blob([this._editingValue], { type: 'text/html' }),
+                'text/plain': new Blob([this.decoratedInput().getText()], { type: 'text/plain' })
+            });
+            navigator.clipboard.write([clipboardItem]);
             this._showCheckIconAndToast(`<div class="toastui-editor-contents">${this._editingValue}</div>`);
         } else if (this.toaster) {
             this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);

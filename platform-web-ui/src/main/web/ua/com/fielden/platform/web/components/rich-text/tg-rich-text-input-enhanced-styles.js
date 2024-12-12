@@ -40,11 +40,11 @@ styleElement.innerHTML = `
                 cursor: pointer !important;
             }
             .toastui-editor-contents .task-list-item:before {
-                top: 3px !important; /* 3px = 24px(lineheight)/2 - 18px(checkbox height)/2 */
+                top: 2px !important; /* ~(2px or 3px depending on vertical align) = 24px(lineheight)/2 - 18px(checkbox height)/2 */
             }
             .toastui-editor-contents ul>li:before {
                 margin-top: 0 !important;
-                top: 9px !important; /* 10px = 24px(lineheight)/2 - 5px(point height)/2 */
+                top: 9px !important; /* ~(10px or 9px depending on vertical align) = 24px(lineheight)/2 - 5px(point height)/2 */
             }
             .toastui-editor-contents .task-list-item {
                 cursor: pointer; /*Need to set this style to display pointer cursor on checkboxes of task lins on Safari*/

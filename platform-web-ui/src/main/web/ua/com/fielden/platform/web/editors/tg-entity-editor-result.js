@@ -56,9 +56,8 @@ const template = html`
             font-size: small;
             padding: 6px;
             margin: 0px;
-            overflow: auto;
+            overflow: hidden;
             -webkit-overflow-scrolling: touch;
-            text-overflow: ellipsis;
             border-top: 1px solid #e3e3e3;
             min-height: 24px;
         }
@@ -87,6 +86,11 @@ const template = html`
 
         paper-item:focus {
             background-color: #E1F5FE;
+        }
+
+        .item-container {
+            width: 100%;
+            overflow: auto;
         }
 
         .additional-prop {
@@ -501,7 +505,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 const id = this._makeId(index);
                 const paperItem = this.shadowRoot.querySelector("#" + id);
                 if (paperItem) {
-                    paperItem.innerHTML = html;
+                    paperItem.innerHTML = `<div class="item-container">${html}</div>`;
                 }
             }
         }.bind(this));
