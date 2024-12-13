@@ -32,22 +32,30 @@ fi
 
 # Function to report errors
 error() {
+    echo ""
     echo -e "[${RED}${BOLD}ERROR${NORMAL}] $1"
+    echo ""
 }
 
 # Function to report success
 success() {
+    echo ""
     echo -e "[${GREEN}${BOLD}SUCCESS${NORMAL}] $1"
+    echo ""
 }
 
 # Function to report warnings
 warn() {
+    echo ""
     echo -e "[${YELLOW}${BOLD}WARN${NORMAL}] $1"
+    echo ""
 }
 
 # Function to report info messages
 info() {
+    echo ""
     echo -e "[${BLUE}${BOLD}INFO${NORMAL}] $1"
+    echo ""
 }
 
 # Function to abort release process
@@ -79,8 +87,10 @@ git add pom.xml **/pom.xml && git commit -m "Update versions for release ${RELEA
 
 info "Merge release branch into master and tag the release ${RELEASE_VERSION}"
 git checkout master && git pull origin master && \
-    git merge --no-ff release-${RELEASE_VERSION} || { error "Failed to merge release branch into master"; abort_release; }
+    git merge --no-ff release-${RELEASE_VERSION} -m "Merged ${RELEASE_VERSION} into master." || { error "Failed to merge release branch into master"; abort_release; }
 git tag -a ${RELEASE_VERSION} -m "Release ${RELEASE_VERSION}" || { error "Failed to tag the release"; abort_release; }
+
+read -r -s -p $'Press ENTER to build and deploy...'
 
 info "Deploy the release"
 if ! mvn clean deploy -DdatabaseUri.prefix=${DATABASE_URI_PREFIX} -Dfork.count=${FORK_COUNT}; then
@@ -88,7 +98,9 @@ if ! mvn clean deploy -DdatabaseUri.prefix=${DATABASE_URI_PREFIX} -Dfork.count=$
   abort_release
 fi
 
-read -r -s -p $'Press ENTER to merge the release branch into develop...'
+success "Deployed ${RELEASE_VERSION}."
+
+read -r -s -p $'Press ENTER to merge the release branch into develop (local)...'
 
 info "Merge release branch back into develop"
 git checkout develop && git pull origin develop && \
@@ -101,14 +113,14 @@ mvn versions:set -DnewVersion=${NEXT_DEVELOPMENT_VERSION} -DprocessAllModules=tr
 info "Commit the changes"
 git add pom.xml **/pom.xml && git commit -m "Update versions to ${NEXT_DEVELOPMENT_VERSION}" || { error "Failed to commit next development version changes"; abort_release; }
 
-read -r -s -p $'Press ENTER to delete the release branch into develop...'
+read -r -s -p $'Press ENTER to delete the release branch...'
 
 info "Delete the release branch ${RELEASE_VERSION}"
 git branch -d release-${RELEASE_VERSION} || { error "Failed to delete the release branch"; exit 1; }
 
 read -r -s -p $'Press ENTER to push changes to remote - make sure your have the privileges for that...'
 
-info "Push changes to remote"
+info "Push changes to remote - develop, master, and tags."
 git push origin develop && git push origin master && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
 
 success "Successfully released ${RELEASE_VERSION}"
