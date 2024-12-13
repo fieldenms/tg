@@ -7,6 +7,7 @@ import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -81,15 +82,15 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         if (action.getRefEntityId() == null) {
             throw failure(ERR_REFERENCE_ENTITY_SHOULD_EXIST);
         } else {
+            final var referencedEntityType = action.getRefEntityClass().orElseThrow(() -> failure(ERR_COULD_NOT_FIND_ENTITY_TYPE.formatted(action.getRefEntityType())));
             final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependencies = new HashMap<>();
-            if (!action.isActiveOnly()) {
+            if (!action.isActiveOnly() || !ActivatableAbstractEntity.class.isAssignableFrom(referencedEntityType)) {
                 dependencies.putAll(DataDependencyQueriesGenerator.produceDependenciesMetadata(applicationDomainProvider.entityTypes()));
             }
             // In case of active only we need to build the dependency graph in the same was as in ActivePropertyValidator.
             // This is needed to keep a direct correspondence between the result produced by this validator and the reference hierarchy for users to easily navigate through the dependencies.
             // One implication of this approach is that the reference hierarchy becomes flatter due to removal of nodes pertaining to deactivatable dependencies.
             else {
-                final var referencedEntityType = action.getRefEntityClass().orElseThrow(() -> failure(ERR_COULD_NOT_FIND_ENTITY_TYPE.formatted(action.getRefEntityType())));
                 final var domainDependencies = entityDependencyMap(applicationDomainProvider.entityTypes(), PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE);
                 final var domainEntityDependencies = domainDependencies.get(referencedEntityType);
                 // The result of getAllDependenciesThatCanPreventDeactivation needs to be inverted to make it suitable for the reference hierarchy.
@@ -107,7 +108,6 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
                                     {
                                         dependencies.put(referencingEntityType, Map.of(referencedEntityType, properties));
                                     });
-
             }
             final ReferenceHierarchyLevel nextLevel = action.getLoadedHierarchyLevel().nextLevel();
             if (this.generateFunctions.containsKey(nextLevel)) {
