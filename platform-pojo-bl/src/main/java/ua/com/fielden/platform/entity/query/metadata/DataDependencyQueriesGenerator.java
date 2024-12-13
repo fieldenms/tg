@@ -54,7 +54,9 @@ public class DataDependencyQueriesGenerator {
             return empty();
         }
 
-        final AggregatedResultQueryModel qry = select(queries).groupBy().prop("type").groupBy().prop("simpleType")
+        final AggregatedResultQueryModel qry = select(queries)
+                                               .groupBy().prop("type")
+                                               .groupBy().prop("simpleType")
                                                .yield().prop("type").as("type")
                                                .yield().prop("simpleType").as("simpleType")
                                                .yield().countAll().as("qty").modelAsAggregate();

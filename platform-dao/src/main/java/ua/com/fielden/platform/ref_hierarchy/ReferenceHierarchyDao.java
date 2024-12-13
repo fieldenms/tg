@@ -87,7 +87,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
             if (!action.isActiveOnly() || !ActivatableAbstractEntity.class.isAssignableFrom(referencedEntityType)) {
                 dependencies.putAll(DataDependencyQueriesGenerator.produceDependenciesMetadata(applicationDomainProvider.entityTypes()));
             }
-            // In case of active only we need to build the dependency graph in the same was as in ActivePropertyValidator.
+            // In case of active only we need to build the dependency graph in the same way as in ActivePropertyValidator.
             // This is needed to keep a direct correspondence between the result produced by this validator and the reference hierarchy for users to easily navigate through the dependencies.
             // One implication of this approach is that the reference hierarchy becomes flatter due to removal of nodes pertaining to deactivatable dependencies.
             else {
