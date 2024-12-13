@@ -106,6 +106,19 @@ public class MiscUtilities {
     }
 
     /**
+     * Converts auto-completer-like regular expression for string typed property into normal regular expression (simply replaces all '*' with '%' characters) without trimming it
+     *
+     * @param stringExpr - The expression for string property
+     * @return converted into SQL like regular expression without trimming stringExpr
+     */
+    public static String prepareStringExpression(final String stringExpr) {
+        if ("*".equals(stringExpr)) {
+            return null;
+        }
+        return stringExpr.replace("*", "%");
+    }
+
+    /**
      * Converts the content of the input stream into a string.
      *
      * @param ins
