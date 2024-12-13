@@ -1,7 +1,15 @@
 package ua.com.fielden.platform.web.app.config;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
+import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -10,18 +18,9 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.apache.logging.log4j.Logger;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
-import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
-import ua.com.fielden.platform.web.view.master.EntityMaster;
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 
 /**
  * Implementation of the {@link IWebUiBuilder}.
@@ -214,7 +213,7 @@ public class WebUiBuilder implements IWebUiBuilder {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/config/tg-app-config.js").
+        return getText("ua/com/fielden/platform/web/app/config/tg-app-config.js").
                 replace("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
                 replace("@minTabletWidth", Integer.toString(this.minTabletWidth)).
                 replace("@locale", "\"" + this.locale + "\"").
@@ -226,13 +225,32 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
 
     public String getAppIndex(final IDates dates) {
-        return ResourceLoader.getText("ua/com/fielden/platform/web/index.html")
+        return getText("ua/com/fielden/platform/web/index.html")
                 .replace("@panelColor", panelColor.map(val -> "--tg-main-pannel-color: " + val + ";").orElse(""))
                 .replace("@watermark", "'" + watermark.orElse("") + "'")
                 .replace("@cssStyle", watermarkStyle.orElse("") )
                 // Need to inject the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
                 // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from  IDates.
                 .replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
+    }
+
+    /**
+     * Generates 'tg-fullcalendar' element source with timezone enhancements based on independent time-zone mode setting.
+     */
+    public String genFullcalendarElement(final boolean independentTimeZoneMode) {
+        return getText("ua/com/fielden/platform/web/components/fullcalendar/tg-fullcalendar.js").
+            replace("@genImport", independentTimeZoneMode ? """
+                import { momentTimezonePlugin } from '/resources/fullcalendar/moment-timezone/fullcalendar-with-timezones-lib.js';
+                import { now } from '/resources/reflection/tg-date-utils.js';
+            """ : "").
+            replace("@genConfig", independentTimeZoneMode ? """
+                ,
+                plugins: [ momentTimezonePlugin ],
+                timeZone: '%s',
+                now: function() {
+                    return now().toDate().toISOString(); // Return in ISO 8601 string format, as per default implementation
+                }
+            """.formatted(TimeZone.getDefault().getID()) : "");
     }
 
     @Override

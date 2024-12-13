@@ -14,7 +14,7 @@ import '/resources/components/tg-calendar.js';
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
-import { _momentTz, timeZoneFormats } from '/resources/reflection/tg-date-utils.js';
+import { _momentTz, timeZoneFormats, now } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
 const AFTER = 'AFTER';
@@ -412,14 +412,9 @@ export class TgDatetimePicker extends TgEditor {
 
     _tryLiterals (editingValue) {
         const upperCasedValue = editingValue[0].toUpperCase();
-        // in concrete time-zone (e.g. UTC) just use standard method _momentTz for creating 'now' in that time-zone;
-        // otherwise in independent time-zone mode we do the following trick:
-        // 1. create 'now' moment in current surrogate (equal to server one) time-zone
-        // 2. convert it to real time-zone to be able to format it into our 'real' string
-        // 3. convert it to string that defines moment in our 'real' time-zone
-        // 4. than use that string to create moment in surrogate time-zone;
-        // in dependent time-zone mode this trick will return the same moment object as just moment().
-        const convertedMoment = this.timeZone ? _momentTz(this.timeZone) : moment(moment().tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'));
+        // In concrete time-zone (e.g. UTC) just use standard method _momentTz for creating 'now' in that time-zone.
+        // Otherwise use standard now() function.
+        const convertedMoment = this.timeZone ? _momentTz(this.timeZone) : now();
 
         if ('T' === upperCasedValue) {
             const todayMoment = convertedMoment.startOf("day");

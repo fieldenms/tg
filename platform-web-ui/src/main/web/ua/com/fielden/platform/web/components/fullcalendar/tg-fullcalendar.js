@@ -1,5 +1,4 @@
-import {FullCalendar} from '/resources/components/fullcalendar/fullcalendar-component.js';
-import '/resources/components/fullcalendar/fullcalendar-style.js';
+import { fullcalendarStyles, FullCalendar } from '/resources/fullcalendar/fullcalendar-lib.js';@genImport
 import '/resources/components/tg-dropdown-switch.js';
 import '/resources/layout/tg-flex-layout.js';
 import '/resources/images/tg-icons.js';
@@ -18,7 +17,8 @@ import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/c
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 const template = html`
-    <style include='fullcalendar-style iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning'>
+    ${fullcalendarStyles}
+    <style include='iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning'>
         :host {
             width: 100%;
             height: 100%;
@@ -210,7 +210,7 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
                 hour12: false
             },
             height: 'auto',
-            firstDay: this._appConfig.firstDayOfWeek
+            firstDay: this._appConfig.firstDayOfWeek@genConfig
           });
           this._calendar.render();
           this.currentView = 'dayGridMonth';
