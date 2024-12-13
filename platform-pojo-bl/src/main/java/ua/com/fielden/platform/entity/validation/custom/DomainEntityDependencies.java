@@ -81,6 +81,23 @@ public class DomainEntityDependencies {
         });
     }
 
+    /**
+     * Returns all dependencies (direct and all transitive stemming from deactivatable dependencies) that might prevent entity deactivation.
+     *
+     * @param domainDependencies  Domain dependencies, which should be considered, usually containing all activatable and persistent domain entities.
+     */
+    public Stream<DomainEntityDependency> getAllDependenciesThatCanPreventDeactivation(
+            final Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> domainDependencies)
+    {
+        // Direct dependencies.
+        final var directActivatableDependenciesForEntity = getActivatableDependencies();
+        // Deactivatable dependencies, which are calculated by recursively traversing all deactivatable dependencies for the current entity,
+        // all deactivatable dependencies for them, and so on.
+        final var deactivatableActivatableDependenciesForEntity = getAllDeactivatableDependencies(domainDependencies);
+        // Merge direct and deactivatable dependencies for processing.
+        return Stream.concat(directActivatableDependenciesForEntity.stream(), deactivatableActivatableDependenciesForEntity);
+    }
+
     public void addDependency(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
         dependencies.add(new DomainEntityDependency(entityType, propField));
     }
@@ -115,6 +132,14 @@ public class DomainEntityDependencies {
             this.belongsToEntityKey = belongsToEntityKey;
 
 
+        }
+
+        public Class<? extends AbstractEntity<?>> entityType() {
+            return entityType;
+        }
+
+        public String propPath() {
+            return propPath;
         }
 
         private DomainEntityDependency(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
