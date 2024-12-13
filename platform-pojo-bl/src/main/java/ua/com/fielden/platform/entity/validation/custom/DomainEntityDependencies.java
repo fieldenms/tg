@@ -134,6 +134,14 @@ public class DomainEntityDependencies {
 
         }
 
+        public Class<? extends AbstractEntity<?>> entityType() {
+            return entityType;
+        }
+
+        public String propPath() {
+            return propPath;
+        }
+
         private DomainEntityDependency(final Class<? extends AbstractEntity<?>> entityType, final Field propField) {
             this(entityType,
                  getEntityTitleAndDesc(entityType).getKey(),

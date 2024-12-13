@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -15,7 +14,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.validation.custom.DomainEntityDependencies.DomainEntityDependency;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
@@ -25,15 +24,17 @@ import ua.com.fielden.platform.utils.Pair;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypeDetails;
 import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypesSummary;
+import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE;
+import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.entityDependencyMap;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyActions.EDIT;
@@ -54,17 +55,18 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     public static final String ERR_ENTITY_TYPE_NOT_FOUND = "Entity type [%s] could not be found.";
     public static final String ERR_REFERENCE_ENTITY_SHOULD_EXIST = "Please select at least one entity to open reference hierarchy.";
     public static final String ERR_NO_ASSOCIATED_GENERATOR_FUNCTION = "There is no associated generator function for level: %s";
+    public static final String ERR_COULD_NOT_FIND_ENTITY_TYPE = "Could not find type %s.";
 
     private final IEntityAggregatesOperations coAggregates;
-    private final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata;
-    private final Map<ReferenceHierarchyLevel, Function<ReferenceHierarchy, List<? extends AbstractEntity<?>>>> generateFunctions;
+    private final IApplicationDomainProvider applicationDomainProvider;
+    private final Map<ReferenceHierarchyLevel, BiFunction<ReferenceHierarchy, Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>>, List<? extends AbstractEntity<?>>>> generateFunctions;
     private final Set<Class<? extends AbstractEntity<?>>> systemTypesToExclude;
 
     @Inject
     public ReferenceHierarchyDao(final IFilter filter, final IEntityAggregatesOperations coAggregates, final IApplicationDomainProvider applicationDomainProvider) {
         super(filter);
         this.coAggregates = coAggregates;
-        this.dependenciesMetadata = DataDependencyQueriesGenerator.produceDependenciesMetadata(applicationDomainProvider.entityTypes());
+        this.applicationDomainProvider = applicationDomainProvider;
         this.systemTypesToExclude = new HashSet<>();
         this.systemTypesToExclude.add(User.class);
         this.generateFunctions = new HashMap<>();
@@ -79,9 +81,37 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         if (action.getRefEntityId() == null) {
             throw failure(ERR_REFERENCE_ENTITY_SHOULD_EXIST);
         } else {
+            final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependencies = new HashMap<>();
+            if (!action.isActiveOnly()) {
+                dependencies.putAll(DataDependencyQueriesGenerator.produceDependenciesMetadata(applicationDomainProvider.entityTypes()));
+            }
+            // In case of active only we need to build the dependency graph in the same was as in ActivePropertyValidator.
+            // This is needed to keep a direct correspondence between the result produced by this validator and the reference hierarchy for users to easily navigate through the dependencies.
+            // One implication of this approach is that the reference hierarchy becomes flatter due to removal of nodes pertaining to deactivatable dependencies.
+            else {
+                final var referencedEntityType = action.getRefEntityClass().orElseThrow(() -> failure(ERR_COULD_NOT_FIND_ENTITY_TYPE.formatted(action.getRefEntityType())));
+                final var domainDependencies = entityDependencyMap(applicationDomainProvider.entityTypes(), PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE);
+                final var domainEntityDependencies = domainDependencies.get(referencedEntityType);
+                // The result of getAllDependenciesThatCanPreventDeactivation needs to be inverted to make it suitable for the reference hierarchy.
+                final var invertedDependencies = domainEntityDependencies.getAllDependenciesThatCanPreventDeactivation(domainDependencies)
+                                                 .collect(groupingBy(
+                                                          DomainEntityDependency::entityType,
+                                                          mapping(
+                                                              DomainEntityDependency::propPath,
+                                                              toSet()
+                                                          )));
+                // Populate dependencies based on the inverted dependencies.
+                // For example, for Person, we get:
+                // WorkActivity -> {Person -> [referredTo, manager.person, returnedToServiceBy.person, technician.person, authoriser]}, which includes the relevant property paths.
+                invertedDependencies.forEach((referencingEntityType, properties) ->
+                                    {
+                                        dependencies.put(referencingEntityType, Map.of(referencedEntityType, properties));
+                                    });
+
+            }
             final ReferenceHierarchyLevel nextLevel = action.getLoadedHierarchyLevel().nextLevel();
             if (this.generateFunctions.containsKey(nextLevel)) {
-                action.setGeneratedHierarchy(this.generateFunctions.get(nextLevel).apply(action));
+                action.setGeneratedHierarchy(this.generateFunctions.get(nextLevel).apply(action, dependencies));
             } else {
                 throw failuref(ERR_NO_ASSOCIATED_GENERATOR_FUNCTION, nextLevel);
             }
@@ -89,8 +119,11 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         return action.setResetFilter(false);
     }
 
-    private List<ReferenceHierarchyEntry> generateReferenceGroup(final ReferenceHierarchy action) {
-        return listOf(createReferenceGroup(generateReferences(action)), createReferencedByGroup(generateTypeLevelHierarchy(action)));
+    private List<ReferenceHierarchyEntry> generateReferenceGroup(
+            final ReferenceHierarchy action,
+            final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependencies)
+    {
+        return listOf(createReferenceGroup(generateReferences(action)), createReferencedByGroup(generateTypeLevelHierarchy(action, dependencies)));
     }
 
     private ReferenceHierarchyEntry createReferencedByGroup(final List<TypeLevelHierarchyEntry> types) {
@@ -130,7 +163,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         fetch<? extends AbstractEntity<?>> fetch = fetchKeyAndDescOnly(entityType);
         fetch = hasDescProperty(entityType) ? fetch.with("desc") : fetch;
         for (final Field propField: entityFields) {
-            final Class<? extends AbstractEntity<?>> propertyType = (Class<? extends AbstractEntity<?>>)propField.getType();
+            final Class<? extends AbstractEntity<?>> propertyType = (Class<? extends AbstractEntity<?>>) propField.getType();
             final List<Field> innerProps = new ArrayList<>();
             if (AbstractUnionEntity.class.isAssignableFrom(propertyType)) {
                 innerProps.addAll(unionProperties((Class<? extends AbstractUnionEntity>) propertyType));
@@ -168,11 +201,15 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         return entry;
     }
 
-    private List<ReferencedByLevelHierarchyEntry> generateReferenceByInstanceLevelHierarchy(final ReferenceHierarchy action) {
+    private List<ReferencedByLevelHierarchyEntry> generateReferenceByInstanceLevelHierarchy(
+            final ReferenceHierarchy action,
+            final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependencies)
+    {
         final var entityClass = action.getEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, action.getEntityType()));
         final var refEntityClass = action.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, action.getRefEntityType()));
         final var propFields = getReferenceProperties(entityClass);
-        final var qem = queryForDependentTypeDetails(dependenciesMetadata, action.getRefEntityId(), refEntityClass, entityClass, generateReferenceFetchModel(entityClass, propFields), action.isActiveOnly());
+        final var fetchModel = generateReferenceFetchModel(entityClass, propFields);
+        final var qem = queryForDependentTypeDetails(dependencies, action.getRefEntityId(), refEntityClass, entityClass, fetchModel, action.isActiveOnly());
         final IPage<EntityAggregates> loadedPage;
         if (action.getPageNumber() == 0) {
             loadedPage = coAggregates.firstPage(qem, action.getPageSize());
@@ -202,10 +239,13 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         return instanceEntry;
     }
 
-    private List<TypeLevelHierarchyEntry> generateTypeLevelHierarchy(final ReferenceHierarchy action) {
-        final Class<? extends AbstractEntity<?>> entityType = action.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, action.getRefEntityType()));
-        final Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> model = queryForDependentTypesSummary(dependenciesMetadata, action.getRefEntityId(), entityType, action.isActiveOnly());
-        final List<EntityAggregates> result = model.map(coAggregates::getAllEntities).orElse(emptyList());
+    private List<TypeLevelHierarchyEntry> generateTypeLevelHierarchy(
+            final ReferenceHierarchy action,
+            final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependencies)
+    {
+        final var entityType = action.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, action.getRefEntityType()));
+        final var model = queryForDependentTypesSummary(dependencies, action.getRefEntityId(), entityType, action.isActiveOnly());
+        final var result = model.map(coAggregates::getAllEntities).orElse(emptyList());
         return createTypeHierarchyEntries(action, result);
 
     }
