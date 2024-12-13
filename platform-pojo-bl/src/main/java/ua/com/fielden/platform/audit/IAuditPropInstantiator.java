@@ -22,4 +22,10 @@ public interface IAuditPropInstantiator<AE extends AbstractAuditEntity<?>, AP ex
      */
     AP newAuditProp(AE auditEntity, CharSequence property);
 
+    /**
+     * An alternative version of {@link #newAuditProp(AbstractAuditEntity, CharSequence)} that gives up validation for speed.
+     * Should be used judiciously.
+     */
+    AP fastNewAuditProp(AE auditEntity, CharSequence property);
+
 }

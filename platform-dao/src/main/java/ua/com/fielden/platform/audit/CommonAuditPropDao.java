@@ -2,6 +2,7 @@ package ua.com.fielden.platform.audit;
 
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -10,6 +11,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.audit.AuditUtils.getAuditTypeForAuditPropType;
+import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 
 /**
  * Base type for implementations of audit-prop entity companion objects.
@@ -38,10 +40,30 @@ public abstract class CommonAuditPropDao<AE extends AbstractAuditEntity<?>, AP e
 
     @Override
     public AP newAuditProp(final AE auditEntity, final CharSequence property) {
+        if (!(auditEntity.isPersisted() && !auditEntity.isDirty())) {
+            throw new InvalidArgumentException("Audit-entity must be persisted and non-dirty.");
+        }
+        if (domainMetadata.forPropertyOpt(auditEntityType, property).isEmpty()) {
+            throw noSuchPropertyException(auditEntityType, property);
+        }
+
         final var auditProp = new_();
 
         auditProp.setAuditEntity(auditEntity);
         auditProp.setProperty(PropertyDescriptor.pd(auditEntityType, property.toString()));
+
+        return auditProp;
+    }
+
+    @Override
+    public AP fastNewAuditProp(final AE auditEntity, final CharSequence property) {
+        final var auditProp = new_();
+        auditProp.beginInitialising();
+
+        auditProp.setAuditEntity(auditEntity);
+        auditProp.setProperty(PropertyDescriptor.pd(auditEntityType, property.toString()));
+
+        auditProp.endInitialising();
 
         return auditProp;
     }

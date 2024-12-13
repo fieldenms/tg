@@ -93,7 +93,8 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
                 // Ignore properties that are not audited.
                 // Ignore nulls if this is the very first version of the audited entity, which means that there are no historical values for its properties.
                 if (auditProperty != null && !(isNewAuditedEntity && auditedEntity.get(property.toString()) == null)) {
-                    coAuditProp.quickSave(coAuditProp.newAuditProp(auditEntity, auditProperty));
+                    // We can use the fast method because its arguments are known to be valid at this point.
+                    coAuditProp.quickSave(coAuditProp.fastNewAuditProp(auditEntity, auditProperty));
                 }
             }
         }
