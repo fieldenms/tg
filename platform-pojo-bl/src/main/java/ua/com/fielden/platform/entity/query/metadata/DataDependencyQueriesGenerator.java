@@ -54,8 +54,11 @@ public class DataDependencyQueriesGenerator {
             return empty();
         }
 
-        final AggregatedResultQueryModel qry = select(queries).groupBy().prop("type").yield().prop("type").as("type").yield().countAll().as("qty").modelAsAggregate();
-        return Optional.of(from(qry).with(orderBy().yield("qty").desc().model()).model());
+        final AggregatedResultQueryModel qry = select(queries).groupBy().prop("type").groupBy().prop("simpleType")
+                                               .yield().prop("type").as("type")
+                                               .yield().prop("simpleType").as("simpleType")
+                                               .yield().countAll().as("qty").modelAsAggregate();
+        return Optional.of(from(qry).with(orderBy().yield("qty").desc().yield("simpleType").asc().model()).model());
     }
 
     public static QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryForDependentTypeDetails(
@@ -134,7 +137,11 @@ public class DataDependencyQueriesGenerator {
     {
         return dependenciesMetadata.entrySet().stream()
                .filter(el -> el.getValue().containsKey(entityType))
-               .map(el -> enhanceQueryWithActiveCondition(el.getKey(), select(el.getKey()).where().anyOfProps(el.getValue().get(entityType).toArray(new String[] {})).eq().val(entityId), activeOnly).yield().val(el.getKey().getName()).as("type").yield().prop(ID).as("entity").modelAsAggregate())
+               .map(el -> enhanceQueryWithActiveCondition(el.getKey(),
+                                                 select(el.getKey()).where().anyOfProps(el.getValue().get(entityType).toArray(new String[] {})).eq().val(entityId), activeOnly)
+                                                 .yield().val(el.getKey().getName()).as("type")
+                                                 .yield().val(el.getKey().getSimpleName()).as("simpleType")
+                                                 .yield().prop(ID).as("entity").modelAsAggregate())
                .toList();
     }
 
