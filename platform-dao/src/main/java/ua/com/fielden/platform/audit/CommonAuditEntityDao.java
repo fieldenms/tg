@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Iterables;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -82,6 +83,9 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
 
     @Override
     public AE audit(final E auditedEntity, final String transactionGuid, final Iterable<? extends CharSequence> dirtyProperties) {
+        // NOTE save() is annotated with SessionRequired.
+        //      To truly enforce the contract of this method described in IAuditEntityDao, a version of save() without
+        //      SessionRequired would need to be used.
         final AE auditEntity = save(newAudit(auditedEntity, transactionGuid));
 
         if (!Iterables.isEmpty(dirtyProperties)) {
@@ -129,6 +133,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
     }
 
     @Override
+    @SessionRequired
     public Stream<AE> streamAudits(final Long auditedEntityId, @Nullable final fetch<AE> fetchModel) {
         final var query = select(getEntityType())
                 .where()
@@ -138,6 +143,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
     }
 
     @Override
+    @SessionRequired
     public Stream<AE> streamAudits(final Long auditedEntityId, final int fetchSize, @Nullable final fetch<AE> fetchModel) {
         final var query = select(getEntityType())
                 .where()
@@ -147,6 +153,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
     }
 
     @Override
+    @SessionRequired
     public List<AE> getAudits(final Long auditedEntityId, @Nullable final fetch<AE> fetchModel) {
         final var query = select(getEntityType())
                 .where()
@@ -156,6 +163,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
     }
 
     @Override
+    @SessionRequired
     public @Nullable AE getAudit(final Long auditedEntityId, final Long version, @Nullable final fetch<AE> fetchModel) {
         final var query = select(getEntityType())
                 .where()

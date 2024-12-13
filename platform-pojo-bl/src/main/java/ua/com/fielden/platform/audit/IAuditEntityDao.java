@@ -32,6 +32,9 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      *        If the specified audited entity instance is new (i.e., was persisted for the very first time), then properties with
      *        {@code null} values are not considered changed.
      * </ul>
+     * <p>
+     * This method requires a session but is deliberately not annotated with {@code @SessionRequired}, which must also be the case for its implementation.
+     * This enforces the contract that this method may only be used as a part of a save operation on an audited entity.
      *
      * @param auditedEntity  the audited entity that will be used to initialise the audit-entity instance.
      *                       Must be persisted and non-dirty.
