@@ -48,7 +48,7 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     private String referenceHierarchyFilter;
 
     @IsProperty
-    @Title(value = "Show active only?", desc = "Check to show only active references in “Referenced By”, skipping any references from non-activatable entities.")
+    @Title(value = "Active dependencies only?", desc = "Check to show only active dependencies in “Referenced By” that prevent entity deactivation.")
     private boolean activeOnly;
 
     @IsProperty(AbstractEntity.class)

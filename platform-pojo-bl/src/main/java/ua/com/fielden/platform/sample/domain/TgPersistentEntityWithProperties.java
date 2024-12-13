@@ -1,50 +1,30 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.math.BigDecimal;
-import java.util.Date;
-
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.Dependent;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.DisplayDescription;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.sample.domain.composite.TgRollingStockMinorComponent;
 import ua.com.fielden.platform.sample.domain.definers.CosWithACEDefiner;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
 import ua.com.fielden.platform.sample.domain.definers.TgPersistentEntityWithPropertiesEntityPropDefiner;
-import ua.com.fielden.platform.sample.domain.validators.CosConcreteValueProhibitedValidator;
-import ua.com.fielden.platform.sample.domain.validators.CosEmptyValueProhibitedValidator;
-import ua.com.fielden.platform.sample.domain.validators.CosWithValidatorValidator;
-import ua.com.fielden.platform.sample.domain.validators.CosWithWarnerValidator;
-import ua.com.fielden.platform.sample.domain.validators.DateValidator;
-import ua.com.fielden.platform.sample.domain.validators.EntityValidator;
-import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
+import ua.com.fielden.platform.sample.domain.validators.*;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
  * Master entity object.
@@ -113,10 +93,14 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
     @Title(value = "Conflicting prop", desc = "Conflicting prop desc")
     private String conflictingProp;
 
-    @IsProperty(displayAs="#2vs#1v")
+    @IsProperty(displayAs = "#2vs#1v")
     @MapTo
     @Title(value = "Composite prop", desc = "Composite prop desc")
     private TgPersistentCompositeEntity compositeProp;
+
+    @IsProperty
+    @MapTo
+    private TgRollingStockMinorComponent compProp;
 
     @IsProperty
     @MapTo
@@ -705,6 +689,16 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
 
     public TgPersistentEntityWithProperties getCritOnlyEntityProp() {
         return critOnlyEntityProp;
+    }
+
+    @Observable
+    public TgPersistentEntityWithProperties setCompProp(final TgRollingStockMinorComponent value) {
+        compProp = value;
+        return this;
+    }
+
+    public TgRollingStockMinorComponent getCompProp() {
+        return compProp;
     }
 
     @Observable
