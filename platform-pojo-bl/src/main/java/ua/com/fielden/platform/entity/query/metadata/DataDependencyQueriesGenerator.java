@@ -19,7 +19,6 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 import static java.util.Optional.empty;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
@@ -35,7 +34,20 @@ import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
  */
 public class DataDependencyQueriesGenerator {
 
-    public static Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> queryForDependentTypesSummary(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Long entityId, final Class<? extends AbstractEntity<?>> entityType, final boolean activeOnly) {
+    public static Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> queryForDependentTypesSummary(
+            final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata,
+            final Long entityId,
+            final Class<? extends AbstractEntity<?>> entityType)
+    {
+        return queryForDependentTypesSummary(dependenciesMetadata, entityId, entityType, false);
+    }
+
+    public static Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> queryForDependentTypesSummary(
+            final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata,
+            final Long entityId,
+            final Class<? extends AbstractEntity<?>> entityType,
+            final boolean activeOnly)
+    {
         final AggregatedResultQueryModel[] queries = produceQueries(dependenciesMetadata, entityType, entityId, activeOnly).toArray(new AggregatedResultQueryModel[] {});
         // if no property references to the specified entity type exists, then there is nothing to query
         if (queries.length == 0) {
@@ -44,6 +56,16 @@ public class DataDependencyQueriesGenerator {
 
         final AggregatedResultQueryModel qry = select(queries).groupBy().prop("type").yield().prop("type").as("type").yield().countAll().as("qty").modelAsAggregate();
         return Optional.of(from(qry).with(orderBy().yield("qty").desc().model()).model());
+    }
+
+    public static QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryForDependentTypeDetails(
+            final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata,
+            final Long entityId,
+            final Class<? extends AbstractEntity<?>> entityType,
+            final Class<? extends AbstractEntity<?>> detailsType,
+            final fetch<? extends AbstractEntity<?>> fetchModel)
+    {
+        return queryForDependentTypeDetails(dependenciesMetadata, entityId, entityType, detailsType, fetchModel, false);
     }
 
     public static QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryForDependentTypeDetails(

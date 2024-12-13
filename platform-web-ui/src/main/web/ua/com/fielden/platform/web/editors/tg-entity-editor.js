@@ -16,7 +16,7 @@ import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js'
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { tearDownEvent, allDefined, isMobileApp, localStorageKey } from '/resources/reflection/tg-polymer-utils.js'
-import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
+import { composeEntityValue } from '/resources/editors/tg-entity-formatter.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const AUTOCOMPLETE_ACTIVE_ONLY_KEY = '@@activeOnly';
@@ -103,9 +103,9 @@ const customInputTemplate = html`
 const inputLayerTemplate = html`
     <div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
+            <span hidden$="[[!item.separator]]" style="white-space: pre;">[[item.separator]]</span>
             <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; white-space: pre;"><span>[[item.title]]</span>: </span>
             <span>[[item.value]]</span>
-            <span style="white-space: pre;">[[_itemSeparator(item, index)]]</span>
         </template>
         <span style="color:#737373" hidden$="[[!_hasDesc(entity, propertyName)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity, propertyName)]]</i></span>
     </div>`;
@@ -1425,7 +1425,7 @@ export class TgEntityEditor extends TgEditor {
                     return composeEntityValue(entityValue, metaProp.displayAs());
                 } catch (e) {
                     console.error(e.msg);
-                    return composeDefaultEntityValue(entityValue);
+                    return composeEntityValue(entityValue, '');
                 }
             }
         }
@@ -1472,15 +1472,6 @@ export class TgEntityEditor extends TgEditor {
             }
         }
         return '';
-    }
-
-    _itemSeparator (item, index) {
-        if (this._customPropTitle && this._customPropTitle.length > 1) {
-            if (index < this._customPropTitle.length - 1) {
-                return item.separator || " ";
-            }
-        }
-        return "";
     }
 
     _changeLayerExistance (_editingValue, entity, propertyName) {
