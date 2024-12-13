@@ -1097,7 +1097,19 @@ public interface EntityQueryProgressiveInterfaces {
      * Limit or the end of this order model.
      */
     interface IOrderByLimit<ET extends AbstractEntity<?>> extends ICompletedAndYielded<ET> {
+
+        /**
+         * Limits the number of retrieved entities to the given number.
+         *
+         * @param n  number that is greater than zero
+         */
         IOrderByOffset<ET> limit(long n);
+
+        /**
+         * Limits the number of retrieved entities to the given limit.
+         *
+         * @param limit  limit that is greater than zero
+         */
         IOrderByOffset<ET> limit(Limit limit);
     }
 
@@ -1105,7 +1117,14 @@ public interface EntityQueryProgressiveInterfaces {
      * Offset or the end of this order model.
      */
     interface IOrderByOffset<ET extends AbstractEntity<?>> extends ICompletedAndYielded<ET> {
+
+        /**
+         * Skips the specified number of entities from the beginning of a result set.
+         *
+         * @param n  non-negative number (>= 0)
+         */
         ICompletedAndYielded<ET> offset(long n);
+
     }
 
     interface StandaloneOrderBy {
@@ -1138,15 +1157,35 @@ public interface EntityQueryProgressiveInterfaces {
          * Limit or the end of this order model.
          */
         interface IOrderByLimit extends IOrderByEnd {
+
+            /**
+             * Limits the number of retrieved entities to the given number.
+             *
+             * @param n  number that is greater than zero
+             */
             IOrderByOffset limit(long n);
+
+            /**
+             * Limits the number of retrieved entities to the given limit.
+             *
+             * @param limit  limit that is greater than zero
+             */
             IOrderByOffset limit(Limit limit);
+            
         }
 
         /**
          * Offset or the end of this order model.
          */
         interface IOrderByOffset extends IOrderByEnd {
+
+            /**
+             * Skips the specified number of entities from the beginning of a result set.
+             *
+             * @param n  non-negative number (>= 0)
+             */
             IOrderByEnd offset(long n);
+
         }
 
     }
