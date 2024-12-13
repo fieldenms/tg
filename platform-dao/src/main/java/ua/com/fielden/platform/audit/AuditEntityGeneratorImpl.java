@@ -3,6 +3,7 @@ package ua.com.fielden.platform.audit;
 import com.google.common.collect.Streams;
 import com.squareup.javapoet.*;
 import jakarta.inject.Inject;
+import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
@@ -10,6 +11,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 
 import java.io.IOException;
@@ -131,6 +133,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final var a3tBuilder = new AuditEntityBuilder(auditTypeClassName, type, auditTypeVersion);
 
         a3tBuilder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(TitlesDescsGetter.getEntityTitle(type))));
+        a3tBuilder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
+        a3tBuilder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
 
         // Property for the reference to the audited entity.
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
@@ -331,7 +335,10 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(AnnotationSpecs.keyTitle("%s Audit and Changed Property".formatted(auditedEntityTitle)))
                 .addAnnotation(javaPoet.getAnnotation(MapEntityTo.class))
                 .addAnnotation(AnnotationSpecs.auditPropFor(auditEntityClassName))
-                .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class));
+                .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class))
+                .addAnnotation(javaPoet.getAnnotation(SkipVerification.class))
+                .addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class))
+                ;
 
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
         final var auditEntityProp = propertyBuilder(AUDIT_ENTITY, auditEntityClassName)
