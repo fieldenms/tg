@@ -2,8 +2,7 @@
   "entrypoint": "build.html",
   "shell": "build-polymer.js",
   "extraDependencies": [
-    "./node_modules/@polymer/test-fixture/test-fixture.js",
-    "./node_modules/web-animations-js/web-animations-next-lite.min.js"
+    "./node_modules/@polymer/test-fixture/test-fixture.js"
   ],
   "builds": [
     { 
