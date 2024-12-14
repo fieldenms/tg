@@ -7,22 +7,21 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-
 'use strict';
-
 /** @type {!Set<string>} */
+
 const styleTextSet = new Set();
-
 export const scopingAttribute = 'shady-unscoped';
-
 /**
  * Add a specifically-marked style to the document directly, and only one copy of that style.
  *
  * @param {!HTMLStyleElement} style
  * @return {undefined}
  */
+
 export function processUnscopedStyle(style) {
   const text = style.textContent;
+
   if (!styleTextSet.has(text)) {
     styleTextSet.add(text);
     const newStyle = document.createElement('style');
@@ -31,12 +30,12 @@ export function processUnscopedStyle(style) {
     document.head.appendChild(newStyle);
   }
 }
-
 /**
  * Check if a style is supposed to be unscoped
  * @param {!HTMLStyleElement} style
  * @return {boolean} true if the style has the unscoping attribute
  */
+
 export function isUnscopedStyle(style) {
   return style.hasAttribute(scopingAttribute);
 }

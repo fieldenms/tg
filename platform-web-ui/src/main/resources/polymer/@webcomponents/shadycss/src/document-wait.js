@@ -7,31 +7,30 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-
 'use strict';
-
 /** @type {Promise<void>} */
+
 let readyPromise = null;
-
 /** @type {?function(?function())} */
-let whenReady =
-  (window['HTMLImports'] && window['HTMLImports']['whenReady']) || null;
 
+let whenReady = window['HTMLImports'] && window['HTMLImports']['whenReady'] || null;
 /** @type {function()} */
-let resolveFn;
 
+let resolveFn;
 /**
  * @param {?function()} callback
  */
+
 export default function documentWait(callback) {
   requestAnimationFrame(function () {
     if (whenReady) {
       whenReady(callback);
     } else {
       if (!readyPromise) {
-        readyPromise = new Promise((resolve) => {
+        readyPromise = new Promise(resolve => {
           resolveFn = resolve;
         });
+
         if (document.readyState === 'complete') {
           resolveFn();
         } else {
@@ -42,6 +41,7 @@ export default function documentWait(callback) {
           });
         }
       }
+
       readyPromise.then(function () {
         callback && callback();
       });
