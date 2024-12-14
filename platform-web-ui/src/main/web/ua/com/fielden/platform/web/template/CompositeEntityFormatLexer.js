@@ -1,6 +1,6 @@
 // Generated from /home/lambda/fielden/git/tg/platform-web-ui/src/main/web/ua/com/fielden/platform/web/template/CompositeEntityFormat.g4 by ANTLR 4.13.2
 // jshint ignore: start
-import antlr4 from '/resources/polymer/antlr4/dist/antlr4.web.mjs';
+import antlr4 from '/resources/lib/antlr-lib.js';
 
 
 const serializedATN = [4,0,7,29,6,-1,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,
