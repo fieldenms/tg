@@ -93,8 +93,6 @@ public @interface IsProperty {
 
     /**
      * This setting should be used to identify a type parameter of the property type. For example, it could indicate an element type for collectional properties.
-     *
-     * @return
      */
     Class<?> value() default Void.class;
 
@@ -122,15 +120,11 @@ public @interface IsProperty {
      *   serviced : Vehicle
      *     ...
      * </pre>
-     *
-     * @return
      */
     String linkProperty() default DEFAULT_LINK_PROPERTY;
 
     /**
      * Declares property as such that should be assigned automatically before entity is saved for the first time.
-     *
-     * @return
      */
     boolean assignBeforeSave() default false;
 
@@ -145,8 +139,6 @@ public @interface IsProperty {
      * For example, for PostgreSQL type {@code text} and for SQL Server type {@code varchar(max)} would be used.
      * <p>
      * Also, length can be combined with pre-condition {@code MaxLengthValidator} to enforce the length integrity constraint on properties of type {@code String}.
-     * 
-     * @return
      */
     int length() default DEFAULT_LENGTH;
 
@@ -154,7 +146,6 @@ public @interface IsProperty {
      * Precision is the number of digits in a number. For example, the number 123.45 has a precision of 5.
      * <p>
      * This parameter is applicable only to properties of type <code>BigDecimal</code>.
-     * @return
      */
     int precision() default DEFAULT_PRECISION;
 
@@ -163,31 +154,33 @@ public @interface IsProperty {
      * Scale is the number of digits to the right of the decimal point in a number. For example, the number 123.45 has a scale of 2.
      * <p>
      * This parameter is applicable only to properties of type <code>BigDecimal</code>.
-     * @return
      */
     int scale() default DEFAULT_SCALE;
 
     /**
      * This parameter should be used to indicate whether trailing zeros have any significance for decimal properties (including Money).
      * Such information can be used by, for example, UI logic for displaying or hind the trailing zeros.
-     *
-     * @return
      */
     boolean trailingZeros() default DEFAULT_TRAILING_ZEROS;
 
     /**
-     * Defines the way the entity property will be displayed. Other than entity type will be ignored. The value of this property
-     * might be empty which means that the displayed value for this property should use default pattern (i.e composite entity property will be displayed with title-value pattern).
-     * Also this parameter might have specific pattern like: #1tv#2tv or #1vs#2vs, #1v, z. Where:
-     * #i -- the value of i-th key member; this must be the opening tag for a template;
-     * v -- key member value;
-     * t -- key member title;
-     * s -- key member separator; mutually exclusive with t
-     * z -- as per the default toString implementation
-     *
-     * This patterns for displayed value can be used only for composite entity property.
-     *
-     * @return
+     * Defines a template for displaying a value of a composite entity-typed property.
+     * Has no effect for other property types or for non-composite entities.
+     * The value of this attribute can be empty, which means that the displayed value would use the default pattern (i.e., composite entity property will be displayed with the title-value pattern).
+     * This attribute supports patterns like {@code #1tv#2tv}, {@code #1vs#2v}, {@code #1v}, {@code z}, {@code #1.2tv#2tv}, {@code #1.2.3v}, where:
+     * <ol>
+     *  <li>{@code #i} – the i-th key member (this must be the starting token in a template);
+     *  <li>{@code i.j} – the j-th key member in the i-th key member (the i-th key member must be a composite entity).
+     *      Arbitrary depth of key members is supported (e.g., {@code i.*.z}, where {@code *} may be replaced with any number of key members).
+     *  <li>{@code t} – title of a preceeding key member
+     *      (e.g., {@code #1t} represents the title of the 1st key member, {@code #1.2t} - title of the 2nd key member in the 1st key member);
+     *  <li>{@code v} – value of a preceeding key member
+     *      (e.g., {@code #1v} represents the value of the 1st key member, {@code #1.2v} - value of the 2nd key member in the 1st key member);
+     *  <li>{@code s} – an optional key member separator (mutually exclusive with {@code t}).
+     * </ol>
+     * Alternatively, a template may consist of a single {@code z} character, serving as a {@code toString} representation of the displayed entity.
+     * <p>
+     * The default template is {@code ""}, which is equivalent to applying template {@code #itv} to every key member.
      */
     String displayAs() default DEFAULT_DISPLAY_AS;
 }
