@@ -191,6 +191,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // this is needed for executing after save event handler
         final List<String> dirtyProperties = entity.getDirtyProperties().stream().map(MetaProperty::getName).collect(toList());
 
+        // Auditing requires an audited entity to be refetched so that audit records can be created.
+        final boolean reallySkipRefetching = !isAudited(entityType) && skipRefetching;
+
         final T2<Long, T> result;
         // let's try to save entity
         try {
@@ -202,9 +205,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                result = saveNewEntity(entity, skipRefetching, maybeFetch, session.get());
+                result = saveNewEntity(entity, reallySkipRefetching, maybeFetch, session.get());
             } else { // so, this is a modified entity
-                result = saveModifiedEntity(entity, skipRefetching, maybeFetch, session.get());
+                result = saveModifiedEntity(entity, reallySkipRefetching, maybeFetch, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
