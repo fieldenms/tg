@@ -660,6 +660,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }
     }
 
+    clearHistory () {
+        const state = this._editor.wwEditor.createState();
+        state.doc = this._editor.wwEditor.view.state.doc;
+        this._editor.wwEditor.view.updateState(state);
+    }
+
     _stopKeyboardEvent(event) {
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }

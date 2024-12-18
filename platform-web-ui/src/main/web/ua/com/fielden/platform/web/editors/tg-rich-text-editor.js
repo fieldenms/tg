@@ -111,8 +111,22 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
             _transformedOriginalEditingValue: {
                 type: String,
                 value: null
+            },
+
+            /**
+             * The entity that was last opened it is null only when first time opened or closed
+             */
+            _lastOpenedEntity: {
+                type: Object,
+                value: null,
+                observer: "_lastOpenedEntityChanged"
             }
         }
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this._lastOpenedEntity =  null;
     }
 
     convertToString (value) {
@@ -127,6 +141,24 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         }
 
         return {coreText: '', 'formattedText': strValue};
+    }
+
+     /**
+     * Overridden to calculate union value type title on each arrival of binding entity.
+     */
+     _entityChanged (newValue, oldValue) {
+        super._entityChanged(newValue, oldValue);
+        if (newValue) {
+            this._lastOpenedEntity = newValue;
+        }
+    }
+
+    _lastOpenedEntityChanged (newValue, oldValue) {
+        if ((newValue && !oldValue) || 
+            !newValue || 
+            (newValue.get("id") && oldValue.get("id") && newValue.get("id") !== oldValue.get("id"))) {
+                this.decoratedInput().clearHistory();
+            }
     }
 
     _calcHeight(height, entityType, propertyName) {
