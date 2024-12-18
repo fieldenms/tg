@@ -614,6 +614,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.addOwnKeyBinding('ctrl+b meta+b', '_applyBold');
         this.addOwnKeyBinding('ctrl+i meta+i', '_applyItalic');
         this.addOwnKeyBinding('ctrl+s meta+s', '_applyStrikethough');
+        this.addOwnKeyBinding('ctrl+x meta+x', '_cut');
         this.addOwnKeyBinding('ctrl+z meta+z', '_undo');
         this.addOwnKeyBinding('ctrl+y meta+y', '_redo');
         this.addOwnKeyBinding('tab', '_stopKeyboardEvent');
@@ -661,6 +662,25 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _stopKeyboardEvent(event) {
         tearDownEvent(event.detail && event.detail.keyboardEvent);
+    }
+
+    _cut(event) {
+        const selection = this._editor.getSelection();
+        if (selection && selection[0] !== selection[1]) {
+            tearDownEvent(event.detail && event.detail.keyboardEvent);
+            const transferData = new DataTransfer();
+            this._getEditableContent().dispatchEvent(new ClipboardEvent('cut', {clipboardData: transferData}));
+            const clipboardItemObj = {};
+            [...transferData.items].forEach(item => {
+                item.getAsString(s => {
+                    clipboardItemObj[item.type] = new Blob([s], { type: item.type });
+                    if (Object.keys(clipboardItemObj).length === transferData.items.length) {
+                        const clipboardItem = new ClipboardItem(clipboardItemObj);
+                        navigator.clipboard.write([clipboardItem]);
+                    }
+                });
+            });
+        }
     }
 
     _stopMouseEvent(e) {
