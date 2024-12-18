@@ -34,7 +34,7 @@ public class DefaultMetaPropertyFactory extends AbstractMetaPropertyFactory {
         final Class<? extends AbstractEntity<?>> key = anotation.value();
 
         try {
-            return entityExistsValidators.get(key, () -> new EntityExistsValidator(key, coFinder));
+            return entityExistsValidators.get(key, () -> new EntityExistsValidator<>(key, coFinder));
         } catch (final ExecutionException ex) {
             throw new EntityException("Could not create EntityExistsValidator.", ex);
         }
