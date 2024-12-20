@@ -410,6 +410,32 @@ function handleAcceptEvent(e) {
     }
 }
 
+function mouseEventRetranslator(e) {
+    document.addEventListener("mouseup",  this._mouseUp);
+    document.addEventListener("mousemove", this._mouseMove);
+}
+
+function mouseUp (e) {
+    if (this._editor.wwEditor.view.input.mouseDown && !e.composedPath().includes(this._getEditableContent())) {
+        this._editor.wwEditor.view.input.mouseDown.up(e);
+    }
+    removeMouseEventHandlersFromDocument.bind(this)();
+}
+
+function mouseMove (e) {
+    if (this._editor.wwEditor.view.input.mouseDown && !e.composedPath().includes(this._getEditableContent())) {
+        this._editor.wwEditor.view.input.mouseDown.move(e);
+    }
+    removeMouseEventHandlersFromDocument.bind(this)();
+}
+
+function removeMouseEventHandlersFromDocument() {
+    if (!this._editor.wwEditor.view.input.mouseDown) {
+        document.removeEventListener("mouseup",  this._mouseUp);
+        document.removeEventListener("mousemove", this._mouseMove);
+    }
+}
+
 const template = html`
     <style include='rich-text-enhanced-styles'>
         :host {
@@ -537,6 +563,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         super.ready();
         //Bind some functions to use it for event handlers
         this._handleAcceptEvent = handleAcceptEvent.bind(this);
+        this._mouseUp = mouseUp.bind(this)
+        this._mouseMove = mouseMove.bind(this)
         //Initialise link and color dialogs
         this.$.linkDropdown.positionTarget = document.body;
         this.$.linkDropdown.addEventListener('iron-overlay-canceled', handleCancelEvent.bind(this));
@@ -607,6 +635,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._getEditableContent().addEventListener("mouseup", mouseUpHandler.bind(this));
         this._getEditableContent().addEventListener("touchstart", mouseDownHandler.bind(this));
         this._getEditableContent().addEventListener("touchend", mouseUpHandler.bind(this));
+        //Add mouse down handler to handle case when user presses mouse button on editor and moves it outside of the editor, which later prevents invokation of mouse up handler
+        this._getEditableContent().addEventListener("mousedown", mouseEventRetranslator.bind(this), true);
         //Add key down to prevent tab key on list
         this._getEditableContent().addEventListener("keydown", preventUnwantedKeyboradEvents.bind(this), true);
         //Initiate key binding and key event target
