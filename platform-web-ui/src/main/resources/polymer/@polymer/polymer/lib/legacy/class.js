@@ -64,6 +64,25 @@ function copyProperties(source, target, excludeProps) {
   }
 }
 
+/**
+ * Applies a "legacy" behavior or array of behaviors to the provided class.
+ *
+ * Note: this method will automatically also apply the `LegacyElementMixin`
+ * to ensure that any legacy behaviors can rely on legacy Polymer API on
+ * the underlying element.
+ *
+ * @function
+ * @template T
+ * @param {!Object|!Array<!Object>} behaviors Behavior object or array of behaviors.
+ * @param {function(new:T)} klass Element class.
+ * @return {?} Returns a new Element class extended by the
+ * passed in `behaviors` and also by `LegacyElementMixin`.
+ * @suppress {invalidCasts, checkTypes}
+ */
+function mixinBehaviors(behaviors, klass) {
+  return GenerateClassFromInfo({}, LegacyElementMixin(klass), behaviors);
+}
+
 // NOTE:
 // 1.x
 // Behaviors were mixed in *in reverse order* and de-duped on the fly.
@@ -521,4 +540,4 @@ const Class = function(info, mixin) {
   return klass;
 };
 
-export { Class };
+export { Class, mixinBehaviors };

@@ -53,6 +53,43 @@ function callMethod(info) {
 }
 
 /**
+ * Flushes all `beforeNextRender` tasks, followed by all `afterNextRender`
+ * tasks.
+ *
+ * @return {void}
+ */
+function flush() {
+  while (beforeRenderQueue.length || afterRenderQueue.length) {
+    flushQueue(beforeRenderQueue);
+    flushQueue(afterRenderQueue);
+  }
+  scheduled = false;
+}
+
+
+/**
+ * Enqueues a callback which will be run before the next render, at
+ * `requestAnimationFrame` timing.
+ *
+ * This method is useful for enqueuing work that requires DOM measurement,
+ * since measurement may not be reliable in custom element callbacks before
+ * the first render, as well as for batching measurement tasks in general.
+ *
+ * Tasks in this queue may be flushed by calling `flush()`.
+ *
+ * @param {*} context Context object the callback function will be bound to
+ * @param {function(...*):void} callback Callback function
+ * @param {!Array=} args An array of arguments to call the callback function with
+ * @return {void}
+ */
+function beforeNextRender(context, callback, args) {
+  if (!scheduled) {
+    schedule();
+  }
+  beforeRenderQueue.push([context, callback, args]);
+}
+
+/**
  * Enqueues a callback which will be run after the next render, equivalent
  * to one task (`setTimeout`) after the next `requestAnimationFrame`.
  *
@@ -73,4 +110,4 @@ function afterNextRender(context, callback, args) {
   afterRenderQueue.push([context, callback, args]);
 }
 
-export { afterNextRender };
+export { afterNextRender, beforeNextRender, flush };
