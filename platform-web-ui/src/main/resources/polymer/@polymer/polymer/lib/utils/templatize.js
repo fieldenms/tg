@@ -1,3 +1,9 @@
+import './boot.js';
+import { PropertyEffects } from '../mixins/property-effects.js';
+import { MutableData } from '../mixins/mutable-data.js';
+import { strictTemplatePolicy, legacyWarnings } from './settings.js';
+import { wrap } from './wrap.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -8,91 +14,49 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-/**
- * Module for preparing and stamping instances of templates that utilize
- * Polymer's data-binding and declarative event listener features.
- *
- * Example:
- *
- *     // Get a template from somewhere, e.g. light DOM
- *     let template = this.querySelector('template');
- *     // Prepare the template
- *     let TemplateClass = Templatize.templatize(template);
- *     // Instance the template with an initial data model
- *     let instance = new TemplateClass({myProp: 'initial'});
- *     // Insert the instance's DOM somewhere, e.g. element's shadow DOM
- *     this.shadowRoot.appendChild(instance.root);
- *     // Changing a property on the instance will propagate to bindings
- *     // in the template
- *     instance.myProp = 'new value';
- *
- * The `options` dictionary passed to `templatize` allows for customizing
- * features of the generated template class, including how outer-scope host
- * properties should be forwarded into template instances, how any instance
- * properties added into the template's scope should be notified out to
- * the host, and whether the instance should be decorated as a "parent model"
- * of any event handlers.
- *
- *     // Customize property forwarding and event model decoration
- *     let TemplateClass = Templatize.templatize(template, this, {
- *       parentModel: true,
- *       forwardHostProp(property, value) {...},
- *       instanceProps: {...},
- *       notifyInstanceProp(instance, property, value) {...},
- *     });
- *
- * @summary Module for preparing and stamping instances of templates
- *   utilizing Polymer templating features.
- */
-import './boot.js';
-import { PropertyEffects } from '../mixins/property-effects.js';
-import { MutableData } from '../mixins/mutable-data.js';
-import { strictTemplatePolicy, legacyWarnings } from './settings.js';
-import { wrap } from './wrap.js'; // Base class for HTMLTemplateElement extension that has property effects
+// Base class for HTMLTemplateElement extension that has property effects
 // machinery for propagating host properties to children. This is an ES5
 // class only because Babel (incorrectly) requires super() in the class
 // constructor even though no `this` is used and it returns an instance.
-
 let newInstance = null;
+
 /**
  * @constructor
  * @extends {HTMLTemplateElement}
  * @private
  */
-
-function HTMLTemplateElementExtension() {
-  return newInstance;
-}
-
+function HTMLTemplateElementExtension() { return newInstance; }
 HTMLTemplateElementExtension.prototype = Object.create(HTMLTemplateElement.prototype, {
   constructor: {
     value: HTMLTemplateElementExtension,
     writable: true
   }
 });
+
 /**
  * @constructor
  * @implements {Polymer_PropertyEffects}
  * @extends {HTMLTemplateElementExtension}
  * @private
  */
-
 const DataTemplate = PropertyEffects(HTMLTemplateElementExtension);
+
 /**
  * @constructor
  * @implements {Polymer_MutableData}
  * @extends {DataTemplate}
  * @private
  */
+const MutableDataTemplate = MutableData(DataTemplate);
 
-const MutableDataTemplate = MutableData(DataTemplate); // Applies a DataTemplate subclass to a <template> instance
-
+// Applies a DataTemplate subclass to a <template> instance
 function upgradeTemplate(template, constructor) {
   newInstance = template;
   Object.setPrototypeOf(template, constructor.prototype);
   new constructor();
   newInstance = null;
 }
+
 /**
  * Base class for TemplateInstance.
  * @constructor
@@ -100,13 +64,12 @@ function upgradeTemplate(template, constructor) {
  * @implements {Polymer_PropertyEffects}
  * @private
  */
-
-
 const templateInstanceBase = PropertyEffects(class {});
-export function showHideChildren(hide, children) {
-  for (let i = 0; i < children.length; i++) {
-    let n = children[i]; // Ignore non-changes
 
+function showHideChildren(hide, children) {
+  for (let i=0; i<children.length; i++) {
+    let n = children[i];
+    // Ignore non-changes
     if (Boolean(hide) != Boolean(n.__hideTemplateChildren__)) {
       // clear and restore text
       if (n.nodeType === Node.TEXT_NODE) {
@@ -115,75 +78,65 @@ export function showHideChildren(hide, children) {
           n.textContent = '';
         } else {
           n.textContent = n.__polymerTextContent__;
-        } // remove and replace slot
-
+        }
+      // remove and replace slot
       } else if (n.localName === 'slot') {
         if (hide) {
           n.__polymerReplaced__ = document.createComment('hidden-slot');
           wrap(wrap(n).parentNode).replaceChild(n.__polymerReplaced__, n);
         } else {
           const replace = n.__polymerReplaced__;
-
           if (replace) {
             wrap(wrap(replace).parentNode).replaceChild(n, replace);
           }
         }
-      } // hide and show nodes
+      }
+      // hide and show nodes
       else if (n.style) {
-          if (hide) {
-            n.__polymerDisplay__ = n.style.display;
-            n.style.display = 'none';
-          } else {
-            n.style.display = n.__polymerDisplay__;
-          }
+        if (hide) {
+          n.__polymerDisplay__ = n.style.display;
+          n.style.display = 'none';
+        } else {
+          n.style.display = n.__polymerDisplay__;
         }
+      }
     }
-
     n.__hideTemplateChildren__ = hide;
-
     if (n._showHideChildren) {
       n._showHideChildren(hide);
     }
   }
 }
+
 /**
  * @polymer
  * @customElement
  * @appliesMixin PropertyEffects
  * @unrestricted
  */
-
 class TemplateInstanceBase extends templateInstanceBase {
   constructor(props) {
     super();
-
     this._configureProperties(props);
     /** @type {!StampedTemplate} */
-
-
-    this.root = this._stampTemplate(this.__dataHost); // Save list of stamped children
-
+    this.root = this._stampTemplate(this.__dataHost);
+    // Save list of stamped children
     let children = [];
     /** @suppress {invalidCasts} */
-
-    this.children =
-    /** @type {!NodeList} */
-    children; // Polymer 1.x did not use `Polymer.dom` here so not bothering.
-
-    for (let n = this.root.firstChild; n; n = n.nextSibling) {
+    this.children = /** @type {!NodeList} */ (children);
+    // Polymer 1.x did not use `Polymer.dom` here so not bothering.
+    for (let n = this.root.firstChild; n; n=n.nextSibling) {
       children.push(n);
       n.__templatizeInstance = this;
     }
-
-    if (this.__templatizeOwner && this.__templatizeOwner.__hideTemplateChildren__) {
+    if (this.__templatizeOwner &&
+      this.__templatizeOwner.__hideTemplateChildren__) {
       this._showHideChildren(true);
-    } // Flush props only when props are passed if instance props exist
+    }
+    // Flush props only when props are passed if instance props exist
     // or when there isn't instance props.
-
-
     let options = this.__templatizeOptions;
-
-    if (props && options.instanceProps || !options.instanceProps) {
+    if ((props && options.instanceProps) || !options.instanceProps) {
       this._enableProperties();
     }
   }
@@ -194,19 +147,15 @@ class TemplateInstanceBase extends templateInstanceBase {
    * @param {Object} props Object of property name-value pairs to set.
    * @return {void}
    */
-
-
   _configureProperties(props) {
     let options = this.__templatizeOptions;
-
     if (options.forwardHostProp) {
       for (let hprop in this.__hostProps) {
         this._setPendingProperty(hprop, this.__dataHost['_host_' + hprop]);
       }
-    } // Any instance props passed in the constructor will overwrite host props;
+    }
+    // Any instance props passed in the constructor will overwrite host props;
     // normally this would be a user error but we don't specifically filter them
-
-
     for (let iprop in props) {
       this._setPendingProperty(iprop, props[iprop]);
     }
@@ -222,13 +171,12 @@ class TemplateInstanceBase extends templateInstanceBase {
    * @param {*} value Value of the property to forward
    * @return {void}
    */
-
-
   forwardHostProp(prop, value) {
     if (this._setPendingPropertyOrPath(prop, value, false, true)) {
       this.__dataHost._enqueueClient(this);
     }
   }
+
   /**
    * Override point for adding custom or simulated event handling.
    *
@@ -238,13 +186,11 @@ class TemplateInstanceBase extends templateInstanceBase {
    * @param {function(!Event):void} handler Listener function to add
    * @return {void}
    */
-
-
   _addEventListenerToNode(node, eventName, handler) {
     if (this._methodHost && this.__templatizeOptions.parentModel) {
       // If this instance should be considered a parent model, decorate
       // events this template instance as `model`
-      this._methodHost._addEventListenerToNode(node, eventName, e => {
+      this._methodHost._addEventListenerToNode(node, eventName, (e) => {
         e.model = this;
         handler(e);
       });
@@ -252,7 +198,6 @@ class TemplateInstanceBase extends templateInstanceBase {
       // Otherwise delegate to the template's host (which could be)
       // another template instance
       let templateHost = this.__dataHost.__dataHost;
-
       if (templateHost) {
         templateHost._addEventListenerToNode(node, eventName, handler);
       }
@@ -267,8 +212,6 @@ class TemplateInstanceBase extends templateInstanceBase {
    * @return {void}
    * @protected
    */
-
-
   _showHideChildren(hide) {
     showHideChildren(hide, this.children);
   }
@@ -284,10 +227,9 @@ class TemplateInstanceBase extends templateInstanceBase {
    * @return {void}
    * @protected
    */
-
-
   _setUnmanagedPropertyToNode(node, prop, value) {
-    if (node.__hideTemplateChildren__ && node.nodeType == Node.TEXT_NODE && prop == 'textContent') {
+    if (node.__hideTemplateChildren__ &&
+        node.nodeType == Node.TEXT_NODE && prop == 'textContent') {
       node.__polymerTextContent__ = value;
     } else {
       super._setUnmanagedPropertyToNode(node, prop, value);
@@ -300,26 +242,21 @@ class TemplateInstanceBase extends templateInstanceBase {
    *
    * @return {!Polymer_PropertyEffects} The parent model of this instance
    */
-
-
   get parentModel() {
     let model = this.__parentModel;
-
     if (!model) {
       let options;
       model = this;
-
       do {
         // A template instance's `__dataHost` is a <template>
         // `model.__dataHost.__dataHost` is the template's host
         model = model.__dataHost.__dataHost;
       } while ((options = model.__templatizeOptions) && !options.parentModel);
-
       this.__parentModel = model;
     }
-
     return model;
   }
+
   /**
    * Stub of HTMLElement's `dispatchEvent`, so that effects that may
    * dispatch events safely no-op.
@@ -328,42 +265,32 @@ class TemplateInstanceBase extends templateInstanceBase {
    * @return {boolean} Always true.
    * @override
    */
-
-
-  dispatchEvent(event) {
-    // eslint-disable-line no-unused-vars
-    return true;
+   dispatchEvent(event) { // eslint-disable-line no-unused-vars
+     return true;
   }
-
 }
+
 /** @type {!DataTemplate} */
-
-
 TemplateInstanceBase.prototype.__dataHost;
 /** @type {!TemplatizeOptions} */
-
 TemplateInstanceBase.prototype.__templatizeOptions;
 /** @type {!Polymer_PropertyEffects} */
-
 TemplateInstanceBase.prototype._methodHost;
 /** @type {!Object} */
-
 TemplateInstanceBase.prototype.__templatizeOwner;
 /** @type {!Object} */
-
 TemplateInstanceBase.prototype.__hostProps;
+
 /**
  * @constructor
  * @extends {TemplateInstanceBase}
  * @implements {Polymer_MutableData}
  * @private
  */
-
-const MutableTemplateInstanceBase = MutableData( // This cast shouldn't be neccessary, but Closure doesn't understand that
-// TemplateInstanceBase is a constructor function.
-
-/** @type {function(new:TemplateInstanceBase)} */
-TemplateInstanceBase);
+const MutableTemplateInstanceBase = MutableData(
+    // This cast shouldn't be neccessary, but Closure doesn't understand that
+    // TemplateInstanceBase is a constructor function.
+    /** @type {function(new:TemplateInstanceBase)} */ (TemplateInstanceBase));
 
 function findMethodHost(template) {
   // Technically this should be the owner of the outermost template.
@@ -374,137 +301,121 @@ function findMethodHost(template) {
   let templateHost = template.__dataHost;
   return templateHost && templateHost._methodHost || templateHost;
 }
-/* eslint-disable valid-jsdoc */
 
+/* eslint-disable valid-jsdoc */
 /**
  * @suppress {missingProperties} class.prototype is not defined for some reason
  */
-
-
 function createTemplatizerClass(template, templateInfo, options) {
   /**
    * @constructor
    * @extends {TemplateInstanceBase}
    */
-  let templatizerBase = options.mutableData ? MutableTemplateInstanceBase : TemplateInstanceBase; // Affordance for global mixins onto TemplatizeInstance
+  let templatizerBase = options.mutableData ?
+    MutableTemplateInstanceBase : TemplateInstanceBase;
 
+  // Affordance for global mixins onto TemplatizeInstance
   if (templatize.mixin) {
     templatizerBase = templatize.mixin(templatizerBase);
   }
+
   /**
    * Anonymous class created by the templatize
    * @constructor
    * @private
    */
-
-
-  let klass = class extends templatizerBase {};
+  let klass = class extends templatizerBase { };
   /** @override */
-
   klass.prototype.__templatizeOptions = options;
-
   klass.prototype._bindTemplate(template);
-
   addNotifyEffects(klass, template, templateInfo, options);
   return klass;
 }
+
 /**
  * Adds propagate effects from the template to the template instance for
  * properties that the host binds to the template using the `_host_` prefix.
  *
  * @suppress {missingProperties} class.prototype is not defined for some reason
  */
-
-
 function addPropagateEffects(target, templateInfo, options, methodHost) {
   let userForwardHostProp = options.forwardHostProp;
-
   if (userForwardHostProp && templateInfo.hasHostProps) {
     // Under the `removeNestedTemplates` optimization, a custom element like
     // `dom-if` or `dom-repeat` can itself be treated as the "template"; this
     // flag is used to switch between upgrading a `<template>` to be a property
     // effects client vs. adding the effects directly to the custom element
-    const isTemplate = target.localName == 'template'; // Provide data API and property effects on memoized template class
-
+    const isTemplate = target.localName == 'template';
+    // Provide data API and property effects on memoized template class
     let klass = templateInfo.templatizeTemplateClass;
-
     if (!klass) {
       if (isTemplate) {
         /**
          * @constructor
          * @extends {DataTemplate}
          */
-        let templatizedBase = options.mutableData ? MutableDataTemplate : DataTemplate; // NOTE: due to https://github.com/google/closure-compiler/issues/2928,
+        let templatizedBase =
+            options.mutableData ? MutableDataTemplate : DataTemplate;
+
+        // NOTE: due to https://github.com/google/closure-compiler/issues/2928,
         // combining the next two lines into one assignment causes a spurious
         // type error.
-
         /** @private */
-
         class TemplatizedTemplate extends templatizedBase {}
-
         klass = templateInfo.templatizeTemplateClass = TemplatizedTemplate;
       } else {
         /**
          * @constructor
          * @extends {PolymerElement}
          */
-        const templatizedBase = target.constructor; // Create a cached subclass of the base custom element class onto which
+        const templatizedBase = target.constructor;
+
+        // Create a cached subclass of the base custom element class onto which
         // to put the template-specific propagate effects
         // NOTE: due to https://github.com/google/closure-compiler/issues/2928,
         // combining the next two lines into one assignment causes a spurious
         // type error.
-
         /** @private */
-
         class TemplatizedTemplateExtension extends templatizedBase {}
-
-        klass = templateInfo.templatizeTemplateClass = TemplatizedTemplateExtension;
-      } // Add template - >instances effects
+        klass = templateInfo.templatizeTemplateClass =
+            TemplatizedTemplateExtension;
+      }
+      // Add template - >instances effects
       // and host <- template effects
-
-
       let hostProps = templateInfo.hostProps;
-
       for (let prop in hostProps) {
-        klass.prototype._addPropertyEffect('_host_' + prop, klass.prototype.PROPERTY_EFFECT_TYPES.PROPAGATE, {
-          fn: createForwardHostPropEffect(prop, userForwardHostProp)
-        });
-
+        klass.prototype._addPropertyEffect('_host_' + prop,
+          klass.prototype.PROPERTY_EFFECT_TYPES.PROPAGATE,
+          {fn: createForwardHostPropEffect(prop, userForwardHostProp)});
         klass.prototype._createNotifyingProperty('_host_' + prop);
       }
-
       if (legacyWarnings && methodHost) {
         warnOnUndeclaredProperties(templateInfo, options, methodHost);
       }
-    } // Mix any pre-bound data into __data; no need to flush this to
+    }
+    // Mix any pre-bound data into __data; no need to flush this to
     // instances since they pull from the template at instance-time
-
-
     if (target.__dataProto) {
       // Note, generally `__dataProto` could be chained, but it's guaranteed
       // to not be since this is a vanilla template we just added effects to
       Object.assign(target.__data, target.__dataProto);
     }
-
     if (isTemplate) {
-      upgradeTemplate(target, klass); // Clear any pending data for performance
-
+      upgradeTemplate(target, klass);
+      // Clear any pending data for performance
       target.__dataTemp = {};
       target.__dataPending = null;
       target.__dataOld = null;
-
       target._enableProperties();
     } else {
       // Swizzle the cached subclass prototype onto the custom element
-      Object.setPrototypeOf(target, klass.prototype); // Check for any pre-bound instance host properties, and do the
+      Object.setPrototypeOf(target, klass.prototype);
+      // Check for any pre-bound instance host properties, and do the
       // instance property delete/assign dance for those (directly into data;
       // not need to go through accessor since they are pulled at instance time)
-
       const hostProps = templateInfo.hostProps;
-
       for (let prop in hostProps) {
         prop = '_host_' + prop;
-
         if (prop in target) {
           const val = target[prop];
           delete target[prop];
@@ -516,27 +427,24 @@ function addPropagateEffects(target, templateInfo, options, methodHost) {
 }
 /* eslint-enable valid-jsdoc */
 
-
 function createForwardHostPropEffect(hostProp, userForwardHostProp) {
   return function forwardHostProp(template, prop, props) {
-    userForwardHostProp.call(template.__templatizeOwner, prop.substring('_host_'.length), props[prop]);
+    userForwardHostProp.call(template.__templatizeOwner,
+      prop.substring('_host_'.length), props[prop]);
   };
 }
 
 function addNotifyEffects(klass, template, templateInfo, options) {
   let hostProps = templateInfo.hostProps || {};
-
   for (let iprop in options.instanceProps) {
     delete hostProps[iprop];
     let userNotifyInstanceProp = options.notifyInstanceProp;
-
     if (userNotifyInstanceProp) {
-      klass.prototype._addPropertyEffect(iprop, klass.prototype.PROPERTY_EFFECT_TYPES.NOTIFY, {
-        fn: createNotifyInstancePropEffect(iprop, userNotifyInstanceProp)
-      });
+      klass.prototype._addPropertyEffect(iprop,
+        klass.prototype.PROPERTY_EFFECT_TYPES.NOTIFY,
+        {fn: createNotifyInstancePropEffect(iprop, userNotifyInstanceProp)});
     }
   }
-
   if (options.forwardHostProp && template.__dataHost) {
     for (let hprop in hostProps) {
       // As we're iterating hostProps in this function, note whether
@@ -544,17 +452,17 @@ function addNotifyEffects(klass, template, templateInfo, options) {
       if (!templateInfo.hasHostProps) {
         templateInfo.hasHostProps = true;
       }
-
-      klass.prototype._addPropertyEffect(hprop, klass.prototype.PROPERTY_EFFECT_TYPES.NOTIFY, {
-        fn: createNotifyHostPropEffect()
-      });
+      klass.prototype._addPropertyEffect(hprop,
+        klass.prototype.PROPERTY_EFFECT_TYPES.NOTIFY,
+        {fn: createNotifyHostPropEffect()});
     }
   }
 }
 
 function createNotifyInstancePropEffect(instProp, userNotifyInstanceProp) {
   return function notifyInstanceProp(inst, prop, props) {
-    userNotifyInstanceProp.call(inst.__templatizeOwner, inst, prop, props[prop]);
+    userNotifyInstanceProp.call(inst.__templatizeOwner,
+      inst, prop, props[prop]);
   };
 }
 
@@ -563,6 +471,8 @@ function createNotifyHostPropEffect() {
     inst.__dataHost._setPendingPropertyOrPath('_host_' + prop, props[prop], true, true);
   };
 }
+
+
 /**
  * Returns an anonymous `PropertyEffects` class bound to the
  * `<template>` provided.  Instancing the class will result in the
@@ -641,101 +551,70 @@ function createNotifyHostPropEffect() {
  *   to the template provided
  * @suppress {invalidCasts}
  */
-
-
-export function templatize(template, owner, options) {
+function templatize(template, owner, options) {
   // Under strictTemplatePolicy, the templatized element must be owned
   // by a (trusted) Polymer element, indicated by existence of _methodHost;
   // e.g. for dom-if & dom-repeat in main document, _methodHost is null
   if (strictTemplatePolicy && !findMethodHost(template)) {
     throw new Error('strictTemplatePolicy: template owner not trusted');
   }
-
-  options =
-  /** @type {!TemplatizeOptions} */
-  options || {};
-
+  options = /** @type {!TemplatizeOptions} */(options || {});
   if (template.__templatizeOwner) {
     throw new Error('A <template> can only be templatized once');
   }
-
   template.__templatizeOwner = owner;
   const ctor = owner ? owner.constructor : TemplateInstanceBase;
-
-  let templateInfo = ctor._parseTemplate(template); // Get memoized base class for the prototypical template, which
+  let templateInfo = ctor._parseTemplate(template);
+  // Get memoized base class for the prototypical template, which
   // includes property effects for binding template & forwarding
-
   /**
    * @constructor
    * @extends {TemplateInstanceBase}
    */
-
-
   let baseClass = templateInfo.templatizeInstanceClass;
-
   if (!baseClass) {
     baseClass = createTemplatizerClass(template, templateInfo, options);
     templateInfo.templatizeInstanceClass = baseClass;
   }
-
-  const methodHost = findMethodHost(template); // Host property forwarding must be installed onto template instance
-
-  addPropagateEffects(template, templateInfo, options, methodHost); // Subclass base class and add reference for this specific template
-
+  const methodHost = findMethodHost(template);
+  // Host property forwarding must be installed onto template instance
+  addPropagateEffects(template, templateInfo, options, methodHost);
+  // Subclass base class and add reference for this specific template
   /** @private */
-
   let klass = class TemplateInstance extends baseClass {};
   /** @override */
-
   klass.prototype._methodHost = methodHost;
   /** @override */
-
-  klass.prototype.__dataHost =
-  /** @type {!DataTemplate} */
-  template;
+  klass.prototype.__dataHost = /** @type {!DataTemplate} */ (template);
   /** @override */
-
-  klass.prototype.__templatizeOwner =
-  /** @type {!Object} */
-  owner;
+  klass.prototype.__templatizeOwner = /** @type {!Object} */ (owner);
   /** @override */
-
   klass.prototype.__hostProps = templateInfo.hostProps;
-  klass =
-  /** @type {function(new:TemplateInstanceBase)} */
-  klass; //eslint-disable-line no-self-assign
-
+  klass = /** @type {function(new:TemplateInstanceBase)} */(klass); //eslint-disable-line no-self-assign
   return klass;
 }
 
 function warnOnUndeclaredProperties(templateInfo, options, methodHost) {
   const declaredProps = methodHost.constructor._properties;
-  const {
-    propertyEffects
-  } = templateInfo;
-  const {
-    instanceProps
-  } = options;
-
+  const {propertyEffects} = templateInfo;
+  const {instanceProps} = options;
   for (let prop in propertyEffects) {
     // Ensure properties with template effects are declared on the outermost
     // host (`methodHost`), unless they are instance props or static functions
     if (!declaredProps[prop] && !(instanceProps && instanceProps[prop])) {
       const effects = propertyEffects[prop];
-
-      for (let i = 0; i < effects.length; i++) {
-        const {
-          part
-        } = effects[i].info;
-
+      for (let i=0; i<effects.length; i++) {
+        const {part} = effects[i].info;
         if (!(part.signature && part.signature.static)) {
-          console.warn(`Property '${prop}' used in template but not ` + `declared in 'properties'; attribute will not be observed.`);
+          console.warn(`Property '${prop}' used in template but not ` +
+            `declared in 'properties'; attribute will not be observed.`);
           break;
         }
       }
     }
   }
 }
+
 /**
  * Returns the template "model" associated with a given element, which
  * serves as the binding scope for the template instance the element is
@@ -758,16 +637,13 @@ function warnOnUndeclaredProperties(templateInfo, options, methodHost) {
  * @return {TemplateInstanceBase} Template instance representing the
  *   binding scope for the element
  */
-
-
-export function modelForElement(template, node) {
+function modelForElement(template, node) {
   let model;
-
   while (node) {
     // An element with a __templatizeInstance marks the top boundary
     // of a scope; walk up until we find one, and then ensure that
     // its __dataHost matches `this`, meaning this dom-repeat stamped it
-    if (model = node.__dataHost ? node : node.__templatizeInstance) {
+    if ((model = node.__dataHost ? node : node.__templatizeInstance)) {
       // Found an element stamped by another template; keep walking up
       // from its __dataHost
       if (model.__dataHost != template) {
@@ -781,7 +657,7 @@ export function modelForElement(template, node) {
       node = wrap(node).parentNode;
     }
   }
-
   return null;
 }
-export { TemplateInstanceBase };
+
+export { TemplateInstanceBase, modelForElement, showHideChildren, templatize };

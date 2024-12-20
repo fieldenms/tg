@@ -1,3 +1,6 @@
+import { LegacyElementMixin } from './legacy-element-mixin.js';
+import { legacyOptimizations } from '../utils/settings.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,8 +10,7 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import { LegacyElementMixin } from './legacy-element-mixin.js';
-import { legacyOptimizations } from '../utils/settings.js';
+
 const lifecycleProps = {
   attached: true,
   detached: true,
@@ -20,6 +22,7 @@ const lifecycleProps = {
   listeners: true,
   hostAttributes: true
 };
+
 const excludeOnInfo = {
   attached: true,
   detached: true,
@@ -31,29 +34,26 @@ const excludeOnInfo = {
   behaviors: true,
   _noAccessors: true
 };
+
 const excludeOnBehaviors = Object.assign({
   listeners: true,
   hostAttributes: true,
   properties: true,
-  observers: true
+  observers: true,
 }, excludeOnInfo);
 
 function copyProperties(source, target, excludeProps) {
   const noAccessors = source._noAccessors;
   const propertyNames = Object.getOwnPropertyNames(source);
-
   for (let i = 0; i < propertyNames.length; i++) {
     let p = propertyNames[i];
-
     if (p in excludeProps) {
       continue;
     }
-
     if (noAccessors) {
       target[p] = source[p];
     } else {
       let pd = Object.getOwnPropertyDescriptor(source, p);
-
       if (pd) {
         // ensure property is configurable so that a later behavior can
         // re-configure it.
@@ -63,26 +63,8 @@ function copyProperties(source, target, excludeProps) {
     }
   }
 }
-/**
- * Applies a "legacy" behavior or array of behaviors to the provided class.
- *
- * Note: this method will automatically also apply the `LegacyElementMixin`
- * to ensure that any legacy behaviors can rely on legacy Polymer API on
- * the underlying element.
- *
- * @function
- * @template T
- * @param {!Object|!Array<!Object>} behaviors Behavior object or array of behaviors.
- * @param {function(new:T)} klass Element class.
- * @return {?} Returns a new Element class extended by the
- * passed in `behaviors` and also by `LegacyElementMixin`.
- * @suppress {invalidCasts, checkTypes}
- */
 
-
-export function mixinBehaviors(behaviors, klass) {
-  return GenerateClassFromInfo({}, LegacyElementMixin(klass), behaviors);
-} // NOTE:
+// NOTE:
 // 1.x
 // Behaviors were mixed in *in reverse order* and de-duped on the fly.
 // The rule was that behavior properties were copied onto the element
@@ -112,16 +94,14 @@ export function mixinBehaviors(behaviors, klass) {
 // If lifecycle is called (super then me), order is
 // (1) C.created, (2) A.created, (3) B.created, (4) element.created
 // (again same as 1.x)
-
 function applyBehaviors(proto, behaviors, lifecycle) {
-  for (let i = 0; i < behaviors.length; i++) {
+  for (let i=0; i<behaviors.length; i++) {
     applyInfo(proto, behaviors[i], lifecycle, excludeOnBehaviors);
   }
 }
 
 function applyInfo(proto, info, lifecycle, excludeProps) {
   copyProperties(info, proto, excludeProps);
-
   for (let p in lifecycleProps) {
     if (info[p]) {
       lifecycle[p] = lifecycle[p] || [];
@@ -129,20 +109,17 @@ function applyInfo(proto, info, lifecycle, excludeProps) {
     }
   }
 }
+
 /**
  * @param {Array} behaviors List of behaviors to flatten.
  * @param {Array=} list Target list to flatten behaviors into.
  * @param {Array=} exclude List of behaviors to exclude from the list.
  * @return {!Array} Returns the list of flattened behaviors.
  */
-
-
 function flattenBehaviors(behaviors, list, exclude) {
   list = list || [];
-
-  for (let i = behaviors.length - 1; i >= 0; i--) {
+  for (let i=behaviors.length-1; i >= 0; i--) {
     let b = behaviors[i];
-
     if (b) {
       if (Array.isArray(b)) {
         flattenBehaviors(b, list);
@@ -156,9 +133,9 @@ function flattenBehaviors(behaviors, list, exclude) {
       console.warn('behavior is null, check for missing or 404 import');
     }
   }
-
   return list;
 }
+
 /**
  * Copies property descriptors from source to target, overwriting all fields
  * of any previous descriptor for a property *except* for `value`, which is
@@ -167,17 +144,12 @@ function flattenBehaviors(behaviors, list, exclude) {
  * @param {*} target Target properties object
  * @param {*} source Source properties object
  */
-
-
 function mergeProperties(target, source) {
   for (const p in source) {
     const targetInfo = target[p];
     const sourceInfo = source[p];
-
-    if (!('value' in sourceInfo) && targetInfo && 'value' in targetInfo) {
-      target[p] = Object.assign({
-        value: targetInfo.value
-      }, sourceInfo);
+    if (!('value' in sourceInfo) && targetInfo && ('value' in targetInfo)) {
+      target[p] = Object.assign({value: targetInfo.value}, sourceInfo);
     } else {
       target[p] = sourceInfo;
     }
@@ -185,6 +157,7 @@ function mergeProperties(target, source) {
 }
 
 const LegacyElement = LegacyElementMixin(HTMLElement);
+
 /* Note about construction and extension of legacy classes.
   [Changed in Q4 2018 to optimize performance.]
 
@@ -207,7 +180,6 @@ const LegacyElement = LegacyElementMixin(HTMLElement);
   and not `_finalizeClass`.
 
 */
-
 /**
  * @param {!PolymerInit} info Polymer info object
  * @param {function(new:HTMLElement)} Base base class to extend with info object
@@ -216,16 +188,16 @@ const LegacyElement = LegacyElementMixin(HTMLElement);
  * @suppress {checkTypes}
  * @private
  */
-
 function GenerateClassFromInfo(info, Base, behaviors) {
+
   // manages behavior and lifecycle processing (filled in after class definition)
   let behaviorList;
   const lifecycle = {};
+
   /** @private */
-
   class PolymerGenerated extends Base {
-    // explicitly not calling super._finalizeClass
 
+    // explicitly not calling super._finalizeClass
     /** @nocollapse */
     static _finalizeClass() {
       // if calling via a subclass that hasn't been generated, pass through to super
@@ -236,88 +208,72 @@ function GenerateClassFromInfo(info, Base, behaviors) {
       } else {
         // interleave properties and observers per behavior and `info`
         if (behaviorList) {
-          for (let i = 0, b; i < behaviorList.length; i++) {
+          for (let i=0, b; i < behaviorList.length; i++) {
             b = behaviorList[i];
-
             if (b.properties) {
               this.createProperties(b.properties);
             }
-
             if (b.observers) {
               this.createObservers(b.observers, b.properties);
             }
           }
         }
-
         if (info.properties) {
           this.createProperties(info.properties);
         }
-
         if (info.observers) {
           this.createObservers(info.observers, info.properties);
-        } // make sure to prepare the element template
-
-
+        }
+        // make sure to prepare the element template
         this._prepareTemplate();
       }
     }
+
     /** @nocollapse */
-
-
     static get properties() {
       const properties = {};
-
       if (behaviorList) {
-        for (let i = 0; i < behaviorList.length; i++) {
+        for (let i=0; i < behaviorList.length; i++) {
           mergeProperties(properties, behaviorList[i].properties);
         }
       }
-
       mergeProperties(properties, info.properties);
       return properties;
     }
+
     /** @nocollapse */
-
-
     static get observers() {
       let observers = [];
-
       if (behaviorList) {
-        for (let i = 0, b; i < behaviorList.length; i++) {
+        for (let i=0, b; i < behaviorList.length; i++) {
           b = behaviorList[i];
-
           if (b.observers) {
             observers = observers.concat(b.observers);
           }
         }
       }
-
       if (info.observers) {
         observers = observers.concat(info.observers);
       }
-
       return observers;
     }
+
     /**
      * @return {void}
      */
-
-
     created() {
       super.created();
       const list = lifecycle.created;
-
       if (list) {
-        for (let i = 0; i < list.length; i++) {
+        for (let i=0; i < list.length; i++) {
           list[i].call(this);
         }
       }
     }
+
     /**
      * @return {void}
      */
-
-
     _registered() {
       /* NOTE: `beforeRegister` is called here for bc, but the behavior
         is different than in 1.x. In 1.0, the method was called *after*
@@ -328,52 +284,42 @@ function GenerateClassFromInfo(info, Base, behaviors) {
       */
       // only proceed if the generated class' prototype has not been registered.
       const generatedProto = PolymerGenerated.prototype;
-
       if (!generatedProto.hasOwnProperty(JSCompiler_renameProperty('__hasRegisterFinished', generatedProto))) {
-        generatedProto.__hasRegisterFinished = true; // ensure superclass is registered first.
-
-        super._registered(); // copy properties onto the generated class lazily if we're optimizing,
-
-
+        generatedProto.__hasRegisterFinished = true;
+        // ensure superclass is registered first.
+        super._registered();
+        // copy properties onto the generated class lazily if we're optimizing,
         if (legacyOptimizations) {
           copyPropertiesToProto(generatedProto);
-        } // make sure legacy lifecycle is called on the *element*'s prototype
+        }
+        // make sure legacy lifecycle is called on the *element*'s prototype
         // and not the generated class prototype; if the element has been
         // extended, these are *not* the same.
-
-
         const proto = Object.getPrototypeOf(this);
         let list = lifecycle.beforeRegister;
-
         if (list) {
-          for (let i = 0; i < list.length; i++) {
+          for (let i=0; i < list.length; i++) {
             list[i].call(proto);
           }
         }
-
         list = lifecycle.registered;
-
         if (list) {
-          for (let i = 0; i < list.length; i++) {
+          for (let i=0; i < list.length; i++) {
             list[i].call(proto);
           }
         }
       }
     }
+
     /**
      * @return {void}
      */
-
-
     _applyListeners() {
       super._applyListeners();
-
       const list = lifecycle.listeners;
-
       if (list) {
-        for (let i = 0; i < list.length; i++) {
+        for (let i=0; i < list.length; i++) {
           const listeners = list[i];
-
           if (listeners) {
             for (let l in listeners) {
               this._addMethodEventListenerToNode(this, l, listeners[l]);
@@ -381,75 +327,66 @@ function GenerateClassFromInfo(info, Base, behaviors) {
           }
         }
       }
-    } // note: exception to "super then me" rule;
+    }
+
+    // note: exception to "super then me" rule;
     // do work before calling super so that super attributes
     // only apply if not already set.
-
     /**
      * @return {void}
      */
-
-
     _ensureAttributes() {
       const list = lifecycle.hostAttributes;
-
       if (list) {
-        for (let i = list.length - 1; i >= 0; i--) {
+        for (let i=list.length-1; i >= 0; i--) {
           const hostAttributes = list[i];
-
           for (let a in hostAttributes) {
-            this._ensureAttribute(a, hostAttributes[a]);
-          }
+              this._ensureAttribute(a, hostAttributes[a]);
+            }
         }
       }
-
       super._ensureAttributes();
     }
+
     /**
      * @return {void}
      */
-
-
     ready() {
       super.ready();
       let list = lifecycle.ready;
-
       if (list) {
-        for (let i = 0; i < list.length; i++) {
+        for (let i=0; i < list.length; i++) {
           list[i].call(this);
         }
       }
     }
+
     /**
      * @return {void}
      */
-
-
     attached() {
       super.attached();
       let list = lifecycle.attached;
-
       if (list) {
-        for (let i = 0; i < list.length; i++) {
+        for (let i=0; i < list.length; i++) {
           list[i].call(this);
         }
       }
     }
+
     /**
      * @return {void}
      */
-
-
     detached() {
       super.detached();
       let list = lifecycle.detached;
-
       if (list) {
-        for (let i = 0; i < list.length; i++) {
+        for (let i=0; i < list.length; i++) {
           list[i].call(this);
         }
       }
     }
+
     /**
      * Implements native Custom Elements `attributeChangedCallback` to
      * set an attribute value to a property via `_attributeToProperty`.
@@ -459,22 +396,18 @@ function GenerateClassFromInfo(info, Base, behaviors) {
      * @param {?string} value New attribute value
      * @return {void}
      */
-
-
     attributeChanged(name, old, value) {
       super.attributeChanged();
       let list = lifecycle.attributeChanged;
-
       if (list) {
-        for (let i = 0; i < list.length; i++) {
+        for (let i=0; i < list.length; i++) {
           list[i].call(this, name, old, value);
         }
       }
     }
+  }
 
-  } // apply behaviors, note actual copying is done lazily at first instance creation
-
-
+  // apply behaviors, note actual copying is done lazily at first instance creation
   if (behaviors) {
     // NOTE: ensure the behavior is extending a class with
     // legacy element api. This is necessary since behaviors expect to be able
@@ -482,29 +415,30 @@ function GenerateClassFromInfo(info, Base, behaviors) {
     if (!Array.isArray(behaviors)) {
       behaviors = [behaviors];
     }
-
-    let superBehaviors = Base.prototype.behaviors; // get flattened, deduped list of behaviors *not* already on super class
-
+    let superBehaviors = Base.prototype.behaviors;
+    // get flattened, deduped list of behaviors *not* already on super class
     behaviorList = flattenBehaviors(behaviors, null, superBehaviors);
-    PolymerGenerated.prototype.behaviors = superBehaviors ? superBehaviors.concat(behaviors) : behaviorList;
+    PolymerGenerated.prototype.behaviors = superBehaviors ?
+      superBehaviors.concat(behaviors) : behaviorList;
   }
 
-  const copyPropertiesToProto = proto => {
+  const copyPropertiesToProto = (proto) => {
     if (behaviorList) {
       applyBehaviors(proto, behaviorList, lifecycle);
     }
-
     applyInfo(proto, info, lifecycle, excludeOnInfo);
-  }; // copy properties if we're not optimizing
+  };
 
-
+  // copy properties if we're not optimizing
   if (!legacyOptimizations) {
     copyPropertiesToProto(PolymerGenerated.prototype);
   }
 
   PolymerGenerated.generatedFrom = info;
+
   return PolymerGenerated;
 }
+
 /**
  * Generates a class that extends `LegacyElement` based on the
  * provided info object.  Metadata objects on the `info` object
@@ -575,16 +509,16 @@ function GenerateClassFromInfo(info, Base, behaviors) {
  *   before extending with Polymer metaprogramming.
  * @return {function(new:HTMLElement)} Generated class
  */
-
-
-export const Class = function (info, mixin) {
+const Class = function(info, mixin) {
   if (!info) {
     console.warn('Polymer.Class requires `info` argument');
   }
-
-  let klass = mixin ? mixin(LegacyElement) : LegacyElement;
-  klass = GenerateClassFromInfo(info, klass, info.behaviors); // decorate klass with registration info
-
+  let klass = mixin ? mixin(LegacyElement) :
+      LegacyElement;
+  klass = GenerateClassFromInfo(info, klass, info.behaviors);
+  // decorate klass with registration info
   klass.is = klass.prototype.is = info.is;
   return klass;
 };
+
+export { Class };

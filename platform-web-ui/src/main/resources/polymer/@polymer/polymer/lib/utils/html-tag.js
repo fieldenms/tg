@@ -1,3 +1,5 @@
+import './boot.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,7 +9,7 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import './boot.js';
+
 /**
  * Our TrustedTypePolicy for HTML which is declared using the Polymer html
  * template tag function.
@@ -18,16 +20,14 @@ import './boot.js';
  *
  * @type {!TrustedTypePolicy|undefined}
  */
+const policy = window.trustedTypes &&
+    trustedTypes.createPolicy('polymer-html-literal', {createHTML: (s) => s});
 
-const policy = window.trustedTypes && trustedTypes.createPolicy('polymer-html-literal', {
-  createHTML: s => s
-});
 /**
  * Class representing a static string value which can be used to filter
  * strings by asseting that they have been created via this class. The
  * `value` property returns the string passed to the constructor.
  */
-
 class LiteralString {
   /**
    * @param {!ITemplateArray} strings Constant parts of tagged template literal
@@ -35,44 +35,38 @@ class LiteralString {
    */
   constructor(strings, values) {
     assertValidTemplateStringParameters(strings, values);
-    const string = values.reduce((acc, v, idx) => acc + literalValue(v) + strings[idx + 1], strings[0]);
+    const string = values.reduce(
+        (acc, v, idx) => acc + literalValue(v) + strings[idx + 1], strings[0]);
     /** @type {string} */
-
     this.value = string.toString();
   }
   /**
    * @return {string} LiteralString string value
    * @override
    */
-
-
   toString() {
     return this.value;
   }
-
 }
+
 /**
  * @param {*} value Object to stringify into HTML
  * @return {string} HTML stringified form of `obj`
  */
-
-
 function literalValue(value) {
   if (value instanceof LiteralString) {
-    return (
-      /** @type {!LiteralString} */
-      value.value
-    );
+    return /** @type {!LiteralString} */(value).value;
   } else {
-    throw new Error(`non-literal value passed to Polymer's htmlLiteral function: ${value}`);
+    throw new Error(
+        `non-literal value passed to Polymer's htmlLiteral function: ${value}`
+    );
   }
 }
+
 /**
  * @param {*} value Object to stringify into HTML
  * @return {string} HTML stringified form of `obj`
  */
-
-
 function htmlValue(value) {
   if (value instanceof HTMLTemplateElement) {
     // This might be an mXSS risk – mainly in the case where this template
@@ -81,16 +75,15 @@ function htmlValue(value) {
     // `>` characters inside style tags.
     // For an example of an actual case that hit this encoding issue,
     // see b/198592167
-    return (
-      /** @type {!HTMLTemplateElement } */
-      value.innerHTML
-    );
+    return /** @type {!HTMLTemplateElement } */(value).innerHTML;
   } else if (value instanceof LiteralString) {
     return literalValue(value);
   } else {
-    throw new Error(`non-template value passed to Polymer's html function: ${value}`);
+    throw new Error(
+        `non-template value passed to Polymer's html function: ${value}`);
   }
 }
+
 /**
  * A template literal tag that creates an HTML <template> element from the
  * contents of the string.
@@ -125,64 +118,34 @@ function htmlValue(value) {
  * @param {...*} values Variable parts of tagged template literal
  * @return {!HTMLTemplateElement} Constructed HTMLTemplateElement
  */
-
-
-export const html = function html(strings, ...values) {
+const html = function html(strings, ...values) {
   assertValidTemplateStringParameters(strings, values);
   const template =
-  /** @type {!HTMLTemplateElement} */
-  document.createElement('template');
-  let value = values.reduce((acc, v, idx) => acc + htmlValue(v) + strings[idx + 1], strings[0]);
-
+      /** @type {!HTMLTemplateElement} */ (document.createElement('template'));
+  let value = values.reduce(
+      (acc, v, idx) => acc + htmlValue(v) + strings[idx + 1], strings[0]);
   if (policy) {
     value = policy.createHTML(value);
   }
-
   template.innerHTML = value;
   return template;
 };
+
 /**
  * @param {!ITemplateArray} strings Constant parts of tagged template literal
  * @param {!Array<*>} values Array of values from quasis
  */
-
 const assertValidTemplateStringParameters = (strings, values) => {
   // Note: if/when https://github.com/tc39/proposal-array-is-template-object
   // is standardized, use that instead when available, as it can perform an
   // unforgable check (though of course, the function itself can be forged).
-  if (!Array.isArray(strings) || !Array.isArray(strings.raw) || values.length !== strings.length - 1) {
+  if (!Array.isArray(strings) || !Array.isArray(strings.raw) ||
+      (values.length !== strings.length - 1)) {
     // This is either caused by a browser bug, a compiler bug, or someone
     // calling the html template tag function as a regular function.
     //
     throw new TypeError('Invalid call to the html template tag');
   }
 };
-/**
- * An html literal tag that can be used with `html` to compose.
- * a literal string.
- *
- * Example:
- *
- *     static get template() {
- *       return html`
- *         <style>
- *           :host { display: block; }
- *           ${this.styleTemplate()}
- *         </style>
- *         <div class="shadowed">${staticValue}</div>
- *         ${super.template}
- *       `;
- *     }
- *     static get styleTemplate() {
- *        return htmlLiteral`.shadowed { background: gray; }`;
- *     }
- *
- * @param {!ITemplateArray} strings Constant parts of tagged template literal
- * @param {...*} values Variable parts of tagged template literal
- * @return {!LiteralString} Constructed literal string
- */
 
-
-export const htmlLiteral = function (strings, ...values) {
-  return new LiteralString(strings, values);
-};
+export { html };

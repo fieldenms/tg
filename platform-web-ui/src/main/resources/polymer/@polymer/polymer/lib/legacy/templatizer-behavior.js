@@ -1,3 +1,5 @@
+import { templatize, modelForElement } from '../utils/templatize.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,20 +9,6 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import { TemplateInstanceBase, templatize, modelForElement } from '../utils/templatize.js'; // eslint-disable-line no-unused-vars
-
-/**
- * @typedef {{
- *   _templatizerTemplate: HTMLTemplateElement,
- *   _parentModel: boolean,
- *   _instanceProps: Object,
- *   _forwardHostPropV2: Function,
- *   _notifyInstancePropV2: Function,
- *   ctor: function(new:TemplateInstanceBase, Object=)
- * }}
- */
-
-let TemplatizerUser; // eslint-disable-line
 
 /**
  * The `Templatizer` behavior adds methods to generate instances of
@@ -83,8 +71,8 @@ let TemplatizerUser; // eslint-disable-line
  *
  * @polymerBehavior
  */
+const Templatizer = {
 
-export const Templatizer = {
   /**
    * Generates an anonymous `TemplateInstance` class (stored as `this.ctor`)
    * for the provided template.  This method should be called once per
@@ -100,15 +88,14 @@ export const Templatizer = {
    */
   templatize(template, mutableData) {
     this._templatizerTemplate = template;
-    this.ctor = templatize(template,
-    /** @type {!Polymer_PropertyEffects} */
-    this, {
-      mutableData: Boolean(mutableData),
-      parentModel: this._parentModel,
-      instanceProps: this._instanceProps,
-      forwardHostProp: this._forwardHostPropV2,
-      notifyInstanceProp: this._notifyInstancePropV2
-    });
+    this.ctor =
+        templatize(template, /** @type {!Polymer_PropertyEffects} */ (this), {
+          mutableData: Boolean(mutableData),
+          parentModel: this._parentModel,
+          instanceProps: this._instanceProps,
+          forwardHostProp: this._forwardHostPropV2,
+          notifyInstanceProp: this._notifyInstancePropV2
+        });
   },
 
   /**
@@ -142,5 +129,6 @@ export const Templatizer = {
   modelForElement(el) {
     return modelForElement(this._templatizerTemplate, el);
   }
-
 };
+
+export { Templatizer };

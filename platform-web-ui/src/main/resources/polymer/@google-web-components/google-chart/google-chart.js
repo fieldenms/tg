@@ -1,3 +1,9 @@
+import { PolymerElement } from '../../@polymer/polymer/polymer-element.js';
+import { timeOut } from '../../@polymer/polymer/lib/utils/async.js';
+import { Debouncer } from '../../@polymer/polymer/lib/utils/debounce.js';
+import { createChartWrapper, dataTable } from './loader.js';
+import { html } from '../../@polymer/polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -7,11 +13,9 @@ The complete set of contributors may be found at https://polymer.github.io/CONTR
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at https://polymer.github.io/PATENTS.txt
 */
-import { PolymerElement, html } from "../../@polymer/polymer/polymer-element.js";
-import { timeOut } from "../../@polymer/polymer/lib/utils/async.js";
-import { Debouncer } from "../../@polymer/polymer/lib/utils/debounce.js";
-import { createChartWrapper, dataTable } from './loader.js';
+
 const DEFAULT_EVENTS = ['ready', 'select'];
+
 /**
  * Constructor names for supported chart types.
  *
@@ -20,7 +24,6 @@ const DEFAULT_EVENTS = ['ready', 'select'];
  *
  * @type {!Object<string, (string|undefined)>}
  */
-
 const CHART_TYPES = {
   'area': 'AreaChart',
   'bar': 'BarChart',
@@ -44,8 +47,9 @@ const CHART_TYPES = {
   'table': 'Table',
   'timeline': 'Timeline',
   'treemap': 'TreeMap',
-  'wordtree': 'WordTree'
+  'wordtree': 'WordTree',
 };
+
 /**
 `google-chart` encapsulates Google Charts as a web component, allowing you to easily visualize
 data. From simple line charts to complex hierarchical tree maps, the chart element provides a
@@ -99,8 +103,7 @@ on the `html` tag of your document.
 
 @demo demo/index.html
 */
-
-export class GoogleChart extends PolymerElement {
+class GoogleChart extends PolymerElement {
   static get template() {
     return html`
       <style>
@@ -136,6 +139,7 @@ export class GoogleChart extends PolymerElement {
       <div id="chartdiv"></div>
     `;
   }
+
   /**
    * Fired after a chart type is rendered and ready for interaction.
    *
@@ -151,52 +155,53 @@ export class GoogleChart extends PolymerElement {
    */
 
   /** Polymer element properties. */
-
-
   static get properties() {
     return {
       type: {
         type: String,
-        observer: GoogleChart.prototype._typeChanged
+        observer: GoogleChart.prototype._typeChanged,
       },
       events: Array,
       options: Object,
       cols: {
         type: Array,
-        observer: GoogleChart.prototype._rowsOrColumnsChanged
+        observer: GoogleChart.prototype._rowsOrColumnsChanged,
       },
       rows: {
         type: Array,
-        observer: GoogleChart.prototype._rowsOrColumnsChanged
+        observer: GoogleChart.prototype._rowsOrColumnsChanged,
       },
       data: {
         // Note: type: String, because it is parsed manually in the observer.
         type: String,
-        observer: GoogleChart.prototype._dataChanged
+        observer: GoogleChart.prototype._dataChanged,
       },
       view: {
         type: Object,
-        observer: GoogleChart.prototype._viewChanged
+        observer: GoogleChart.prototype._viewChanged,
       },
       selection: {
         type: Array,
         notify: true,
-        observer: GoogleChart.prototype._setSelection
+        observer: GoogleChart.prototype._setSelection,
       },
       drawn: {
         type: Boolean,
-        readOnly: true
+        readOnly: true,
       },
-      _data: Object
+      _data: Object,
     };
   }
 
   static get observers() {
-    return ['redraw(_data, options.*)'];
+    return [
+      'redraw(_data, options.*)',
+    ];
   }
 
   constructor() {
     super();
+
     /**
      * Sets the type of the chart.
      *
@@ -227,8 +232,8 @@ export class GoogleChart extends PolymerElement {
      *
      * @type {string}
      */
-
     this.type = 'column';
+
     /**
      * Enumerates the chart events that should be fired.
      *
@@ -242,8 +247,8 @@ export class GoogleChart extends PolymerElement {
      *
      * @type {!Array<string>}
      */
-
     this.events = [];
+
     /**
      * Sets the options for the chart.
      *
@@ -264,8 +269,8 @@ export class GoogleChart extends PolymerElement {
      *
      * @type {!Object|undefined}
      */
-
     this.options = undefined;
+
     /**
      * Sets the data columns for this object.
      *
@@ -280,8 +285,8 @@ export class GoogleChart extends PolymerElement {
      *
      * @type {!Array<*>|undefined}
      */
-
     this.cols = undefined;
+
     /**
      * Sets the data rows for this object.
      *
@@ -296,8 +301,8 @@ export class GoogleChart extends PolymerElement {
      *
      * @type {!Array<!Array<*>>|undefined}
      */
-
     this.rows = undefined;
+
     /**
      * Sets the entire dataset for this object.
      * Can be used to provide the data directly, or to provide a URL from
@@ -321,8 +326,8 @@ export class GoogleChart extends PolymerElement {
      *        string|
      *        undefined}
      */
-
     this.data = undefined;
+
     /**
      * Sets the entire dataset for this object to a Google DataView.
      *
@@ -333,8 +338,8 @@ export class GoogleChart extends PolymerElement {
      *
      * @type {!google.visualization.DataView|undefined}
      */
-
     this.view = undefined;
+
     /**
      * Selected datapoint(s) in the chart.
      *
@@ -352,17 +357,17 @@ export class GoogleChart extends PolymerElement {
      *
      * @type {!Array<*>|undefined}
      */
-
     this.selection = undefined;
+
+
     /**
      * Whether the chart is currently rendered.
      *
      * @type {boolean}
      */
-
     this.drawn;
-
     this._setDrawn(false);
+
     /**
      * Internal data displayed on the chart.
      *
@@ -372,68 +377,54 @@ export class GoogleChart extends PolymerElement {
      *             !google.visualization.DataView|
      *             undefined}
      */
-
-
     this._data = undefined;
+
     /**
      * Internal chart object.
      * @private {!google.visualization.ChartWrapper|null}
      */
-
     this._chartWrapper = null;
-    /** @private {?Debouncer} */
 
+    /** @private {?Debouncer} */
     this._redrawDebouncer = null;
   }
+
   /** @override */
-
-
   ready() {
     super.ready();
-    createChartWrapper(
-    /** @type {!HTMLElement} */
-    this.$['chartdiv']).then(chartWrapper => {
+    createChartWrapper(/** @type {!HTMLElement} */ (this.$['chartdiv'])).then((chartWrapper) => {
       this._chartWrapper = chartWrapper;
-
       this._typeChanged();
-
       google.visualization.events.addListener(chartWrapper, 'ready', () => {
         this._setDrawn(true);
       });
       google.visualization.events.addListener(chartWrapper, 'select', () => {
         this.selection = chartWrapper.getChart().getSelection();
       });
-
       this._propagateEvents(DEFAULT_EVENTS, chartWrapper);
     });
   }
+
   /** Reacts to chart type change. */
-
-
   _typeChanged() {
     if (this._chartWrapper == null) return;
-
     this._chartWrapper.setChartType(CHART_TYPES[this.type] || this.type);
-
     const lastChart = this._chartWrapper.getChart();
-
     google.visualization.events.addOneTimeListener(this._chartWrapper, 'ready', () => {
       const chart = this._chartWrapper.getChart();
-
       if (chart !== lastChart) {
-        this._propagateEvents(this.events.filter(eventName => !DEFAULT_EVENTS.includes(eventName)), chart);
+        this._propagateEvents(this.events.filter((eventName) => !DEFAULT_EVENTS.includes(eventName)), chart);
       }
-
       if (!this.$.styles.children.length) {
         this._localizeGlobalStylesheets();
       }
-
       if (this.selection) {
         this._setSelection();
       }
     });
     this.redraw();
   }
+
   /**
    * Adds listeners to propagate events from the chart.
    *
@@ -441,32 +432,25 @@ export class GoogleChart extends PolymerElement {
    * @param {*} eventTarget
    * @private
    */
-
-
   _propagateEvents(events, eventTarget) {
     for (const eventName of events) {
-      google.visualization.events.addListener(eventTarget, eventName, event => {
+      google.visualization.events.addListener(eventTarget, eventName, (event) => {
         this.dispatchEvent(new CustomEvent(`google-chart-${eventName}`, {
           bubbles: true,
           composed: true,
           detail: {
             chart: this._chartWrapper.getChart(),
-            data: event
-          }
-        }));
+            data: event,
+          }}));
       });
     }
   }
+
   /** Sets the selectiton on the chart. */
-
-
   _setSelection() {
     if (this._chartWrapper == null) return;
-
     const chart = this._chartWrapper.getChart();
-
     if (chart == null) return;
-
     if (chart.setSelection) {
       // Workaround for timeline chart which emits select event on setSelection.
       // See issue #256.
@@ -475,31 +459,27 @@ export class GoogleChart extends PolymerElement {
         const newSelection = JSON.stringify(this.selection);
         if (newSelection === oldSelection) return;
       }
-
       chart.setSelection(this.selection);
     }
   }
+
   /**
    * Redraws the chart.
    *
    * Called automatically when data/type/selection attributes change.
    * Call manually to handle view updates, page resizes, etc.
    */
-
-
   redraw() {
     if (this._chartWrapper == null || this._data == null) return;
-
     this._chartWrapper.setDataTable(this._data);
-
     this._chartWrapper.setOptions(this.options || {});
 
     this._setDrawn(false);
-
     this._redrawDebouncer = Debouncer.debounce(this._redrawDebouncer, timeOut.after(5), () => {
       this._chartWrapper.draw();
     });
   }
+
   /**
    * Returns the chart serialized as an image URI.
    *
@@ -507,45 +487,31 @@ export class GoogleChart extends PolymerElement {
    *
    * @return {?string} Returns image URI.
    */
-
-
   get imageURI() {
     if (this._chartWrapper == null) return null;
-
     const chart = this._chartWrapper.getChart();
-
     return chart && chart.getImageURI();
   }
+
   /** Handles changes to the `view` attribute. */
-
-
   _viewChanged() {
-    if (!this.view) {
-      return;
-    }
-
+    if (!this.view) { return; }
     this._data = this.view;
   }
+
   /** Handles changes to the rows & columns attributes. */
-
-
   async _rowsOrColumnsChanged() {
-    const {
-      rows,
-      cols
-    } = this;
+    const {rows, cols} = this;
     if (!rows || !cols) return;
-
     try {
-      const dt = await dataTable({
-        cols
-      });
+      const dt = await dataTable({cols});
       dt.addRows(rows);
       this._data = dt;
     } catch (reason) {
       this.$.chartdiv.textContent = reason;
     }
   }
+
   /**
    * Handles changes to the `data` attribute.
    *
@@ -555,18 +521,14 @@ export class GoogleChart extends PolymerElement {
    *     string|
    *     undefined} data The new data value
    */
-
-
   _dataChanged(data) {
     var dataPromise;
+    if (!data) { return; }
 
-    if (!data) {
-      return;
-    }
+    var isString = false;
 
-    var isString = false; // Polymer 2 will not call observer if type:Object is set and fails, so
+    // Polymer 2 will not call observer if type:Object is set and fails, so
     // we must parse the string ourselves.
-
     try {
       /**
        * @suppress {checkTypes} `JSON.parse` expects a string but here it tries to deserialize
@@ -579,31 +541,29 @@ export class GoogleChart extends PolymerElement {
 
     if (isString) {
       // Load data asynchronously, from external URL.
-      dataPromise = fetch(data).then(
-      /** @type {!Response} */
-      response => response.json());
+      dataPromise = fetch(data)
+          .then((/** @type {!Response} */ response) => response.json());
     } else {
       // Data is all ready to be processed.
       dataPromise = Promise.resolve(data);
     }
-
-    dataPromise.then(dataTable).then(
-    /** @type {!google.visualization.DataTable} */
-    data => {
-      this._data = data;
-    });
+    dataPromise.then(dataTable)
+        .then((/** @type {!google.visualization.DataTable} */ data) => {
+          this._data = data;
+        });
   }
+
   /**
    * Queries global document head for google charts link#load-css-* and clones
    * them into the local root's div#styles element for shadow dom support.
    *
    * @private
    */
-
-
   _localizeGlobalStylesheets() {
     // get all gchart stylesheets
-    var stylesheets = document.head.querySelectorAll('link[rel="stylesheet"][type="text/css"]');
+    var stylesheets = document.head
+        .querySelectorAll('link[rel="stylesheet"][type="text/css"]');
+
     var stylesheetsArray = Array.from(stylesheets);
 
     for (var i = 0; i < stylesheetsArray.length; i++) {
@@ -616,10 +576,13 @@ export class GoogleChart extends PolymerElement {
         clonedLinkEl.setAttribute('rel', 'stylesheet');
         clonedLinkEl.setAttribute('type', 'text/css');
         clonedLinkEl.setAttribute('href', sheetLinkEl.getAttribute('href'));
+
         this.$.styles.appendChild(clonedLinkEl);
       }
     }
   }
-
 }
+
 customElements.define('google-chart', GoogleChart);
+
+export { GoogleChart };

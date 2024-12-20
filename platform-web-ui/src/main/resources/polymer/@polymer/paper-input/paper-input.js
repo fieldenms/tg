@@ -1,3 +1,14 @@
+import '../polymer/polymer-legacy.js';
+import '../iron-input/iron-input.js';
+import './paper-input-char-counter.js';
+import './paper-input-container.js';
+import './paper-input-error.js';
+import { IronFormElementBehavior } from '../iron-form-element-behavior/iron-form-element-behavior.js';
+import '../polymer/lib/elements/dom-module.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+import { PaperInputBehavior } from './paper-input-behavior.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,16 +19,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import "../iron-input/iron-input.js";
-import './paper-input-char-counter.js';
-import './paper-input-container.js';
-import './paper-input-error.js';
-import { IronFormElementBehavior } from "../iron-form-element-behavior/iron-form-element-behavior.js";
-import { DomModule } from "../polymer/lib/elements/dom-module.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
-import { PaperInputBehavior } from './paper-input-behavior.js';
+
 /**
 Material design: [Text
 fields](https://www.google.com/design/spec/components/text-fields.html)
@@ -73,10 +75,8 @@ Custom property | Description | Default
 @element paper-input
 @demo demo/index.html
 */
-
 Polymer({
   is: 'paper-input',
-
   /** @override */
   _template: html`
     <style>
@@ -183,20 +183,24 @@ Polymer({
 
     </paper-input-container>
   `,
+
   behaviors: [PaperInputBehavior, IronFormElementBehavior],
+
   properties: {
     value: {
       // Required for the correct TypeScript type-generation
       type: String
     },
+
     inputRole: {
       type: String,
-      value: undefined
+      value: undefined,
     },
+
     inputAriaHaspopup: {
       type: String,
-      value: undefined
-    }
+      value: undefined,
+    },
   },
 
   /**
@@ -212,25 +216,22 @@ Polymer({
   // Note: This event is only available in the 1.0 version of this element.
   // In 2.0, the functionality of `_onIronInputReady` is done in
   // PaperInputBehavior::attached.
-  listeners: {
-    'iron-input-ready': '_onIronInputReady'
-  },
-  _onIronInputReady: function () {
+  listeners: {'iron-input-ready': '_onIronInputReady'},
+
+  _onIronInputReady: function() {
     // Even though this is only used in the next line, save this for
     // backwards compatibility, since the native input had this ID until 2.0.5.
     if (!this.$.nativeInput) {
-      this.$.nativeInput =
-      /** @type {!Element} */
-      this.$$('input');
+      this.$.nativeInput = /** @type {!Element} */ (this.$$('input'));
+    }
+    if (this.inputElement &&
+        this._typesThatHaveText.indexOf(this.$.nativeInput.type) !== -1) {
+      this.alwaysFloatLabel = true;
     }
 
-    if (this.inputElement && this._typesThatHaveText.indexOf(this.$.nativeInput.type) !== -1) {
-      this.alwaysFloatLabel = true;
-    } // Only validate when attached if the input already has a value.
-
-
+    // Only validate when attached if the input already has a value.
     if (!!this.inputElement.bindValue) {
       this.$.container._handleValueAndAutoValidate(this.inputElement);
     }
-  }
+  },
 });

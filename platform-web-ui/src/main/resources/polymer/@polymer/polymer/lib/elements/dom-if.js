@@ -1,3 +1,13 @@
+import { PolymerElement } from '../../polymer-element.js';
+import { Debouncer, enqueueDebouncer } from '../utils/debounce.js';
+import { flush } from '../utils/flush.js';
+import { microTask } from '../utils/async.js';
+import { root } from '../utils/path.js';
+import { wrap } from '../utils/wrap.js';
+import { hideElementsGlobally } from '../utils/hide-template-controls.js';
+import { fastDomIf, strictTemplatePolicy, suppressTemplateNotifications } from '../utils/settings.js';
+import { showHideChildren, templatize } from '../utils/templatize.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,15 +17,7 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import { PolymerElement } from '../../polymer-element.js';
-import { Debouncer } from '../utils/debounce.js';
-import { enqueueDebouncer, flush } from '../utils/flush.js';
-import { microTask } from '../utils/async.js';
-import { root } from '../utils/path.js';
-import { wrap } from '../utils/wrap.js';
-import { hideElementsGlobally } from '../utils/hide-template-controls.js';
-import { fastDomIf, strictTemplatePolicy, suppressTemplateNotifications } from '../utils/settings.js';
-import { showHideChildren, templatize } from '../utils/templatize.js';
+
 /**
  * @customElement
  * @polymer
@@ -23,20 +25,18 @@ import { showHideChildren, templatize } from '../utils/templatize.js';
  * @summary Base class for dom-if element; subclassed into concrete
  *   implementation.
  */
-
 class DomIfBase extends PolymerElement {
+
   // Not needed to find template; can be removed once the analyzer
   // can find the tag name from customElements.define call
-  static get is() {
-    return 'dom-if';
-  }
+  static get is() { return 'dom-if'; }
 
-  static get template() {
-    return null;
-  }
+  static get template() { return null; }
 
   static get properties() {
+
     return {
+
       /**
        * Fired whenever DOM is added or removed/hidden by this template (by
        * default, rendering occurs lazily).  To force immediate rendering, call
@@ -74,6 +74,7 @@ class DomIfBase extends PolymerElement {
         type: Boolean
       }
     };
+
   }
 
   constructor() {
@@ -82,10 +83,8 @@ class DomIfBase extends PolymerElement {
     this._lastIf = false;
     this.__hideTemplateChildren__ = false;
     /** @type {!HTMLTemplateElement|undefined} */
-
     this.__template;
     /** @type {!TemplateInfo|undefined} */
-
     this._templateInfo;
   }
 
@@ -106,40 +105,40 @@ class DomIfBase extends PolymerElement {
     //    we wanted a sync option in the future, simply having <dom-if> flush
     //    (or clear) its template's pending host properties before creating
     //    the instance would also avoid the problem.
-    this.__renderDebouncer = Debouncer.debounce(this.__renderDebouncer, microTask, () => this.__render());
+    this.__renderDebouncer = Debouncer.debounce(
+          this.__renderDebouncer
+        , microTask
+        , () => this.__render());
     enqueueDebouncer(this.__renderDebouncer);
   }
+
   /**
    * @override
    * @return {void}
    */
-
-
   disconnectedCallback() {
     super.disconnectedCallback();
     const parent = wrap(this).parentNode;
-
-    if (!parent || parent.nodeType == Node.DOCUMENT_FRAGMENT_NODE && !wrap(parent).host) {
+    if (!parent || (parent.nodeType == Node.DOCUMENT_FRAGMENT_NODE &&
+        !wrap(parent).host)) {
       this.__teardownInstance();
     }
   }
+
   /**
    * @override
    * @return {void}
    */
-
-
   connectedCallback() {
     super.connectedCallback();
-
     if (!hideElementsGlobally()) {
       this.style.display = 'none';
     }
-
     if (this.if) {
       this.__debounceRender();
     }
   }
+
   /**
    * Ensures a template has been assigned to `this.__template`.  If it has not
    * yet been, it querySelectors for it in its children and if it does not yet
@@ -150,43 +149,34 @@ class DomIfBase extends PolymerElement {
    *
    * @return {boolean} True when a template has been found, false otherwise
    */
-
-
   __ensureTemplate() {
     if (!this.__template) {
       // When `removeNestedTemplates` is true, the "template" is the element
       // itself, which has been given a `_templateInfo` property
-      const thisAsTemplate =
-      /** @type {!HTMLTemplateElement} */
-
-      /** @type {!HTMLElement} */
-      this;
-      let template = thisAsTemplate._templateInfo ? thisAsTemplate :
-      /** @type {!HTMLTemplateElement} */
-      wrap(thisAsTemplate).querySelector('template');
-
+      const thisAsTemplate = /** @type {!HTMLTemplateElement} */ (
+          /** @type {!HTMLElement} */ (this));
+      let template = thisAsTemplate._templateInfo ?
+          thisAsTemplate :
+          /** @type {!HTMLTemplateElement} */
+          (wrap(thisAsTemplate).querySelector('template'));
       if (!template) {
         // Wait until childList changes and template should be there by then
         let observer = new MutationObserver(() => {
           if (wrap(this).querySelector('template')) {
             observer.disconnect();
-
             this.__render();
           } else {
             throw new Error('dom-if requires a <template> child');
           }
         });
-        observer.observe(this, {
-          childList: true
-        });
+        observer.observe(this, {childList: true});
         return false;
       }
-
       this.__template = template;
     }
-
     return true;
   }
+
   /**
    * Ensures a an instance of the template has been created and inserted. This
    * method may return false if the template has not yet been found or if
@@ -202,41 +192,34 @@ class DomIfBase extends PolymerElement {
    *
    * @return {boolean} True if the instance was created, false otherwise.
    */
-
-
   __ensureInstance() {
     let parentNode = wrap(this).parentNode;
-
     if (!this.__hasInstance()) {
       // Guard against element being detached while render was queued
       if (!parentNode) {
         return false;
-      } // Find the template (when false, there was no template yet)
-
-
+      }
+      // Find the template (when false, there was no template yet)
       if (!this.__ensureTemplate()) {
         return false;
       }
-
       this.__createAndInsertInstance(parentNode);
     } else {
       // Move instance children if necessary
       let children = this.__getInstanceNodes();
-
       if (children && children.length) {
         // Detect case where dom-if was re-attached in new position
         let lastChild = wrap(this).previousSibling;
-
-        if (lastChild !== children[children.length - 1]) {
-          for (let i = 0, n; i < children.length && (n = children[i]); i++) {
+        if (lastChild !== children[children.length-1]) {
+          for (let i=0, n; (i<children.length) && (n=children[i]); i++) {
             wrap(parentNode).insertBefore(n, this);
           }
         }
       }
     }
-
     return true;
   }
+
   /**
    * Forces the element to render its content. Normally rendering is
    * asynchronous to a provoking change. This is done for efficiency so
@@ -246,11 +229,10 @@ class DomIfBase extends PolymerElement {
    *
    * @return {void}
    */
-
-
   render() {
     flush();
   }
+
   /**
    * Performs the key rendering steps:
    * 1. Ensure a template instance has been stamped (when true)
@@ -260,8 +242,6 @@ class DomIfBase extends PolymerElement {
    *
    * @return {void}
    */
-
-
   __render() {
     if (this.if) {
       if (!this.__ensureInstance()) {
@@ -271,21 +251,20 @@ class DomIfBase extends PolymerElement {
     } else if (this.restamp) {
       this.__teardownInstance();
     }
-
     this._showHideChildren();
-
-    if ((!suppressTemplateNotifications || this.notifyDomChange) && this.if != this._lastIf) {
+    if ((!suppressTemplateNotifications || this.notifyDomChange)
+        && this.if != this._lastIf) {
       this.dispatchEvent(new CustomEvent('dom-change', {
         bubbles: true,
         composed: true
       }));
       this._lastIf = this.if;
     }
-  } // Ideally these would be annotated as abstract methods in an abstract class,
+  }
+
+  // Ideally these would be annotated as abstract methods in an abstract class,
   // but closure compiler is finnicky
-
   /* eslint-disable valid-jsdoc */
-
   /**
    * Abstract API to be implemented by subclass: Returns true if a template
    * instance has been created and inserted.
@@ -293,9 +272,8 @@ class DomIfBase extends PolymerElement {
    * @protected
    * @return {boolean} True when an instance has been created.
    */
+  __hasInstance() { }
 
-
-  __hasInstance() {}
   /**
    * Abstract API to be implemented by subclass: Returns the child nodes stamped
    * from a template instance.
@@ -304,9 +282,8 @@ class DomIfBase extends PolymerElement {
    * @return {Array<Node>} Array of child nodes stamped from the template
    * instance.
    */
+  __getInstanceNodes() { }
 
-
-  __getInstanceNodes() {}
   /**
    * Abstract API to be implemented by subclass: Creates an instance of the
    * template and inserts it into the given parent node.
@@ -315,9 +292,7 @@ class DomIfBase extends PolymerElement {
    * @param {Node} parentNode The parent node to insert the instance into
    * @return {void}
    */
-
-
-  __createAndInsertInstance(parentNode) {} // eslint-disable-line no-unused-vars
+  __createAndInsertInstance(parentNode) { } // eslint-disable-line no-unused-vars
 
   /**
    * Abstract API to be implemented by subclass: Removes nodes created by an
@@ -326,9 +301,8 @@ class DomIfBase extends PolymerElement {
    * @protected
    * @return {void}
    */
+  __teardownInstance() { }
 
-
-  __teardownInstance() {}
   /**
    * Abstract API to be implemented by subclass: Shows or hides any template
    * instance childNodes based on the `if` state of the element and its
@@ -337,13 +311,10 @@ class DomIfBase extends PolymerElement {
    * @protected
    * @return {void}
    */
-
-
-  _showHideChildren() {}
+  _showHideChildren() { }
   /* eslint-enable valid-jsdoc */
-
-
 }
+
 /**
  * The version of DomIf used when `fastDomIf` setting is in use, which is
  * optimized for first-render (but adds a tax to all subsequent property updates
@@ -363,25 +334,24 @@ class DomIfBase extends PolymerElement {
  * `DocumentFragment` returned from `_stampTemplate`, which also serves as the
  * handle for later removing it using the `_removeBoundDom` method.
  */
-
-
 class DomIfFast extends DomIfBase {
+
   constructor() {
     super();
     this.__instance = null;
     this.__syncInfo = null;
   }
+
   /**
    * Implementation of abstract API needed by DomIfBase.
    *
    * @override
    * @return {boolean} True when an instance has been created.
    */
-
-
   __hasInstance() {
     return Boolean(this.__instance);
   }
+
   /**
    * Implementation of abstract API needed by DomIfBase.
    *
@@ -389,11 +359,10 @@ class DomIfFast extends DomIfBase {
    * @return {Array<Node>} Array of child nodes stamped from the template
    * instance.
    */
-
-
   __getInstanceNodes() {
     return this.__instance.templateInfo.childNodes;
   }
+
   /**
    * Implementation of abstract API needed by DomIfBase.
    *
@@ -404,27 +373,20 @@ class DomIfFast extends DomIfBase {
    * @param {Node} parentNode The parent node to insert the instance into
    * @return {void}
    */
-
-
   __createAndInsertInstance(parentNode) {
     const host = this.__dataHost || this;
-
     if (strictTemplatePolicy) {
       if (!this.__dataHost) {
         throw new Error('strictTemplatePolicy: template owner not trusted');
       }
-    } // Pre-bind and link the template into the effects system
-
-
+    }
+    // Pre-bind and link the template into the effects system
     const templateInfo = host._bindTemplate(
-    /** @type {!HTMLTemplateElement} */
-    this.__template, true); // Install runEffects hook that prevents running property effects
+        /** @type {!HTMLTemplateElement} */ (this.__template), true);
+    // Install runEffects hook that prevents running property effects
     // (and any nested template effects) when the `if` is false
-
-
     templateInfo.runEffects = (runEffects, changedProps, hasPaths) => {
       let syncInfo = this.__syncInfo;
-
       if (this.if) {
         // Mix any props that changed while the `if` was false into `changedProps`
         if (syncInfo) {
@@ -436,12 +398,9 @@ class DomIfFast extends DomIfBase {
           // `_showHideChildren`'s call to `__syncHostProperties` no-ops, so
           // that we don't call `runEffects` more often than necessary.
           this.__syncInfo = null;
-
           this._showHideChildren();
-
           changedProps = Object.assign(syncInfo.changedProps, changedProps);
         }
-
         runEffects(changedProps, hasPaths);
       } else {
         // Accumulate any values changed while `if` was false, along with the
@@ -449,12 +408,8 @@ class DomIfFast extends DomIfBase {
         // becomes true
         if (this.__instance) {
           if (!syncInfo) {
-            syncInfo = this.__syncInfo = {
-              runEffects,
-              changedProps: {}
-            };
+            syncInfo = this.__syncInfo = { runEffects, changedProps: {} };
           }
-
           if (hasPaths) {
             // Store root object of any paths; this will ensure direct bindings
             // like [[obj.foo]] bindings run after a `set('obj.foo', v)`, but
@@ -472,29 +427,26 @@ class DomIfFast extends DomIfBase {
           }
         }
       }
-    }; // Stamp the template, and set its DocumentFragment to the "instance"
-
-
+    };
+    // Stamp the template, and set its DocumentFragment to the "instance"
     this.__instance = host._stampTemplate(
-    /** @type {!HTMLTemplateElement} */
-    this.__template, templateInfo);
+        /** @type {!HTMLTemplateElement} */ (this.__template), templateInfo);
     wrap(parentNode).insertBefore(this.__instance, this);
   }
+
   /**
    * Run effects for any properties that changed while the `if` was false.
    *
    * @return {void}
    */
-
-
   __syncHostProperties() {
     const syncInfo = this.__syncInfo;
-
     if (syncInfo) {
       this.__syncInfo = null;
       syncInfo.runEffects(syncInfo.changedProps, false);
     }
   }
+
   /**
    * Implementation of abstract API needed by DomIfBase.
    *
@@ -504,18 +456,15 @@ class DomIfFast extends DomIfBase {
    * @override
    * @return {void}
    */
-
-
   __teardownInstance() {
     const host = this.__dataHost || this;
-
     if (this.__instance) {
       host._removeBoundDom(this.__instance);
-
       this.__instance = null;
       this.__syncInfo = null;
     }
   }
+
   /**
    * Implementation of abstract API needed by DomIfBase.
    *
@@ -528,48 +477,43 @@ class DomIfFast extends DomIfBase {
    * @protected
    * @suppress {visibility}
    */
-
-
   _showHideChildren() {
     const hidden = this.__hideTemplateChildren__ || !this.if;
-
     if (this.__instance && Boolean(this.__instance.__hidden) !== hidden) {
       this.__instance.__hidden = hidden;
       showHideChildren(hidden, this.__instance.templateInfo.childNodes);
     }
-
     if (!hidden) {
       this.__syncHostProperties();
     }
   }
-
 }
+
 /**
  * The "legacy" implementation of `dom-if`, implemented using `Templatizer`.
  *
  * In this version, `this.__instance` is the `TemplateInstance` returned
  * from the templatized constructor.
  */
-
-
 class DomIfLegacy extends DomIfBase {
+
   constructor() {
     super();
     this.__ctor = null;
     this.__instance = null;
     this.__invalidProps = null;
   }
+
   /**
    * Implementation of abstract API needed by DomIfBase.
    *
    * @override
    * @return {boolean} True when an instance has been created.
    */
-
-
   __hasInstance() {
     return Boolean(this.__instance);
   }
+
   /**
    * Implementation of abstract API needed by DomIfBase.
    *
@@ -577,11 +521,10 @@ class DomIfLegacy extends DomIfBase {
    * @return {Array<Node>} Array of child nodes stamped from the template
    * instance.
    */
-
-
   __getInstanceNodes() {
     return this.__instance.children;
   }
+
   /**
    * Implementation of abstract API needed by DomIfBase.
    *
@@ -593,44 +536,41 @@ class DomIfLegacy extends DomIfBase {
    * @param {Node} parentNode The parent node to insert the instance into
    * @return {void}
    */
-
-
   __createAndInsertInstance(parentNode) {
     // Ensure we have an instance constructor
     if (!this.__ctor) {
       this.__ctor = templatize(
-      /** @type {!HTMLTemplateElement} */
-      this.__template, this, {
-        // dom-if templatizer instances require `mutable: true`, as
-        // `__syncHostProperties` relies on that behavior to sync objects
-        mutableData: true,
-
-        /**
-         * @param {string} prop Property to forward
-         * @param {*} value Value of property
-         * @this {DomIfLegacy}
-         */
-        forwardHostProp: function (prop, value) {
-          if (this.__instance) {
-            if (this.if) {
-              this.__instance.forwardHostProp(prop, value);
-            } else {
-              // If we have an instance but are squelching host property
-              // forwarding due to if being false, note the invalidated
-              // properties so `__syncHostProperties` can sync them the next
-              // time `if` becomes true
-              this.__invalidProps = this.__invalidProps || Object.create(null);
-              this.__invalidProps[root(prop)] = true;
+          /** @type {!HTMLTemplateElement} */ (this.__template), this, {
+            // dom-if templatizer instances require `mutable: true`, as
+            // `__syncHostProperties` relies on that behavior to sync objects
+            mutableData: true,
+            /**
+             * @param {string} prop Property to forward
+             * @param {*} value Value of property
+             * @this {DomIfLegacy}
+             */
+            forwardHostProp: function(prop, value) {
+              if (this.__instance) {
+                if (this.if) {
+                  this.__instance.forwardHostProp(prop, value);
+                } else {
+                  // If we have an instance but are squelching host property
+                  // forwarding due to if being false, note the invalidated
+                  // properties so `__syncHostProperties` can sync them the next
+                  // time `if` becomes true
+                  this.__invalidProps =
+                      this.__invalidProps || Object.create(null);
+                  this.__invalidProps[root(prop)] = true;
+                }
+              }
             }
-          }
-        }
-      });
-    } // Create and insert the instance
-
-
+          });
+    }
+    // Create and insert the instance
     this.__instance = new this.__ctor();
     wrap(parentNode).insertBefore(this.__instance.root, this);
   }
+
   /**
    * Implementation of abstract API needed by DomIfBase.
    *
@@ -639,51 +579,43 @@ class DomIfLegacy extends DomIfBase {
    * @override
    * @return {void}
    */
-
-
   __teardownInstance() {
     if (this.__instance) {
       let c$ = this.__instance.children;
-
       if (c$ && c$.length) {
         // use first child parent, for case when dom-if may have been detached
-        let parent = wrap(c$[0]).parentNode; // Instance children may be disconnected from parents when dom-if
+        let parent = wrap(c$[0]).parentNode;
+        // Instance children may be disconnected from parents when dom-if
         // detaches if a tree was innerHTML'ed
-
         if (parent) {
           parent = wrap(parent);
-
-          for (let i = 0, n; i < c$.length && (n = c$[i]); i++) {
+          for (let i=0, n; (i<c$.length) && (n=c$[i]); i++) {
             parent.removeChild(n);
           }
         }
       }
-
       this.__invalidProps = null;
       this.__instance = null;
     }
   }
+
   /**
    * Forwards any properties that changed while the `if` was false into the
    * template instance and flushes it.
    *
    * @return {void}
    */
-
-
   __syncHostProperties() {
     let props = this.__invalidProps;
-
     if (props) {
       this.__invalidProps = null;
-
       for (let prop in props) {
         this.__instance._setPendingProperty(prop, this.__dataHost[prop]);
       }
-
       this.__instance._flushProperties();
     }
   }
+
   /**
    * Implementation of abstract API needed by DomIfBase.
    *
@@ -696,23 +628,18 @@ class DomIfLegacy extends DomIfBase {
    * @return {void}
    * @suppress {visibility}
    */
-
-
   _showHideChildren() {
     const hidden = this.__hideTemplateChildren__ || !this.if;
-
     if (this.__instance && Boolean(this.__instance.__hidden) !== hidden) {
       this.__instance.__hidden = hidden;
-
       this.__instance._showHideChildren(hidden);
     }
-
     if (!hidden) {
       this.__syncHostProperties();
     }
   }
-
 }
+
 /**
  * The `<dom-if>` element will stamp a light-dom `<template>` child when
  * the `if` property becomes truthy, and the template can use Polymer
@@ -735,7 +662,8 @@ class DomIfLegacy extends DomIfBase {
  * @summary Custom element that conditionally stamps and hides or removes
  *   template content based on a boolean flag.
  */
+const DomIf = fastDomIf ? DomIfFast : DomIfLegacy;
 
-
-export const DomIf = fastDomIf ? DomIfFast : DomIfLegacy;
 customElements.define(DomIf.is, DomIf);
+
+export { DomIf };

@@ -1,3 +1,21 @@
+import '../../../../@webcomponents/shadycss/entrypoints/apply-shim.js';
+import { ElementMixin, builtCSS } from '../mixins/element-mixin.js';
+import { GestureEventListeners } from '../mixins/gesture-event-listeners.js';
+import { DirMixin } from '../mixins/dir-mixin.js';
+import { dedupingMixin } from '../utils/mixin.js';
+import '../utils/boot.js';
+import '../utils/unresolved.js';
+import { dom, matchesSelector } from './polymer.dom.js';
+import { setTouchAction } from '../utils/gestures.js';
+import { Debouncer } from '../utils/debounce.js';
+import { timeOut, microTask } from '../utils/async.js';
+import { get } from '../utils/path.js';
+import { wrap } from '../utils/wrap.js';
+import { scopeSubtree } from '../utils/scope-subtree.js';
+import { legacyNoObservedAttributes, legacyOptimizations } from '../utils/settings.js';
+import { findObservedAttributesGetter } from '../mixins/disable-upgrade-mixin.js';
+import { register } from '../utils/telemetry.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,25 +25,11 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import "../../../../@webcomponents/shadycss/entrypoints/apply-shim.js";
-import { ElementMixin, builtCSS } from '../mixins/element-mixin.js';
-import { GestureEventListeners } from '../mixins/gesture-event-listeners.js';
-import { DirMixin } from '../mixins/dir-mixin.js';
-import { dedupingMixin } from '../utils/mixin.js';
-import '../utils/render-status.js';
-import '../utils/unresolved.js';
-import { dom, matchesSelector } from './polymer.dom.js';
-import { setTouchAction } from '../utils/gestures.js';
-import { Debouncer } from '../utils/debounce.js';
-import { timeOut, microTask } from '../utils/async.js';
-import { get } from '../utils/path.js';
-import { wrap } from '../utils/wrap.js';
-import { scopeSubtree } from '../utils/scope-subtree.js';
-import { legacyOptimizations, legacyNoObservedAttributes } from '../utils/settings.js';
-import { findObservedAttributesGetter } from '../mixins/disable-upgrade-mixin.js';
-import { register } from '../utils/telemetry.js';
+
 const DISABLED_ATTR = 'disable-upgrade';
+
 let styleInterface = window.ShadyCSS;
+
 /**
  * Element class mixin that provides Polymer's "legacy" API intended to be
  * backward-compatible to the greatest extent possible with the API
@@ -41,11 +45,10 @@ let styleInterface = window.ShadyCSS;
  *   `connectedCallback` and `false` in `disconnectedCallback`
  * @summary Element class mixin that provides Polymer's "legacy" API
  */
+const LegacyElementMixin = dedupingMixin((base) => {
 
-export const LegacyElementMixin = dedupingMixin(base => {
   // TODO(kschaaf): Note, the `@implements {Polymer_DirMixin}` is required here
   // (rather than on legacyElementBase) for unknown reasons.
-
   /**
    * @constructor
    * @implements {Polymer_ElementMixin}
@@ -54,7 +57,9 @@ export const LegacyElementMixin = dedupingMixin(base => {
    * @extends {HTMLElement}
    * @private
    */
-  const GesturesElement = GestureEventListeners(ElementMixin(base)); // Note, the DirMixin does nothing if css is built so avoid including it
+  const GesturesElement = GestureEventListeners(ElementMixin(base));
+
+  // Note, the DirMixin does nothing if css is built so avoid including it
   // in that case.
 
   /**
@@ -62,20 +67,22 @@ export const LegacyElementMixin = dedupingMixin(base => {
    * @extends {GesturesElement}
    * @private
    */
+  const legacyElementBase = builtCSS ? GesturesElement :
+    DirMixin(GesturesElement);
 
-  const legacyElementBase = builtCSS ? GesturesElement : DirMixin(GesturesElement);
   const observedAttributesGetter = findObservedAttributesGetter(legacyElementBase);
+
   /**
    * Map of simple names to touch action names
    * @dict
    */
-
   const DIRECTION_MAP = {
     'x': 'pan-x',
     'y': 'pan-y',
     'none': 'none',
     'all': 'auto'
   };
+
   /**
    * @polymer
    * @mixinClass
@@ -83,30 +90,25 @@ export const LegacyElementMixin = dedupingMixin(base => {
    * @implements {Polymer_LegacyElementMixin}
    * @unrestricted
    */
-
   class LegacyElement extends legacyElementBase {
+
     constructor() {
       super();
       /** @type {boolean} */
-
       this.isAttached;
       /** @type {?WeakMap<!Element, !Object<string, !Function>>} */
-
       this.__boundListeners;
       /** @type {?Object<string, ?Function>} */
-
-      this._debouncers; // NOTE: Inlined for perf from version of DisableUpgradeMixin.
-
+      this._debouncers;
+      // NOTE: Inlined for perf from version of DisableUpgradeMixin.
       /** @type {boolean|undefined} */
-
       this.__isUpgradeDisabled;
       /** @type {boolean|undefined} */
-
       this.__needsAttributesAtConnected;
       /** @type {boolean|undefined} */
-
       this._legacyForceObservedAttributes;
     }
+
     /**
      * Forwards `importMeta` from the prototype (i.e. from the info object
      * passed to `Polymer({...})`) to the static API.
@@ -116,20 +118,18 @@ export const LegacyElementMixin = dedupingMixin(base => {
      *  closure for some reason even in a static method, rather than the class
      * @nocollapse
      */
-
-
     static get importMeta() {
       return this.prototype.importMeta;
     }
+
     /**
      * Legacy callback called during the `constructor`, for overriding
      * by the user.
      * @override
      * @return {void}
      */
-
-
     created() {}
+
     /**
      * Processes an attribute reaction when the `legacyNoObservedAttributes`
      * setting is in use.
@@ -138,47 +138,42 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @param {?string} value New attribute value
      * @return {void}
      */
-
-
     __attributeReaction(name, old, value) {
-      if (this.__dataAttributes && this.__dataAttributes[name] || name === DISABLED_ATTR) {
+      if ((this.__dataAttributes && this.__dataAttributes[name]) || name === DISABLED_ATTR) {
         this.attributeChangedCallback(name, old, value, null);
       }
     }
+
     /**
      * Sets the value of an attribute.
      * @override
      */
-
-
     setAttribute(name, value) {
       if (legacyNoObservedAttributes && !this._legacyForceObservedAttributes) {
         const oldValue = this.getAttribute(name);
-        super.setAttribute(name, value); // value coerced to String for closure's benefit
-
+        super.setAttribute(name, value);
+        // value coerced to String for closure's benefit
         this.__attributeReaction(name, oldValue, String(value));
       } else {
         super.setAttribute(name, value);
       }
     }
+
     /**
      * Removes an attribute.
      * @override
      */
-
-
     removeAttribute(name) {
       if (legacyNoObservedAttributes && !this._legacyForceObservedAttributes) {
         const oldValue = this.getAttribute(name);
         super.removeAttribute(name);
-
         this.__attributeReaction(name, oldValue, null);
       } else {
         super.removeAttribute(name);
       }
-    } // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+    }
 
-
+    // NOTE: Inlined for perf from version of DisableUpgradeMixin.
     static get observedAttributes() {
       if (legacyNoObservedAttributes && !this.prototype._legacyForceObservedAttributes) {
         // Ensure this element is property registered with the telemetry system.
@@ -186,72 +181,66 @@ export const LegacyElementMixin = dedupingMixin(base => {
           this.__observedAttributes = [];
           register(this.prototype);
         }
-
         return this.__observedAttributes;
       } else {
         return observedAttributesGetter.call(this).concat(DISABLED_ATTR);
       }
-    } // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+    }
+
+    // NOTE: Inlined for perf from version of DisableUpgradeMixin.
     // Prevent element from enabling properties when it's upgrade disabled.
     // Normally overriding connectedCallback would be enough, but dom-* elements
-
     /** @override */
-
-
     _enableProperties() {
       if (!this.__isUpgradeDisabled) {
         super._enableProperties();
       }
-    } // NOTE: Inlined for perf from version of DisableUpgradeMixin.
+    }
+
+    // NOTE: Inlined for perf from version of DisableUpgradeMixin.
     // If the element starts upgrade-disabled and a property is set for
     // which an accessor exists, the default should not be applied.
     // This additional check is needed because defaults are applied via
     // `_initializeProperties` which is called after initial properties
     // have been set when the element starts upgrade-disabled.
-
     /** @override */
-
-
     _canApplyPropertyDefault(property) {
-      return super._canApplyPropertyDefault(property) && !(this.__isUpgradeDisabled && this._isPropertyPending(property));
+      return super._canApplyPropertyDefault(property) &&
+        !(this.__isUpgradeDisabled && this._isPropertyPending(property));
     }
+
     /**
      * Provides an implementation of `connectedCallback`
      * which adds Polymer legacy API's `attached` method.
      * @return {void}
      * @override
      */
-
-
     connectedCallback() {
       if (this.__needsAttributesAtConnected) {
         this._takeAttributes();
-      } // NOTE: Inlined for perf from version of DisableUpgradeMixin.
-
-
+      }
+      // NOTE: Inlined for perf from version of DisableUpgradeMixin.
       if (!this.__isUpgradeDisabled) {
         super.connectedCallback();
         this.isAttached = true;
         this.attached();
       }
     }
+
     /**
      * Legacy callback called during `connectedCallback`, for overriding
      * by the user.
      * @override
      * @return {void}
      */
-
-
     attached() {}
+
     /**
      * Provides an implementation of `disconnectedCallback`
      * which adds Polymer legacy API's `detached` method.
      * @return {void}
      * @override
      */
-
-
     disconnectedCallback() {
       // NOTE: Inlined for perf from version of DisableUpgradeMixin.
       if (!this.__isUpgradeDisabled) {
@@ -260,15 +249,15 @@ export const LegacyElementMixin = dedupingMixin(base => {
         this.detached();
       }
     }
+
     /**
      * Legacy callback called during `disconnectedCallback`, for overriding
      * by the user.
      * @override
      * @return {void}
      */
-
-
     detached() {}
+
     /**
      * Provides an override implementation of `attributeChangedCallback`
      * which adds the Polymer legacy API's `attributeChanged` method.
@@ -279,8 +268,6 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     attributeChangedCallback(name, old, value, namespace) {
       if (old !== value) {
         // NOTE: Inlined for perf from version of DisableUpgradeMixin.
@@ -289,9 +276,7 @@ export const LegacyElementMixin = dedupingMixin(base => {
           // provoke connectedCallback if the element is already connected.
           if (this.__isUpgradeDisabled && value == null) {
             this._initializeProperties();
-
             this.__isUpgradeDisabled = false;
-
             if (wrap(this).isConnected) {
               this.connectedCallback();
             }
@@ -302,6 +287,7 @@ export const LegacyElementMixin = dedupingMixin(base => {
         }
       }
     }
+
     /**
      * Legacy callback called during `attributeChangedChallback`, for overriding
      * by the user.
@@ -311,8 +297,6 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     attributeChanged(name, old, value) {} // eslint-disable-line no-unused-vars
 
     /**
@@ -324,8 +308,6 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @override
      * @suppress {invalidCasts}
      */
-
-
     _initializeProperties() {
       // NOTE: Inlined for perf from version of DisableUpgradeMixin.
       // Only auto-use disable-upgrade if legacyOptimizations is set.
@@ -333,47 +315,39 @@ export const LegacyElementMixin = dedupingMixin(base => {
         this.__isUpgradeDisabled = true;
       } else {
         let proto = Object.getPrototypeOf(this);
-
         if (!proto.hasOwnProperty(JSCompiler_renameProperty('__hasRegisterFinished', proto))) {
-          this._registered(); // backstop in case the `_registered` implementation does not set this
-
-
+          this._registered();
+          // backstop in case the `_registered` implementation does not set this
           proto.__hasRegisterFinished = true;
         }
-
         super._initializeProperties();
-
-        this.root =
-        /** @type {HTMLElement} */
-        this;
-        this.created(); // Pull all attribute values 1x if `legacyNoObservedAttributes` is set.
-
+        this.root = /** @type {HTMLElement} */(this);
+        this.created();
+        // Pull all attribute values 1x if `legacyNoObservedAttributes` is set.
         if (legacyNoObservedAttributes && !this._legacyForceObservedAttributes) {
           if (this.hasAttributes()) {
-            this._takeAttributes(); // Element created from scratch or parser generated
-
+            this._takeAttributes();
+          // Element created from scratch or parser generated
           } else if (!this.parentNode) {
             this.__needsAttributesAtConnected = true;
           }
-        } // Ensure listeners are applied immediately so that they are
+        }
+        // Ensure listeners are applied immediately so that they are
         // added before declarative event listeners. This allows an element to
         // decorate itself via an event prior to any declarative listeners
         // seeing the event. Note, this ensures compatibility with 1.x ordering.
-
-
         this._applyListeners();
       }
     }
 
     _takeAttributes() {
       const a = this.attributes;
-
-      for (let i = 0, l = a.length; i < l; i++) {
+      for (let i=0, l=a.length; i < l; i++) {
         const attr = a[i];
-
         this.__attributeReaction(attr.name, null, attr.value);
       }
     }
+
     /**
      * Called automatically when an element is initializing.
      * Users may override this method to perform class registration time
@@ -383,9 +357,8 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     _registered() {}
+
     /**
      * Overrides the default `Polymer.PropertyEffects` implementation to
      * add support for installing `hostAttributes` and `listeners`.
@@ -393,13 +366,11 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     ready() {
       this._ensureAttributes();
-
       super.ready();
     }
+
     /**
      * Ensures an element has required attributes. Called when the element
      * is being readied via `ready`. Users should override to set the
@@ -412,9 +383,8 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     _ensureAttributes() {}
+
     /**
      * Adds element event listeners. Called when the element
      * is being readied via `ready`. Users should override to
@@ -427,9 +397,8 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     _applyListeners() {}
+
     /**
      * Converts a typed JavaScript value to a string.
      *
@@ -443,11 +412,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {string | undefined} Serialized value
      * @override
      */
-
-
     serialize(value) {
       return this._serializeValue(value);
     }
+
     /**
      * Converts a string to a typed JavaScript value.
      *
@@ -462,11 +430,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {*} Returns the deserialized value in the `type` given.
      * @override
      */
-
-
     deserialize(value, type) {
       return this._deserializeValue(value, type);
     }
+
     /**
      * Serializes a property to its associated attribute.
      *
@@ -479,11 +446,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     reflectPropertyToAttribute(property, attribute, value) {
       this._propertyToAttribute(property, attribute, value);
     }
+
     /**
      * Sets a typed value to an HTML attribute on a node.
      *
@@ -496,13 +462,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     serializeValueToAttribute(value, attribute, node) {
-      this._valueToNodeAttribute(
-      /** @type {Element} */
-      node || this, value, attribute);
+      this._valueToNodeAttribute(/** @type {Element} */ (node || this), value, attribute);
     }
+
     /**
      * Copies own properties (including accessor descriptors) from a source
      * object to a target object.
@@ -512,25 +475,20 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {Object} prototype object that was passed as first argument.
      * @override
      */
-
-
     extend(prototype, api) {
       if (!(prototype && api)) {
         return prototype || api;
       }
-
       let n$ = Object.getOwnPropertyNames(api);
-
-      for (let i = 0, n; i < n$.length && (n = n$[i]); i++) {
+      for (let i=0, n; (i<n$.length) && (n=n$[i]); i++) {
         let pd = Object.getOwnPropertyDescriptor(api, n);
-
         if (pd) {
           Object.defineProperty(prototype, n, pd);
         }
       }
-
       return prototype;
     }
+
     /**
      * Copies props from a source object to a target object.
      *
@@ -543,15 +501,13 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {!Object} Target object that was passed as first argument.
      * @override
      */
-
-
     mixin(target, source) {
       for (let i in source) {
         target[i] = source[i];
       }
-
       return target;
     }
+
     /**
      * Sets the prototype of an object.
      *
@@ -564,15 +520,13 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * to the given `prototype` object.
      * @override
      */
-
-
     chainObject(object, prototype) {
       if (object && prototype && object !== prototype) {
         object.__proto__ = prototype;
       }
-
       return object;
     }
+
     /* **** Begin Template **** */
 
     /**
@@ -585,17 +539,16 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @override
      * @suppress {missingProperties} go/missingfnprops
      */
-
-
     instanceTemplate(template) {
       let content = this.constructor._contentForTemplate(template);
-
-      let dom =
-      /** @type {!DocumentFragment} */
-      document.importNode(content, true);
+      let dom = /** @type {!DocumentFragment} */
+        (document.importNode(content, true));
       return dom;
     }
+
     /* **** Begin Events **** */
+
+
 
     /**
      * Dispatches a custom event with an optional detail value.
@@ -612,21 +565,20 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {!Event} The new event that was fired.
      * @override
      */
-
-
     fire(type, detail, options) {
       options = options || {};
-      detail = detail === null || detail === undefined ? {} : detail;
+      detail = (detail === null || detail === undefined) ? {} : detail;
       let event = new Event(type, {
         bubbles: options.bubbles === undefined ? true : options.bubbles,
         cancelable: Boolean(options.cancelable),
-        composed: options.composed === undefined ? true : options.composed
+        composed: options.composed === undefined ? true: options.composed
       });
       event.detail = detail;
       let node = options.node || this;
       wrap(node).dispatchEvent(event);
       return event;
     }
+
     /**
      * Convenience method to add an event listener on a given element,
      * late bound to a named method on this element.
@@ -637,28 +589,22 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     listen(node, eventName, methodName) {
-      node =
-      /** @type {!EventTarget} */
-      node || this;
-      let hbl = this.__boundListeners || (this.__boundListeners = new WeakMap());
+      node = /** @type {!EventTarget} */ (node || this);
+      let hbl = this.__boundListeners ||
+        (this.__boundListeners = new WeakMap());
       let bl = hbl.get(node);
-
       if (!bl) {
         bl = {};
         hbl.set(node, bl);
       }
-
       let key = eventName + methodName;
-
       if (!bl[key]) {
         bl[key] = this._addMethodEventListenerToNode(
-        /** @type {!Node} */
-        node, eventName, methodName, this);
+            /** @type {!Node} */ (node), eventName, methodName, this);
       }
     }
+
     /**
      * Convenience method to remove an event listener from a given element,
      * late bound to a named method on this element.
@@ -670,30 +616,19 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     unlisten(node, eventName, methodName) {
-      node =
-      /** @type {!EventTarget} */
-      node || this;
-
-      let bl = this.__boundListeners && this.__boundListeners.get(
-      /** @type {!Element} */
-      node);
-
+      node = /** @type {!EventTarget} */ (node || this);
+      let bl = this.__boundListeners &&
+          this.__boundListeners.get(/** @type {!Element} */ (node));
       let key = eventName + methodName;
       let handler = bl && bl[key];
-
       if (handler) {
         this._removeEventListenerFromNode(
-        /** @type {!Node} */
-        node, eventName, handler);
-
-        bl[key] =
-        /** @type {?} */
-        null;
+            /** @type {!Node} */ (node), eventName, handler);
+        bl[key] = /** @type {?} */ (null);
       }
     }
+
     /**
      * Override scrolling behavior to all direction, one direction, or none.
      *
@@ -710,12 +645,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     setScrollDirection(direction, node) {
       setTouchAction(
-      /** @type {!Element} */
-      node || this, DIRECTION_MAP[direction] || 'auto');
+          /** @type {!Element} */ (node || this),
+          DIRECTION_MAP[direction] || 'auto');
     }
     /* **** End Events **** */
 
@@ -728,12 +661,11 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {Element} Element found by the selector, or null if not found.
      * @override
      */
-
-
     $$(slctr) {
       // Note, no need to `wrap` this because root is always patched
       return this.root.querySelector(slctr);
     }
+
     /**
      * Return the element whose local dom within which this element
      * is contained. This is a shorthand for
@@ -743,14 +675,11 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * contained.
      * @override
      */
-
-
     get domHost() {
       let root = wrap(this).getRootNode();
-      return root instanceof DocumentFragment ?
-      /** @type {ShadowRoot} */
-      root.host : root;
+      return (root instanceof DocumentFragment) ? /** @type {ShadowRoot} */ (root).host : root;
     }
+
     /**
      * Force this element to distribute its children to its local dom.
      * This should not be necessary as of Polymer 2.0.2 and is provided only
@@ -758,20 +687,14 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     distributeContent() {
-      const thisEl =
-      /** @type {Element} */
-      this;
-      const domApi =
-      /** @type {PolymerDomApi} */
-      dom(thisEl);
-
+      const thisEl = /** @type {Element} */ (this);
+      const domApi = /** @type {PolymerDomApi} */(dom(thisEl));
       if (window.ShadyDOM && domApi.shadowRoot) {
         ShadyDOM.flush();
       }
     }
+
     /**
      * Returns a list of nodes that are the effective childNodes. The effective
      * childNodes list is the same as the element's childNodes except that
@@ -782,17 +705,12 @@ export const LegacyElementMixin = dedupingMixin(base => {
      *     HTMLElement
      * @override
      */
-
-
     getEffectiveChildNodes() {
-      const thisEl =
-      /** @type {Element} */
-      this;
-      const domApi =
-      /** @type {PolymerDomApi} */
-      dom(thisEl);
+      const thisEl = /** @type {Element} */ (this);
+      const domApi = /** @type {PolymerDomApi} */ (dom(thisEl));
       return domApi.getEffectiveChildNodes();
     }
+
     /**
      * Returns a list of nodes distributed within this element that match
      * `selector`. These can be dom children or elements distributed to
@@ -803,17 +721,12 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * HTMLElement
      * @override
      */
-
-
     queryDistributedElements(selector) {
-      const thisEl =
-      /** @type {Element} */
-      this;
-      const domApi =
-      /** @type {PolymerDomApi} */
-      dom(thisEl);
+      const thisEl = /** @type {Element} */ (this);
+      const domApi = /** @type {PolymerDomApi} */ (dom(thisEl));
       return domApi.queryDistributedElements(selector);
     }
+
     /**
      * Returns a list of elements that are the effective children. The effective
      * children list is the same as the element's children except that
@@ -823,16 +736,13 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {!Array<!Node>} List of effective children.
      * @override
      */
-
-
     getEffectiveChildren() {
       let list = this.getEffectiveChildNodes();
-      return list.filter(function (
-      /** @type {!Node} */
-      n) {
-        return n.nodeType === Node.ELEMENT_NODE;
+      return list.filter(function(/** @type {!Node} */ n) {
+        return (n.nodeType === Node.ELEMENT_NODE);
       });
     }
+
     /**
      * Returns a string of text content that is the concatenation of the
      * text content's of the element's effective childNodes (the elements
@@ -841,20 +751,17 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {string} List of effective children.
      * @override
      */
-
-
     getEffectiveTextContent() {
       let cn = this.getEffectiveChildNodes();
       let tc = [];
-
-      for (let i = 0, c; c = cn[i]; i++) {
+      for (let i=0, c; (c = cn[i]); i++) {
         if (c.nodeType !== Node.COMMENT_NODE) {
           tc.push(c.textContent);
         }
       }
-
       return tc.join('');
     }
+
     /**
      * Returns the first effective childNode within this element that
      * match `selector`. These can be dom child nodes or elements distributed
@@ -863,12 +770,11 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {Node} First effective child node that matches selector.
      * @override
      */
-
-
     queryEffectiveChildren(selector) {
       let e$ = this.queryDistributedElements(selector);
       return e$ && e$[0];
     }
+
     /**
      * Returns a list of effective childNodes within this element that
      * match `selector`. These can be dom child nodes or elements distributed
@@ -878,11 +784,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      *     selector.
      * @override
      */
-
-
     queryAllEffectiveChildren(selector) {
       return this.queryDistributedElements(selector);
     }
+
     /**
      * Returns a list of nodes distributed to this element's `<slot>`.
      *
@@ -894,15 +799,14 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {!Array<!Node>} List of distributed nodes for the `<slot>`.
      * @override
      */
-
-
     getContentChildNodes(slctr) {
       // Note, no need to `wrap` this because root is always
       let content = this.root.querySelector(slctr || 'slot');
       return content ?
-      /** @type {PolymerDomApi} */
-      dom(content).getDistributedNodes() : [];
+          /** @type {PolymerDomApi} */ (dom(content)).getDistributedNodes() :
+          [];
     }
+
     /**
      * Returns a list of element children distributed to this element's
      * `<slot>`.
@@ -919,16 +823,13 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @suppress {invalidCasts}
      * @override
      */
-
-
     getContentChildren(slctr) {
-      let children =
-      /** @type {!Array<!HTMLElement>} */
-      this.getContentChildNodes(slctr).filter(function (n) {
-        return n.nodeType === Node.ELEMENT_NODE;
-      });
+      let children = /** @type {!Array<!HTMLElement>} */(this.getContentChildNodes(slctr).filter(function(n) {
+        return (n.nodeType === Node.ELEMENT_NODE);
+      }));
       return children;
     }
+
     /**
      * Checks whether an element is in this element's light DOM tree.
      *
@@ -938,14 +839,12 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * HTMLElement
      * @override
      */
-
-
     isLightDescendant(node) {
-      const thisNode =
-      /** @type {Node} */
-      this;
-      return thisNode !== node && wrap(thisNode).contains(node) && wrap(thisNode).getRootNode() === wrap(node).getRootNode();
+      const thisNode = /** @type {Node} */ (this);
+      return thisNode !== node && wrap(thisNode).contains(node) &&
+        wrap(thisNode).getRootNode() === wrap(node).getRootNode();
     }
+
     /**
      * Checks whether an element is in this element's local DOM tree.
      *
@@ -953,11 +852,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {boolean} true if node is in this element's local DOM tree.
      * @override
      */
-
-
     isLocalDescendant(node) {
       return this.root === wrap(node).getRootNode();
     }
+
     /**
      * No-op for backwards compatibility. This should now be handled by
      * ShadyCss library.
@@ -966,11 +864,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {?MutationObserver} Returns a new MutationObserver on `container` if `shouldObserve` is true.
      * @override
      */
-
-
     scopeSubtree(container, shouldObserve = false) {
       return scopeSubtree(container, shouldObserve);
     }
+
     /**
      * Returns the computed style value for the given property.
      * @param {string} property The css property name.
@@ -980,13 +877,11 @@ export const LegacyElementMixin = dedupingMixin(base => {
      *     HTMLElement
      * @override
      */
-
-
     getComputedStyleValue(property) {
-      return styleInterface.getComputedStyleValue(
-      /** @type {!Element} */
-      this, property);
-    } // debounce
+      return styleInterface.getComputedStyleValue(/** @type {!Element} */(this), property);
+    }
+
+    // debounce
 
     /**
      * Call `debounce` to collapse multiple requests for a named task into
@@ -1013,12 +908,14 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * is active.
      * @override
      */
-
-
     debounce(jobName, callback, wait) {
       this._debouncers = this._debouncers || {};
-      return this._debouncers[jobName] = Debouncer.debounce(this._debouncers[jobName], wait > 0 ? timeOut.after(wait) : microTask, callback.bind(this));
+      return this._debouncers[jobName] = Debouncer.debounce(
+            this._debouncers[jobName]
+          , wait > 0 ? timeOut.after(wait) : microTask
+          , callback.bind(this));
     }
+
     /**
      * Returns whether a named debouncer is active.
      *
@@ -1026,13 +923,12 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {boolean} Whether the debouncer is active (has not yet fired).
      * @override
      */
-
-
     isDebouncerActive(jobName) {
       this._debouncers = this._debouncers || {};
       let debouncer = this._debouncers[jobName];
       return !!(debouncer && debouncer.isActive());
     }
+
     /**
      * Immediately calls the debouncer `callback` and inactivates it.
      *
@@ -1040,16 +936,14 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     flushDebouncer(jobName) {
       this._debouncers = this._debouncers || {};
       let debouncer = this._debouncers[jobName];
-
       if (debouncer) {
         debouncer.flush();
       }
     }
+
     /**
      * Cancels an active debouncer.  The `callback` will not be called.
      *
@@ -1057,16 +951,14 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     cancelDebouncer(jobName) {
       this._debouncers = this._debouncers || {};
       let debouncer = this._debouncers[jobName];
-
       if (debouncer) {
         debouncer.cancel();
       }
     }
+
     /**
      * Runs a callback function asynchronously.
      *
@@ -1081,11 +973,11 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {number} Handle that may be used to cancel the async job.
      * @override
      */
-
-
     async(callback, waitTime) {
-      return waitTime > 0 ? timeOut.run(callback.bind(this), waitTime) : ~microTask.run(callback.bind(this));
+      return waitTime > 0 ? timeOut.run(callback.bind(this), waitTime) :
+          ~microTask.run(callback.bind(this));
     }
+
     /**
      * Cancels an async operation started with `async`.
      *
@@ -1094,11 +986,12 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     cancelAsync(handle) {
-      handle < 0 ? microTask.cancel(~handle) : timeOut.cancel(handle);
-    } // other
+      handle < 0 ? microTask.cancel(~handle) :
+          timeOut.cancel(handle);
+    }
+
+    // other
 
     /**
      * Convenience method for creating an element and configuring it.
@@ -1109,11 +1002,8 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {!Element} Newly created and configured element.
      * @override
      */
-
-
     create(tag, props) {
       let elt = document.createElement(tag);
-
       if (props) {
         if (elt.setProperties) {
           elt.setProperties(props);
@@ -1123,9 +1013,9 @@ export const LegacyElementMixin = dedupingMixin(base => {
           }
         }
       }
-
       return elt;
     }
+
     /**
      * Polyfill for Element.prototype.matches, which is sometimes still
      * prefixed.
@@ -1135,11 +1025,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {boolean} Whether the element matches the selector.
      * @override
      */
-
-
     elementMatches(selector, node) {
-      return matchesSelector(node || this, selector);
+      return matchesSelector( (node || this), selector);
     }
+
     /**
      * Toggles an HTML attribute on or off.
      *
@@ -1149,23 +1038,14 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {boolean} true if the attribute now exists
      * @override
      */
-
-
     toggleAttribute(name, bool) {
-      let node =
-      /** @type {Element} */
-      this;
-
+      let node = /** @type {Element} */(this);
       if (arguments.length === 3) {
-        node =
-        /** @type {Element} */
-        arguments[2];
+        node = /** @type {Element} */(arguments[2]);
       }
-
       if (arguments.length == 1) {
         bool = !node.hasAttribute(name);
       }
-
       if (bool) {
         wrap(node).setAttribute(name, '');
         return true;
@@ -1174,6 +1054,8 @@ export const LegacyElementMixin = dedupingMixin(base => {
         return false;
       }
     }
+
+
     /**
      * Toggles a CSS class on or off.
      *
@@ -1184,23 +1066,18 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     toggleClass(name, bool, node) {
-      node =
-      /** @type {Element} */
-      node || this;
-
+      node = /** @type {Element} */ (node || this);
       if (arguments.length == 1) {
         bool = !node.classList.contains(name);
       }
-
       if (bool) {
         node.classList.add(name);
       } else {
         node.classList.remove(name);
       }
     }
+
     /**
      * Cross-platform helper for setting an element's CSS `transform` property.
      *
@@ -1210,15 +1087,12 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     transform(transformText, node) {
-      node =
-      /** @type {Element} */
-      node || this;
+      node = /** @type {Element} */ (node || this);
       node.style.webkitTransform = transformText;
       node.style.transform = transformText;
     }
+
     /**
      * Cross-platform helper for setting an element's CSS `translate3d`
      * property.
@@ -1231,14 +1105,11 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     translate3d(x, y, z, node) {
-      node =
-      /** @type {Element} */
-      node || this;
+      node = /** @type {Element} */ (node || this);
       this.transform('translate3d(' + x + ',' + y + ',' + z + ')', node);
     }
+
     /**
      * Removes an item from an array, if it exists.
      *
@@ -1256,28 +1127,24 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {Array} Array containing item removed.
      * @override
      */
-
-
     arrayDelete(arrayOrPath, item) {
       let index;
-
       if (Array.isArray(arrayOrPath)) {
         index = arrayOrPath.indexOf(item);
-
         if (index >= 0) {
           return arrayOrPath.splice(index, 1);
         }
       } else {
         let arr = get(this, arrayOrPath);
         index = arr.indexOf(item);
-
         if (index >= 0) {
           return this.splice(arrayOrPath, index, 1);
         }
       }
-
       return null;
-    } // logging
+    }
+
+    // logging
 
     /**
      * Facades `console.log`/`warn`/`error` as override point.
@@ -1287,21 +1154,19 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     _logger(level, args) {
       // accept ['foo', 'bar'] and [['foo', 'bar']]
       if (Array.isArray(args) && args.length === 1 && Array.isArray(args[0])) {
         args = args[0];
       }
-
-      switch (level) {
+      switch(level) {
         case 'log':
         case 'warn':
         case 'error':
           console[level](...args);
       }
     }
+
     /**
      * Facades `console.log` as an override point.
      *
@@ -1309,11 +1174,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     _log(...args) {
       this._logger('log', args);
     }
+
     /**
      * Facades `console.warn` as an override point.
      *
@@ -1321,11 +1185,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     _warn(...args) {
       this._logger('warn', args);
     }
+
     /**
      * Facades `console.error` as an override point.
      *
@@ -1333,11 +1196,10 @@ export const LegacyElementMixin = dedupingMixin(base => {
      * @return {void}
      * @override
      */
-
-
     _error(...args) {
       this._logger('error', args);
     }
+
     /**
      * Formats a message using the element type an a method name.
      *
@@ -1347,8 +1209,6 @@ export const LegacyElementMixin = dedupingMixin(base => {
      *   logging.
      * @override
      */
-
-
     _logf(methodName, ...args) {
       return ['[%s::%s]', this.is, methodName, ...args];
     }
@@ -1356,5 +1216,8 @@ export const LegacyElementMixin = dedupingMixin(base => {
   }
 
   LegacyElement.prototype.is = '';
+
   return LegacyElement;
 });
+
+export { LegacyElementMixin };

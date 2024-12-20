@@ -1,3 +1,12 @@
+import '../utils/boot.js';
+import { wrap } from '../utils/wrap.js';
+import { dedupingMixin } from '../utils/mixin.js';
+import { root, get, set, isPath, normalize, isDescendant, isAncestor, translate } from '../utils/path.js';
+import { camelToDashCase, dashToCamelCase } from '../utils/case-map.js';
+import { PropertyAccessors } from './property-accessors.js';
+import { TemplateStamp } from './template-stamp.js';
+import { legacyUndefined, removeNestedTemplates, fastDomIf, sanitizeDOMValue, orderedComputed } from '../utils/settings.js';
+
 /**
  * @fileoverview
  * @suppress {checkPrototypalTypes}
@@ -9,27 +18,17 @@
  * Google as part of the polymer project is also subject to an additional IP
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import '../utils/boot.js';
-import { wrap } from '../utils/wrap.js';
-import { dedupingMixin } from '../utils/mixin.js';
-import { root, isAncestor, isDescendant, get, translate, isPath, set, normalize } from '../utils/path.js';
-/* for notify, reflect */
 
-import { camelToDashCase, dashToCamelCase } from '../utils/case-map.js';
-import { PropertyAccessors } from './property-accessors.js';
-/* for annotated effects */
-
-import { TemplateStamp } from './template-stamp.js';
-import { sanitizeDOMValue, legacyUndefined, orderedComputed, removeNestedTemplates, fastDomIf } from '../utils/settings.js'; // Monotonically increasing unique ID used for de-duping effects triggered
+// Monotonically increasing unique ID used for de-duping effects triggered
 // from multiple properties in the same turn
-
 let dedupeId = 0;
+
 const NOOP = [];
+
 /**
  * Property effect types; effects are stored on the prototype using these keys
  * @enum {string}
  */
-
 const TYPES = {
   COMPUTE: '__computeEffects',
   REFLECT: '__reflectEffects',
@@ -38,29 +37,11 @@ const TYPES = {
   OBSERVE: '__observeEffects',
   READ_ONLY: '__readOnly'
 };
+
 const COMPUTE_INFO = '__computeInfo';
+
 /** @const {!RegExp} */
-
 const capitalAttributeRegex = /[A-Z]/;
-/**
- * @typedef {{
- * name: (string | undefined),
- * structured: (boolean | undefined),
- * wildcard: (boolean | undefined)
- * }}
- */
-
-let DataTrigger; //eslint-disable-line no-unused-vars
-
-/**
- * @typedef {{
- * info: ?,
- * trigger: (!DataTrigger | undefined),
- * fn: (!Function | undefined)
- * }}
- */
-
-let DataEffect; //eslint-disable-line no-unused-vars
 
 /**
  * Ensures that the model has an own-property map of effects for the given type.
@@ -86,30 +67,27 @@ let DataEffect; //eslint-disable-line no-unused-vars
  * @return {Object} The own-property map of effects for the given type
  * @private
  */
-
 function ensureOwnEffectMap(model, type, cloneArrays) {
   let effects = model[type];
-
   if (!effects) {
     effects = model[type] = {};
   } else if (!model.hasOwnProperty(type)) {
     effects = model[type] = Object.create(model[type]);
-
     if (cloneArrays) {
       for (let p in effects) {
-        let protoFx = effects[p]; // Perf optimization over Array.slice
-
+        let protoFx = effects[p];
+        // Perf optimization over Array.slice
         let instFx = effects[p] = Array(protoFx.length);
-
-        for (let i = 0; i < protoFx.length; i++) {
+        for (let i=0; i<protoFx.length; i++) {
           instFx[i] = protoFx[i];
         }
       }
     }
   }
-
   return effects;
-} // -- effects ----------------------------------------------
+}
+
+// -- effects ----------------------------------------------
 
 /**
  * Runs all effects of a given type for the given set of property changes
@@ -124,37 +102,32 @@ function ensureOwnEffectMap(model, type, cloneArrays) {
  * @return {boolean} True if an effect ran for this property
  * @private
  */
-
-
 function runEffects(inst, effects, props, oldProps, hasPaths, extraArgs) {
   if (effects) {
     let ran = false;
     const id = dedupeId++;
-
     for (let prop in props) {
       // Inline `runEffectsForProperty` for perf.
       let rootProperty = hasPaths ? root(prop) : prop;
       let fxs = effects[rootProperty];
-
       if (fxs) {
-        for (let i = 0, l = fxs.length, fx; i < l && (fx = fxs[i]); i++) {
-          if ((!fx.info || fx.info.lastRun !== id) && (!hasPaths || pathMatchesTrigger(prop, fx.trigger))) {
+        for (let i=0, l=fxs.length, fx; (i<l) && (fx=fxs[i]); i++) {
+          if ((!fx.info || fx.info.lastRun !== id) &&
+              (!hasPaths || pathMatchesTrigger(prop, fx.trigger))) {
             if (fx.info) {
               fx.info.lastRun = id;
             }
-
             fx.fn(inst, prop, props, oldProps, fx.info, hasPaths, extraArgs);
             ran = true;
           }
         }
       }
     }
-
     return ran;
   }
-
   return false;
 }
+
 /**
  * Runs a list of effects for a given property.
  *
@@ -169,28 +142,25 @@ function runEffects(inst, effects, props, oldProps, hasPaths, extraArgs) {
  * @return {boolean} True if an effect ran for this property
  * @private
  */
-
-
 function runEffectsForProperty(inst, effects, dedupeId, prop, props, oldProps, hasPaths, extraArgs) {
   let ran = false;
   let rootProperty = hasPaths ? root(prop) : prop;
   let fxs = effects[rootProperty];
-
   if (fxs) {
-    for (let i = 0, l = fxs.length, fx; i < l && (fx = fxs[i]); i++) {
-      if ((!fx.info || fx.info.lastRun !== dedupeId) && (!hasPaths || pathMatchesTrigger(prop, fx.trigger))) {
+    for (let i=0, l=fxs.length, fx; (i<l) && (fx=fxs[i]); i++) {
+      if ((!fx.info || fx.info.lastRun !== dedupeId) &&
+          (!hasPaths || pathMatchesTrigger(prop, fx.trigger))) {
         if (fx.info) {
           fx.info.lastRun = dedupeId;
         }
-
         fx.fn(inst, prop, props, oldProps, fx.info, hasPaths, extraArgs);
         ran = true;
       }
     }
   }
-
   return ran;
 }
+
 /**
  * Determines whether a property/path that has changed matches the trigger
  * criteria for an effect.  A trigger is a descriptor with the following
@@ -209,18 +179,17 @@ function runEffectsForProperty(inst, effects, dedupeId, prop, props, oldProps, h
  * @param {?DataTrigger} trigger Descriptor
  * @return {boolean} Whether the path matched the trigger
  */
-
-
 function pathMatchesTrigger(path, trigger) {
   if (trigger) {
-    let triggerPath =
-    /** @type {string} */
-    trigger.name;
-    return triggerPath == path || !!(trigger.structured && isAncestor(triggerPath, path)) || !!(trigger.wildcard && isDescendant(triggerPath, path));
+    let triggerPath = /** @type {string} */ (trigger.name);
+    return (triggerPath == path) ||
+        !!(trigger.structured && isAncestor(triggerPath, path)) ||
+        !!(trigger.wildcard && isDescendant(triggerPath, path));
   } else {
     return true;
   }
 }
+
 /**
  * Implements the "observer" effect.
  *
@@ -235,18 +204,16 @@ function pathMatchesTrigger(path, trigger) {
  * @return {void}
  * @private
  */
-
-
 function runObserverEffect(inst, property, props, oldProps, info) {
   let fn = typeof info.method === "string" ? inst[info.method] : info.method;
   let changedProp = info.property;
-
   if (fn) {
     fn.call(inst, inst.__data[changedProp], oldProps[changedProp]);
   } else if (!info.dynamicFn) {
     console.warn('observer method `' + info.method + '` not defined');
   }
 }
+
 /**
  * Runs "notify" effects for a set of changed properties.
  *
@@ -265,14 +232,12 @@ function runObserverEffect(inst, property, props, oldProps, info) {
  * @return {void}
  * @private
  */
-
-
 function runNotifyEffects(inst, notifyProps, props, oldProps, hasPaths) {
   // Notify
   let fxs = inst[TYPES.NOTIFY];
   let notified;
-  let id = dedupeId++; // Try normal notify effects; if none, fall back to try path notification
-
+  let id = dedupeId++;
+  // Try normal notify effects; if none, fall back to try path notification
   for (let prop in notifyProps) {
     if (notifyProps[prop]) {
       if (fxs && runEffectsForProperty(inst, fxs, id, prop, props, oldProps, hasPaths)) {
@@ -281,17 +246,16 @@ function runNotifyEffects(inst, notifyProps, props, oldProps, hasPaths) {
         notified = true;
       }
     }
-  } // Flush host if we actually notified and host was batching
+  }
+  // Flush host if we actually notified and host was batching
   // And the host has already initialized clients; this prevents
   // an issue with a host observing data changes before clients are ready.
-
-
   let host;
-
   if (notified && (host = inst.__dataHost) && host._invalidateProperties) {
     host._invalidateProperties();
   }
 }
+
 /**
  * Dispatches {property}-changed events with path information in the detail
  * object to indicate a sub-path of the property was changed.
@@ -303,19 +267,16 @@ function runNotifyEffects(inst, notifyProps, props, oldProps, hasPaths) {
  * @return {boolean} Returns true if the path was notified
  * @private
  */
-
-
 function notifyPath(inst, path, props) {
   let rootProperty = root(path);
-
   if (rootProperty !== path) {
     let eventName = camelToDashCase(rootProperty) + '-changed';
     dispatchNotifyEvent(inst, eventName, props[path], path);
     return true;
   }
-
   return false;
 }
+
 /**
  * Dispatches {property}-changed events to indicate a property (or path)
  * changed.
@@ -331,29 +292,22 @@ function notifyPath(inst, path, props) {
  * @private
  * @suppress {invalidCasts}
  */
-
-
 function dispatchNotifyEvent(inst, eventName, value, path) {
   let detail = {
     value: value,
     queueProperty: true
   };
-
   if (path) {
     detail.path = path;
-  } // As a performance optimization, we could elide the wrap here since notifying
+  }
+  // As a performance optimization, we could elide the wrap here since notifying
   // events are non-bubbling and shouldn't need retargeting. However, a very
   // small number of internal tests failed in obscure ways, which may indicate
   // user code relied on timing differences resulting from ShadyDOM flushing
   // as a result of the wrapped `dispatchEvent`.
-
-
-  wrap(
-  /** @type {!HTMLElement} */
-  inst).dispatchEvent(new CustomEvent(eventName, {
-    detail
-  }));
+  wrap(/** @type {!HTMLElement} */(inst)).dispatchEvent(new CustomEvent(eventName, { detail }));
 }
+
 /**
  * Implements the "notify" effect.
  *
@@ -369,19 +323,16 @@ function dispatchNotifyEvent(inst, eventName, value, path) {
  * @return {void}
  * @private
  */
-
-
 function runNotifyEffect(inst, property, props, oldProps, info, hasPaths) {
   let rootProperty = hasPaths ? root(property) : property;
   let path = rootProperty != property ? property : null;
   let value = path ? get(inst, path) : inst.__data[property];
-
   if (path && value === undefined) {
-    value = props[property]; // specifically for .splices
+    value = props[property];  // specifically for .splices
   }
-
   dispatchNotifyEvent(inst, info.eventName, value, path);
 }
+
 /**
  * Handler function for 2-way notification events. Receives context
  * information captured in the `addNotifyListener` closure from the
@@ -400,30 +351,25 @@ function runNotifyEffect(inst, property, props, oldProps, info, hasPaths) {
  * @return {void}
  * @private
  */
-
-
 function handleNotification(event, inst, fromProp, toPath, negate) {
   let value;
-  let detail =
-  /** @type {Object} */
-  event.detail;
+  let detail = /** @type {Object} */(event.detail);
   let fromPath = detail && detail.path;
-
   if (fromPath) {
     toPath = translate(fromProp, toPath, fromPath);
     value = detail && detail.value;
   } else {
     value = event.currentTarget[fromProp];
   }
-
   value = negate ? !value : value;
-
   if (!inst[TYPES.READ_ONLY] || !inst[TYPES.READ_ONLY][toPath]) {
-    if (inst._setPendingPropertyOrPath(toPath, value, true, Boolean(fromPath)) && (!detail || !detail.queueProperty)) {
+    if (inst._setPendingPropertyOrPath(toPath, value, true, Boolean(fromPath))
+      && (!detail || !detail.queueProperty)) {
       inst._invalidateProperties();
     }
   }
 }
+
 /**
  * Implements the "reflect" effect.
  *
@@ -437,19 +383,14 @@ function handleNotification(event, inst, fromProp, toPath, negate) {
  * @return {void}
  * @private
  */
-
-
 function runReflectEffect(inst, property, props, oldProps, info) {
   let value = inst.__data[property];
-
   if (sanitizeDOMValue) {
-    value = sanitizeDOMValue(value, info.attrName, 'attribute',
-    /** @type {Node} */
-    inst);
+    value = sanitizeDOMValue(value, info.attrName, 'attribute', /** @type {Node} */(inst));
   }
-
   inst._propertyToAttribute(property, info.attrName, value);
 }
+
 /**
  * Runs "computed" effects for a set of changed properties.
  *
@@ -467,11 +408,8 @@ function runReflectEffect(inst, property, props, oldProps, info) {
  * @return {void}
  * @private
  */
-
-
 function runComputedEffects(inst, changedProps, oldProps, hasPaths) {
   let computeEffects = inst[TYPES.COMPUTE];
-
   if (computeEffects) {
     if (orderedComputed) {
       // Runs computed effects in efficient order by keeping a topologically-
@@ -480,44 +418,32 @@ function runComputedEffects(inst, changedProps, oldProps, hasPaths) {
       dedupeId++;
       const order = getComputedOrder(inst);
       const queue = [];
-
       for (let p in changedProps) {
         enqueueEffectsFor(p, computeEffects, queue, order, hasPaths);
       }
-
       let info;
-
-      while (info = queue.shift()) {
+      while ((info = queue.shift())) {
         if (runComputedEffect(inst, '', changedProps, oldProps, info)) {
           enqueueEffectsFor(info.methodInfo, computeEffects, queue, order, hasPaths);
         }
       }
-
-      Object.assign(
-      /** @type {!Object} */
-      oldProps, inst.__dataOld);
-      Object.assign(
-      /** @type {!Object} */
-      changedProps, inst.__dataPending);
+      Object.assign(/** @type {!Object} */ (oldProps), inst.__dataOld);
+      Object.assign(/** @type {!Object} */ (changedProps), inst.__dataPending);
       inst.__dataPending = null;
     } else {
       // Original Polymer 2.x computed effects order, which continues running
       // effects until no further computed properties have been invalidated
       let inputProps = changedProps;
-
       while (runEffects(inst, computeEffects, inputProps, oldProps, hasPaths)) {
-        Object.assign(
-        /** @type {!Object} */
-        oldProps, inst.__dataOld);
-        Object.assign(
-        /** @type {!Object} */
-        changedProps, inst.__dataPending);
+        Object.assign(/** @type {!Object} */ (oldProps), inst.__dataOld);
+        Object.assign(/** @type {!Object} */ (changedProps), inst.__dataPending);
         inputProps = inst.__dataPending;
         inst.__dataPending = null;
       }
     }
   }
 }
+
 /**
  * Inserts a computed effect into a queue, given the specified order. Performs
  * the insert using a binary search.
@@ -529,19 +455,15 @@ function runComputedEffects(inst, changedProps, oldProps, hasPaths) {
  * @param {Map<string,number>} order Map of computed property name->topological
  *   sort order
  */
-
-
 const insertEffect = (info, queue, order) => {
   let start = 0;
   let end = queue.length - 1;
   let idx = -1;
-
   while (start <= end) {
-    const mid = start + end >> 1; // Note `methodInfo` is where the computed property name is stored in
+    const mid = (start + end) >> 1;
+    // Note `methodInfo` is where the computed property name is stored in
     // the effect metadata
-
     const cmp = order.get(queue[mid].methodInfo) - order.get(info.methodInfo);
-
     if (cmp < 0) {
       start = mid + 1;
     } else if (cmp > 0) {
@@ -551,13 +473,12 @@ const insertEffect = (info, queue, order) => {
       break;
     }
   }
-
   if (idx < 0) {
     idx = end + 1;
   }
-
   queue.splice(idx, 0, info);
 };
+
 /**
  * Inserts all downstream computed effects invalidated by the specified property
  * into the topologically-sorted queue of effects to be run.
@@ -572,23 +493,21 @@ const insertEffect = (info, queue, order) => {
  *   sort order
  * @param {boolean} hasPaths True with `changedProps` contains one or more paths
  */
-
-
 const enqueueEffectsFor = (prop, computeEffects, queue, order, hasPaths) => {
   const rootProperty = hasPaths ? root(prop) : prop;
   const fxs = computeEffects[rootProperty];
-
   if (fxs) {
-    for (let i = 0; i < fxs.length; i++) {
+    for (let i=0; i<fxs.length; i++) {
       const fx = fxs[i];
-
-      if (fx.info.lastRun !== dedupeId && (!hasPaths || pathMatchesTrigger(prop, fx.trigger))) {
+      if ((fx.info.lastRun !== dedupeId) &&
+          (!hasPaths || pathMatchesTrigger(prop, fx.trigger))) {
         fx.info.lastRun = dedupeId;
         insertEffect(fx.info, queue, order);
       }
     }
   }
 };
+
 /**
  * Generates and retrieves a memoized map of computed property name to its
  * topologically-sorted order.
@@ -610,50 +529,36 @@ const enqueueEffectsFor = (prop, computeEffects, queue, order, hasPaths) => {
  * @return {Map<string,number>} Map of computed property name->topological sort
  *   order
  */
-
-
 function getComputedOrder(inst) {
   let ordered = inst.constructor.__orderedComputedDeps;
-
   if (!ordered) {
     ordered = new Map();
     const effects = inst[TYPES.COMPUTE];
-    let {
-      counts,
-      ready,
-      total
-    } = dependencyCounts(inst);
+    let {counts, ready, total} = dependencyCounts(inst);
     let curr;
-
-    while (curr = ready.shift()) {
+    while ((curr = ready.shift())) {
       ordered.set(curr, ordered.size);
       const computedByCurr = effects[curr];
-
       if (computedByCurr) {
         computedByCurr.forEach(fx => {
           // Note `methodInfo` is where the computed property name is stored
           const computedProp = fx.info.methodInfo;
           --total;
-
           if (--counts[computedProp] === 0) {
             ready.push(computedProp);
           }
         });
       }
     }
-
     if (total !== 0) {
-      const el =
-      /** @type {HTMLElement} */
-      inst;
+      const el = /** @type {HTMLElement} */ (inst);
       console.warn(`Computed graph for ${el.localName} incomplete; circular?`);
     }
-
     inst.constructor.__orderedComputedDeps = ordered;
   }
-
   return ordered;
 }
+
 /**
  * Generates a map of property-to-dependency count (`counts`, where "dependency
  * count" is the number of dependencies a given property has assuming it is a
@@ -669,34 +574,28 @@ function getComputedOrder(inst) {
  *   count) and pre-populated `ready` array of properties that had zero
  *   dependencies.
  */
-
-
 function dependencyCounts(inst) {
   const infoForComputed = inst[COMPUTE_INFO];
   const counts = {};
   const computedDeps = inst[TYPES.COMPUTE];
   const ready = [];
-  let total = 0; // Count dependencies for each computed property
-
+  let total = 0;
+  // Count dependencies for each computed property
   for (let p in infoForComputed) {
-    const info = infoForComputed[p]; // Be sure to add the method name itself in case of "dynamic functions"
-
-    total += counts[p] = info.args.filter(a => !a.literal).length + (info.dynamicFn ? 1 : 0);
-  } // Build list of ready properties (that aren't themselves computed)
-
-
+    const info = infoForComputed[p];
+    // Be sure to add the method name itself in case of "dynamic functions"
+    total += counts[p] =
+      info.args.filter(a => !a.literal).length + (info.dynamicFn ? 1 : 0);
+  }
+  // Build list of ready properties (that aren't themselves computed)
   for (let p in computedDeps) {
     if (!infoForComputed[p]) {
       ready.push(p);
     }
   }
-
-  return {
-    counts,
-    ready,
-    total
-  };
+  return {counts, ready, total};
 }
+
 /**
  * Implements the "computed property" effect by running the method with the
  * values of the arguments specified in the `info` object and setting the
@@ -710,18 +609,14 @@ function dependencyCounts(inst) {
  * @return {boolean} True when the property being computed changed
  * @private
  */
-
-
 function runComputedEffect(inst, property, changedProps, oldProps, info) {
   // Dirty check dependencies and run if any invalid
-  let result = runMethodEffect(inst, property, changedProps, oldProps, info); // Abort if method returns a no-op result
-
+  let result = runMethodEffect(inst, property, changedProps, oldProps, info);
+  // Abort if method returns a no-op result
   if (result === NOOP) {
     return false;
   }
-
   let computedProp = info.methodInfo;
-
   if (inst.__dataHasAccessor && inst.__dataHasAccessor[computedProp]) {
     return inst._setPendingProperty(computedProp, result, true);
   } else {
@@ -729,6 +624,7 @@ function runComputedEffect(inst, property, changedProps, oldProps, info) {
     return false;
   }
 }
+
 /**
  * Computes path changes based on path links set up using the `linkPaths`
  * API.
@@ -739,29 +635,24 @@ function runComputedEffect(inst, property, changedProps, oldProps, info) {
  * @return {void}
  * @private
  */
-
-
 function computeLinkedPaths(inst, path, value) {
   let links = inst.__dataLinkedPaths;
-
   if (links) {
     let link;
-
     for (let a in links) {
       let b = links[a];
-
       if (isDescendant(a, path)) {
         link = translate(a, b, path);
-
         inst._setPendingPropertyOrPath(link, value, true, true);
       } else if (isDescendant(b, path)) {
         link = translate(b, a, path);
-
         inst._setPendingPropertyOrPath(link, value, true, true);
       }
     }
   }
-} // -- bindings ----------------------------------------------
+}
+
+// -- bindings ----------------------------------------------
 
 /**
  * Adds binding metadata to the current `nodeInfo`, and binding effects
@@ -780,40 +671,26 @@ function computeLinkedPaths(inst, path, value) {
  * @return {void}
  * @private
  */
-
-
 function addBinding(constructor, templateInfo, nodeInfo, kind, target, parts, literal) {
   // Create binding metadata and add to nodeInfo
   nodeInfo.bindings = nodeInfo.bindings || [];
-  let
-  /** Binding */
-  binding = {
-    kind,
-    target,
-    parts,
-    literal,
-    isCompound: parts.length !== 1
-  };
-  nodeInfo.bindings.push(binding); // Add listener info to binding metadata
-
+  let /** Binding */ binding = { kind, target, parts, literal, isCompound: (parts.length !== 1) };
+  nodeInfo.bindings.push(binding);
+  // Add listener info to binding metadata
   if (shouldAddListener(binding)) {
-    let {
-      event,
-      negate
-    } = binding.parts[0];
-    binding.listenerEvent = event || camelToDashCase(target) + '-changed';
+    let {event, negate} = binding.parts[0];
+    binding.listenerEvent = event || (camelToDashCase(target) + '-changed');
     binding.listenerNegate = negate;
-  } // Add "propagate" property effects to templateInfo
-
-
+  }
+  // Add "propagate" property effects to templateInfo
   let index = templateInfo.nodeInfoList.length;
-
-  for (let i = 0; i < binding.parts.length; i++) {
+  for (let i=0; i<binding.parts.length; i++) {
     let part = binding.parts[i];
     part.compoundIndex = i;
     addEffectForBindingPart(constructor, templateInfo, binding, part, index);
   }
 }
+
 /**
  * Adds property effects to the given `templateInfo` for the given binding
  * part.
@@ -826,38 +703,29 @@ function addBinding(constructor, templateInfo, nodeInfo, kind, target, parts, li
  * @param {number} index Index into `nodeInfoList` for this node
  * @return {void}
  */
-
-
 function addEffectForBindingPart(constructor, templateInfo, binding, part, index) {
   if (!part.literal) {
     if (binding.kind === 'attribute' && binding.target[0] === '-') {
-      console.warn('Cannot set attribute ' + binding.target + ' because "-" is not a valid attribute starting character');
+      console.warn('Cannot set attribute ' + binding.target +
+        ' because "-" is not a valid attribute starting character');
     } else {
       let dependencies = part.dependencies;
-      let info = {
-        index,
-        binding,
-        part,
-        evaluator: constructor
-      };
-
-      for (let j = 0; j < dependencies.length; j++) {
+      let info = { index, binding, part, evaluator: constructor };
+      for (let j=0; j<dependencies.length; j++) {
         let trigger = dependencies[j];
-
         if (typeof trigger == 'string') {
           trigger = parseArg(trigger);
           trigger.wildcard = true;
         }
-
         constructor._addTemplatePropertyEffect(templateInfo, trigger.rootProperty, {
           fn: runBindingEffect,
-          info,
-          trigger
+          info, trigger
         });
       }
     }
   }
 }
+
 /**
  * Implements the "binding" (property/path binding) effect.
  *
@@ -878,31 +746,31 @@ function addEffectForBindingPart(constructor, templateInfo, binding, part, index
  * @return {void}
  * @private
  */
-
-
 function runBindingEffect(inst, path, props, oldProps, info, hasPaths, nodeList) {
   let node = nodeList[info.index];
   let binding = info.binding;
-  let part = info.part; // Subpath notification: transform path and set to client
+  let part = info.part;
+  // Subpath notification: transform path and set to client
   // e.g.: foo="{{obj.sub}}", path: 'obj.sub.prop', set 'foo.prop'=obj.sub.prop
-
-  if (hasPaths && part.source && path.length > part.source.length && binding.kind == 'property' && !binding.isCompound && node.__isPropertyEffectsClient && node.__dataHasAccessor && node.__dataHasAccessor[binding.target]) {
+  if (hasPaths && part.source && (path.length > part.source.length) &&
+      (binding.kind == 'property') && !binding.isCompound &&
+      node.__isPropertyEffectsClient &&
+      node.__dataHasAccessor && node.__dataHasAccessor[binding.target]) {
     let value = props[path];
     path = translate(part.source, binding.target, path);
-
     if (node._setPendingPropertyOrPath(path, value, false, true)) {
       inst._enqueueClient(node);
     }
   } else {
-    let value = info.evaluator._evaluateBinding(inst, part, path, props, oldProps, hasPaths); // Propagate value to child
+    let value = info.evaluator._evaluateBinding(inst, part, path, props, oldProps, hasPaths);
+    // Propagate value to child
     // Abort if value is a no-op result
-
-
     if (value !== NOOP) {
       applyBindingValue(inst, node, binding, part, value);
     }
   }
 }
+
 /**
  * Sets the value for an "binding" (binding) effect to a node,
  * either as a property or attribute.
@@ -915,25 +783,19 @@ function runBindingEffect(inst, path, props, oldProps, info, hasPaths, nodeList)
  * @return {void}
  * @private
  */
-
-
 function applyBindingValue(inst, node, binding, part, value) {
   value = computeBindingValue(node, value, binding, part);
-
   if (sanitizeDOMValue) {
     value = sanitizeDOMValue(value, binding.target, binding.kind, node);
   }
-
   if (binding.kind == 'attribute') {
     // Attribute binding
-    inst._valueToNodeAttribute(
-    /** @type {Element} */
-    node, value, binding.target);
+    inst._valueToNodeAttribute(/** @type {Element} */(node), value, binding.target);
   } else {
     // Property binding
     let prop = binding.target;
-
-    if (node.__isPropertyEffectsClient && node.__dataHasAccessor && node.__dataHasAccessor[prop]) {
+    if (node.__isPropertyEffectsClient &&
+        node.__dataHasAccessor && node.__dataHasAccessor[prop]) {
       if (!node[TYPES.READ_ONLY] || !node[TYPES.READ_ONLY][prop]) {
         if (node._setPendingProperty(prop, value)) {
           inst._enqueueClient(node);
@@ -946,6 +808,7 @@ function applyBindingValue(inst, node, binding, part, value) {
     }
   }
 }
+
 /**
  * Transforms an "binding" effect value based on compound & negation
  * effect metadata, as well as handling for special-case properties
@@ -957,24 +820,23 @@ function applyBindingValue(inst, node, binding, part, value) {
  * @return {*} Transformed value to set
  * @private
  */
-
-
 function computeBindingValue(node, value, binding, part) {
   if (binding.isCompound) {
     let storage = node.__dataCompoundStorage[binding.target];
     storage[part.compoundIndex] = value;
     value = storage.join('');
   }
-
   if (binding.kind !== 'attribute') {
     // Some browsers serialize `undefined` to `"undefined"`
-    if (binding.target === 'textContent' || binding.target === 'value' && (node.localName === 'input' || node.localName === 'textarea')) {
+    if (binding.target === 'textContent' ||
+        (binding.target === 'value' &&
+          (node.localName === 'input' || node.localName === 'textarea'))) {
       value = value == undefined ? '' : value;
     }
   }
-
   return value;
 }
+
 /**
  * Returns true if a binding's metadata meets all the requirements to allow
  * 2-way binding, and therefore a `<property>-changed` event listener should be
@@ -988,11 +850,14 @@ function computeBindingValue(node, value, binding, part) {
  * @return {boolean} True if 2-way listener should be added
  * @private
  */
-
-
 function shouldAddListener(binding) {
-  return Boolean(binding.target) && binding.kind != 'attribute' && binding.kind != 'text' && !binding.isCompound && binding.parts[0].mode === '{';
+  return Boolean(binding.target) &&
+         binding.kind != 'attribute' &&
+         binding.kind != 'text' &&
+         !binding.isCompound &&
+         binding.parts[0].mode === '{';
 }
+
 /**
  * Setup compound binding storage structures, notify listeners, and dataHost
  * references onto the bound nodeList.
@@ -1003,35 +868,28 @@ function shouldAddListener(binding) {
  * @return {void}
  * @private
  */
-
-
 function setupBindings(inst, templateInfo) {
   // Setup compound storage, dataHost, and notify listeners
-  let {
-    nodeList,
-    nodeInfoList
-  } = templateInfo;
-
+  let {nodeList, nodeInfoList} = templateInfo;
   if (nodeInfoList.length) {
-    for (let i = 0; i < nodeInfoList.length; i++) {
+    for (let i=0; i < nodeInfoList.length; i++) {
       let info = nodeInfoList[i];
       let node = nodeList[i];
       let bindings = info.bindings;
-
       if (bindings) {
-        for (let i = 0; i < bindings.length; i++) {
+        for (let i=0; i<bindings.length; i++) {
           let binding = bindings[i];
           setupCompoundStorage(node, binding);
           addNotifyListener(node, inst, binding);
         }
-      } // This ensures all bound elements have a host set, regardless
+      }
+      // This ensures all bound elements have a host set, regardless
       // of whether they upgrade synchronous to creation
-
-
       node.__dataHost = inst;
     }
   }
 }
+
 /**
  * Initializes `__dataCompoundStorage` local storage on a bound node with
  * initial literal data for compound bindings, and sets the joined
@@ -1046,23 +904,20 @@ function setupBindings(inst, templateInfo) {
  * @return {void}
  * @private
  */
-
-
 function setupCompoundStorage(node, binding) {
   if (binding.isCompound) {
     // Create compound storage map
-    let storage = node.__dataCompoundStorage || (node.__dataCompoundStorage = {});
-    let parts = binding.parts; // Copy literals from parts into storage for this binding
-
+    let storage = node.__dataCompoundStorage ||
+      (node.__dataCompoundStorage = {});
+    let parts = binding.parts;
+    // Copy literals from parts into storage for this binding
     let literals = new Array(parts.length);
-
-    for (let j = 0; j < parts.length; j++) {
+    for (let j=0; j<parts.length; j++) {
       literals[j] = parts[j].literal;
     }
-
     let target = binding.target;
-    storage[target] = literals; // Configure properties with their literal parts
-
+    storage[target] = literals;
+    // Configure properties with their literal parts
     if (binding.literal && binding.kind == 'property') {
       // Note, className needs style scoping so this needs wrapping.
       // We may also want to consider doing this for `textContent` and
@@ -1070,11 +925,11 @@ function setupCompoundStorage(node, binding) {
       if (target === 'className') {
         node = wrap(node);
       }
-
       node[target] = binding.literal;
     }
   }
 }
+
 /**
  * Adds a 2-way binding notification event listener to the node specified
  *
@@ -1085,16 +940,16 @@ function setupCompoundStorage(node, binding) {
  * @return {void}
  * @private
  */
-
-
 function addNotifyListener(node, inst, binding) {
   if (binding.listenerEvent) {
     let part = binding.parts[0];
-    node.addEventListener(binding.listenerEvent, function (e) {
+    node.addEventListener(binding.listenerEvent, function(e) {
       handleNotification(e, inst, binding.target, part.source, part.negate);
     });
   }
-} // -- for method-based effects (complexObserver & computed) --------------
+}
+
+// -- for method-based effects (complexObserver & computed) --------------
 
 /**
  * Adds property effects for each argument in the method signature (and
@@ -1113,36 +968,30 @@ function addNotifyListener(node, inst, binding) {
  * @return {!Object} Effect metadata for this method effect
  * @private
  */
-
-
 function createMethodEffect(model, sig, type, effectFn, methodInfo, dynamicFn) {
-  dynamicFn = sig.static || dynamicFn && (typeof dynamicFn !== 'object' || dynamicFn[sig.methodName]);
+  dynamicFn = sig.static || (dynamicFn &&
+    (typeof dynamicFn !== 'object' || dynamicFn[sig.methodName]));
   let info = {
     methodName: sig.methodName,
     args: sig.args,
     methodInfo,
     dynamicFn
   };
-
-  for (let i = 0, arg; i < sig.args.length && (arg = sig.args[i]); i++) {
+  for (let i=0, arg; (i<sig.args.length) && (arg=sig.args[i]); i++) {
     if (!arg.literal) {
       model._addPropertyEffect(arg.rootProperty, type, {
-        fn: effectFn,
-        info: info,
-        trigger: arg
+        fn: effectFn, info: info, trigger: arg
       });
     }
   }
-
   if (dynamicFn) {
     model._addPropertyEffect(sig.methodName, type, {
-      fn: effectFn,
-      info: info
+      fn: effectFn, info: info
     });
   }
-
   return info;
 }
+
 /**
  * Calls a method with arguments marshaled from properties on the instance
  * based on the method signature contained in the effect metadata.
@@ -1159,58 +1008,54 @@ function createMethodEffect(model, sig, type, effectFn, methodInfo, dynamicFn) {
  * @return {*} Returns the return value from the method invocation
  * @private
  */
-
-
 function runMethodEffect(inst, property, props, oldProps, info) {
   // Instances can optionally have a _methodHost which allows redirecting where
   // to find methods. Currently used by `templatize`.
   let context = inst._methodHost || inst;
   let fn = context[info.methodName];
-
   if (fn) {
     let args = inst._marshalArgs(info.args, property, props);
-
     return args === NOOP ? NOOP : fn.apply(context, args);
   } else if (!info.dynamicFn) {
     console.warn('method `' + info.methodName + '` not defined');
   }
 }
 
-const emptyArray = []; // Regular expressions used for binding
+const emptyArray = [];
 
-const IDENT = '(?:' + '[a-zA-Z_$][\\w.:$\\-*]*' + ')';
+// Regular expressions used for binding
+const IDENT  = '(?:' + '[a-zA-Z_$][\\w.:$\\-*]*' + ')';
 const NUMBER = '(?:' + '[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?' + ')';
 const SQUOTE_STRING = '(?:' + '\'(?:[^\'\\\\]|\\\\.)*\'' + ')';
 const DQUOTE_STRING = '(?:' + '"(?:[^"\\\\]|\\\\.)*"' + ')';
 const STRING = '(?:' + SQUOTE_STRING + '|' + DQUOTE_STRING + ')';
-const ARGUMENT = '(?:(' + IDENT + '|' + NUMBER + '|' + STRING + ')\\s*' + ')';
+const ARGUMENT = '(?:(' + IDENT + '|' + NUMBER + '|' +  STRING + ')\\s*' + ')';
 const ARGUMENTS = '(?:' + ARGUMENT + '(?:,\\s*' + ARGUMENT + ')*' + ')';
-const ARGUMENT_LIST = '(?:' + '\\(\\s*' + '(?:' + ARGUMENTS + '?' + ')' + '\\)\\s*' + ')';
+const ARGUMENT_LIST = '(?:' + '\\(\\s*' +
+                              '(?:' + ARGUMENTS + '?' + ')' +
+                            '\\)\\s*' + ')';
 const BINDING = '(' + IDENT + '\\s*' + ARGUMENT_LIST + '?' + ')'; // Group 3
-
 const OPEN_BRACKET = '(\\[\\[|{{)' + '\\s*';
 const CLOSE_BRACKET = '(?:]]|}})';
 const NEGATE = '(?:(!)\\s*)?'; // Group 2
-
 const EXPRESSION = OPEN_BRACKET + NEGATE + BINDING + CLOSE_BRACKET;
 const bindingRegex = new RegExp(EXPRESSION, "g");
+
 /**
  * Create a string from binding parts of all the literal parts
  *
  * @param {!Array<BindingPart>} parts All parts to stringify
  * @return {string} String made from the literal parts
  */
-
 function literalFromParts(parts) {
   let s = '';
-
-  for (let i = 0; i < parts.length; i++) {
+  for (let i=0; i<parts.length; i++) {
     let literal = parts[i].literal;
     s += literal || '';
   }
-
   return s;
 }
+
 /**
  * Parses an expression string for a method signature, and returns a metadata
  * describing the method in terms of `methodName`, `static` (whether all the
@@ -1221,20 +1066,12 @@ function literalFromParts(parts) {
  *   found, otherwise `undefined`
  * @private
  */
-
-
 function parseMethod(expression) {
   // tries to match valid javascript property names
   let m = expression.match(/([^\s]+?)\(([\s\S]*)\)/);
-
   if (m) {
     let methodName = m[1];
-    let sig = {
-      methodName,
-      static: true,
-      args: emptyArray
-    };
-
+    let sig = { methodName, static: true, args: emptyArray };
     if (m[2].trim()) {
       // replace escaped commas with comma entity, split on un-escaped commas
       let args = m[2].replace(/\\,/g, '&comma;').split(',');
@@ -1243,9 +1080,9 @@ function parseMethod(expression) {
       return sig;
     }
   }
-
   return null;
 }
+
 /**
  * Parses an array of arguments and sets the `args` property of the supplied
  * signature metadata object. Sets the `static` property to false if any
@@ -1256,20 +1093,17 @@ function parseMethod(expression) {
  * @return {!MethodSignature} The updated signature metadata object
  * @private
  */
-
-
 function parseArgs(argList, sig) {
-  sig.args = argList.map(function (rawArg) {
+  sig.args = argList.map(function(rawArg) {
     let arg = parseArg(rawArg);
-
     if (!arg.literal) {
       sig.static = false;
     }
-
     return arg;
   }, this);
   return sig;
 }
+
 /**
  * Parses an individual argument, and returns an argument metadata object
  * with the following fields:
@@ -1286,76 +1120,70 @@ function parseArgs(argList, sig) {
  * @return {!MethodArg} Argument metadata object
  * @private
  */
-
-
 function parseArg(rawArg) {
   // clean up whitespace
-  let arg = rawArg.trim() // replace comma entity with comma
-  .replace(/&comma;/g, ',') // repair extra escape sequences; note only commas strictly need
-  // escaping, but we allow any other char to be escaped since its
-  // likely users will do this
-  .replace(/\\(.)/g, '$1'); // basic argument descriptor
-
+  let arg = rawArg.trim()
+    // replace comma entity with comma
+    .replace(/&comma;/g, ',')
+    // repair extra escape sequences; note only commas strictly need
+    // escaping, but we allow any other char to be escaped since its
+    // likely users will do this
+    .replace(/\\(.)/g, '$1')
+    ;
+  // basic argument descriptor
   let a = {
     name: arg,
     value: '',
     literal: false
-  }; // detect literal value (must be String or Number)
-
+  };
+  // detect literal value (must be String or Number)
   let fc = arg[0];
-
   if (fc === '-') {
     fc = arg[1];
   }
-
   if (fc >= '0' && fc <= '9') {
     fc = '#';
   }
-
-  switch (fc) {
+  switch(fc) {
     case "'":
     case '"':
       a.value = arg.slice(1, -1);
       a.literal = true;
       break;
-
     case '#':
       a.value = Number(arg);
       a.literal = true;
       break;
-  } // if not literal, look for structured path
-
-
+  }
+  // if not literal, look for structured path
   if (!a.literal) {
-    a.rootProperty = root(arg); // detect structured path (has dots)
-
+    a.rootProperty = root(arg);
+    // detect structured path (has dots)
     a.structured = isPath(arg);
-
     if (a.structured) {
-      a.wildcard = arg.slice(-2) == '.*';
-
+      a.wildcard = (arg.slice(-2) == '.*');
       if (a.wildcard) {
         a.name = arg.slice(0, -2);
       }
     }
   }
-
   return a;
 }
 
 function getArgValue(data, props, path) {
-  let value = get(data, path); // when data is not stored e.g. `splices`, get the value from changedProps
+  let value = get(data, path);
+  // when data is not stored e.g. `splices`, get the value from changedProps
   // TODO(kschaaf): Note, this can cause a rare issue where the wildcard
   // info.value could pull a stale value out of changedProps during a reentrant
   // change that sets the value back to undefined.
   // https://github.com/Polymer/polymer/issues/5479
-
   if (value === undefined) {
     value = props[path];
   }
-
   return value;
-} // data api
+}
+
+// data api
 
 /**
  * Sends array splice notifications (`.splices` and `.length`)
@@ -1369,25 +1197,21 @@ function getArgValue(data, props, path) {
  * @return {void}
  * @private
  */
-
-
 function notifySplices(inst, array, path, splices) {
-  const splicesData = {
-    indexSplices: splices
-  }; // Legacy behavior stored splices in `__data__` so it was *not* ephemeral.
+  const splicesData = { indexSplices: splices };
+  // Legacy behavior stored splices in `__data__` so it was *not* ephemeral.
   // To match this behavior, we store splices directly on the array.
-
   if (legacyUndefined && !inst._overrideLegacyUndefined) {
     array.splices = splicesData;
   }
-
   inst.notifyPath(path + '.splices', splicesData);
-  inst.notifyPath(path + '.length', array.length); // Clear splice data only when it's stored on the array.
-
+  inst.notifyPath(path + '.length', array.length);
+  // Clear splice data only when it's stored on the array.
   if (legacyUndefined && !inst._overrideLegacyUndefined) {
     splicesData.indexSplices = [];
   }
 }
+
 /**
  * Creates a splice record and sends an array splice notification for
  * the described mutation
@@ -1403,8 +1227,6 @@ function notifySplices(inst, array, path, splices) {
  * @return {void}
  * @private
  */
-
-
 function notifySplice(inst, array, path, index, addedCount, removed) {
   notifySplices(inst, array, path, [{
     index: index,
@@ -1414,6 +1236,7 @@ function notifySplice(inst, array, path, index, addedCount, removed) {
     type: 'splice'
   }]);
 }
+
 /**
  * Returns an upper-cased version of the string.
  *
@@ -1421,11 +1244,10 @@ function notifySplice(inst, array, path, index, addedCount, removed) {
  * @return {string} Uppercased string
  * @private
  */
-
-
 function upper(name) {
   return name[0].toUpperCase() + name.substring(1);
 }
+
 /**
  * Element class mixin that provides meta-programming for Polymer's template
  * binding and data observation (collectively, "property effects") system.
@@ -1461,9 +1283,8 @@ function upper(name) {
  * @summary Element class mixin that provides meta-programming for Polymer's
  * template binding and data observation system.
  */
+const PropertyEffects = dedupingMixin(superClass => {
 
-
-export const PropertyEffects = dedupingMixin(superClass => {
   /**
    * @constructor
    * @implements {Polymer_PropertyAccessors}
@@ -1472,6 +1293,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
    * @private
    */
   const propertyEffectsBase = TemplateStamp(PropertyAccessors(superClass));
+
   /**
    * @polymer
    * @mixinClass
@@ -1479,99 +1301,74 @@ export const PropertyEffects = dedupingMixin(superClass => {
    * @extends {propertyEffectsBase}
    * @unrestricted
    */
-
   class PropertyEffects extends propertyEffectsBase {
+
     constructor() {
       super();
       /** @type {boolean} */
       // Used to identify users of this mixin, ala instanceof
-
       this.__isPropertyEffectsClient = true;
       /** @type {boolean} */
-
       this.__dataClientsReady;
       /** @type {Array} */
-
       this.__dataPendingClients;
       /** @type {Object} */
-
       this.__dataToNotify;
       /** @type {Object} */
-
       this.__dataLinkedPaths;
       /** @type {boolean} */
-
       this.__dataHasPaths;
       /** @type {Object} */
-
       this.__dataCompoundStorage;
       /** @type {Polymer_PropertyEffects} */
-
       this.__dataHost;
       /** @type {!Object} */
-
       this.__dataTemp;
       /** @type {boolean} */
-
       this.__dataClientsInitialized;
       /** @type {!Object} */
-
       this.__data;
       /** @type {!Object|null} */
-
       this.__dataPending;
       /** @type {!Object} */
-
       this.__dataOld;
       /** @type {Object} */
-
       this.__computeEffects;
       /** @type {Object} */
-
       this.__computeInfo;
       /** @type {Object} */
-
       this.__reflectEffects;
       /** @type {Object} */
-
       this.__notifyEffects;
       /** @type {Object} */
-
       this.__propagateEffects;
       /** @type {Object} */
-
       this.__observeEffects;
       /** @type {Object} */
-
       this.__readOnly;
       /** @type {!TemplateInfo} */
-
       this.__templateInfo;
       /** @type {boolean} */
-
       this._overrideLegacyUndefined;
     }
 
     get PROPERTY_EFFECT_TYPES() {
       return TYPES;
     }
+
     /**
      * @override
      * @return {void}
      */
-
-
     _initializeProperties() {
       super._initializeProperties();
-
       this._registerHost();
-
       this.__dataClientsReady = false;
       this.__dataPendingClients = null;
       this.__dataToNotify = null;
       this.__dataLinkedPaths = null;
-      this.__dataHasPaths = false; // May be set on instance prior to upgrade
-
+      this.__dataHasPaths = false;
+      // May be set on instance prior to upgrade
       this.__dataCompoundStorage = this.__dataCompoundStorage || null;
       this.__dataHost = this.__dataHost || null;
       this.__dataTemp = {};
@@ -1580,15 +1377,14 @@ export const PropertyEffects = dedupingMixin(superClass => {
 
     _registerHost() {
       if (hostStack.length) {
-        let host = hostStack[hostStack.length - 1];
-
-        host._enqueueClient(this); // This ensures even non-bound elements have a host set, as
+        let host = hostStack[hostStack.length-1];
+        host._enqueueClient(this);
+        // This ensures even non-bound elements have a host set, as
         // long as they upgrade synchronously
-
-
         this.__dataHost = host;
       }
     }
+
     /**
      * Overrides `PropertyAccessors` implementation to provide a
      * more efficient implementation of initializing properties from
@@ -1598,13 +1394,12 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {Object} props Properties to initialize on the prototype
      * @return {void}
      */
-
-
     _initializeProtoProperties(props) {
       this.__data = Object.create(props);
       this.__dataPending = Object.create(props);
       this.__dataOld = {};
     }
+
     /**
      * Overrides `PropertyAccessors` implementation to avoid setting
      * `_setProperty`'s `shouldNotify: true`.
@@ -1613,11 +1408,8 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {Object} props Properties to initialize on the instance
      * @return {void}
      */
-
-
     _initializeInstanceProperties(props) {
       let readOnly = this[TYPES.READ_ONLY];
-
       for (let prop in props) {
         if (!readOnly || !readOnly[prop]) {
           this.__dataPending = this.__dataPending || {};
@@ -1625,7 +1417,9 @@ export const PropertyEffects = dedupingMixin(superClass => {
           this.__data[prop] = this.__dataPending[prop] = props[prop];
         }
       }
-    } // Prototype setup ----------------------------------------
+    }
+
+    // Prototype setup ----------------------------------------
 
     /**
      * Equivalent to static `addPropertyEffect` API but can be called on
@@ -1639,20 +1433,16 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _addPropertyEffect(property, type, effect) {
-      this._createPropertyAccessor(property, type == TYPES.READ_ONLY); // effects are accumulated into arrays per property based on type
-
-
+      this._createPropertyAccessor(property, type == TYPES.READ_ONLY);
+      // effects are accumulated into arrays per property based on type
       let effects = ensureOwnEffectMap(this, type, true)[property];
-
       if (!effects) {
         effects = this[type][property] = [];
       }
-
       effects.push(effect);
     }
+
     /**
      * Removes the given property effect.
      *
@@ -1662,16 +1452,14 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {Object=} effect Effect metadata object to remove
      * @return {void}
      */
-
-
     _removePropertyEffect(property, type, effect) {
       let effects = ensureOwnEffectMap(this, type, true)[property];
       let idx = effects.indexOf(effect);
-
       if (idx >= 0) {
         effects.splice(idx, 1);
       }
     }
+
     /**
      * Returns whether the current prototype/instance has a property effect
      * of a certain type.
@@ -1683,12 +1471,11 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *     type
      * @protected
      */
-
-
     _hasPropertyEffect(property, type) {
       let effects = this[type];
       return Boolean(effects && effects[property]);
     }
+
     /**
      * Returns whether the current prototype/instance has a "read only"
      * accessor for the given property.
@@ -1699,11 +1486,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *     type
      * @protected
      */
-
-
     _hasReadOnlyEffect(property) {
       return this._hasPropertyEffect(property, TYPES.READ_ONLY);
     }
+
     /**
      * Returns whether the current prototype/instance has a "notify"
      * property effect for the given property.
@@ -1714,11 +1500,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *     type
      * @protected
      */
-
-
     _hasNotifyEffect(property) {
       return this._hasPropertyEffect(property, TYPES.NOTIFY);
     }
+
     /**
      * Returns whether the current prototype/instance has a "reflect to
      * attribute" property effect for the given property.
@@ -1729,11 +1514,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *     type
      * @protected
      */
-
-
     _hasReflectEffect(property) {
       return this._hasPropertyEffect(property, TYPES.REFLECT);
     }
+
     /**
      * Returns whether the current prototype/instance has a "computed"
      * property effect for the given property.
@@ -1744,11 +1528,11 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *     type
      * @protected
      */
-
-
     _hasComputedEffect(property) {
       return this._hasPropertyEffect(property, TYPES.COMPUTE);
-    } // Runtime ----------------------------------------
+    }
+
+    // Runtime ----------------------------------------
 
     /**
      * Sets a pending property or path.  If the root property of the path in
@@ -1779,10 +1563,9 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   the pending changes bag.
      * @protected
      */
-
-
     _setPendingPropertyOrPath(path, value, shouldNotify, isPathNotification) {
-      if (isPathNotification || root(Array.isArray(path) ? path[0] : path) !== path) {
+      if (isPathNotification ||
+          root(Array.isArray(path) ? path[0] : path) !== path) {
         // Dirty check changes being set to a path against the actual object,
         // since this is the entry point for paths into the system; from here
         // the only dirty checks are against the `__dataTemp` cache to prevent
@@ -1793,37 +1576,27 @@ export const PropertyEffects = dedupingMixin(superClass => {
         // object has already been updated
         if (!isPathNotification) {
           let old = get(this, path);
-          path =
-          /** @type {string} */
-          set(this, path, value); // Use property-accessor's simpler dirty check
-
+          path = /** @type {string} */ (set(this, path, value));
+          // Use property-accessor's simpler dirty check
           if (!path || !super._shouldPropertyChange(path, value, old)) {
             return false;
           }
         }
-
         this.__dataHasPaths = true;
-
-        if (this._setPendingProperty(
-        /**@type{string}*/
-        path, value, shouldNotify)) {
-          computeLinkedPaths(this,
-          /**@type{string}*/
-          path, value);
+        if (this._setPendingProperty(/**@type{string}*/(path), value, shouldNotify)) {
+          computeLinkedPaths(this, /**@type{string}*/ (path), value);
           return true;
         }
       } else {
         if (this.__dataHasAccessor && this.__dataHasAccessor[path]) {
-          return this._setPendingProperty(
-          /**@type{string}*/
-          path, value, shouldNotify);
+          return this._setPendingProperty(/**@type{string}*/(path), value, shouldNotify);
         } else {
           this[path] = value;
         }
       }
-
       return false;
     }
+
     /**
      * Applies a value to a non-Polymer element/node's property.
      *
@@ -1846,8 +1619,6 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _setUnmanagedPropertyToNode(node, prop, value) {
       // It is a judgment call that resetting primitives is
       // "bad" and resettings objects is also "good"; alternatively we could
@@ -1856,14 +1627,12 @@ export const PropertyEffects = dedupingMixin(superClass => {
       if (value !== node[prop] || typeof value == 'object') {
         // Note, className needs style scoping so this needs wrapping.
         if (prop === 'className') {
-          node =
-          /** @type {!Node} */
-          wrap(node);
+          node = /** @type {!Node} */(wrap(node));
         }
-
         node[prop] = value;
       }
     }
+
     /**
      * Overrides the `PropertiesChanged` implementation to introduce special
      * dirty check logic depending on the property & value being set:
@@ -1899,44 +1668,37 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   event (applies only for `notify: true` properties)
      * @return {boolean} Returns true if the property changed
      */
-
-
     _setPendingProperty(property, value, shouldNotify) {
       let propIsPath = this.__dataHasPaths && isPath(property);
       let prevProps = propIsPath ? this.__dataTemp : this.__data;
-
       if (this._shouldPropertyChange(property, value, prevProps[property])) {
         if (!this.__dataPending) {
           this.__dataPending = {};
           this.__dataOld = {};
-        } // Ensure old is captured from the last turn
-
-
+        }
+        // Ensure old is captured from the last turn
         if (!(property in this.__dataOld)) {
           this.__dataOld[property] = this.__data[property];
-        } // Paths are stored in temporary cache (cleared at end of turn),
+        }
+        // Paths are stored in temporary cache (cleared at end of turn),
         // which is used for dirty-checking, all others stored in __data
-
-
         if (propIsPath) {
           this.__dataTemp[property] = value;
         } else {
           this.__data[property] = value;
-        } // All changes go into pending property bag, passed to _propertiesChanged
-
-
-        this.__dataPending[property] = value; // Track properties that should notify separately
-
-        if (propIsPath || this[TYPES.NOTIFY] && this[TYPES.NOTIFY][property]) {
+        }
+        // All changes go into pending property bag, passed to _propertiesChanged
+        this.__dataPending[property] = value;
+        // Track properties that should notify separately
+        if (propIsPath || (this[TYPES.NOTIFY] && this[TYPES.NOTIFY][property])) {
           this.__dataToNotify = this.__dataToNotify || {};
           this.__dataToNotify[property] = shouldNotify;
         }
-
         return true;
       }
-
       return false;
     }
+
     /**
      * Overrides base implementation to ensure all accessors set `shouldNotify`
      * to true, for per-property notification tracking.
@@ -1946,13 +1708,12 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @param {*} value Value to set
      * @return {void}
      */
-
-
     _setProperty(property, value) {
       if (this._setPendingProperty(property, value, true)) {
         this._invalidateProperties();
       }
     }
+
     /**
      * Overrides `PropertyAccessor`'s default async queuing of
      * `_propertiesChanged`: if `__dataReady` is false (has not yet been
@@ -1962,13 +1723,12 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @override
      * @return {void}
      */
-
-
     _invalidateProperties() {
       if (this.__dataReady) {
         this._flushProperties();
       }
     }
+
     /**
      * Enqueues the given client on a list of pending clients, whose
      * pending property changes can later be flushed via a call to
@@ -1979,15 +1739,13 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _enqueueClient(client) {
       this.__dataPendingClients = this.__dataPendingClients || [];
-
       if (client !== this) {
         this.__dataPendingClients.push(client);
       }
     }
+
     /**
      * Flushes any clients previously enqueued via `_enqueueClient`, causing
      * their `_flushProperties` method to run.
@@ -1996,22 +1754,20 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _flushClients() {
       if (!this.__dataClientsReady) {
         this.__dataClientsReady = true;
-
-        this._readyClients(); // Override point where accessors are turned on; importantly,
+        this._readyClients();
+        // Override point where accessors are turned on; importantly,
         // this is after clients have fully readied, providing a guarantee
         // that any property effects occur only after all clients are ready.
-
-
         this.__dataReady = true;
       } else {
         this.__enableOrFlushClients();
       }
-    } // NOTE: We ensure clients either enable or flush as appropriate. This
+    }
+
+    // NOTE: We ensure clients either enable or flush as appropriate. This
     // handles two corner cases:
     // (1) clients flush properly when connected/enabled before the host
     // enables; e.g.
@@ -2023,17 +1779,12 @@ export const PropertyEffects = dedupingMixin(superClass => {
     //   (a) a template is runtime stamped and not yet connected/enabled
     //   (b) a host sets a property, causing stamped dom to flush
     //   (c) the stamped dom enables.
-
-
     __enableOrFlushClients() {
       let clients = this.__dataPendingClients;
-
       if (clients) {
         this.__dataPendingClients = null;
-
-        for (let i = 0; i < clients.length; i++) {
+        for (let i=0; i < clients.length; i++) {
           let client = clients[i];
-
           if (!client.__dataEnabled) {
             client._enableProperties();
           } else if (client.__dataPending) {
@@ -2042,6 +1793,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
         }
       }
     }
+
     /**
      * Perform any initial setup on client dom. Called before the first
      * `_flushProperties` call on client dom and before any element
@@ -2051,11 +1803,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _readyClients() {
       this.__enableOrFlushClients();
     }
+
     /**
      * Sets a bag of property changes to this instance, and
      * synchronously processes all effects of the properties as a batch.
@@ -2072,8 +1823,6 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @public
      */
-
-
     setProperties(props, setReadOnly) {
       for (let path in props) {
         if (setReadOnly || !this[TYPES.READ_ONLY] || !this[TYPES.READ_ONLY][path]) {
@@ -2084,9 +1833,9 @@ export const PropertyEffects = dedupingMixin(superClass => {
           this._setPendingPropertyOrPath(path, props[path], true);
         }
       }
-
       this._invalidateProperties();
     }
+
     /**
      * Overrides `PropertyAccessors` so that property accessor
      * side effects are not enabled until after client dom is fully ready.
@@ -2096,27 +1845,24 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @override
      * @return {void}
      */
-
-
     ready() {
       // It is important that `super.ready()` is not called here as it
       // immediately turns on accessors. Instead, we wait until `readyClients`
       // to enable accessors to provide a guarantee that clients are ready
       // before processing any accessors side effects.
-      this._flushProperties(); // If no data was pending, `_flushProperties` will not `flushClients`
+      this._flushProperties();
+      // If no data was pending, `_flushProperties` will not `flushClients`
       // so ensure this is done.
-
-
       if (!this.__dataClientsReady) {
         this._flushClients();
-      } // Before ready, client notifications do not trigger _flushProperties.
+      }
+      // Before ready, client notifications do not trigger _flushProperties.
       // Therefore a flush is necessary here if data has been set.
-
-
       if (this.__dataPending) {
         this._flushProperties();
       }
     }
+
     /**
      * Implements `PropertyAccessors`'s properties changed callback.
      *
@@ -2131,8 +1877,6 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   in `changedProps`
      * @return {void}
      */
-
-
     _propertiesChanged(currentProps, changedProps, oldProps) {
       // ----------------------------
       // let c = Object.getOwnPropertyNames(changedProps || {});
@@ -2141,36 +1885,34 @@ export const PropertyEffects = dedupingMixin(superClass => {
       // ----------------------------
       let hasPaths = this.__dataHasPaths;
       this.__dataHasPaths = false;
-      let notifyProps; // Compute properties
-
-      runComputedEffects(this, changedProps, oldProps, hasPaths); // Clear notify properties prior to possible reentry (propagate, observe),
+      let notifyProps;
+      // Compute properties
+      runComputedEffects(this, changedProps, oldProps, hasPaths);
+      // Clear notify properties prior to possible reentry (propagate, observe),
       // but after computing effects have a chance to add to them
-
       notifyProps = this.__dataToNotify;
-      this.__dataToNotify = null; // Propagate properties to clients
-
-      this._propagatePropertyChanges(changedProps, oldProps, hasPaths); // Flush clients
-
-
-      this._flushClients(); // Reflect properties
-
-
-      runEffects(this, this[TYPES.REFLECT], changedProps, oldProps, hasPaths); // Observe properties
-
-      runEffects(this, this[TYPES.OBSERVE], changedProps, oldProps, hasPaths); // Notify properties to host
-
+      this.__dataToNotify = null;
+      // Propagate properties to clients
+      this._propagatePropertyChanges(changedProps, oldProps, hasPaths);
+      // Flush clients
+      this._flushClients();
+      // Reflect properties
+      runEffects(this, this[TYPES.REFLECT], changedProps, oldProps, hasPaths);
+      // Observe properties
+      runEffects(this, this[TYPES.OBSERVE], changedProps, oldProps, hasPaths);
+      // Notify properties to host
       if (notifyProps) {
         runNotifyEffects(this, notifyProps, changedProps, oldProps, hasPaths);
-      } // Clear temporary cache at end of turn
-
-
+      }
+      // Clear temporary cache at end of turn
       if (this.__dataCounter == 1) {
         this.__dataTemp = {};
-      } // ----------------------------
+      }
+      // ----------------------------
       // window.debug && console.groupEnd(this.localName + '#' + this.id + ': ' + c);
       // ----------------------------
-
     }
+
     /**
      * Called to propagate any property changes to stamped template nodes
      * managed by this element.
@@ -2182,13 +1924,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _propagatePropertyChanges(changedProps, oldProps, hasPaths) {
       if (this[TYPES.PROPAGATE]) {
         runEffects(this, this[TYPES.PROPAGATE], changedProps, oldProps, hasPaths);
       }
-
       if (this.__templateInfo) {
         this._runEffectsForTemplate(this.__templateInfo, changedProps, oldProps, hasPaths);
       }
@@ -2196,19 +1935,19 @@ export const PropertyEffects = dedupingMixin(superClass => {
 
     _runEffectsForTemplate(templateInfo, changedProps, oldProps, hasPaths) {
       const baseRunEffects = (changedProps, hasPaths) => {
-        runEffects(this, templateInfo.propertyEffects, changedProps, oldProps, hasPaths, templateInfo.nodeList);
-
-        for (let info = templateInfo.firstChild; info; info = info.nextSibling) {
+        runEffects(this, templateInfo.propertyEffects, changedProps, oldProps,
+          hasPaths, templateInfo.nodeList);
+        for (let info=templateInfo.firstChild; info; info=info.nextSibling) {
           this._runEffectsForTemplate(info, changedProps, oldProps, hasPaths);
         }
       };
-
       if (templateInfo.runEffects) {
         templateInfo.runEffects(baseRunEffects, changedProps, hasPaths);
       } else {
         baseRunEffects(changedProps, hasPaths);
       }
     }
+
     /**
      * Aliases one data path as another, such that path notifications from one
      * are routed to the other.
@@ -2219,14 +1958,13 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @public
      */
-
-
     linkPaths(to, from) {
       to = normalize(to);
       from = normalize(from);
       this.__dataLinkedPaths = this.__dataLinkedPaths || {};
       this.__dataLinkedPaths[to] = from;
     }
+
     /**
      * Removes a data path alias previously established with `_linkPaths`.
      *
@@ -2238,15 +1976,13 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @public
      */
-
-
     unlinkPaths(path) {
       path = normalize(path);
-
       if (this.__dataLinkedPaths) {
         delete this.__dataLinkedPaths[path];
       }
     }
+
     /**
      * Notify that an array has changed.
      *
@@ -2281,17 +2017,12 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @public
      */
-
-
     notifySplices(path, splices) {
-      let info = {
-        path: ''
-      };
-      let array =
-      /** @type {Array} */
-      get(this, path, info);
+      let info = {path: ''};
+      let array = /** @type {Array} */(get(this, path, info));
       notifySplices(this, array, info.path, splices);
     }
+
     /**
      * Convenience method for reading a value from a path.
      *
@@ -2312,11 +2043,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      *   is undefined.
      * @public
      */
-
-
     get(path, root) {
       return get(root || this, path);
     }
+
     /**
      * Convenience method for setting a value to a path and notifying any
      * elements bound to the same path.
@@ -2339,21 +2069,18 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @public
      */
-
-
     set(path, value, root) {
       if (root) {
         set(root, path, value);
       } else {
-        if (!this[TYPES.READ_ONLY] || !this[TYPES.READ_ONLY][
-        /** @type {string} */
-        path]) {
+        if (!this[TYPES.READ_ONLY] || !this[TYPES.READ_ONLY][/** @type {string} */(path)]) {
           if (this._setPendingPropertyOrPath(path, value, true)) {
             this._invalidateProperties();
           }
         }
       }
     }
+
     /**
      * Adds items onto the end of the array at the path specified.
      *
@@ -2369,24 +2096,17 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {number} New length of the array.
      * @public
      */
-
-
     push(path, ...items) {
-      let info = {
-        path: ''
-      };
-      let array =
-      /** @type {Array}*/
-      get(this, path, info);
+      let info = {path: ''};
+      let array = /** @type {Array}*/(get(this, path, info));
       let len = array.length;
       let ret = array.push(...items);
-
       if (items.length) {
         notifySplice(this, array, info.path, len, items.length, []);
       }
-
       return ret;
     }
+
     /**
      * Removes an item from the end of array at the path specified.
      *
@@ -2401,24 +2121,17 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {*} Item that was removed.
      * @public
      */
-
-
     pop(path) {
-      let info = {
-        path: ''
-      };
-      let array =
-      /** @type {Array} */
-      get(this, path, info);
+      let info = {path: ''};
+      let array = /** @type {Array} */(get(this, path, info));
       let hadLength = Boolean(array.length);
       let ret = array.pop();
-
       if (hadLength) {
         notifySplice(this, array, info.path, array.length, 0, [ret]);
       }
-
       return ret;
     }
+
     /**
      * Starting from the start index specified, removes 0 or more items
      * from the array and inserts 0 or more new items in their place.
@@ -2437,21 +2150,16 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {!Array} Array of removed items.
      * @public
      */
-
-
     splice(path, start, deleteCount, ...items) {
-      let info = {
-        path: ''
-      };
-      let array =
-      /** @type {Array} */
-      get(this, path, info); // Normalize fancy native splice handling of crazy start values
-
+      let info = {path : ''};
+      let array = /** @type {Array} */(get(this, path, info));
+      // Normalize fancy native splice handling of crazy start values
       if (start < 0) {
         start = array.length - Math.floor(-start);
       } else if (start) {
         start = Math.floor(start);
-      } // array.splice does different things based on the number of arguments
+      }
+      // array.splice does different things based on the number of arguments
       // you pass in. Therefore, array.splice(0) and array.splice(0, undefined)
       // do different things. In the former, the whole array is cleared. In the
       // latter, no items are removed.
@@ -2459,30 +2167,28 @@ export const PropertyEffects = dedupingMixin(superClass => {
       // is actually passed in and then 2. determine how many arguments
       // we should pass on to the native array.splice
       //
-
-
-      let ret; // Omit any additional arguments if they were not passed in
-
+      let ret;
+      // Omit any additional arguments if they were not passed in
       if (arguments.length === 2) {
-        ret = array.splice(start); // Either start was undefined and the others were defined, but in this
-        // case we can safely pass on all arguments
-        //
-        // Note: this includes the case where none of the arguments were passed in,
-        // e.g. this.splice('array'). However, if both start and deleteCount
-        // are undefined, array.splice will not modify the array (as expected)
+        ret = array.splice(start);
+      // Either start was undefined and the others were defined, but in this
+      // case we can safely pass on all arguments
+      //
+      // Note: this includes the case where none of the arguments were passed in,
+      // e.g. this.splice('array'). However, if both start and deleteCount
+      // are undefined, array.splice will not modify the array (as expected)
       } else {
         ret = array.splice(start, deleteCount, ...items);
-      } // At the end, check whether any items were passed in (e.g. insertions)
+      }
+      // At the end, check whether any items were passed in (e.g. insertions)
       // or if the return array contains items (e.g. deletions).
       // Only notify if items were added or deleted.
-
-
       if (items.length || ret.length) {
         notifySplice(this, array, info.path, start, items.length, ret);
       }
-
       return ret;
     }
+
     /**
      * Removes an item from the beginning of array at the path specified.
      *
@@ -2497,24 +2203,17 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {*} Item that was removed.
      * @public
      */
-
-
     shift(path) {
-      let info = {
-        path: ''
-      };
-      let array =
-      /** @type {Array} */
-      get(this, path, info);
+      let info = {path: ''};
+      let array = /** @type {Array} */(get(this, path, info));
       let hadLength = Boolean(array.length);
       let ret = array.shift();
-
       if (hadLength) {
         notifySplice(this, array, info.path, 0, 0, [ret]);
       }
-
       return ret;
     }
+
     /**
      * Adds items onto the beginning of the array at the path specified.
      *
@@ -2530,23 +2229,16 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {number} New length of the array.
      * @public
      */
-
-
     unshift(path, ...items) {
-      let info = {
-        path: ''
-      };
-      let array =
-      /** @type {Array} */
-      get(this, path, info);
+      let info = {path: ''};
+      let array = /** @type {Array} */(get(this, path, info));
       let ret = array.unshift(...items);
-
       if (items.length) {
         notifySplice(this, array, info.path, 0, items.length, []);
       }
-
       return ret;
     }
+
     /**
      * Notify that a path has changed.
      *
@@ -2561,32 +2253,25 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @public
      */
-
-
     notifyPath(path, value) {
       /** @type {string} */
       let propPath;
-
       if (arguments.length == 1) {
         // Get value if not supplied
-        let info = {
-          path: ''
-        };
+        let info = {path: ''};
         value = get(this, path, info);
         propPath = info.path;
       } else if (Array.isArray(path)) {
         // Normalize path if needed
         propPath = normalize(path);
       } else {
-        propPath =
-        /** @type{string} */
-        path;
+        propPath = /** @type{string} */(path);
       }
-
       if (this._setPendingPropertyOrPath(propPath, value, true, true)) {
         this._invalidateProperties();
       }
     }
+
     /**
      * Equivalent to static `createReadOnlyProperty` API but can be called on
      * an instance to add effects at runtime.  See that method for
@@ -2599,19 +2284,15 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _createReadOnlyProperty(property, protectedSetter) {
       this._addPropertyEffect(property, TYPES.READ_ONLY);
-
       if (protectedSetter) {
-        this['_set' + upper(property)] =
-        /** @this {PropertyEffects} */
-        function (value) {
+        this['_set' + upper(property)] = /** @this {PropertyEffects} */function(value) {
           this._setProperty(property, value);
         };
       }
     }
+
     /**
      * Equivalent to static `createPropertyObserver` API but can be called on
      * an instance to add effects at runtime.  See that method for
@@ -2626,35 +2307,18 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _createPropertyObserver(property, method, dynamicFn) {
-      let info = {
-        property,
-        method,
-        dynamicFn: Boolean(dynamicFn)
-      };
-
+      let info = { property, method, dynamicFn: Boolean(dynamicFn) };
       this._addPropertyEffect(property, TYPES.OBSERVE, {
-        fn: runObserverEffect,
-        info,
-        trigger: {
-          name: property
-        }
+        fn: runObserverEffect, info, trigger: {name: property}
       });
-
       if (dynamicFn) {
-        this._addPropertyEffect(
-        /** @type {string} */
-        method, TYPES.OBSERVE, {
-          fn: runObserverEffect,
-          info,
-          trigger: {
-            name: method
-          }
+        this._addPropertyEffect(/** @type {string} */(method), TYPES.OBSERVE, {
+          fn: runObserverEffect, info, trigger: {name: method}
         });
       }
     }
+
     /**
      * Equivalent to static `createMethodObserver` API but can be called on
      * an instance to add effects at runtime.  See that method for
@@ -2667,17 +2331,14 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _createMethodObserver(expression, dynamicFn) {
       let sig = parseMethod(expression);
-
       if (!sig) {
         throw new Error("Malformed observer expression '" + expression + "'");
       }
-
       createMethodEffect(this, sig, TYPES.OBSERVE, runMethodEffect, null, dynamicFn);
     }
+
     /**
      * Equivalent to static `createNotifyingProperty` API but can be called on
      * an instance to add effects at runtime.  See that method for
@@ -2688,8 +2349,6 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _createNotifyingProperty(property) {
       this._addPropertyEffect(property, TYPES.NOTIFY, {
         fn: runNotifyEffect,
@@ -2699,6 +2358,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
         }
       });
     }
+
     /**
      * Equivalent to static `createReflectedProperty` API but can be called on
      * an instance to add effects at runtime.  See that method for
@@ -2710,13 +2370,11 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @suppress {missingProperties} go/missingfnprops
      */
-
-
     _createReflectedProperty(property) {
       let attr = this.constructor.attributeNameForProperty(property);
-
       if (attr[0] === '-') {
-        console.warn('Property ' + property + ' cannot be reflected to attribute ' + attr + ' because "-" is not a valid starting attribute name. Use a lowercase first letter for the property instead.');
+        console.warn('Property ' + property + ' cannot be reflected to attribute ' +
+          attr + ' because "-" is not a valid starting attribute name. Use a lowercase first letter for the property instead.');
       } else {
         this._addPropertyEffect(property, TYPES.REFLECT, {
           fn: runReflectEffect,
@@ -2726,6 +2384,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
         });
       }
     }
+
     /**
      * Equivalent to static `createComputedProperty` API but can be called on
      * an instance to add effects at runtime.  See that method for
@@ -2739,20 +2398,17 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _createComputedProperty(property, expression, dynamicFn) {
       let sig = parseMethod(expression);
-
       if (!sig) {
         throw new Error("Malformed computed expression '" + expression + "'");
       }
-
-      const info = createMethodEffect(this, sig, TYPES.COMPUTE, runComputedEffect, property, dynamicFn); // Effects are normally stored as map of dependency->effect, but for
+      const info = createMethodEffect(this, sig, TYPES.COMPUTE, runComputedEffect, property, dynamicFn);
+      // Effects are normally stored as map of dependency->effect, but for
       // ordered computation, we also need tree of computedProp->dependencies
-
       ensureOwnEffectMap(this, COMPUTE_INFO)[property] = info;
     }
+
     /**
      * Gather the argument values for a method specified in the provided array
      * of argument metadata.
@@ -2766,21 +2422,11 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {!Array<*>} Array of argument values
      * @private
      */
-
-
     _marshalArgs(args, path, props) {
       const data = this.__data;
       const values = [];
-
-      for (let i = 0, l = args.length; i < l; i++) {
-        let {
-          name,
-          structured,
-          wildcard,
-          value,
-          literal
-        } = args[i];
-
+      for (let i=0, l=args.length; i<l; i++) {
+        let {name, structured, wildcard, value, literal} = args[i];
         if (!literal) {
           if (wildcard) {
             const matches = isDescendant(name, path);
@@ -2793,19 +2439,18 @@ export const PropertyEffects = dedupingMixin(superClass => {
           } else {
             value = structured ? getArgValue(data, props, name) : data[name];
           }
-        } // When the `legacyUndefined` flag is enabled, pass a no-op value
+        }
+        // When the `legacyUndefined` flag is enabled, pass a no-op value
         // so that the observer, computed property, or compound binding is aborted.
-
-
         if (legacyUndefined && !this._overrideLegacyUndefined && value === undefined && args.length > 1) {
           return NOOP;
         }
-
         values[i] = value;
       }
-
       return values;
-    } // -- static class methods ------------
+    }
+
+    // -- static class methods ------------
 
     /**
      * Ensures an accessor exists for the specified property, and adds
@@ -2844,11 +2489,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static addPropertyEffect(property, type, effect) {
       this.prototype._addPropertyEffect(property, type, effect);
     }
+
     /**
      * Creates a single-property observer for the given property.
      *
@@ -2860,11 +2504,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static createPropertyObserver(property, method, dynamicFn) {
       this.prototype._createPropertyObserver(property, method, dynamicFn);
     }
+
     /**
      * Creates a multi-property "method observer" based on the provided
      * expression, which should be a string in the form of a normal JavaScript
@@ -2879,11 +2522,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static createMethodObserver(expression, dynamicFn) {
       this.prototype._createMethodObserver(expression, dynamicFn);
     }
+
     /**
      * Causes the setter for the given property to dispatch `<property>-changed`
      * events to notify of changes to the property.
@@ -2893,11 +2535,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static createNotifyingProperty(property) {
       this.prototype._createNotifyingProperty(property);
     }
+
     /**
      * Creates a read-only accessor for the given property.
      *
@@ -2915,11 +2556,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static createReadOnlyProperty(property, protectedSetter) {
       this.prototype._createReadOnlyProperty(property, protectedSetter);
     }
+
     /**
      * Causes the setter for the given property to reflect the property value
      * to a (dash-cased) attribute of the same name.
@@ -2929,11 +2569,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static createReflectedProperty(property) {
       this.prototype._createReflectedProperty(property);
     }
+
     /**
      * Creates a computed property whose value is set to the result of the
      * method described by the given `expression` each time one or more
@@ -2949,11 +2588,10 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static createComputedProperty(property, expression, dynamicFn) {
       this.prototype._createComputedProperty(property, expression, dynamicFn);
     }
+
     /**
      * Parses the provided template to ensure binding effects are created
      * for them, and then ensures property accessors are created for any
@@ -2967,11 +2605,11 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static bindTemplate(template) {
       return this.prototype._bindTemplate(template);
-    } // -- binding ----------------------------------------------
+    }
+
+    // -- binding ----------------------------------------------
 
     /*
      * Overview of binding flow:
@@ -3030,28 +2668,21 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @suppress {missingProperties} go/missingfnprops
      */
-
-
     _bindTemplate(template, instanceBinding) {
       let templateInfo = this.constructor._parseTemplate(template);
-
-      let wasPreBound = this.__preBoundTemplateInfo == templateInfo; // Optimization: since this is called twice for proto-bound templates,
+      let wasPreBound = this.__preBoundTemplateInfo == templateInfo;
+      // Optimization: since this is called twice for proto-bound templates,
       // don't attempt to recreate accessors if this template was pre-bound
-
       if (!wasPreBound) {
         for (let prop in templateInfo.propertyEffects) {
           this._createPropertyAccessor(prop);
         }
       }
-
       if (instanceBinding) {
         // For instance-time binding, create instance of template metadata
         // and link into tree of templates if necessary
-        templateInfo =
-        /** @type {!TemplateInfo} */
-        Object.create(templateInfo);
+        templateInfo = /** @type {!TemplateInfo} */(Object.create(templateInfo));
         templateInfo.wasPreBound = wasPreBound;
-
         if (!this.__templateInfo) {
           // Set the info to the root of the tree
           this.__templateInfo = templateInfo;
@@ -3073,7 +2704,6 @@ export const PropertyEffects = dedupingMixin(superClass => {
           templateInfo.parent = parent;
           parent.lastChild = templateInfo;
           templateInfo.previousSibling = previous;
-
           if (previous) {
             previous.nextSibling = templateInfo;
           } else {
@@ -3083,9 +2713,9 @@ export const PropertyEffects = dedupingMixin(superClass => {
       } else {
         this.__preBoundTemplateInfo = templateInfo;
       }
-
       return templateInfo;
     }
+
     /**
      * Adds a property effect to the given template metadata, which is run
      * at the "propagate" stage of `_propertiesChanged` when the template
@@ -3100,8 +2730,6 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static _addTemplatePropertyEffect(templateInfo, prop, effect) {
       let hostProps = templateInfo.hostProps = templateInfo.hostProps || {};
       hostProps[prop] = true;
@@ -3109,6 +2737,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
       let propEffects = effects[prop] = effects[prop] || [];
       propEffects.push(effect);
     }
+
     /**
      * Stamps the provided template and performs instance-time setup for
      * Polymer template features, including data bindings, declarative event
@@ -3132,33 +2761,26 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @override
      * @protected
      */
-
-
     _stampTemplate(template, templateInfo) {
-      templateInfo = templateInfo ||
-      /** @type {!TemplateInfo} */
-      this._bindTemplate(template, true); // Ensures that created dom is `_enqueueClient`'d to this element so
+      templateInfo =  templateInfo || /** @type {!TemplateInfo} */(this._bindTemplate(template, true));
+      // Ensures that created dom is `_enqueueClient`'d to this element so
       // that it can be flushed on next call to `_flushProperties`
-
       hostStack.push(this);
-
       let dom = super._stampTemplate(template, templateInfo);
-
-      hostStack.pop(); // Add template-instance-specific data to instanced templateInfo
-
-      templateInfo.nodeList = dom.nodeList; // Capture child nodes to allow unstamping of non-prototypical templates
-
+      hostStack.pop();
+      // Add template-instance-specific data to instanced templateInfo
+      templateInfo.nodeList = dom.nodeList;
+      // Capture child nodes to allow unstamping of non-prototypical templates
       if (!templateInfo.wasPreBound) {
         let nodes = templateInfo.childNodes = [];
-
-        for (let n = dom.firstChild; n; n = n.nextSibling) {
+        for (let n=dom.firstChild; n; n=n.nextSibling) {
           nodes.push(n);
         }
       }
-
-      dom.templateInfo = templateInfo; // Setup compound storage, 2-way listeners, and dataHost for bindings
-
-      setupBindings(this, templateInfo); // Flush properties into template nodes; the check on `__dataClientsReady`
+      dom.templateInfo = templateInfo;
+      // Setup compound storage, 2-way listeners, and dataHost for bindings
+      setupBindings(this, templateInfo);
+      // Flush properties into template nodes; the check on `__dataClientsReady`
       // ensures we don't needlessly run effects for an element's initial
       // prototypical template stamping since they will happen as a part of the
       // first call to `_propertiesChanged`. This flag is set to true
@@ -3167,15 +2789,13 @@ export const PropertyEffects = dedupingMixin(superClass => {
       // this host (e.g. a fastDomIf `dom-if` being forced to render
       // synchronously), this flag ensures effects for runtime-stamped templates
       // are run at this point during the initial element boot-up.
-
       if (this.__dataClientsReady) {
         this._runEffectsForTemplate(templateInfo, this.__data, null, false);
-
         this._flushClients();
       }
-
       return dom;
     }
+
     /**
      * Removes and unbinds the nodes previously contained in the provided
      * DocumentFragment returned from `_stampTemplate`.
@@ -3186,41 +2806,32 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @return {void}
      * @protected
      */
-
-
     _removeBoundDom(dom) {
       // Unlink template info; Note that while the child is unlinked from its
       // parent list, a template's `parent` reference is never removed, since
       // this is is determined by the tree structure and applied at
       // `applyTemplateInfo` time.
       const templateInfo = dom.templateInfo;
-      const {
-        previousSibling,
-        nextSibling,
-        parent
-      } = templateInfo;
-
+      const {previousSibling, nextSibling, parent} = templateInfo;
       if (previousSibling) {
         previousSibling.nextSibling = nextSibling;
       } else if (parent) {
         parent.firstChild = nextSibling;
       }
-
       if (nextSibling) {
         nextSibling.previousSibling = previousSibling;
       } else if (parent) {
         parent.lastChild = previousSibling;
       }
-
-      templateInfo.nextSibling = templateInfo.previousSibling = null; // Remove stamped nodes
-
+      templateInfo.nextSibling = templateInfo.previousSibling = null;
+      // Remove stamped nodes
       let nodes = templateInfo.childNodes;
-
-      for (let i = 0; i < nodes.length; i++) {
+      for (let i=0; i<nodes.length; i++) {
         let node = nodes[i];
         wrap(wrap(node).parentNode).removeChild(node);
       }
     }
+
     /**
      * Overrides default `TemplateStamp` implementation to add support for
      * parsing bindings from `TextNode`'s' `textContent`.  A `bindings`
@@ -3238,16 +2849,13 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
      * @nocollapse
      */
-
-
     static _parseTemplateNode(node, templateInfo, nodeInfo) {
       // TODO(https://github.com/google/closure-compiler/issues/3240):
       //     Change back to just super.methodCall()
-      let noted = propertyEffectsBase._parseTemplateNode.call(this, node, templateInfo, nodeInfo);
-
+      let noted = propertyEffectsBase._parseTemplateNode.call(
+        this, node, templateInfo, nodeInfo);
       if (node.nodeType === Node.TEXT_NODE) {
         let parts = this._parseBindings(node.textContent, templateInfo);
-
         if (parts) {
           // Initialize the textContent with any literal parts
           // NOTE: default to a space here so the textNode remains; some browsers
@@ -3257,9 +2865,9 @@ export const PropertyEffects = dedupingMixin(superClass => {
           noted = true;
         }
       }
-
       return noted;
     }
+
     /**
      * Overrides default `TemplateStamp` implementation to add support for
      * parsing bindings from attributes.  A `bindings`
@@ -3279,69 +2887,61 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
      * @nocollapse
      */
-
-
     static _parseTemplateNodeAttribute(node, templateInfo, nodeInfo, name, value) {
       let parts = this._parseBindings(value, templateInfo);
-
       if (parts) {
         // Attribute or property
         let origName = name;
-        let kind = 'property'; // The only way we see a capital letter here is if the attr has
+        let kind = 'property';
+        // The only way we see a capital letter here is if the attr has
         // a capital letter in it per spec. In this case, to make sure
         // this binding works, we go ahead and make the binding to the attribute.
-
         if (capitalAttributeRegex.test(name)) {
           kind = 'attribute';
-        } else if (name[name.length - 1] == '$') {
+        } else if (name[name.length-1] == '$') {
           name = name.slice(0, -1);
           kind = 'attribute';
-        } // Initialize attribute bindings with any literal parts
-
-
+        }
+        // Initialize attribute bindings with any literal parts
         let literal = literalFromParts(parts);
-
         if (literal && kind == 'attribute') {
           // Ensure a ShadyCSS template scoped style is not removed
           // when a class$ binding's initial literal value is set.
           if (name == 'class' && node.hasAttribute('class')) {
             literal += ' ' + node.getAttribute(name);
           }
-
           node.setAttribute(name, literal);
-        } // support disable-upgrade
-
-
+        }
+        // support disable-upgrade
         if (kind == 'attribute' && origName == 'disable-upgrade$') {
           node.setAttribute(name, '');
-        } // Clear attribute before removing, since IE won't allow removing
+        }
+        // Clear attribute before removing, since IE won't allow removing
         // `value` attribute if it previously had a value (can't
         // unconditionally set '' before removing since attributes with `$`
         // can't be set using setAttribute)
-
-
         if (node.localName === 'input' && origName === 'value') {
           node.setAttribute(origName, '');
-        } // Remove annotation
-
-
-        node.removeAttribute(origName); // Case hackery: attributes are lower-case, but bind targets
+        }
+        // Remove annotation
+        node.removeAttribute(origName);
+        // Case hackery: attributes are lower-case, but bind targets
         // (properties) are case sensitive. Gambit is to map dash-case to
         // camel-case: `foo-bar` becomes `fooBar`.
         // Attribute bindings are excepted.
-
         if (kind === 'property') {
           name = dashToCamelCase(name);
         }
-
         addBinding(this, templateInfo, nodeInfo, kind, name, parts, literal);
         return true;
       } else {
         // TODO(https://github.com/google/closure-compiler/issues/3240):
         //     Change back to just super.methodCall()
-        return propertyEffectsBase._parseTemplateNodeAttribute.call(this, node, templateInfo, nodeInfo, name, value);
+        return propertyEffectsBase._parseTemplateNodeAttribute.call(
+          this, node, templateInfo, nodeInfo, name, value);
       }
     }
+
     /**
      * Overrides default `TemplateStamp` implementation to add support for
      * binding the properties that a nested template depends on to the template
@@ -3356,34 +2956,30 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @suppress {missingProperties} Interfaces in closure do not inherit statics, but classes do
      * @nocollapse
      */
-
-
     static _parseTemplateNestedTemplate(node, templateInfo, nodeInfo) {
       // TODO(https://github.com/google/closure-compiler/issues/3240):
       //     Change back to just super.methodCall()
-      let noted = propertyEffectsBase._parseTemplateNestedTemplate.call(this, node, templateInfo, nodeInfo);
-
+      let noted = propertyEffectsBase._parseTemplateNestedTemplate.call(
+        this, node, templateInfo, nodeInfo);
       const parent = node.parentNode;
       const nestedTemplateInfo = nodeInfo.templateInfo;
       const isDomIf = parent.localName === 'dom-if';
-      const isDomRepeat = parent.localName === 'dom-repeat'; // Remove nested template and redirect its host bindings & templateInfo
+      const isDomRepeat = parent.localName === 'dom-repeat';
+      // Remove nested template and redirect its host bindings & templateInfo
       // onto the parent (dom-if/repeat element)'s nodeInfo
-
       if (removeNestedTemplates && (isDomIf || isDomRepeat)) {
-        parent.removeChild(node); // Use the parent's nodeInfo (for the dom-if/repeat) to record the
+        parent.removeChild(node);
+        // Use the parent's nodeInfo (for the dom-if/repeat) to record the
         // templateInfo, and use that for any host property bindings below
-
         nodeInfo = nodeInfo.parentInfo;
-        nodeInfo.templateInfo = nestedTemplateInfo; // Ensure the parent dom-if/repeat is noted since it now may have host
+        nodeInfo.templateInfo = nestedTemplateInfo;
+        // Ensure the parent dom-if/repeat is noted since it now may have host
         // bindings; it may not have been if it did not have its own bindings
-
         nodeInfo.noted = true;
         noted = false;
-      } // Merge host props into outer template and add bindings
-
-
+      }
+      // Merge host props into outer template and add bindings
       let hostProps = nestedTemplateInfo.hostProps;
-
       if (fastDomIf && isDomIf) {
         // `fastDomIf` mode uses runtime-template stamping to add accessors/
         // effects to properties used in its template; as such we don't need to
@@ -3393,30 +2989,25 @@ export const PropertyEffects = dedupingMixin(superClass => {
         // TemplateInstance's `hostProps` so that they are forwarded to the
         // TemplateInstance.
         if (hostProps) {
-          templateInfo.hostProps = Object.assign(templateInfo.hostProps || {}, hostProps); // Ensure the dom-if is noted so that it has a __dataHost, since
+          templateInfo.hostProps =
+            Object.assign(templateInfo.hostProps || {}, hostProps);
+          // Ensure the dom-if is noted so that it has a __dataHost, since
           // `fastDomIf` uses the host for runtime template stamping; note this
           // was already ensured above in the `removeNestedTemplates` case
-
           if (!removeNestedTemplates) {
             nodeInfo.parentInfo.noted = true;
           }
         }
       } else {
         let mode = '{';
-
         for (let source in hostProps) {
-          let parts = [{
-            mode,
-            source,
-            dependencies: [source],
-            hostProp: true
-          }];
+          let parts = [{ mode, source, dependencies: [source], hostProp: true }];
           addBinding(this, templateInfo, nodeInfo, 'property', '_host_' + source, parts);
         }
       }
-
       return noted;
     }
+
     /**
      * Called to parse text in a template (either attribute values or
      * textContent) into binding metadata.
@@ -3462,60 +3053,43 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static _parseBindings(text, templateInfo) {
       let parts = [];
       let lastIndex = 0;
-      let m; // Example: "literal1{{prop}}literal2[[!compute(foo,bar)]]final"
+      let m;
+      // Example: "literal1{{prop}}literal2[[!compute(foo,bar)]]final"
       // Regex matches:
       //        Iteration 1:  Iteration 2:
       // m[1]: '{{'          '[['
       // m[2]: ''            '!'
       // m[3]: 'prop'        'compute(foo,bar)'
-
       while ((m = bindingRegex.exec(text)) !== null) {
         // Add literal part
         if (m.index > lastIndex) {
-          parts.push({
-            literal: text.slice(lastIndex, m.index)
-          });
-        } // Add binding part
-
-
+          parts.push({literal: text.slice(lastIndex, m.index)});
+        }
+        // Add binding part
         let mode = m[1][0];
         let negate = Boolean(m[2]);
         let source = m[3].trim();
-        let customEvent = false,
-            notifyEvent = '',
-            colon = -1;
-
+        let customEvent = false, notifyEvent = '', colon = -1;
         if (mode == '{' && (colon = source.indexOf('::')) > 0) {
           notifyEvent = source.substring(colon + 2);
           source = source.substring(0, colon);
           customEvent = true;
         }
-
         let signature = parseMethod(source);
         let dependencies = [];
-
         if (signature) {
           // Inline computed function
-          let {
-            args,
-            methodName
-          } = signature;
-
-          for (let i = 0; i < args.length; i++) {
+          let {args, methodName} = signature;
+          for (let i=0; i<args.length; i++) {
             let arg = args[i];
-
             if (!arg.literal) {
               dependencies.push(arg);
             }
           }
-
           let dynamicFns = templateInfo.dynamicFns;
-
           if (dynamicFns && dynamicFns[methodName] || signature.static) {
             dependencies.push(methodName);
             signature.dynamicFn = true;
@@ -3524,36 +3098,28 @@ export const PropertyEffects = dedupingMixin(superClass => {
           // Property or path
           dependencies.push(source);
         }
-
         parts.push({
-          source,
-          mode,
-          negate,
-          customEvent,
-          signature,
-          dependencies,
+          source, mode, negate, customEvent, signature, dependencies,
           event: notifyEvent
         });
         lastIndex = bindingRegex.lastIndex;
-      } // Add a final literal part
-
-
+      }
+      // Add a final literal part
       if (lastIndex && lastIndex < text.length) {
         let literal = text.substring(lastIndex);
-
         if (literal) {
           parts.push({
             literal: literal
           });
         }
       }
-
       if (parts.length) {
         return parts;
       } else {
         return null;
       }
     }
+
     /**
      * Called to evaluate a previously parsed binding part based on a set of
      * one or more changed dependencies.
@@ -3569,11 +3135,8 @@ export const PropertyEffects = dedupingMixin(superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static _evaluateBinding(inst, part, path, props, oldProps, hasPaths) {
       let value;
-
       if (part.signature) {
         value = runMethodEffect(inst, path, props, oldProps, part.signature);
       } else if (path != part.source) {
@@ -3585,11 +3148,9 @@ export const PropertyEffects = dedupingMixin(superClass => {
           value = inst.__data[path];
         }
       }
-
       if (part.negate) {
         value = !value;
       }
-
       return value;
     }
 
@@ -3597,6 +3158,7 @@ export const PropertyEffects = dedupingMixin(superClass => {
 
   return PropertyEffects;
 });
+
 /**
  * Stack for enqueuing client dom created by a host element.
  *
@@ -3620,5 +3182,6 @@ export const PropertyEffects = dedupingMixin(superClass => {
  *
  * @private
  */
-
 const hostStack = [];
+
+export { PropertyEffects };

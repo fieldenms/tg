@@ -1,3 +1,6 @@
+import '../polymer/polymer-legacy.js';
+import { IronMeta } from '../iron-meta/iron-meta.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,13 +11,12 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { IronMeta } from "../iron-meta/iron-meta.js";
+
 /**
  * Singleton IronMeta instance.
  */
+let IronValidatableBehaviorMeta = null;
 
-export let IronValidatableBehaviorMeta = null;
 /**
  * `Use IronValidatableBehavior` to implement an element that validates
  * user input. Use the related `IronValidatorBehavior` to add custom
@@ -42,15 +44,13 @@ export let IronValidatableBehaviorMeta = null;
  * @demo demo/index.html
  * @polymerBehavior
  */
+const IronValidatableBehavior = {
 
-export const IronValidatableBehavior = {
   properties: {
     /**
      * Name of the validator to use.
      */
-    validator: {
-      type: String
-    },
+    validator: {type: String},
 
     /**
      * True if the last call to `validate` is invalid.
@@ -61,14 +61,14 @@ export const IronValidatableBehavior = {
       type: Boolean,
       value: false,
       observer: '_invalidChanged'
-    }
+    },
   },
-  registered: function () {
-    IronValidatableBehaviorMeta = new IronMeta({
-      type: 'validator'
-    });
+
+  registered: function() {
+    IronValidatableBehaviorMeta = new IronMeta({type: 'validator'});
   },
-  _invalidChanged: function () {
+
+  _invalidChanged: function() {
     if (this.invalid) {
       this.setAttribute('aria-invalid', 'true');
     } else {
@@ -79,13 +79,14 @@ export const IronValidatableBehavior = {
   /* Recompute this every time it's needed, because we don't know if the
    * underlying IronValidatableBehaviorMeta has changed. */
   get _validator() {
-    return IronValidatableBehaviorMeta && IronValidatableBehaviorMeta.byKey(this.validator);
+    return IronValidatableBehaviorMeta &&
+        IronValidatableBehaviorMeta.byKey(this.validator);
   },
 
   /**
    * @return {boolean} True if the validator `validator` exists.
    */
-  hasValidator: function () {
+  hasValidator: function() {
     return this._validator != null;
   },
 
@@ -93,17 +94,21 @@ export const IronValidatableBehavior = {
    * Returns true if the `value` is valid, and updates `invalid`. If you want
    * your element to have custom validation logic, do not override this method;
    * override `_getValidity(value)` instead.
-    * @param {Object} value Deprecated: The value to be validated. By default,
+
+   * @param {Object} value Deprecated: The value to be validated. By default,
    * it is passed to the validator's `validate()` function, if a validator is
    set.
    * If this argument is not specified, then the element's `value` property
    * is used, if it exists.
    * @return {boolean} True if `value` is valid.
    */
-  validate: function (value) {
+  validate: function(value) {
     // If this is an element that also has a value property, and there was
     // no explicit value argument passed, use the element's property instead.
-    if (value === undefined && this.value !== undefined) this.invalid = !this._getValidity(this.value);else this.invalid = !this._getValidity(value);
+    if (value === undefined && this.value !== undefined)
+      this.invalid = !this._getValidity(this.value);
+    else
+      this.invalid = !this._getValidity(value);
     return !this.invalid;
   },
 
@@ -116,11 +121,13 @@ export const IronValidatableBehavior = {
    * @param {Object} value The value to be validated.
    * @return {boolean} True if `value` is valid.
    */
-  _getValidity: function (value) {
+
+  _getValidity: function(value) {
     if (this.hasValidator()) {
       return this._validator.validate(value);
     }
-
     return true;
   }
 };
+
+export { IronValidatableBehavior, IronValidatableBehaviorMeta };

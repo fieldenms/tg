@@ -1,3 +1,9 @@
+import '../polymer/polymer-legacy.js';
+import { IronA11yKeysBehavior } from '../iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { dom } from '../polymer/lib/legacy/polymer.dom.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -8,28 +14,29 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { IronA11yKeysBehavior } from "../iron-a11y-keys-behavior/iron-a11y-keys-behavior.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { dom } from "../polymer/lib/legacy/polymer.dom.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
+
 var Utility = {
-  distance: function (x1, y1, x2, y2) {
-    var xDelta = x1 - x2;
-    var yDelta = y1 - y2;
+  distance: function(x1, y1, x2, y2) {
+    var xDelta = (x1 - x2);
+    var yDelta = (y1 - y2);
+
     return Math.sqrt(xDelta * xDelta + yDelta * yDelta);
   },
-  now: window.performance && window.performance.now ? window.performance.now.bind(window.performance) : Date.now
+
+  now: window.performance && window.performance.now ?
+      window.performance.now.bind(window.performance) :
+      Date.now
 };
+
 /**
  * @param {HTMLElement} element
  * @constructor
  */
-
 function ElementMetrics(element) {
   this.element = element;
   this.width = this.boundingRect.width;
   this.height = this.boundingRect.height;
+
   this.size = Math.max(this.width, this.height);
 }
 
@@ -38,32 +45,36 @@ ElementMetrics.prototype = {
     return this.element.getBoundingClientRect();
   },
 
-  furthestCornerDistanceFrom: function (x, y) {
+  furthestCornerDistanceFrom: function(x, y) {
     var topLeft = Utility.distance(x, y, 0, 0);
     var topRight = Utility.distance(x, y, this.width, 0);
     var bottomLeft = Utility.distance(x, y, 0, this.height);
     var bottomRight = Utility.distance(x, y, this.width, this.height);
+
     return Math.max(topLeft, topRight, bottomLeft, bottomRight);
   }
 };
+
 /**
  * @param {HTMLElement} element
  * @constructor
  */
-
 function Ripple(element) {
   this.element = element;
   this.color = window.getComputedStyle(element).color;
+
   this.wave = document.createElement('div');
   this.waveContainer = document.createElement('div');
   this.wave.style.backgroundColor = this.color;
   this.wave.classList.add('wave');
   this.waveContainer.classList.add('wave-container');
   dom(this.waveContainer).appendChild(this.wave);
+
   this.resetInteractionState();
 }
 
 Ripple.MAX_RADIUS = 300;
+
 Ripple.prototype = {
   get recenters() {
     return this.element.recenters;
@@ -116,10 +127,13 @@ Ripple.prototype = {
   get radius() {
     var width2 = this.containerMetrics.width * this.containerMetrics.width;
     var height2 = this.containerMetrics.height * this.containerMetrics.height;
-    var waveRadius = Math.min(Math.sqrt(width2 + height2), Ripple.MAX_RADIUS) * 1.1 + 5;
+    var waveRadius =
+        Math.min(Math.sqrt(width2 + height2), Ripple.MAX_RADIUS) * 1.1 + 5;
+
     var duration = 1.1 - 0.2 * (waveRadius / Ripple.MAX_RADIUS);
     var timeNow = this.mouseInteractionSeconds / duration;
     var size = waveRadius * (1 - Math.pow(80, -timeNow));
+
     return Math.abs(size);
   },
 
@@ -128,7 +142,10 @@ Ripple.prototype = {
       return this.initialOpacity;
     }
 
-    return Math.max(0, this.initialOpacity - this.mouseUpElapsedSeconds * this.opacityDecayVelocity);
+    return Math.max(
+        0,
+        this.initialOpacity -
+            this.mouseUpElapsedSeconds * this.opacityDecayVelocity);
   },
 
   get outerOpacity() {
@@ -136,23 +153,28 @@ Ripple.prototype = {
     // of the wavefront (waveOpacity).
     var outerOpacity = this.mouseUpElapsedSeconds * 0.3;
     var waveOpacity = this.opacity;
+
     return Math.max(0, Math.min(outerOpacity, waveOpacity));
   },
 
   get isOpacityFullyDecayed() {
-    return this.opacity < 0.01 && this.radius >= Math.min(this.maxRadius, Ripple.MAX_RADIUS);
+    return this.opacity < 0.01 &&
+        this.radius >= Math.min(this.maxRadius, Ripple.MAX_RADIUS);
   },
 
   get isRestingAtMaxRadius() {
-    return this.opacity >= this.initialOpacity && this.radius >= Math.min(this.maxRadius, Ripple.MAX_RADIUS);
+    return this.opacity >= this.initialOpacity &&
+        this.radius >= Math.min(this.maxRadius, Ripple.MAX_RADIUS);
   },
 
   get isAnimationComplete() {
-    return this.mouseUpStart ? this.isOpacityFullyDecayed : this.isRestingAtMaxRadius;
+    return this.mouseUpStart ? this.isOpacityFullyDecayed :
+                               this.isRestingAtMaxRadius;
   },
 
   get translationFraction() {
-    return Math.min(1, this.radius / this.containerMetrics.size * 2 / Math.sqrt(2));
+    return Math.min(
+        1, this.radius / this.containerMetrics.size * 2 / Math.sqrt(2));
   },
 
   get xNow() {
@@ -175,74 +197,97 @@ Ripple.prototype = {
     return this.mouseDownStart && !this.mouseUpStart;
   },
 
-  resetInteractionState: function () {
+  resetInteractionState: function() {
     this.maxRadius = 0;
     this.mouseDownStart = 0;
     this.mouseUpStart = 0;
+
     this.xStart = 0;
     this.yStart = 0;
     this.xEnd = 0;
     this.yEnd = 0;
     this.slideDistance = 0;
+
     this.containerMetrics = new ElementMetrics(this.element);
   },
-  draw: function () {
+
+  draw: function() {
     var scale;
     var dx;
     var dy;
-    this.wave.style.opacity = this.opacity;
-    scale = this.radius / (this.containerMetrics.size / 2);
-    dx = this.xNow - this.containerMetrics.width / 2;
-    dy = this.yNow - this.containerMetrics.height / 2; // 2d transform for safari because of border-radius and overflow:hidden
-    // clipping bug. https://bugs.webkit.org/show_bug.cgi?id=98538
 
-    this.waveContainer.style.webkitTransform = 'translate(' + dx + 'px, ' + dy + 'px)';
-    this.waveContainer.style.transform = 'translate3d(' + dx + 'px, ' + dy + 'px, 0)';
+    this.wave.style.opacity = this.opacity;
+
+    scale = this.radius / (this.containerMetrics.size / 2);
+    dx = this.xNow - (this.containerMetrics.width / 2);
+    dy = this.yNow - (this.containerMetrics.height / 2);
+
+
+    // 2d transform for safari because of border-radius and overflow:hidden
+    // clipping bug. https://bugs.webkit.org/show_bug.cgi?id=98538
+    this.waveContainer.style.webkitTransform =
+        'translate(' + dx + 'px, ' + dy + 'px)';
+    this.waveContainer.style.transform =
+        'translate3d(' + dx + 'px, ' + dy + 'px, 0)';
     this.wave.style.webkitTransform = 'scale(' + scale + ',' + scale + ')';
     this.wave.style.transform = 'scale3d(' + scale + ',' + scale + ',1)';
   },
 
   /** @param {Event=} event */
-  downAction: function (event) {
+  downAction: function(event) {
     var xCenter = this.containerMetrics.width / 2;
     var yCenter = this.containerMetrics.height / 2;
+
     this.resetInteractionState();
     this.mouseDownStart = Utility.now();
 
     if (this.center) {
       this.xStart = xCenter;
       this.yStart = yCenter;
-      this.slideDistance = Utility.distance(this.xStart, this.yStart, this.xEnd, this.yEnd);
+      this.slideDistance =
+          Utility.distance(this.xStart, this.yStart, this.xEnd, this.yEnd);
     } else {
-      this.xStart = event ? event.detail.x - this.containerMetrics.boundingRect.left : this.containerMetrics.width / 2;
-      this.yStart = event ? event.detail.y - this.containerMetrics.boundingRect.top : this.containerMetrics.height / 2;
+      this.xStart = event ?
+          event.detail.x - this.containerMetrics.boundingRect.left :
+          this.containerMetrics.width / 2;
+      this.yStart = event ?
+          event.detail.y - this.containerMetrics.boundingRect.top :
+          this.containerMetrics.height / 2;
     }
 
     if (this.recenters) {
       this.xEnd = xCenter;
       this.yEnd = yCenter;
-      this.slideDistance = Utility.distance(this.xStart, this.yStart, this.xEnd, this.yEnd);
+      this.slideDistance =
+          Utility.distance(this.xStart, this.yStart, this.xEnd, this.yEnd);
     }
 
-    this.maxRadius = this.containerMetrics.furthestCornerDistanceFrom(this.xStart, this.yStart);
-    this.waveContainer.style.top = (this.containerMetrics.height - this.containerMetrics.size) / 2 + 'px';
-    this.waveContainer.style.left = (this.containerMetrics.width - this.containerMetrics.size) / 2 + 'px';
+    this.maxRadius = this.containerMetrics.furthestCornerDistanceFrom(
+        this.xStart, this.yStart);
+
+    this.waveContainer.style.top =
+        (this.containerMetrics.height - this.containerMetrics.size) / 2 + 'px';
+    this.waveContainer.style.left =
+        (this.containerMetrics.width - this.containerMetrics.size) / 2 + 'px';
+
     this.waveContainer.style.width = this.containerMetrics.size + 'px';
     this.waveContainer.style.height = this.containerMetrics.size + 'px';
   },
 
   /** @param {Event=} event */
-  upAction: function (event) {
+  upAction: function(event) {
     if (!this.isMouseDown) {
       return;
     }
 
     this.mouseUpStart = Utility.now();
   },
-  remove: function () {
+
+  remove: function() {
     dom(dom(this.waveContainer).parentNode).removeChild(this.waveContainer);
   }
 };
+
 /**
 Material design: [Surface
 reaction](https://www.google.com/design/spec/animation/responsive-interaction.html#responsive-interaction-surface-reaction)
@@ -305,7 +350,6 @@ Apply `circle` class to make the rippling effect within a circle.
 @element paper-ripple
 @demo demo/index.html
 */
-
 Polymer({
   /** @override */
   _template: html`
@@ -379,18 +423,17 @@ Polymer({
     <div id="background"></div>
     <div id="waves"></div>
 `,
+
   is: 'paper-ripple',
   behaviors: [IronA11yKeysBehavior],
+
   properties: {
     /**
      * The initial opacity set on the wave.
      * @type number
      * @default 0.25
      */
-    initialOpacity: {
-      type: Number,
-      value: 0.25
-    },
+    initialOpacity: {type: Number, value: 0.25},
 
     /**
      * How fast (opacity per second) the wave fades out.
@@ -398,10 +441,7 @@ Polymer({
      * @type number
      * @default 0.8
      */
-    opacityDecayVelocity: {
-      type: Number,
-      value: 0.8
-    },
+    opacityDecayVelocity: {type: Number, value: 0.8},
 
     /**
      * If true, ripples will exhibit a gravitational pull towards
@@ -410,10 +450,7 @@ Polymer({
      * @type boolean
      * @default false
      */
-    recenters: {
-      type: Boolean,
-      value: false
-    },
+    recenters: {type: Boolean, value: false},
 
     /**
      * If true, ripples will center inside its container
@@ -421,10 +458,7 @@ Polymer({
      * @type boolean
      * @default false
      */
-    center: {
-      type: Boolean,
-      value: false
-    },
+    center: {type: Boolean, value: false},
 
     /**
      * A list of the visual ripples.
@@ -434,7 +468,7 @@ Polymer({
      */
     ripples: {
       type: Array,
-      value: function () {
+      value: function() {
         return [];
       }
     },
@@ -443,22 +477,14 @@ Polymer({
      * True when there are visible ripples animating within the
      * element.
      */
-    animating: {
-      type: Boolean,
-      readOnly: true,
-      reflectToAttribute: true,
-      value: false
-    },
+    animating:
+        {type: Boolean, readOnly: true, reflectToAttribute: true, value: false},
 
     /**
      * If true, the ripple will remain in the "down" state until `holdDown`
      * is set to false again.
      */
-    holdDown: {
-      type: Boolean,
-      value: false,
-      observer: '_holdDownChanged'
-    },
+    holdDown: {type: Boolean, value: false, observer: '_holdDownChanged'},
 
     /**
      * If true, the ripple will not generate a ripple effect
@@ -466,16 +492,13 @@ Polymer({
      * Calling ripple's imperative api like `simulatedRipple` will
      * still generate the ripple effect.
      */
-    noink: {
-      type: Boolean,
-      value: false
-    },
-    _animating: {
-      type: Boolean
-    },
+    noink: {type: Boolean, value: false},
+
+    _animating: {type: Boolean},
+
     _boundAnimate: {
       type: Function,
-      value: function () {
+      value: function() {
         return this.animate.bind(this);
       }
     }
@@ -495,26 +518,22 @@ Polymer({
   },
 
   /** @override */
-  attached: function () {
+  attached: function() {
     // Set up a11yKeysBehavior to listen to key events on the target,
     // so that space and enter activate the ripple even if the target doesn't
     // handle key events. The key handlers deal with `noink` themselves.
-    if (dom(this).parentNode.nodeType == 11) {
-      // DOCUMENT_FRAGMENT_NODE
+    if (dom(this).parentNode.nodeType == 11) {  // DOCUMENT_FRAGMENT_NODE
       this.keyEventTarget = dom(this).getOwnerRoot().host;
     } else {
       this.keyEventTarget = dom(this).parentNode;
     }
-
-    var keyEventTarget =
-    /** @type {!EventTarget} */
-    this.keyEventTarget;
+    var keyEventTarget = /** @type {!EventTarget} */ (this.keyEventTarget);
     this.listen(keyEventTarget, 'up', 'uiUpAction');
     this.listen(keyEventTarget, 'down', 'uiDownAction');
   },
 
   /** @override */
-  detached: function () {
+  detached: function() {
     this.unlisten(this.keyEventTarget, 'up', 'uiUpAction');
     this.unlisten(this.keyEventTarget, 'down', 'uiDownAction');
     this.keyEventTarget = null;
@@ -530,10 +549,11 @@ Polymer({
     return false;
   },
 
-  simulatedRipple: function () {
-    this.downAction(null); // Please see polymer/polymer#1305
+  simulatedRipple: function() {
+    this.downAction(null);
 
-    this.async(function () {
+    // Please see polymer/polymer#1305
+    this.async(function() {
       this.upAction();
     }, 1);
   },
@@ -543,7 +563,7 @@ Polymer({
    * respecting the `noink` property.
    * @param {Event=} event
    */
-  uiDownAction: function (event) {
+  uiDownAction: function(event) {
     if (!this.noink) {
       this.downAction(event);
     }
@@ -554,12 +574,13 @@ Polymer({
    * *not* respecting the `noink` property.
    * @param {Event=} event
    */
-  downAction: function (event) {
+  downAction: function(event) {
     if (this.holdDown && this.ripples.length > 0) {
       return;
     }
 
     var ripple = this.addRipple();
+
     ripple.downAction(event);
 
     if (!this._animating) {
@@ -573,7 +594,7 @@ Polymer({
    * respecting the `noink` property.
    * @param {Event=} event
    */
-  uiUpAction: function (event) {
+  uiUpAction: function(event) {
     if (!this.noink) {
       this.upAction(event);
     }
@@ -584,24 +605,28 @@ Polymer({
    * *not* respecting the `noink` property.
    * @param {Event=} event
    */
-  upAction: function (event) {
+  upAction: function(event) {
     if (this.holdDown) {
       return;
     }
 
-    this.ripples.forEach(function (ripple) {
+    this.ripples.forEach(function(ripple) {
       ripple.upAction(event);
     });
+
     this._animating = true;
     this.animate();
   },
-  onAnimationComplete: function () {
+
+  onAnimationComplete: function() {
     this._animating = false;
     this.$.background.style.backgroundColor = '';
     this.fire('transitionend');
   },
-  addRipple: function () {
+
+  addRipple: function() {
     var ripple = new Ripple(this);
+
     dom(this.$.waves).appendChild(ripple.waveContainer);
     this.$.background.style.backgroundColor = ripple.color;
     this.ripples.push(ripple);
@@ -610,7 +635,8 @@ Polymer({
 
     return ripple;
   },
-  removeRipple: function (ripple) {
+
+  removeRipple: function(ripple) {
     var rippleIndex = this.ripples.indexOf(ripple);
 
     if (rippleIndex < 0) {
@@ -618,6 +644,7 @@ Polymer({
     }
 
     this.ripples.splice(rippleIndex, 1);
+
     ripple.remove();
 
     if (!this.ripples.length) {
@@ -634,17 +661,18 @@ Polymer({
    * @suppress {checkTypes}
    * @override
    */
-  animate: function () {
+  animate: function() {
     if (!this._animating) {
       return;
     }
-
     var index;
     var ripple;
 
     for (index = 0; index < this.ripples.length; ++index) {
       ripple = this.ripples[index];
+
       ripple.draw();
+
       this.$.background.style.opacity = ripple.outerOpacity;
 
       if (ripple.isOpacityFullyDecayed && !ripple.isRestingAtMaxRadius) {
@@ -663,38 +691,42 @@ Polymer({
    * An alias for animate() whose name does not conflict with the platform
    * Element.animate() method.
    */
-  animateRipple: function () {
+  animateRipple: function() {
     return this.animate();
   },
-  _onEnterKeydown: function () {
+
+  _onEnterKeydown: function() {
     this.uiDownAction();
     this.async(this.uiUpAction, 1);
   },
-  _onSpaceKeydown: function () {
+
+  _onSpaceKeydown: function() {
     this.uiDownAction();
   },
-  _onSpaceKeyup: function () {
+
+  _onSpaceKeyup: function() {
     this.uiUpAction();
   },
+
   // note: holdDown does not respect noink since it can be a focus based
   // effect.
-  _holdDownChanged: function (newVal, oldVal) {
+  _holdDownChanged: function(newVal, oldVal) {
     if (oldVal === undefined) {
       return;
     }
-
     if (newVal) {
       this.downAction();
     } else {
       this.upAction();
     }
   }
+
   /**
   Fired when the animation finishes.
   This is useful if you want to wait until
   the ripple animation finishes to perform some action.
-   @event transitionend
+
+  @event transitionend
   @param {{node: Object}} detail Contains the animated node.
   */
-
 });

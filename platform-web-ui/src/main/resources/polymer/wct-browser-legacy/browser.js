@@ -916,7 +916,7 @@ function logException(error) {
     // Otherwise only one test can be run and it stops there.
   	function createCommonjsModule(fn, module) {
   		return module = { exports: {} }, fn(module, module.exports), module.exports;
-  	}
+}
 
 	function unwrapExports (x) {
 		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;

@@ -1,3 +1,6 @@
+import { PropertyAccessors } from './property-accessors.js';
+import { dedupingMixin } from '../utils/mixin.js';
+
 /**
  * @fileoverview
  * @suppress {checkPrototypalTypes}
@@ -9,37 +12,37 @@
  * Google as part of the polymer project is also subject to an additional IP
  * rights grant found at http://polymer.github.io/PATENTS.txt
  */
-import { PropertyAccessors } from './property-accessors.js';
-import { dedupingMixin } from '../utils/mixin.js';
+
 const HOST_DIR = /:host\(:dir\((ltr|rtl)\)\)/g;
 const HOST_DIR_REPLACMENT = ':host([dir="$1"])';
+
 const EL_DIR = /([\s\w-#\.\[\]\*]*):dir\((ltr|rtl)\)/g;
 const EL_DIR_REPLACMENT = ':host([dir="$2"]) $1';
+
 const DIR_CHECK = /:dir\((?:ltr|rtl)\)/;
+
 const SHIM_SHADOW = Boolean(window['ShadyDOM'] && window['ShadyDOM']['inUse']);
+
 /**
  * @type {!Array<!Polymer_DirMixin>}
  */
-
 const DIR_INSTANCES = [];
-/** @type {?MutationObserver} */
 
+/** @type {?MutationObserver} */
 let observer = null;
+
 let documentDir = '';
 
 function getRTL() {
   documentDir = document.documentElement.getAttribute('dir');
 }
+
 /**
  * @param {!Polymer_DirMixin} instance Instance to set RTL status on
  */
-
-
 function setRTL(instance) {
   if (!instance.__autoDirOptOut) {
-    const el =
-    /** @type {!HTMLElement} */
-    instance;
+    const el = /** @type {!HTMLElement} */(instance);
     el.setAttribute('dir', documentDir);
   }
 }
@@ -47,7 +50,6 @@ function setRTL(instance) {
 function updateDirection() {
   getRTL();
   documentDir = document.documentElement.getAttribute('dir');
-
   for (let i = 0; i < DIR_INSTANCES.length; i++) {
     setRTL(DIR_INSTANCES[i]);
   }
@@ -58,6 +60,7 @@ function takeRecords() {
     updateDirection();
   }
 }
+
 /**
  * Element class mixin that allows elements to use the `:dir` CSS Selector to
  * have text direction specific styling.
@@ -84,34 +87,30 @@ function takeRecords() {
  * @param {function(new:T)} superClass Class to apply mixin to.
  * @return {function(new:T)} superClass with mixin applied.
  */
+const DirMixin = dedupingMixin((base) => {
 
-
-export const DirMixin = dedupingMixin(base => {
   if (!SHIM_SHADOW) {
     if (!observer) {
       getRTL();
       observer = new MutationObserver(updateDirection);
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['dir']
-      });
+      observer.observe(document.documentElement, {attributes: true, attributeFilter: ['dir']});
     }
   }
+
   /**
    * @constructor
    * @implements {Polymer_PropertyAccessors}
    * @private
    */
-
-
   const elementBase = PropertyAccessors(base);
+
   /**
    * @polymer
    * @mixinClass
    * @implements {Polymer_DirMixin}
    */
-
   class Dir extends elementBase {
+
     /**
      * @param {string} cssText .
      * @param {string} baseURI .
@@ -123,14 +122,13 @@ export const DirMixin = dedupingMixin(base => {
       // TODO(https://github.com/google/closure-compiler/issues/3240):
       //     Change back to just super.methodCall()
       cssText = elementBase._processStyleText.call(this, cssText, baseURI);
-
       if (!SHIM_SHADOW && DIR_CHECK.test(cssText)) {
         cssText = this._replaceDirInCssText(cssText);
         this.__activateDir = true;
       }
-
       return cssText;
     }
+
     /**
      * Replace `:dir` in the given CSS text
      *
@@ -138,8 +136,6 @@ export const DirMixin = dedupingMixin(base => {
      * @return {string} Modified CSS
      * @nocollapse
      */
-
-
     static _replaceDirInCssText(text) {
       let replacedText = text;
       replacedText = replacedText.replace(HOST_DIR, HOST_DIR_REPLACMENT);
@@ -150,66 +146,59 @@ export const DirMixin = dedupingMixin(base => {
     constructor() {
       super();
       /** @type {boolean} */
-
       this.__autoDirOptOut = false;
     }
+
     /**
      * @override
      * @suppress {invalidCasts} Closure doesn't understand that `this` is an
      *     HTMLElement
      * @return {void}
      */
-
-
     ready() {
       super.ready();
-      this.__autoDirOptOut =
-      /** @type {!HTMLElement} */
-      this.hasAttribute('dir');
+      this.__autoDirOptOut = /** @type {!HTMLElement} */(this).hasAttribute('dir');
     }
+
     /**
      * @override
      * @suppress {missingProperties} If it exists on elementBase, it can be
      *   super'd
      * @return {void}
      */
-
-
     connectedCallback() {
       if (elementBase.prototype.connectedCallback) {
         super.connectedCallback();
       }
-
       if (this.constructor.__activateDir) {
         takeRecords();
         DIR_INSTANCES.push(this);
         setRTL(this);
       }
     }
+
     /**
      * @override
      * @suppress {missingProperties} If it exists on elementBase, it can be
      *   super'd
      * @return {void}
      */
-
-
     disconnectedCallback() {
       if (elementBase.prototype.disconnectedCallback) {
         super.disconnectedCallback();
       }
-
       if (this.constructor.__activateDir) {
         const idx = DIR_INSTANCES.indexOf(this);
-
         if (idx > -1) {
           DIR_INSTANCES.splice(idx, 1);
         }
       }
     }
-
   }
 
   Dir.__activateDir = false;
+
   return Dir;
 });
+
+export { DirMixin };

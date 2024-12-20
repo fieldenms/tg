@@ -1,3 +1,9 @@
+import '../polymer/polymer-legacy.js';
+import { IronA11yKeysBehavior } from '../iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
+import { IronControlState } from '../iron-behaviors/iron-control-state.js';
+import { dom } from '../polymer/lib/legacy/polymer.dom.js';
+import { PolymerElement } from '../polymer/polymer-element.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,17 +14,15 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { IronA11yKeysBehavior } from "../iron-a11y-keys-behavior/iron-a11y-keys-behavior.js";
-import { IronControlState } from "../iron-behaviors/iron-control-state.js";
-import { dom } from "../polymer/lib/legacy/polymer.dom.js";
-import { PolymerElement } from "../polymer/polymer-element.js"; // Generate unique, monotonically increasing IDs for labels (needed by
-// aria-labelledby) and add-ons.
 
-export const PaperInputHelper = {};
+// Generate unique, monotonically increasing IDs for labels (needed by
+// aria-labelledby) and add-ons.
+const PaperInputHelper = {};
+
 PaperInputHelper.NextLabelID = 1;
 PaperInputHelper.NextAddonID = 1;
 PaperInputHelper.NextInputID = 1;
+
 /**
  * Use `PaperInputBehavior` to implement inputs with `<paper-input-container>`.
  * This behavior is implemented by `<paper-input>`. It exposes a number of
@@ -29,8 +33,8 @@ PaperInputHelper.NextInputID = 1;
  * to access properties or methods that are not exposed.
  * @polymerBehavior PaperInputBehavior
  */
+const PaperInputBehaviorImpl = {
 
-export const PaperInputBehaviorImpl = {
   properties: {
     /**
      * Fired when the input changes due to user interaction.
@@ -44,9 +48,7 @@ export const PaperInputBehaviorImpl = {
      * `<label>`'s content and `hidden` property, e.g.
      * `<label hidden$="[[!label]]">[[label]]</label>` in your `template`
      */
-    label: {
-      type: String
-    },
+    label: {type: String},
 
     /**
      * The value for this input. If you're using PaperInputBehavior to
@@ -55,20 +57,14 @@ export const PaperInputBehaviorImpl = {
      * property, or the value property of your input that is `notify:true`.
      * @type {*}
      */
-    value: {
-      notify: true,
-      type: String
-    },
+    value: {notify: true, type: String},
 
     /**
      * Set to true to disable this input. If you're using PaperInputBehavior to
      * implement your own paper-input-like element, bind this to
      * both the `<paper-input-container>`'s and the input's `disabled` property.
      */
-    disabled: {
-      type: Boolean,
-      value: false
-    },
+    disabled: {type: Boolean, value: false},
 
     /**
      * Returns true if the value is invalid. If you're using PaperInputBehavior
@@ -78,11 +74,7 @@ export const PaperInputBehaviorImpl = {
      * If `autoValidate` is true, the `invalid` attribute is managed
      * automatically, which can clobber attempts to manage it manually.
      */
-    invalid: {
-      type: Boolean,
-      value: false,
-      notify: true
-    },
+    invalid: {type: Boolean, value: false, notify: true},
 
     /**
      * Set this to specify the pattern allowed by `preventInvalidInput`. If
@@ -90,9 +82,7 @@ export const PaperInputBehaviorImpl = {
      * element, bind this to the `<input is="iron-input">`'s `allowedPattern`
      * property.
      */
-    allowedPattern: {
-      type: String
-    },
+    allowedPattern: {type: String},
 
     /**
      * The type of the input. The supported types are the
@@ -103,9 +93,7 @@ export const PaperInputBehaviorImpl = {
      * (Polymer 2)
      * `<iron-input>`'s `type` property.
      */
-    type: {
-      type: String
-    },
+    type: {type: String},
 
     /**
      * The datalist of the input (if any). This should match the id of an
@@ -113,84 +101,62 @@ export const PaperInputBehaviorImpl = {
      * your own paper-input-like element, bind this to the `<input
      * is="iron-input">`'s `list` property.
      */
-    list: {
-      type: String
-    },
+    list: {type: String},
 
     /**
      * A pattern to validate the `input` with. If you're using
      * PaperInputBehavior to implement your own paper-input-like element, bind
      * this to the `<input is="iron-input">`'s `pattern` property.
      */
-    pattern: {
-      type: String
-    },
+    pattern: {type: String},
 
     /**
      * Set to true to mark the input as required. If you're using
      * PaperInputBehavior to implement your own paper-input-like element, bind
      * this to the `<input is="iron-input">`'s `required` property.
      */
-    required: {
-      type: Boolean,
-      value: false
-    },
+    required: {type: Boolean, value: false},
 
     /**
      * The error message to display when the input is invalid. If you're using
      * PaperInputBehavior to implement your own paper-input-like element,
      * bind this to the `<paper-input-error>`'s content, if using.
      */
-    errorMessage: {
-      type: String
-    },
+    errorMessage: {type: String},
 
     /**
      * Set to true to show a character counter.
      */
-    charCounter: {
-      type: Boolean,
-      value: false
-    },
+    charCounter: {type: Boolean, value: false},
 
     /**
      * Set to true to disable the floating label. If you're using
      * PaperInputBehavior to implement your own paper-input-like element, bind
      * this to the `<paper-input-container>`'s `noLabelFloat` property.
      */
-    noLabelFloat: {
-      type: Boolean,
-      value: false
-    },
+    noLabelFloat: {type: Boolean, value: false},
 
     /**
      * Set to true to always float the label. If you're using PaperInputBehavior
      * to implement your own paper-input-like element, bind this to the
      * `<paper-input-container>`'s `alwaysFloatLabel` property.
      */
-    alwaysFloatLabel: {
-      type: Boolean,
-      value: false
-    },
+    alwaysFloatLabel: {type: Boolean, value: false},
 
     /**
      * Set to true to auto-validate the input value. If you're using
      * PaperInputBehavior to implement your own paper-input-like element, bind
      * this to the `<paper-input-container>`'s `autoValidate` property.
      */
-    autoValidate: {
-      type: Boolean,
-      value: false
-    },
+    autoValidate: {type: Boolean, value: false},
 
     /**
      * Name of the validator to use. If you're using PaperInputBehavior to
      * implement your own paper-input-like element, bind this to
      * the `<input is="iron-input">`'s `validator` property.
      */
-    validator: {
-      type: String
-    },
+    validator: {type: String},
+
     // HTMLInputElement attributes for binding if needed
 
     /**
@@ -198,10 +164,7 @@ export const PaperInputBehaviorImpl = {
      * element, bind this to the `<input is="iron-input">`'s `autocomplete`
      * property.
      */
-    autocomplete: {
-      type: String,
-      value: 'off'
-    },
+    autocomplete: {type: String, value: 'off'},
 
     /**
      * If you're using PaperInputBehavior to implement your own paper-input-like
@@ -210,19 +173,14 @@ export const PaperInputBehaviorImpl = {
      *
      * @type {!boolean}
      */
-    autofocus: {
-      type: Boolean,
-      observer: '_autofocusChanged'
-    },
+    autofocus: {type: Boolean, observer: '_autofocusChanged'},
 
     /**
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `inputmode`
      * property.
      */
-    inputmode: {
-      type: String
-    },
+    inputmode: {type: String},
 
     /**
      * The minimum length of the input value.
@@ -230,9 +188,7 @@ export const PaperInputBehaviorImpl = {
      * element, bind this to the `<input is="iron-input">`'s `minlength`
      * property.
      */
-    minlength: {
-      type: Number
-    },
+    minlength: {type: Number},
 
     /**
      * The maximum length of the input value.
@@ -240,18 +196,14 @@ export const PaperInputBehaviorImpl = {
      * element, bind this to the `<input is="iron-input">`'s `maxlength`
      * property.
      */
-    maxlength: {
-      type: Number
-    },
+    maxlength: {type: Number},
 
     /**
      * The minimum (numeric or date-time) input value.
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `min` property.
      */
-    min: {
-      type: String
-    },
+    min: {type: String},
 
     /**
      * The maximum (numeric or date-time) input value.
@@ -259,26 +211,20 @@ export const PaperInputBehaviorImpl = {
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `max` property.
      */
-    max: {
-      type: String
-    },
+    max: {type: String},
 
     /**
      * Limits the numeric or date-time increments.
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `step` property.
      */
-    step: {
-      type: String
-    },
+    step: {type: String},
 
     /**
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `name` property.
      */
-    name: {
-      type: String
-    },
+    name: {type: String},
 
     /**
      * A placeholder string in addition to the label. If this is set, the label
@@ -295,18 +241,14 @@ export const PaperInputBehaviorImpl = {
      * element, bind this to the `<input is="iron-input">`'s `readonly`
      * property.
      */
-    readonly: {
-      type: Boolean,
-      value: false
-    },
+    readonly: {type: Boolean, value: false},
 
     /**
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `size` property.
      */
-    size: {
-      type: Number
-    },
+    size: {type: Number},
+
     // Nonstandard attributes for binding if needed
 
     /**
@@ -316,90 +258,64 @@ export const PaperInputBehaviorImpl = {
      *
      * @type {string}
      */
-    autocapitalize: {
-      type: String,
-      value: 'none'
-    },
+    autocapitalize: {type: String, value: 'none'},
 
     /**
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `autocorrect`
      * property.
      */
-    autocorrect: {
-      type: String,
-      value: 'off'
-    },
+    autocorrect: {type: String, value: 'off'},
 
     /**
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `autosave`
      * property, used with type=search.
      */
-    autosave: {
-      type: String
-    },
+    autosave: {type: String},
 
     /**
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `results` property,
      * used with type=search.
      */
-    results: {
-      type: Number
-    },
+    results: {type: Number},
 
     /**
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the `<input is="iron-input">`'s `accept` property,
      * used with type=file.
      */
-    accept: {
-      type: String
-    },
+    accept: {type: String},
 
     /**
      * If you're using PaperInputBehavior to implement your own paper-input-like
      * element, bind this to the`<input is="iron-input">`'s `multiple` property,
      * used with type=file.
      */
-    multiple: {
-      type: Boolean
-    },
+    multiple: {type: Boolean},
 
     /** @private */
-    _ariaDescribedBy: {
-      type: String,
-      value: ''
-    },
+    _ariaDescribedBy: {type: String, value: ''},
 
     /** @private */
-    _ariaLabelledBy: {
-      type: String,
-      value: ''
-    },
+    _ariaLabelledBy: {type: String, value: ''},
 
     /** @private */
-    _inputId: {
-      type: String,
-      value: ''
-    }
+    _inputId: {type: String, value: ''}
   },
+
   listeners: {
-    'addon-attached': '_onAddonAttached'
+    'addon-attached': '_onAddonAttached',
   },
 
   /**
    * @type {!Object}
    */
-  keyBindings: {
-    'shift+tab:keydown': '_onShiftTabDown'
-  },
+  keyBindings: {'shift+tab:keydown': '_onShiftTabDown'},
 
   /** @private */
-  hostAttributes: {
-    tabindex: 0
-  },
+  hostAttributes: {tabindex: 0},
 
   /**
    * Returns a reference to the input element.
@@ -412,13 +328,10 @@ export const PaperInputBehaviorImpl = {
     if (!this.$) {
       this.$ = {};
     }
-
     if (!this.$.input) {
       this._generateInputId();
-
       this.$.input = this.$$('#' + this._inputId);
     }
-
     return this.$.input;
   },
 
@@ -431,41 +344,45 @@ export const PaperInputBehaviorImpl = {
   },
 
   /** @override */
-  created: function () {
+  created: function() {
     // These types have some default placeholder text; overlapping
     // the label on top of it looks terrible. Auto-float the label in this case.
-    this._typesThatHaveText = ['date', 'datetime', 'datetime-local', 'month', 'time', 'week', 'file'];
+    this._typesThatHaveText =
+        ['date', 'datetime', 'datetime-local', 'month', 'time', 'week', 'file'];
   },
 
   /** @override */
-  attached: function () {
-    this._updateAriaLabelledBy(); // In the 2.0 version of the element, this is handled in `onIronInputReady`,
+  attached: function() {
+    this._updateAriaLabelledBy();
+
+    // In the 2.0 version of the element, this is handled in `onIronInputReady`,
     // i.e. after the native input has finished distributing. In the 1.0
     // version, the input is in the shadow tree, so it's already available.
-
-
-    if (!PolymerElement && this.inputElement && this._typesThatHaveText.indexOf(this.inputElement.type) !== -1) {
+    if (!PolymerElement && this.inputElement &&
+        this._typesThatHaveText.indexOf(this.inputElement.type) !== -1) {
       this.alwaysFloatLabel = true;
     }
   },
-  _appendStringWithSpace: function (str, more) {
+
+  _appendStringWithSpace: function(str, more) {
     if (str) {
       str = str + ' ' + more;
     } else {
       str = more;
     }
-
     return str;
   },
-  _onAddonAttached: function (event) {
-    var target = dom(event).rootTarget;
 
+  _onAddonAttached: function(event) {
+    var target = dom(event).rootTarget;
     if (target.id) {
-      this._ariaDescribedBy = this._appendStringWithSpace(this._ariaDescribedBy, target.id);
+      this._ariaDescribedBy =
+          this._appendStringWithSpace(this._ariaDescribedBy, target.id);
     } else {
       var id = 'paper-input-add-on-' + PaperInputHelper.NextAddonID++;
       target.id = id;
-      this._ariaDescribedBy = this._appendStringWithSpace(this._ariaDescribedBy, id);
+      this._ariaDescribedBy =
+          this._appendStringWithSpace(this._ariaDescribedBy, id);
     }
   },
 
@@ -474,17 +391,17 @@ export const PaperInputBehaviorImpl = {
    *
    * @return {boolean}
    */
-  validate: function () {
+  validate: function() {
     return this.inputElement.validate();
   },
 
   /**
    * Forward focus to inputElement. Overriden from IronControlState.
    */
-  _focusBlurHandler: function (event) {
-    IronControlState._focusBlurHandler.call(this, event); // Forward the focus to the nested input.
+  _focusBlurHandler: function(event) {
+    IronControlState._focusBlurHandler.call(this, event);
 
-
+    // Forward the focus to the nested input.
     if (this.focused && !this._shiftTabPressed && this._focusableElement) {
       this._focusableElement.focus();
     }
@@ -495,11 +412,11 @@ export const PaperInputBehaviorImpl = {
    *
    * @param {CustomEvent} event A key combination event.
    */
-  _onShiftTabDown: function (event) {
+  _onShiftTabDown: function(event) {
     var oldTabIndex = this.getAttribute('tabindex');
     this._shiftTabPressed = true;
     this.setAttribute('tabindex', '-1');
-    this.async(function () {
+    this.async(function() {
       this.setAttribute('tabindex', oldTabIndex);
       this._shiftTabPressed = false;
     }, 1);
@@ -508,23 +425,25 @@ export const PaperInputBehaviorImpl = {
   /**
    * If `autoValidate` is true, then validates the element.
    */
-  _handleAutoValidate: function () {
-    if (this.autoValidate) this.validate();
+  _handleAutoValidate: function() {
+    if (this.autoValidate)
+      this.validate();
   },
 
   /**
    * Restores the cursor to its original position after updating the value.
    * @param {string} newValue The value that should be saved.
    */
-  updateValueAndPreserveCaret: function (newValue) {
+  updateValueAndPreserveCaret: function(newValue) {
     // Not all elements might have selection, and even if they have the
     // right properties, accessing them might throw an exception (like for
     // <input type=number>)
     try {
       var start = this.inputElement.selectionStart;
-      this.value = newValue; // The cursor automatically jumps to the end after re-setting the value,
-      // so restore it to its original position.
+      this.value = newValue;
 
+      // The cursor automatically jumps to the end after re-setting the value,
+      // so restore it to its original position.
       this.inputElement.selectionStart = start;
       this.inputElement.selectionEnd = start;
     } catch (e) {
@@ -532,49 +451,47 @@ export const PaperInputBehaviorImpl = {
       this.value = newValue;
     }
   },
-  _computeAlwaysFloatLabel: function (alwaysFloatLabel, placeholder) {
+
+  _computeAlwaysFloatLabel: function(alwaysFloatLabel, placeholder) {
     return placeholder || alwaysFloatLabel;
   },
-  _updateAriaLabelledBy: function () {
-    var label = dom(this.root).querySelector('label');
 
+  _updateAriaLabelledBy: function() {
+    var label = dom(this.root).querySelector('label');
     if (!label) {
       this._ariaLabelledBy = '';
       return;
     }
-
     var labelledBy;
-
     if (label.id) {
       labelledBy = label.id;
     } else {
       labelledBy = 'paper-input-label-' + PaperInputHelper.NextLabelID++;
       label.id = labelledBy;
     }
-
     this._ariaLabelledBy = labelledBy;
   },
-  _generateInputId: function () {
+
+  _generateInputId: function() {
     if (!this._inputId || this._inputId === '') {
       this._inputId = 'input-' + PaperInputHelper.NextInputID++;
     }
   },
-  _onChange: function (event) {
+
+  _onChange: function(event) {
     // In the Shadow DOM, the `change` event is not leaked into the
     // ancestor tree, so we must do this manually.
     // See
     // https://w3c.github.io/webcomponents/spec/shadow/#events-that-are-not-leaked-into-ancestor-trees.
     if (this.shadowRoot) {
-      this.fire(event.type, {
-        sourceEvent: event
-      }, {
-        node: this,
-        bubbles: event.bubbles,
-        cancelable: event.cancelable
-      });
+      this.fire(
+          event.type,
+          {sourceEvent: event},
+          {node: this, bubbles: event.bubbles, cancelable: event.cancelable});
     }
   },
-  _autofocusChanged: function () {
+
+  _autofocusChanged: function() {
     // Firefox doesn't respect the autofocus attribute if it's applied after
     // the page is loaded (Chrome/WebKit do respect it), preventing an
     // autofocus attribute specified in markup from taking effect when the
@@ -587,11 +504,12 @@ export const PaperInputBehaviorImpl = {
       // just a plain object. We identify the latter case as having no valid
       // activeElement.
       var activeElement = document.activeElement;
-      var isActiveElementValid = activeElement instanceof HTMLElement; // Has some other element has already taken the focus?
+      var isActiveElementValid = activeElement instanceof HTMLElement;
 
-      var isSomeElementActive = isActiveElementValid && activeElement !== document.body && activeElement !== document.documentElement;
-      /* IE 11 */
-
+      // Has some other element has already taken the focus?
+      var isSomeElementActive = isActiveElementValid &&
+          activeElement !== document.body &&
+          activeElement !== document.documentElement; /* IE 11 */
       if (!isSomeElementActive) {
         // No specific element has taken the focus yet, so we can take it.
         this._focusableElement.focus();
@@ -599,6 +517,9 @@ export const PaperInputBehaviorImpl = {
     }
   }
 };
-/** @polymerBehavior */
 
-export const PaperInputBehavior = [IronControlState, IronA11yKeysBehavior, PaperInputBehaviorImpl];
+/** @polymerBehavior */
+const PaperInputBehavior =
+    [IronControlState, IronA11yKeysBehavior, PaperInputBehaviorImpl];
+
+export { PaperInputBehavior, PaperInputBehaviorImpl, PaperInputHelper };

@@ -1,3 +1,8 @@
+import '../utils/boot.js';
+import { dedupingMixin } from '../utils/mixin.js';
+import { microTask } from '../utils/async.js';
+import { wrap } from '../utils/wrap.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,13 +12,10 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import '../utils/boot.js';
-import { dedupingMixin } from '../utils/mixin.js';
-import { microTask } from '../utils/async.js';
-import { wrap } from '../utils/wrap.js';
-/** @const {!AsyncInterface} */
 
+/** @const {!AsyncInterface} */
 const microtask = microTask;
+
 /**
  * Element class mixin that provides basic meta-programming for creating one
  * or more property accessors (getter/setter pair) that enqueue an async
@@ -35,14 +37,14 @@ const microtask = microTask;
  * @param {function(new:T)} superClass Class to apply mixin to.
  * @return {function(new:T)} superClass with mixin applied.
  */
+const PropertiesChanged = dedupingMixin(
+    /**
+     * @template T
+     * @param {function(new:T)} superClass Class to apply mixin to.
+     * @return {function(new:T)} superClass with mixin applied.
+     */
+    (superClass) => {
 
-export const PropertiesChanged = dedupingMixin(
-/**
- * @template T
- * @param {function(new:T)} superClass Class to apply mixin to.
- * @return {function(new:T)} superClass with mixin applied.
- */
-superClass => {
   /**
    * @polymer
    * @mixinClass
@@ -50,6 +52,7 @@ superClass => {
    * @unrestricted
    */
   class PropertiesChanged extends superClass {
+
     /**
      * Creates property accessors for the given property names.
      * @param {!Object} props Object whose keys are names of accessors.
@@ -59,7 +62,6 @@ superClass => {
      */
     static createProperties(props) {
       const proto = this.prototype;
-
       for (let prop in props) {
         // don't stomp an existing accessor
         if (!(prop in proto)) {
@@ -67,6 +69,7 @@ superClass => {
         }
       }
     }
+
     /**
      * Returns an attribute name that corresponds to the given property.
      * The attribute name is the lowercased property name. Override to
@@ -77,11 +80,10 @@ superClass => {
      * @protected
      * @nocollapse
      */
-
-
     static attributeNameForProperty(property) {
       return property.toLowerCase();
     }
+
     /**
      * Override point to provide a type to which to deserialize a value to
      * a given property.
@@ -90,9 +92,7 @@ superClass => {
      * @protected
      * @nocollapse
      */
-
-
-    static typeForProperty(name) {} //eslint-disable-line no-unused-vars
+    static typeForProperty(name) { } //eslint-disable-line no-unused-vars
 
     /**
      * Creates a setter/getter pair for the named property with its own
@@ -111,21 +111,17 @@ superClass => {
      * @protected
      * @override
      */
-
-
     _createPropertyAccessor(property, readOnly) {
       this._addPropertyToAttributeMap(property);
-
       if (!this.hasOwnProperty(JSCompiler_renameProperty('__dataHasAccessor', this))) {
         this.__dataHasAccessor = Object.assign({}, this.__dataHasAccessor);
       }
-
       if (!this.__dataHasAccessor[property]) {
         this.__dataHasAccessor[property] = true;
-
         this._definePropertyAccessor(property, readOnly);
       }
     }
+
     /**
      * Adds the given `property` to a map matching attribute names
      * to property names, using `attributeNameForProperty`. This map is
@@ -134,28 +130,24 @@ superClass => {
      * @param {string} property Name of the property
      * @override
      */
-
-
     _addPropertyToAttributeMap(property) {
       if (!this.hasOwnProperty(JSCompiler_renameProperty('__dataAttributes', this))) {
         this.__dataAttributes = Object.assign({}, this.__dataAttributes);
-      } // This check is technically not correct; it's an optimization that
+      }
+      // This check is technically not correct; it's an optimization that
       // assumes that if a _property_ name is already in the map (note this is
       // an attr->property map), the property mapped directly to the attribute
       // and it has already been mapped.  This would fail if
       // `attributeNameForProperty` were overridden such that this was not the
       // case.
-
-
       let attr = this.__dataAttributes[property];
-
       if (!attr) {
         attr = this.constructor.attributeNameForProperty(property);
         this.__dataAttributes[attr] = property;
       }
-
       return attr;
     }
+
     /**
      * Defines a property accessor for the given property.
      * @param {string} property Name of the property
@@ -163,18 +155,14 @@ superClass => {
      * @return {void}
      * @override
      */
-
-
-    _definePropertyAccessor(property, readOnly) {
+     _definePropertyAccessor(property, readOnly) {
       Object.defineProperty(this, property, {
         /* eslint-disable valid-jsdoc */
-
         /** @this {PropertiesChanged} */
         get() {
           // Inline for perf instead of using `_getProperty`
           return this.__data[property];
         },
-
         /** @this {PropertiesChanged} */
         set: readOnly ? function () {} : function (value) {
           // Inline for perf instead of using `_setProperty`
@@ -183,14 +171,12 @@ superClass => {
           }
         }
         /* eslint-enable */
-
       });
     }
 
     constructor() {
       super();
       /** @type {boolean} */
-
       this.__dataEnabled = false;
       this.__dataReady = false;
       this.__dataInvalid = false;
@@ -200,12 +186,11 @@ superClass => {
       this.__dataInstanceProps = null;
       /** @type {number} */
       // NOTE: used to track re-entrant calls to `_flushProperties`
-
       this.__dataCounter = 0;
       this.__serializing = false;
-
       this._initializeProperties();
     }
+
     /**
      * Lifecycle callback called when properties are enabled via
      * `_enableProperties`.
@@ -221,13 +206,11 @@ superClass => {
      * @public
      * @override
      */
-
-
     ready() {
       this.__dataReady = true;
-
       this._flushProperties();
     }
+
     /**
      * Initializes the local storage for property accessors.
      *
@@ -238,8 +221,6 @@ superClass => {
      * @protected
      * @override
      */
-
-
     _initializeProperties() {
       // Capture instance properties; these will be set into accessors
       // during first flush. Don't set them here, since we want
@@ -252,6 +233,7 @@ superClass => {
         }
       }
     }
+
     /**
      * Called at ready time with bag of instance properties that overwrote
      * accessors when the element upgraded.
@@ -266,11 +248,10 @@ superClass => {
      * @protected
      * @override
      */
-
-
     _initializeInstanceProperties(props) {
       Object.assign(this, props);
     }
+
     /**
      * Updates the local storage for a property (via `_setPendingProperty`)
      * and enqueues a `_proeprtiesChanged` callback.
@@ -281,13 +262,12 @@ superClass => {
      * @protected
      * @override
      */
-
-
     _setProperty(property, value) {
       if (this._setPendingProperty(property, value)) {
         this._invalidateProperties();
       }
     }
+
     /**
      * Returns the value for the given property.
      * @param {string} property Name of property
@@ -295,13 +275,11 @@ superClass => {
      * @protected
      * @override
      */
-
-
     _getProperty(property) {
       return this.__data[property];
     }
-    /* eslint-disable no-unused-vars */
 
+    /* eslint-disable no-unused-vars */
     /**
      * Updates the local storage for a property, records the previous value,
      * and adds it to the set of "pending changes" that will be passed to the
@@ -315,28 +293,21 @@ superClass => {
      * @protected
      * @override
      */
-
-
     _setPendingProperty(property, value, ext) {
       let old = this.__data[property];
-
       let changed = this._shouldPropertyChange(property, value, old);
-
       if (changed) {
         if (!this.__dataPending) {
           this.__dataPending = {};
           this.__dataOld = {};
-        } // Ensure old is captured from the last turn
-
-
+        }
+        // Ensure old is captured from the last turn
         if (this.__dataOld && !(property in this.__dataOld)) {
           this.__dataOld[property] = old;
         }
-
         this.__data[property] = value;
         this.__dataPending[property] = value;
       }
-
       return changed;
     }
     /* eslint-enable */
@@ -345,11 +316,10 @@ superClass => {
      * @param {string} property Name of the property
      * @return {boolean} Returns true if the property is pending.
      */
-
-
     _isPropertyPending(property) {
       return !!(this.__dataPending && this.__dataPending.hasOwnProperty(property));
     }
+
     /**
      * Marks the properties as invalid, and enqueues an async
      * `_propertiesChanged` callback.
@@ -358,20 +328,18 @@ superClass => {
      * @protected
      * @override
      */
-
-
     _invalidateProperties() {
       if (!this.__dataInvalid && this.__dataReady) {
         this.__dataInvalid = true;
         microtask.run(() => {
           if (this.__dataInvalid) {
             this.__dataInvalid = false;
-
             this._flushProperties();
           }
         });
       }
     }
+
     /**
      * Call to enable property accessor processing. Before this method is
      * called accessor values will be set but side effects are
@@ -384,21 +352,17 @@ superClass => {
      * @protected
      * @override
      */
-
-
     _enableProperties() {
       if (!this.__dataEnabled) {
         this.__dataEnabled = true;
-
         if (this.__dataInstanceProps) {
           this._initializeInstanceProperties(this.__dataInstanceProps);
-
           this.__dataInstanceProps = null;
         }
-
         this.ready();
       }
     }
+
     /**
      * Calls the `_propertiesChanged` callback with the current set of
      * pending changes (and old values recorded when pending changes were
@@ -409,23 +373,19 @@ superClass => {
      * @protected
      * @override
      */
-
-
     _flushProperties() {
       this.__dataCounter++;
       const props = this.__data;
       const changedProps = this.__dataPending;
       const old = this.__dataOld;
-
       if (this._shouldPropertiesChange(props, changedProps, old)) {
         this.__dataPending = null;
         this.__dataOld = null;
-
         this._propertiesChanged(props, changedProps, old);
       }
-
       this.__dataCounter--;
     }
+
     /**
      * Called in `_flushProperties` to determine if `_propertiesChanged`
      * should be called. The default implementation returns true if
@@ -439,12 +399,10 @@ superClass => {
      * @return {boolean} true if changedProps is truthy
      * @override
      */
-
-
-    _shouldPropertiesChange(currentProps, changedProps, oldProps) {
-      // eslint-disable-line no-unused-vars
+    _shouldPropertiesChange(currentProps, changedProps, oldProps) { // eslint-disable-line no-unused-vars
       return Boolean(changedProps);
     }
+
     /**
      * Callback called when any properties with accessors created via
      * `_createPropertyAccessor` have been set.
@@ -458,9 +416,8 @@ superClass => {
      * @protected
      * @override
      */
-
-
-    _propertiesChanged(currentProps, changedProps, oldProps) {} // eslint-disable-line no-unused-vars
+    _propertiesChanged(currentProps, changedProps, oldProps) { // eslint-disable-line no-unused-vars
+    }
 
     /**
      * Method called to determine whether a property value should be
@@ -481,14 +438,15 @@ superClass => {
      * @protected
      * @override
      */
-
-
     _shouldPropertyChange(property, value, old) {
-      return (// Strict equality check
-        old !== value && ( // This ensures (old==NaN, value==NaN) always returns false
-        old === old || value === value)
+      return (
+        // Strict equality check
+        (old !== value &&
+          // This ensures (old==NaN, value==NaN) always returns false
+          (old === old || value === value))
       );
     }
+
     /**
      * Implements native Custom Elements `attributeChangedCallback` to
      * set an attribute value to a property via `_attributeToProperty`.
@@ -501,17 +459,15 @@ superClass => {
      * @suppress {missingProperties} Super may or may not implement the callback
      * @override
      */
-
-
     attributeChangedCallback(name, old, value, namespace) {
       if (old !== value) {
         this._attributeToProperty(name, value);
       }
-
       if (super.attributeChangedCallback) {
         super.attributeChangedCallback(name, old, value, namespace);
       }
     }
+
     /**
      * Deserializes an attribute to its associated property.
      *
@@ -525,15 +481,15 @@ superClass => {
      * @return {void}
      * @override
      */
-
-
     _attributeToProperty(attribute, value, type) {
       if (!this.__serializing) {
         const map = this.__dataAttributes;
         const property = map && map[attribute] || attribute;
-        this[property] = this._deserializeValue(value, type || this.constructor.typeForProperty(property));
+        this[property] = this._deserializeValue(value, type ||
+          this.constructor.typeForProperty(property));
       }
     }
+
     /**
      * Serializes a property to its associated attribute.
      *
@@ -545,18 +501,14 @@ superClass => {
      * @return {void}
      * @override
      */
-
-
     _propertyToAttribute(property, attribute, value) {
       this.__serializing = true;
-      value = arguments.length < 3 ? this[property] : value;
-
-      this._valueToNodeAttribute(
-      /** @type {!HTMLElement} */
-      this, value, attribute || this.constructor.attributeNameForProperty(property));
-
+      value = (arguments.length < 3) ? this[property] : value;
+      this._valueToNodeAttribute(/** @type {!HTMLElement} */(this), value,
+        attribute || this.constructor.attributeNameForProperty(property));
       this.__serializing = false;
     }
+
     /**
      * Sets a typed value to an HTML attribute on a node.
      *
@@ -571,27 +523,24 @@ superClass => {
      * @return {void}
      * @override
      */
-
-
     _valueToNodeAttribute(node, value, attribute) {
       const str = this._serializeValue(value);
-
       if (attribute === 'class' || attribute === 'name' || attribute === 'slot') {
-        node =
-        /** @type {?Element} */
-        wrap(node);
+        node = /** @type {?Element} */(wrap(node));
       }
-
       if (str === undefined) {
         node.removeAttribute(attribute);
       } else {
-        node.setAttribute(attribute, // Closure's type for `setAttribute`'s second parameter incorrectly
-        // excludes `TrustedScript`.
-        str === '' && window.trustedTypes ?
-        /** @type {?} */
-        window.trustedTypes.emptyScript : str);
+        node.setAttribute(
+            attribute,
+            // Closure's type for `setAttribute`'s second parameter incorrectly
+            // excludes `TrustedScript`.
+            (str === '' && window.trustedTypes) ?
+                /** @type {?} */ (window.trustedTypes.emptyScript) :
+                str);
       }
     }
+
     /**
      * Converts a typed JavaScript value to a string.
      *
@@ -604,17 +553,15 @@ superClass => {
      * property  value.
      * @override
      */
-
-
     _serializeValue(value) {
       switch (typeof value) {
         case 'boolean':
           return value ? '' : undefined;
-
         default:
           return value != null ? value.toString() : undefined;
       }
     }
+
     /**
      * Converts a string to a typed JavaScript value.
      *
@@ -628,16 +575,12 @@ superClass => {
      * @return {*} Typed value deserialized from the provided string.
      * @override
      */
-
-
     _deserializeValue(value, type) {
       switch (type) {
         case Boolean:
-          return value !== null;
-
+          return (value !== null);
         case Number:
           return Number(value);
-
         default:
           return value;
       }
@@ -647,3 +590,5 @@ superClass => {
 
   return PropertiesChanged;
 });
+
+export { PropertiesChanged };

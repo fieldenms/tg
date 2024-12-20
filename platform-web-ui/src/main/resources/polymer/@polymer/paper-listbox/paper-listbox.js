@@ -1,3 +1,9 @@
+import '../polymer/polymer-legacy.js';
+import '../paper-styles/default-theme.js';
+import { IronMenuBehavior } from '../iron-menu-behavior/iron-menu-behavior.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,11 +14,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import "../paper-styles/default-theme.js";
-import { IronMenuBehavior } from "../iron-menu-behavior/iron-menu-behavior.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
+
 /**
 Material design:
 [Menus](https://www.google.com/design/spec/components/menus.html)
@@ -64,7 +66,6 @@ will also focus it.
 @element paper-listbox
 @demo demo/index.html
 */
-
 Polymer({
   _template: html`
     <style>
@@ -81,11 +82,10 @@ Polymer({
 
     <slot></slot>
 `,
+
   is: 'paper-listbox',
   behaviors: [IronMenuBehavior],
 
   /** @private */
-  hostAttributes: {
-    role: 'listbox'
-  }
+  hostAttributes: {role: 'listbox'}
 });

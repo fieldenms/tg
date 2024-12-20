@@ -9,7 +9,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 /* eslint-disable valid-jsdoc */
-
 /**
  * Node wrapper to ensure ShadowDOM safe operation regardless of polyfill
  * presence or mode. Note that with the introduction of `ShadyDOM.noPatch`,
@@ -19,4 +18,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  * of legacy (Polymer.dom) API.
  * @type {function(Node):Node}
  */
-export const wrap = window['ShadyDOM'] && window['ShadyDOM']['noPatch'] && window['ShadyDOM']['wrap'] ? window['ShadyDOM']['wrap'] : window['ShadyDOM'] ? n => ShadyDOM['patch'](n) : n => n;
+const wrap = (window['ShadyDOM'] && window['ShadyDOM']['noPatch'] && window['ShadyDOM']['wrap']) ?
+  window['ShadyDOM']['wrap'] :
+  (window['ShadyDOM'] ? (n) => ShadyDOM['patch'](n) : (n) => n);
+
+export { wrap };

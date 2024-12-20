@@ -17,38 +17,27 @@ const loaderPromise = new Promise((resolve, reject) => {
   // Resolve immediately if the loader script has been added already and
   // `google.charts.load` is available. Adding the loader script twice throws
   // an error.
-  if (typeof google !== 'undefined' && google.charts && typeof google.charts.load === 'function') {
+  if (typeof google !== 'undefined' && google.charts &&
+      typeof google.charts.load === 'function') {
     resolve();
   } else {
     // Try to find existing loader script.
-
     /** @type {?HTMLScriptElement} */
-    let loaderScript = document.querySelector('script[src="https://www.gstatic.com/charts/loader.js"]');
-
+    let loaderScript = document.querySelector(
+        'script[src="https://www.gstatic.com/charts/loader.js"]');
     if (!loaderScript) {
       // If the loader is not present, add it.
       loaderScript =
-      /** @type {!HTMLScriptElement} */
-      document.createElement('script'); // Specify URL directly to pass JS compiler conformance checks.
-
+          /** @type {!HTMLScriptElement} */ (document.createElement('script'));
+      // Specify URL directly to pass JS compiler conformance checks.
       loaderScript.src = 'https://www.gstatic.com/charts/loader.js';
       document.head.appendChild(loaderScript);
     }
-
     loaderScript.addEventListener('load', resolve);
     loaderScript.addEventListener('error', reject);
   }
 });
-/**
- * @typedef {{
- *   version: (string|undefined),
- *   packages: (!Array<string>|undefined),
- *   language: (string|undefined),
- *   mapsApiKey: (string|undefined),
- * }}
- */
 
-var LoadSettings;
 /**
  * Loads Google Charts API with the selected settings or using defaults.
  *
@@ -62,21 +51,21 @@ var LoadSettings;
  * @param {!LoadSettings=} settings
  * @return {!Promise<void>}
  */
-
-export async function load(settings = {}) {
+async function load(settings = {}) {
   await loaderPromise;
   const {
     version = 'current',
     packages = ['corechart'],
     language = document.documentElement.lang || 'en',
-    mapsApiKey
+    mapsApiKey,
   } = settings;
   return google.charts.load(version, {
     'packages': packages,
     'language': language,
-    'mapsApiKey': mapsApiKey
+    'mapsApiKey': mapsApiKey,
   });
 }
+
 /**
  * Creates a DataTable object for use with a chart.
  *
@@ -110,21 +99,15 @@ export async function load(settings = {}) {
  *     the data with which we should use to construct the new DataTable object
  * @return {!Promise<!google.visualization.DataTable>} promise for the created DataTable
  */
-
-export async function dataTable(data) {
+async function dataTable(data) {
   // Ensure that `google.visualization` namespace is added to the document.
   await load();
-
   if (data == null) {
     return new google.visualization.DataTable();
   } else if (data.getNumberOfRows) {
     // Data is already a DataTable
-    return (
-      /** @type {!google.visualization.DataTable} */
-      data
-    );
-  } else if (data.cols) {
-    // data.rows may also be specified
+    return /** @type {!google.visualization.DataTable} */ (data);
+  } else if (data.cols) {  // data.rows may also be specified
     // Data is in the form of object DataTable structure
     return new google.visualization.DataTable(data);
   } else if (data.length > 0) {
@@ -135,20 +118,19 @@ export async function dataTable(data) {
     // We throw instead of creating an empty DataTable because most
     // (if not all) charts will render a sticky error in this situation.
     throw new Error('Data was empty.');
-  }
-
+    }
   throw new Error('Data format was not recognized.');
 }
+
 /**
  * Creates new `ChartWrapper`.
  * @param {!HTMLElement} container Element in which the chart will be drawn
  * @return {!Promise<!google.visualization.ChartWrapper>}
  */
-
-export async function createChartWrapper(container) {
+async function createChartWrapper(container) {
   // Ensure that `google.visualization` namespace is added to the document.
   await load();
-  return new google.visualization.ChartWrapper({
-    'container': container
-  });
+  return new google.visualization.ChartWrapper({'container': container});
 }
+
+export { createChartWrapper, dataTable, load };
