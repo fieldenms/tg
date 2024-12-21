@@ -388,7 +388,7 @@ export class TgDatetimePicker extends TgEditor {
      */
     _datePortionApproximationFormatsFor (datePortionFormat, separator) {
         const parts = datePortionFormat.split(separator);
-        const partFormats = part => part.length === 2 ? part[0].toUpperCase() : ['YYYY', 'YY', 'Y']; // converts from 'MM' to 'M'; from 'DD' to 'D'; and from 'YYYY' to ['YYYY', 'YY', 'Y']
+        const partFormats = part => part.length === 2 ? [part.toUpperCase(), part[0].toUpperCase()] : ['YYYY', 'YY', 'Y']; // converts from 'MM' to ['MM', 'M']; from 'DD' to ['DD', 'D']; and from 'YYYY' to ['YYYY', 'YY', 'Y']
         const first = partFormats(parts[0]);
         const second = partFormats(parts[1]);
         const third = partFormats(parts[2]);
@@ -396,13 +396,10 @@ export class TgDatetimePicker extends TgEditor {
         const datePortionFormats = [
             'L'
         ];
-        if (Array.isArray(first)) {
-            first.forEach(f => datePortionFormats.push(f + separator + second + separator + third));
-        } else if (Array.isArray(second)) {
-            second.forEach(s => datePortionFormats.push(first + separator + s + separator + third));
-        } else {
-            third.forEach(t => datePortionFormats.push(first + separator + second + separator + t));
-        }
+        // The order, by which formats will be generated, is not really important.
+        // E.g. the very first format will still be widest, either it will be 'YYYY/MM/DD' or 'MM/YYYY/DD' or 'DD/MM/YYYY'.
+        // Also, newest (>=2.30.1) 'moment' lib requires, for example, 'MM' to match 09 month ('M' is not sufficient).
+        first.forEach(f => second.forEach(s => third.forEach(t => datePortionFormats.push(f + separator + s + separator + t))));
         return datePortionFormats;
     }
 
