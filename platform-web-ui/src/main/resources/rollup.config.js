@@ -7,6 +7,7 @@ export default {
 
         // Our other libraries.
         'node_modules/lib/antlr-lib.js',
+        'node_modules/lib/moment-lib.js',
 
         // Polymer import files, that we are using through function imports, are listed here.
         // They can not be added to 'build-polymer.js' because we would need to somehow use those functions there for them to be not tree-shaken.

@@ -56,6 +56,8 @@
     "@webcomponents/shadycss": "^1.11.2",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "antlr4": "^4.13.2",
+    "moment": "2.24.0",
+    "moment-timezone": "0.5.33",
     "web-animations-js": "^2.3.2"
   },
   "devDependencies": {
