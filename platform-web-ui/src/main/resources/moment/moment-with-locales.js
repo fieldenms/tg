@@ -1,9 +1,8 @@
-;(function (global, factory) {
+(function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define(factory) :
-    global.moment = factory()
-}(window, (function () { 'use strict';
-
+    global.moment = factory();
+}(undefined, (function () {
     var hookCallback;
 
     function hooks () {
@@ -6056,7 +6055,6 @@
                 } else {
                     return result + 'sekundami';
                 }
-                break;
             case 'm':  // a minute / in a minute / a minute ago
                 return withoutSuffix ? 'minuta' : (isFuture ? 'minutu' : 'minutou');
             case 'mm': // 9 minutes / in 9 minutes / 9 minutes ago
@@ -6065,7 +6063,6 @@
                 } else {
                     return result + 'minutami';
                 }
-                break;
             case 'h':  // an hour / in an hour / an hour ago
                 return withoutSuffix ? 'hodina' : (isFuture ? 'hodinu' : 'hodinou');
             case 'hh': // 9 hours / in 9 hours / 9 hours ago
@@ -6074,7 +6071,6 @@
                 } else {
                     return result + 'hodinami';
                 }
-                break;
             case 'd':  // a day / in a day / a day ago
                 return (withoutSuffix || isFuture) ? 'den' : 'dnem';
             case 'dd': // 9 days / in 9 days / 9 days ago
@@ -6083,7 +6079,6 @@
                 } else {
                     return result + 'dny';
                 }
-                break;
             case 'M':  // a month / in a month / a month ago
                 return (withoutSuffix || isFuture) ? 'měsíc' : 'měsícem';
             case 'MM': // 9 months / in 9 months / 9 months ago
@@ -6092,7 +6087,6 @@
                 } else {
                     return result + 'měsíci';
                 }
-                break;
             case 'y':  // a year / in a year / a year ago
                 return (withoutSuffix || isFuture) ? 'rok' : 'rokem';
             case 'yy': // 9 years / in 9 years / 9 years ago
@@ -6101,7 +6095,6 @@
                 } else {
                     return result + 'lety';
                 }
-                break;
         }
     }
 
@@ -12338,7 +12331,6 @@
                 } else {
                     return result + 'sekundami';
                 }
-                break;
             case 'm':  // a minute / in a minute / a minute ago
                 return withoutSuffix ? 'minúta' : (isFuture ? 'minútu' : 'minútou');
             case 'mm': // 9 minutes / in 9 minutes / 9 minutes ago
@@ -12347,7 +12339,6 @@
                 } else {
                     return result + 'minútami';
                 }
-                break;
             case 'h':  // an hour / in an hour / an hour ago
                 return withoutSuffix ? 'hodina' : (isFuture ? 'hodinu' : 'hodinou');
             case 'hh': // 9 hours / in 9 hours / 9 hours ago
@@ -12356,7 +12347,6 @@
                 } else {
                     return result + 'hodinami';
                 }
-                break;
             case 'd':  // a day / in a day / a day ago
                 return (withoutSuffix || isFuture) ? 'deň' : 'dňom';
             case 'dd': // 9 days / in 9 days / 9 days ago
@@ -12365,7 +12355,6 @@
                 } else {
                     return result + 'dňami';
                 }
-                break;
             case 'M':  // a month / in a month / a month ago
                 return (withoutSuffix || isFuture) ? 'mesiac' : 'mesiacom';
             case 'MM': // 9 months / in 9 months / 9 months ago
@@ -12374,7 +12363,6 @@
                 } else {
                     return result + 'mesiacmi';
                 }
-                break;
             case 'y':  // a year / in a year / a year ago
                 return (withoutSuffix || isFuture) ? 'rok' : 'rokom';
             case 'yy': // 9 years / in 9 years / 9 years ago
@@ -12383,7 +12371,6 @@
                 } else {
                     return result + 'rokmi';
                 }
-                break;
         }
     }
 

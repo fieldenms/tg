@@ -5,7 +5,6 @@
 //! github.com/moment/moment-timezone
 
 (function (root, factory) {
-	"use strict";
 
 	/*global define*/
 	if (typeof module === 'object' && module.exports) {
@@ -15,8 +14,7 @@
 	} else {
 		factory(root.moment);                        // Browser
 	}
-}(window, function (moment) {
-	"use strict";
+}(undefined, function (moment) {
 
 	// Resolves es6 module loading issue
 	if (moment.version === undefined && moment.default) {
@@ -377,7 +375,7 @@
 			zoneScore, i, j;
 
 		for (i = 0; i < guesses.length; i++) {
-			zoneScore = new ZoneScore(getZone(guesses[i]), offsetsLength);
+			zoneScore = new ZoneScore(getZone(guesses[i]));
 			for (j = 0; j < offsetsLength; j++) {
 				zoneScore.scoreOffsetAt(offsets[j]);
 			}
