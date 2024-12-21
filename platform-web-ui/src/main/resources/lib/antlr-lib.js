@@ -1,2 +1,2 @@
-import antlr4 from '/resources/polymer/antlr4/dist/antlr4.web.mjs';
+import antlr4 from 'antlr4';
 export default antlr4;

@@ -1,4 +1,6 @@
-import '@polymer/polymer/polymer-element.js';
+import '@polymer/polymer/lib/elements/dom-bind.js';
+import '@polymer/polymer/lib/elements/dom-module.js';
+import '@polymer/polymer/lib/elements/dom-repeat.js';
 import '@polymer/polymer/polymer-legacy.js';
 import '@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
 import '@polymer/app-layout/app-drawer/app-drawer.js';
@@ -64,10 +66,8 @@ import '@polymer/paper-radio-button/paper-radio-button.js';
 import '@polymer/paper-spinner/paper-spinner.js';
 import '@polymer/paper-styles/color.js';
 import '@polymer/paper-styles/default-theme.js';
-import '@polymer/paper-styles/paper-styles.js';
-import '@polymer/paper-styles/paper-styles-classes.js';
 import '@polymer/paper-styles/shadow.js';
 import '@polymer/paper-styles/element-styles/paper-material-styles.js';
 import '@polymer/paper-toast/paper-toast.js';
 import '@polymer/paper-toolbar/paper-toolbar.js';
-import '@google-web-components/google-chart/google-chart.js'
+import '@google-web-components/google-chart/google-chart.js';
