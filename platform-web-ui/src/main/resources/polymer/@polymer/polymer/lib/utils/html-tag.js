@@ -148,4 +148,32 @@ const assertValidTemplateStringParameters = (strings, values) => {
   }
 };
 
-export { html };
+/**
+ * An html literal tag that can be used with `html` to compose.
+ * a literal string.
+ *
+ * Example:
+ *
+ *     static get template() {
+ *       return html`
+ *         <style>
+ *           :host { display: block; }
+ *           ${this.styleTemplate()}
+ *         </style>
+ *         <div class="shadowed">${staticValue}</div>
+ *         ${super.template}
+ *       `;
+ *     }
+ *     static get styleTemplate() {
+ *        return htmlLiteral`.shadowed { background: gray; }`;
+ *     }
+ *
+ * @param {!ITemplateArray} strings Constant parts of tagged template literal
+ * @param {...*} values Variable parts of tagged template literal
+ * @return {!LiteralString} Constructed literal string
+ */
+const htmlLiteral = function(strings, ...values) {
+  return new LiteralString(strings, values);
+};
+
+export { html, htmlLiteral };
