@@ -1,4 +1,4 @@
-import '/resources/components/moment-lib.js';
+import '/resources/polymer/lib/moment-lib.js';
 
 export const timeZoneFormats = {
     "UTC": {

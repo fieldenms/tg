@@ -3,7 +3,7 @@ import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn
 import {generateUUID} from '/resources/reflection/tg-polymer-utils.js';
 
 import '/resources/components/postal-lib.js';
-import '/resources/components/moment-lib.js';
+import '/resources/polymer/lib/moment-lib.js';
 
 @independentTimeZoneSetting
 
