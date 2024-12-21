@@ -2,7 +2,7 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define(factory) :
     global.moment = factory();
-}(undefined, (function () {
+}(window, (function () {
     var hookCallback;
 
     function hooks () {

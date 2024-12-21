@@ -14,7 +14,7 @@
 	} else {
 		factory(root.moment);                        // Browser
 	}
-}(undefined, function (moment) {
+}(window, function (moment) {
 
 	// Resolves es6 module loading issue
 	if (moment.version === undefined && moment.default) {
