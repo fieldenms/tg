@@ -140,7 +140,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
         final var auditedEntityTitle = TitlesDescsGetter.getEntityTitle(type);
         final var auditedEntityProp = propertyBuilder(AUDITED_ENTITY, type)
-                .addAnnotation(AnnotationSpecs.compositeKeyMember(AbstractAuditEntity.NEXT_COMPOSITE_KEY_MEMBER))
+                .addAnnotation(AnnotationSpecs.compositeKeyMember(AbstractAuditEntity.AUDITED_ENTITY_KEY_MEMBER_ORDER))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .addAnnotation(javaPoet.getAnnotation(Required.class))
                 .addAnnotation(javaPoet.getAnnotation(Final.class))

@@ -53,7 +53,12 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
      */
     public static final String CHANGED_PROPS = "changedProps";
 
-    static final int NEXT_COMPOSITE_KEY_MEMBER = 2;
+    /**
+     * The composite key order that must be specified by the {@link #AUDITED_ENTITY} property.
+     */
+    // Placing this property first ensures that its column comes first in the multi-column unique index that is always
+    // generated for composite keys, which improves performance because the first column in such an index is searchable.
+    static final int AUDITED_ENTITY_KEY_MEMBER_ORDER = 1;
 
     /**
      * Getter for property {@link #AUDITED_ENTITY}.
@@ -73,7 +78,7 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     @IsProperty
     @MapTo
     @Title(value = "Audited entity version", desc = "Version of the entity for which this audit record was created.")
-    @CompositeKeyMember(1)
+    @CompositeKeyMember(2)
     private Long auditedVersion;
 
     @IsProperty
