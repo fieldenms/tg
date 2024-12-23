@@ -1,3 +1,4 @@
-import moment from 'moment-timezone/builds/moment-timezone-with-data.js';
-import 'moment/min/locales.js';
+import 'moment';
+import 'moment/min/locales';
+import moment from 'moment-timezone';
 export default moment;
