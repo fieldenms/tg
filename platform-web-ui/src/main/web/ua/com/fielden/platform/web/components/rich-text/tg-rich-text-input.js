@@ -298,6 +298,12 @@ function preventUnwantedKeyboradEvents(event) {
     }
 }
 
+function scrollWhenListItem(event) {
+    if (event.keyCode === 13 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) {
+        scrollIntoView.bind(this)()
+    }
+}
+
 function getEditorHTMLText() {
     const html = this._editor.getHTML();
     return this._fakeSelection ? html.replace(/<mark>(.*?)<\/mark>/g, '$1') : html;
@@ -639,6 +645,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._getEditableContent().addEventListener("mousedown", mouseEventRetranslator.bind(this), true);
         //Add key down to prevent tab key on list
         this._getEditableContent().addEventListener("keydown", preventUnwantedKeyboradEvents.bind(this), true);
+        //Add key down to scroll into view when creating new list item on Enter key
+        this._getEditableContent().addEventListener("keydown", scrollWhenListItem.bind(this));
         //Initiate key binding and key event target
         this.addOwnKeyBinding('ctrl+a meta+a', '_selectAll');
         this.addOwnKeyBinding('ctrl+b meta+b', '_applyBold');
