@@ -13,7 +13,7 @@ import '/resources/components/tg-calendar.js';
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
-import '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData(). ...
+import moment from '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData(). ...
 import { _momentTz, timeZoneFormats } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 

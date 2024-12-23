@@ -13,7 +13,7 @@ import '/resources/components/tg-month-selector.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData(). ...
+import moment from '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData(). ...
 import {_momentTz} from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
