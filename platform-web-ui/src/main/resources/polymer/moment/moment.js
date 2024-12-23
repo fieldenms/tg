@@ -1,5 +1,5 @@
 import { commonjsRequire } from '../../_virtual/_commonjs-dynamic-modules.js';
-import { __module as moment$1 } from '../../_virtual/moment.js';
+import { __module as moment$1 } from '../../_virtual/moment2.js';
 
 var moment = moment$1.exports;
 

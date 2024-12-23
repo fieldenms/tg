@@ -1,3 +1,3 @@
-var moment = {exports: {}};
+import { __require as requireMoment } from '../polymer/moment/moment.js';
 
-export { moment as __module };
+requireMoment();
