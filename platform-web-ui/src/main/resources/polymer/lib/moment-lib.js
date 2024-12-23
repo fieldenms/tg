@@ -1,2 +1,2 @@
-import '../moment/min/moment-with-locales.js';
-import '../moment-timezone/builds/moment-timezone-with-data.js';
+import '../../_virtual/moment-with-locales.js';
+import '../../_virtual/moment-timezone-with-data.js';
