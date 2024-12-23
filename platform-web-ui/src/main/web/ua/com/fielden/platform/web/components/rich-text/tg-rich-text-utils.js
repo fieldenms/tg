@@ -1,4 +1,5 @@
 const RichTextConverter = {
+    'BR': convertBreak,
     'H1': convertHeader,
     'H2': convertHeader,
     'H3': convertHeader,
@@ -6,6 +7,10 @@ const RichTextConverter = {
     'UL': convertUnorderedList,
     'OL': convertOrderedList,
     'LI': convertListItem
+}
+
+function convertBreak(breakElement) {
+    return null;
 }
 
 function convertHeader(header) {
