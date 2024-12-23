@@ -1,5 +1,6 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 
 const unprocessedFiles = [
     // Separate testing dependency -- we also tree shake it because placed under '@polymer/' umbrella.
@@ -48,6 +49,7 @@ export default {
         }),
         commonjs({ // plugin to convert CommonJS modules to ES modules (see 'moment' and 'moment-timezone')
             exclude: [ ...unprocessedFiles ]
-        })
+        }),
+        json() // plugin to be able to import JSON files (see 'moment-timezone')
     ]
 };
