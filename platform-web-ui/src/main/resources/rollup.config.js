@@ -1,4 +1,14 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+
+const unprocessedFiles = [
+    // Separate testing dependency -- we also tree shake it because placed under '@polymer/' umbrella.
+    'node_modules/@polymer/test-fixture/test-fixture.js',
+
+    // Separate production files, that are used through <script src='/resources/polymer/ ... /*.js'></script>.
+    'node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js',
+    'node_modules/web-animations-js/web-animations-next-lite.min.js'
+];
 
 export default {
     input: [
@@ -25,12 +35,7 @@ export default {
         'node_modules/@polymer/paper-styles/paper-styles.js',
         'node_modules/@polymer/paper-styles/paper-styles-classes.js',
 
-        // Separate testing dependency -- we also tree shake it because placed under '@polymer/' umbrella.
-        'node_modules/@polymer/test-fixture/test-fixture.js',
-
-        // Separate production files, that are used through <script src='/resources/polymer/ ... /*.js'></script>.
-        'node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js',
-        'node_modules/web-animations-js/web-animations-next-lite.min.js'
+        ...unprocessedFiles
     ],
     output: {
         dir: 'build',
@@ -38,9 +43,11 @@ export default {
         preserveModules: true
     },
     plugins: [
-        nodeResolve({
-            extensions: ['.js', '.mjs'],
+        nodeResolve({ // plugin to resolve node-like imports (without /, ./ and ../); default 'extensions': ['.mjs', '.js', '.json', '.node']
             browser: true // required for resolving browser-related file in libs like antlr4 (see 'exports' section in 'package.json' in https://www.npmjs.com/package/antlr4?activeTab=code)
+        }),
+        commonjs({ // plugin to convert CommonJS modules to ES modules (see 'moment' and 'moment-timezone')
+            exclude: [ ...unprocessedFiles ]
         })
     ]
 };
