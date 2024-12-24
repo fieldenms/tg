@@ -1,5 +1,5 @@
 rm -f package-lock.json
-npm install
+npm install --no-bin-links
 rm -f node_modules/stacky
 cp -r lib node_modules/
 rollup --config

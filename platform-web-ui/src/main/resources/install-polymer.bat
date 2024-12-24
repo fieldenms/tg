@@ -1,5 +1,5 @@
 del "package-lock.json" && ^
-npm install && ^
+npm install --no-bin-links && ^
 del node_modules\stacky && ^
 xcopy lib node_modules\ /E /I /Q && ^
 rollup --config && ^
