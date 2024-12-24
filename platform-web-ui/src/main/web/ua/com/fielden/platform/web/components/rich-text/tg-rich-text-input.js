@@ -712,18 +712,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         const selection = this._editor.getSelection();
         if (selection && selection[0] !== selection[1]) {
             tearDownEvent(event.detail && event.detail.keyboardEvent);
-            const transferData = new DataTransfer();
-            this._getEditableContent().dispatchEvent(new ClipboardEvent('cut', {clipboardData: transferData}));
-            const clipboardItemObj = {};
-            [...transferData.items].forEach(item => {
-                item.getAsString(s => {
-                    clipboardItemObj[item.type] = new Blob([s], { type: item.type });
-                    if (Object.keys(clipboardItemObj).length === transferData.items.length) {
-                        const clipboardItem = new ClipboardItem(clipboardItemObj);
-                        navigator.clipboard.write([clipboardItem]);
-                    }
-                });
-            });
+            document.execCommand('cut');
         }
     }
 
