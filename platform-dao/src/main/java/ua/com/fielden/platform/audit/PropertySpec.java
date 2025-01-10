@@ -132,9 +132,9 @@ final class PropertySpec {
                                          case LIST -> "unmodifiableList";
                                          case SET -> "unmodifiableSet";
                                      };
-                                     builder.addStatement("return $T.%s(this.%s)".formatted(collectionsMethodName, name), Collections.class);
+                                     builder.addStatement("return $T.$L(this.$L)", collectionsMethodName, name, Collections.class);
                                  }),
-                                 () -> builder.addStatement("return this.%s".formatted(name)));
+                                 () -> builder.addStatement("return this.$L", name));
 
         return builder.build();
     }
@@ -148,11 +148,11 @@ final class PropertySpec {
 
         asCollectionalType(environment)
                 .ifPresentOrElse(collTy -> collTy.run((collTypeName, eltTypeName) -> builder
-                                         .addStatement("this.%s.clear()".formatted(name))
-                                         .addStatement("this.%s.addAll(%s)".formatted(name, name))
+                                         .addStatement("this.$L.clear()", name)
+                                         .addStatement("this.$L.addAll($L)", name, name)
                                          .addStatement("return this")),
                                  () -> builder
-                                         .addStatement("this.%s = %s".formatted(name, name))
+                                         .addStatement("this.$L = $L", name, name)
                                          .addStatement("return this"));
 
         return builder.build();
