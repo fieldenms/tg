@@ -1,11 +1,9 @@
 package ua.com.fielden.platform.audit;
 
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.*;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
@@ -81,6 +79,19 @@ final class JavaPoet {
                 default -> throw new UnsupportedOperationException("Type name [%s] cannot be reflected.");
             };
         }
+    }
+
+    /**
+     * Returns the contents of the specified java file.
+     */
+    public static String readJavaFile(final JavaFile javaFile) {
+        final var sb = new StringBuilder();
+        try {
+            javaFile.writeTo(sb);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+        return sb.toString();
     }
 
 }

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.audit;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.squareup.javapoet.*;
 import jakarta.inject.Inject;
@@ -8,31 +9,47 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
+import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
-import static javax.lang.model.element.Modifier.PUBLIC;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
+import static javax.lang.model.element.Modifier.*;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.*;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.AUDIT_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.PROPERTY;
+import static ua.com.fielden.platform.audit.AnnotationSpecs.compositeKeyMember;
 import static ua.com.fielden.platform.audit.AuditUtils.getAuditEntityTypeVersion;
+import static ua.com.fielden.platform.audit.AuditUtils.isAuditProperty;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.concatSet;
+import static ua.com.fielden.platform.utils.CollectionUtil.dropRight;
+import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
 final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
@@ -140,7 +157,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
         final var auditedEntityTitle = TitlesDescsGetter.getEntityTitle(type);
         final var auditedEntityProp = propertyBuilder(AUDITED_ENTITY, type)
-                .addAnnotation(AnnotationSpecs.compositeKeyMember(AbstractAuditEntity.AUDITED_ENTITY_KEY_MEMBER_ORDER))
+                .addAnnotation(compositeKeyMember(AbstractAuditEntity.AUDITED_ENTITY_KEY_MEMBER_ORDER))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .addAnnotation(javaPoet.getAnnotation(Required.class))
                 .addAnnotation(javaPoet.getAnnotation(Final.class))
@@ -315,6 +332,12 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         }
     }
 
+    private TypeSpec.Builder addPropertyTo(final PropertySpec propSpec, final TypeSpec.Builder builder, final ClassName builderClassName) {
+        return builder.addField(propSpec.toFieldSpec(environment))
+                .addMethod(propSpec.getAccessorSpec(environment))
+                .addMethod(propSpec.getSetterSpec(environment, builderClassName));
+    }
+
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Audit-prop entity generation
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -342,7 +365,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
         final var auditEntityProp = propertyBuilder(AUDIT_ENTITY, auditEntityClassName)
-                .addAnnotation(AnnotationSpecs.compositeKeyMember(1))
+                .addAnnotation(compositeKeyMember(1))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .addAnnotation(AnnotationSpecs.title("%s Audit".formatted(auditedEntityTitle),
                                                      "The audit event associated with this changed property."))
@@ -351,7 +374,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
         final var pdProp = propertyBuilder(PROPERTY, ParameterizedTypeName.get(
                 javaPoet.getClassName(PropertyDescriptor.class), auditEntityClassName))
-                .addAnnotation(AnnotationSpecs.compositeKeyMember(2))
+                .addAnnotation(compositeKeyMember(2))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .addAnnotation(AnnotationSpecs.title("Changed Property", "The property that was changed as part of the audit event."))
                 .build();
@@ -361,6 +384,216 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final var typeSpec = builder.build();
 
         return JavaFile.builder(auditPropTypePkg, typeSpec).build();
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Synthetic audit-entity generation
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @Override
+    public SourceInfo generateSyn(final Class<? extends AbstractEntity<?>> entityType) {
+        final var javaFile = generateSyn_(entityType);
+
+        final var fqn = Stream.of(javaFile.packageName, javaFile.typeSpec.name).filter(s -> !s.isEmpty()).collect(joining("."));
+        final var source = JavaPoet.readJavaFile(javaFile);
+        return new SourceInfo(fqn, source);
+    }
+
+    private JavaFile generateSyn_(final Class<? extends AbstractEntity<?>> entityType) {
+        validateAuditedType(entityType);
+
+        // non-empty
+        final var auditEntityTypes = auditTypeFinder.getAllAuditEntityTypesFor(entityType)
+                .stream()
+                .sorted(comparing(AuditUtils::getAuditEntityTypeVersion))
+                .toList();
+
+        final var synEntitySimpleName = "Re%s_a3t".formatted(entityType.getSimpleName());
+
+        return generateSyn_(entityType, entityType.getPackageName(), synEntitySimpleName, auditEntityTypes);
+    }
+
+    @Override
+    public SourceInfo generateSynTo(final Class<? extends AbstractEntity<?>> entityType, final Path outputPath) {
+        final var javaFile = generateSyn_(entityType);
+        try {
+            javaFile.writeTo(outputPath);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+        final var fqn = Stream.of(javaFile.packageName, javaFile.typeSpec.name).filter(s -> !s.isEmpty()).collect(joining("."));
+        final var source = JavaPoet.readJavaFile(javaFile);
+        return new SourceInfo(fqn, source);
+    }
+
+    private JavaFile generateSyn_(
+            final Class<? extends AbstractEntity<?>> auditedEntityType,
+            final String pkgName,
+            final String simpleName,
+            final List<Class<AbstractAuditEntity<AbstractEntity<?>>>> auditEntityTypes)
+    {
+        if (auditEntityTypes.isEmpty()) {
+            throw new InvalidArgumentException(
+                    format("Synthetic audit-entity type for [%s] cannot be generated: there are no audit-entity types.",
+                           auditedEntityType.getSimpleName()));
+        }
+
+        final var className = ClassName.get(pkgName, simpleName);
+        final var builder = classBuilder(className);
+
+        builder.addModifiers(PUBLIC);
+
+        builder.superclass(ParameterizedTypeName.get(AbstractSynAuditEntity.class, auditedEntityType));
+
+        builder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
+        builder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
+
+        // Declare key member "auditedEntity", common to all audit-entity type versions.
+        final var auditedEntityProp = propertyBuilder(AbstractSynAuditEntity.AUDITED_ENTITY, auditedEntityType)
+                .addAnnotation(compositeKeyMember(AbstractSynAuditEntity.AUDITED_ENTITY_KEY_MEMBER_ORDER))
+                .build();
+        addPropertyTo(auditedEntityProp, builder, className);
+
+        // "Current" audit-entity type (latest audit-entity type version).
+        final var currentAuditEntityType = auditEntityTypes.getLast();
+        final var currentAuditProperties =
+                domainMetadata.forEntity(currentAuditEntityType)
+                        .properties()
+                        .stream()
+                        .filter(pm -> isAuditProperty(pm.name()))
+                        .toList();
+
+        final var priorAuditEntityTypes = dropRight(auditEntityTypes, 1);
+
+        final Function<PropertyMetadata, String> propertyNameGenerator = new Function<>() {
+            final IdentityHashMap<PropertyMetadata, String> cache = new IdentityHashMap<>();
+            long counter = 0;
+
+            public String apply(final PropertyMetadata property) {
+                return cache.computeIfAbsent(property, p -> "$%s_%s".formatted(counter++, p.name()));
+            }
+        };
+
+        // Audit properties from all audit-entity type versions and the names they are declared under in the synthetic entity.
+        // "Old" audit properties are declared in the synthetic audit-entity using generated names to avoid potential conflicts
+        // with current audit properties.
+        // Old audit properties are those that are present in a prior audit-entity type and absent in the current one.
+        final Map<PropertyMetadata, String> allAuditProperties =
+                distinct(auditEntityTypes.stream()
+                                 .map(domainMetadata::forEntity)
+                                 .map(EntityMetadata::properties)
+                                 .flatMap(Collection::stream)
+                                 .filter(pm -> isAuditProperty(pm.name())),
+                         pm -> t2(pm.name(), pm.type()))
+                .collect(toImmutableMap(Function.identity(),
+                                        pm -> hasProperty(currentAuditEntityType, pm) ? pm.name() : propertyNameGenerator.apply(pm)));
+
+        // Declare all audit properties.
+        allAuditProperties.forEach((pm, name) -> addPropertyTo(propertyBuilder(name, pm.type().genericJavaType()).build(), builder, className));
+
+        // EQL models
+
+        final var eqlQueryType = ParameterizedTypeName.get(javaPoet.getClassName(EntityResultQueryModel.class), className);
+
+        final Map<PropertyMetadata, String> allOldAuditProperties = Maps.filterKeys(allAuditProperties, pm -> !hasProperty(currentAuditEntityType, pm));
+
+        // Yield null into audit properties absent from the current audit-entity type (i.e., old properties).
+        final var currentModelField = FieldSpec.builder(eqlQueryType,
+                                                        "model_a3t_%s".formatted(getAuditEntityTypeVersion(currentAuditEntityType)),
+                                                        PRIVATE, STATIC, FINAL)
+                .initializer("$T.$L($L.class, $T.class, $L)",
+                             SynAuditEntityUtils.class,
+                             "mkModelCurrent",
+                             className,
+                             currentAuditEntityType,
+                             codeSetOf(allOldAuditProperties.values()))
+                .build();
+
+        final var priorModelFields = priorAuditEntityTypes.stream()
+                .map(priorAuditEntityType -> {
+                    // Yield null into audit properties absent from this prior audit-entity type.
+                    final var nullYieldsArg = codeSetOf(
+                            Maps.filterKeys(allAuditProperties, pm -> !hasProperty(priorAuditEntityType, pm))
+                                    .values());
+                    // Yield old properties under generated names.
+                    final var renamedYieldsArg = codeMapOf(
+                            CollectionUtil.map(Maps.filterKeys(allOldAuditProperties, pm -> hasProperty(priorAuditEntityType, pm)),
+                                               (pm, $) -> pm.name(),
+                                               ($, genName) -> genName));
+                    // Properties present in both the current and prior audit-entity types are yielded as usual.
+                    final var otherYieldsArg = codeSetOf(
+                            concatSet(currentAuditProperties.stream()
+                                              .filter(pm -> hasProperty(priorAuditEntityType, pm))
+                                              .map(PropertyMetadata::name)
+                                              .collect(toSet()),
+                                      Set.of(AbstractEntity.ID, AbstractEntity.VERSION),
+                                      AbstractSynAuditEntity.BASE_PROPERTIES));
+
+                    return FieldSpec.builder(eqlQueryType,
+                                             "model_a3t_%s".formatted(getAuditEntityTypeVersion(priorAuditEntityType)),
+                                             PRIVATE, STATIC, FINAL)
+                            .initializer("$T.$L($L.class, $T.class, $L, $L, $L)",
+                                         SynAuditEntityUtils.class,
+                                         "mkModelPrior",
+                                         className,
+                                         priorAuditEntityType,
+                                         nullYieldsArg,
+                                         renamedYieldsArg,
+                                         otherYieldsArg)
+                            .build();
+                })
+                .toList();
+
+        final var modelField = FieldSpec.builder(eqlQueryType, "model_", PROTECTED, STATIC, FINAL)
+                .initializer(CodeBlock.of("$T.$L($L)",
+                                          SynAuditEntityUtils.class,
+                                          "combineModels",
+                                          CollectionUtil.append(priorModelFields, currentModelField)
+                                                  .stream()
+                                                  .map(field -> CodeBlock.of("$L", field.name))
+                                                  .map(CodeBlock::toString)
+                                                  .collect(joining(", "))))
+                .build();
+
+        builder.addFields(priorModelFields);
+        builder.addField(currentModelField);
+        builder.addField(modelField);
+
+        return JavaFile.builder(pkgName, builder.build()).build();
+    }
+
+    private boolean hasPropertyOfType(final Class<? extends AbstractEntity<?>> entityType, final String name, final Type type) {
+        return domainMetadata.forPropertyOpt(entityType, name)
+                .filter(pm -> pm.type().genericJavaType().equals(type))
+                .isPresent();
+    }
+
+    private boolean hasProperty(final Class<? extends AbstractEntity<?>> entityType, final PropertyMetadata property) {
+        return hasPropertyOfType(entityType, property.name(), property.type().genericJavaType());
+    }
+
+    /**
+     * Generates code that calls {@link Set#of(Object[])} with the specified strings as arguments.
+     */
+    private CodeBlock codeSetOf(final Iterable<String> strings) {
+        return CodeBlock.of("$T.of($L)",
+                            Set.class,
+                            Streams.stream(strings)
+                                    .map(s -> CodeBlock.of("$S", s))
+                                    .map(CodeBlock::toString)
+                                    .collect(joining(", ")));
+    }
+
+    /**
+     * Generates code that calls {@link CollectionUtil#mapOf(T2[])} with the specified map of strings as arguments (each entry becomes a pair).
+     */
+    private CodeBlock codeMapOf(final Map<String, String> map) {
+        return CodeBlock.of("$T.mapOf($L)",
+                            CollectionUtil.class,
+                            map.entrySet().stream()
+                                    .map(entry -> CodeBlock.of("$T.t2($S, $S)", T2.class, entry.getKey(), entry.getValue()))
+                                    .map(CodeBlock::toString)
+                                    .collect(joining(", ")));
     }
 
 }

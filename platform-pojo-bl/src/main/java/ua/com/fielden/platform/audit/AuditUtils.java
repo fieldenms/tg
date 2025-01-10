@@ -53,6 +53,16 @@ public final class AuditUtils {
         return result.isEmpty() ? null : result;
     }
 
+    /**
+     * Returns {@code true} if the specified property names an audit property (i.e., was constructed with {@link #auditPropertyName(CharSequence)}).
+     */
+    public static boolean isAuditProperty(final CharSequence property) {
+        if (property == null) {
+            throw new InvalidArgumentException("Argument [auditPropertyName] must not be null.");
+        }
+        return StringUtils.startsWith(property, "a3t_");
+    }
+
     public static String getAuditTypeName(final Class<? extends AbstractEntity<?>> type, final int version) {
         final var simpleName = type.getSimpleName() + "_" + AbstractAuditEntity.A3T + "_" + version;
         return type.getPackageName() + "." + simpleName;
