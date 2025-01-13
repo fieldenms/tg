@@ -15,6 +15,12 @@ final class AnnotationSpecs {
                 .build();
     }
 
+    public static AnnotationSpec synAuditFor(final Class<? extends AbstractEntity<?>> entityType) {
+        return AnnotationSpec.builder(SynAuditFor.class)
+                .addMember("value", "$T.class", entityType)
+                .build();
+    }
+
     public static AnnotationSpec auditPropFor(final Class<? extends AbstractAuditEntity<?>> auditEntityType) {
         return AnnotationSpec.builder(AuditPropFor.class)
                 .addMember("value", "$T.class", auditEntityType)

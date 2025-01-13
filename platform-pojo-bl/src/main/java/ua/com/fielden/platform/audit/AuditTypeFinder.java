@@ -9,12 +9,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.Comparator.comparingLong;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
 import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
+import static ua.com.fielden.platform.audit.AuditUtils.isSynAuditEntityType;
 
 final class AuditTypeFinder implements IAuditTypeFinder {
 
@@ -24,6 +27,11 @@ final class AuditTypeFinder implements IAuditTypeFinder {
      */
     private final Map<Class<? extends AbstractEntity<?>>, List<Class<? extends AbstractAuditEntity<?>>>> auditEntityTypesMap;
 
+    /**
+     * A map in which each entry associates an audited entity type with a synthetic audit-entity type.
+     */
+    private final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractSynAuditEntity<?>>> synAuditEntityTypesMap;
+
     AuditTypeFinder(final Iterable<Class<?>> types) {
         this.auditEntityTypesMap = Streams.stream(types)
                 .filter(ty -> ty != AbstractAuditEntity.class && isAuditEntityType(ty))
@@ -31,6 +39,10 @@ final class AuditTypeFinder implements IAuditTypeFinder {
                 .collect(groupingBy(AuditUtils::getAuditedType,
                                     collectingAndThen(toImmutableList(),
                                                       list -> ImmutableList.sortedCopyOf(comparingLong(AuditUtils::getAuditEntityTypeVersion), list))));
+        this.synAuditEntityTypesMap = Streams.stream(types)
+                .filter(ty -> ty != AbstractSynAuditEntity.class && isSynAuditEntityType(ty))
+                .map(ty -> (Class<AbstractSynAuditEntity<AbstractEntity<?>>>) ty)
+                .collect(toImmutableMap(AuditUtils::getAuditedTypeForSyn, Function.identity()));
     }
 
     @Override
@@ -86,6 +98,21 @@ final class AuditTypeFinder implements IAuditTypeFinder {
     @SuppressWarnings("unchecked")
     public <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> findAllAuditEntityTypesFor(final Class<? extends AbstractEntity<?>> entityType) {
         return (Collection) auditEntityTypesMap.getOrDefault(entityType, ImmutableList.of());
+    }
+
+    @Override
+    public <E extends AbstractEntity<?>> Class<AbstractSynAuditEntity<E>> getSynAuditEntityType(final Class<E> entityType) {
+        final var synAuditType = synAuditEntityTypesMap.get(entityType);
+        if (synAuditType == null) {
+            throw new InvalidArgumentException("Synthetic audit-entity type for [%s] doesn't exist.".formatted(entityType.getSimpleName()));
+        }
+        return (Class<AbstractSynAuditEntity<E>>) synAuditType;
+    }
+
+    @Override
+    public <E extends AbstractEntity<?>> Optional<Class<AbstractSynAuditEntity<E>>> findSynAuditEntityType(final Class<E> entityType) {
+        final var synAuditType = synAuditEntityTypesMap.get(entityType);
+        return Optional.ofNullable((Class<AbstractSynAuditEntity<E>>) synAuditType);
     }
 
     @Override

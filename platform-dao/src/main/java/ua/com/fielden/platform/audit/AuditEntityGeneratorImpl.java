@@ -41,6 +41,7 @@ import static ua.com.fielden.platform.audit.AbstractAuditEntity.*;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.AUDIT_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.PROPERTY;
 import static ua.com.fielden.platform.audit.AnnotationSpecs.compositeKeyMember;
+import static ua.com.fielden.platform.audit.AnnotationSpecs.synAuditFor;
 import static ua.com.fielden.platform.audit.AuditUtils.getAuditEntityTypeVersion;
 import static ua.com.fielden.platform.audit.AuditUtils.isAuditProperty;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
@@ -445,6 +446,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         builder.superclass(ParameterizedTypeName.get(AbstractSynAuditEntity.class, auditedEntityType));
 
+        builder.addAnnotation(synAuditFor(auditedEntityType));
         builder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
         builder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
 

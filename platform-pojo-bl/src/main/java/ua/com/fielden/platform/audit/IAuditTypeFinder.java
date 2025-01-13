@@ -58,4 +58,17 @@ public interface IAuditTypeFinder {
      */
     <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> findAllAuditEntityTypesFor(Class<? extends AbstractEntity<?>> entityType);
 
+    /**
+     * Locates and returns the synthetic audit-entity type for the specified entity type.
+     * <p>
+     * It is an error if an audit-entity type for the specified entity type doesn't exist.
+     */
+    <E extends AbstractEntity<?>> Class<AbstractSynAuditEntity<E>> getSynAuditEntityType(Class<E> entityType);
+
+    /**
+     * Locates the synthetic audit-entity type for the specified entity type and returns it if found.
+     * Otherwise, returns an empty optional.
+     */
+    <E extends AbstractEntity<?>> Optional<Class<AbstractSynAuditEntity<E>>> findSynAuditEntityType(Class<E> entityType);
+
 }

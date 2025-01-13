@@ -72,6 +72,10 @@ public final class AuditUtils {
         return AbstractAuditEntity.class.isAssignableFrom(type);
     }
 
+    public static boolean isSynAuditEntityType(final Class<?> type) {
+        return AbstractSynAuditEntity.class.isAssignableFrom(type);
+    }
+
     /**
      * Locates and returns the {@linkplain AbstractAuditProp audit-prop entity type} for the specified audit-entity type using the class loader of the latter.
      * Returns an empty optional if the audit-prop type cannot be located.
@@ -169,6 +173,24 @@ public final class AuditUtils {
         if (atAuditFor == null) {
             throw new EntityDefinitionException(format("Audit-entity [%s] is missing required annotation @%s",
                                                        auditType.getTypeName(), AuditFor.class.getTypeName()));
+        }
+        return (Class<E>) atAuditFor.value();
+    }
+
+    /**
+     * Locates and returns the audited entity type for the specified audit-entity type.
+     * <p>
+     * It is an error if the audited type cannot be located.
+     *
+     * @see #getAuditedTypeForAuditPropType(Class)
+     */
+    public static <E extends AbstractEntity<?>, AE extends AbstractSynAuditEntity<E>>
+    Class<E> getAuditedTypeForSyn(final Class<AE> synAuditType)
+    {
+        final var atAuditFor = synAuditType.getAnnotation(SynAuditFor.class);
+        if (atAuditFor == null) {
+            throw new EntityDefinitionException(format("Synthetic audit-entity [%s] is missing required annotation @%s",
+                                                       synAuditType.getTypeName(), SynAuditFor.class.getTypeName()));
         }
         return (Class<E>) atAuditFor.value();
     }
