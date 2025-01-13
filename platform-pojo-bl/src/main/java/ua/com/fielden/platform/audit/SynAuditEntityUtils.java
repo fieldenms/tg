@@ -125,8 +125,16 @@ public final class SynAuditEntityUtils {
             final EntityResultQueryModel<T> currentModel,
             final EntityResultQueryModel<T>... priorModels
     ) {
-        final var models = concatList(List.of(currentModel), Arrays.asList(priorModels)).toArray(EntityResultQueryModel[]::new);
-        return EntityQueryUtils.select(models).model();
+        // When there are no prior models, we end up with select(currentModel), which is an edge case in EQL that can't be compiled,
+        // so let's prevent that.
+        if (priorModels.length == 0) {
+            return currentModel;
+        }
+        else {
+            final var models = concatList(List.of(currentModel), Arrays.asList(priorModels)).toArray(
+                    EntityResultQueryModel[]::new);
+            return EntityQueryUtils.select(models).model();
+        }
     }
 
     private SynAuditEntityUtils() {}
