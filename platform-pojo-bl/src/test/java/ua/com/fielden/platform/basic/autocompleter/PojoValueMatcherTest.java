@@ -4,9 +4,9 @@ import com.google.inject.Injector;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test_entities.Entity;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText;
 import ua.com.fielden.platform.types.RichText;
 
 import java.util.List;

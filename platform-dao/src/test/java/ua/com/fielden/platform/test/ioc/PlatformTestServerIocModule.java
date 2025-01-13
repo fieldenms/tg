@@ -174,6 +174,11 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(ITgReVehicleModel.class).to(TgReVehicleModelDao.class);
         bind(TgNoteCo.class).to(TgNoteDao.class);
 
+        bind(TgInventoryPartCo.class).to(TgInventoryPartDao.class);
+        bind(TgInventoryCo.class).to(TgInventoryDao.class);
+        bind(TgInventoryBinCo.class).to(TgInventoryBinDao.class);
+        bind(TgInventoryIssueCo.class).to(TgInventoryIssueDao.class);
+
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...
         //       this should really be corrected at some stage

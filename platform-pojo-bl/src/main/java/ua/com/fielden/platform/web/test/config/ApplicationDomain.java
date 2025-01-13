@@ -1,24 +1,13 @@
 package ua.com.fielden.platform.web.test.config;
 
-import static java.util.Collections.unmodifiableSet;
-
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import fielden.test_app.close_leave.OpenTgCloseLeaveExampleMasterAction;
-import fielden.test_app.close_leave.TgCloseLeaveExample;
-import fielden.test_app.close_leave.TgCloseLeaveExampleDetail;
-import fielden.test_app.close_leave.TgCloseLeaveExampleDetailUnpersisted;
-import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenDetailUnpersisted_MenuItem;
-import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenDetail_MenuItem;
-import fielden.test_app.close_leave.TgCloseLeaveExampleMaster_OpenMain_MenuItem;
+import fielden.test_app.close_leave.*;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.sample.domain.composite.TgMinorComponent;
+import ua.com.fielden.platform.sample.domain.composite.TgRollingStockMajorComponent;
+import ua.com.fielden.platform.sample.domain.composite.TgRollingStockMinorComponent;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
@@ -31,6 +20,14 @@ import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcess
 import ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
+
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -57,6 +54,9 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgPersistentEntityWithPropertiesAttachment.class);
         add(TgExportFunctionalEntity.class);
         add(TgPersistentCompositeEntity.class);
+        add(TgRollingStockMinorComponent.class);
+        add(TgRollingStockMajorComponent.class);
+        add(TgMinorComponent.class);
         add(TgFunctionalEntityWithCentreContext.class);
         add(TgStatusActivationFunctionalEntity.class);
         add(TgISStatusActivationFunctionalEntity.class);

@@ -188,7 +188,7 @@ public abstract class AbstractQuery1 {
                 transformForYield(original, yields, mainSource));
         }
 
-        return new OrderBys2(enhanced);
+        return orderBys.updateOrderBys(enhanced);
     }
 
     private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {

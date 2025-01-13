@@ -38,12 +38,12 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStandaloneCondExpr(EQLParser.StandaloneCondExprContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code OrderBy}
+	 * Visit a parse tree produced by the {@code StandaloneOrderBy}
 	 * labeled alternative in {@link EQLParser#query}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitOrderBy(EQLParser.OrderByContext ctx);
+	T visitStandaloneOrderBy(EQLParser.StandaloneOrderByContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code SelectEnd_Model}
 	 * labeled alternative in {@link EQLParser#selectEnd}.
@@ -469,6 +469,12 @@ public interface EQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitOrStandaloneCondition(EQLParser.OrStandaloneConditionContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link EQLParser#orderBy}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitOrderBy(EQLParser.OrderByContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code OrderByOperand_Single}
 	 * labeled alternative in {@link EQLParser#orderByOperand}.

@@ -9,7 +9,6 @@ import ua.com.fielden.platform.eql.antlr.exceptions.EqlCompilationException;
 import ua.com.fielden.platform.eql.antlr.tokens.PropToken;
 import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 import ua.com.fielden.platform.eql.antlr.tokens.util.TokensFormatter;
-import ua.com.fielden.platform.eql.exceptions.EqlStage0ProcessingException;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 
 import static java.util.Objects.requireNonNull;
@@ -181,10 +180,9 @@ public final class EqlCompiler {
         }
 
         @Override
-        public EqlCompilationResult visitOrderBy(final OrderByContext ctx) {
-            return new OrderByVisitor(transformer).visitOrderBy(ctx);
+        public EqlCompilationResult visitStandaloneOrderBy(final StandaloneOrderByContext ctx) {
+            return new StandaloneOrderByVisitor(transformer).visitStandaloneOrderBy(ctx);
         }
-
     }
 
     private static final class ThrowingErrorListener extends BaseErrorListener {

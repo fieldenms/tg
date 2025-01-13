@@ -48,9 +48,9 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
         final IReferenceHierarchy coReferenceHierarchy = co(ReferenceHierarchy.class);
         final var refChy = coReferenceHierarchy.new_();
         refChy.beginInitialising();
-        refChy.setLoadedHierarchyLevel(ReferenceHierarchyLevel.REFERENCE_BY_INSTANCE);
-        refChy.setRefEntityId(entity.getId());
-        refChy.setRefEntityType(entity.getType().getName());
+        refChy.setLoadedHierarchyLevel(ReferenceHierarchyLevel.REFERENCE_BY_INSTANCE)
+              .setRefEntityId(entity.getId())
+              .setRefEntityType(entity.getType().getName());
         refChy.endInitialising();
 
         final var savedRefChy = coReferenceHierarchy.save(refChy);
