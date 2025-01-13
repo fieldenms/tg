@@ -46,7 +46,11 @@ const template = html`
         .ordered-list:not(:first-child) {
             margin-left: 8px;
         }
-        .unordered-list-item {
+        .unordered-list:not(:last-child),
+        .ordered-list:not(:last-child) {
+            margin-right: 8px;
+        }
+        .unordered-list-item:not(:last-child) {
             margin-right: 8px;
         }
         .unordered-list-item::before {
@@ -60,7 +64,7 @@ const template = html`
             border-radius: 50%;
             background-color: #ccc;
         }
-        .task-list-item {
+        .task-list-item:not(:last-child) {
             margin-right: 8px;
         }
         .task-list-item::before {
@@ -86,6 +90,8 @@ const template = html`
         }
         .ordered-list-item {
             counter-increment: orderedList;
+        }
+        .ordered-list-item:not(:last-child) {
             margin-right: 8px;
         }
         .ordered-list-item::before {

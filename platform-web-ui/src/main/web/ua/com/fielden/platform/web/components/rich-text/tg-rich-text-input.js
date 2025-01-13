@@ -292,8 +292,7 @@ function rgbToHex(rgbString) {
 }
 
 function preventUnwantedKeyboradEvents(event) {
-    if ((event.keyCode === 9 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) || 
-        ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/)) {
+    if ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/) {
         event.preventDefault();
     }
 }
@@ -655,8 +654,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.addOwnKeyBinding('ctrl+x meta+x', '_cut');
         this.addOwnKeyBinding('ctrl+z meta+z', '_undo');
         this.addOwnKeyBinding('ctrl+y meta+y', '_redo');
-        this.addOwnKeyBinding('tab', '_stopKeyboardEvent');
-        this.addOwnKeyBinding('shift+tab', '_stopKeyboardEvent');
         this.addOwnKeyBinding('ctrl+u meta+u', '_createBulletList');
         this.addOwnKeyBinding('ctrl+o meta+o', '_createOrderedList');
         this.addOwnKeyBinding('esc', '_stopEditing');
@@ -702,10 +699,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         const state = this._editor.wwEditor.createState();
         state.doc = this._editor.wwEditor.view.state.doc;
         this._editor.wwEditor.view.updateState(state);
-    }
-
-    _stopKeyboardEvent(event) {
-        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     _cut(event) {
