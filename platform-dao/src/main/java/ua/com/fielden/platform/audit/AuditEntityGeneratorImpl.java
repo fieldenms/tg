@@ -48,8 +48,7 @@ import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.concatSet;
-import static ua.com.fielden.platform.utils.CollectionUtil.dropRight;
+import static ua.com.fielden.platform.utils.CollectionUtil.*;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
 final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
@@ -512,58 +511,69 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                              codeSetOf(allOldAuditProperties.values()))
                 .build();
 
-        final var priorModelFields = priorAuditEntityTypes.stream()
-                .map(priorAuditEntityType -> {
-                    // Yield null into audit properties absent from this prior audit-entity type.
-                    final var nullYieldsArg = codeSetOf(
-                            Maps.filterKeys(allAuditProperties, pm -> !hasProperty(priorAuditEntityType, pm))
-                                    .values());
-                    // Yield old properties under generated names.
-                    final var renamedYieldsArg = codeMapOf(
-                            CollectionUtil.map(Maps.filterKeys(allOldAuditProperties, pm -> hasProperty(priorAuditEntityType, pm)),
-                                               (pm, $) -> pm.name(),
-                                               ($, genName) -> genName));
-                    // Properties present in both the current and prior audit-entity types are yielded as usual.
-                    final var otherYieldsArg = codeSetOf(
-                            concatSet(currentAuditProperties.stream()
-                                              .filter(pm -> hasProperty(priorAuditEntityType, pm))
-                                              .map(PropertyMetadata::name)
-                                              .collect(toSet()),
-                                      Set.of(AbstractEntity.ID, AbstractEntity.VERSION),
-                                      AbstractSynAuditEntity.BASE_PROPERTIES));
+        final Map<Class<? extends AbstractAuditEntity<?>>, FieldSpec> priorModelFieldsMap =
+                priorAuditEntityTypes.stream()
+                        .collect(toImmutableMap(
+                                Function.identity(),
+                                priorAuditEntityType -> {
+                                    // Yield null into audit properties absent from this prior audit-entity type.
+                                    final var nullYieldsArg = codeSetOf(
+                                            Maps.filterKeys(allAuditProperties, pm -> !hasProperty(priorAuditEntityType, pm))
+                                                    .values());
+                                    // Yield old properties under generated names.
+                                    final var renamedYieldsArg = codeMapOf(
+                                            CollectionUtil.map(Maps.filterKeys(allOldAuditProperties, pm -> hasProperty(priorAuditEntityType, pm)),
+                                                               (pm, $) -> pm.name(),
+                                                               ($, genName) -> genName));
+                                    // Properties present in both the current and prior audit-entity types are yielded as usual.
+                                    final var otherYieldsArg = codeSetOf(
+                                            concatSet(currentAuditProperties.stream()
+                                                              .filter(pm -> hasProperty(priorAuditEntityType, pm))
+                                                              .map(PropertyMetadata::name)
+                                                              .collect(toSet()),
+                                                      Set.of(AbstractEntity.ID, AbstractEntity.VERSION),
+                                                      AbstractSynAuditEntity.BASE_PROPERTIES));
 
-                    return FieldSpec.builder(eqlQueryType,
-                                             "model_a3t_%s".formatted(getAuditEntityTypeVersion(priorAuditEntityType)),
-                                             PRIVATE, STATIC, FINAL)
-                            .initializer("$T.$L($L.class, $T.class, $L, $L, $L)",
-                                         SynAuditEntityUtils.class,
-                                         "mkModelPrior",
-                                         className,
-                                         priorAuditEntityType,
-                                         nullYieldsArg,
-                                         renamedYieldsArg,
-                                         otherYieldsArg)
-                            .build();
-                })
+                                    return FieldSpec.builder(eqlQueryType,
+                                                             "model_a3t_%s".formatted(getAuditEntityTypeVersion(priorAuditEntityType)),
+                                                             PRIVATE, STATIC, FINAL)
+                                            .initializer("$T.$L($L.class, $T.class, $L, $L, $L)",
+                                                         SynAuditEntityUtils.class,
+                                                         "mkModelPrior",
+                                                         className,
+                                                         priorAuditEntityType,
+                                                         nullYieldsArg,
+                                                         renamedYieldsArg,
+                                                         otherYieldsArg)
+                                            .build();
+                                }));
+
+        // From highest version to lowest
+        final var sortedPriorModelFields = priorModelFieldsMap.entrySet()
+                .stream()
+                .sorted(comparing(Map.Entry::getKey, AUDIT_ENTITY_TYPE_VERSION_COMPARATOR.reversed()))
+                .map(Map.Entry::getValue)
                 .toList();
-
         final var modelField = FieldSpec.builder(eqlQueryType, "model_", PROTECTED, STATIC, FINAL)
                 .initializer(CodeBlock.of("$T.$L($L)",
                                           SynAuditEntityUtils.class,
                                           "combineModels",
-                                          CollectionUtil.append(priorModelFields, currentModelField)
+                                          concatList(List.of(currentModelField), sortedPriorModelFields)
                                                   .stream()
                                                   .map(field -> CodeBlock.of("$L", field.name))
                                                   .map(CodeBlock::toString)
                                                   .collect(joining(", "))))
                 .build();
 
-        builder.addFields(priorModelFields);
         builder.addField(currentModelField);
+        builder.addFields(sortedPriorModelFields);
         builder.addField(modelField);
 
         return JavaFile.builder(pkgName, builder.build()).build();
     }
+
+    private static final Comparator<Class<? extends AbstractAuditEntity<?>>> AUDIT_ENTITY_TYPE_VERSION_COMPARATOR =
+            comparing(AuditUtils::getAuditEntityTypeVersion);
 
     private boolean hasPropertyOfType(final Class<? extends AbstractEntity<?>> entityType, final String name, final Type type) {
         return domainMetadata.forPropertyOpt(entityType, name)
