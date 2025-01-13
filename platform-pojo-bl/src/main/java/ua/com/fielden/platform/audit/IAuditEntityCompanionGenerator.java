@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.audit;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+
 /**
  * This interface defines the generator of audit-entity companion object types.
  */
@@ -16,5 +18,7 @@ public interface IAuditEntityCompanionGenerator {
      * Generates a companion object implementation for the specified audit-prop entity type.
      */
     Class<?> generateCompanionForAuditProp(Class<? extends AbstractAuditProp> type);
+
+    Class<?> generateCompanionForSynAuditEntity(Class<? extends AbstractSynAuditEntity> type);
 
 }
