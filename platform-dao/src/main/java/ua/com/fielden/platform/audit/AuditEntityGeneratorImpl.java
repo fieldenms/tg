@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.meta.PropertyTypeMetadata;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -32,6 +33,7 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -508,7 +510,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                              "mkModelCurrent",
                              className,
                              currentAuditEntityType,
-                             codeSetOf(allOldAuditProperties.values()))
+                             codeMapOf(mkNullYields(allOldAuditProperties), "$S", "$L"))
                 .build();
 
         final Map<Class<? extends AbstractAuditEntity<?>>, FieldSpec> priorModelFieldsMap =
@@ -517,14 +519,15 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                                 Function.identity(),
                                 priorAuditEntityType -> {
                                     // Yield null into audit properties absent from this prior audit-entity type.
-                                    final var nullYieldsArg = codeSetOf(
-                                            Maps.filterKeys(allAuditProperties, pm -> !hasProperty(priorAuditEntityType, pm))
-                                                    .values());
+                                    final var nullYieldsArg = codeMapOf(
+                                            mkNullYields(Maps.filterKeys(allAuditProperties, pm -> !hasProperty(priorAuditEntityType, pm))),
+                                            "$S", "$L");
                                     // Yield old properties under generated names.
                                     final var renamedYieldsArg = codeMapOf(
-                                            CollectionUtil.map(Maps.filterKeys(allOldAuditProperties, pm -> hasProperty(priorAuditEntityType, pm)),
+                                            map(Maps.filterKeys(allOldAuditProperties, pm -> hasProperty(priorAuditEntityType, pm)),
                                                                (pm, $) -> pm.name(),
-                                                               ($, genName) -> genName));
+                                                               ($, genName) -> genName),
+                                            "$S", "$S");
                                     // Properties present in both the current and prior audit-entity types are yielded as usual.
                                     final var otherYieldsArg = codeSetOf(
                                             concatSet(currentAuditProperties.stream()
@@ -572,6 +575,29 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         return JavaFile.builder(pkgName, builder.build()).build();
     }
 
+    /**
+     * Creates a map of yields ({@code {alias : value}}), where {@code value} is always {@code null}, and where {@code null}
+     * is not applicable, some default value is used.
+     * <p>
+     * The definition of <i>default value</i> may be refined in the future.
+     *
+     * @param propertyMap  a map containing properties for which null-yields are to be created;
+     *                     values in the map are corresponding names as declared by a synthetic entity
+     */
+    private static Map<String, Object> mkNullYields(final Map<PropertyMetadata, String> propertyMap) {
+        final var map = new HashMap<String, Object>(propertyMap.size());
+
+        propertyMap.forEach((pm, name) -> {
+            final var value = switch (pm.type()) {
+                case PropertyTypeMetadata.Primitive ty when ty.javaType() == boolean.class -> false;
+                default -> null;
+            };
+            map.put(name, value);
+        });
+
+        return unmodifiableMap(map);
+    }
+
     private static final Comparator<Class<? extends AbstractAuditEntity<?>>> AUDIT_ENTITY_TYPE_VERSION_COMPARATOR =
             comparing(AuditUtils::getAuditEntityTypeVersion);
 
@@ -598,13 +624,17 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     }
 
     /**
-     * Generates code that calls {@link CollectionUtil#mapOf(T2[])} with the specified map of strings as arguments (each entry becomes a pair).
+     * Generates code that calls {@link CollectionUtil#mapOf(T2[])} with arguments from the specified map (each entry becomes a pair).
+     *
+     * @param keyFormat  format specifier for keys (see {@link CodeBlock})
+     * @param valueFormat  format specifier for values (see {@link CodeBlock})
      */
-    private CodeBlock codeMapOf(final Map<String, String> map) {
+    private CodeBlock codeMapOf(final Map<?, ?> map, final String keyFormat, final String valueFormat) {
         return CodeBlock.of("$T.mapOf($L)",
                             CollectionUtil.class,
                             map.entrySet().stream()
-                                    .map(entry -> CodeBlock.of("$T.t2($S, $S)", T2.class, entry.getKey(), entry.getValue()))
+                                    .map(entry -> CodeBlock.of("$T.t2(%s, %s)".formatted(keyFormat, valueFormat),
+                                                               T2.class, entry.getKey(), entry.getValue()))
                                     .map(CodeBlock::toString)
                                     .collect(joining(", ")));
     }
