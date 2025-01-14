@@ -132,7 +132,7 @@ final class PropertySpec {
                                          case LIST -> "unmodifiableList";
                                          case SET -> "unmodifiableSet";
                                      };
-                                     builder.addStatement("return $T.$L(this.$L)", collectionsMethodName, name, Collections.class);
+                                     builder.addStatement("return $T.$L(this.$L)", Collections.class, collectionsMethodName, name);
                                  }),
                                  () -> builder.addStatement("return this.$L", name));
 
