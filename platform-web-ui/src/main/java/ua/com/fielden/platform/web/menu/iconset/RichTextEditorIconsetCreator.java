@@ -5,7 +5,7 @@ import ua.com.fielden.platform.svg.combining.IronIconsetUtility;
 import java.io.IOException;
 
 /**
- * The icon-set creator for reference hierarchy
+ * The icon-set creator for rich text editor
  *
  * @author TG Team
  *

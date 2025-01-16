@@ -8,6 +8,13 @@ import ua.com.fielden.platform.web.view.master.api.widgets.richtext.IRichTextCon
 import ua.com.fielden.platform.web.view.master.api.widgets.richtext.IRichTextConfigWithMinHeight;
 import ua.com.fielden.platform.web.view.master.api.widgets.richtext.impl.RichTextWidget;
 
+/**
+ * Implementation for rich text edtir configuration.
+ *
+ * @param <T>
+ *
+ * @author TG Team
+ */
 public class RichTextConfig<T extends AbstractEntity<?>>
         extends AbstractEditorWidgetConfig<T, RichTextWidget, IRichTextConfig0<T>>
         implements IRichTextConfig<T>{

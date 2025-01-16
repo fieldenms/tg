@@ -1,3 +1,6 @@
+/**
+ * List of available converters
+ */
 const RichTextConverter = {
     'BR': convertBreak,
     'H1': convertHeader,
@@ -9,6 +12,7 @@ const RichTextConverter = {
     'LI': convertListItem
 }
 
+/**********************Converters***************************************************/
 function convertBreak(breakElement) {
     return null;
 }
@@ -50,6 +54,7 @@ function convertListItem(listItem) {
     }
     return moveChildren(listItem, spanItem);
 }
+/***********************************************************************************/
 
 function moveChildren(from, to) {
     while(from.hasChildNodes()) {
@@ -73,6 +78,12 @@ function convertNode(root) {
     return root;
 }
 
+/**
+ * Simplification should convert HTML rich text into single line HTML text including lists, paragraphs, breaks etc.
+ * 
+ * @param {String} richText - HTML text to simplify.
+ * @returns 
+ */
 export function simplifyRichText(richText) {
     const root = document.createElement('div');
     root.innerHTML = richText;

@@ -8,6 +8,12 @@ import java.util.Map;
 
 import static java.lang.String.format;
 
+/**
+ * The implementation box for rich text widgets.
+ *
+ * @author TG Team
+ *
+ */
 public class RichTextWidget extends AbstractWidget {
 
     private final Class<? extends AbstractEntity<?>> entityType;
@@ -15,15 +21,32 @@ public class RichTextWidget extends AbstractWidget {
     private int height = 100; //default height
     private int minHeight = 0; //default min height
 
+    /**
+     * Creates new rich text widget for specified property in entityType and specified title/description pair.
+     *
+     * @param titleDesc
+     * @param entityType
+     * @param propertyName
+     */
     public RichTextWidget(final Pair<String, String> titleDesc, final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
         super("editors/tg-rich-text-editor", titleDesc, propertyName);
         this.entityType = entityType;
     }
 
+    /**
+     * Sets the height of rich text widget
+     *
+     * @param height
+     */
     public void setHeight (int height) {
         this.height = height;
     }
 
+    /**
+     * Sets the minimal height of rich text widget
+     *
+     * @param minHeight
+     */
     public void setMinHeight (int minHeight) {
         this.minHeight = minHeight;
     }
