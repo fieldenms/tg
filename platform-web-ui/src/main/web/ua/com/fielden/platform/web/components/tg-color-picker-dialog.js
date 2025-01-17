@@ -7,7 +7,7 @@ import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polyme
 import '/resources/editors/tg-colour-picker.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, createDummyBindingEntity } from '/resources/reflection/tg-polymer-utils.js';
 
 
 const template = html`
@@ -43,51 +43,7 @@ const template = html`
             <span>OK</span>
         </paper-button>
     </div>`;
-
-const createEntity = function(reflector) {
-    const fullEntityType = reflector.getEntityPrototype();
-    fullEntityType.compoundOpenerType = () => null;
-
-    const fullEntity = reflector.newEntityEmpty();
-
-    fullEntity.get = prop => {
-        if (prop === '') { // empty property name means 'entity itself'
-            return fullEntity;
-        }
-        return fullEntity[prop];
-    };
-    fullEntity._type = fullEntityType;
-    fullEntity.id = -1;
-    fullEntity.version = 0;
-    fullEntity.colorProp = {hashlessUppercasedColourValue: ''};
     
-    const bindingView = reflector.newEntityEmpty();
-    bindingView['id'] = -1;
-    bindingView['version'] = 0;
-    bindingView['@@touchedProps'] = {
-        names: [],
-        values: [],
-        counts: []
-    };
-    bindingView['@@origin'] = fullEntity;
-    bindingView['colorProp'] = {hashlessUppercasedColourValue: ''};
-    bindingView['@colorProp_editable'] = true;
-    bindingView.get = prop => {
-        if (prop === '') { // empty property name means 'entity itself'
-            return bindingView;
-        }
-        return bindingView[prop];
-    };
-    const bindingViewType = reflector.getEntityPrototype();
-    bindingViewType.prop = (name) => {
-        return {
-            type: () => name === 'colorProp' ? 'object' : null
-        }
-    };
-    bindingView._type = bindingViewType;
-    return bindingView;
-}
-
 export class TgColorPickerDialog extends PolymerElement {
 
     static get template() { 
@@ -113,10 +69,15 @@ export class TgColorPickerDialog extends PolymerElement {
     constructor() {
         super();
         this._reflector = new TgReflector();
-        this._entity = createEntity(this._reflector);
-        this._validationCallback = function () {
-            console.log("validation of color entity");
-        };
+        this._entity = createDummyBindingEntity(
+            {'colorProp': {value: {hashlessUppercasedColourValue: ''}, editable: true}},
+            (name) => {
+                return {
+                    type: () => name === 'colorProp' ? 'object' : null
+                }
+            }
+        );
+        this._validationCallback = function () {};
         this.addEventListener("addon-attached", this._onAddonAttached.bind(this));
     }
 

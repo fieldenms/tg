@@ -6,7 +6,7 @@ import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polyme
 
 import '/resources/editors/tg-singleline-text-editor.js';
 import '/resources/editors/tg-hyperlink-editor.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, createDummyBindingEntity} from '/resources/reflection/tg-polymer-utils.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 
@@ -43,51 +43,7 @@ const template = html`
             <span>OK</span>
         </paper-button>
     </div>`;
-
-const createEntity = function(reflector) {
-    const fullEntityType = reflector.getEntityPrototype();
-    fullEntityType.compoundOpenerType = () => null;
-
-    const fullEntity = reflector.newEntityEmpty();
-
-    fullEntity.get = prop => {
-        if (prop === '') { // empty property name means 'entity itself'
-            return fullEntity;
-        }
-        return fullEntity[prop];
-    };
-    fullEntity._type = fullEntityType;
-    fullEntity.id = -1;
-    fullEntity.version = 0;
-    fullEntity.urlProp = {value: ''};
     
-    const bindingView = reflector.newEntityEmpty();
-    bindingView['id'] = -1;
-    bindingView['version'] = 0;
-    bindingView['@@touchedProps'] = {
-        names: [],
-        values: [],
-        counts: []
-    };
-    bindingView['@@origin'] = fullEntity;
-    bindingView['urlProp'] = {value: ''};
-    bindingView['@urlProp_editable'] = true;
-    bindingView.get = prop => {
-        if (prop === '') { // empty property name means 'entity itself'
-            return bindingView;
-        }
-        return bindingView[prop];
-    };
-    const bindingViewType = reflector.getEntityPrototype();
-    bindingViewType.prop = (name) => {
-        return {
-            type: () => 'object'
-        }
-    };
-    bindingView._type = bindingViewType;
-    return bindingView;
-}
-
 export class TgLinkDialog extends PolymerElement {
 
     static get template() { 
@@ -114,7 +70,14 @@ export class TgLinkDialog extends PolymerElement {
     constructor() {
         super();
         this._reflector = new TgReflector();
-        this._entity = createEntity(this._reflector);
+        this._entity = createDummyBindingEntity(
+            {'urlProp': {value: {value: ''}, editable: true}},
+            (name) => {
+                return {
+                    type: () => 'object'
+                }
+            }
+        );
         this.validationCallback = function () {
             console.log("validation of link entity");
         };
