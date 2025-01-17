@@ -54,7 +54,7 @@ public interface IAuditTypeFinder {
 
     /**
      * If the specified entity type is audited, returns a collection of all versions of its audit entity type.
-     * Otherwise, returns an empty stream.
+     * Otherwise, returns an empty collection.
      */
     <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> findAllAuditEntityTypesFor(Class<? extends AbstractEntity<?>> entityType);
 

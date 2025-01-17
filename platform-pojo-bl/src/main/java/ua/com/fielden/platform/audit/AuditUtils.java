@@ -40,6 +40,9 @@ public final class AuditUtils {
      * and returns the name of the audited property.
      * Otherwise, {@code null} is returned.
      * <p>
+     * In other words, given the name of a property of an audit-entity type, this method may return the name of a corresponding
+     * property of an audited entity type.
+     * <p>
      * It is an error if {@code auditedPropertyName} is {@code null} or blank.
      */
     public static @Nullable String auditedPropertyName(final CharSequence auditPropertyName) {

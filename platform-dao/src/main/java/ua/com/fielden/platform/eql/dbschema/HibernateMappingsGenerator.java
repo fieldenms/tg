@@ -101,6 +101,8 @@ public class HibernateMappingsGenerator {
 
     private static String generateEntityVersionMapping(final String name, final String columnName, final String hibTypeName) {
         final var sb = new StringBuffer();
+        // insert: whether or not to include the version column in SQL insert statements.
+        //         Defaults to true, but you can set it to false if the database column is defined with a default value of 0.
         sb.append("\t<version name=\"" + name + "\" type=\"" + hibTypeName + "\" access=\"field\" insert=\"false\">\n");
         sb.append("\t\t<column name=\"" + columnName + "\" default=\"0\" />\n");
         sb.append("\t</version>\n");
