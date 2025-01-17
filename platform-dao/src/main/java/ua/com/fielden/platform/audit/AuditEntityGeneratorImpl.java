@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
-import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
@@ -29,6 +28,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
@@ -49,6 +49,7 @@ import static ua.com.fielden.platform.audit.AuditUtils.isAuditProperty;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
@@ -478,22 +479,39 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             }
         };
 
+        // Sorted by version, from highest to lowest.
+        final var sortedAuditEntityTypes = auditEntityTypes.stream()
+                .sorted(AUDIT_ENTITY_TYPE_VERSION_COMPARATOR.reversed())
+                .collect(toImmutableList());
+
+        // Associates each distinct audit property with the audit-entity that declares it.
+        final Map<PropertyMetadata, Class<? extends AbstractEntity<?>>> auditPropertyOriginMap =
+                distinct(sortedAuditEntityTypes.stream()
+                                 .map(domainMetadata::forEntity)
+                                 .flatMap(em -> em.properties().stream()
+                                         .filter(pm -> isAuditProperty(pm.name()))
+                                         .map(pm -> t2(em, pm))),
+                         pair -> t2(pair._2.name(), pair._2.type()))
+                        .collect(toImmutableMap(pair -> pair._2, pair -> pair._1.javaType()));
+
         // Audit properties from all audit-entity type versions and the names they are declared under in the synthetic entity.
         // "Old" audit properties are declared in the synthetic audit-entity using generated names to avoid potential conflicts
         // with current audit properties.
         // Old audit properties are those that are present in a prior audit-entity type and absent in the current one.
         final Map<PropertyMetadata, String> allAuditProperties =
-                distinct(auditEntityTypes.stream()
-                                 .map(domainMetadata::forEntity)
-                                 .map(EntityMetadata::properties)
-                                 .flatMap(Collection::stream)
-                                 .filter(pm -> isAuditProperty(pm.name())),
-                         pm -> t2(pm.name(), pm.type()))
-                .collect(toImmutableMap(Function.identity(),
-                                        pm -> hasProperty(currentAuditEntityType, pm) ? pm.name() : propertyNameGenerator.apply(pm)));
+                auditPropertyOriginMap.keySet()
+                        .stream()
+                        .collect(toImmutableMap(Function.identity(),
+                                                pm -> hasProperty(currentAuditEntityType, pm) ? pm.name() : propertyNameGenerator.apply(pm)));
 
         // Declare all audit properties.
-        allAuditProperties.forEach((pm, name) -> addPropertyTo(propertyBuilder(name, pm.type().genericJavaType()).build(), builder, className));
+        allAuditProperties.forEach((pm, name) -> {
+            final var title = getTitleAndDesc(pm.name(), requireNonNull(auditPropertyOriginMap.get(pm))).getKey();
+            addPropertyTo(propertyBuilder(name, pm.type().genericJavaType())
+                                  .addAnnotation(AnnotationSpecs.title(title, "[%s] at the time of the audited event.".formatted(title)))
+                                  .build(),
+                          builder, className);
+        });
 
         // EQL models
 
