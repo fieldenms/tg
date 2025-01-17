@@ -78,9 +78,7 @@ export class TgLinkDialog extends PolymerElement {
                 }
             }
         );
-        this.validationCallback = function () {
-            console.log("validation of link entity");
-        };
+        this.validationCallback = function () {};
         this.addEventListener("addon-attached", this._onAddonAttached.bind(this));
     }
 
