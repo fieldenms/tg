@@ -456,6 +456,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         // Declare key member "auditedEntity", common to all audit-entity type versions.
         final var auditedEntityProp = propertyBuilder(AbstractSynAuditEntity.AUDITED_ENTITY, auditedEntityType)
                 .addAnnotation(compositeKeyMember(AbstractSynAuditEntity.AUDITED_ENTITY_KEY_MEMBER_ORDER))
+                .addAnnotation(AnnotationSpecs.title(TitlesDescsGetter.getEntityTitle(auditedEntityType),
+                                                     "The audited %s.".formatted(TitlesDescsGetter.getEntityTitle(auditedEntityType))))
                 .build();
         addPropertyTo(auditedEntityProp, builder, className);
 
