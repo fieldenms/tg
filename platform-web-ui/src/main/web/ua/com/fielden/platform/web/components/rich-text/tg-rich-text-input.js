@@ -25,6 +25,14 @@ import '/resources/egi/tg-responsive-toolbar.js';
 
 excludeErrors( e => e.filename && e.filename.includes("toastui-editor-all") && e.error && e.error.name === 'TransformError');
 
+/**
+ * Defines plugin for fake selection. Fake selection allows to keep text look like it is selected when editor loses the focus.
+ * Such fake selecetion helps to highlight text that is about to change it's state (e.g. color) or become a link.
+ * 
+ * @param {Object} context 
+ * @param {Object} options 
+ * @returns Object
+ */
 function fakeSelection(context, options) {
 
     return {
@@ -60,6 +68,13 @@ function fakeSelection(context, options) {
     }
 }
 
+/**
+ * Plugin that allows user to change the text color or reset it.
+ * 
+ * @param {Object} context 
+ * @param {Object} options 
+ * @returns Object
+ */
 function colorTextPlugin(context, options) {
     //The following method was copied from prosemirror-commands module
     function markApplies(doc, ranges, type) {
@@ -136,6 +151,7 @@ function colorTextPlugin(context, options) {
     };
 }
 
+/****************************Tooltip trigger related code*********************************/
 let currentTooltipElement = null;
 function mouseOverHandler(e) {
     const a = findParentBy.bind(this)(e.target, isLink);
@@ -149,15 +165,35 @@ function mouseOverHandler(e) {
     }
     currentTooltipElement = a;
 };
+/****************************************************************************************/
 
+/**
+ * Predicate that determines whether specified element is link or not.
+ * 
+ * @param {Object} element element to test
+ * @returns 
+ */
 function isLink(element) {
     return element.hasAttribute && element.hasAttribute('href')
 }
 
+/**
+ * Predicate that determines whether specified element is span with specified color or not.
+ * 
+ * @param {Object} element element to test
+ * @returns 
+ */
 function isColoredSpan(element) {
     return element.tagName && element.tagName === 'SPAN' && element.style.color
 }
 
+/**
+ * Finds element that is equal to specified one or is parent to specified one and sutisfies the specified predicate. 
+ * 
+ * @param {Object} element - an element for which parent element should be found
+ * @param {Function} predicate - determines whether selected parent is sufficient or not.
+ * @returns 
+ */
 function findParentBy(element, predicate) {
     let parent = element;
     while (parent && !predicate(parent) && parent !== this._getEditableContent() ) {
@@ -166,6 +202,7 @@ function findParentBy(element, predicate) {
     return parent && predicate(parent) ? parent : null;
 }
 
+/*******************************link click action related logic************************/
 let mouseTimer = null;
 let longPress = false;
 let shortPress = false;
@@ -208,7 +245,15 @@ function mouseUpHandler(e) {
         mouseTimer = null;
     }
 }
+/****************************************************************************************/
 
+/**
+ * Finds the element to edit. This element can be determined by caret position or by selection.
+ * 
+ * @param {Function} predicate 
+ * @param {Function} extractor 
+ * @returns 
+ */
 function getElementToEdit(predicate, extractor) {
     const selection = this._editor.getSelection();
     if (selection) {
@@ -237,6 +282,11 @@ function getElementToEdit(predicate, extractor) {
     }
 }
 
+/**
+ * Handles click on task list item so that it triggers revalidation.
+ * 
+ * @param {Object} e - an event object generated on mouse click
+ */
 function handleTaskListItemStatusChange(e) {
     const pos = this._editor.wwEditor.view.posAtCoords({left:e.clientX, top:e.clientY});
     const node = pos && this._editor.wwEditor.view.domAtPos(pos.pos, pos.inside);
@@ -260,6 +310,11 @@ function isPositionInBox(style, offsetX, offsetY) {
     return offsetX >= left && offsetX <= left + width && offsetY >= top && offsetY <= top + height;
 }
 
+/**
+ * Focuses rich text editor on keyboard event that doesn't includes any functional key except shift key.
+ * 
+ * @param {Object} event keyboard event
+ */
 function focusOnKeyDown(event) {
     if ((event.keyCode === 13 || (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey)) && !this.shadowRoot.activeElement) {
         this._editor.moveCursorToStart(true);
@@ -269,6 +324,13 @@ function focusOnKeyDown(event) {
     }
 }
 
+/**
+ * Selects element that is about to change it's state and returns additional information needed for editing it in external  dialog.
+ * 
+ * @param {Function} predicate - determines which element to edit
+ * @param {Function} extractor - extracts the information from element that can be edited
+ * @returns element to edit
+ */
 function editElement(predicate, extractor) {
     const element = getElementToEdit.bind(this)(predicate, extractor);
     if (element) {
@@ -279,6 +341,12 @@ function editElement(predicate, extractor) {
     }
 }
 
+/**
+ * Converts rgb/rgba notation into color with hash notation. 
+ * 
+ * @param {String} rgbString RGB string with "rgb[a](..,..,..)"
+ * @returns HTML color notation
+ */
 function rgbToHex(rgbString) {
     return "#" + rgbString
         .split("(")[1]
@@ -291,29 +359,54 @@ function rgbToHex(rgbString) {
         .join("");
 }
 
+/**
+ * Prevents ctrl+a event. This is used to handle select all action by tg-rich-text-input element.
+ * 
+ * @param {Object} event keyboard event
+ */
 function preventUnwantedKeyboradEvents(event) {
     if ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/) {
         event.preventDefault();
     }
 }
 
+/**
+ * Scrolls content when creating new list item
+ * 
+ * @param {Event} event keyboard event
+ */
 function scrollWhenListItem(event) {
     if (event.keyCode === 13 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) {
         scrollIntoView.bind(this)()
     }
 }
 
+/**
+ * Returns html text from the editor. Removes fake selection if it is present.
+ * 
+ * @returns converted text
+ */
 function getEditorHTMLText() {
     const html = this._editor.getHTML();
     return this._fakeSelection ? html.replace(/<mark>(.*?)<\/mark>/g, '$1') : html;
 }
 
+/**
+ * Applies fake selection for text specified with indices.
+ * 
+ * @param {Array} selection - array of inidices for which fake selection should be applied
+ */
 function applyFakeSelection(selection) {
     if (selection && selection[0] !== selection[1]) {
         this._editor.exec('fakeSelect', {from: selection[0], to: selection[1]});
     }
 }
 
+/**
+ * Removes fake selection from text specified with indices
+ * 
+ * @param {Array} selection - array of indices of fake selection start and finish. 
+ */
 function applyFakeUnselection(selection) {
     this._editor.exec('fakeUnselect', {from: selection[0], to: selection[1]});
 }
@@ -326,6 +419,12 @@ function initColorEditing() {
     return editElement.bind(this)(isColoredSpan, el => rgbToHex(el.style.color));
 }
 
+/**
+ * Creates link for specified text or removes link if URL is empty
+ * 
+ * @param {String} url - hyperlink text
+ * @param {String} text - URL description
+ */
 function toggleLink(url, text) {
     const selection = this._editor.getSelection();
     if (selection && selection[0] !== selection[1] && !url) {
@@ -336,7 +435,12 @@ function toggleLink(url, text) {
     this.changeEventHandler();
 }
 
- function applyColor(selectedColor) {
+/**
+ * Applies color to selected text if selectedColor is specified or removes color from selection if selectedColor is empty.
+ * 
+ * @param {String} selectedColor - color with hash to apply.
+ */
+function applyColor(selectedColor) {
     this.focusInput();
     if (selectedColor) {
         this._editor.exec("color", {selectedColor: selectedColor});
@@ -346,6 +450,12 @@ function toggleLink(url, text) {
     this.changeEventHandler();
 }
 
+/**
+ * Set the position of dialog at the middle-bottom side of selected text specified with pos array. The position might be adjusted if dialog doesn't fir into window.
+ * 
+ * @param {HTMLElement} dialog 
+ * @param {Array} pos 
+ */
 function setDialogPosition(dialog, pos) {
     const dialogWidth = parseInt(dialog.style.width);
     const dialogHeight = parseInt(dialog.style.height);
@@ -380,6 +490,11 @@ function getWindowHeight () {
     return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 }
 
+/**
+ * Calculates the position of the selected text. The returned value is an array containing the positions of the first and last characters of the selected text.
+ * 
+ * @returns Array of the selection position
+ */
 function getSelectionCoordinates() {
     if (this._editor && this._editor.getSelection()) {
         const view = this._editor.wwEditor.view;
@@ -388,10 +503,14 @@ function getSelectionCoordinates() {
     }
 }
 
+/**
+ * Scrolls caret position into view.
+ */
 function scrollIntoView() {
     this._editor.wwEditor.view.dispatch(this._editor.wwEditor.view.state.tr.scrollIntoView());
 }
 
+/*********************** Dialog related event handlers *********************/
 function handleCancelEvent(e) {
     if (e.composedPath()[0].tagName == "IRON-DROPDOWN") {
         const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
@@ -414,12 +533,23 @@ function handleAcceptEvent(e) {
         }
     }
 }
+/***********************************************************************/
 
+/**
+ * Adds event listener to document to handle situation when mouse was pressed on editor but released on another element. Such behavior creates problem for user editing.
+ * 
+ * @param {Event} e - mouse event
+ */
 function mouseEventRetranslator(e) {
     document.addEventListener("mouseup",  this._mouseUp);
     document.addEventListener("mousemove", this._mouseMove);
 }
 
+/**
+ * Catches 'mouse up' event and sends it to the editor to handle it as if it happened on it. It is necessary to handle the entire sequence of mouse events on the editor, even if the mouse moves outside of the editor.
+ * 
+ * @param {Event} e mouse event
+ */
 function mouseUp (e) {
     if (this._editor.wwEditor.view.input.mouseDown && !e.composedPath().includes(this._getEditableContent())) {
         this._editor.wwEditor.view.input.mouseDown.up(e);
@@ -427,6 +557,11 @@ function mouseUp (e) {
     removeMouseEventHandlersFromDocument.bind(this)();
 }
 
+/**
+ * Catches the 'mouse move' event and sends it to the editor to handle it as if it happened on it. It is necessary to handle the entire sequence of mouse events on the editor, even if the mouse moves outside of the editor.
+ * 
+ * @param {Event} e mouse event
+ */
 function mouseMove (e) {
     if (this._editor.wwEditor.view.input.mouseDown && !e.composedPath().includes(this._getEditableContent())) {
         this._editor.wwEditor.view.input.mouseDown.move(e);
@@ -434,6 +569,9 @@ function mouseMove (e) {
     removeMouseEventHandlersFromDocument.bind(this)();
 }
 
+/**
+ * Removes mouse event listeners from document after the corresponding event was handled.
+ */
 function removeMouseEventHandlersFromDocument() {
     if (!this._editor.wwEditor.view.input.mouseDown) {
         document.removeEventListener("mouseup",  this._mouseUp);
@@ -677,6 +815,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         document.removeEventListener("keydown", this._handleAcceptEvent, true);
     }
 
+    /**
+     * Changes the editable state of rich text input.
+     * 
+     * @param {Boolean} editable determines whether editor shoulb be editable or not
+     */
     makeEditable(editable) {
         this._getEditableContent().setAttribute("contenteditable", editable + "");
     }
