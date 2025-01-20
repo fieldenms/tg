@@ -9,7 +9,7 @@ import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js'
 import { tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { excludeErrors } from '/resources/components/tg-global-error-handler.js';
 
-import '/resources/toastui-editor/toastui-editor-all.js';
+import '/resources/toastui-editor/toastui-editor-all.min.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/editor-icons.js';
