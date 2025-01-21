@@ -16,6 +16,8 @@ import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import ua.com.fielden.platform.classloader.SecurityTokenClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -30,10 +32,23 @@ import ua.com.fielden.platform.utils.Pair;
 public class ClassesRetriever {
     private static final SecurityTokenClassLoader URL_CLASS_LOADER = new SecurityTokenClassLoader(ClassLoader.getSystemClassLoader());
 
+    private static final Cache<String, Class<?>> ADHOC_CLASSES = CacheBuilder.newBuilder()
+            .weakValues()
+            .build();
+
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
     private ClassesRetriever() {
+    }
+
+    /**
+     * Registers a class so that it can be found with {@link #findClass(String)}.
+     * This enables dynamically generated classes to be located by name (such classes often have an anonymous class loader,
+     * which cannot be directly used to find them via {@link ClassLoader#loadClass(String)}).
+     */
+    public static void registerClass(final Class<?> klass) {
+        ADHOC_CLASSES.put(klass.getCanonicalName(), klass);
     }
 
     /**
@@ -184,6 +199,10 @@ public class ClassesRetriever {
             try {
                 return URL_CLASS_LOADER.loadClass(className);
             } catch (final ClassNotFoundException e) {
+                final Class<?> klass = ADHOC_CLASSES.getIfPresent(className);
+                if (klass != null) {
+                    return klass;
+                }
                 throw new ReflectionException(format("Failed to load class [%s]", className),e);
             }
         }
