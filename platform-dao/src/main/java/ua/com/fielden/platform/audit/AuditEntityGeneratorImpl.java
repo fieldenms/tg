@@ -449,6 +449,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         builder.superclass(ParameterizedTypeName.get(AbstractSynAuditEntity.class, auditedEntityType));
 
         builder.addAnnotation(synAuditFor(auditedEntityType));
+        builder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(TitlesDescsGetter.getEntityTitle(auditedEntityType))));
         builder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
         builder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
         builder.addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class));
