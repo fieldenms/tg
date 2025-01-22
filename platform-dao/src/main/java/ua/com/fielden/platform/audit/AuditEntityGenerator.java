@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Set;
 
 @ImplementedBy(AuditEntityGeneratorImpl.class)
@@ -26,25 +27,24 @@ public interface AuditEntityGenerator {
             AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID,
             ActivatableAbstractEntity.REF_COUNT);
 
-    Set<GeneratedResult> generate(
+    /**
+     * Equivalent to {@link #generateSources(Iterable, VersionStrategy)}, but also writes generated sources to disk.
+     *
+     * @param sourceRoot  directory root where packages of generated sources will be placed
+     * @return  paths to generated sources
+     */
+    Collection<Path> generate(
             Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
             Path sourceRoot,
             VersionStrategy versionStrategy);
 
     /**
-     * Result of audit-entity generation.
-     *
-     * @param auditEntityPath  path to a source file with an {@linkplain AbstractAuditEntity audit-entity} type
-     * @param auditPropEntityPath  path to a source file with a {@linkplain AbstractAuditProp one-to-many entity type that represents changed properties}
-     */
-    record GeneratedResult (Path auditEntityPath, Path auditPropEntityPath) { }
-
-    /**
      * For each specified audited entity type, generates source code for an audit-entity and its associated audit-prop entity.
+     * It is an error if any of specified entity types are not audited.
      *
      * @return  a set of generated audit-entity and audit-prop entity types
      */
-    Set<SourceInfo> generateSources(
+    Collection<SourceInfo> generateSources(
             Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
             VersionStrategy versionStrategy);
 
@@ -62,7 +62,7 @@ public interface AuditEntityGenerator {
      *
      * @param outputPath  path to a directory where the generated source file and its package will be created
      */
-    SourceInfo generateSynTo(Class<? extends AbstractEntity<?>> entityType, Path outputPath);
+    SourceInfo generateSyn(Class<? extends AbstractEntity<?>> entityType, Path outputPath);
 
     /**
      * Represents the source code of a top-level class or interface.

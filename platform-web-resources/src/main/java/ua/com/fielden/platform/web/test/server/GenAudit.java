@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.test.server;
 
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AuditEntityGenerator;
+import ua.com.fielden.platform.audit.AuditEntityGenerator.VersionStrategy;
 import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
@@ -9,8 +10,10 @@ import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
+import java.util.stream.Collectors;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
@@ -67,12 +70,11 @@ public class GenAudit {
         final var generator = config.getInstance(AuditEntityGenerator.class);
         final var results = generator.generate(
                 // Specify audited entity types
-                List.of(),
-                Path.of("../platform-pojo-bl/src/audit/java"));
-        results.forEach(r -> {
-            LOGGER.info("Generated audit-entity %s".formatted(r.auditEntityPath()));
-            LOGGER.info("Generated audit-prop entity %s".formatted(r.auditPropEntityPath()));
-        });
+                List.of(TgVehicle.class),
+                Path.of("../platform-pojo-bl/src/audit/java"),
+                VersionStrategy.NEW);
+        LOGGER.info(format("Generated audit types:\n%s",
+                           results.stream().map(p -> p.toAbsolutePath().normalize().toString()).collect(joining("\n"))));
     }
 
 }

@@ -15,7 +15,6 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
@@ -70,7 +69,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     }
 
     @Override
-    public Set<GeneratedResult> generate(
+    public Collection<Path> generate(
             final Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
             final Path sourceRoot,
             final VersionStrategy versionStrategy)
@@ -78,7 +77,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         entityTypes.forEach(AuditEntityGeneratorImpl::validateAuditedType);
         return Streams.stream(entityTypes)
                 .parallel()
-                .map(type -> {
+                .flatMap(type -> {
                     final var result = generate_(type, versionStrategy);
                     final Path auditEntityPath;
                     final Path auditPropPath;
@@ -88,7 +87,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                     } catch (final IOException e) {
                         throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(result.auditVersion, type.getTypeName()), e);
                     }
-                    return new GeneratedResult(auditEntityPath, auditPropPath);
+                    return Stream.of(auditEntityPath, auditPropPath);
                 })
                 .collect(toImmutableSet());
     }
@@ -426,7 +425,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     }
 
     @Override
-    public SourceInfo generateSynTo(final Class<? extends AbstractEntity<?>> entityType, final Path outputPath) {
+    public SourceInfo generateSyn(final Class<? extends AbstractEntity<?>> entityType, final Path outputPath) {
         final var javaFile = generateSyn_(entityType);
         try {
             javaFile.writeTo(outputPath);
