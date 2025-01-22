@@ -72,13 +72,14 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     @Override
     public Set<GeneratedResult> generate(
             final Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
-            final Path sourceRoot)
+            final Path sourceRoot,
+            final VersionStrategy versionStrategy)
     {
         entityTypes.forEach(AuditEntityGeneratorImpl::validateAuditedType);
         return Streams.stream(entityTypes)
                 .parallel()
                 .map(type -> {
-                    final var result = generate_(type);
+                    final var result = generate_(type, versionStrategy);
                     final Path auditEntityPath;
                     final Path auditPropPath;
                     try {
@@ -93,7 +94,10 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     }
 
     @Override
-    public Set<SourceInfo> generateSources(final Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes) {
+    public Set<SourceInfo> generateSources(
+            final Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
+            final VersionStrategy versionStrategy)
+    {
         class $ {
             static SourceInfo makeSourceInfo(final JavaFile javaFile) {
                 final var className = javaFile.packageName.isEmpty() ? javaFile.typeSpec.name : javaFile.packageName + '.' + javaFile.typeSpec.name;
@@ -105,7 +109,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         return Streams.stream(entityTypes)
                 .parallel()
                 .flatMap(type -> {
-                    final var result = generate_(type);
+                    final var result = generate_(type, versionStrategy);
                     return Stream.of($.makeSourceInfo(result.auditEntity), $.makeSourceInfo(result.auditProp));
                 })
                 .collect(toImmutableSet());
@@ -118,10 +122,15 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         }
     }
 
-    private LocalResult generate_(final Class<? extends AbstractEntity<?>> type) {
-        final var newAuditTypeVersion = auditTypeFinder.findAuditEntityType(type)
-                .map(auditEntityType -> getAuditEntityTypeVersion(auditEntityType) + 1)
-                .orElse(1);
+    private LocalResult generate_(
+            final Class<? extends AbstractEntity<?>> type,
+            final VersionStrategy versionStrategy)
+    {
+        final var lastAuditTypeVersion = auditTypeFinder.findAuditEntityType(type).map(AuditUtils::getAuditEntityTypeVersion);
+        final var newAuditTypeVersion = switch (versionStrategy) {
+            case NEW -> lastAuditTypeVersion.map(v -> v + 1).orElse(1);
+            case OVERWRITE_LAST -> lastAuditTypeVersion.orElse(1);
+        };
 
         final var auditTypePkg = type.getPackageName();
         final var auditTypeName = type.getSimpleName() + "_" + A3T + "_" + newAuditTypeVersion;
@@ -152,15 +161,15 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final var a3tBuilder = new AuditEntityBuilder(auditTypeClassName, type, auditTypeVersion);
 
-        a3tBuilder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(TitlesDescsGetter.getEntityTitle(type))));
+        a3tBuilder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(getEntityTitle(type))));
         a3tBuilder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
         a3tBuilder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
 
         // Property for the reference to the audited entity.
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
-        final var auditedEntityTitle = TitlesDescsGetter.getEntityTitle(type);
+        final var auditedEntityTitle = getEntityTitle(type);
         final var auditedEntityProp = propertyBuilder(AUDITED_ENTITY, type)
-                .addAnnotation(compositeKeyMember(AbstractAuditEntity.AUDITED_ENTITY_KEY_MEMBER_ORDER))
+                .addAnnotation(compositeKeyMember(AUDITED_ENTITY_KEY_MEMBER_ORDER))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .addAnnotation(javaPoet.getAnnotation(Required.class))
                 .addAnnotation(javaPoet.getAnnotation(Final.class))
@@ -189,7 +198,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                                     AnnotationSpecs.mapTo((AuditUtils.auditPropertyName(pm.name())).toUpperCase()))
                             .addAnnotation(javaPoet.getAnnotation(Final.class));
 
-                    final var propTitle = TitlesDescsGetter.getTitleAndDesc(pm.name(), type).getKey();
+                    final var propTitle = getTitleAndDesc(pm.name(), type).getKey();
                     if (!propTitle.isEmpty()) {
                         propBuilder.addAnnotation(AnnotationSpecs.title(propTitle, "[%s] at the time of the audited event.".formatted(propTitle)));
                     }
@@ -449,7 +458,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         builder.superclass(ParameterizedTypeName.get(AbstractSynAuditEntity.class, auditedEntityType));
 
         builder.addAnnotation(synAuditFor(auditedEntityType));
-        builder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(TitlesDescsGetter.getEntityTitle(auditedEntityType))));
+        builder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(getEntityTitle(auditedEntityType))));
         builder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
         builder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
         builder.addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class));
@@ -457,8 +466,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         // Declare key member "auditedEntity", common to all audit-entity type versions.
         final var auditedEntityProp = propertyBuilder(AbstractSynAuditEntity.AUDITED_ENTITY, auditedEntityType)
                 .addAnnotation(compositeKeyMember(AbstractSynAuditEntity.AUDITED_ENTITY_KEY_MEMBER_ORDER))
-                .addAnnotation(AnnotationSpecs.title(TitlesDescsGetter.getEntityTitle(auditedEntityType),
-                                                     "The audited %s.".formatted(TitlesDescsGetter.getEntityTitle(auditedEntityType))))
+                .addAnnotation(AnnotationSpecs.title(getEntityTitle(auditedEntityType),
+                                                     "The audited %s.".formatted(getEntityTitle(auditedEntityType))))
                 .build();
         addPropertyTo(auditedEntityProp, builder, className);
 

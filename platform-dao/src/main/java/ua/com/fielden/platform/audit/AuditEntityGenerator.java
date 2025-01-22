@@ -32,7 +32,8 @@ public interface AuditEntityGenerator {
 
     Set<GeneratedResult> generate(
             Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
-            Path sourceRoot);
+            Path sourceRoot,
+            VersionStrategy versionStrategy);
 
     /**
      * Result of audit-entity generation.
@@ -47,7 +48,9 @@ public interface AuditEntityGenerator {
      *
      * @return  a set of generated audit-entity and audit-prop entity types
      */
-    Set<SourceInfo> generateSources(Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes);
+    Set<SourceInfo> generateSources(
+            Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
+            VersionStrategy versionStrategy);
 
     /**
      * Generates a synthetic audit-entity type for the specified audited entity type.
@@ -73,6 +76,24 @@ public interface AuditEntityGenerator {
      */
     record SourceInfo (String className, String source) {}
 
-    // TODO: Display deltas
+    /**
+     * Strategies for choosing a version for generated audit types.
+     */
+    enum VersionStrategy {
+
+        /**
+         * A new audit-entity type is generated.
+         * If there is an existing audit-entity type for the same audited type, its version is incremented to obtain the new version.
+         * Otherwise, version 1 is used.
+         */
+        NEW,
+
+        /**
+         * An existing audit-entity type with the latest version is overwritten if it exists.
+         * Otherwise, a new audit-entity type is generated with version 1.
+         */
+        OVERWRITE_LAST
+
+    }
 
 }
