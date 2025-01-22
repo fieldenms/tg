@@ -26,10 +26,6 @@ public interface AuditEntityGenerator {
             AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID,
             ActivatableAbstractEntity.REF_COUNT);
 
-    default Set<GeneratedResult> generate(Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes) {
-        return generate(entityTypes, Path.of("src/main/java"));
-    }
-
     Set<GeneratedResult> generate(
             Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
             Path sourceRoot,
