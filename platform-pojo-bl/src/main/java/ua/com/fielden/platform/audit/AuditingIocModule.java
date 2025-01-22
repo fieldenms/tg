@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.audit;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
 import com.google.inject.Provides;
+import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
@@ -8,6 +11,8 @@ import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 import java.util.List;
+
+import static com.google.inject.multibindings.OptionalBinder.newOptionalBinder;
 
 /**
  * IoC module that provides auditing configuration that pertains to modelling.
@@ -20,6 +25,7 @@ import java.util.List;
  * <h4>Bindings</h4>
  * <ul>
  *   <li> Discovery of audit types through {@link IAuditTypeFinder}.
+ *   <li> Default {@link AuditingMode}.
  * </ul>
  */
 public final class AuditingIocModule extends AbstractPlatformIocModule {
@@ -34,6 +40,25 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
      * This name is to be used with the {@link jakarta.inject.Named} annotation.
      */
     public static final String AUDIT_PATH = "audit.path";
+
+    /**
+     * Returns an IoC module that sets the specified auditing mode.
+     */
+    public static Module withAuditingMode(final AuditingMode mode) {
+        return new AbstractModule() {
+            @Override
+            protected void configure() {
+                newOptionalBinder(binder(), AuditingMode.class).setBinding().toInstance(mode);
+            }
+        };
+    }
+
+    @Override
+    protected void configure() {
+        super.configure();
+
+        newOptionalBinder(binder(), AuditingMode.class).setDefault().toInstance(AuditingMode.ENABLED);
+    }
 
     @Provides
     @Singleton

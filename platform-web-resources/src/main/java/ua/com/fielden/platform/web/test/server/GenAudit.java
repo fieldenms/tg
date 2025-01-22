@@ -13,7 +13,6 @@ import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.ioc.BasicWebServerIocModule.GEN_AUDIT_MODE;
 
 /**
  * This is a helper class, which generates audit-entities.

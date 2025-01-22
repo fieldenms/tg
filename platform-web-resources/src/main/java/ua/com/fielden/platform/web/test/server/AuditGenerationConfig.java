@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
 import com.google.inject.Injector;
+import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
@@ -9,7 +10,7 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 import java.util.Properties;
 
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
-import static ua.com.fielden.platform.ioc.BasicWebServerIocModule.GEN_AUDIT_MODE;
+import static ua.com.fielden.platform.audit.AuditingIocModule.withAuditingMode;
 
 /**
  * Configures the test application to enable generation of audit types.
@@ -33,13 +34,13 @@ public final class AuditGenerationConfig implements IDomainDrivenTestCaseConfigu
             props.setProperty("workflow", "development");
             props.setProperty("email.smtp", "localhost");
             props.setProperty("email.fromAddress", "tg@localhost");
-            props.setProperty(GEN_AUDIT_MODE, "true");
 
             final var appDomain = new ApplicationDomain();
             injector = new ApplicationInjectorFactory()
                     .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), props))
                     .add(new NewUserEmailNotifierTestIocModule())
                     .add(new DataFilterTestIocModule())
+                    .add(withAuditingMode(AuditingMode.GENERATION))
                     .getInjector();
         } catch (final Exception e) {
             throw new IllegalStateException("Could not create audit generation configuration.", e);

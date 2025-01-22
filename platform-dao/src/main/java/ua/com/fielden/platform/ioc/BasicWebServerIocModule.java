@@ -7,6 +7,7 @@ import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.audit.AbstractAuditProp;
+import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -64,12 +65,6 @@ import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_M
  */
 public class BasicWebServerIocModule extends CompanionIocModule {
     private static final Logger LOGGER = getLogger(BasicWebServerIocModule.class);
-
-    /**
-     * Names a system property, presence of which indicates that the application is running in the audit-entity generation mode
-     * (i.e., application-specific class {@code GenAudit} was launched).
-     */
-    public static final String GEN_AUDIT_MODE = "genAuditMode";
 
     private final Properties props;
     protected final IApplicationDomainProvider applicationDomainProvider;
@@ -162,15 +157,16 @@ public class BasicWebServerIocModule extends CompanionIocModule {
 
     @Provides
     @Singleton
-    IApplicationDomainProvider provideApplicationDomain(final IAuditTypeFinder auditTypeFinder) {
-        final boolean isGenAuditMode = props.getProperty(GEN_AUDIT_MODE) != null;
-
+    IApplicationDomainProvider provideApplicationDomain(
+            final IAuditTypeFinder auditTypeFinder,
+            final AuditingMode auditingMode)
+    {
         final var newEntityTypes = applicationDomainProvider.entityTypes().stream()
                 .<Class<? extends AbstractEntity<?>>> mapMulti((type, sink) -> {
                     sink.accept(type);
                     // For audited types, register their audit types, which must exist, unless we are running in the audit generation mode.
                     if (isAudited(type)) {
-                        if (isGenAuditMode) {
+                        if (auditingMode == AuditingMode.GENERATION) {
                             auditTypeFinder.findAllAuditEntityTypesFor(type).forEach(a3tType -> {
                                 sink.accept(a3tType);
                                 findAuditPropTypeForAuditType(a3tType).ifPresent(sink);
