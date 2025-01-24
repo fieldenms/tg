@@ -171,13 +171,18 @@ public class BasicWebServerIocModule extends CompanionIocModule {
                                 sink.accept(a3tType);
                                 findAuditPropTypeForAuditType(a3tType).ifPresent(sink);
                             });
-                            auditTypeFinder.findSynAuditEntityType(type).ifPresent(sink);
+                            auditTypeFinder.findSynAuditEntityType(type).ifPresent(synAuditType -> {
+                                sink.accept(synAuditType);
+                                findSynAuditPropTypeForSynAuditType(synAuditType).ifPresent(sink);
+                            });
                         } else {
                             auditTypeFinder.getAllAuditEntityTypesFor(type).forEach(a3tType -> {
                                 sink.accept(a3tType);
                                 sink.accept(getAuditPropTypeForAuditType(a3tType));
                             });
-                            sink.accept(auditTypeFinder.getSynAuditEntityType(type));
+                            final var synAuditType = auditTypeFinder.getSynAuditEntityType(type);
+                            sink.accept(synAuditType);
+                            sink.accept(getSynAuditPropTypeForSynAuditType(synAuditType));
                         }
                     }
                 })
