@@ -120,6 +120,47 @@ public final class AuditUtils {
         return (Class<AP>) auditType.getClassLoader().loadClass(auditPropTypeName);
     }
 
+    /**
+     * Locates and returns a {@linkplain AbstractSynAuditProp synthetic audit-prop entity type} for the specified synthetic audit-entity type using the class loader of the latter.
+     * Returns an empty optional if the requested type cannot be located.
+     *
+     * @see #getSynAuditPropTypeForSynAuditType(Class)
+     */
+    public static <AE extends AbstractSynAuditEntity<?>, AP extends AbstractSynAuditProp<AE>>
+    Optional<Class<AP>> findSynAuditPropTypeForSynAuditType(final Class<AE> synAuditType)
+    {
+        try {
+            return Optional.of(getSynAuditPropTypeForSynAuditTypeOrThrow(synAuditType));
+        } catch (final ClassNotFoundException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Locates and returns a {@linkplain AbstractSynAuditProp synthetic audit-prop entity type} for the specified synthetic audit-entity type using the class loader of the latter.
+     * <p>
+     * It is an error if the requested type cannot be located.
+     *
+     * @see #findSynAuditPropTypeForSynAuditType(Class)
+     */
+    public static <AE extends AbstractSynAuditEntity<?>, AP extends AbstractSynAuditProp<AE>>
+    Class<AP> getSynAuditPropTypeForSynAuditType(final Class<AE> synAuditType)
+    {
+        try {
+            return getSynAuditPropTypeForSynAuditTypeOrThrow(synAuditType);
+        } catch (final ClassNotFoundException e) {
+            throw new InvalidArgumentException("Synthetic audit-prop entity type doesn't exist for synthetic audit-entity type [%s]".formatted(synAuditType.getTypeName()), e);
+        }
+    }
+
+    private static <AE extends AbstractSynAuditEntity<?>, AP extends AbstractSynAuditProp<AE>>
+    Class<AP> getSynAuditPropTypeForSynAuditTypeOrThrow(final Class<AE> synAuditType)
+            throws ClassNotFoundException
+    {
+        final var auditPropTypeName = synAuditType.getName() + "_Prop";
+        return (Class<AP>) synAuditType.getClassLoader().loadClass(auditPropTypeName);
+    }
+
     public static boolean isAuditPropEntityType(final Class<?> type) {
         return AbstractAuditProp.class.isAssignableFrom(type);
     }

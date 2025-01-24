@@ -116,6 +116,17 @@ final class AuditTypeFinder implements IAuditTypeFinder {
     }
 
     @Override
+    public <E extends AbstractSynAuditEntity<?>> Class<AbstractSynAuditProp<E>> getSynAuditPropTypeForSynAuditEntity(final Class<E> synAuditType) {
+        return AuditUtils.getSynAuditPropTypeForSynAuditType(synAuditType);
+    }
+
+    @Override
+    public <E extends AbstractSynAuditEntity<?>> Optional<Class<AbstractSynAuditProp<E>>> findSynAuditPropTypeForSynAuditEntity(final Class<E> synAuditType)
+    {
+        return AuditUtils.findSynAuditPropTypeForSynAuditType(synAuditType);
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> getAllAuditEntityTypesFor(final Class<? extends AbstractEntity<?>> entityType) {
         return (Collection) requireAllAuditEntityTypesFor(entityType);
