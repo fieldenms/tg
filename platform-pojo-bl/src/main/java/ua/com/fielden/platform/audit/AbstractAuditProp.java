@@ -29,7 +29,7 @@ public abstract class AbstractAuditProp<AE extends AbstractAuditEntity<?>> exten
      * Name of the property that is declared by specific audit-prop types.
      * This property is a key-member representing a changed property.
      * <p>
-     * Its type is a {@link PropertyDescriptor} parameterised with the type of the audit-entity.
+     * Its type is a {@link PropertyDescriptor} parameterised with the type of a corresponding <b>synthetic audit-entity</b>.
      * The choice of the type parameter is motivated by the evolutionary model of audit-entity types.
      * An audited entity type cannot be used because it could result in a persisted property descriptor becoming invalid due to structural changes to that audited type.
      */
@@ -48,11 +48,11 @@ public abstract class AbstractAuditProp<AE extends AbstractAuditEntity<?>> exten
     /**
      * Getter for property {@link #PROPERTY}.
      */
-    public abstract PropertyDescriptor<AE> getProperty();
+    public abstract PropertyDescriptor<? extends AbstractSynAuditEntity<?>> getProperty();
 
     /**
      * Setter for property {@link #PROPERTY}.
      */
-    public abstract AbstractAuditProp<AE> setProperty(PropertyDescriptor<AE> propertyDescriptor);
+    public abstract AbstractAuditProp<AE> setProperty(PropertyDescriptor<? extends AbstractSynAuditEntity<?>> property);
 
 }

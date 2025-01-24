@@ -2,6 +2,7 @@ package ua.com.fielden.platform.audit;
 
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -11,20 +12,23 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.audit.AuditUtils.getAuditTypeForAuditPropType;
+import static ua.com.fielden.platform.audit.AuditUtils.getAuditedType;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 
 /**
  * Base type for implementations of audit-prop entity companion objects.
  *
+ * @param <E>  the audited entity type
  * @param <AE>  the audit-entity type
  * @param <AP>  the audit-prop entity type
  */
-public abstract class CommonAuditPropDao<AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
+public abstract class CommonAuditPropDao<E extends AbstractEntity<?>, AE extends AbstractAuditEntity<E>, AP extends AbstractAuditProp<AE>>
         extends CommonEntityDao<AP>
         implements IAuditPropDao<AE, AP>
 {
 
     private final Class<AE> auditEntityType;
+    private Class<AbstractSynAuditEntity<E>> synAuditEntityType;
 
     private IDomainMetadata domainMetadata;
 
@@ -36,6 +40,12 @@ public abstract class CommonAuditPropDao<AE extends AbstractAuditEntity<?>, AP e
     @Inject
     protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
+    }
+
+    @Inject
+    protected void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
+        final var auditedType = getAuditedType(auditEntityType);
+        synAuditEntityType = auditTypeFinder.getSynAuditEntityType(auditedType);
     }
 
     @Override
@@ -50,7 +60,7 @@ public abstract class CommonAuditPropDao<AE extends AbstractAuditEntity<?>, AP e
         final var auditProp = new_();
 
         auditProp.setAuditEntity(auditEntity);
-        auditProp.setProperty(PropertyDescriptor.pd(auditEntityType, property.toString()));
+        auditProp.setProperty(PropertyDescriptor.pd(synAuditEntityType, property.toString()));
 
         return auditProp;
     }
@@ -61,7 +71,7 @@ public abstract class CommonAuditPropDao<AE extends AbstractAuditEntity<?>, AP e
         auditProp.beginInitialising();
 
         auditProp.setAuditEntity(auditEntity);
-        auditProp.setProperty(PropertyDescriptor.pd(auditEntityType, property.toString()));
+        auditProp.setProperty(PropertyDescriptor.pd(synAuditEntityType, property.toString()));
 
         auditProp.endInitialising();
 

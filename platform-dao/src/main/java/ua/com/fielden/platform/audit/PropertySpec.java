@@ -140,11 +140,15 @@ final class PropertySpec {
     }
 
     public MethodSpec getSetterSpec(final GeneratorEnvironment environment, final TypeName declaringClassName) {
+        return getSetterSpecWithParamType(environment, declaringClassName, typeName);
+    }
+
+    public MethodSpec getSetterSpecWithParamType(final GeneratorEnvironment environment, final TypeName declaringClassName, final TypeName paramTypeName) {
         final var builder = MethodSpec.methodBuilder("set" + StringUtils.capitalize(name))
                 .addModifiers(PUBLIC)
                 .returns(declaringClassName)
                 .addAnnotation(Observable.class)
-                .addParameter(typeName, name, FINAL);
+                .addParameter(paramTypeName, name, FINAL);
 
         asCollectionalType(environment)
                 .ifPresentOrElse(collTy -> collTy.run((collTypeName, eltTypeName) -> builder

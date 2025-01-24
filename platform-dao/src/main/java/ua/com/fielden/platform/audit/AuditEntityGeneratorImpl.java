@@ -359,6 +359,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final String auditPropTypePkg,
             final String auditPropTypeName)
     {
+        final var synAuditType = auditTypeFinder.getSynAuditEntityType(auditedType);
+
         final var auditedEntityTitle = getEntityTitle(auditedType);
         final var auditPropTypeClassName = ClassName.get(auditPropTypePkg, auditPropTypeName);
 
@@ -382,15 +384,20 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                                                      "The audit event associated with this changed property."))
                 .build();
 
+        PropertySpec.addProperty(environment, builder, auditPropTypeClassName, auditEntityProp);
+
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
-        final var pdProp = propertyBuilder(PROPERTY, ParameterizedTypeName.get(
-                javaPoet.getClassName(PropertyDescriptor.class), auditEntityClassName))
+        final var pdProp = propertyBuilder(PROPERTY, ParameterizedTypeName.get(PropertyDescriptor.class, synAuditType))
                 .addAnnotation(compositeKeyMember(2))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .addAnnotation(AnnotationSpecs.title("Changed Property", "The property that was changed as part of the audit event."))
                 .build();
-
-        PropertySpec.addProperties(environment, builder, auditPropTypeClassName, auditEntityProp, pdProp);
+        // This property has a custom setter so has to be added by hand
+        builder.addField(pdProp.toFieldSpec(environment));
+        builder.addMethod(pdProp.getAccessorSpec(environment));
+        // Ideally, PropertyDescriptor in the setter's parameter type would be parameterised with the synthetic audit-entity type
+        // to match the property type, but the setter cannot be overriden in such a way, so we use the raw type.
+        builder.addMethod(pdProp.getSetterSpecWithParamType(environment, auditPropTypeClassName, javaPoet.getClassName(PropertyDescriptor.class)));
 
         final var typeSpec = builder.build();
 
