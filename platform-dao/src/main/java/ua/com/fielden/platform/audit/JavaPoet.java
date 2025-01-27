@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.audit;
 
 import com.squareup.javapoet.*;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -98,6 +99,20 @@ final class JavaPoet {
 
     public static Optional<CodeBlock> annotationMember(final AnnotationSpec annotSpec, final String memberName) {
         return Optional.of(annotSpec.members.get(memberName)).map(List::getFirst);
+    }
+
+    /**
+     * Returns a class name for the specified fully-qualified name which must name a top-level class.
+     * Although, this requirement cannot be enforced.
+     */
+    public static ClassName topLevelClassName(final CharSequence fqn) {
+        final var dotIdx = StringUtils.lastIndexOf(fqn, '.');
+        if (dotIdx == -1) {
+            return ClassName.get("", fqn.toString());
+        }
+        else {
+            return ClassName.get(fqn.subSequence(0, dotIdx).toString(), fqn.subSequence(dotIdx + 1, fqn.length()).toString());
+        }
     }
 
 }

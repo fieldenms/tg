@@ -35,14 +35,15 @@ import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.IntStream.rangeClosed;
 import static javax.lang.model.element.Modifier.*;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.*;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.AUDIT_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.PROPERTY;
 import static ua.com.fielden.platform.audit.AnnotationSpecs.compositeKeyMember;
 import static ua.com.fielden.platform.audit.AnnotationSpecs.synAuditFor;
-import static ua.com.fielden.platform.audit.AuditUtils.getAuditEntityTypeVersion;
-import static ua.com.fielden.platform.audit.AuditUtils.isAuditProperty;
+import static ua.com.fielden.platform.audit.AuditUtils.*;
+import static ua.com.fielden.platform.audit.JavaPoet.topLevelClassName;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
@@ -136,17 +137,19 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final AuditEntitySpec auditEntitySpec;
         final JavaFile auditProp;
         final JavaFile synAuditEntity;
+        final JavaFile synAuditPropEntity;
         try {
             auditEntitySpec = generateAuditEntity(type, auditTypePkg, auditTypeName,
                                                   ClassName.get(auditTypePkg, auditPropTypeName),
                                                   newAuditTypeVersion);
             auditProp = generateAuditPropEntity(type, auditEntitySpec.className(), auditTypePkg, auditPropTypeName);
             synAuditEntity = generateSynAuditEntity(type, auditEntitySpec);
+            synAuditPropEntity = generateSynAuditPropEntity(type, newAuditTypeVersion);
         } catch (final Exception e) {
             throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(newAuditTypeVersion, type.getTypeName()), e);
         }
 
-        return new LocalResult(List.of(auditEntitySpec.javaFileBuilder().build(), auditProp, synAuditEntity),
+        return new LocalResult(List.of(auditEntitySpec.javaFileBuilder().build(), auditProp, synAuditEntity, synAuditPropEntity),
                                newAuditTypeVersion);
     }
 
@@ -621,6 +624,69 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         return JavaFile.builder(synAuditEntityClassName.packageName(), builder.build()).build();
     }
+
+    private JavaFile generateSynAuditPropEntity(
+            final Class<? extends AbstractEntity<?>> auditedType,
+            final int lastAuditVersion)
+    {
+        final var auditedEntityTitle = getEntityTitle(auditedType);
+        final var synAuditPropClassName = ClassName.get(auditedType.getPackageName(), "Re%s_a3t_Prop".formatted(auditedType.getSimpleName()));
+        final var synAuditClassName = ClassName.get(auditedType.getPackageName(), "Re%s_a3t".formatted(auditedType.getSimpleName()));
+
+        final var builder = classBuilder(synAuditPropClassName)
+                .addModifiers(PUBLIC)
+                .superclass(ParameterizedTypeName.get(ClassName.get(AbstractSynAuditProp.class), synAuditClassName))
+                .addAnnotation(javaPoet.getAnnotation(SkipVerification.class))
+                .addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class))
+                .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class))
+                .addAnnotation(AnnotationSpecs.entityTitle("%s Audit Changed Property".formatted(auditedEntityTitle)))
+                .addAnnotation(AnnotationSpecs.keyTitle("%s Audit and Changed Property".formatted(auditedEntityTitle)));
+
+        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
+        final var auditEntityProp = propertyBuilder(AbstractSynAuditProp.AUDIT_ENTITY, synAuditClassName)
+                .addAnnotation(compositeKeyMember(1))
+                .addAnnotation(AnnotationSpecs.title("%s Audit".formatted(auditedEntityTitle),
+                                                     "The audit event associated with this changed property."))
+                .build();
+        PropertySpec.addProperty(environment, builder, synAuditPropClassName, auditEntityProp);
+
+        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
+        final var pdProp = propertyBuilder(AbstractSynAuditProp.PROPERTY, ParameterizedTypeName.get(javaPoet.getClassName(PropertyDescriptor.class), synAuditClassName))
+                .addAnnotation(compositeKeyMember(2))
+                .addAnnotation(AnnotationSpecs.title("Changed Property", "The property that was changed as part of the audit event."))
+                .build();
+        PropertySpec.addProperty(environment, builder, synAuditPropClassName, pdProp);
+
+        // EQL models, one for each audit-prop version
+        final var eqlModelTypeName = ParameterizedTypeName.get(ClassName.get(EntityResultQueryModel.class), synAuditPropClassName);
+        final var eqlModelFieldSpecs = rangeClosed(1, lastAuditVersion)
+                .mapToObj(i -> {
+                    final var auditClassName = topLevelClassName(getAuditTypeName(auditedType, i));
+                    final var auditPropClassName = topLevelClassName(getAuditTypeName(auditedType, i) + "_Prop");
+                    return FieldSpec.builder(eqlModelTypeName, "model_a3t_%s".formatted(i), PRIVATE, STATIC, FINAL)
+                            .initializer(CodeBlock.of("$T.$L($T.class, $T.class, $T.class, $T.class)",
+                                                      SynAuditPropEntityUtils.class,
+                                                      "modelAuditProp",
+                                                      auditPropClassName,
+                                                      synAuditPropClassName,
+                                                      auditClassName,
+                                                      synAuditClassName))
+                            .build();
+                })
+                .toList();
+
+        builder.addFields(eqlModelFieldSpecs);
+
+        // Field "models_"
+        final var modelsFieldSpec = FieldSpec.builder(ParameterizedTypeName.get(ClassName.get(List.class), eqlModelTypeName), "models_", PROTECTED, STATIC, FINAL)
+                .initializer("$T.of($L)", List.class, eqlModelFieldSpecs.stream().map(f -> f.name).collect(joining(", ")))
+                .build();
+
+        builder.addField(modelsFieldSpec);
+
+        return JavaFile.builder(synAuditPropClassName.packageName(), builder.build()).build();
+    }
+
 
     /**
      * Creates a map of yields ({@code {alias : value}}), where {@code value} is always {@code null}, and where {@code null}
