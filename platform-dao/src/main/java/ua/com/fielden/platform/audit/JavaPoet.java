@@ -6,7 +6,9 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -92,6 +94,10 @@ final class JavaPoet {
             throw new RuntimeException(e);
         }
         return sb.toString();
+    }
+
+    public static Optional<CodeBlock> annotationMember(final AnnotationSpec annotSpec, final String memberName) {
+        return Optional.of(annotSpec.members.get(memberName)).map(List::getFirst);
     }
 
 }

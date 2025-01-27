@@ -5,6 +5,7 @@ import com.squareup.javapoet.*;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -15,11 +16,13 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 import static javax.lang.model.element.Modifier.*;
+import static ua.com.fielden.platform.audit.JavaPoet.annotationMember;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 final class PropertySpec {
 
     private static final TypeName TYPE_NAME_IS_PROPERTY = TypeName.get(IsProperty.class);
+    private static final TypeName TYPE_NAME_TITLE = TypeName.get(Title.class);
 
     private final String name;
     private final TypeName typeName;
@@ -182,6 +185,26 @@ final class PropertySpec {
         return annotations;
     }
 
+    public Optional<String> title() {
+        // FIXME Resulting string is enclosed in double-quotes
+        return annotations.stream()
+                .filter(a -> a.type.equals(TYPE_NAME_TITLE))
+                .findFirst()
+                .flatMap(as -> annotationMember(as, "value"))
+                .map(CodeBlock::toString)
+                .filter(s -> !s.equals("\"\""));
+    }
+
+    public Optional<String> desc() {
+        // FIXME Resulting string is enclosed in double-quotes
+        return annotations.stream()
+                .filter(a -> a.type.equals(TYPE_NAME_TITLE))
+                .findFirst()
+                .flatMap(as -> annotationMember(as, "desc"))
+                .map(CodeBlock::toString)
+                .filter(s -> !s.equals("\"\""));
+    }
+
     @Override
     public boolean equals(Object obj) {
         return this == obj
@@ -271,6 +294,11 @@ final class PropertySpec {
 
         public Builder addAnnotation(final Class<? extends Annotation> annotation) {
             return addAnnotation(ClassName.get(annotation));
+        }
+
+        public Builder addAnnotations(final Iterable<AnnotationSpec> annotations) {
+            this.annotations.addAll(annotations);
+            return this;
         }
 
         public Builder initializer(final CodeBlock codeBlock) {

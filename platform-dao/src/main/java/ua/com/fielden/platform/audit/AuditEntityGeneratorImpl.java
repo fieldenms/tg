@@ -13,14 +13,13 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.PropertyTypeMetadata;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.*;
@@ -135,21 +134,23 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final var auditTypeName = type.getSimpleName() + "_" + A3T + "_" + newAuditTypeVersion;
         final var auditPropTypeName = auditTypeName + "_Prop";
 
-        final JavaFile auditEntity;
+        final AuditEntitySpec auditEntitySpec;
         final JavaFile auditProp;
         try {
-            auditEntity = generateAuditEntity(type, auditTypePkg, auditTypeName, ClassName.get(auditTypePkg, auditPropTypeName), newAuditTypeVersion);
-            auditProp = generateAuditPropEntity(type, ClassName.get(auditTypePkg, auditTypeName), auditTypePkg, auditPropTypeName);
+            auditEntitySpec = generateAuditEntity(type, auditTypePkg, auditTypeName,
+                                                  ClassName.get(auditTypePkg, auditPropTypeName),
+                                                  newAuditTypeVersion);
+            auditProp = generateAuditPropEntity(type, auditEntitySpec.className(), auditTypePkg, auditPropTypeName);
         } catch (final Exception e) {
             throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(newAuditTypeVersion, type.getTypeName()), e);
         }
 
-        return new LocalResult(auditEntity, auditProp, newAuditTypeVersion);
+        return new LocalResult(auditEntitySpec.javaFileBuilder().build(), auditProp, newAuditTypeVersion);
     }
 
     record LocalResult(JavaFile auditEntity, JavaFile auditProp, int auditVersion) {}
 
-    private JavaFile generateAuditEntity(
+    private AuditEntitySpec generateAuditEntity(
             final Class<? extends AbstractEntity<?>> type,
             final String auditTypePkg,
             final String auditTypeName,
@@ -158,7 +159,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     {
         final var auditTypeClassName = ClassName.get(auditTypePkg, auditTypeName);
 
-        final var a3tBuilder = new AuditEntityBuilder(auditTypeClassName, type, auditTypeVersion);
+        final var a3tBuilder = new AuditEntitySpecBuilder(auditTypeClassName, type, auditTypeVersion);
 
         a3tBuilder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(getEntityTitle(type))));
         a3tBuilder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
@@ -206,8 +207,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 })
                 .forEach(a3tBuilder::addProperty);
 
-        final var typeSpec = a3tBuilder.build(addSkipEntityExistsValidation);
-        return JavaFile.builder(auditTypePkg, typeSpec).build();
+        return a3tBuilder.build(addSkipEntityExistsValidation);
     }
 
     private AnnotationSpec mkIsPropertyForAudit(final IsProperty isProperty) {
@@ -256,8 +256,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     /**
      * Annotates each entity-typed property with {@link SkipEntityExistsValidation}, unless this annotation is already present.
      */
-    private final AuditEntityBuilder.Processor addSkipEntityExistsValidation = new AuditEntityBuilder.Processor() {
-        public PropertySpec processProperty(final AuditEntityBuilder builder, final PropertySpec propSpec) {
+    private final AuditEntitySpecBuilder.Processor addSkipEntityExistsValidation = new AuditEntitySpecBuilder.Processor() {
+        public PropertySpec processProperty(final AuditEntitySpecBuilder builder, final PropertySpec propSpec) {
             return javaPoet.reflectType(propSpec.type()) instanceof Class klass
                    && domainMetadata.forEntityOpt(klass).isPresent()
                    && !propSpec.hasAnnotation(javaPoet.getClassName(SkipEntityExistsValidation.class))
@@ -270,15 +270,48 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         return !AuditEntityGenerator.NON_AUDITED_PROPERTIES.contains(property.name());
     }
 
-    private final class AuditEntityBuilder {
-        private final ClassName className;
-        private final Class<? extends AbstractEntity<?>> auditedType;
-        private final ArrayList<PropertySpec> properties;
-        private final ArrayList<MethodSpec> methods;
-        private final ArrayList<AnnotationSpec> annotations;
-        private final int auditVersion;
+    private record AuditEntitySpec
+            (ClassName className,
+             TypeSpec typeSpec,
+             List<PropertySpec> properties,
+             int version)
+    {
 
-        private AuditEntityBuilder(
+        public JavaFile.Builder javaFileBuilder() {
+            return JavaFile.builder(className.packageName(), typeSpec);
+        }
+
+        public boolean hasProperty(final PropertySpec property) {
+            return properties.stream().anyMatch(p -> p.name().equals(property.name()) && p.type().equals(property.type()));
+        }
+
+    }
+
+    private AuditEntitySpec newAuditEntitySpec(final Class<? extends AbstractAuditEntity<?>> auditType) {
+        final var properties = Finder.streamRealProperties(auditType)
+                .map(prop -> propertyBuilder(prop.getName(), prop.getGenericType())
+                        .addAnnotations(Arrays.stream(prop.getAnnotations()).map(AnnotationSpec::get).toList())
+                        // Initializer is not available and also not needed
+                        .build())
+                .toList();
+        final var className = ClassName.get(auditType);
+        final var typeSpecBuilder = classBuilder(className)
+                .addModifiers(PUBLIC)
+                .superclass(auditType.getSuperclass())
+                .addAnnotations(Arrays.stream(auditType.getAnnotations()).map(AnnotationSpec::get).toList());
+        properties.forEach(p -> addPropertyTo(p, typeSpecBuilder, className));
+        return new AuditEntitySpec(className, typeSpecBuilder.build(), properties, getAuditEntityTypeVersion(auditType));
+    }
+
+    class AuditEntitySpecBuilder {
+        final ClassName className;
+        final Class<? extends AbstractEntity<?>> auditedType;
+        final ArrayList<PropertySpec> properties;
+        final ArrayList<MethodSpec> methods;
+        final ArrayList<AnnotationSpec> annotations;
+        final int auditVersion;
+
+        private AuditEntitySpecBuilder(
                 final ClassName className,
                 final Class<? extends AbstractEntity<?>> auditedType,
                 final int auditVersion)
@@ -291,7 +324,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             this.annotations = new ArrayList<>();
         }
 
-        public TypeSpec build(final Processor processor) {
+        public AuditEntitySpec build(final Processor processor) {
             final var builder = classBuilder(className)
                     .addModifiers(PUBLIC)
                     .superclass(ParameterizedTypeName.get(AbstractAuditEntity.class, auditedType))
@@ -308,38 +341,39 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                         builder.addMethod(propSpec.getSetterSpec(environment, className));
                     });
             builder.addMethods(methods);
-            return builder.build();
-        }
+            final var typeSpec = builder.build();
 
-        public AuditEntityBuilder addProperty(final PropertySpec property) {
+            return new AuditEntitySpec(className, typeSpec, properties, auditVersion);}
+
+        public AuditEntitySpecBuilder addProperty(final PropertySpec property) {
             properties.add(property);
             return this;
         }
 
-        public AuditEntityBuilder addProperties(final PropertySpec... properties) {
+        public AuditEntitySpecBuilder addProperties(final PropertySpec... properties) {
             for (final var property : properties) {
                 this.properties.add(property);
             }
             return this;
         }
 
-        public AuditEntityBuilder addProperties(final Iterable<? extends PropertySpec> properties) {
+        public AuditEntitySpecBuilder addProperties(final Iterable<? extends PropertySpec> properties) {
             properties.forEach(this.properties::add);
             return this;
         }
 
-        public AuditEntityBuilder addMethod(MethodSpec method) {
+        public AuditEntitySpecBuilder addMethod(MethodSpec method) {
             methods.add(method);
             return this;
         }
 
-        public AuditEntityBuilder addAnnotation(final AnnotationSpec annotation) {
+        public AuditEntitySpecBuilder addAnnotation(final AnnotationSpec annotation) {
             annotations.add(annotation);
             return this;
         }
 
         interface Processor {
-            PropertySpec processProperty(AuditEntityBuilder builder, PropertySpec property);
+            PropertySpec processProperty(AuditEntitySpecBuilder builder, PropertySpec property);
         }
     }
 
@@ -355,14 +389,13 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
     private JavaFile generateAuditPropEntity(
             final Class<? extends AbstractEntity<?>> auditedType,
-            final TypeName auditEntityClassName,
+            final ClassName auditEntityClassName,
             final String auditPropTypePkg,
             final String auditPropTypeName)
     {
-        final var synAuditType = auditTypeFinder.getSynAuditEntityType(auditedType);
-
         final var auditedEntityTitle = getEntityTitle(auditedType);
         final var auditPropTypeClassName = ClassName.get(auditPropTypePkg, auditPropTypeName);
+        final var synAuditTypeName = ClassName.get(auditEntityClassName.packageName(), "Re%s_a3t".formatted(auditedType.getSimpleName()));
 
         final var builder = classBuilder(auditPropTypeClassName)
                 .addModifiers(PUBLIC)
@@ -387,7 +420,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         PropertySpec.addProperty(environment, builder, auditPropTypeClassName, auditEntityProp);
 
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
-        final var pdProp = propertyBuilder(PROPERTY, ParameterizedTypeName.get(PropertyDescriptor.class, synAuditType))
+        final var pdProp = propertyBuilder(PROPERTY, ParameterizedTypeName.get(javaPoet.getClassName(PropertyDescriptor.class), synAuditTypeName))
                 .addAnnotation(compositeKeyMember(2))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .addAnnotation(AnnotationSpecs.title("Changed Property", "The property that was changed as part of the audit event."))
@@ -428,7 +461,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final var synEntitySimpleName = "Re%s_a3t".formatted(entityType.getSimpleName());
 
-        return generateSyn_(entityType, entityType.getPackageName(), synEntitySimpleName, auditEntityTypes);
+        return generateSyn_(entityType, entityType.getPackageName(), synEntitySimpleName, auditEntityTypes.stream().map(this::newAuditEntitySpec).toList());
     }
 
     @Override
@@ -448,9 +481,9 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final Class<? extends AbstractEntity<?>> auditedEntityType,
             final String pkgName,
             final String simpleName,
-            final List<Class<AbstractAuditEntity<AbstractEntity<?>>>> auditEntityTypes)
+            final List<AuditEntitySpec> auditEntitySpecs)
     {
-        if (auditEntityTypes.isEmpty()) {
+        if (auditEntitySpecs.isEmpty()) {
             throw new InvalidArgumentException(
                     format("Synthetic audit-entity type for [%s] cannot be generated: there are no audit-entity types.",
                            auditedEntityType.getSimpleName()));
@@ -478,54 +511,50 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         addPropertyTo(auditedEntityProp, builder, className);
 
         // "Current" audit-entity type (latest audit-entity type version).
-        final var currentAuditEntityType = auditEntityTypes.getLast();
-        final var currentAuditProperties =
-                domainMetadata.forEntity(currentAuditEntityType)
-                        .properties()
-                        .stream()
-                        .filter(pm -> isAuditProperty(pm.name()))
-                        .toList();
+        final var currentAuditEntitySpec = auditEntitySpecs.getLast();
+        final var currentAuditPropertySpecs = currentAuditEntitySpec.properties.stream()
+                .filter(p -> isAuditProperty(p.name()))
+                .toList();
 
-        final var priorAuditEntityTypes = dropRight(auditEntityTypes, 1);
+        final var priorAuditEntityTypeSpecs = dropRight(auditEntitySpecs, 1);
 
-        final Function<PropertyMetadata, String> propertyNameGenerator = new Function<>() {
-            final IdentityHashMap<PropertyMetadata, String> cache = new IdentityHashMap<>();
+        final Function<PropertySpec, String> propertyNameGenerator = new Function<>() {
+            final IdentityHashMap<PropertySpec, String> cache = new IdentityHashMap<>();
             long counter = 0;
 
-            public String apply(final PropertyMetadata property) {
+            public String apply(final PropertySpec property) {
                 return cache.computeIfAbsent(property, p -> "$%s_%s".formatted(counter++, p.name()));
             }
         };
 
         // Sorted by version, from highest to lowest.
-        final var sortedAuditEntityTypes = auditEntityTypes.stream()
-                .sorted(AUDIT_ENTITY_TYPE_VERSION_COMPARATOR.reversed())
+        final var sortedAuditEntitySpecs = auditEntitySpecs.stream()
+                .sorted(comparing(AuditEntitySpec::version).reversed())
                 .collect(toImmutableList());
 
         // Associates each distinct audit property with the audit-entity that declares it.
-        final Map<PropertyMetadata, Class<? extends AbstractEntity<?>>> auditPropertyOriginMap =
-                distinct(sortedAuditEntityTypes.stream()
-                                 .map(domainMetadata::forEntity)
-                                 .flatMap(em -> em.properties().stream()
-                                         .filter(pm -> isAuditProperty(pm.name()))
-                                         .map(pm -> t2(em, pm))),
+        final Map<PropertySpec, ClassName> auditPropertyOriginMap =
+                distinct(sortedAuditEntitySpecs.stream()
+                                 .flatMap(ts -> ts.properties.stream()
+                                         .filter(p -> isAuditProperty(p.name()))
+                                         .map(p -> t2(ts, p))),
                          pair -> t2(pair._2.name(), pair._2.type()))
-                        .collect(toImmutableMap(pair -> pair._2, pair -> pair._1.javaType()));
+                        .collect(toImmutableMap(pair -> pair._2, pair -> pair._1.className()));
 
         // Audit properties from all audit-entity type versions and the names they are declared under in the synthetic entity.
         // "Old" audit properties are declared in the synthetic audit-entity using generated names to avoid potential conflicts
         // with current audit properties.
         // Old audit properties are those that are present in a prior audit-entity type and absent in the current one.
-        final Map<PropertyMetadata, String> allAuditProperties =
+        final Map<PropertySpec, String> allAuditProperties =
                 auditPropertyOriginMap.keySet()
                         .stream()
                         .collect(toImmutableMap(Function.identity(),
-                                                pm -> hasProperty(currentAuditEntityType, pm) ? pm.name() : propertyNameGenerator.apply(pm)));
+                                                p -> currentAuditEntitySpec.hasProperty(p) ? p.name() : propertyNameGenerator.apply(p)));
 
         // Declare all audit properties.
-        allAuditProperties.forEach((pm, name) -> {
-            final var title = getTitleAndDesc(pm.name(), requireNonNull(auditPropertyOriginMap.get(pm))).getKey();
-            addPropertyTo(propertyBuilder(name, pm.type().genericJavaType())
+        allAuditProperties.forEach((prop, name) -> {
+            final var title = prop.title().orElse("");
+            addPropertyTo(propertyBuilder(name, prop.type())
                                   .addAnnotation(AnnotationSpecs.title(title, "[%s] at the time of the audited event.".formatted(title)))
                                   .build(),
                           builder, className);
@@ -535,52 +564,52 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final var eqlQueryType = ParameterizedTypeName.get(javaPoet.getClassName(EntityResultQueryModel.class), className);
 
-        final Map<PropertyMetadata, String> allOldAuditProperties = Maps.filterKeys(allAuditProperties, pm -> !hasProperty(currentAuditEntityType, pm));
+        final Map<PropertySpec, String> allOldAuditProperties = Maps.filterKeys(allAuditProperties, p -> !currentAuditEntitySpec.hasProperty(p));
 
         // Yield null into audit properties absent from the current audit-entity type (i.e., old properties).
         final var currentModelField = FieldSpec.builder(eqlQueryType,
-                                                        "model_a3t_%s".formatted(getAuditEntityTypeVersion(currentAuditEntityType)),
+                                                        "model_a3t_%s".formatted(currentAuditEntitySpec.version()),
                                                         PRIVATE, STATIC, FINAL)
                 .initializer("$T.$L($L.class, $T.class, $L)",
                              SynAuditEntityUtils.class,
                              "mkModelCurrent",
                              className,
-                             currentAuditEntityType,
+                             currentAuditEntitySpec.className(),
                              codeMapOf(mkNullYields(allOldAuditProperties), "$S", "$L"))
                 .build();
 
-        final Map<Class<? extends AbstractAuditEntity<?>>, FieldSpec> priorModelFieldsMap =
-                priorAuditEntityTypes.stream()
+        final Map<AuditEntitySpec, FieldSpec> priorModelFieldsMap =
+                priorAuditEntityTypeSpecs.stream()
                         .collect(toImmutableMap(
                                 Function.identity(),
                                 priorAuditEntityType -> {
                                     // Yield null into audit properties absent from this prior audit-entity type.
                                     final var nullYieldsArg = codeMapOf(
-                                            mkNullYields(Maps.filterKeys(allAuditProperties, pm -> !hasProperty(priorAuditEntityType, pm))),
+                                            mkNullYields(Maps.filterKeys(allAuditProperties, p -> !priorAuditEntityType.hasProperty(p))),
                                             "$S", "$L");
                                     // Yield old properties under generated names.
                                     final var renamedYieldsArg = codeMapOf(
-                                            map(Maps.filterKeys(allOldAuditProperties, pm -> hasProperty(priorAuditEntityType, pm)),
+                                            map(Maps.filterKeys(allOldAuditProperties, priorAuditEntityType::hasProperty),
                                                                (pm, $) -> pm.name(),
                                                                ($, genName) -> genName),
                                             "$S", "$S");
                                     // Properties present in both the current and prior audit-entity types are yielded as usual.
                                     final var otherYieldsArg = codeSetOf(
-                                            concatSet(currentAuditProperties.stream()
-                                                              .filter(pm -> hasProperty(priorAuditEntityType, pm))
-                                                              .map(PropertyMetadata::name)
+                                            concatSet(currentAuditPropertySpecs.stream()
+                                                              .filter(priorAuditEntityType::hasProperty)
+                                                              .map(PropertySpec::name)
                                                               .collect(toSet()),
                                                       Set.of(AbstractEntity.ID, AbstractEntity.VERSION),
                                                       AbstractSynAuditEntity.BASE_PROPERTIES));
 
                                     return FieldSpec.builder(eqlQueryType,
-                                                             "model_a3t_%s".formatted(getAuditEntityTypeVersion(priorAuditEntityType)),
+                                                             "model_a3t_%s".formatted(priorAuditEntityType.version()),
                                                              PRIVATE, STATIC, FINAL)
                                             .initializer("$T.$L($L.class, $T.class, $L, $L, $L)",
                                                          SynAuditEntityUtils.class,
                                                          "mkModelPrior",
                                                          className,
-                                                         priorAuditEntityType,
+                                                         priorAuditEntityType.className(),
                                                          nullYieldsArg,
                                                          renamedYieldsArg,
                                                          otherYieldsArg)
@@ -590,7 +619,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         // From highest version to lowest
         final var sortedPriorModelFields = priorModelFieldsMap.entrySet()
                 .stream()
-                .sorted(comparing(Map.Entry::getKey, AUDIT_ENTITY_TYPE_VERSION_COMPARATOR.reversed()))
+                .sorted(comparing(Map.Entry::getKey, comparing(AuditEntitySpec::version).reversed()))
                 .map(Map.Entry::getValue)
                 .toList();
         final var modelField = FieldSpec.builder(eqlQueryType, "model_", PROTECTED, STATIC, FINAL)
@@ -620,31 +649,21 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
      * @param propertyMap  a map containing properties for which null-yields are to be created;
      *                     values in the map are corresponding names as declared by a synthetic entity
      */
-    private static Map<String, Object> mkNullYields(final Map<PropertyMetadata, String> propertyMap) {
+    private static Map<String, Object> mkNullYields(final Map<PropertySpec, String> propertyMap) {
         final var map = new HashMap<String, Object>(propertyMap.size());
 
-        propertyMap.forEach((pm, name) -> {
-            final var value = switch (pm.type()) {
-                case PropertyTypeMetadata.Primitive ty when ty.javaType() == boolean.class -> false;
-                default -> null;
-            };
+        propertyMap.forEach((prop, name) -> {
+            final Object value;
+            if (prop.type().equals(TypeName.BOOLEAN)) {
+                value = false;
+            }
+            else {
+                value = null;
+            }
             map.put(name, value);
         });
 
         return unmodifiableMap(map);
-    }
-
-    private static final Comparator<Class<? extends AbstractAuditEntity<?>>> AUDIT_ENTITY_TYPE_VERSION_COMPARATOR =
-            comparing(AuditUtils::getAuditEntityTypeVersion);
-
-    private boolean hasPropertyOfType(final Class<? extends AbstractEntity<?>> entityType, final String name, final Type type) {
-        return domainMetadata.forPropertyOpt(entityType, name)
-                .filter(pm -> pm.type().genericJavaType().equals(type))
-                .isPresent();
-    }
-
-    private boolean hasProperty(final Class<? extends AbstractEntity<?>> entityType, final PropertyMetadata property) {
-        return hasPropertyOfType(entityType, property.name(), property.type().genericJavaType());
     }
 
     /**
