@@ -49,22 +49,6 @@ public interface AuditEntityGenerator {
             VersionStrategy versionStrategy);
 
     /**
-     * Generates a synthetic audit-entity type for the specified audited entity type.
-     * <p>
-     * It is an error if the specified entity type is not audited or does not have at least one audit-entity type.
-     */
-    SourceInfo generateSyn(Class<? extends AbstractEntity<?>> entityType);
-
-    /**
-     * Generates a synthetic audit-entity type for the specified audited entity type.
-     * <p>
-     * It is an error if the specified entity type is not audited or does not have at least one audit-entity type.
-     *
-     * @param outputPath  path to a directory where the generated source file and its package will be created
-     */
-    SourceInfo generateSyn(Class<? extends AbstractEntity<?>> entityType, Path outputPath);
-
-    /**
      * Represents the source code of a top-level class or interface.
      *
      * @param className  fully-qualified name of the class or interface

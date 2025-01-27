@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
@@ -78,15 +77,15 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .parallel()
                 .flatMap(type -> {
                     final var result = generate_(type, versionStrategy);
-                    final Path auditEntityPath;
-                    final Path auditPropPath;
-                    try {
-                        auditEntityPath = result.auditEntity.writeToPath(sourceRoot);
-                        auditPropPath = result.auditProp.writeToPath(sourceRoot);
-                    } catch (final IOException e) {
-                        throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(result.auditVersion, type.getTypeName()), e);
-                    }
-                    return Stream.of(auditEntityPath, auditPropPath);
+                    final Collection<Path> paths;
+                    paths = result.javaFiles.stream().map(jf -> {
+                        try {
+                            return jf.writeToPath(sourceRoot);
+                        } catch (final IOException e) {
+                            throw new RuntimeException("Failed to write a generated audit source for audited type [%s]".formatted(type.getTypeName()), e);
+                        }
+                    }).toList();
+                    return paths.stream();
                 })
                 .collect(toImmutableSet());
     }
@@ -108,7 +107,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .parallel()
                 .flatMap(type -> {
                     final var result = generate_(type, versionStrategy);
-                    return Stream.of($.makeSourceInfo(result.auditEntity), $.makeSourceInfo(result.auditProp));
+                    return result.javaFiles.stream().map($::makeSourceInfo);
                 })
                 .collect(toImmutableSet());
     }
@@ -136,19 +135,22 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final AuditEntitySpec auditEntitySpec;
         final JavaFile auditProp;
+        final JavaFile synAuditEntity;
         try {
             auditEntitySpec = generateAuditEntity(type, auditTypePkg, auditTypeName,
                                                   ClassName.get(auditTypePkg, auditPropTypeName),
                                                   newAuditTypeVersion);
             auditProp = generateAuditPropEntity(type, auditEntitySpec.className(), auditTypePkg, auditPropTypeName);
+            synAuditEntity = generateSynAuditEntity(type, auditEntitySpec);
         } catch (final Exception e) {
             throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(newAuditTypeVersion, type.getTypeName()), e);
         }
 
-        return new LocalResult(auditEntitySpec.javaFileBuilder().build(), auditProp, newAuditTypeVersion);
+        return new LocalResult(List.of(auditEntitySpec.javaFileBuilder().build(), auditProp, synAuditEntity),
+                               newAuditTypeVersion);
     }
 
-    record LocalResult(JavaFile auditEntity, JavaFile auditProp, int auditVersion) {}
+    record LocalResult(Collection<JavaFile> javaFiles, int auditVersion) {}
 
     private AuditEntitySpec generateAuditEntity(
             final Class<? extends AbstractEntity<?>> type,
@@ -441,74 +443,54 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     // : Synthetic audit-entity generation
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    @Override
-    public SourceInfo generateSyn(final Class<? extends AbstractEntity<?>> entityType) {
-        final var javaFile = generateSyn_(entityType);
+    private JavaFile generateSynAuditEntity(
+            final Class<? extends AbstractEntity<?>> auditedType,
+            final AuditEntitySpec auditEntitySpec)
+    {
+        validateAuditedType(auditedType);
 
-        final var fqn = Stream.of(javaFile.packageName, javaFile.typeSpec.name).filter(s -> !s.isEmpty()).collect(joining("."));
-        final var source = JavaPoet.readJavaFile(javaFile);
-        return new SourceInfo(fqn, source);
-    }
-
-    private JavaFile generateSyn_(final Class<? extends AbstractEntity<?>> entityType) {
-        validateAuditedType(entityType);
-
-        // non-empty
-        final var auditEntityTypes = auditTypeFinder.getAllAuditEntityTypesFor(entityType)
+        final var priorAuditEntitySpecs = auditTypeFinder.findAllAuditEntityTypesFor(auditedType)
                 .stream()
-                .sorted(comparing(AuditUtils::getAuditEntityTypeVersion))
+                .filter(ty -> getAuditEntityTypeVersion(ty) != auditEntitySpec.version())
+                .map(this::newAuditEntitySpec)
+                .sorted(comparing(AuditEntitySpec::version))
                 .toList();
 
-        final var synEntitySimpleName = "Re%s_a3t".formatted(entityType.getSimpleName());
+        final var synAuditEntityClassName = ClassName.get(auditedType.getPackageName(), "Re%s_a3t".formatted(auditedType.getSimpleName()));
 
-        return generateSyn_(entityType, entityType.getPackageName(), synEntitySimpleName, auditEntityTypes.stream().map(this::newAuditEntitySpec).toList());
+        return generateSynAuditEntity(auditedType, append(priorAuditEntitySpecs, auditEntitySpec), synAuditEntityClassName);
     }
 
-    @Override
-    public SourceInfo generateSyn(final Class<? extends AbstractEntity<?>> entityType, final Path outputPath) {
-        final var javaFile = generateSyn_(entityType);
-        try {
-            javaFile.writeTo(outputPath);
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
-        final var fqn = Stream.of(javaFile.packageName, javaFile.typeSpec.name).filter(s -> !s.isEmpty()).collect(joining("."));
-        final var source = JavaPoet.readJavaFile(javaFile);
-        return new SourceInfo(fqn, source);
-    }
-
-    private JavaFile generateSyn_(
-            final Class<? extends AbstractEntity<?>> auditedEntityType,
-            final String pkgName,
-            final String simpleName,
-            final List<AuditEntitySpec> auditEntitySpecs)
+    private JavaFile generateSynAuditEntity(
+            final Class<? extends AbstractEntity<?>> auditedType,
+            final List<AuditEntitySpec> auditEntitySpecs,
+            final ClassName synAuditEntityClassName)
     {
         if (auditEntitySpecs.isEmpty()) {
             throw new InvalidArgumentException(
                     format("Synthetic audit-entity type for [%s] cannot be generated: there are no audit-entity types.",
-                           auditedEntityType.getSimpleName()));
+                           auditedType.getSimpleName()));
         }
 
-        final var className = ClassName.get(pkgName, simpleName);
-        final var builder = classBuilder(className);
+        final var builder = classBuilder(synAuditEntityClassName);
 
         builder.addModifiers(PUBLIC);
 
-        builder.superclass(ParameterizedTypeName.get(AbstractSynAuditEntity.class, auditedEntityType));
+        builder.superclass(ParameterizedTypeName.get(AbstractSynAuditEntity.class, auditedType));
 
-        builder.addAnnotation(synAuditFor(auditedEntityType));
-        builder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(getEntityTitle(auditedEntityType))));
+        builder.addAnnotation(synAuditFor(auditedType));
+        builder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(getEntityTitle(auditedType))));
         builder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
         builder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
         builder.addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class));
 
         // Declare key member "auditedEntity", common to all audit-entity type versions.
-        final var auditedEntityProp = propertyBuilder(AbstractSynAuditEntity.AUDITED_ENTITY, auditedEntityType)
+        final var auditedEntityProp = propertyBuilder(AbstractSynAuditEntity.AUDITED_ENTITY, auditedType)
                 .addAnnotation(compositeKeyMember(AbstractSynAuditEntity.AUDITED_ENTITY_KEY_MEMBER_ORDER))
-                .addAnnotation(AnnotationSpecs.title(getEntityTitle(auditedEntityType),
-                                                     "The audited %s.".formatted(getEntityTitle(auditedEntityType))))
+                .addAnnotation(AnnotationSpecs.title(getEntityTitle(auditedType),
+                                                     "The audited %s.".formatted(getEntityTitle(auditedType))))
                 .build();
-        addPropertyTo(auditedEntityProp, builder, className);
+        addPropertyTo(auditedEntityProp, builder, synAuditEntityClassName);
 
         // "Current" audit-entity type (latest audit-entity type version).
         final var currentAuditEntitySpec = auditEntitySpecs.getLast();
@@ -557,12 +539,12 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             addPropertyTo(propertyBuilder(name, prop.type())
                                   .addAnnotation(AnnotationSpecs.title(title, "[%s] at the time of the audited event.".formatted(title)))
                                   .build(),
-                          builder, className);
+                          builder, synAuditEntityClassName);
         });
 
         // EQL models
 
-        final var eqlQueryType = ParameterizedTypeName.get(javaPoet.getClassName(EntityResultQueryModel.class), className);
+        final var eqlQueryType = ParameterizedTypeName.get(javaPoet.getClassName(EntityResultQueryModel.class), synAuditEntityClassName);
 
         final Map<PropertySpec, String> allOldAuditProperties = Maps.filterKeys(allAuditProperties, p -> !currentAuditEntitySpec.hasProperty(p));
 
@@ -573,7 +555,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .initializer("$T.$L($L.class, $T.class, $L)",
                              SynAuditEntityUtils.class,
                              "mkModelCurrent",
-                             className,
+                             synAuditEntityClassName,
                              currentAuditEntitySpec.className(),
                              codeMapOf(mkNullYields(allOldAuditProperties), "$S", "$L"))
                 .build();
@@ -590,8 +572,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                                     // Yield old properties under generated names.
                                     final var renamedYieldsArg = codeMapOf(
                                             map(Maps.filterKeys(allOldAuditProperties, priorAuditEntityType::hasProperty),
-                                                               (pm, $) -> pm.name(),
-                                                               ($, genName) -> genName),
+                                                (pm, $) -> pm.name(),
+                                                ($, genName) -> genName),
                                             "$S", "$S");
                                     // Properties present in both the current and prior audit-entity types are yielded as usual.
                                     final var otherYieldsArg = codeSetOf(
@@ -608,7 +590,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                                             .initializer("$T.$L($L.class, $T.class, $L, $L, $L)",
                                                          SynAuditEntityUtils.class,
                                                          "mkModelPrior",
-                                                         className,
+                                                         synAuditEntityClassName,
                                                          priorAuditEntityType.className(),
                                                          nullYieldsArg,
                                                          renamedYieldsArg,
@@ -637,7 +619,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         builder.addFields(sortedPriorModelFields);
         builder.addField(modelField);
 
-        return JavaFile.builder(pkgName, builder.build()).build();
+        return JavaFile.builder(synAuditEntityClassName.packageName(), builder.build()).build();
     }
 
     /**
