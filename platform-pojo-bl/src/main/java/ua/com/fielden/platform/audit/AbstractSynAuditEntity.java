@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.security.user.User;
 
 import java.util.Date;
@@ -42,6 +43,25 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
     // Placing this property first ensures that its column comes first in the multi-column unique index that is always
     // generated for composite keys, which improves performance because the first column in such an index is searchable.
     static final int AUDITED_ENTITY_KEY_MEMBER_ORDER = 1;
+
+    /**
+     * Name of a property declared by subtypes.
+     * This property models the one-to-many relationship between this synthetic audit-entity and a {@linkplain AbstractSynAuditProp synthetic audit-prop} entity.
+     * Its type is a {@link Set} parameterised with a corresponding synthetic audit-prop type.
+     * <p>
+     * For example, synthetic audit-entity {@code ReVehicle_a3t} is expected to declare property {@code changedProps} of type {@code Set<ReVehicle_a3t_Prop>}.
+     */
+    public static final String CHANGED_PROPS = "changedProps";
+
+    /**
+     * Name of a property declared by subtypes.
+     * This property is a criterion for searching by changed properties (i.e., by property {@link #CHANGED_PROPS}).
+     * Its type is a {@link PropertyDescriptor} parameterised with the synthetic audit-entity type itself.
+     * <p>
+     * For example, synthetic audit-entity {@code ReVehicle_a3t} is expected to declare property {@code changedPropsCrit}
+     * of type {@code PropertyDescriptor<ReVehicle_a3t>}.
+     */
+    public static final String CHANGED_PROPS_CRIT = "changedPropsCrit";
 
     public static final Set<String> BASE_PROPERTIES = ImmutableSet.of(
             AUDITED_ENTITY, AUDITED_VERSION, AUDIT_DATE, USER, AUDITED_TRANSACTION_GUID

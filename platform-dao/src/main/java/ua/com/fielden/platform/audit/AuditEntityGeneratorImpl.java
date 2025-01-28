@@ -501,6 +501,22 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .filter(p -> isAuditProperty(p.name()))
                 .toList();
 
+        // "changedProps" property
+        final var synAuditPropClassName = ClassName.get(synAuditEntityClassName.packageName(), synAuditEntityClassName.simpleName() + "_Prop");
+        addPropertyTo(propertyBuilder(AbstractSynAuditEntity.CHANGED_PROPS, ParameterizedTypeName.get(ClassName.get(Set.class), synAuditPropClassName))
+                              .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of the audit event."))
+                              .initializer("new $T<>()", ClassName.get(HashSet.class))
+                              .build(),
+                      builder, synAuditEntityClassName);
+
+        // "changedPropsCrit" property
+        addPropertyTo(propertyBuilder(AbstractSynAuditEntity.CHANGED_PROPS_CRIT,
+                                      ParameterizedTypeName.get(ClassName.get(PropertyDescriptor.class), synAuditEntityClassName))
+                              .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of the audit event."))
+                              .addAnnotation(AnnotationSpecs.critOnly(CritOnly.Type.MULTI))
+                              .build(),
+                      builder, synAuditEntityClassName);
+
         final var priorAuditEntityTypeSpecs = dropRight(auditEntitySpecs, 1);
 
         final Function<PropertySpec, String> propertyNameGenerator = new Function<>() {
@@ -608,9 +624,10 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .map(Map.Entry::getValue)
                 .toList();
         final var modelField = FieldSpec.builder(eqlQueryType, "model_", PROTECTED, STATIC, FINAL)
-                .initializer(CodeBlock.of("$T.$L($L)",
+                .initializer(CodeBlock.of("$T.$L($T.class, $L)",
                                           SynAuditEntityUtils.class,
                                           "combineModels",
+                                          synAuditPropClassName,
                                           concatList(List.of(currentModelField), sortedPriorModelFields)
                                                   .stream()
                                                   .map(field -> CodeBlock.of("$L", field.name))

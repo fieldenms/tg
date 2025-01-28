@@ -96,6 +96,12 @@ final class AnnotationSpecs {
                 .build();
     }
 
+    public static AnnotationSpec critOnly(final CritOnly.Type value) {
+        return AnnotationSpec.builder(CritOnly.class)
+                .addMember("value", "$T.$L", CritOnly.Type.class, value.name())
+                .build();
+    }
+
     private AnnotationSpecs() {}
 
 }

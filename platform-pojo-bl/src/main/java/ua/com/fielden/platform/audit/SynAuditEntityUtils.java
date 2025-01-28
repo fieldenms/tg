@@ -124,19 +124,15 @@ public final class SynAuditEntityUtils {
      */
     @SafeVarargs
     public static <T extends AbstractEntity<?>> EntityResultQueryModel<T> combineModels(
+            final Class<? extends AbstractSynAuditProp<?>> synAuditPropType,
             final EntityResultQueryModel<T> currentModel,
-            final EntityResultQueryModel<T>... priorModels
-    ) {
-        // When there are no prior models, we end up with select(currentModel), which is an edge case in EQL that can't be compiled,
-        // so let's prevent that.
-        if (priorModels.length == 0) {
-            return currentModel;
-        }
-        else {
-            final var models = concatList(List.of(currentModel), Arrays.asList(priorModels)).toArray(
-                    EntityResultQueryModel[]::new);
-            return EntityQueryUtils.select(models).model();
-        }
+            final EntityResultQueryModel<T>... priorModels)
+    {
+        return EntityQueryUtils.select(concatList(List.of(currentModel), Arrays.asList(priorModels)).toArray((EntityResultQueryModel<T>[]) new EntityResultQueryModel[] {}))
+                .where()
+                .critCondition(EntityQueryUtils.select(synAuditPropType).where().prop(AbstractSynAuditProp.AUDIT_ENTITY).eq().extProp(AbstractEntity.ID),
+                               AbstractSynAuditProp.PROPERTY, AbstractSynAuditEntity.CHANGED_PROPS_CRIT)
+                .model();
     }
 
     private SynAuditEntityUtils() {}
