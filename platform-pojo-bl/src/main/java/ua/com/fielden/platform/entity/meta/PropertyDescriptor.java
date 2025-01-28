@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.*;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 import java.lang.reflect.Field;
@@ -20,8 +20,6 @@ import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValid
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A class that describes entity property. It is like {@link Field}, but for types descendant from {@link AbstractEntity} and simpler holding only property name and description.
@@ -74,9 +72,8 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
      *            -- name of the property that directly belongs to the specified entity (i.e. support for dot notation does not make any sense in this case)
      */
     public PropertyDescriptor(final Class<T> entityType, final String propertyName) {
-        final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
-        setKey(pair.getKey());
-        setDesc(pair.getValue());
+        setKey(nonBlankPropertyTitle(propertyName, entityType));
+        setDesc(getTitleAndDesc(propertyName, entityType).getValue());
         this.entityType = entityType;
         this.propertyName = propertyName;
     }
@@ -160,10 +157,13 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
             final String propertyName = parts[1];
 
-            final Pair<String, String> pair = getTitleAndDesc(propertyName, entityType);
-            final PropertyDescriptor<T> inst = (PropertyDescriptor<T>) factory.map(f -> f.newByKey(PropertyDescriptor.class, pair.getKey())).orElse(new PropertyDescriptor<>());
-            inst.setKey(pair.getKey());
-            inst.setDesc(pair.getValue());
+            // If a property title is explicitly set to a blank string, the value of PropertyDescriptor.key will be null,
+            // which will cause an error during retrieval with EQL. To prevent this, let's always use a non-blank title.
+            final String propTitle = nonBlankPropertyTitle(propertyName, entityType);
+
+            final PropertyDescriptor<T> inst = (PropertyDescriptor<T>) factory.map(f -> f.newByKey(PropertyDescriptor.class, propTitle)).orElse(new PropertyDescriptor<>());
+            inst.setKey(propTitle);
+            inst.setDesc(getTitleAndDesc(propertyName, entityType).getValue());
             inst.entityType = entityType;
             inst.propertyName = propertyName;
             return inst;
