@@ -47,7 +47,7 @@ import static ua.com.fielden.platform.audit.JavaPoet.topLevelClassName;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.nonBlankPropertyTitle;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
@@ -203,7 +203,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                                     AnnotationSpecs.mapTo((AuditUtils.auditPropertyName(pm.name())).toUpperCase()))
                             .addAnnotation(javaPoet.getAnnotation(Final.class));
 
-                    final var propTitle = getTitleAndDesc(pm.name(), type).getKey();
+                    final var propTitle = nonBlankPropertyTitle(pm.name(), type);
                     if (!propTitle.isEmpty()) {
                         propBuilder.addAnnotation(AnnotationSpecs.title(propTitle, "[%s] at the time of the audited event.".formatted(propTitle)));
                     }
