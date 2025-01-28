@@ -567,15 +567,20 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final Map<PropertySpec, String> allOldAuditProperties = Maps.filterKeys(allAuditProperties, p -> !currentAuditEntitySpec.hasProperty(p));
 
-        // Yield null into audit properties absent from the current audit-entity type (i.e., old properties).
         final var currentModelField = FieldSpec.builder(eqlQueryType,
                                                         "model_a3t_%s".formatted(currentAuditEntitySpec.version()),
                                                         PRIVATE, STATIC, FINAL)
-                .initializer("$T.$L($L.class, $T.class, $L)",
+                .initializer("$T.$L($L.class, $T.class, $L, $L)",
                              SynAuditEntityUtils.class,
                              "mkModelCurrent",
                              synAuditEntityClassName,
                              currentAuditEntitySpec.className(),
+                             // Workaround: explicitly yield all audit and service properties, because yieldAll must not
+                             // be used when there is only one audit-entity version (EQL will not compile).
+                             codeSetOf(concatSet(currentAuditPropertySpecs.stream().map(PropertySpec::name).toList(),
+                                                 Set.of(ID, VERSION),
+                                                 AbstractSynAuditEntity.BASE_PROPERTIES)),
+                             // Yield null into audit properties absent from the current audit-entity type (i.e., old properties).
                              codeMapOf(mkNullYields(allOldAuditProperties), "$S", "$L"))
                 .build();
 

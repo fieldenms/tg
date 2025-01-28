@@ -20,17 +20,22 @@ public final class SynAuditEntityUtils {
      *
      * @param synAuditEntityType  synthetic audit-entity type
      * @param auditEntityType  current audit-entity type
-     * @param yields  map of yields, of the form {alias : value};
-     *                these are properties that are present in prior audit-entity types but absent in the current one.
+     * @param customYields  map of yields, of the form {alias : value};
+     *                     these are properties that are present in prior audit-entity types but absent in the current one.
      */
     public static <T extends AbstractSynAuditEntity<?>> EntityResultQueryModel<T> mkModelCurrent(
             final Class<T> synAuditEntityType,
             final Class<? extends AbstractAuditEntity<?>> auditEntityType,
-            final Map<String, Object> yields)
+            final Set<String> yields,
+            final Map<String, Object> customYields)
     {
         var part = EntityQueryUtils.select(auditEntityType)
                 .yieldAll();
-        for (final var entry : yields.entrySet()) {
+        for (final var yield : yields) {
+            part = part.yield().prop(yield).as(yield);
+
+        }
+        for (final var entry : customYields.entrySet()) {
             part = part.yield().val(entry.getValue()).as(entry.getKey());
         }
         return part.modelAsEntity(synAuditEntityType);
@@ -119,7 +124,7 @@ public final class SynAuditEntityUtils {
      * Assists with construction of a synthetic model.
      * Creates the definitive EQL query to be assigned to the {@code model_} field.
      * The arguments should be queries for the current audit-entity type and prior ones, constructed with
-     * {@link #mkModelCurrent(Class, Class, Map)} and {@link #mkModelPrior(Class, Class, Map, Map, Set)}, respectively.
+     * {@link #mkModelCurrent(Class, Class, Set, Map)} and {@link #mkModelPrior(Class, Class, Map, Map, Set)}, respectively.
      * Queries for prior audit-entity types <b>must be sorted</b> by their versions in a descending order (this is not checked).
      */
     @SafeVarargs
