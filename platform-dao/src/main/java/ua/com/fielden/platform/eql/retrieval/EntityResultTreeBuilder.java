@@ -12,8 +12,7 @@ import static ua.com.fielden.platform.persistence.HibernateConstants.H_LONG;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_STRING;
 import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -141,7 +140,7 @@ public final class EntityResultTreeBuilder {
                 currentGroup = yc.name();
 
                 // can be either ET prop, or primitive prop
-                if (yc.propType().isNotNull() && isPersistedEntityType(yc.propType().javaType())) {
+                if (yc.propType().isNotNull() && (isPersistedEntityType(yc.propType().javaType()) || isSyntheticEntityType(yc.propType().javaType()))) {
                     currentResultType = (Class<? extends AbstractEntity<?>>) yc.propType().javaType();
                     currentGroupDetails.add(new YieldedColumn(ID, LONG_PROP_TYPE, yc.column()));
                 } else {
