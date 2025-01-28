@@ -2,10 +2,7 @@ package ua.com.fielden.platform.companion;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import ua.com.fielden.platform.audit.AbstractAuditEntity;
-import ua.com.fielden.platform.audit.AbstractAuditProp;
-import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
-import ua.com.fielden.platform.audit.IAuditEntityCompanionGenerator;
+import ua.com.fielden.platform.audit.*;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
@@ -31,6 +28,9 @@ final class EntityCompanionGeneratorImpl implements IEntityCompanionGenerator {
         }
         else if (isSynAuditEntityType(type)) {
             return auditCoGenerator.generateCompanionForSynAuditEntity((Class<? extends AbstractSynAuditEntity>) type);
+        }
+        else if (isSynAuditPropEntityType(type)) {
+            return auditCoGenerator.generateCompanionForSynAuditProp((Class<? extends AbstractSynAuditProp>) type);
         }
 
         // Support for other kinds of generated companions should be added here

@@ -79,6 +79,10 @@ public final class AuditUtils {
         return AbstractSynAuditEntity.class.isAssignableFrom(type);
     }
 
+    public static boolean isSynAuditPropEntityType(final Class<?> type) {
+        return AbstractSynAuditProp.class.isAssignableFrom(type);
+    }
+
     /**
      * Locates and returns the {@linkplain AbstractAuditProp audit-prop entity type} for the specified audit-entity type using the class loader of the latter.
      * Returns an empty optional if the audit-prop type cannot be located.

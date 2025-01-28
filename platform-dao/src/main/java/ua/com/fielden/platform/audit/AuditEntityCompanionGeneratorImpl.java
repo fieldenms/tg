@@ -61,4 +61,19 @@ final class AuditEntityCompanionGeneratorImpl implements IAuditEntityCompanionGe
                 .getLoaded();
     }
 
+    @Override
+    public Class<?> generateCompanionForSynAuditProp(final Class<? extends AbstractSynAuditProp> type) {
+        final var baseType = PropertyTypeDeterminator.baseEntityType((Class<? extends AbstractEntity<?>>) type);
+
+        return new ByteBuddy()
+                .subclass(CommonEntityDao.class)
+                .name(baseType.getCanonicalName() + "Dao")
+                .annotateType(AnnotationDescription.Builder.ofType(EntityType.class)
+                                      .define("value", baseType)
+                                      .build())
+                .make()
+                .load(baseType.getClassLoader())
+                .getLoaded();
+    }
+
 }
