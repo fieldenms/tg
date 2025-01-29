@@ -20,12 +20,14 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 public class AuditingTest extends AbstractDaoTestCase {
 
     private Class<AbstractAuditEntity<TgVehicle>> tgVehicleAuditType;
+    private Class<AbstractSynAuditEntity<TgVehicle>> tgVehicleSynAuditType;
     private IAuditEntityDao<TgVehicle, AbstractAuditEntity<TgVehicle>> coTgVehicleAudit;
     private Class<AbstractAuditProp<AbstractAuditEntity<TgVehicle>>> tgVehicleAuditPropType;
 
     @Inject
     void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
         tgVehicleAuditType = auditTypeFinder.getAuditEntityType(TgVehicle.class);
+        tgVehicleSynAuditType = auditTypeFinder.getSynAuditEntityType(TgVehicle.class);
         coTgVehicleAudit = co(tgVehicleAuditType);
         tgVehicleAuditPropType = auditTypeFinder.getAuditPropTypeForAuditEntity(tgVehicleAuditType);
     }
@@ -85,7 +87,7 @@ public class AuditingTest extends AbstractDaoTestCase {
             assertEquals("Incorrect audit-entity referenced by changed property [%s].".formatted(changedProp),
                          vehicleAudit, changedProp.getAuditEntity());
             assertEquals("Incorrect entity type referenced by property descriptor of changed property [%s]".formatted(changedProp),
-                         tgVehicleAuditType, changedProp.getProperty().getEntityType());
+                         tgVehicleSynAuditType, changedProp.getProperty().getEntityType());
         }
     }
 
@@ -132,7 +134,7 @@ public class AuditingTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void property_descriptors_of_audit_prop_entities_reference_the_audit_entity_type() {
+    public void property_descriptors_of_audit_prop_entities_reference_the_synthetic_audit_entity_type() {
         final var m1 = co(TgVehicleModel.class).findByKey(TgVehicleModels.m1.key);
         final var vehicle = save(new_(TgVehicle.class, "CAR2").
                                          setInitDate(date("2001-01-01 00:00:00")).
@@ -146,7 +148,7 @@ public class AuditingTest extends AbstractDaoTestCase {
 
         for (final var changedProp : vehicleAudit.getChangedProps()) {
             assertEquals("Incorrect entity type referenced by property descriptor of changed property [%s]".formatted(changedProp),
-                         tgVehicleAuditType, changedProp.getProperty().getEntityType());
+                         tgVehicleSynAuditType, changedProp.getProperty().getEntityType());
         }
     }
 

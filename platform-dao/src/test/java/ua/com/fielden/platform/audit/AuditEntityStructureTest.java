@@ -29,11 +29,13 @@ import static ua.com.fielden.platform.reflection.Reflector.newParameterizedType;
 public class AuditEntityStructureTest extends AbstractDaoTestCase {
 
     private Class<AbstractAuditEntity<TgVehicle>> tgVehicleAuditType;
+    private Class<AbstractSynAuditEntity<TgVehicle>> tgVehicleSynAuditType;
     private Class<AbstractAuditProp<AbstractAuditEntity<TgVehicle>>> tgVehicleAuditPropType;
 
     @Inject
     void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
         tgVehicleAuditType = auditTypeFinder.getAuditEntityType(TgVehicle.class);
+        tgVehicleSynAuditType = auditTypeFinder.getSynAuditEntityType(TgVehicle.class);
         tgVehicleAuditPropType = auditTypeFinder.getAuditPropTypeForAuditEntity(tgVehicleAuditType);
     }
 
@@ -111,7 +113,7 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
 
         final var expectedProps = ImmutableList.<Prop>builder()
                 .add(new Prop(AbstractAuditProp.AUDIT_ENTITY, tgVehicleAuditType, PERSISTENT))
-                .add(new Prop(AbstractAuditProp.PROPERTY, newParameterizedType(PropertyDescriptor.class, tgVehicleAuditType), PERSISTENT))
+                .add(new Prop(AbstractAuditProp.PROPERTY, newParameterizedType(PropertyDescriptor.class, tgVehicleSynAuditType), PERSISTENT))
                 .add(new Prop(KEY, String.class, CALCULATED))
                 .add(new Prop(ID, Long.class, PERSISTENT))
                 .add(new Prop(VERSION, Long.class, PERSISTENT))
