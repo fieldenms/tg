@@ -72,10 +72,14 @@ public class RootEntityUtils {
      * This is a part of GraphQL spec.
      */
     private static final String __TYPENAME = "__typename";
-    public static final String WARN_ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
     static final String QUERY_TYPE_NAME = "Query";
+
+    public static final String ERR_EQ_AND_LIKE_ARE_MUTUALLY_EXCLUSIVE = "Conditions `eq` and `like` are mutually exclusive. Please remove one or both conditions.";
+    public static final String ERR_EQ_DOES_NOT_PERMIT_WILDCARDS = "Value for `eq` should not contain wildcard symbols (`*`).";
+    public static final String WARN_ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
+
     private static final Logger LOGGER = getLogger(RootEntityUtils.class);
-    
+
     /**
      * Returns function for generation of EQL query execution model for retrieving {@code rootField} and its selection set in GraphQL query or mutation [and optional warning about ordering].
      * The argument of function is {@link IDates} instance from which 'now' moment can properly be retrieved and used for date property filtering.
@@ -222,13 +226,13 @@ public class RootEntityUtils {
 
         if (isString(type) || isEntityType(type)) {
             if (argumentValues.get(EQ) != null && argumentValues.get(LIKE) != null) {
-                throw new WebApiException("Conditions `eq` and `like` are mutually exclusive. Please remove one or both conditions.");
+                throw new WebApiException(ERR_EQ_AND_LIKE_ARE_MUTUALLY_EXCLUSIVE);
             }
 
             if (argumentValues.get(EQ) != null) {
                 final var searchValue = (String) argumentValues.get(EQ);
                 if (searchValue.contains("*")) {
-                    throw new WebApiException("Value for `eq` should not contain wildcard symbols (`*`).");
+                    throw new WebApiException(ERR_EQ_DOES_NOT_PERMIT_WILDCARDS);
                 }
                 queryProperty.setValue(searchValue);
                 queryProperty.setSingle(true); // a search value should only be recognised as representing a single value (i.e. not comma separated).
