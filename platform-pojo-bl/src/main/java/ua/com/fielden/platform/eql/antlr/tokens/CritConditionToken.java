@@ -12,15 +12,15 @@ import static ua.com.fielden.platform.eql.antlr.EQLLexer.CRITCONDITION;
 public final class CritConditionToken extends AbstractParameterisedEqlToken {
 
     /** Can be null. */
-    public final ICompoundCondition0 collectionQueryStart;
+    public final ICompoundCondition0<?> collectionQueryStart;
     public final String prop;
     public final String critProp;
-    public final Optional<Object> defaultValue;
+    public final Optional<?> defaultValue;
 
     public CritConditionToken(
-            final ICompoundCondition0 collectionQueryStart,
+            final ICompoundCondition0<?> collectionQueryStart,
             final String prop, final String critProp,
-            final Optional<Object> defaultValue) {
+            final Optional<?> defaultValue) {
         super(CRITCONDITION, "critCondition");
         this.collectionQueryStart = collectionQueryStart;
         this.prop = requireNonNull(prop);

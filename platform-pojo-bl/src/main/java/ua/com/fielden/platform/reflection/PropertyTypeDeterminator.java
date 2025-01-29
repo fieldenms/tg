@@ -38,6 +38,14 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 public class PropertyTypeDeterminator {
     public static final String PROPERTY_SPLITTER = ".";
     public static final String ERR_TYPE_AND_PROP_REQUIRED = "Property type cannot be determined without both property name and owning type specified.";
+    public static final String ERR_IDENTIFYING_BASE_TYPE_FOR_ENTITY = "Could not identify a base type for entity type [%s].";
+    public static final String ERR_CLASS_STRIPPING_FOR_NULL = "Class stripping is not applicable to null values.";
+    public static final String ERR_EMPTY_STRING_IS_NOT_EXPECTED = "Empty string is not expected here: type [%s], propertyOrFunction [%s].";
+    public static final String ERR_DOT_EXPRESSION_IS_NOT_EXPECTED = "Dot-expression is not expected here: type [%s], propertyOrFunction [%s].";
+    public static final String ERR_NEITHER_DOT_EXPRESSION_NOR_EMPTY_STRING_IS_EXPECTED = "Neither dot-expression nor empty string is expected here: type [%s], propertyOrFunction [%s].";
+    public static final String ERR_NO_METHOD_IN_TYPE = "No method [%s] in type [%s].";
+    public static final String ERR_NO_PROPERTY_IN_TYPE = "No property [%s] in type [%s].";
+    public static final String ERR_DOT_EXPRESSION_IS_EXPECTED = "A dot-expression is expected.";
 
     /**
      * Hide default constructor for a utility class.
@@ -80,16 +88,16 @@ public class PropertyTypeDeterminator {
      * @param type  the class that should contain {@code propertyOrFunction} (property or function)
      * @param propertyOrFunction  the name of property or function (e.g., "isObservable()", "vehicle", "key", "getKey()"), not a dot-expression.
      * @param determineKeyType  true => then a correct "key"/"getKey()" class is returned, otherwise {@link Comparable} is returned.
-     * @param determineElementType  true => then a correct element type of a collectional property is returned, otherwise a type of collection (list, set, etc.) is returned.
+     * @param determineElementType  true => then a correct element type of collectional property is returned, otherwise a type of collection (list, set, etc.) is returned.
      *
      * @return
      */
     public static Class<?> determineClass(final Class<?> type, final String propertyOrFunction, final boolean determineKeyType, final boolean determineElementType) {
         if (StringUtils.isEmpty(propertyOrFunction)) {
-            throw new ReflectionException("Empty string is not expected here. type = " + type + ", propertyOrFunction = " + propertyOrFunction);
+            throw new ReflectionException(ERR_EMPTY_STRING_IS_NOT_EXPECTED.formatted(type, propertyOrFunction));
         }
         if (isDotExpression(propertyOrFunction)) {
-            throw new ReflectionException("Dot-expression is not expected here. type = " + type + ", propertyOrFunction = " + propertyOrFunction);
+            throw new ReflectionException(ERR_DOT_EXPRESSION_IS_NOT_EXPECTED.formatted(type, propertyOrFunction));
         }
         if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.equals(type)) {
             return Comparable.class;
@@ -217,7 +225,7 @@ public class PropertyTypeDeterminator {
      */
     private static Type determineType(final Class<?> type, final String propertyOrFunction) {
         if (StringUtils.isEmpty(propertyOrFunction) || isDotExpression(propertyOrFunction)) {
-            throw new ReflectionException("Neither dot-expression nor empty string is expected here.");
+            throw new ReflectionException(ERR_NEITHER_DOT_EXPRESSION_NOR_EMPTY_STRING_IS_EXPECTED.formatted(type, propertyOrFunction));
         }
         if ((AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.isAssignableFrom(type)) {
             return AnnotationReflector.getKeyType(type);
@@ -227,28 +235,26 @@ public class PropertyTypeDeterminator {
                 ////////////////// Parameterless Function return type determination //////////////////
                 return Reflector.getMethod(type, propertyOrFunction.substring(0, propertyOrFunction.length() - 2)).getGenericReturnType(); // getReturnType();
             } catch (final Exception e) {
-                throw new ReflectionException("No " + propertyOrFunction + " method in " + type.getSimpleName() + " class.");
+                throw new ReflectionException(ERR_NO_METHOD_IN_TYPE.formatted(propertyOrFunction, type));
             }
         } else { // property -- assuming that "propertyOrFunction" is a name of a property (because its name contains no braces)
             //	    return Reflector.getFieldByName(type, propertyOrFunction).getType();
             ////////////////// Property class determination using property accessor. //////////////////
             try {
                 return Reflector.obtainPropertyAccessor(type, propertyOrFunction).getGenericReturnType();
-            } catch (final ReflectionException e) {
-                throw new ReflectionException(format("No [%s] property in type [%s].", propertyOrFunction, type.getName()), e);
+            } catch (final ReflectionException ex) {
+                throw new ReflectionException(ERR_NO_PROPERTY_IN_TYPE.formatted(propertyOrFunction, type), ex);
             }
         }
     }
 
     /**
-     * Returns class without enhancements if present.
-     *
-     * @param type
-     * @return
+     * If the given type is non-structurally enhanced, recursively finds its base type, otherwise returns the type itself.
+     * The base type is determined recursively, so the returned type may be more than one superclass away from the given one.
      */
     public static Class<?> stripIfNeeded(final Class<?> type) {
         if (type == null) {
-            throw new ReflectionException("Class stripping is not applicable to null values.");
+            throw new ReflectionException(ERR_CLASS_STRIPPING_FOR_NULL);
         } else if (isInstrumented(type) || isProxied(type) || isLoadedByHibernate(type) || isMockNotFoundType(type)) {
             return stripIfNeeded(type.getSuperclass());
         }
@@ -256,20 +262,19 @@ public class PropertyTypeDeterminator {
     }
 
     /**
-     * A convenient function to identify the closest real type (i.e. not dynamically generated) that is the bases for the specified entity type.
-     * It is simular to {@link #stripIfNeeded(Class)}, but in addition it handles generated types that have suffix {@link DynamicTypeNamingService#APPENDIX} in their name.
-     *
-     * @param type
-     * @return
+     * If the type is enhanced, recursively finds its base type, otherwise returns the type itself.
+     * This method is similar to {@link #stripIfNeeded(Class)}, but also removes structural enhancements,
+     * indicated by suffix {@link DynamicTypeNamingService#APPENDIX} in the type name.
      */
     public static Class<? extends AbstractEntity<?>> baseEntityType(final Class<? extends AbstractEntity<?>> type) {
         final Class<? extends AbstractEntity<?>> strippedType = (Class<? extends AbstractEntity<?>>) stripIfNeeded(type);
-        if (strippedType.getSimpleName().contains(APPENDIX)) {
+        final var simpleName = strippedType.getSimpleName();
+        if (simpleName.contains(APPENDIX)) {
             final String typeName = strippedType.getName();
             try {
                 return (Class<? extends AbstractEntity<?>>) Class.forName(typeName.substring(0, typeName.indexOf(APPENDIX)));
-            } catch (final ClassNotFoundException e) {
-                throw new ReflectionException(format("Could not identify a base type for entity type [%s].", typeName), e);
+            } catch (final ClassNotFoundException ex) {
+                throw new ReflectionException(ERR_IDENTIFYING_BASE_TYPE_FOR_ENTITY.formatted(simpleName), ex);
             }
         } else {
             return strippedType;
@@ -277,7 +282,7 @@ public class PropertyTypeDeterminator {
     }
 
     private static boolean isLoadedByHibernate(final Class<?> type) {
-        final String name = type.getName();
+        final String name = type.getSimpleName();
         return name.contains("$HibernateProxy") || name.contains("$$_javassist") || name.contains("_$$_");
     }
 
@@ -328,7 +333,7 @@ public class PropertyTypeDeterminator {
 
     public static Pair<String, String> penultAndLast(final CharSequence dotExpr) {
         if (!isDotExpression(dotExpr)) {
-            throw new ReflectionException("A dot-expression is expected.");
+            throw new ReflectionException(ERR_DOT_EXPRESSION_IS_EXPECTED);
         }
         final String dotNotationStr = dotExpr.toString();
         final int indexOfLastDot = dotNotationStr.lastIndexOf(PROPERTY_SPLITTER);
@@ -339,7 +344,7 @@ public class PropertyTypeDeterminator {
 
     public static Pair<String, String> firstAndRest(final CharSequence dotNotationExp) {
         if (!isDotExpression(dotNotationExp)) {
-            throw new ReflectionException("A dot-expression is expected.");
+            throw new ReflectionException(ERR_DOT_EXPRESSION_IS_EXPECTED);
         }
         final String dotNotationStr = dotNotationExp.toString();
         final int indexOfFirstDot = dotNotationStr.indexOf(PROPERTY_SPLITTER);

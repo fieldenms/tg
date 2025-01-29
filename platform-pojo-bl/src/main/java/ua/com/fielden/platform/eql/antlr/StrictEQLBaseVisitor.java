@@ -48,6 +48,11 @@ public abstract class StrictEQLBaseVisitor<T> extends AbstractParseTreeVisitor<T
     }
 
     @Override
+    public T visitStandaloneOrderBy(final EQLParser.StandaloneOrderByContext ctx) {
+        return defaultVisit();
+    }
+
+    @Override
     public T visitOrderBy(final EQLParser.OrderByContext ctx) {
         return defaultVisit();
     }

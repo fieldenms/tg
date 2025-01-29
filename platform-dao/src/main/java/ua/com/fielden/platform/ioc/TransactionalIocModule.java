@@ -43,6 +43,7 @@ public abstract class TransactionalIocModule extends EntityIocModule {
     private final Properties props;
 
     public TransactionalIocModule(final Properties props) {
+        super(props);
         this.props = props;
     }
 

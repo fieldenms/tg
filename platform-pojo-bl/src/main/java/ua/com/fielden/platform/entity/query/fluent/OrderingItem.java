@@ -1,45 +1,61 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperand0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItemCloseable;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.*;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-class OrderingItem //
-        extends ExprOperand<ISingleOperandOrderable, IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>, AbstractEntity<?>> //
-        implements IOrderingItem {
+/**
+ * If Java had multiple inheritance, then would also extend {@link CompletedAndYielded}.
+ * We work around this by using {@link CompletedAndYielded} as a delegate.
+ */
+final class OrderingItem<ET extends AbstractEntity<?>>
+        extends OrderingItem1<ET>
+        implements IOrderingItem<ET>
+{
 
     public OrderingItem(final EqlSentenceBuilder builder) {
         super(builder);
     }
 
     @Override
-    protected ISingleOperandOrderable nextForSingleOperand(final EqlSentenceBuilder builder) {
-        return new SingleOperandOrderable(builder);
+    public IFunctionYieldedLastArgument<IFirstYieldedItemAlias<ISubsequentCompletedAndYielded<ET>>, ET> yield() {
+        return new CompletedAndYielded<ET>(builder).yield();
     }
 
     @Override
-    protected IExprOperand0<ISingleOperandOrderable, AbstractEntity<?>> nextForExprOperand(final EqlSentenceBuilder builder) {
-        return new ExprOperand0<ISingleOperandOrderable, AbstractEntity<?>>(builder) {
-
-            @Override
-            protected ISingleOperandOrderable nextForExprOperand0(final EqlSentenceBuilder builder) {
-                return OrderingItem.this.nextForSingleOperand(builder);
-            }
-
-        };
+    public ISubsequentCompletedAndYielded<ET> yieldAll() {
+        return new CompletedAndYielded<ET>(builder).yieldAll();
     }
 
     @Override
-    public ISingleOperandOrderable yield(final CharSequence yieldAlias) {
-        return new SingleOperandOrderable(builder.yield(yieldAlias));
+    public EntityResultQueryModel<ET> model() {
+        return new CompletedAndYielded<ET>(builder).model();
     }
 
     @Override
-    public IOrderingItemCloseable order(OrderingModel model) {
-        return new OrderingItemCloseable(builder.order(model));
+    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
+        return new CompletedAndYielded<ET>(builder).modelAsEntity(resultType);
+    }
+
+    @Override
+    public AggregatedResultQueryModel modelAsAggregate() {
+        return new CompletedAndYielded<ET>(builder).modelAsAggregate();
+    }
+
+    @Override
+    public IOrderByOffset<ET> limit(final long n) {
+        return new OrderByOffset<>(builder.limit(n));
+    }
+
+    @Override
+    public IOrderByOffset<ET> limit(final Limit limit) {
+        return new OrderByOffset<>(builder.limit(limit));
+    }
+
+    @Override
+    public ICompletedAndYielded<ET> offset(final long n) {
+        return new CompletedAndYielded<>(builder.offset(n));
     }
 
 }

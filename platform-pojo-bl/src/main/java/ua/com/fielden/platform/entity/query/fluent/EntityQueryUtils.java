@@ -59,8 +59,8 @@ public class EntityQueryUtils {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static IOrderingItem orderBy() {
-        return new OrderingItem(new EqlSentenceBuilder().orderBy());
+    public static StandaloneOrderBy.IOrderingItem orderBy() {
+        return new StandaloneOrderBy_OrderingItem(new EqlSentenceBuilder().orderBy());
     }
 
     public static <T extends AbstractEntity<?>> Builder<T, EntityResultQueryModel<T>> from(

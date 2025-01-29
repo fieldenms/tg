@@ -1,45 +1,39 @@
 package ua.com.fielden.platform.entity.activatable;
 
-import static java.util.stream.Collectors.toSet;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.sample.domain.TgAuthoriser;
-import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.sample.domain.TgOriginator;
-import ua.com.fielden.platform.sample.domain.TgPerson;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
+
+import java.util.List;
+
+import static java.util.stream.Collectors.toSet;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 
 public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase {
 
     @Test
-    public void active_person_with_active_authoriser_and_originator_deactivatable_dependencies_and_one_tangenital_dependeny_should_have_one_ref_count() {
+    public void active_person_with_active_authoriser_and_originator_deactivatable_dependencies_and_one_tangenital_dependency_has_one_ref_count() {
         final TgPerson person = co$(TgPerson.class).findByKey("P1");
 
         assertEquals(Integer.valueOf(1), person.getRefCount());
     }
 
     @Test
-    public void active_person_with_acitve_authoriser_and_inactive_originator_deactivatable_dependencies_should_have_zero_ref_count() {
+    public void active_person_with_active_authoriser_and_inactive_originator_deactivatable_dependencies_has_zero_ref_count() {
         final TgPerson person = co$(TgPerson.class).findByKey("P2");
 
         assertEquals(Integer.valueOf(0), person.getRefCount());
     }
 
     @Test
-    public void deactivating_authoriser_that_references_active_person_should_not_change_its_ref_count() {
+    public void deactivating_authoriser_that_references_active_person_does_not_change_its_ref_count() {
         final TgPerson person = co$(TgPerson.class).findByKey("P1");
         assertEquals(Integer.valueOf(1), person.getRefCount());
         final TgAuthoriser auth = co$(TgAuthoriser.class).findByKey(person);
@@ -74,7 +68,7 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivation_of_person_with_only_acitve_authoriser_and_originator_deactivatable_dependencies_should_be_permitted() {
+    public void deactivation_of_person_with_only_active_authoriser_and_originator_deactivatable_dependencies_is_permitted() {
         final TgPerson person = co$(TgPerson.class).findByKey("P2");
 
         final TgPerson savedPerson = save(person.setActive(false));
@@ -82,18 +76,19 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivation_of_person_with_deactivatable_dependencies_that_is_not_part_of_a_key_should_be_prevented() {
+    public void deactivation_of_person_with_deactivatable_dependencies_that_is_not_part_of_a_key_is_prevented() {
         final TgPerson person = co$(TgPerson.class).findByKey("P1");
 
         try {
             save(person.setActive(false));
             fail();
         } catch (final Result ex) {
+            assertTrue(ex.getMessage().startsWith("Tg Person [P1] has 1 active dependency."));
         }
     }
 
     @Test
-    public void deactivating_originator_that_references_two_active_persons_should_not_change_ref_count_for_one_where_it_is_dependable_and_should_change_for_the_other() {
+    public void deactivating_originator_that_references_two_active_persons_should_not_change_ref_count_for_one_where_it_is_dependable_and_changes_for_the_other() {
         final TgPerson p3 = co$(TgPerson.class).findByKey("P3");
         assertEquals(Integer.valueOf(0), p3.getRefCount());
         final TgOriginator orig = co$(TgOriginator.class).findByKey(p3);
@@ -105,7 +100,7 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void activating_originator_that_references_two_active_persons_should_not_change_ref_count_for_one_where_it_is_dependable_and_should_change_for_the_other() {
+    public void activating_originator_that_references_two_active_persons_does_not_change_ref_count_for_one_where_it_is_dependable_and_does_change_for_the_other() {
         final TgPerson p2 = co$(TgPerson.class).findByKey("P2");
         final TgOriginator orig = co$(TgOriginator.class).findByKey(p2);
 
@@ -116,7 +111,7 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivation_of_person_p3_with_originators_assistant_as_p1_should_decrement_p1s_ref_count() {
+    public void deactivation_of_person_p3_with_originators_assistant_as_p1_does_decrement_p1s_ref_count() {
         final TgPerson p1 = co$(TgPerson.class).findByKey("P1");
         assertEquals("Test pre condition should validate", Integer.valueOf(1), p1.getRefCount());
         final TgPerson p3 = save(co$(TgPerson.class).findByKey("P3").setActive(false));
@@ -126,7 +121,7 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void activation_of_inactive_authoriser_should_increase_ref_count_for_referenced_category_and_decrease_it_upon_automatic_deactivation() {
+    public void activation_of_inactive_authoriser_increases_ref_count_for_referenced_category_and_decreases_it_upon_automatic_deactivation() {
         final TgPerson p3 = co$(TgPerson.class).findByKey("P3");
         final TgAuthoriser auth = co$(TgAuthoriser.class).findByKey(p3);
         assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey("CAT1").getRefCount());
@@ -137,6 +132,35 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
         save(p3.setActive(false));
         assertFalse(co$(TgAuthoriser.class).findByKey(p3).isActive());
         assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey("CAT1").getRefCount());
+    }
+
+    @Test
+    public void transitive_deactivatable_dependencies_are_considered_when_validating_property_active() {
+        final var part1 = co$(TgInventoryPart.class).findByKey("Part1");
+        assertNotNull(part1);
+        part1.setActive(false);
+        assertTrue(part1.isActive());
+        final MetaProperty<Boolean> mpActive = part1.getProperty(ACTIVE);
+        assertFalse(mpActive.isValid());
+        assertEquals("""
+                        Inventory Part [Part1] has 3 active dependencies.<extended/>Inventory Part [Part1] has 3 active dependencies:
+                        
+                        <br><br><tt>Entity              Qty Property       </tt><hr>
+                        <br><tt>Tg Inventory Issue    2 Inventory Bin  </tt>
+                        <br><tt>Tg Inventory Issue    1 Tg Inventory   </tt>""",
+                        mpActive.validationResult().getMessage().replace("\r", ""));
+        // let's now deactivate the culprits and try deactivating the part again
+        final var issue1Part1 = co$(TgInventoryIssue.class).findByKey("Part1 01/12/2024 13:30");
+        assertNotNull(issue1Part1);
+        save(issue1Part1.setActive(false));
+        final var issue2Part1 = co$(TgInventoryIssue.class).findByKey("Part1 04/12/2024 13:30");
+        assertNotNull(issue2Part1);
+        save(issue2Part1.setActive(false));
+
+        part1.setActive(false);
+        assertFalse(part1.isActive());
+        final var inactivePart1 = save(part1);
+        assertFalse(inactivePart1.isActive());
     }
 
     @Override
@@ -154,6 +178,12 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
         final TgPerson p3 = save(new_(TgPerson.class, "P3").setActive(true));
         save(new_composite(TgOriginator.class, p3).setAssistant(p1).setActive(true));
         save(new_composite(TgAuthoriser.class, p3).setActive(false).setCategory(save(new_(TgCategory.class, "CAT1").setActive(true))));
+
+        final var part1 = save(new_composite(TgInventoryPart.class, "Part1").setActive(true).setDesc("Part 1 description"));
+        final var invPart1 = save(new_composite(TgInventory.class, part1).setActive(true));
+        final var invBinPart1 = save(new_composite(TgInventoryBin.class, invPart1).setActive(true));
+        final var issue1Part1 = save(new_composite(TgInventoryIssue.class, invBinPart1, date("2024-12-01 13:30:00")).setQty(1).setSupersededInventory(invPart1).setActive(true));
+        final var issue2Part1 = save(new_composite(TgInventoryIssue.class, invBinPart1, date("2024-12-04 13:30:00")).setQty(10).setActive(true));
     }
 
 }

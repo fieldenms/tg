@@ -5,6 +5,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.web_api.GraphQLScalars;
 
+import java.util.Properties;
+
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
 
@@ -14,6 +16,16 @@ import static com.google.inject.matcher.Matchers.subclassesOf;
  * @author TG Team
  */
 public abstract class EntityIocModule extends AbstractPlatformIocModule {
+
+    private final Properties properties;
+
+    public EntityIocModule(final Properties properties) {
+        this.properties = properties;
+    }
+
+    public EntityIocModule() {
+        this(new Properties());
+    }
 
     /**
      * Binds intercepter for observable property mutators to ensure property change observation and validation. Only descendants of {@link AbstractEntity} are processed.
@@ -29,6 +41,9 @@ public abstract class EntityIocModule extends AbstractPlatformIocModule {
         // static injection occurs at the time when an injector is created
         // this guarantees that different implementations of IDates will be injected based on IDates binding in IoC modules that define the binding configuration;
         requestStaticInjection(GraphQLScalars.class);
+
+        install(DynamicPropertyAccessIocModule.options().fromProperties(properties));
+        install(new DynamicPropertyAccessIocModule());
 
         install(new AuditingIocModule());
     }

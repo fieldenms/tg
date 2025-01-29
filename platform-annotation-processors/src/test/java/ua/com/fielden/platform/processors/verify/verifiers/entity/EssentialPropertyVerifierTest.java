@@ -14,6 +14,7 @@ import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -27,6 +28,7 @@ import java.util.function.Function;
 import static ua.com.fielden.platform.test_utils.compile.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.compileWithTempStorage;
+import static ua.com.fielden.platform.processors.utils.CodeGenerationUtils.buildAtCompositeKeyMember;
 import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.setterBuilder;
@@ -36,6 +38,8 @@ import static ua.com.fielden.platform.processors.verify.verifiers.entity.Essenti
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errEntityTypeMustBeRegistered;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.RichTextPropertyVerifier.errKeyMemberRichText;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.ERR_UNION_ENTITY_TYPED_SIMPLE_KEY;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.errUnionEntityTypedKeyMember;
 
 /**
  * Tests related to the composable verifier {@link EssentialPropertyVerifier} and its components.
@@ -526,6 +530,43 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         @Test
         public void collection_type_parameterised_with_PropertyDescriptor_is_allowed() {
             assertTypeAllowed(ParameterizedTypeName.get(List.class, PropertyDescriptor.class));
+        }
+
+    }
+
+    // 5. union-typed simple key and key members
+    public static class UnionEntityTypedKeyVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.class;
+
+        @Override
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
+            return new EssentialPropertyVerifier.UnionEntityTypedKeyVerifier(procEnv);
+        }
+
+        @Test
+        public void simple_key_typed_with_a_union_entity_is_disallowed() {
+            final var entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(UnionEntity.class, "key").build())
+                    .build();
+
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "key"),
+                    ERR_UNION_ENTITY_TYPED_SIMPLE_KEY);
+        }
+
+        @Test
+        public void key_member_typed_with_a_union_entity_is_disallowed() {
+            final var entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(UnionEntity.class, "prop")
+                            .addAnnotation(buildAtCompositeKeyMember(1))
+                            .build())
+                    .build();
+
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
+                    errUnionEntityTypedKeyMember("prop"));
         }
 
     }

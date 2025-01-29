@@ -11,6 +11,8 @@ import ua.com.fielden.platform.sample.domain.ReferenceHierarchyDaoStub;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.utils.IDates;
 
+import java.util.Properties;
+
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 
 /**
@@ -20,6 +22,14 @@ import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
  * @author TG Team
  */
 public class EntityTestIocModuleWithPropertyFactory extends EntityIocModule {
+
+    public EntityTestIocModuleWithPropertyFactory() {
+        super();
+    }
+
+    public EntityTestIocModuleWithPropertyFactory(final Properties properties) {
+        super(properties);
+    }
 
     /**
      * 
