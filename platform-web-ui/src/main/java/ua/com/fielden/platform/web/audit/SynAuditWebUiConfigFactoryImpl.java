@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.audit;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
@@ -14,14 +15,19 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
+import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.*;
 import static ua.com.fielden.platform.audit.AuditUtils.isAuditProperty;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
@@ -101,7 +107,9 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
             centreBuilder2 = centreBuilder2.also().addProp(prop.getName());
         }
 
-        final var ecc = centreBuilder2.build();
+        final var centreBuilder3 = centreBuilder2.setRenderingCustomiser(RenderingCustomiser.class);
+
+        final var ecc = centreBuilder3.build();
 
         return new EntityCentre<>(miType, ecc, injector);
     }
@@ -138,6 +146,31 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
         }
         else {
             return null;
+        }
+    }
+
+    private static class RenderingCustomiser implements IRenderingCustomiser<Map<String, Object>> {
+
+        // TODO Enable configuration of style by applications
+        private static final String LIGHT_BLUE = "#42A5F5";
+        private static final Map<String, Map<String, String>> PROP_STYLE =
+                ImmutableMap.of("backgroundStyles", ImmutableMap.of("background-color", LIGHT_BLUE));
+
+        /**
+         * @param entity  synthetic audit-entity
+         */
+        @Override
+        public Optional<Map<String, Object>> getCustomRenderingFor(final AbstractEntity<?> entity) {
+            final var synAudit = (AbstractSynAuditEntity<?>) entity;
+
+            final Map<String, Object> styles = synAudit.getChangedProps().stream()
+                    .map(ap -> ap.getProperty().getPropertyName())
+                    .collect(toMap(Function.identity(),
+                                   $ -> PROP_STYLE,
+                                   ($1, $2) -> $2,
+                                   HashMap::new));
+
+            return Optional.of(styles);
         }
     }
 
