@@ -5,6 +5,7 @@ import com.google.common.collect.Streams;
 import com.squareup.javapoet.*;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
+import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
@@ -169,6 +170,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         a3tBuilder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(getEntityTitle(type))));
         a3tBuilder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
         a3tBuilder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
+        a3tBuilder.addAnnotation(javaPoet.getAnnotation(WithoutMetaModel.class));
 
         // Property for the reference to the audited entity.
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
@@ -412,7 +414,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class))
                 .addAnnotation(javaPoet.getAnnotation(SkipVerification.class))
                 .addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class))
-                ;
+                .addAnnotation(javaPoet.getAnnotation(WithoutMetaModel.class));
 
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
         final var auditEntityProp = propertyBuilder(AUDIT_ENTITY, auditEntityClassName)
@@ -486,6 +488,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         builder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
         builder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
         builder.addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class));
+        builder.addAnnotation(javaPoet.getAnnotation(WithoutMetaModel.class));
 
         // Declare key member "auditedEntity", common to all audit-entity type versions.
         final var auditedEntityProp = propertyBuilder(AbstractSynAuditEntity.AUDITED_ENTITY, auditedType)
@@ -661,6 +664,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(javaPoet.getAnnotation(SkipVerification.class))
                 .addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class))
                 .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class))
+                .addAnnotation(javaPoet.getAnnotation(WithoutMetaModel.class))
                 .addAnnotation(AnnotationSpecs.entityTitle("%s Audit Changed Property".formatted(auditedEntityTitle)))
                 .addAnnotation(AnnotationSpecs.keyTitle("%s Audit and Changed Property".formatted(auditedEntityTitle)));
 
