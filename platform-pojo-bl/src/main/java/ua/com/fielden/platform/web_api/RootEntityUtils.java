@@ -24,6 +24,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -126,7 +127,7 @@ public class RootEntityUtils {
                 locale
             ))
             .flatMap(orderingProperty -> orderingProperty.isPresent() ? Stream.of(orderingProperty.get()) : Stream.empty())
-            .collect(toList()); // exclude empty values
+            .toList(); // exclude empty values
         final Optional<String> optionalWarning = propOrderingWithPriorities.stream().map(t3 -> t3._3).distinct().count() < propOrderingWithPriorities.size() ? of(WARN_ORDER_PRIORITIES_ARE_NOT_DISTINCT) : empty(); // in case where order priorities are not distinct, return non-intrusive warning (with data still present)
         final List<Pair<String, Ordering>> specifiedOrderingProperties = propOrderingWithPriorities.stream()
             .sorted((p1, p2) -> p1._3.compareTo(p2._3)) // sort by ordering priority
@@ -218,16 +219,30 @@ public class RootEntityUtils {
         // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
         final Map<String, Object> argumentValues = getArgumentValues(codeRegistry, arguments._1, arguments._2, of(variables), context, locale);
-        
-        if (isString(type)) {
-            ofNullable(argumentValues.get(LIKE)).ifPresent(value -> {
-                queryProperty.setValue(value);
-            });
-        } else if (isEntityType(type)) {
-            ofNullable(argumentValues.get(LIKE)).ifPresent(value -> {
-                queryProperty.setValue(queryProperty.isSingle() ? value : asList(((String) value).split(",")));
-            });
-        } else if (isBoolean(type)) {
+
+        if (isString(type) || isEntityType(type)) {
+            if (argumentValues.get(EQ) != null && argumentValues.get(LIKE) != null) {
+                throw new WebApiException("Conditions `eq` and `like` are mutually exclusive. Please remove one or both conditions.");
+            }
+
+            if (argumentValues.get(EQ) != null) {
+                final var searchValue = (String) argumentValues.get(EQ);
+                if (searchValue.contains("*")) {
+                    throw new WebApiException("Value for `eq` should not contain wildcard symbols (`*`).");
+                }
+                queryProperty.setValue(searchValue);
+                queryProperty.setSingle(true); // a search value should only be recognised as representing a single value (i.e. not comma separated).
+                queryProperty.setMatchAnywhere(false); // match exactly
+            }
+            else if (argumentValues.get(LIKE) != null) {
+                final var searchValue = (String) argumentValues.get(LIKE);
+                // The searchValue must be of type String for string-typed criteria even if it represents comma separated values.
+                // However, for entity-typed criteria, comma separated values need to be... separated, and represented as a list.
+                queryProperty.setValue(queryProperty.isSingle() || isString(type) ? searchValue : asList(searchValue.split(",")));
+                queryProperty.setMatchAnywhere(isString(type)); // match anywhere only applies to string-typed criteria
+            }
+        }
+        else if (isBoolean(type)) {
             ofNullable(argumentValues.get(VALUE)).ifPresent(value -> {
                 if ((boolean) value) { // default empty values are 'true' for both 'value' and 'value2'
                     queryProperty.setValue2(false);
@@ -235,18 +250,15 @@ public class RootEntityUtils {
                     queryProperty.setValue(false);
                 }
             });
-        } else if (Integer.class.isAssignableFrom(type)
+        }
+        else if (Integer.class.isAssignableFrom(type)
             || Long.class.isAssignableFrom(type)
             || BigDecimal.class.isAssignableFrom(type)
             || Money.class.isAssignableFrom(type)
             || Date.class.isAssignableFrom(type)
         ) {
-            ofNullable(argumentValues.get(FROM)).ifPresent(value -> {
-                queryProperty.setValue(value);
-            });
-            ofNullable(argumentValues.get(TO)).ifPresent(value -> {
-                queryProperty.setValue2(value);
-            });
+            ofNullable(argumentValues.get(FROM)).ifPresent(queryProperty::setValue);
+            ofNullable(argumentValues.get(TO)).ifPresent(queryProperty::setValue2);
         }
         return queryProperty;
     }
@@ -400,7 +412,7 @@ public class RootEntityUtils {
     private static List<Field> toFields(final SelectionSet selectionSet, final Map<String, FragmentDefinition> fragmentDefinitions) {
         final List<Field> selectionFields = new ArrayList<>();
         if (selectionSet != null) {
-            for (final Selection selection: selectionSet.getSelections()) {
+            for (final Selection<?> selection: selectionSet.getSelections()) {
                 if (selection instanceof Field) {
                     selectionFields.add((Field) selection);
                 } else if (selection instanceof final FragmentSpread fragmentSpread) {
@@ -410,7 +422,7 @@ public class RootEntityUtils {
                     selectionFields.addAll(toFields(inlineFragment.getSelectionSet(), fragmentDefinitions));
                 } else {
                     // this is the only three types of possible selections; log warning if something else appeared
-                    LOGGER.warn(format("Unknown Selection [%s] has appeared.", Objects.toString(selection))); // 'null' selection is possible
+                    LOGGER.warn("Unknown Selection [{}] has appeared.", Objects.toString(selection)); // 'null' selection is possible
                 }
             }
         }
