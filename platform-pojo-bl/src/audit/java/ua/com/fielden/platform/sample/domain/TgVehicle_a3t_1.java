@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
+import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.audit.AuditFor;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
@@ -19,6 +21,7 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.types.Money;
 
 @AuditFor(
@@ -28,8 +31,11 @@ import ua.com.fielden.platform.types.Money;
 @MapEntityTo
 @CompanionIsGenerated
 @EntityTitle("Tg Vehicle Audit")
+@SkipVerification
+@SkipEntityRegistration
+@WithoutMetaModel
 public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
-  @CompositeKeyMember(2)
+  @CompositeKeyMember(1)
   @MapTo
   @Required
   @Final
@@ -51,6 +57,10 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
   @IsProperty
   @MapTo("A3T_KEY")
   @Final
+  @Title(
+      value = "Key",
+      desc = "[Key] at the time of the audited event."
+  )
   private String a3t_key;
 
   @IsProperty
