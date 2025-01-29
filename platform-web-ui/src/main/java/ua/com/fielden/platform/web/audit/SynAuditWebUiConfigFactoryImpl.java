@@ -24,6 +24,7 @@ import java.util.Optional;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.*;
 import static ua.com.fielden.platform.audit.AuditUtils.isAuditProperty;
+import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -71,7 +72,7 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
                 .collect(toImmutableList());
 
         final var desktopLayout = cell(
-                cell(CELL_LAYOUT).repeat(3)
+                cell(CELL_LAYOUT).repeat(4)
                 .cell(CELL_LAYOUT).repeat(auditProperties.size())
                 )
                 .toString();
@@ -79,6 +80,7 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
         IAlsoCrit centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
                 .addCrit(AUDITED_ENTITY).asMulti().autocompleter(auditedType).also()
                 .addCrit(AUDIT_DATE).asRange().dateTime().also()
+                .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType)).also()
                 .addCrit(USER).asMulti().autocompleter(User.class);
 
         for (final Field prop : auditProperties) {
@@ -92,6 +94,7 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
                 .addProp(AUDITED_ENTITY)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching audit records.").also()
                 .addProp(AUDIT_DATE).order(1).desc().also()
+                .addProp(CHANGED_PROPS).minWidth(200).also()
                 .addProp(USER);
 
         for (final Field prop : auditProperties) {
