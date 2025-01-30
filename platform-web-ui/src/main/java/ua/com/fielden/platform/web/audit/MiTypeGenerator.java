@@ -20,13 +20,15 @@ import static java.util.stream.Collectors.joining;
 @Singleton
 final class MiTypeGenerator {
 
+    private static final String PACKAGE = "main.menu.audit";
+
     @SuppressWarnings("unchecked")
     <E extends AbstractEntity<?>> Class<MiWithConfigurationSupport<E>> generate(final Class<E> type) {
         final var baseType = PropertyTypeDeterminator.baseEntityType(type);
         final var miTypeSimpleName = "Mi" + baseType.getSimpleName();
-        // For manually created mi types, the conventional package is `fielden.main.menu.{module_name}`,
-        // but for generated mi types we may choose an arbitrary package.
-        final var miTypeFqn = Stream.of(baseType.getPackageName(), miTypeSimpleName)
+        // Use a fixed package that doesn't depend on the entity type so that the resulting Mi type is not affected by
+        // renaming / moving of the entity type.
+        final var miTypeFqn = Stream.of(PACKAGE, miTypeSimpleName)
                 .filter(not(String::isEmpty))
                 .collect(joining("."));
 
