@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.BooleanParam;
 import ua.com.fielden.platform.entity.annotation.mutator.ClassParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.AuthorisationValidator;
-import ua.com.fielden.platform.sample.domain.security_tokens.TgFuelType_CanModify_guarded_Token;
+import ua.com.fielden.platform.security.tokens.persistent.TgFuelType_CanModify_guarded_Token;
 
 import static ua.com.fielden.platform.entity.validation.AuthorisationValidator.PARAM_PERSISTED_ONLY;
 import static ua.com.fielden.platform.entity.validation.AuthorisationValidator.PARAM_SECURITY_TOKEN;
