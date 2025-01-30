@@ -18,9 +18,16 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
+import ua.com.fielden.platform.audit.AuditUtils;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
+import ua.com.fielden.platform.security.tokens.ISecurityTokenGenerator;
+import ua.com.fielden.platform.security.tokens.Template;
 import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanReadModel_Token;
@@ -80,8 +87,9 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
 
     /**
      * Contains top level security token nodes.
+     * Effectively final.
      */
-    private final SortedSet<SecurityTokenNode> topLevelSecurityTokenNodes;
+    private SortedSet<SecurityTokenNode> topLevelSecurityTokenNodes;
 
     /**
      * The "default" constructor that can be used by IoC.
@@ -153,7 +161,37 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
             throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
         }
-        topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
+    }
+
+    @Inject
+    private void registerAuditTokens(
+            final IApplicationDomainProvider appDomain,
+            final IAuditTypeFinder auditTypeFinder,
+            final ISecurityTokenGenerator generator)
+    {
+        appDomain.entityTypes().stream()
+                .filter(AuditUtils::isAudited)
+                .flatMap(ty -> {
+                    final var synAuditEntityType = auditTypeFinder.getSynAuditEntityType(ty);
+                    return templatesForAuditedType(ty).stream().map(template -> generator.generateToken(synAuditEntityType, template));
+                })
+                .forEach(tok -> {
+                    tokenClassesByName.put(tok.getName(), tok);
+                    tokenClassesBySimpleName.put(tok.getSimpleName(), tok);
+                });
+
+        if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
+            throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
+        }
+
+        topLevelSecurityTokenNodes = buildTokenNodes(tokenClassesByName.values());
+    }
+
+    /**
+     * Given an audited entity type, specifies the kinds of tokens that should be generated.
+     */
+    protected Set<Template> templatesForAuditedType(final Class<? extends AbstractEntity<?>> type) {
+        return Set.of(Template.READ, Template.READ_MODEL);
     }
 
     @Override
@@ -182,7 +220,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
      * @param allTokens
      * @return
      */
-    private static SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
+    private static SortedSet<SecurityTokenNode> buildTokenNodes(final Iterable<Class<? extends ISecurityToken>> allTokens) {
         final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
 
         allTokens.forEach(token -> {
