@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -28,9 +29,12 @@ import ua.com.fielden.platform.security.user.UserRole;
 @EntityType(SecurityMatrixSaveAction.class)
 public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixSaveAction> implements SecurityMatrixSaveActionCo{
 
+    private final ISecurityTokenProvider securityTokenProvider;
+
     @Inject
-    protected SecurityMatrixSaveActionDao(final IFilter filter) {
+    protected SecurityMatrixSaveActionDao(final IFilter filter, final ISecurityTokenProvider securityTokenProvider) {
         super(filter);
+        this.securityTokenProvider = securityTokenProvider;
     }
 
     @Override
@@ -73,12 +77,7 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
     }
 
     private Class<? extends ISecurityToken> loadToken(final String name) {
-        final Class<? extends ISecurityToken> token;
-        try {
-            token = (Class<? extends ISecurityToken>) Class.forName(name);
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(new IllegalStateException(String.format("Security token [%s] could not be found.", name)));
-        }
-        return token;
+        return securityTokenProvider.getTokenByName(name)
+                .orElseThrow(() -> Result.failure(new IllegalStateException(String.format("Security token [%s] could not be found.", name))));
     }
 }
