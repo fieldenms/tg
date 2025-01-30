@@ -10,12 +10,14 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
+import ua.com.fielden.platform.web.test.server.config.StandardActions;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -72,6 +74,9 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
             final Class<S> synAuditType,
             final Class<? extends MiWithConfigurationSupport<?>> miType)
     {
+        final var standardExportAction = StandardActions.EXPORT_ACTION.mkAction(synAuditType);
+        final var standardSortAction = CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
+
         // Cannot use IDomainMetadata as it resides in the dao module
         final List<Field> auditProperties = streamRealProperties(synAuditType)
                 .filter(prop -> isAuditProperty(prop.getName()))
@@ -84,13 +89,13 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
                 .toString();
 
         IAlsoCrit centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
+                .addTopAction(standardExportAction)
+                .also().addTopAction(standardSortAction)
+
                 .addCrit(AUDITED_ENTITY).asMulti().autocompleter(auditedType).also()
                 .addCrit(AUDIT_DATE).asRange().dateTime().also()
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType)).also()
                 .addCrit(USER).asMulti().autocompleter(User.class);
-
-        // final var standardExportAction = StandardActions.EXPORT_ACTION.mkAction(Category.class);
-        // final var standardSortAction = CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
 
         for (final Field prop : auditProperties) {
             final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
