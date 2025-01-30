@@ -1,6 +1,7 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.security.tokens;
 
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
+import ua.com.fielden.platform.security.tokens.FirstLevelSecurityToken2;
 
 /**
  * Represent the second level security token, added to the {@link FirstLevelSecurityToken2} group. Implemented for testing purpose only

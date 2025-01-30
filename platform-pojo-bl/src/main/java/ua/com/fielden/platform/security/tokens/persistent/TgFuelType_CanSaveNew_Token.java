@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.sample.domain.security_tokens;
+package ua.com.fielden.platform.security.tokens.persistent;
 
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.TgFuelType;

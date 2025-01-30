@@ -26,6 +26,7 @@ import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
+import ua.com.fielden.platform.security.provider.SecurityTestIocModule;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
@@ -71,6 +72,8 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
+
+        install(new SecurityTestIocModule());
     }
 
     @Override

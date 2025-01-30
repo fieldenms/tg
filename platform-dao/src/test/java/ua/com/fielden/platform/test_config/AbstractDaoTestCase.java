@@ -7,7 +7,6 @@ import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.sample.domain.security_tokens.TgFuelType_CanSaveNew_Token;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
@@ -72,7 +71,6 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
             final ISecurityTokenProvider provider = getInstance(ISecurityTokenProvider.class);
             final SortedSet<SecurityTokenNode> topNodes = new TreeSet<>();
             topNodes.addAll(provider.getTopLevelSecurityTokenNodes());
-            topNodes.add(SecurityTokenNode.makeTopLevelNode(TgFuelType_CanSaveNew_Token.class)); // extra token, which is not loaded by default due to its package
             final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
             final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
             for (final SecurityTokenNode securityNode : topNodes) {

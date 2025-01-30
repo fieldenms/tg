@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.security.tokens;
 
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 

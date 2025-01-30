@@ -1,24 +1,15 @@
 package ua.com.fielden.platform.security.provider;
 
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableCollection;
 import static java.util.Optional.ofNullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AuditUtils;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -76,7 +67,6 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  */
 @Singleton
 public class SecurityTokenProvider implements ISecurityTokenProvider {
-    public static final String ERR_DUPLICATE_SECURITY_TOKENS = "Not all security tokens are unique in their simple class name. This is required.";
 
     /**
      * A map between token classes and their names.
@@ -197,6 +187,11 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     @Override
     public SortedSet<SecurityTokenNode> getTopLevelSecurityTokenNodes() {
         return Collections.unmodifiableSortedSet(topLevelSecurityTokenNodes);
+    }
+
+    @Override
+    public Collection<Class<? extends ISecurityToken>> allSecurityTokens() {
+        return unmodifiableCollection(tokenClassesByName.values());
     }
 
     /**
