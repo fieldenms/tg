@@ -90,6 +90,11 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
     private String auditedTransactionGuid;
 
     /**
+     * Getter for property {@link #CHANGED_PROPS}.
+     */
+    public abstract Set<? extends AbstractSynAuditProp<? extends AbstractSynAuditEntity<E>>> getChangedProps();
+
+    /**
      * Dynamic getter for accessing values of audited properties.
      * Given the name of an audited property as declared in the audited entity, this method accesses the value of a corresponding property in this audit-entity.
      * It is an error if the specified property is not audited by this audit-entity.
