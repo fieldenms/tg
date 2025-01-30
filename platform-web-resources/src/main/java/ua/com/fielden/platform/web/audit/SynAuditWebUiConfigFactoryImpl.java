@@ -89,6 +89,9 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType)).also()
                 .addCrit(USER).asMulti().autocompleter(User.class);
 
+        // final var standardExportAction = StandardActions.EXPORT_ACTION.mkAction(Category.class);
+        // final var standardSortAction = CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
+
         for (final Field prop : auditProperties) {
             final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
             centreBuilder1 = result == null ? centreBuilder1 : result;
@@ -173,5 +176,19 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
             return Optional.of(styles);
         }
     }
+
+    // private static class ChangedPropsMatcher extends AbstractSearchPropertyDescriptorByKeyWithCentreContext {
+    //
+    //     @Override
+    //     public IValueMatcherWithCentreContext setContext(final CentreContext context) {
+    //         return null;
+    //     }
+    //
+    //     @Override
+    //     public void setFetch(final fetch fetchModel) {
+    //
+    //     }
+    //
+    // }
 
 }
