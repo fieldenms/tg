@@ -22,6 +22,7 @@ import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
+import ua.com.fielden.platform.persistence.types.SecurityTokenType;
 
 import java.util.Properties;
 
@@ -52,6 +53,8 @@ public abstract class TransactionalIocModule extends EntityIocModule {
         super.configure();
 
         bind(HibernateTypeMappings.class).toProvider(PlatformHibernateTypeMappings.Provider.class).in(SINGLETON);
+        requestStaticInjection(SecurityTokenType.class);
+
         bind(IIdOnlyProxiedEntityTypeCache.class).to(IdOnlyProxiedEntityTypeCache.class);
 
         // bind SessionRequired interceptor
