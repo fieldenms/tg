@@ -7,6 +7,8 @@ import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
@@ -26,10 +28,8 @@ import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -42,10 +42,8 @@ import static ua.com.fielden.platform.audit.AuditUtils.isAuditProperty;
 import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
-import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
@@ -59,13 +57,15 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
     private final IAuditTypeFinder auditTypeFinder;
     private final MiTypeGenerator miTypeGenerator;
     private final Injector injector;
+    private final IDomainMetadata domainMetadata;
 
     @Inject
     SynAuditWebUiConfigFactoryImpl(final IAuditTypeFinder auditTypeFinder, final MiTypeGenerator miTypeGenerator,
-                                   final Injector injector) {
+                                   final Injector injector, final IDomainMetadata domainMetadata) {
         this.auditTypeFinder = auditTypeFinder;
         this.miTypeGenerator = miTypeGenerator;
         this.injector = injector;
+        this.domainMetadata = domainMetadata;
     }
 
     @Override
@@ -95,9 +95,10 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
                 "Mi%sMaster_%s".formatted(baseAuditedType.getSimpleName(), synAuditType.getSimpleName()),
                 synAuditType);
 
-        // Cannot use IDomainMetadata as it resides in the dao module
-        final List<Field> auditProperties = streamRealProperties(synAuditType)
-                .filter(prop -> isAuditProperty(prop.getName()))
+        final var auditProperties = domainMetadata.forEntity(synAuditType)
+                .properties()
+                .stream()
+                .filter(prop -> isAuditProperty(prop.name()))
                 .collect(toImmutableList());
 
         final var layout = LayoutComposer.mkGridForCentre(3 + auditProperties.size(), 1);
@@ -132,7 +133,7 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
                 ;
 
         for (final var prop : auditProperties) {
-            centreBuilder2 = centreBuilder2.also().addProp(prop.getName());
+            centreBuilder2 = centreBuilder2.also().addProp(prop.name());
         }
 
         final EntityCentreConfig centre = centreBuilder2.setRenderingCustomiser(RenderingCustomiser.class)
@@ -150,9 +151,10 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
         final var standardExportAction = StandardActions.EXPORT_ACTION.mkAction(synAuditType);
         final var standardSortAction = CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
 
-        // Cannot use IDomainMetadata as it resides in the dao module
-        final List<Field> auditProperties = streamRealProperties(synAuditType)
-                .filter(prop -> isAuditProperty(prop.getName()))
+        final var auditProperties = domainMetadata.forEntity(synAuditType)
+                .properties()
+                .stream()
+                .filter(prop -> isAuditProperty(prop.name()))
                 .collect(toImmutableList());
 
         final var desktopLayout = cell(
@@ -170,7 +172,7 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType)).also()
                 .addCrit(USER).asMulti().autocompleter(User.class);
 
-        for (final Field prop : auditProperties) {
+        for (final var prop : auditProperties) {
             final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
             centreBuilder1 = result == null ? centreBuilder1 : result;
         }
@@ -184,8 +186,8 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
                 .addProp(CHANGED_PROPS).minWidth(200).also()
                 .addProp(USER);
 
-        for (final Field prop : auditProperties) {
-            centreBuilder2 = centreBuilder2.also().addProp(prop.getName());
+        for (final var prop : auditProperties) {
+            centreBuilder2 = centreBuilder2.also().addProp(prop.name());
         }
 
         final var centreBuilder3 = centreBuilder2.setRenderingCustomiser(RenderingCustomiser.class);
@@ -197,33 +199,33 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
 
     private static @Nullable IAlsoCrit addAuditPropertyAsCrit(
             final ISelectionCriteriaBuilder builder,
-            final Field property)
+            final PropertyMetadata property)
     {
-        final var propType = property.getType();
+        final var propType = property.type();
 
-        if (isEntityType(propType)) {
-            return builder.addCrit(property.getName()).asMulti().autocompleter((Class<? extends AbstractEntity<?>>) propType);
+        if (propType.isEntity()) {
+            return builder.addCrit(property.name()).asMulti().autocompleter(propType.javaType());
         }
-        else if (isDate(propType)) {
-            return builder.addCrit(property.getName()).asRange().dateTime();
+        else if (isDate(propType.javaType())) {
+            return builder.addCrit(property.name()).asRange().dateTime();
         }
-        else if (propType == Integer.class || propType == Long.class) {
-            return builder.addCrit(property.getName()).asRange().integer();
+        else if (propType.javaType() == Integer.class || propType.javaType() == Long.class) {
+            return builder.addCrit(property.name()).asRange().integer();
         }
-        else if (propType == BigDecimal.class) {
-            return builder.addCrit(property.getName()).asRange().decimal();
+        else if (propType.javaType() == BigDecimal.class) {
+            return builder.addCrit(property.name()).asRange().decimal();
         }
-        else if (propType == String.class) {
-            return builder.addCrit(property.getName()).asMulti().text();
+        else if (propType.javaType() == String.class) {
+            return builder.addCrit(property.name()).asMulti().text();
         }
-        else if (propType == boolean.class) {
-            return builder.addCrit(property.getName()).asMulti().bool();
+        else if (propType.javaType() == boolean.class) {
+            return builder.addCrit(property.name()).asMulti().bool();
         }
-        else if (propType == Money.class) {
-            return builder.addCrit(property.getName()).asRange().decimal();
+        else if (propType.javaType() == Money.class) {
+            return builder.addCrit(property.name()).asRange().decimal();
         }
-        else if (propType == RichText.class) {
-            return builder.addCrit(property.getName()).asMulti().text();
+        else if (propType.javaType() == RichText.class) {
+            return builder.addCrit(property.name()).asMulti().text();
         }
         else {
             return null;
