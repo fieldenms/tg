@@ -211,6 +211,7 @@ public class GraphQLService implements IWebApi {
             queryTypeBuilder.field(newFieldDefinition()
                 .name(fieldName)
                 .description(format("Query %s.", bold(getEntityTitleAndDesc(entityType).getKey())))
+                .argument(EQ_ARGUMENT)
                 .argument(LIKE_ARGUMENT)
                 .argument(ORDER_ARGUMENT)
                 .argument(PAGE_NUMBER_ARGUMENT)
