@@ -6,13 +6,13 @@ import net.bytebuddy.description.annotation.AnnotationDescription;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
 import java.util.stream.Stream;
 
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 
 /**
  * Generates Mi types (subclasses of {@link MiWithConfigurationSupport}) at runtime.
@@ -22,14 +22,21 @@ final class MiTypeGenerator {
 
     private static final String PACKAGE = "main.menu.audit";
 
-    @SuppressWarnings("unchecked")
     <E extends AbstractEntity<?>> Class<MiWithConfigurationSupport<E>> generate(final Class<E> type) {
-        final var baseType = PropertyTypeDeterminator.baseEntityType(type);
-        final var miTypeSimpleName = "Mi" + baseType.getSimpleName();
+        final var simpleName = "Mi" + baseEntityType(type).getSimpleName();
+        return generate(simpleName, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    <E extends AbstractEntity<?>> Class<MiWithConfigurationSupport<E>> generate(
+            final String simpleName,
+            final Class<E> type)
+    {
+        final var baseType = baseEntityType(type);
 
         // Use a fixed package that doesn't depend on the entity type so that the resulting Mi type is not affected by
         // renaming / moving of the entity type.
-        final var miTypeFqn = Stream.of(PACKAGE, miTypeSimpleName)
+        final var miTypeFqn = Stream.of(PACKAGE, simpleName)
                 .filter(not(String::isEmpty))
                 .collect(joining("."));
 

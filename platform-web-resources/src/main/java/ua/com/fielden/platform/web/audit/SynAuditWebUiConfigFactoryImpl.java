@@ -6,17 +6,23 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
+import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 
 import javax.annotation.Nullable;
@@ -29,16 +35,24 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.*;
 import static ua.com.fielden.platform.audit.AuditUtils.isAuditProperty;
+import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
+import static ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.EXPORT_EMBEDDED_CENTRE_ACTION;
 
 final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory {
 
@@ -67,6 +81,65 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
         builder.register(centre);
 
         return new SynAuditWebUiConfig<>(centre);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <E extends AbstractEntity<?>> EntityCentre<E> createEmbeddedCentre(final Class<E> auditedType) {
+        final var baseAuditedType = baseEntityType(auditedType);
+
+        // Must exist
+        final var synAuditType = auditTypeFinder.getSynAuditEntityType(baseAuditedType);
+
+        final var masterMiType = miTypeGenerator.generate(
+                "Mi%sMaster_%s".formatted(baseAuditedType.getSimpleName(), synAuditType.getSimpleName()),
+                synAuditType);
+
+        // Cannot use IDomainMetadata as it resides in the dao module
+        final List<Field> auditProperties = streamRealProperties(synAuditType)
+                .filter(prop -> isAuditProperty(prop.getName()))
+                .collect(toImmutableList());
+
+        final var layout = LayoutComposer.mkGridForCentre(3 + auditProperties.size(), 1);
+
+        final EntityActionConfig standardExportAction = EXPORT_EMBEDDED_CENTRE_ACTION.mkAction(synAuditType);
+        final EntityActionConfig standardSortAction = CUSTOMISE_COLUMNS_ACTION.mkAction();
+
+        IAlsoCrit centreBuilder1 = centreFor((Class) synAuditType)
+                .runAutomatically()
+                .addTopAction(standardSortAction).also()
+                .addTopAction(standardExportAction)
+
+                .addCrit(USER).asMulti().autocompleter(User.class)
+                .also().addCrit(AUDIT_DATE).asRange().date()
+                .also().addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType))
+                ;
+
+        for (final var prop : auditProperties) {
+            final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
+            centreBuilder1 = result == null ? centreBuilder1 : result;
+        }
+
+        var centreBuilder2 = centreBuilder1
+                .setLayoutFor(DESKTOP, empty(), layout)
+                .setLayoutFor(TABLET, empty(), layout)
+                .setLayoutFor(MOBILE, empty(), layout)
+
+                .addProp(AUDIT_DATE).order(1).desc().minWidth(140)
+                .also().addProp(USER).minWidth(60)
+                .also().addProp(CHANGED_PROPS).minWidth(120)
+                    .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching audit records.")
+                ;
+
+        for (final var prop : auditProperties) {
+            centreBuilder2 = centreBuilder2.also().addProp(prop.getName());
+        }
+
+        final EntityCentreConfig centre = centreBuilder2.setRenderingCustomiser(RenderingCustomiser.class)
+                .setQueryEnhancer(QueryEnhancer.class, context().withMasterEntity().build())
+                .build();
+
+        return new EntityCentre<>(masterMiType, centre, injector);
     }
 
     private <S extends AbstractSynAuditEntity<E>, E extends AbstractEntity<?>> EntityCentre<S> createCentre(
@@ -180,6 +253,18 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
 
             return Optional.of(styles);
         }
+    }
+
+    private static class QueryEnhancer implements IQueryEnhancer<AbstractSynAuditEntity<?>> {
+
+        @Override
+        public EntityQueryProgressiveInterfaces.ICompleted<AbstractSynAuditEntity<?>> enhanceQuery(
+                final EntityQueryProgressiveInterfaces.IWhere0<AbstractSynAuditEntity<?>> where,
+                final Optional<CentreContext<AbstractSynAuditEntity<?>, ?>> context)
+        {
+            return enhanceEmbededCentreQuery(where, createConditionProperty(AUDITED_ENTITY), context.get().getMasterEntity().getKey());
+        }
+
     }
 
     // private static class ChangedPropsMatcher extends AbstractSearchPropertyDescriptorByKeyWithCentreContext {
