@@ -1,3 +1,14 @@
+import { PolymerElement } from '../../polymer-element.js';
+import { templatize, modelForElement } from '../utils/templatize.js';
+import { Debouncer, enqueueDebouncer } from '../utils/debounce.js';
+import { flush } from '../utils/flush.js';
+import { OptionalMutableData } from '../mixins/mutable-data.js';
+import { matches, translate } from '../utils/path.js';
+import { timeOut, microTask } from '../utils/async.js';
+import { wrap } from '../utils/wrap.js';
+import { hideElementsGlobally } from '../utils/hide-template-controls.js';
+import { suppressTemplateNotifications } from '../utils/settings.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,23 +18,15 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import { PolymerElement } from '../../polymer-element.js';
-import { TemplateInstanceBase, templatize, modelForElement } from '../utils/templatize.js'; // eslint-disable-line no-unused-vars
 
-import { Debouncer } from '../utils/debounce.js';
-import { enqueueDebouncer, flush } from '../utils/flush.js';
-import { OptionalMutableData } from '../mixins/mutable-data.js';
-import { matches, translate } from '../utils/path.js';
-import { timeOut, microTask } from '../utils/async.js';
-import { wrap } from '../utils/wrap.js';
 /**
  * @constructor
  * @implements {Polymer_OptionalMutableData}
  * @extends {PolymerElement}
  * @private
  */
-
 const domRepeatBase = OptionalMutableData(PolymerElement);
+
 /**
  * The `<dom-repeat>` element will automatically stamp and binds one instance
  * of template content to each object in a user-provided array.
@@ -126,19 +129,16 @@ const domRepeatBase = OptionalMutableData(PolymerElement);
  * @summary Custom element for stamping instance of a template bound to
  *   items in an array.
  */
+class DomRepeat extends domRepeatBase {
 
-export class DomRepeat extends domRepeatBase {
   // Not needed to find template; can be removed once the analyzer
   // can find the tag name from customElements.define call
-  static get is() {
-    return 'dom-repeat';
-  }
+  static get is() { return 'dom-repeat'; }
 
-  static get template() {
-    return null;
-  }
+  static get template() { return null; }
 
   static get properties() {
+
     /**
      * Fired whenever DOM is added or removed by this template (by
      * default, rendering occurs lazily).  To force immediate rendering, call
@@ -147,6 +147,7 @@ export class DomRepeat extends domRepeatBase {
      * @event dom-change
      */
     return {
+
       /**
        * An array containing items determining how many instances of the template
        * to stamp and that that each template instance should bind to.
@@ -239,20 +240,20 @@ export class DomRepeat extends domRepeatBase {
        */
       renderedItemCount: {
         type: Number,
-        notify: true,
+        notify: !suppressTemplateNotifications,
         readOnly: true
       },
 
       /**
-       * Defines an initial count of template instances to render after setting
-       * the `items` array, before the next paint, and puts the `dom-repeat`
-       * into "chunking mode".  The remaining items will be created and rendered
-       * incrementally at each animation frame therof until all instances have
-       * been rendered.
+       * When greater than zero, defines an initial count of template instances
+       * to render after setting the `items` array, before the next paint, and
+       * puts the `dom-repeat` into "chunking mode".  The remaining items (and
+       * any future items as a result of pushing onto the array) will be created
+       * and rendered incrementally at each animation frame thereof until all
+       * instances have been rendered.
        */
       initialCount: {
-        type: Number,
-        observer: '__initializeChunking'
+        type: Number
       },
 
       /**
@@ -271,65 +272,105 @@ export class DomRepeat extends domRepeatBase {
         type: Number,
         value: 20
       },
+
       _targetFrameTime: {
         type: Number,
         computed: '__computeFrameTime(targetFramerate)'
+      },
+
+      /**
+       * When the global `suppressTemplateNotifications` setting is used, setting
+       * `notifyDomChange: true` will enable firing `dom-change` events on this
+       * element.
+       */
+      notifyDomChange: {
+        type: Boolean
+      },
+
+      /**
+       * When chunking is enabled via `initialCount` and the `items` array is
+       * set to a new array, this flag controls whether the previously rendered
+       * instances are reused or not.
+       *
+       * When `true`, any previously rendered template instances are updated in
+       * place to their new item values synchronously in one shot, and then any
+       * further items (if any) are chunked out.  When `false`, the list is
+       * returned back to its `initialCount` (any instances over the initial
+       * count are discarded) and the remainder of the list is chunked back in.
+       * Set this to `true` to avoid re-creating the list and losing scroll
+       * position, although note that when changing the list to completely
+       * different data the render thread will be blocked until all existing
+       * instances are updated to their new data.
+       */
+      reuseChunkedInstances: {
+        type: Boolean
       }
+
     };
+
   }
 
   static get observers() {
-    return ['__itemsChanged(items.*)'];
+    return [ '__itemsChanged(items.*)' ];
   }
 
   constructor() {
     super();
     this.__instances = [];
-    this.__limit = Infinity;
-    this.__pool = [];
     this.__renderDebouncer = null;
     this.__itemsIdxToInstIdx = {};
     this.__chunkCount = null;
-    this.__lastChunkTime = null;
+    this.__renderStartTime = null;
+    this.__itemsArrayChanged = false;
+    this.__shouldMeasureChunk = false;
+    this.__shouldContinueChunking = false;
+    this.__chunkingId = 0;
     this.__sortFn = null;
     this.__filterFn = null;
     this.__observePaths = null;
-    /** @type {?function(new:Polymer.TemplateInstanceBase, *)} */
-
+    /** @type {?function(new:TemplateInstanceBase, Object=)} */
     this.__ctor = null;
     this.__isDetached = true;
     this.template = null;
+    /** @type {TemplateInfo} */
+    this._templateInfo;
   }
+
   /**
    * @override
    * @return {void}
    */
-
-
   disconnectedCallback() {
     super.disconnectedCallback();
     this.__isDetached = true;
-
-    for (let i = 0; i < this.__instances.length; i++) {
+    for (let i=0; i<this.__instances.length; i++) {
       this.__detachInstance(i);
     }
+    // Stop chunking if one was in progress
+    if (this.__chunkingId) {
+      cancelAnimationFrame(this.__chunkingId);
+    }
   }
+
   /**
    * @override
    * @return {void}
    */
-
-
   connectedCallback() {
     super.connectedCallback();
-    this.style.display = 'none'; // only perform attachment if the element was previously detached.
-
+    if (!hideElementsGlobally()) {
+      this.style.display = 'none';
+    }
+    // only perform attachment if the element was previously detached.
     if (this.__isDetached) {
       this.__isDetached = false;
       let wrappedParent = wrap(wrap(this).parentNode);
-
-      for (let i = 0; i < this.__instances.length; i++) {
+      for (let i=0; i<this.__instances.length; i++) {
         this.__attachInstance(i, wrappedParent);
+      }
+      // Restart chunking if one was in progress when disconnected
+      if (this.__chunkingId) {
+        this.__render();
       }
     }
   }
@@ -339,28 +380,27 @@ export class DomRepeat extends domRepeatBase {
     // until ready, since won't have its template content handed back to
     // it until then
     if (!this.__ctor) {
-      let template = this.template =
-      /** @type {HTMLTemplateElement} */
-      this.querySelector('template');
-
+      // When `removeNestedTemplates` is true, the "template" is the element
+      // itself, which has been given a `_templateInfo` property
+      const thisAsTemplate = /** @type {!HTMLTemplateElement} */ (
+          /** @type {!HTMLElement} */ (this));
+      let template = this.template = thisAsTemplate._templateInfo ?
+          thisAsTemplate :
+          /** @type {!HTMLTemplateElement} */ (this.querySelector('template'));
       if (!template) {
-        // // Wait until childList changes and template should be there by then
+        // Wait until childList changes and template should be there by then
         let observer = new MutationObserver(() => {
           if (this.querySelector('template')) {
             observer.disconnect();
-
             this.__render();
           } else {
             throw new Error('dom-repeat requires a <template> child');
           }
         });
-        observer.observe(this, {
-          childList: true
-        });
+        observer.observe(this, {childList: true});
         return false;
-      } // Template instance props that should be excluded from forwarding
-
-
+      }
+      // Template instance props that should be excluded from forwarding
       let instanceProps = {};
       instanceProps[this.as] = true;
       instanceProps[this.indexAs] = true;
@@ -369,41 +409,35 @@ export class DomRepeat extends domRepeatBase {
         mutableData: this.mutableData,
         parentModel: true,
         instanceProps: instanceProps,
-
         /**
          * @this {DomRepeat}
          * @param {string} prop Property to set
          * @param {*} value Value to set property to
          */
-        forwardHostProp: function (prop, value) {
+        forwardHostProp: function(prop, value) {
           let i$ = this.__instances;
-
-          for (let i = 0, inst; i < i$.length && (inst = i$[i]); i++) {
+          for (let i=0, inst; (i<i$.length) && (inst=i$[i]); i++) {
             inst.forwardHostProp(prop, value);
           }
         },
-
         /**
          * @this {DomRepeat}
          * @param {Object} inst Instance to notify
          * @param {string} prop Property to notify
          * @param {*} value Value to notify
          */
-        notifyInstanceProp: function (inst, prop, value) {
+        notifyInstanceProp: function(inst, prop, value) {
           if (matches(this.as, prop)) {
             let idx = inst[this.itemsIndexAs];
-
             if (prop == this.as) {
               this.items[idx] = value;
             }
-
             let path = translate(this.as, `${JSCompiler_renameProperty('items', this)}.${idx}`, prop);
             this.notifyPath(path, value);
           }
         }
       });
     }
-
     return true;
   }
 
@@ -419,12 +453,8 @@ export class DomRepeat extends domRepeatBase {
   __functionFromPropertyValue(functionOrMethodName) {
     if (typeof functionOrMethodName === 'string') {
       let methodName = functionOrMethodName;
-
       let obj = this.__getMethodHost();
-
-      return function () {
-        return obj[methodName].apply(obj, arguments);
-      };
+      return function() { return obj[methodName].apply(obj, arguments); };
     }
 
     return functionOrMethodName;
@@ -432,75 +462,21 @@ export class DomRepeat extends domRepeatBase {
 
   __sortChanged(sort) {
     this.__sortFn = this.__functionFromPropertyValue(sort);
-
-    if (this.items) {
-      this.__debounceRender(this.__render);
-    }
+    if (this.items) { this.__debounceRender(this.__render); }
   }
 
   __filterChanged(filter) {
     this.__filterFn = this.__functionFromPropertyValue(filter);
-
-    if (this.items) {
-      this.__debounceRender(this.__render);
-    }
+    if (this.items) { this.__debounceRender(this.__render); }
   }
 
   __computeFrameTime(rate) {
-    return Math.ceil(1000 / rate);
-  }
-
-  __initializeChunking() {
-    if (this.initialCount) {
-      this.__limit = this.initialCount;
-      this.__chunkCount = this.initialCount;
-      this.__lastChunkTime = performance.now();
-    }
-  }
-
-  __tryRenderChunk() {
-    // Debounced so that multiple calls through `_render` between animation
-    // frames only queue one new rAF (e.g. array mutation & chunked render)
-    if (this.items && this.__limit < this.items.length) {
-      this.__debounceRender(this.__requestRenderChunk);
-    }
-  }
-
-  __requestRenderChunk() {
-    requestAnimationFrame(() => this.__renderChunk());
-  }
-
-  __renderChunk() {
-    // Simple auto chunkSize throttling algorithm based on feedback loop:
-    // measure actual time between frames and scale chunk count by ratio
-    // of target/actual frame time
-    let currChunkTime = performance.now();
-    let ratio = this._targetFrameTime / (currChunkTime - this.__lastChunkTime);
-    this.__chunkCount = Math.round(this.__chunkCount * ratio) || 1;
-    this.__limit += this.__chunkCount;
-    this.__lastChunkTime = currChunkTime;
-
-    this.__debounceRender(this.__render);
+    return Math.ceil(1000/rate);
   }
 
   __observeChanged() {
-    this.__observePaths = this.observe && this.observe.replace('.*', '.').split(' ');
-  }
-
-  __itemsChanged(change) {
-    if (this.items && !Array.isArray(this.items)) {
-      console.warn('dom-repeat expected array for `items`, found', this.items);
-    } // If path was to an item (e.g. 'items.3' or 'items.3.foo'), forward the
-    // path to that instance synchronously (returns false for non-item paths)
-
-
-    if (!this.__handleItemPath(change.path, change.value)) {
-      // Otherwise, the array was reset ('items') or spliced ('items.splices'),
-      // so queue a full refresh
-      this.__initializeChunking();
-
-      this.__debounceRender(this.__render);
-    }
+    this.__observePaths = this.observe &&
+      this.observe.replace('.*', '.').split(' ');
   }
 
   __handleObservedPaths(path) {
@@ -512,8 +488,7 @@ export class DomRepeat extends domRepeatBase {
       } else if (this.__observePaths) {
         // Otherwise, re-render if the path changed matches an observed path
         let paths = this.__observePaths;
-
-        for (let i = 0; i < paths.length; i++) {
+        for (let i=0; i<paths.length; i++) {
           if (path.indexOf(paths[i]) === 0) {
             this.__debounceRender(this.__render, this.delay);
           }
@@ -521,16 +496,36 @@ export class DomRepeat extends domRepeatBase {
       }
     }
   }
+
+  __itemsChanged(change) {
+    if (this.items && !Array.isArray(this.items)) {
+      console.warn('dom-repeat expected array for `items`, found', this.items);
+    }
+    // If path was to an item (e.g. 'items.3' or 'items.3.foo'), forward the
+    // path to that instance synchronously (returns false for non-item paths)
+    if (!this.__handleItemPath(change.path, change.value)) {
+      // Otherwise, the array was reset ('items') or spliced ('items.splices'),
+      // so queue a render.  Restart chunking when the items changed (for
+      // backward compatibility), unless `reuseChunkedInstances` option is set
+      if (change.path === 'items') {
+        this.__itemsArrayChanged = true;
+      }
+      this.__debounceRender(this.__render);
+    }
+  }
+
   /**
    * @param {function(this:DomRepeat)} fn Function to debounce.
    * @param {number=} delay Delay in ms to debounce by.
    */
-
-
   __debounceRender(fn, delay = 0) {
-    this.__renderDebouncer = Debouncer.debounce(this.__renderDebouncer, delay > 0 ? timeOut.after(delay) : microTask, fn.bind(this));
+    this.__renderDebouncer = Debouncer.debounce(
+          this.__renderDebouncer
+        , delay > 0 ? timeOut.after(delay) : microTask
+        , fn.bind(this));
     enqueueDebouncer(this.__renderDebouncer);
   }
+
   /**
    * Forces the element to render its content. Normally rendering is
    * asynchronous to a provoking change. This is done for efficiency so
@@ -539,12 +534,9 @@ export class DomRepeat extends domRepeatBase {
    * validate application state.
    * @return {void}
    */
-
-
   render() {
     // Queue this repeater, then flush all in order
     this.__debounceRender(this.__render);
-
     flush();
   }
 
@@ -553,72 +545,130 @@ export class DomRepeat extends domRepeatBase {
       // No template found yet
       return;
     }
-
-    this.__applyFullRefresh(); // Reset the pool
-    // TODO(kschaaf): Reuse pool across turns and nested templates
-    // Now that objects/arrays are re-evaluated when set, we can safely
-    // reuse pooled instances across turns, however we still need to decide
-    // semantics regarding how long to hold, how many to hold, etc.
-
-
-    this.__pool.length = 0; // Set rendered item count
-
-    this._setRenderedItemCount(this.__instances.length); // Notify users
-
-
-    this.dispatchEvent(new CustomEvent('dom-change', {
-      bubbles: true,
-      composed: true
-    })); // Check to see if we need to render more items
-
-    this.__tryRenderChunk();
+    let items = this.items || [];
+    // Sort and filter the items into a mapping array from instance->item
+    const isntIdxToItemsIdx = this.__sortAndFilterItems(items);
+    // If we're chunking, increase the limit if there are new instances to
+    // create and schedule the next chunk
+    const limit = this.__calculateLimit(isntIdxToItemsIdx.length);
+    // Create, update, and/or remove instances
+    this.__updateInstances(items, limit, isntIdxToItemsIdx);
+    // If we're chunking, schedule a rAF task to measure/continue chunking.     
+    // Do this before any notifying events (renderedItemCount & dom-change)
+    // since those could modify items and enqueue a new full render which will
+    // pre-empt this measurement.
+    if (this.initialCount &&
+       (this.__shouldMeasureChunk || this.__shouldContinueChunking)) {
+      cancelAnimationFrame(this.__chunkingId);
+      this.__chunkingId = requestAnimationFrame(() => {
+        this.__chunkingId = null;
+        this.__continueChunking();
+      });
+    }
+    // Set rendered item count
+    this._setRenderedItemCount(this.__instances.length);
+    // Notify users
+    if (!suppressTemplateNotifications || this.notifyDomChange) {
+      this.dispatchEvent(new CustomEvent('dom-change', {
+        bubbles: true,
+        composed: true
+      }));
+    }
   }
 
-  __applyFullRefresh() {
-    let items = this.items || [];
+  __sortAndFilterItems(items) {
+    // Generate array maping the instance index to the items array index
     let isntIdxToItemsIdx = new Array(items.length);
-
-    for (let i = 0; i < items.length; i++) {
+    for (let i=0; i<items.length; i++) {
       isntIdxToItemsIdx[i] = i;
-    } // Apply user filter
-
-
+    }
+    // Apply user filter
     if (this.__filterFn) {
-      isntIdxToItemsIdx = isntIdxToItemsIdx.filter((i, idx, array) => this.__filterFn(items[i], idx, array));
-    } // Apply user sort
-
-
+      isntIdxToItemsIdx = isntIdxToItemsIdx.filter((i, idx, array) =>
+        this.__filterFn(items[i], idx, array));
+    }
+    // Apply user sort
     if (this.__sortFn) {
       isntIdxToItemsIdx.sort((a, b) => this.__sortFn(items[a], items[b]));
-    } // items->inst map kept for item path forwarding
+    }
+    return isntIdxToItemsIdx;
+  }
 
+  __calculateLimit(filteredItemCount) {
+    let limit = filteredItemCount;
+    const currentCount = this.__instances.length;
+    // When chunking, we increase the limit from the currently rendered count
+    // by the chunk count that is re-calculated after each rAF (with special
+    // cases for resetting the limit to initialCount after changing items)
+    if (this.initialCount) {
+      let newCount;
+      if (!this.__chunkCount ||
+        (this.__itemsArrayChanged && !this.reuseChunkedInstances)) {
+        // Limit next render to the initial count
+        limit = Math.min(filteredItemCount, this.initialCount);
+        // Subtract off any existing instances to determine the number of
+        // instances that will be created
+        newCount = Math.max(limit - currentCount, 0);
+        // Initialize the chunk size with how many items we're creating
+        this.__chunkCount = newCount || 1;
+      } else {
+        // The number of new instances that will be created is based on the
+        // existing instances, the new list size, and the chunk size
+        newCount = Math.min(
+          Math.max(filteredItemCount - currentCount, 0), 
+          this.__chunkCount);
+        // Update the limit based on how many new items we're making, limited
+        // buy the total size of the list
+        limit = Math.min(currentCount + newCount, filteredItemCount);
+      }
+      // Record some state about chunking for use in `__continueChunking`
+      this.__shouldMeasureChunk = newCount === this.__chunkCount;
+      this.__shouldContinueChunking = limit < filteredItemCount;
+      this.__renderStartTime = performance.now();
+    }
+    this.__itemsArrayChanged = false;
+    return limit;
+  }
 
+  __continueChunking() {
+    // Simple auto chunkSize throttling algorithm based on feedback loop:
+    // measure actual time between frames and scale chunk count by ratio of
+    // target/actual frame time.  Only modify chunk size if our measurement
+    // reflects the cost of a creating a full chunk's worth of instances; this
+    // avoids scaling up the chunk size if we e.g. quickly re-rendered instances
+    // in place
+    if (this.__shouldMeasureChunk) {
+      const renderTime = performance.now() - this.__renderStartTime;
+      const ratio = this._targetFrameTime / renderTime;
+      this.__chunkCount = Math.round(this.__chunkCount * ratio) || 1;
+    }
+    // Enqueue a new render if we haven't reached the full size of the list
+    if (this.__shouldContinueChunking) {
+      this.__debounceRender(this.__render);
+    }
+  }
+  
+  __updateInstances(items, limit, isntIdxToItemsIdx) {
+    // items->inst map kept for item path forwarding
     const itemsIdxToInstIdx = this.__itemsIdxToInstIdx = {};
-    let instIdx = 0; // Generate instances and assign items
-
-    const limit = Math.min(isntIdxToItemsIdx.length, this.__limit);
-
-    for (; instIdx < limit; instIdx++) {
+    let instIdx;
+    // Generate instances and assign items
+    for (instIdx=0; instIdx<limit; instIdx++) {
       let inst = this.__instances[instIdx];
       let itemIdx = isntIdxToItemsIdx[instIdx];
       let item = items[itemIdx];
       itemsIdxToInstIdx[itemIdx] = instIdx;
-
       if (inst) {
         inst._setPendingProperty(this.as, item);
-
         inst._setPendingProperty(this.indexAs, instIdx);
-
         inst._setPendingProperty(this.itemsIndexAs, itemIdx);
-
         inst._flushProperties();
       } else {
         this.__insertInstance(item, instIdx, itemIdx);
       }
-    } // Remove any extra instances from previous state
-
-
-    for (let i = this.__instances.length - 1; i >= instIdx; i--) {
+    }
+    // Remove any extra instances from previous state
+    for (let i=this.__instances.length-1; i>=instIdx; i--) {
       this.__detachAndRemoveInstance(i);
     }
   }
@@ -626,28 +676,21 @@ export class DomRepeat extends domRepeatBase {
   __detachInstance(idx) {
     let inst = this.__instances[idx];
     const wrappedRoot = wrap(inst.root);
-
-    for (let i = 0; i < inst.children.length; i++) {
+    for (let i=0; i<inst.children.length; i++) {
       let el = inst.children[i];
       wrappedRoot.appendChild(el);
     }
-
     return inst;
   }
 
   __attachInstance(idx, parent) {
-    let inst = this.__instances[idx]; // Note, this is pre-wrapped as an optimization
-
+    let inst = this.__instances[idx];
+    // Note, this is pre-wrapped as an optimization
     parent.insertBefore(inst.root, this);
   }
 
   __detachAndRemoveInstance(idx) {
-    let inst = this.__detachInstance(idx);
-
-    if (inst) {
-      this.__pool.push(inst);
-    }
-
+    this.__detachInstance(idx);
     this.__instances.splice(idx, 1);
   }
 
@@ -660,29 +703,15 @@ export class DomRepeat extends domRepeatBase {
   }
 
   __insertInstance(item, instIdx, itemIdx) {
-    let inst = this.__pool.pop();
-
-    if (inst) {
-      // TODO(kschaaf): If the pool is shared across turns, hostProps
-      // need to be re-set to reused instances in addition to item
-      inst._setPendingProperty(this.as, item);
-
-      inst._setPendingProperty(this.indexAs, instIdx);
-
-      inst._setPendingProperty(this.itemsIndexAs, itemIdx);
-
-      inst._flushProperties();
-    } else {
-      inst = this.__stampInstance(item, instIdx, itemIdx);
-    }
-
+    const inst = this.__stampInstance(item, instIdx, itemIdx);
     let beforeRow = this.__instances[instIdx + 1];
     let beforeNode = beforeRow ? beforeRow.children[0] : this;
     wrap(wrap(this).parentNode).insertBefore(inst.root, beforeNode);
     this.__instances[instIdx] = inst;
     return inst;
-  } // Implements extension point from Templatize mixin
+  }
 
+  // Implements extension point from Templatize mixin
   /**
    * Shows or hides the template instance top level child elements. For
    * text nodes, `textContent` is removed while "hidden" and replaced when
@@ -692,46 +721,40 @@ export class DomRepeat extends domRepeatBase {
    * @return {void}
    * @protected
    */
-
-
   _showHideChildren(hidden) {
-    for (let i = 0; i < this.__instances.length; i++) {
+    for (let i=0; i<this.__instances.length; i++) {
       this.__instances[i]._showHideChildren(hidden);
     }
-  } // Called as a side effect of a host items.<key>.<path> path change,
+  }
+
+  // Called as a side effect of a host items.<key>.<path> path change,
   // responsible for notifying item.<path> changes to inst for key
-
-
   __handleItemPath(path, value) {
     let itemsPath = path.slice(6); // 'items.'.length == 6
-
     let dot = itemsPath.indexOf('.');
-    let itemsIdx = dot < 0 ? itemsPath : itemsPath.substring(0, dot); // If path was index into array...
-
+    let itemsIdx = dot < 0 ? itemsPath : itemsPath.substring(0, dot);
+    // If path was index into array...
     if (itemsIdx == parseInt(itemsIdx, 10)) {
-      let itemSubPath = dot < 0 ? '' : itemsPath.substring(dot + 1); // If the path is observed, it will trigger a full refresh
-
-      this.__handleObservedPaths(itemSubPath); // Note, even if a rull refresh is triggered, always do the path
+      let itemSubPath = dot < 0 ? '' : itemsPath.substring(dot+1);
+      // If the path is observed, it will trigger a full refresh
+      this.__handleObservedPaths(itemSubPath);
+      // Note, even if a rull refresh is triggered, always do the path
       // notification because unless mutableData is used for dom-repeat
       // and all elements in the instance subtree, a full refresh may
       // not trigger the proper update.
-
-
       let instIdx = this.__itemsIdxToInstIdx[itemsIdx];
       let inst = this.__instances[instIdx];
-
       if (inst) {
-        let itemPath = this.as + (itemSubPath ? '.' + itemSubPath : ''); // This is effectively `notifyPath`, but avoids some of the overhead
+        let itemPath = this.as + (itemSubPath ? '.' + itemSubPath : '');
+        // This is effectively `notifyPath`, but avoids some of the overhead
         // of the public API
-
         inst._setPendingPropertyOrPath(itemPath, value, false, true);
-
         inst._flushProperties();
       }
-
       return true;
     }
   }
+
   /**
    * Returns the item associated with a given element stamped by
    * this `dom-repeat`.
@@ -743,12 +766,11 @@ export class DomRepeat extends domRepeatBase {
    * @param {!HTMLElement} el Element for which to return the item.
    * @return {*} Item associated with the element.
    */
-
-
   itemForElement(el) {
     let instance = this.modelForElement(el);
     return instance && instance[this.as];
   }
+
   /**
    * Returns the inst index for a given element stamped by this `dom-repeat`.
    * If `sort` is provided, the index will reflect the sorted order (rather
@@ -758,12 +780,11 @@ export class DomRepeat extends domRepeatBase {
    * @return {?number} Row index associated with the element (note this may
    *   not correspond to the array index if a user `sort` is applied).
    */
-
-
   indexForElement(el) {
     let instance = this.modelForElement(el);
     return instance && instance[this.indexAs];
   }
+
   /**
    * Returns the template "model" associated with a given element, which
    * serves as the binding scope for the template instance the element is
@@ -781,11 +802,12 @@ export class DomRepeat extends domRepeatBase {
    * @return {TemplateInstanceBase} Model representing the binding scope for
    *   the element.
    */
-
-
   modelForElement(el) {
     return modelForElement(this.template, el);
   }
 
 }
+
 customElements.define(DomRepeat.is, DomRepeat);
+
+export { DomRepeat };

@@ -1,6 +1,6 @@
 import { TgReflector } from '/app/tg-reflector.js';
 
-import antlr4 from '/resources/polymer/antlr4/dist/antlr4.web.mjs';
+import antlr4 from '/resources/polymer/lib/antlr-lib.js';
 import CompositeEntityFormatLexer from '/resources/template/CompositeEntityFormatLexer.js';
 import CompositeEntityFormatParser from '/resources/template/CompositeEntityFormatParser.js';
 import CompositeEntityFormatListener from '/resources/template/CompositeEntityFormatListener.js';

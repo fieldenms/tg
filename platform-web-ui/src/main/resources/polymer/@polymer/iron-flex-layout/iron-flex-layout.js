@@ -1,3 +1,6 @@
+import '../polymer/polymer-legacy.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,8 +11,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
+
 /**
 The `<iron-flex-layout>` component provides simple ways to use
 [CSS flexible box
@@ -72,7 +74,6 @@ you to import the `dom-modules` in every element that needs to use them.
 @pseudoElement iron-flex-layout
 @demo demo/index.html
 */
-
 const template = html`
 <custom-style>
   <style is="custom-style">
@@ -426,8 +427,10 @@ const template = html`
     }
   </style>
 </custom-style>`;
+
 template.setAttribute('style', 'display: none;');
 document.head.appendChild(template.content);
+
 var style = document.createElement('style');
 style.textContent = '[hidden] { display: none !important; }';
 document.head.appendChild(style);

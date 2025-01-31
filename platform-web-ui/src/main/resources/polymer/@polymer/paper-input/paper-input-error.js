@@ -1,3 +1,10 @@
+import '../polymer/polymer-legacy.js';
+import '../paper-styles/default-theme.js';
+import '../paper-styles/typography.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+import { PaperInputAddonBehavior } from './paper-input-addon-behavior.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,12 +15,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import "../paper-styles/default-theme.js";
-import "../paper-styles/typography.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
-import { PaperInputAddonBehavior } from './paper-input-addon-behavior.js';
+
 /*
 `<paper-input-error>` is an error message for use with
 `<paper-input-container>`. The error is displayed when the
@@ -34,8 +36,8 @@ Custom property | Description | Default
 `--paper-input-container-invalid-color` | The foreground color of the error | `--error-color`
 `--paper-input-error` | Mixin applied to the error | `{}`
 */
-
 Polymer({
+  /** @override */
   _template: html`
     <style>
       :host {
@@ -57,6 +59,7 @@ Polymer({
 
       #a11yWrapper {
         visibility: hidden;
+        /*TG #2329*/
         overflow: hidden;
         text-overflow: ellipsis;
       }
@@ -79,17 +82,15 @@ Polymer({
       <slot></slot>
     </div>
 `,
+
   is: 'paper-input-error',
   behaviors: [PaperInputAddonBehavior],
+
   properties: {
     /**
      * True if the error is showing.
      */
-    invalid: {
-      readOnly: true,
-      reflectToAttribute: true,
-      type: Boolean
-    }
+    invalid: {readOnly: true, reflectToAttribute: true, type: Boolean}
   },
 
   /**
@@ -103,7 +104,7 @@ Polymer({
    *     value: The input value.
    *     invalid: True if the input value is invalid.
    */
-  update: function (state) {
+  update: function(state) {
     this._setInvalid(state.invalid);
   }
 });

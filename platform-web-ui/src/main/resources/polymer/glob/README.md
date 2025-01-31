@@ -7,7 +7,7 @@ Match files using the patterns the shell uses, like stars and stuff.
 This is a glob implementation in JavaScript.  It uses the `minimatch`
 library to do its matching.
 
-![](oh-my-glob.gif)
+![a fun cartoon logo made of glob characters](logo/glob.png)
 
 ## Usage
 
@@ -210,10 +210,26 @@ parallel glob operations will be sped up by sharing information about
 the filesystem.
 
 * `cwd` The current working directory in which to search.  Defaults
-  to `process.cwd()`.
+  to `process.cwd()`.  This option is always coerced to use
+  forward-slashes as a path separator, because it is not tested
+  as a glob pattern, so there is no need to escape anything.
 * `root` The place where patterns starting with `/` will be mounted
   onto.  Defaults to `path.resolve(options.cwd, "/")` (`/` on Unix
-  systems, and `C:\` or some such on Windows.)
+  systems, and `C:\` or some such on Windows.)  This option is
+  always coerced to use forward-slashes as a path separator,
+  because it is not tested as a glob pattern, so there is no need
+  to escape anything.
+* `windowsPathsNoEscape` Use `\\` as a path separator _only_, and
+  _never_ as an escape character.  If set, all `\\` characters
+  are replaced with `/` in the pattern.  Note that this makes it
+  **impossible** to match against paths containing literal glob
+  pattern characters, but allows matching with patterns constructed
+  using `path.join()` and `path.resolve()` on Windows platforms,
+  mimicking the (buggy!) behavior of Glob v7 and before on
+  Windows.  Please use with caution, and be mindful of [the caveat
+  below about Windows paths](#windows).  (For legacy reasons,
+  this is also set if `allowWindowsEscape` is set to the exact
+  value `false`.)
 * `dot` Include `.dot` files in normal matches and `globstar` matches.
   Note that an explicit dot in a portion of the pattern will always
   match dot files.
@@ -276,6 +292,9 @@ the filesystem.
 * `absolute` Set to true to always receive absolute paths for matched
   files.  Unlike `realpath`, this also affects the values returned in
   the `match` event.
+* `fs` File-system object with Node's `fs` API. By default, the built-in
+  `fs` module will be used. Set to a volume provided by a library like
+  `memfs` to avoid using the "real" file-system.
 
 ## Comparisons to other fnmatch/glob implementations
 
@@ -329,6 +348,11 @@ Results from absolute patterns such as `/foo/*` are mounted onto the
 root setting using `path.join`.  On windows, this will by default result
 in `/foo/*` matching `C:\foo\bar.txt`.
 
+To automatically coerce all `\` characters to `/` in pattern
+strings, **thus making it impossible to escape literal glob
+characters**, you may set the `windowsPathsNoEscape` option to
+`true`.
+
 ## Race Conditions
 
 Glob searching, by its very nature, is susceptible to race conditions,
@@ -346,6 +370,11 @@ calls.
 Users are thus advised not to use a glob result as a guarantee of
 filesystem state in the face of rapid changes.  For the vast majority
 of operations, this is never a problem.
+
+## Glob Logo
+Glob's logo was created by [Tanya Brassie](http://tanyabrassie.com/). Logo files can be found [here](https://github.com/isaacs/node-glob/tree/master/logo).
+
+The logo is licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
 
 ## Contributing
 
@@ -366,3 +395,5 @@ npm run bench
 # to profile javascript
 npm run prof
 ```
+
+![](oh-my-glob.gif)
