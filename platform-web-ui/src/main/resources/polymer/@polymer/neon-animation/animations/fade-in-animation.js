@@ -1,3 +1,7 @@
+import '../../polymer/polymer-legacy.js';
+import { Polymer } from '../../polymer/lib/legacy/polymer-fn.js';
+import { NeonAnimationBehavior } from '../neon-animation-behavior.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,9 +12,6 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../../polymer/polymer-legacy.js";
-import { Polymer } from "../../polymer/lib/legacy/polymer-fn.js";
-import { NeonAnimationBehavior } from '../neon-animation-behavior.js';
 /*
 `<fade-in-animation>` animates the opacity of an element from 0 to 1.
 
@@ -23,17 +24,19 @@ Configuration:
 }
 ```
 */
-
 Polymer({
+
   is: 'fade-in-animation',
+
   behaviors: [NeonAnimationBehavior],
-  configure: function (config) {
+
+  configure: function(config) {
     var node = config.node;
-    this._effect = new KeyframeEffect(node, [{
-      'opacity': '0'
-    }, {
-      'opacity': '1'
-    }], this.timingFromConfig(config));
+    this._effect = new KeyframeEffect(
+        node,
+        [{'opacity': '0'}, {'opacity': '1'}],
+        this.timingFromConfig(config));
     return this._effect;
   }
+
 });

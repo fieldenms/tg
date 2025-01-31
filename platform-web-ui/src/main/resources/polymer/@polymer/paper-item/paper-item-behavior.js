@@ -1,3 +1,7 @@
+import '../polymer/polymer-legacy.js';
+import { IronButtonState } from '../iron-behaviors/iron-button-state.js';
+import { IronControlState } from '../iron-behaviors/iron-control-state.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,23 +12,19 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { IronButtonState } from "../iron-behaviors/iron-button-state.js";
-import { IronControlState } from "../iron-behaviors/iron-control-state.js";
+
 /*
 `PaperItemBehavior` is a convenience behavior shared by <paper-item> and
 <paper-icon-item> that manages the shared control states and attributes of
 the items.
 */
-
 /** @polymerBehavior PaperItemBehavior */
-
-export const PaperItemBehaviorImpl = {
-  hostAttributes: {
-    role: 'option',
-    tabindex: '0'
-  }
+const PaperItemBehaviorImpl = {
+  hostAttributes: {role: 'option', tabindex: '0'}
 };
-/** @polymerBehavior */
 
-export const PaperItemBehavior = [IronButtonState, IronControlState, PaperItemBehaviorImpl];
+/** @polymerBehavior */
+const PaperItemBehavior =
+    [IronButtonState, IronControlState, PaperItemBehaviorImpl];
+
+export { PaperItemBehavior, PaperItemBehaviorImpl };

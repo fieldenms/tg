@@ -5,6 +5,8 @@ import { isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
+import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 const template = html`
     <style>

@@ -1,3 +1,10 @@
+import '../polymer/polymer-legacy.js';
+import '../paper-styles/color.js';
+import './paper-spinner-styles.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+import { PaperSpinnerBehavior } from './paper-spinner-behavior.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,12 +15,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import "../paper-styles/color.js";
-import './paper-spinner-styles.js';
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
-import { PaperSpinnerBehavior } from './paper-spinner-behavior.js';
+
 const template = html`
   <style include="paper-spinner-styles"></style>
 
@@ -56,6 +58,7 @@ const template = html`
   </div>
 `;
 template.setAttribute('strip-whitespace', '');
+
 /**
 Material design: [Progress &
 activity](https://www.google.com/design/spec/components/progress-activity.html)
@@ -94,9 +97,10 @@ Custom property | Description | Default
 @hero hero.svg
 @demo demo/index.html
 */
-
 Polymer({
   _template: template,
+
   is: 'paper-spinner',
+
   behaviors: [PaperSpinnerBehavior]
 });
