@@ -8,10 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -187,10 +184,8 @@ public class ClassesRetriever {
     }
 
     /**
-     * Finds and loads class for with {@code className}.
-     *
-     * @param className
-     * @return
+     * Finds a class with the specified binary name.
+     * Throws an exception if it cannot be found.
      */
     public static Class<?> findClass(final String className) {
         try {
@@ -204,6 +199,21 @@ public class ClassesRetriever {
                     return klass;
                 }
                 throw new ReflectionException(format("Failed to load class [%s]", className),e);
+            }
+        }
+    }
+
+    /**
+     * Finds a class with the specified binary name.
+     */
+    public static Optional<Class<?>> maybeFindClass(final String className) {
+        try {
+            return Optional.of(DynamicEntityClassLoader.loadType(className));
+        } catch (final ClassNotFoundException $1) {
+            try {
+                return Optional.of(URL_CLASS_LOADER.loadClass(className));
+            } catch (final ClassNotFoundException $2) {
+                return Optional.ofNullable(ADHOC_CLASSES.getIfPresent(className));
             }
         }
     }
