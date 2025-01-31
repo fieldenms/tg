@@ -155,8 +155,7 @@ Polymer({
     },
 
     _iconTransitionFinished: function (e) {
-        var target = e.target || e.srcElement;
-        if (target === this.$.searchIcon && this._showInput) {
+        if (e.target === this.$.searchIcon && this._showInput) {
             this.$.searchIcon.style.display = 'none';
             this.$.inputContainer.classList.toggle('start-transition', true);
             this.$.inputContainer.style.removeProperty('display');
@@ -166,8 +165,7 @@ Polymer({
     },
 
     _inputTransitionFinished: function (e) {
-        var target = e.target || e.srcElement;
-        if (target === this.$.inputContainer) {
+        if (e.target === this.$.inputContainer) {
             if (this._showInput) {
                 this.$.input.focus();
             } else {

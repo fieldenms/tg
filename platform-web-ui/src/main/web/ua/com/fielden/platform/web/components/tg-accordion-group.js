@@ -29,7 +29,7 @@ Polymer({
                     if (this.singleOpen) {
                         if (e.detail) {
                             this.accordions.forEach(function (accordion) {
-                                const target = e.target || e.srcElement;
+                                const target = e.target;
                                 if (accordion !== target) {
                                     accordion.opened = false;
                                 }
