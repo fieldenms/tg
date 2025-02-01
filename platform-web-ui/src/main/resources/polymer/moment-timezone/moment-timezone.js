@@ -10,7 +10,7 @@ function requireMomentTimezone () {
 	hasRequiredMomentTimezone = 1;
 	(function (module) {
 		//! moment-timezone.js
-		//! version : 0.5.46
+		//! version : 0.5.47
 		//! Copyright (c) JS Foundation and other contributors
 		//! license : MIT
 		//! github.com/moment/moment-timezone
@@ -36,7 +36,7 @@ function requireMomentTimezone () {
 			// 	return moment;
 			// }
 
-			var VERSION = "0.5.46",
+			var VERSION = "0.5.47",
 				zones = {},
 				links = {},
 				countries = {},
