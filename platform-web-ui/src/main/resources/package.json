@@ -53,6 +53,7 @@
     "@polymer/paper-toast": "^3.0.1",
     "@polymer/paper-toolbar": "^3.0.1",
     "@polymer/polymer": "^3.5.2",
+    "@toast-ui/editor": "^3.2.2",
     "@webcomponents/shadycss": "^1.11.2",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "antlr4": "^4.13.2",
