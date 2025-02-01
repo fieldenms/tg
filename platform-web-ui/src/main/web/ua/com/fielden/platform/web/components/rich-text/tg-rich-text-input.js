@@ -9,7 +9,7 @@ import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js'
 import { tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { excludeErrors } from '/resources/components/tg-global-error-handler.js';
 
-import '/resources/toastui-editor/toastui-editor-all.min.js';
+import Editor from '/resources/polymer/lib/toastui-editor-lib.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/editor-icons.js';
@@ -23,6 +23,7 @@ import '/resources/components/tg-color-picker-dialog.js';
 import '/resources/images/tg-rich-text-editor-icons.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 
+/* TODO adjust filename, probably in prosemirror dependency; also how about deployment mode? */
 excludeErrors( e => e.filename && e.filename.includes("toastui-editor-all") && e.error && e.error.name === 'TransformError');
 
 /**
@@ -744,7 +745,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             tearDownEvent(e);
         }.bind(this);
         // Create editor
-        this._editor = new toastui.Editor({
+        this._editor = new Editor({
             el: this.$.editor,
             height: this.height,
             minHeight: this.minHeight,
