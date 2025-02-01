@@ -1,3 +1,7 @@
+import '../polymer/polymer-legacy.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { IronMultiSelectableBehavior } from './iron-multi-selectable.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,9 +12,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { IronMultiSelectableBehavior } from './iron-multi-selectable.js';
+
 /**
 `iron-selector` is an element which can be used to manage a list of elements
 that can be selected.  Tapping on the item will make the item selected.  The
@@ -76,6 +78,9 @@ Example:
 */
 
 Polymer({
+
   is: 'iron-selector',
+
   behaviors: [IronMultiSelectableBehavior]
+
 });

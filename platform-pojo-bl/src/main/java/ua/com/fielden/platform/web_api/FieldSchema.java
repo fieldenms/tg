@@ -112,6 +112,7 @@ public class FieldSchema {
     private static final String SPACE_SEPARATOR = "," + SPACE;
     private static final String NEWLINE_SEPARATOR = "," + NEWLINE;
     private static final String INDENT_STEP = "&nbsp;&nbsp;&nbsp;&nbsp;";
+    static final String EQ = "eq";
     static final String LIKE = "like";
     static final String VALUE = "value";
     static final String FROM = "from";
@@ -119,9 +120,23 @@ public class FieldSchema {
     static final String ORDER = "order";
     static final String PAGE_NUMBER = "pageNumber";
     static final String PAGE_CAPACITY = "pageCapacity";
+    static final GraphQLArgument EQ_ARGUMENT = newArgument()
+            .name(EQ)
+            .description(
+            """
+            Include entities matching the specified string value exactly.
+            Does not support comma separated values.
+            Does not permit wildcard `*`.
+            Mutually exclusive with `like`.""")
+            .type(GraphQLString)
+            .build();
     static final GraphQLArgument LIKE_ARGUMENT = newArgument()
         .name(LIKE)
-        .description("Include entities with specified string value pattern with * as a wildcard.")
+        .description(
+        """
+        Include entities matching the specified comma separated string values. Supports wildcard `*`.
+        If no `*` is used, assumes match anywhere for string-typed properties, but exact match for entity-typed properties.
+        Mutually exclusive with `eq`.""")
         .type(GraphQLString)
         .build();
     static final GraphQLArgument ORDER_ARGUMENT = newArgument()
@@ -177,7 +192,7 @@ public class FieldSchema {
      * @return
      */
     public static boolean isQueryArgument(final GraphQLArgument argumentDefinition) {
-        return asList(LIKE, VALUE, FROM, TO).contains(argumentDefinition.getName());
+        return asList(EQ, LIKE, VALUE, FROM, TO).contains(argumentDefinition.getName());
     }
     
     /**
@@ -507,7 +522,7 @@ public class FieldSchema {
      */
     private static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldTypeNonCollectional(final Class<?> propertyType) {
         if (isString(propertyType)) {
-            return of(t2(GraphQLString, asList(LIKE_ARGUMENT, ORDER_ARGUMENT)));
+            return of(t2(GraphQLString, asList(EQ_ARGUMENT, LIKE_ARGUMENT, ORDER_ARGUMENT)));
         } else if (isBoolean(propertyType)) {
             return of(t2(GraphQLBoolean, asList(newArgument() // null-valued or non-existing argument in GraphQL query means entities with both true and false values in the property
                 .name(VALUE)
@@ -540,7 +555,7 @@ public class FieldSchema {
         } else if (isUnionEntityType(propertyType)) {
             return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList()));
         } else if (isEntityType(propertyType)) {
-            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList(LIKE_ARGUMENT, ORDER_ARGUMENT)));
+            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList(EQ_ARGUMENT, LIKE_ARGUMENT, ORDER_ARGUMENT)));
         } else {
             return empty();
         }
@@ -556,13 +571,13 @@ public class FieldSchema {
         return asList(
             newArgument()
             .name(FROM)
-            .description("Include entities with property greater than (or equal to) specified value.")
+            .description("Include entities with property greater than (or equal to) specified value. Date values should be specified as strings in the ISO format (e.g. `\"2025-01-29\"`).")
             .type(inputType)
             .build(),
             
             newArgument()
             .name(TO)
-            .description("Include entities with property less than (or equal to) specified value.")
+            .description("Include entities with property less than (or equal to) specified value. Date values should be specified as strings in the ISO format (e.g. `\"2025-02-15\"`).")
             .type(inputType)
             .build(),
             

@@ -1,3 +1,7 @@
+import { gatherStyleText, rulesForStyle, toCssText, forEachRule, processVariableAndFallback } from './style-util.js';
+import { VAR_ASSIGN, MIXIN_MATCH } from './common-regex.js';
+import { detectMixin } from './common-utils.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,74 +11,6 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-/*
- * The apply shim simulates the behavior of `@apply` proposed at
- * https://tabatkins.github.io/specs/css-apply-rule/.
- * The approach is to convert a property like this:
- *
- *    --foo: {color: red; background: blue;}
- *
- * to this:
- *
- *    --foo_-_color: red;
- *    --foo_-_background: blue;
- *
- * Then where `@apply --foo` is used, that is converted to:
- *
- *    color: var(--foo_-_color);
- *    background: var(--foo_-_background);
- *
- * This approach generally works but there are some issues and limitations.
- * Consider, for example, that somewhere *between* where `--foo` is set and used,
- * another element sets it to:
- *
- *    --foo: { border: 2px solid red; }
- *
- * We must now ensure that the color and background from the previous setting
- * do not apply. This is accomplished by changing the property set to this:
- *
- *    --foo_-_border: 2px solid red;
- *    --foo_-_color: initial;
- *    --foo_-_background: initial;
- *
- * This works but introduces one new issue.
- * Consider this setup at the point where the `@apply` is used:
- *
- *    background: orange;
- *    `@apply` --foo;
- *
- * In this case the background will be unset (initial) rather than the desired
- * `orange`. We address this by altering the property set to use a fallback
- * value like this:
- *
- *    color: var(--foo_-_color);
- *    background: var(--foo_-_background, orange);
- *    border: var(--foo_-_border);
- *
- * Note that the default is retained in the property set and the `background` is
- * the desired `orange`. This leads us to a limitation.
- *
- * Limitation 1:
-
- * Only properties in the rule where the `@apply`
- * is used are considered as default values.
- * If another rule matches the element and sets `background` with
- * less specificity than the rule in which `@apply` appears,
- * the `background` will not be set.
- *
- * Limitation 2:
- *
- * When using Polymer's `updateStyles` api, new properties may not be set for
- * `@apply` properties.
-
-*/
-
-'use strict';
-
-import {forEachRule, processVariableAndFallback, rulesForStyle, toCssText, gatherStyleText} from './style-util.js';
-import {MIXIN_MATCH, VAR_ASSIGN} from './common-regex.js';
-import {detectMixin} from './common-utils.js';
-import {StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
 
 const APPLY_NAME_CLEAN = /;\s*/m;
 const INITIAL_INHERIT = /^\s*(initial)|(inherit)\s*$/;
@@ -83,23 +19,6 @@ const IMPORTANT = /\s*!important/;
 // separator used between mixin-name and mixin-property-name when producing properties
 // NOTE: plain '-' may cause collisions in user styles
 const MIXIN_VAR_SEP = '_-_';
-
-/**
- * @typedef {!Object<string, string>}
- */
-let PropertyEntry; // eslint-disable-line no-unused-vars
-
-/**
- * @typedef {!Object<string, boolean>}
- */
-let DependantsEntry; // eslint-disable-line no-unused-vars
-
-/** @typedef {{
- *    properties: PropertyEntry,
- *    dependants: DependantsEntry
- * }}
- */
-let MixinMapEntry; // eslint-disable-line no-unused-vars
 
 // map of mixin to property names
 // --foo: {border: 2px} -> {properties: {(--foo, ['border'])}, dependants: {'element-name': proto}}
@@ -116,8 +35,8 @@ class MixinMap {
     name = name.trim();
     this._map[name] = {
       properties: props,
-      dependants: {}
-    }
+      dependants: {},
+    };
   }
   /**
    * @param {string} name
@@ -161,7 +80,9 @@ class ApplyShim {
   gatherStyles(template) {
     const styleText = gatherStyleText(template.content);
     if (styleText) {
-      const style = /** @type {!HTMLStyleElement} */(document.createElement('style'));
+      const style = /** @type {!HTMLStyleElement} */ (document.createElement(
+        'style'
+      ));
       style.textContent = styleText;
       template.content.insertBefore(style, template.content.firstChild);
       return style;
@@ -203,7 +124,7 @@ class ApplyShim {
         rule['selector'] = 'html';
       }
       this.transformRule(rule);
-    })
+    });
     style.textContent = toCssText(ast);
     return ast;
   }
@@ -237,8 +158,17 @@ class ApplyShim {
    */
   transformCssText(cssText, rule) {
     // produce variables
-    cssText = cssText.replace(VAR_ASSIGN, (matchText, propertyName, valueProperty, valueMixin) =>
-      this._produceCssProperties(matchText, propertyName, valueProperty, valueMixin, rule));
+    cssText = cssText.replace(
+      VAR_ASSIGN,
+      (matchText, propertyName, valueProperty, valueMixin) =>
+        this._produceCssProperties(
+          matchText,
+          propertyName,
+          valueProperty,
+          valueMixin,
+          rule
+        )
+    );
     // consume mixins
     return this._consumeCssProperties(cssText, rule);
   }
@@ -248,12 +178,16 @@ class ApplyShim {
    */
   _getInitialValueForProperty(property) {
     if (!this._measureElement) {
-      this._measureElement = /** @type {HTMLMetaElement} */(document.createElement('meta'));
+      this._measureElement = /** @type {HTMLMetaElement} */ (document.createElement(
+        'meta'
+      ));
       this._measureElement.setAttribute('apply-shim-measure', '');
       this._measureElement.style.all = 'initial';
       document.head.appendChild(this._measureElement);
     }
-    return window.getComputedStyle(this._measureElement).getPropertyValue(property);
+    return window
+      .getComputedStyle(this._measureElement)
+      .getPropertyValue(property);
   }
   /**
    * Walk over all rules before this rule to find fallbacks for mixins
@@ -295,7 +229,7 @@ class ApplyShim {
     /** @type {Array} */
     let m = null;
     // loop over text until all mixins with defintions have been applied
-    while((m = MIXIN_MATCH.exec(text))) {
+    while ((m = MIXIN_MATCH.exec(text))) {
       let matchText = m[0];
       let mixinName = m[1];
       let idx = m.index;
@@ -342,8 +276,9 @@ class ApplyShim {
       }
       let p, parts, f;
       const properties = mixinEntry.properties;
+      /*TG #2329*/
       const keys = Object.keys(properties); let len = keys.length; while (len--) { const p = keys[len];
-      //The following comment out code was replaced to improve performance. 
+      //The following comment out code was replaced to improve performance.
       //for (p in properties) {
         f = fallbacks && fallbacks[p];
         parts = [p, ': var(', mixinName, MIXIN_VAR_SEP, p];
@@ -436,13 +371,19 @@ class ApplyShim {
    * @param {!StyleNode} rule
    * @return {string}
    */
-  _produceCssProperties(matchText, propertyName, valueProperty, valueMixin, rule) {
+  _produceCssProperties(
+    matchText,
+    propertyName,
+    valueProperty,
+    valueMixin,
+    rule
+  ) {
     // handle case where property value is a mixin
     if (valueProperty) {
       // form: --mixin2: var(--mixin1), where --mixin1 is in the map
       processVariableAndFallback(valueProperty, (prefix, value) => {
         if (value && this._map.get(value)) {
-          valueMixin = `@apply ${value};`
+          valueMixin = `@apply ${value};`;
         }
       });
     }
@@ -469,6 +410,7 @@ class ApplyShim {
     let p, v;
     // set variables defined by current mixin
     let needToInvalidate = false;
+    /*TG #2329*/
     const keys = Object.keys(combinedProps); let len = keys.length; while (len--) { const p = keys[len];
     //The following comment out code was replaced to improve performance.
     //for (p in combinedProps) {
@@ -509,10 +451,12 @@ class ApplyShim {
 /* eslint-disable no-self-assign */
 ApplyShim.prototype['detectMixin'] = ApplyShim.prototype.detectMixin;
 ApplyShim.prototype['transformStyle'] = ApplyShim.prototype.transformStyle;
-ApplyShim.prototype['transformCustomStyle'] = ApplyShim.prototype.transformCustomStyle;
+ApplyShim.prototype['transformCustomStyle'] =
+  ApplyShim.prototype.transformCustomStyle;
 ApplyShim.prototype['transformRules'] = ApplyShim.prototype.transformRules;
 ApplyShim.prototype['transformRule'] = ApplyShim.prototype.transformRule;
-ApplyShim.prototype['transformTemplate'] = ApplyShim.prototype.transformTemplate;
+ApplyShim.prototype['transformTemplate'] =
+  ApplyShim.prototype.transformTemplate;
 ApplyShim.prototype['_separator'] = MIXIN_VAR_SEP;
 /* eslint-enable no-self-assign */
 Object.defineProperty(ApplyShim.prototype, 'invalidCallback', {
@@ -523,7 +467,7 @@ Object.defineProperty(ApplyShim.prototype, 'invalidCallback', {
   /** @param {?function(string)} cb */
   set(cb) {
     invalidCallback = cb;
-  }
+  },
 });
 
-export default ApplyShim;
+export { ApplyShim as default };

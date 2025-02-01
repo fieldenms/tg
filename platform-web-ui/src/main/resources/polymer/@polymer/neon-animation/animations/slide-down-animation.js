@@ -1,3 +1,7 @@
+import '../../polymer/polymer-legacy.js';
+import { Polymer } from '../../polymer/lib/legacy/polymer-fn.js';
+import { NeonAnimationBehavior } from '../neon-animation-behavior.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,9 +12,6 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../../polymer/polymer-legacy.js";
-import { Polymer } from "../../polymer/lib/legacy/polymer-fn.js";
-import { NeonAnimationBehavior } from '../neon-animation-behavior.js';
 /*
 `<slide-down-animation>` animates the transform of an element from `none`
 `translateY(100%)`. The `transformOrigin` defaults to `50% 0`.
@@ -25,17 +26,22 @@ Configuration:
 }
 ```
 */
-
 Polymer({
+
   is: 'slide-down-animation',
+
   behaviors: [NeonAnimationBehavior],
-  configure: function (config) {
+
+  configure: function(config) {
     var node = config.node;
-    this._effect = new KeyframeEffect(node, [{
-      'transform': 'translateY(0%)'
-    }, {
-      'transform': 'translateY(100%)'
-    }], this.timingFromConfig(config));
+
+    this._effect = new KeyframeEffect(
+        node,
+        [
+          {'transform': 'translateY(0%)'},
+          {'transform': 'translateY(100%)'},
+        ],
+        this.timingFromConfig(config));
 
     if (config.transformOrigin) {
       this.setPrefixedProperty(node, 'transformOrigin', config.transformOrigin);
@@ -45,4 +51,5 @@ Polymer({
 
     return this._effect;
   }
+
 });

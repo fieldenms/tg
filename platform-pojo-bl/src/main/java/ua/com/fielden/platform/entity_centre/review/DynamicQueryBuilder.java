@@ -92,6 +92,7 @@ public class DynamicQueryBuilder {
         private Boolean orNull = null;
         private Boolean not = null;
         private Integer orGroup = null;
+        private boolean matchAnywhere = true; // if QueryProperty represents a string criterion without wildcards, then match anywhere is the default behaviour.
 
         private final Class<?> entityClass;
         private final String propertyName;
@@ -100,7 +101,7 @@ public class DynamicQueryBuilder {
         private final boolean critOnlyWithModel;
         private final String propertyUnderCondition;
         private final ICompoundCondition0<?> critOnlyModel;
-        private final boolean single;
+        private boolean single;
         private final boolean aECritOnlyChild;
         private final Class<?> type;
         /** The type of collection which contain this property. If this property is not in collection hierarchy it should be null. */
@@ -283,6 +284,14 @@ public class DynamicQueryBuilder {
 
         public void setOrGroup(final Integer orGroup) {
             this.orGroup = orGroup;
+        }
+
+        public boolean isMatchAnywhere() {
+            return matchAnywhere;
+        }
+
+        public void setMatchAnywhere(final boolean matchAnywhere) {
+            this.matchAnywhere = matchAnywhere;
         }
 
         /**
@@ -524,6 +533,9 @@ public class DynamicQueryBuilder {
          */
         public boolean isSingle() {
             return single;
+        }
+        public void setSingle(final boolean single) {
+            this.single = single;
         }
 
         public Class<?> getEntityClass() {
@@ -819,13 +831,14 @@ public class DynamicQueryBuilder {
 
     /**
      * Adjusts string criteria by changing wildcards {@code *} to SQL wildcards {@code %}, if they exist.
-     * Otherwise, prepends and appends wildcards to specified criteria value to match anywhere.
+     * Otherwise, if `property` requires "match anywhere", prepends and appends the wildcard to the criteria value to match anywhere.
      *
-     * @param criteria
+     * @param property
      * @return
      */
-    private static String prepCritValuesForSingleStringTypedProp(final String criteria) {
-        if (!criteria.contains("*")) {
+    private static String prepCritValuesForSingleStringTypedProp(final QueryProperty property) {
+        final String criteria = (String) property.getValue();
+        if (property.isMatchAnywhere() && !criteria.contains("*")) {
             return prepare("*" + criteria + "*");
         }
         return prepare(criteria);
@@ -1015,7 +1028,7 @@ public class DynamicQueryBuilder {
     private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName, final IDates dates) {
         if (property.isSingle()) {
             if (isString(property.getType())) {
-                return cond().prop(propertyName).iLike().val(prepCritValuesForSingleStringTypedProp((String)property.getValue())).model();
+                return cond().prop(propertyName).iLike().val(prepCritValuesForSingleStringTypedProp(property)).model();
             }
             return propertyEquals(propertyName, property.getValue()); // this covers the PropertyDescriptor case too
         } else if (isRangeType(property.getType())) {
