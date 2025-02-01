@@ -1,3 +1,12 @@
+import '../polymer/polymer-legacy.js';
+import { IronA11yKeysBehavior } from '../iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
+import { IronControlState } from '../iron-behaviors/iron-control-state.js';
+import { IronOverlayBehavior, IronOverlayBehaviorImpl } from '../iron-overlay-behavior/iron-overlay-behavior.js';
+import { NeonAnimationRunnerBehavior } from '../neon-animation/neon-animation-runner-behavior.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { dom } from '../polymer/lib/legacy/polymer.dom.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,14 +17,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { IronA11yKeysBehavior } from "../iron-a11y-keys-behavior/iron-a11y-keys-behavior.js";
-import { IronControlState } from "../iron-behaviors/iron-control-state.js";
-import { IronOverlayBehavior, IronOverlayBehaviorImpl } from "../iron-overlay-behavior/iron-overlay-behavior.js";
-import { NeonAnimationRunnerBehavior } from "../neon-animation/neon-animation-runner-behavior.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { dom } from "../polymer/lib/legacy/polymer.dom.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
+
 /**
 `<iron-dropdown>` is a generalized element that is useful when you have
 hidden content (`dropdown-content`) that is revealed due to some change in
@@ -41,7 +43,6 @@ be hidden until the dropdown element has `opened` set to true, or when the
 
 @demo demo/index.html
 */
-
 Polymer({
   _template: html`
     <style>
@@ -63,30 +64,30 @@ Polymer({
       <slot id="content" name="dropdown-content"></slot>
     </div>
 `,
+
   is: 'iron-dropdown',
-  behaviors: [IronControlState, IronA11yKeysBehavior, IronOverlayBehavior, NeonAnimationRunnerBehavior],
+
+  behaviors: [
+    IronControlState,
+    IronA11yKeysBehavior,
+    IronOverlayBehavior,
+    NeonAnimationRunnerBehavior
+  ],
+
   properties: {
     /**
      * The orientation against which to align the dropdown content
      * horizontally relative to the dropdown trigger.
      * Overridden from `Polymer.IronFitBehavior`.
      */
-    horizontalAlign: {
-      type: String,
-      value: 'left',
-      reflectToAttribute: true
-    },
+    horizontalAlign: {type: String, value: 'left', reflectToAttribute: true},
 
     /**
      * The orientation against which to align the dropdown content
      * vertically relative to the dropdown trigger.
      * Overridden from `Polymer.IronFitBehavior`.
      */
-    verticalAlign: {
-      type: String,
-      value: 'top',
-      reflectToAttribute: true
-    },
+    verticalAlign: {type: String, value: 'top', reflectToAttribute: true},
 
     /**
      * An animation config. If provided, this will be used to animate the
@@ -94,9 +95,7 @@ Polymer({
      * See `neon-animation` documentation for more animation configuration
      * details.
      */
-    openAnimationConfig: {
-      type: Object
-    },
+    openAnimationConfig: {type: Object},
 
     /**
      * An animation config. If provided, this will be used to animate the
@@ -104,26 +103,19 @@ Polymer({
      * See `neon-animation` documentation for more animation configuration
      * details.
      */
-    closeAnimationConfig: {
-      type: Object
-    },
+    closeAnimationConfig: {type: Object},
 
     /**
      * If provided, this will be the element that will be focused when
      * the dropdown opens.
      */
-    focusTarget: {
-      type: Object
-    },
+    focusTarget: {type: Object},
 
     /**
      * Set to true to disable animations when opening and closing the
      * dropdown.
      */
-    noAnimations: {
-      type: Boolean,
-      value: false
-    },
+    noAnimations: {type: Boolean, value: false},
 
     /**
      * By default, the dropdown will constrain scrolling on the page
@@ -133,16 +125,15 @@ Polymer({
      * This property is a shortcut to set `scrollAction` to lock or refit.
      * Prefer directly setting the `scrollAction` property.
      */
-    allowOutsideScroll: {
-      type: Boolean,
-      value: false,
-      observer: '_allowOutsideScrollChanged'
-    }
+    allowOutsideScroll:
+        {type: Boolean, value: false, observer: '_allowOutsideScrollChanged'}
   },
-  listeners: {
-    'neon-animation-finish': '_onNeonAnimationFinish'
-  },
-  observers: ['_updateOverlayPosition(positionTarget, verticalAlign, horizontalAlign, verticalOffset, horizontalOffset)'],
+
+  listeners: {'neon-animation-finish': '_onNeonAnimationFinish'},
+
+  observers: [
+    '_updateOverlayPosition(positionTarget, verticalAlign, horizontalAlign, verticalOffset, horizontalOffset)'
+  ],
 
   /**
    * The element that is contained by the dropdown, if any.
@@ -150,7 +141,6 @@ Polymer({
   get containedElement() {
     // Polymer 2.x returns slot.assignedNodes which can contain text nodes.
     var nodes = dom(this.$.content).getDistributedNodes();
-
     for (var i = 0, l = nodes.length; i < l; i++) {
       if (nodes[i].nodeType === Node.ELEMENT_NODE) {
         return nodes[i];
@@ -158,20 +148,21 @@ Polymer({
     }
   },
 
-  ready: function () {
+  ready: function() {
     // Ensure scrollAction is set.
     if (!this.scrollAction) {
       this.scrollAction = this.allowOutsideScroll ? 'refit' : 'lock';
     }
-
     this._readied = true;
   },
-  attached: function () {
+
+  attached: function() {
     if (!this.sizingTarget || this.sizingTarget === this) {
       this.sizingTarget = this.containedElement || this;
     }
   },
-  detached: function () {
+
+  detached: function() {
     this.cancelAnimation();
   },
 
@@ -179,14 +170,12 @@ Polymer({
    * Called when the value of `opened` changes.
    * Overridden from `IronOverlayBehavior`
    */
-  _openedChanged: function () {
+  _openedChanged: function() {
     if (this.opened && this.disabled) {
       this.cancel();
     } else {
       this.cancelAnimation();
-
       this._updateAnimationConfig();
-
       IronOverlayBehaviorImpl._openedChanged.apply(this, arguments);
     }
   },
@@ -194,7 +183,7 @@ Polymer({
   /**
    * Overridden from `IronOverlayBehavior`.
    */
-  _renderOpened: function () {
+  _renderOpened: function() {
     if (!this.noAnimations && this.animationConfig.open) {
       this.$.contentWrapper.classList.add('animating');
       this.playAnimation('open');
@@ -206,7 +195,7 @@ Polymer({
   /**
    * Overridden from `IronOverlayBehavior`.
    */
-  _renderClosed: function () {
+  _renderClosed: function() {
     if (!this.noAnimations && this.animationConfig.close) {
       this.$.contentWrapper.classList.add('animating');
       this.playAnimation('close');
@@ -221,9 +210,8 @@ Polymer({
    * closing the dropdown by positioning it or setting its display to
    * none.
    */
-  _onNeonAnimationFinish: function () {
+  _onNeonAnimationFinish: function() {
     this.$.contentWrapper.classList.remove('animating');
-
     if (this.opened) {
       this._finishRenderOpened();
     } else {
@@ -235,15 +223,14 @@ Polymer({
    * Constructs the final animation config from different properties used
    * to configure specific parts of the opening and closing animations.
    */
-  _updateAnimationConfig: function () {
+  _updateAnimationConfig: function() {
     // Update the animation node to be the containedElement.
     var animationNode = this.containedElement;
-    var animations = [].concat(this.openAnimationConfig || []).concat(this.closeAnimationConfig || []);
-
+    var animations = [].concat(this.openAnimationConfig || [])
+                         .concat(this.closeAnimationConfig || []);
     for (var i = 0; i < animations.length; i++) {
       animations[i].node = animationNode;
     }
-
     this.animationConfig = {
       open: this.openAnimationConfig,
       close: this.closeAnimationConfig
@@ -254,7 +241,7 @@ Polymer({
    * Updates the overlay position based on configured horizontal
    * and vertical alignment.
    */
-  _updateOverlayPosition: function () {
+  _updateOverlayPosition: function() {
     if (this.isAttached) {
       // This triggers iron-resize, and iron-overlay-behavior will call refit if
       // needed.
@@ -266,12 +253,11 @@ Polymer({
    * Sets scrollAction according to the value of allowOutsideScroll.
    * Prefer setting directly scrollAction.
    */
-  _allowOutsideScrollChanged: function (allowOutsideScroll) {
+  _allowOutsideScrollChanged: function(allowOutsideScroll) {
     // Wait until initial values are all set.
     if (!this._readied) {
       return;
     }
-
     if (!allowOutsideScroll) {
       this.scrollAction = 'lock';
     } else if (!this.scrollAction || this.scrollAction === 'lock') {
@@ -282,9 +268,8 @@ Polymer({
   /**
    * Apply focus to focusTarget or containedElement
    */
-  _applyFocus: function () {
+  _applyFocus: function() {
     var focusTarget = this.focusTarget || this.containedElement;
-
     if (focusTarget && this.opened && !this.noAutoFocus) {
       focusTarget.focus();
     } else {

@@ -4,6 +4,8 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
+import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
 const additionalTemplate = html`
     <style>

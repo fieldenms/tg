@@ -1,3 +1,7 @@
+import '../../polymer/polymer-legacy.js';
+import '../shadow.js';
+import { html } from '../../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -8,30 +12,6 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-
-/**
-Material design:
-[Cards](https://www.google.com/design/spec/components/cards.html)
-
-Shared styles that you can apply to an element to renders two shadows on top
-of each other,that create the effect of a lifted piece of paper.
-
-Example:
-
-    <custom-style>
-      <style is="custom-style" include="paper-material-styles"></style>
-    </custom-style>
-
-    <div class="paper-material" elevation="1">
-      ... content ...
-    </div>
-
-@group Paper Elements
-@demo demo/index.html
-*/
-import "../../polymer/polymer-legacy.js";
-import '../shadow.js';
-import { html } from "../../polymer/lib/utils/html-tag.js";
 const template = html`
 <dom-module id="paper-material-styles">
   <template>

@@ -1,3 +1,5 @@
+import documentWait from './document-wait.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,15 +9,6 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-
-'use strict';
-
-import documentWait from './document-wait.js';
-
-/**
- * @typedef {HTMLStyleElement | {getStyle: function():HTMLStyleElement}}
- */
-export let CustomStyleProvider;
 
 const SEEN_MARKER = '__seenByShadyCSS';
 const CACHED_STYLE = '__shadyCSSCachedStyle';
@@ -40,7 +33,7 @@ An example usage of the document-level styling api can be found in `examples/doc
 
 @unrestricted
 */
-export default class CustomStyleInterface {
+class CustomStyleInterface {
   constructor() {
     /** @type {!Array<!CustomStyleProvider>} */
     this['customStyles'] = [];
@@ -50,7 +43,7 @@ export default class CustomStyleInterface {
       if (window['ShadyCSS']['flushCustomStyles']) {
         window['ShadyCSS']['flushCustomStyles']();
       }
-    })
+    });
   }
   /**
    * Queue a validation for new custom styles to batch style recalculations
@@ -102,7 +95,9 @@ export default class CustomStyleInterface {
       if (style) {
         // HTMLImports polyfill may have cloned the style into the main document,
         // which is referenced with __appliedElement.
-        const styleToTransform = /** @type {!HTMLStyleElement} */(style['__appliedElement'] || style);
+        const styleToTransform = /** @type {!HTMLStyleElement} */ (style[
+          '__appliedElement'
+        ] || style);
         if (transformFn) {
           transformFn(styleToTransform);
         }
@@ -114,9 +109,12 @@ export default class CustomStyleInterface {
 }
 
 /* eslint-disable no-self-assign */
-CustomStyleInterface.prototype['addCustomStyle'] = CustomStyleInterface.prototype.addCustomStyle;
-CustomStyleInterface.prototype['getStyleForCustomStyle'] = CustomStyleInterface.prototype.getStyleForCustomStyle;
-CustomStyleInterface.prototype['processStyles'] = CustomStyleInterface.prototype.processStyles;
+CustomStyleInterface.prototype['addCustomStyle'] =
+  CustomStyleInterface.prototype.addCustomStyle;
+CustomStyleInterface.prototype['getStyleForCustomStyle'] =
+  CustomStyleInterface.prototype.getStyleForCustomStyle;
+CustomStyleInterface.prototype['processStyles'] =
+  CustomStyleInterface.prototype.processStyles;
 /* eslint-enable no-self-assign */
 
 Object.defineProperties(CustomStyleInterface.prototype, {
@@ -128,7 +126,7 @@ Object.defineProperties(CustomStyleInterface.prototype, {
     /** @param {?function(!HTMLStyleElement)} fn */
     set(fn) {
       transformFn = fn;
-    }
+    },
   },
   'validateCallback': {
     /** @return {?function()} */
@@ -149,16 +147,7 @@ Object.defineProperties(CustomStyleInterface.prototype, {
         this.enqueueDocumentValidation();
       }
     },
-  }
-})
+  },
+});
 
-/** @typedef {{
- * customStyles: !Array<!CustomStyleProvider>,
- * addCustomStyle: function(!CustomStyleProvider),
- * getStyleForCustomStyle: function(!CustomStyleProvider): HTMLStyleElement,
- * findStyles: function(),
- * transformCallback: ?function(!HTMLStyleElement),
- * validateCallback: ?function()
- * }}
- */
-export const CustomStyleInterfaceInterface = {};
+export { CustomStyleInterface as default };

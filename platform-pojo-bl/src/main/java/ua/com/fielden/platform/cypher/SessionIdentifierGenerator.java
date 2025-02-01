@@ -26,12 +26,11 @@ import org.joda.time.format.PeriodFormatterBuilder;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 
 /**
- *
  * A generator of cryptographically random series identifiers for user session, and 2-factor authentication pin codes.
  * <p>
- * It also provides functions for generating a secrete key to produce HMAC-SHA1 hash codes.
- * This is should be unique for each specific application, and should be changed from time to time, which would lead to strogner security, but also the need to
- * user to re-authenticate their sessions by logging in explicitly.
+ * It also provides functions for generating a secrete key to produce HMAC-SHA256 hash codes.
+ * Such keys should be unique for each application, and should be changed from time to time, which would lead to stronger security.
+ * Updating keys will require users to re-authenticate their sessions.
  *
  * @author TG Team
  *
@@ -88,7 +87,7 @@ public final class SessionIdentifierGenerator {
      * @throws NoSuchAlgorithmException
      */
     public static String genHmacSha256Key() throws NoSuchAlgorithmException {
-        // Generate a key for the HMAC-SHA1 keyed-hashing algorithm
+        // Generate a key for the HMAC-SHA256 keyed-hashing algorithm
         final KeyGenerator keyGen = KeyGenerator.getInstance(HMAC_SHA256_ALGORITHM);
         keyGen.init(4096);
         final SecretKey key = keyGen.generateKey();
@@ -107,10 +106,10 @@ public final class SessionIdentifierGenerator {
         final String result;
         try {
 
-            // get an hmac_sha1 key from the raw key bytes
+            // get a hmac_sha256 key from the raw key bytes
             final SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA256_ALGORITHM);
 
-            // get an hmac_sha1 Mac instance and initialize with the signing key
+            // get a hmac_sha256 Mac instance and initialize with the signing key
             final Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
             mac.init(signingKey);
 
@@ -127,7 +126,7 @@ public final class SessionIdentifierGenerator {
     }
 
     /**
-     * Calculates a hash code for a given data using algorithm HMAC-SHA1 with the provided key.
+     * Calculates a hash code for a given data using algorithm HMAC-SHA256 with the provided key.
      * Good <a href="http://security.stackexchange.com/questions/41617/do-salts-have-to-be-random-or-just-unique-and-unknown">read</a> about salt.
      * Hashing algorithm used is <a href="https://en.wikipedia.org/wiki/PBKDF2">PBKDF2</a>.
      * <a href="https://adambard.com/blog/3-wrong-ways-to-store-a-password/">This</a> article was used to implement this method.
@@ -138,9 +137,9 @@ public final class SessionIdentifierGenerator {
      * @return
      * @throws SignatureException
      */
-    public String calculatePBKDF2WithHmacSHA1(final String data, final String salt) throws SignatureException {
+    public String calculatePBKDF2WithHmacSHA256(final String data, final String salt) throws SignatureException {
         final int ITERATIONS = 100000;
-        final int KEY_LENGTH = 192; // bits
+        final int KEY_LENGTH = 256; // bits
 
         final String result;
         try {
@@ -152,7 +151,7 @@ public final class SessionIdentifierGenerator {
                     KEY_LENGTH
                 );
             
-            final SecretKeyFactory signingKey = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            final SecretKeyFactory signingKey = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
             final byte[] hashedPassword = signingKey.generateSecret(spec).getEncoded();
             
             // base64-encode the hmac

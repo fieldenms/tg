@@ -1,3 +1,6 @@
+import '../polymer/polymer-legacy.js';
+import { dom } from '../polymer/lib/legacy/polymer.dom.js';
+
 /**
 @license
 Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
@@ -8,8 +11,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { dom } from "../polymer/lib/legacy/polymer.dom.js";
+
 /**
  * `Polymer.IronScrollTargetBehavior` allows an element to respond to scroll
  * events from a designated scroll target.
@@ -21,9 +23,10 @@ import { dom } from "../polymer/lib/legacy/polymer.dom.js";
  * @demo demo/document.html Document Element
  * @polymerBehavior
  */
+const IronScrollTargetBehavior = {
 
-export const IronScrollTargetBehavior = {
   properties: {
+
     /**
      * Specifies the element that will handle the scroll event
      * on the behalf of the current element. This is typically a reference to an
@@ -61,39 +64,41 @@ export const IronScrollTargetBehavior = {
      */
     scrollTarget: {
       type: HTMLElement,
-      value: function () {
+      value: function() {
         return this._defaultScrollTarget;
       }
     }
   },
+
   observers: ['_scrollTargetChanged(scrollTarget, isAttached)'],
 
   /**
    * True if the event listener should be installed.
    */
   _shouldHaveListener: true,
-  _scrollTargetChanged: function (scrollTarget, isAttached) {
-    var eventTarget;
+
+  _scrollTargetChanged: function(scrollTarget, isAttached) {
 
     if (this._oldScrollTarget) {
       this._toggleScrollListener(false, this._oldScrollTarget);
-
       this._oldScrollTarget = null;
     }
-
     if (!isAttached) {
       return;
-    } // Support element id references
-
-
+    }
+    // Support element id references
     if (scrollTarget === 'document') {
       this.scrollTarget = this._doc;
+
     } else if (typeof scrollTarget === 'string') {
       var domHost = this.domHost;
-      this.scrollTarget = domHost && domHost.$ ? domHost.$[scrollTarget] : dom(this.ownerDocument).querySelector('#' + scrollTarget);
+
+      this.scrollTarget = domHost && domHost.$ ?
+          domHost.$[scrollTarget] :
+          dom(this.ownerDocument).querySelector('#' + scrollTarget);
+
     } else if (this._isValidScrollTarget()) {
       this._oldScrollTarget = scrollTarget;
-
       this._toggleScrollListener(this._shouldHaveListener, scrollTarget);
     }
   },
@@ -133,9 +138,9 @@ export const IronScrollTargetBehavior = {
    */
   get _scrollTop() {
     if (this._isValidScrollTarget()) {
-      return this.scrollTarget === this._doc ? window.pageYOffset : this.scrollTarget.scrollTop;
+      return this.scrollTarget === this._doc ? window.pageYOffset :
+                                               this.scrollTarget.scrollTop;
     }
-
     return 0;
   },
 
@@ -147,9 +152,9 @@ export const IronScrollTargetBehavior = {
    */
   get _scrollLeft() {
     if (this._isValidScrollTarget()) {
-      return this.scrollTarget === this._doc ? window.pageXOffset : this.scrollTarget.scrollLeft;
+      return this.scrollTarget === this._doc ? window.pageXOffset :
+                                               this.scrollTarget.scrollLeft;
     }
-
     return 0;
   },
 
@@ -189,7 +194,7 @@ export const IronScrollTargetBehavior = {
    * @param {number=} top The top position
    * @return {void}
    */
-  scroll: function (leftOrOptions, top) {
+  scroll: function(leftOrOptions, top) {
     var left;
 
     if (typeof leftOrOptions === 'object') {
@@ -201,7 +206,6 @@ export const IronScrollTargetBehavior = {
 
     left = left || 0;
     top = top || 0;
-
     if (this.scrollTarget === this._doc) {
       window.scrollTo(left, top);
     } else if (this._isValidScrollTarget()) {
@@ -217,9 +221,9 @@ export const IronScrollTargetBehavior = {
    */
   get _scrollTargetWidth() {
     if (this._isValidScrollTarget()) {
-      return this.scrollTarget === this._doc ? window.innerWidth : this.scrollTarget.offsetWidth;
+      return this.scrollTarget === this._doc ? window.innerWidth :
+                                               this.scrollTarget.offsetWidth;
     }
-
     return 0;
   },
 
@@ -230,9 +234,9 @@ export const IronScrollTargetBehavior = {
    */
   get _scrollTargetHeight() {
     if (this._isValidScrollTarget()) {
-      return this.scrollTarget === this._doc ? window.innerHeight : this.scrollTarget.offsetHeight;
+      return this.scrollTarget === this._doc ? window.innerHeight :
+                                               this.scrollTarget.offsetHeight;
     }
-
     return 0;
   },
 
@@ -241,12 +245,12 @@ export const IronScrollTargetBehavior = {
    *
    * @return {boolean}
    */
-  _isValidScrollTarget: function () {
+  _isValidScrollTarget: function() {
     return this.scrollTarget instanceof HTMLElement;
   },
-  _toggleScrollListener: function (yes, scrollTarget) {
-    var eventTarget = scrollTarget === this._doc ? window : scrollTarget;
 
+  _toggleScrollListener: function(yes, scrollTarget) {
+    var eventTarget = scrollTarget === this._doc ? window : scrollTarget;
     if (yes) {
       if (!this._boundScrollHandler) {
         this._boundScrollHandler = this._scrollHandler.bind(this);
@@ -265,9 +269,11 @@ export const IronScrollTargetBehavior = {
    *
    * @param {boolean} yes True to add the event, False to remove it.
    */
-  toggleScrollListener: function (yes) {
+  toggleScrollListener: function(yes) {
     this._shouldHaveListener = yes;
-
     this._toggleScrollListener(yes, this.scrollTarget);
   }
+
 };
+
+export { IronScrollTargetBehavior };

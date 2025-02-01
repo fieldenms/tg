@@ -9,44 +9,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 /**
- * Total number of Polymer element instances created.
- * @type {number}
- */
-export let instanceCount = 0;
-export function incrementInstanceCount() {
-  instanceCount++;
-}
-/**
- * Array of Polymer element classes that have been finalized.
- * @type {!Array<!PolymerElementConstructor>}
- */
-
-export const registrations = [];
-/**
- * @param {!PolymerElementConstructor} prototype Element prototype to log
- * @private
- */
-
-function _regLog(prototype) {
-  console.log('[' +
-  /** @type {?} */
-  prototype.is + ']: registered');
-}
-/**
  * Registers a class prototype for telemetry purposes.
  * @param {!PolymerElementConstructor} prototype Element prototype to register
  * @protected
  */
-
-
-export function register(prototype) {
-  registrations.push(prototype);
+function register(prototype) {
 }
-/**
- * Logs all elements registered with an `is` to the console.
- * @public
- */
 
-export function dumpRegistrations() {
-  registrations.forEach(_regLog);
-}
+export { register };
