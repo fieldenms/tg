@@ -77,7 +77,7 @@ final class AuditWebUiConfigFactoryImpl implements AuditWebUiConfigFactory {
         final var centre = createCentre(auditedType, synAuditType, miType);
         builder.register(centre);
 
-        return new AuditWebUiConfig(centre);
+        return new AuditWebUiConfig(centre, synAuditType);
     }
 
     @SuppressWarnings("unchecked")
