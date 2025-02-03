@@ -172,6 +172,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         a3tBuilder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
         a3tBuilder.addAnnotation(javaPoet.getAnnotation(WithoutMetaModel.class));
         a3tBuilder.addAnnotation(keyType(DynamicEntityKey.class));
+        a3tBuilder.addAnnotation(javaPoet.getAnnotation(DenyIntrospection.class));
 
         // Property for the reference to the audited entity.
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
@@ -415,6 +416,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(javaPoet.getAnnotation(SkipVerification.class))
                 .addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class))
                 .addAnnotation(javaPoet.getAnnotation(WithoutMetaModel.class))
+                .addAnnotation(javaPoet.getAnnotation(DenyIntrospection.class))
                 .addAnnotation(keyType(DynamicEntityKey.class));
 
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
