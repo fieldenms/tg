@@ -1,11 +1,13 @@
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-module.js';
-import '/resources/components/rich-text/tg-rich-text-input-styles.js';
+//import '/resources/components/rich-text/tg-rich-text-input-styles.js';
+//import { toastuiEditorStyles } from '/resources/polymer/lib/toastui-editor-lib.js';
+//        ${toastuiEditorStyles}
 import '/resources/polymer/@polymer/paper-styles/typography.js';
 
 const styleElement = document.createElement('dom-module');
 styleElement.innerHTML = `
     <template>
-        <style include='rich-text-styles'>
+        <style>
             :host {
                 position: relative
                 @apply --layout-vertical;

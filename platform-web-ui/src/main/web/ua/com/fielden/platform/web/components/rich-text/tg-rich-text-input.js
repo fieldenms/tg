@@ -17,6 +17,7 @@ import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js';
 
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 
+import { toastuiEditorStyles } from '/resources/polymer/lib/toastui-editor-lib.js';
 import '/resources/components/rich-text/tg-rich-text-input-enhanced-styles.js';
 import '/resources/components/tg-link-dialog.js';
 import '/resources/components/tg-color-picker-dialog.js';
@@ -581,6 +582,7 @@ function removeMouseEventHandlersFromDocument() {
 }
 
 const template = html`
+    ${toastuiEditorStyles}
     <style include='rich-text-enhanced-styles'>
         :host {
             @apply --layout-vertical;
