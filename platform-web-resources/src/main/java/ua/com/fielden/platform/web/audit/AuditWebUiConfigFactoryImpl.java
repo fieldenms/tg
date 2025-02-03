@@ -48,8 +48,6 @@ import static ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EXPORT_EMBEDDED_CENTRE_ACTION;
 
 final class AuditWebUiConfigFactoryImpl implements AuditWebUiConfigFactory {
@@ -154,11 +152,7 @@ final class AuditWebUiConfigFactoryImpl implements AuditWebUiConfigFactory {
                 .filter(prop -> isAuditProperty(prop.name()))
                 .collect(toImmutableList());
 
-        final var desktopLayout = cell(
-                cell(CELL_LAYOUT).repeat(4)
-                .cell(CELL_LAYOUT).repeat(auditProperties.size())
-                )
-                .toString();
+        final var layout = LayoutComposer.mkGridForCentre(4 + auditProperties.size(), 1);
 
         IAlsoCrit centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
                 .addTopAction(standardExportAction)
@@ -175,7 +169,9 @@ final class AuditWebUiConfigFactoryImpl implements AuditWebUiConfigFactory {
         }
 
         var centreBuilder2 = centreBuilder1
-                .setLayoutFor(DESKTOP, Optional.empty(), desktopLayout)
+                .setLayoutFor(DESKTOP, empty(), layout)
+                .setLayoutFor(TABLET, empty(), layout)
+                .setLayoutFor(MOBILE, empty(), layout)
 
                 .addProp(AUDITED_ENTITY)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching audit records.").also()
