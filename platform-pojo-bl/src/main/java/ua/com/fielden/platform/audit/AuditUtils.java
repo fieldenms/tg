@@ -61,7 +61,7 @@ public final class AuditUtils {
      */
     public static boolean isAuditProperty(final CharSequence property) {
         if (property == null) {
-            throw new InvalidArgumentException("Argument [auditPropertyName] must not be null.");
+            throw new InvalidArgumentException("Argument [property] must not be null.");
         }
         return StringUtils.startsWith(property, "a3t_");
     }

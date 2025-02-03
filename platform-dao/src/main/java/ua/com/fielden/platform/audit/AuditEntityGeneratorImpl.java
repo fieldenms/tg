@@ -336,7 +336,6 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                     .addModifiers(PUBLIC)
                     .superclass(ParameterizedTypeName.get(AbstractAuditEntity.class, auditedType))
                     .addAnnotation(AnnotationSpecs.auditFor(auditedType, auditVersion))
-                    // TODO Meta-model is not needed. Meta-model processor needs to support a new annotation - WithoutMetaModel.
                     .addAnnotation(MapEntityTo.class)
                     .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class))
                     .addAnnotations(annotations);

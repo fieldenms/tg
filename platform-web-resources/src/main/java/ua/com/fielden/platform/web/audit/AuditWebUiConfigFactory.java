@@ -11,8 +11,20 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 @ImplementedBy(AuditWebUiConfigFactoryImpl.class)
 public interface AuditWebUiConfigFactory {
 
+    /**
+     * Creates a Web UI configuration object for a synthetic audit-entity type.
+     * <p>
+     * <b>Side-effect</b>: the created configuration is registered with the specified builder.
+     *
+     * @param auditedType   type of an audited entity whose audit types are used
+     */
     AuditWebUiConfig create(Class<? extends AbstractEntity<?>> auditedType, IWebUiBuilder builder);
 
+    /**
+     * Creates an embedded entity centre for a synthetic audit-entity type.
+     *
+     * @param auditedType   type of an audited entity whose audit types are used
+     */
     EntityCentre<?> createEmbeddedCentre(Class<? extends AbstractEntity<?>> auditedType);
 
 }
