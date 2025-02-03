@@ -52,7 +52,7 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EXPORT_EMBEDDED_CENTRE_ACTION;
 
-final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory {
+final class AuditWebUiConfigFactoryImpl implements AuditWebUiConfigFactory {
 
     private final IAuditTypeFinder auditTypeFinder;
     private final MiTypeGenerator miTypeGenerator;
@@ -60,8 +60,8 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
     private final IDomainMetadata domainMetadata;
 
     @Inject
-    SynAuditWebUiConfigFactoryImpl(final IAuditTypeFinder auditTypeFinder, final MiTypeGenerator miTypeGenerator,
-                                   final Injector injector, final IDomainMetadata domainMetadata) {
+    AuditWebUiConfigFactoryImpl(final IAuditTypeFinder auditTypeFinder, final MiTypeGenerator miTypeGenerator,
+                                final Injector injector, final IDomainMetadata domainMetadata) {
         this.auditTypeFinder = auditTypeFinder;
         this.miTypeGenerator = miTypeGenerator;
         this.injector = injector;
@@ -69,10 +69,7 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
     }
 
     @Override
-    public <E extends AbstractEntity<?>> SynAuditWebUiConfig<E> create(
-            final Class<E> auditedType,
-            final IWebUiBuilder builder)
-    {
+    public AuditWebUiConfig create(final Class<? extends AbstractEntity<?>> auditedType, final IWebUiBuilder builder) {
         // Must exist
         final var synAuditType = auditTypeFinder.getSynAuditEntityType(auditedType);
         final var miType = miTypeGenerator.generate(synAuditType);
@@ -80,12 +77,12 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
         final var centre = createCentre(auditedType, synAuditType, miType);
         builder.register(centre);
 
-        return new SynAuditWebUiConfig<>(centre);
+        return new AuditWebUiConfig(centre);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <E extends AbstractEntity<?>> EntityCentre<E> createEmbeddedCentre(final Class<E> auditedType) {
+    public EntityCentre<?> createEmbeddedCentre(final Class<? extends AbstractEntity<?>> auditedType) {
         final var baseAuditedType = baseEntityType(auditedType);
 
         // Must exist
@@ -143,9 +140,9 @@ final class SynAuditWebUiConfigFactoryImpl implements SynAuditWebUiConfigFactory
         return new EntityCentre<>(masterMiType, centre, injector);
     }
 
-    private <S extends AbstractSynAuditEntity<E>, E extends AbstractEntity<?>> EntityCentre<S> createCentre(
-            final Class<E> auditedType,
-            final Class<S> synAuditType,
+    private EntityCentre<?> createCentre(
+            final Class<? extends AbstractEntity<?>> auditedType,
+            final Class<? extends AbstractSynAuditEntity<?>> synAuditType,
             final Class<? extends MiWithConfigurationSupport<?>> miType)
     {
         final var standardExportAction = StandardActions.EXPORT_ACTION.mkAction(synAuditType);
