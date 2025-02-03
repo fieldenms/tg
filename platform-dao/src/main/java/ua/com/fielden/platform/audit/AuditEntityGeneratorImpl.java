@@ -487,7 +487,6 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         builder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
         builder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
         builder.addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class));
-        builder.addAnnotation(javaPoet.getAnnotation(WithoutMetaModel.class));
 
         // Declare key member "auditedEntity", common to all audit-entity type versions.
         final var auditedEntityProp = propertyBuilder(AbstractSynAuditEntity.AUDITED_ENTITY, auditedType)
