@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.audit;
 
 import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
@@ -99,6 +100,16 @@ final class AnnotationSpecs {
     public static AnnotationSpec critOnly(final CritOnly.Type value) {
         return AnnotationSpec.builder(CritOnly.class)
                 .addMember("value", "$T.$L", CritOnly.Type.class, value.name())
+                .build();
+    }
+
+    public static AnnotationSpec keyType(final Class<?> value) {
+        return keyType(ClassName.get(value));
+    }
+
+    public static AnnotationSpec keyType(final TypeName typeName) {
+        return AnnotationSpec.builder(KeyType.class)
+                .addMember("value", "$T.class", typeName)
                 .build();
     }
 
