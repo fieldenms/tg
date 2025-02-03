@@ -1,3 +1,8 @@
+import { nativeCssVariables, nativeShadow, cssBuild } from './style-settings.js';
+import { parse, stringify, types } from './css-parse.js';
+import { MEDIA_MATCH } from './common-regex.js';
+import { isUnscopedStyle, processUnscopedStyle } from './unscoped-style-handler.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -8,19 +13,12 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
-import {nativeShadow, nativeCssVariables, cssBuild} from './style-settings.js';
-import {parse, stringify, types, StyleNode} from './css-parse.js'; // eslint-disable-line no-unused-vars
-import {MEDIA_MATCH} from './common-regex.js';
-import {processUnscopedStyle, isUnscopedStyle} from './unscoped-style-handler.js';
-
 /**
  * @param {string|StyleNode} rules
  * @param {function(StyleNode)=} callback
  * @return {string}
  */
-export function toCssText (rules, callback) {
+function toCssText(rules, callback) {
   if (!rules) {
     return '';
   }
@@ -37,23 +35,11 @@ export function toCssText (rules, callback) {
  * @param {HTMLStyleElement} style
  * @return {StyleNode}
  */
-export function rulesForStyle(style) {
+function rulesForStyle(style) {
   if (!style['__cssRules'] && style.textContent) {
     style['__cssRules'] = parse(style.textContent);
   }
   return style['__cssRules'] || null;
-}
-
-// Tests if a rule is a keyframes selector, which looks almost exactly
-// like a normal selector but is not (it has nothing to do with scoping
-// for example).
-/**
- * @param {StyleNode} rule
- * @return {boolean}
- */
-export function isKeyframesSelector(rule) {
-  return Boolean(rule['parent']) &&
-  rule['parent']['type'] === types.KEYFRAMES_RULE;
 }
 
 /**
@@ -62,7 +48,12 @@ export function isKeyframesSelector(rule) {
  * @param {Function=} keyframesRuleCallback
  * @param {boolean=} onlyActiveRules
  */
-export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, onlyActiveRules) {
+function forEachRule(
+  node,
+  styleRuleCallback,
+  keyframesRuleCallback,
+  onlyActiveRules
+) {
   if (!node) {
     return;
   }
@@ -81,97 +72,17 @@ export function forEachRule(node, styleRuleCallback, keyframesRuleCallback, only
   }
   if (type === types.STYLE_RULE) {
     styleRuleCallback(node);
-  } else if (keyframesRuleCallback &&
-    type === types.KEYFRAMES_RULE) {
+  } else if (keyframesRuleCallback && type === types.KEYFRAMES_RULE) {
     keyframesRuleCallback(node);
   } else if (type === types.MIXIN_RULE) {
     skipRules = true;
   }
   let r$ = node['rules'];
   if (r$ && !skipRules) {
-    for (let i=0, l=r$.length, r; (i<l) && (r=r$[i]); i++) {
+    for (let i = 0, l = r$.length, r; i < l && (r = r$[i]); i++) {
       forEachRule(r, styleRuleCallback, keyframesRuleCallback, onlyActiveRules);
     }
   }
-}
-
-// add a string of cssText to the document.
-/**
- * @param {string} cssText
- * @param {string} moniker
- * @param {Node} target
- * @param {Node} contextNode
- * @return {HTMLStyleElement}
- */
-export function applyCss(cssText, moniker, target, contextNode) {
-  let style = createScopeStyle(cssText, moniker);
-  applyStyle(style, target, contextNode);
-  return style;
-}
-
-/**
- * @param {string} cssText
- * @param {string} moniker
- * @return {HTMLStyleElement}
- */
-export function createScopeStyle(cssText, moniker) {
-  let style = /** @type {HTMLStyleElement} */(document.createElement('style'));
-  if (moniker) {
-    style.setAttribute('scope', moniker);
-  }
-  style.textContent = cssText;
-  return style;
-}
-
-/**
- * Track the position of the last added style for placing placeholders
- * @type {Node}
- */
-let lastHeadApplyNode = null;
-
-// insert a comment node as a styling position placeholder.
-/**
- * @param {string} moniker
- * @return {!Comment}
- */
-export function applyStylePlaceHolder(moniker) {
-  let placeHolder = document.createComment(' Shady DOM styles for ' +
-    moniker + ' ');
-  let after = lastHeadApplyNode ?
-    lastHeadApplyNode['nextSibling'] : null;
-  let scope = document.head;
-  scope.insertBefore(placeHolder, after || scope.firstChild);
-  lastHeadApplyNode = placeHolder;
-  return placeHolder;
-}
-
-/**
- * @param {HTMLStyleElement} style
- * @param {?Node} target
- * @param {?Node} contextNode
- */
-export function applyStyle(style, target, contextNode) {
-  target = target || document.head;
-  let after = (contextNode && contextNode.nextSibling) ||
-    target.firstChild;
-  target.insertBefore(style, after);
-  if (!lastHeadApplyNode) {
-    lastHeadApplyNode = style;
-  } else {
-    // only update lastHeadApplyNode if the new style is inserted after the old lastHeadApplyNode
-    let position = style.compareDocumentPosition(lastHeadApplyNode);
-    if (position === Node.DOCUMENT_POSITION_PRECEDING) {
-      lastHeadApplyNode = style;
-    }
-  }
-}
-
-/**
- * @param {string} buildType
- * @return {boolean}
- */
-export function isTargetedBuild(buildType) {
-  return nativeShadow ? buildType === 'shadow' : buildType === 'shady';
 }
 
 /**
@@ -181,9 +92,9 @@ export function isTargetedBuild(buildType) {
  * @param {number} start
  * @return {number}
  */
-export function findMatchingParen(text, start) {
+function findMatchingParen(text, start) {
   let level = 0;
-  for (let i=start, l=text.length; i < l; i++) {
+  for (let i = start, l = text.length; i < l; i++) {
     if (text[i] === '(') {
       level++;
     } else if (text[i] === ')') {
@@ -199,7 +110,7 @@ export function findMatchingParen(text, start) {
  * @param {string} str
  * @param {function(string, string, string, string)} callback
  */
-export function processVariableAndFallback(str, callback) {
+function processVariableAndFallback(str, callback) {
   // find 'var('
   let start = str.indexOf('var(');
   if (start === -1) {
@@ -225,30 +136,18 @@ export function processVariableAndFallback(str, callback) {
 }
 
 /**
- * @param {Element} element
- * @param {string} value
- */
-export function setElementClassRaw(element, value) {
-  // use native setAttribute provided by ShadyDOM when setAttribute is patched
-  if (nativeShadow) {
-    element.setAttribute('class', value);
-  } else {
-    window['ShadyDOM']['nativeMethods']['setAttribute'].call(element, 'class', value);
-  }
-}
-
-/**
  * @type {function(*):*}
  */
-export const wrap = window['ShadyDOM'] && window['ShadyDOM']['wrap'] || ((node) => node);
+(window['ShadyDOM'] && window['ShadyDOM']['wrap']) || ((node) => node);
 
 /**
  * @param {Element | {is: string, extends: string}} element
  * @return {{is: string, typeExtension: string}}
  */
-export function getIsExtends(element) {
+function getIsExtends(element) {
   let localName = element['localName'];
-  let is = '', typeExtension = '';
+  let is = '',
+    typeExtension = '';
   /*
   NOTE: technically, this can be wrong for certain svg elements
   with `-` in the name like `<font-face>`
@@ -261,8 +160,8 @@ export function getIsExtends(element) {
       is = (element.getAttribute && element.getAttribute('is')) || '';
     }
   } else {
-    is = /** @type {?} */(element).is;
-    typeExtension = /** @type {?} */(element).extends;
+    is = /** @type {?} */ (element).is;
+    typeExtension = /** @type {?} */ (element).extends;
   }
   return {is, typeExtension};
 }
@@ -271,10 +170,12 @@ export function getIsExtends(element) {
  * @param {Element|DocumentFragment} element
  * @return {string}
  */
-export function gatherStyleText(element) {
+function gatherStyleText(element) {
   /** @type {!Array<string>} */
   const styleTextParts = [];
-  const styles = /** @type {!NodeList<!HTMLStyleElement>} */(element.querySelectorAll('style'));
+  const styles = /** @type {!NodeList<!HTMLStyleElement>} */ (element.querySelectorAll(
+    'style'
+  ));
   for (let i = 0; i < styles.length; i++) {
     const style = styles[i];
     if (isUnscopedStyle(style)) {
@@ -290,37 +191,6 @@ export function gatherStyleText(element) {
   return styleTextParts.join('').trim();
 }
 
-/**
- * Split a selector separated by commas into an array in a smart way
- * @param {string} selector
- * @return {!Array<string>}
- */
-export function splitSelectorList(selector) {
-  const parts = [];
-  let part = '';
-  for (let i = 0; i >= 0 && i < selector.length; i++) {
-    // A selector with parentheses will be one complete part
-    if (selector[i] === '(') {
-      // find the matching paren
-      const end = findMatchingParen(selector, i);
-      // push the paren block into the part
-      part += selector.slice(i, end + 1);
-      // move the index to after the paren block
-      i = end;
-    } else if (selector[i] === ',') {
-      parts.push(part);
-      part = '';
-    } else {
-      part += selector[i];
-    }
-  }
-  // catch any pieces after the last comma
-  if (part) {
-    parts.push(part);
-  }
-  return parts;
-}
-
 const CSS_BUILD_ATTR = 'css-build';
 
 /**
@@ -329,9 +199,9 @@ const CSS_BUILD_ATTR = 'css-build';
  * @param {!HTMLElement} element
  * @return {string} Can be "", "shady", or "shadow"
  */
-export function getCssBuild(element) {
+function getCssBuild(element) {
   if (cssBuild !== undefined) {
-    return /** @type {string} */(cssBuild);
+    return /** @type {string} */ (cssBuild);
   }
   if (element.__cssBuild === undefined) {
     // try attribute first, as it is the common case
@@ -365,7 +235,7 @@ export function getCssBuild(element) {
  * @param {!HTMLElement} element
  * @return {boolean}
  */
-export function elementHasBuiltCss(element) {
+function elementHasBuiltCss(element) {
   return getCssBuild(element) !== '';
 }
 
@@ -376,10 +246,11 @@ export function elementHasBuiltCss(element) {
  * @param {!HTMLElement} element
  * @return {string}
  */
-export function getBuildComment(element) {
-  const buildComment = element.localName === 'template' ?
-      /** @type {!HTMLTemplateElement} */ (element).content.firstChild :
-      element.firstChild;
+function getBuildComment(element) {
+  const buildComment =
+    element.localName === 'template'
+      ? /** @type {!HTMLTemplateElement} */ (element).content.firstChild
+      : element.firstChild;
   if (buildComment instanceof Comment) {
     const commentParts = buildComment.textContent.trim().split(':');
     if (commentParts[0] === CSS_BUILD_ATTR) {
@@ -390,25 +261,14 @@ export function getBuildComment(element) {
 }
 
 /**
- * Check if the css build status is optimal, and do no unneeded work.
- *
- * @param {string=} cssBuild CSS build status
- * @return {boolean} css build is optimal or not
- */
-export function isOptimalCssBuild(cssBuild = '') {
-  // CSS custom property shim always requires work
-  if (cssBuild === '' || !nativeCssVariables) {
-    return false;
-  }
-  return nativeShadow ? cssBuild === 'shadow' : cssBuild === 'shady';
-}
-
-/**
  * @param {!HTMLElement} element
  */
 function removeBuildComment(element) {
-  const buildComment = element.localName === 'template' ?
-      /** @type {!HTMLTemplateElement} */ (element).content.firstChild :
-      element.firstChild;
+  const buildComment =
+    element.localName === 'template'
+      ? /** @type {!HTMLTemplateElement} */ (element).content.firstChild
+      : element.firstChild;
   buildComment.parentNode.removeChild(buildComment);
 }
+
+export { elementHasBuiltCss, findMatchingParen, forEachRule, gatherStyleText, getBuildComment, getCssBuild, getIsExtends, processVariableAndFallback, rulesForStyle, toCssText };

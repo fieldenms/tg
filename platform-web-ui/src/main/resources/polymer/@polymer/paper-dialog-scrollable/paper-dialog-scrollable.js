@@ -1,3 +1,10 @@
+import '../polymer/polymer-legacy.js';
+import '../iron-flex-layout/iron-flex-layout.js';
+import '../paper-styles/default-theme.js';
+import { PaperDialogBehaviorImpl } from '../paper-dialog-behavior/paper-dialog-behavior.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,12 +15,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import "../iron-flex-layout/iron-flex-layout.js";
-import "../paper-styles/default-theme.js";
-import { PaperDialogBehaviorImpl } from "../paper-dialog-behavior/paper-dialog-behavior.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
+
 /**
 Material design:
 [Dialogs](https://www.google.com/design/spec/components/dialogs.html)
@@ -73,7 +75,6 @@ Custom property | Description | Default
 @demo demo/index.html
 @hero hero.svg
 */
-
 Polymer({
   _template: html`
     <style>
@@ -119,16 +120,18 @@ Polymer({
       <slot></slot>
     </div>
 `,
+
   is: 'paper-dialog-scrollable',
+
   properties: {
+
     /**
      * The dialog element that implements `Polymer.PaperDialogBehavior`
      * containing this element.
      * @type {?Node}
      */
-    dialogElement: {
-      type: Object
-    }
+    dialogElement: {type: Object}
+
   },
 
   /**
@@ -138,27 +141,34 @@ Polymer({
     return this.$.scrollable;
   },
 
-  ready: function () {
+  ready: function() {
     this._ensureTarget();
-
     this.classList.add('no-padding');
   },
-  attached: function () {
-    this._ensureTarget();
 
+  attached: function() {
+    this._ensureTarget();
     requestAnimationFrame(this.updateScrollState.bind(this));
   },
-  updateScrollState: function () {
-    this.toggleClass('is-scrolled', this.scrollTarget.scrollTop > 0);
-    this.toggleClass('can-scroll', this.scrollTarget.offsetHeight < this.scrollTarget.scrollHeight);
-    this.toggleClass('scrolled-to-bottom', this.scrollTarget.scrollTop + this.scrollTarget.offsetHeight >= this.scrollTarget.scrollHeight);
-  },
-  _ensureTarget: function () {
-    // Read parentElement instead of parentNode in order to skip shadowRoots.
-    this.dialogElement = this.dialogElement || this.parentElement; // Check if dialog implements paper-dialog-behavior. If not, fit
-    // scrollTarget to host.
 
-    if (this.dialogElement && this.dialogElement.behaviors && this.dialogElement.behaviors.indexOf(PaperDialogBehaviorImpl) >= 0) {
+  updateScrollState: function() {
+    this.toggleClass('is-scrolled', this.scrollTarget.scrollTop > 0);
+    this.toggleClass(
+        'can-scroll',
+        this.scrollTarget.offsetHeight < this.scrollTarget.scrollHeight);
+    this.toggleClass(
+        'scrolled-to-bottom',
+        this.scrollTarget.scrollTop + this.scrollTarget.offsetHeight >=
+            this.scrollTarget.scrollHeight);
+  },
+
+  _ensureTarget: function() {
+    // Read parentElement instead of parentNode in order to skip shadowRoots.
+    this.dialogElement = this.dialogElement || this.parentElement;
+    // Check if dialog implements paper-dialog-behavior. If not, fit
+    // scrollTarget to host.
+    if (this.dialogElement && this.dialogElement.behaviors &&
+        this.dialogElement.behaviors.indexOf(PaperDialogBehaviorImpl) >= 0) {
       this.dialogElement.sizingTarget = this.scrollTarget;
       this.scrollTarget.classList.remove('fit');
     } else if (this.dialogElement) {

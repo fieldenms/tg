@@ -9,19 +9,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 */
 
 /* eslint-disable no-unused-vars */
-
 /**
  * When using Closure Compiler, JSCompiler_renameProperty(property, object) is replaced by the munged name for object[property]
  * We cannot alias this function, so we have to use a small shim that has the same behavior when not compiling.
  *
- * @param {string} prop Property name
- * @param {?Object} obj Reference object
+ * @param {?} prop Property name
+ * @param {*} obj Reference object
  * @return {string} Potentially renamed property name
  */
-window.JSCompiler_renameProperty = function (prop, obj) {
+window.JSCompiler_renameProperty = function(prop, obj) {
   return prop;
 };
-/* eslint-enable */
-
-
-export {};

@@ -5,7 +5,6 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js'
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js'
 import '/resources/polymer/@polymer/paper-button/paper-button.js'
 import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js'
-import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js'
 import '/resources/polymer/@polymer/neon-animation/animations/scale-up-animation.js'
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js'
 
@@ -14,6 +13,7 @@ import '/resources/components/tg-calendar.js';
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
+import moment from '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData(). ...
 import { _momentTz, timeZoneFormats } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
@@ -129,16 +129,25 @@ export class TgDatetimePicker extends TgEditor {
                     const fullFormat = moment.localeData().longDateFormat('LTS');
                     const noMillisFormat = fullFormat ? fullFormat.replace('.SSS', '') : 'LTS';
                     return [
+                        'h:mm:ss.SSSa',
                         'h:m:ss.SSSa',
+                        'H:mm:ss.SSS',
                         'H:m:ss.SSS',
                         'LTS', // e.g. HH:mm:ss.SSS
+                        'HH:m:ss.SSS',
+                        'h:mm:ssa',
                         'h:m:ssa',
+                        'H:mm:ss',
                         'H:m:ss',
                         noMillisFormat, // e.g. HH:mm:ss
+                        'HH:m:ss',
                         'LT', // e.g. HH:mm
+                        'HH:m',
                         'hmma',
                         'Hmm',
+                        'h:mma',
                         'h:ma',
+                        'H:mm',
                         'H:m',
                         'ha',
                         'H'
@@ -379,7 +388,7 @@ export class TgDatetimePicker extends TgEditor {
      */
     _datePortionApproximationFormatsFor (datePortionFormat, separator) {
         const parts = datePortionFormat.split(separator);
-        const partFormats = part => part.length === 2 ? part[0].toUpperCase() : ['YYYY', 'YY', 'Y']; // converts from 'MM' to 'M'; from 'DD' to 'D'; and from 'YYYY' to ['YYYY', 'YY', 'Y']
+        const partFormats = part => part.length === 2 ? [part.toUpperCase(), part[0].toUpperCase()] : ['YYYY', 'YY', 'Y']; // converts from 'MM' to ['MM', 'M']; from 'DD' to ['DD', 'D']; and from 'YYYY' to ['YYYY', 'YY', 'Y']
         const first = partFormats(parts[0]);
         const second = partFormats(parts[1]);
         const third = partFormats(parts[2]);
@@ -387,13 +396,10 @@ export class TgDatetimePicker extends TgEditor {
         const datePortionFormats = [
             'L'
         ];
-        if (Array.isArray(first)) {
-            first.forEach(f => datePortionFormats.push(f + separator + second + separator + third));
-        } else if (Array.isArray(second)) {
-            second.forEach(s => datePortionFormats.push(first + separator + s + separator + third));
-        } else {
-            third.forEach(t => datePortionFormats.push(first + separator + second + separator + t));
-        }
+        // The order, by which formats will be generated, is not really important.
+        // E.g. the very first format will still be widest, either it will be 'YYYY/MM/DD' or 'MM/YYYY/DD' or 'DD/MM/YYYY'.
+        // Also, newest (>=2.30.1) 'moment' lib requires, for example, 'MM' to match 09 month ('M' is not sufficient).
+        first.forEach(f => second.forEach(s => third.forEach(t => datePortionFormats.push(f + separator + s + separator + t))));
         return datePortionFormats;
     }
 

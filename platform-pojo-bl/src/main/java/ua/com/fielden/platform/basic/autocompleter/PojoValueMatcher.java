@@ -1,98 +1,93 @@
 package ua.com.fielden.platform.basic.autocompleter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.ExpExec;
+
+import java.util.*;
+import java.util.function.BiPredicate;
+import java.util.regex.Pattern;
 
 /**
- * Provides a collection-based implementation of the {@link IValueMatcher} with wild card support. This implementation should be convenient in cases where there is a list of
- * instances of type T that needs to be used for autocomplition.
+ * Provides a collection-based implementation of the {@link IValueMatcher} with wild card support.
+ * This implementation should be convenient in cases where there is a list of entity instances, which is used to value autocompletion.
  *
- * @author TG Team
- *
- * @param <T>
+ * @param <T>  a type of entities being matched.
  */
 public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher<T> {
+
+    public static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
+
     private final Collection<T> instances;
-    private final ExpExec<T> exec = new ExpExec<>("pojo");
-    private final boolean isCaseSensitive;
+    private final BiPredicate<Pattern, T> matchingPredicate;
+
     /**
      * Controls the number of values that can be returned as the result of matching.
      */
     private final int limit;
 
-    public PojoValueMatcher(final Collection<T> instances, final String expression, final int limit) {
-        this(instances, expression, limit, false);
+    public PojoValueMatcher(final Collection<T> instances, final String propNameToMatchBy, final int limit) {
+        this(instances, matchByPropPredicate(propNameToMatchBy), limit);
     }
 
-    public PojoValueMatcher(final Collection<T> instances, final String expression, final int limit, final boolean isCaseSensitive) {
-        this.instances = instances;
-        exec.add(expression);
+    public PojoValueMatcher(final Collection<T> instances, final BiPredicate<Pattern, T> matchingPredicate, final int limit) {
+        this.instances = ImmutableList.copyOf(instances);
         this.limit = limit;
-        this.isCaseSensitive = isCaseSensitive;
+        this.matchingPredicate = matchingPredicate;
     }
 
-    /*
-     * Two protected getters to make this class overridable
-     */
-    protected Collection<T> getInstances() {
+    public Collection<T> getInstances() {
         return instances;
     }
 
-    protected ExpExec<T> getExec() {
-        return exec;
-    }
-
-    public static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
-    
     @Override
     public List<T> findMatches(final String v) {
-        final String value = SPECIAL_REGEX_CHARS.matcher(isCaseSensitive ? v : v.toUpperCase()).replaceAll("\\\\$0");
-        final List<T> possibleEntities = new ArrayList<T>();
-        final int substringLen = value.length();
+        final String searchText = SPECIAL_REGEX_CHARS.matcher(v.toUpperCase()).replaceAll("\\\\$0");
+        final var matchingEntities = new ArrayList<T>();
+        final int substringLen = searchText.length();
         if (substringLen == 0) {
-            return possibleEntities;
+            return matchingEntities;
         }
 
         // * if string does not start with % then prepend ^
         // * if string does not end with % then append $
         // * substitute all occurrences of % with .*
-        final String prefex = value.startsWith("%") ? "" : "^";
-        final String postfix = value.endsWith("%") ? "" : "$";
-        final String strPattern = prefex + value.replaceAll("\\%", ".*") + postfix;
+        final String prefix = searchText.startsWith("%") ? "" : "^";
+        final String postfix = searchText.endsWith("%") ? "" : "$";
+        final String searchPattern = prefix + searchText.replaceAll("%", ".*") + postfix;
 
-        final Pattern pattern = Pattern.compile(strPattern);
-        for (final T instance : instances) {
-            if (possibleEntities.size() < limit) {
-                final Object entryValue = exec.eval(instance, 0);
-                if (entryValue != null) {
-                    final String listEntry = isCaseSensitive ? entryValue.toString() : entryValue.toString().toUpperCase();
-                    final Matcher matcher = pattern.matcher(listEntry);
-                    if (matcher.find()) {
-                        possibleEntities.add(instance);
-                    }
+        final Pattern pattern = Pattern.compile(searchPattern);
+        for (final T entity : instances) {
+            if (matchingEntities.size() < limit) {
+                if (matchingPredicate.test(pattern, entity)) {
+                    matchingEntities.add(entity);
                 }
             }
         }
-        return possibleEntities;
+        return matchingEntities;
 
     }
 
     /**
-     * Returns the maximum number of values that could be returned by the matcher instance. For example, of there are 100 matching values, but the limit is 10 then only 10 values
-     * will be returned from method findMatches().
-     *
-     * @return
+     * Returns the maximum number of values that could be returned by the matcher instance.
+     * For example, if there are 100 matching values, but the limit is 10 than only 10 values would be returned from method findMatches().
      */
     @Override
     public Integer getPageSize() {
         return limit;
+    }
+
+    public static <T extends AbstractEntity<?>> BiPredicate<Pattern, T> matchByPropPredicate(final String propNameToMatchBy) {
+        return matchByAnyPropPredicate(Set.of(propNameToMatchBy));
+    }
+
+    public static <T extends AbstractEntity<?>> BiPredicate<Pattern, T> matchByAnyPropPredicate(final Set<String> propNamesToMatchBy) {
+        return (pattern, entity) -> {
+            return propNamesToMatchBy.stream()
+                    .map(entity::get)
+                    .filter(Objects::nonNull)
+                    .anyMatch(value -> pattern.matcher(value.toString().toUpperCase()).find());
+        };
     }
 
 }

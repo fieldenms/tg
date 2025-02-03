@@ -1,17 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
-import static ua.com.fielden.platform.error.Result.failure;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-
-import org.joda.time.DateTime;
-
 import com.google.inject.Inject;
-
+import org.joda.time.DateTime;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.ICanAttach;
 import ua.com.fielden.platform.continuation.NeedMoreData;
@@ -24,6 +14,14 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.observables.TgPersistentEntityWithPropertiesChangeSubject;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
+import static ua.com.fielden.platform.error.Result.failure;
 
 /**
  * DAO implementation for companion object {@link ITgPersistentEntityWithProperties}.
@@ -153,6 +151,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 //                .with("status")
                 .with("critOnlyEntityProp")
                 .with("compositeProp", "compositeProp.desc")
+                .with("compProp")
                 // .with("producerInitProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key")
                 .with("producerInitProp.completed", "status.key", "status.desc")
                 .with("colourProp", "hyperlinkProp")

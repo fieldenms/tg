@@ -1,3 +1,6 @@
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { Base } from '../polymer/polymer-legacy.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,8 +11,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { Base } from "../polymer/polymer-legacy.js";
+
 /*
 iron-request can be used to perform XMLHttpRequests.
 
@@ -17,13 +19,13 @@ iron-request can be used to perform XMLHttpRequests.
     ...
     this.$.xhr.send({url: url, body: params});
 */
-
 Polymer({
   is: 'iron-request',
-  hostAttributes: {
-    hidden: true
-  },
+
+  hostAttributes: {hidden: true},
+
   properties: {
+
     /**
      * A reference to the XMLHttpRequest instance used to generate the
      * network request.
@@ -34,7 +36,7 @@ Polymer({
       type: Object,
       notify: true,
       readOnly: true,
-      value: function () {
+      value: function() {
         return new XMLHttpRequest();
       }
     },
@@ -50,7 +52,7 @@ Polymer({
       type: Object,
       notify: true,
       readOnly: true,
-      value: function () {
+      value: function() {
         return null;
       }
     },
@@ -58,22 +60,12 @@ Polymer({
     /**
      * A reference to the status code, if the `xhr` has completely resolved.
      */
-    status: {
-      type: Number,
-      notify: true,
-      readOnly: true,
-      value: 0
-    },
+    status: {type: Number, notify: true, readOnly: true, value: 0},
 
     /**
      * A reference to the status text, if the `xhr` has completely resolved.
      */
-    statusText: {
-      type: String,
-      notify: true,
-      readOnly: true,
-      value: ''
-    },
+    statusText: {type: String, notify: true, readOnly: true, value: ''},
 
     /**
      * A promise that resolves when the `xhr` response comes back, or rejects
@@ -90,8 +82,8 @@ Polymer({
       type: Object,
       readOnly: true,
       notify: true,
-      value: function () {
-        return new Promise(function (resolve, reject) {
+      value: function() {
+        return new Promise(function(resolve, reject) {
           this.resolveCompletes = resolve;
           this.rejectCompletes = reject;
         }.bind(this));
@@ -108,7 +100,7 @@ Polymer({
       type: Object,
       notify: true,
       readOnly: true,
-      value: function () {
+      value: function() {
         return {};
       }
     },
@@ -120,29 +112,19 @@ Polymer({
       type: Boolean,
       notify: true,
       readOnly: true,
-      value: false
+      value: false,
     },
 
     /**
      * Errored will be true if the browser fired an error event from the
      * XHR object (mainly network errors).
      */
-    errored: {
-      type: Boolean,
-      notify: true,
-      readOnly: true,
-      value: false
-    },
+    errored: {type: Boolean, notify: true, readOnly: true, value: false},
 
     /**
      * TimedOut will be true if the XHR threw a timeout event.
      */
-    timedOut: {
-      type: Boolean,
-      notify: true,
-      readOnly: true,
-      value: false
-    }
+    timedOut: {type: Boolean, notify: true, readOnly: true, value: false}
   },
 
   /**
@@ -159,11 +141,11 @@ Polymer({
     if (this.errored || this.aborted || this.timedOut) {
       return false;
     }
+    var status = this.xhr.status || 0;
 
-    var status = this.xhr.status || 0; // Note: if we are using the file:// protocol, the status code will be 0
+    // Note: if we are using the file:// protocol, the status code will be 0
     // for all outcomes (successful or otherwise).
-
-    return status === 0 || status >= 200 && status < 300;
+    return status === 0 || (status >= 200 && status < 300);
   },
 
   /**
@@ -199,80 +181,70 @@ Polymer({
    * promise rejections.
    * @return {Promise}
    */
-  send: function (options) {
+  send: function(options) {
     var xhr = this.xhr;
 
     if (xhr.readyState > 0) {
       return null;
     }
 
-    xhr.addEventListener('progress', function (progress) {
+    xhr.addEventListener('progress', function(progress) {
       this._setProgress({
         lengthComputable: progress.lengthComputable,
         loaded: progress.loaded,
         total: progress.total
-      }); // Webcomponents v1 spec does not fire *-changed events when not connected
-
-
-      this.fire('iron-request-progress-changed', {
-        value: this.progress
       });
+
+      // Webcomponents v1 spec does not fire *-changed events when not connected
+      this.fire('iron-request-progress-changed', {value: this.progress});
     }.bind(this));
-    xhr.addEventListener('error', function (error) {
+
+    xhr.addEventListener('error', function(error) {
       this._setErrored(true);
-
       this._updateStatus();
-
-      var response = options.rejectWithRequest ? {
-        error: error,
-        request: this
-      } : error;
+      var response =
+          options.rejectWithRequest ? {error: error, request: this} : error;
       this.rejectCompletes(response);
     }.bind(this));
-    xhr.addEventListener('timeout', function (error) {
+
+    xhr.addEventListener('timeout', function(error) {
       this._setTimedOut(true);
-
       this._updateStatus();
-
-      var response = options.rejectWithRequest ? {
-        error: error,
-        request: this
-      } : error;
+      var response =
+          options.rejectWithRequest ? {error: error, request: this} : error;
       this.rejectCompletes(response);
     }.bind(this));
-    xhr.addEventListener('abort', function () {
+
+    xhr.addEventListener('abort', function() {
       this._setAborted(true);
-
       this._updateStatus();
-
       var error = new Error('Request aborted.');
-      var response = options.rejectWithRequest ? {
-        error: error,
-        request: this
-      } : error;
+      var response =
+          options.rejectWithRequest ? {error: error, request: this} : error;
       this.rejectCompletes(response);
-    }.bind(this)); // Called after all of the above.
+    }.bind(this));
 
-    xhr.addEventListener('loadend', function () {
+    // Called after all of the above.
+    xhr.addEventListener('loadend', function() {
       this._updateStatus();
-
       this._setResponse(this.parseResponse());
 
       if (!this.succeeded) {
-        var error = new Error('The request failed with status code: ' + this.xhr.status);
-        var response = options.rejectWithRequest ? {
-          error: error,
-          request: this
-        } : error;
+        var error = new Error(
+            'The request failed with status code: ' + this.xhr.status);
+        var response =
+            options.rejectWithRequest ? {error: error, request: this} : error;
         this.rejectCompletes(response);
         return;
       }
 
       this.resolveCompletes(this);
     }.bind(this));
+
     this.url = options.url;
     var isXHRAsync = options.async !== false;
     xhr.open(options.method || 'GET', options.url, isXHRAsync);
+
     var acceptType = {
       'json': 'application/json',
       'text': 'text/plain',
@@ -282,38 +254,37 @@ Polymer({
     }[options.handleAs];
     var headers = options.headers || Object.create(null);
     var newHeaders = Object.create(null);
-
     for (var key in headers) {
       newHeaders[key.toLowerCase()] = headers[key];
     }
-
     headers = newHeaders;
 
     if (acceptType && !headers['accept']) {
       headers['accept'] = acceptType;
     }
-
-    Object.keys(headers).forEach(function (requestHeader) {
+    Object.keys(headers).forEach(function(requestHeader) {
       if (/[A-Z]/.test(requestHeader)) {
         Base._error('Headers must be lower case, got', requestHeader);
       }
-
       xhr.setRequestHeader(requestHeader, headers[requestHeader]);
     }, this);
 
     if (isXHRAsync) {
       xhr.timeout = options.timeout;
-      var handleAs = options.handleAs; // If a JSON prefix is present, the responseType must be 'text' or the
-      // browser won’t be able to parse the response.
 
+      var handleAs = options.handleAs;
+
+      // If a JSON prefix is present, the responseType must be 'text' or the
+      // browser won’t be able to parse the response.
       if (!!options.jsonPrefix || !handleAs) {
         handleAs = 'text';
-      } // In IE, `xhr.responseType` is an empty string when the response
+      }
+
+      // In IE, `xhr.responseType` is an empty string when the response
       // returns. Hence, caching it as `xhr._responseType`.
+      xhr.responseType = xhr._responseType = handleAs;
 
-
-      xhr.responseType = xhr._responseType = handleAs; // Cache the JSON prefix, if it exists.
-
+      // Cache the JSON prefix, if it exists.
       if (!!options.jsonPrefix) {
         xhr._jsonPrefix = options.jsonPrefix;
       }
@@ -321,14 +292,16 @@ Polymer({
 
     xhr.withCredentials = !!options.withCredentials;
 
+
     var body = this._encodeBodyObject(options.body, headers['content-type']);
 
     xhr.send(
-    /**
-       @type {ArrayBuffer|ArrayBufferView|Blob|Document|FormData|
-               null|string|undefined}
-     */
-    body);
+        /**
+           @type {ArrayBuffer|ArrayBufferView|Blob|Document|FormData|
+                   null|string|undefined}
+         */
+        (body));
+
     return this.completes;
   },
 
@@ -340,11 +313,11 @@ Polymer({
    * @return {*} The parsed response,
    * or undefined if there was an empty response or parsing failed.
    */
-  parseResponse: function () {
+  parseResponse: function() {
     var xhr = this.xhr;
     var responseType = xhr.responseType || xhr._responseType;
     var preferResponseText = !this.xhr.responseType;
-    var prefixLen = xhr._jsonPrefix && xhr._jsonPrefix.length || 0;
+    var prefixLen = (xhr._jsonPrefix && xhr._jsonPrefix.length) || 0;
 
     try {
       switch (responseType) {
@@ -367,33 +340,28 @@ Polymer({
           }
 
           return xhr.response;
-
         case 'xml':
           return xhr.responseXML;
-
         case 'blob':
         case 'document':
         case 'arraybuffer':
           return xhr.response;
-
         case 'text':
-        default:
-          {
-            // If `prefixLen` is set, it implies the response should be parsed
-            // as JSON once the prefix of length `prefixLen` is stripped from
-            // it. Emulate the behavior above where null is returned on failure
-            // to parse.
-            if (prefixLen) {
-              try {
-                return JSON.parse(xhr.responseText.substring(prefixLen));
-              } catch (_) {
-                console.warn('Failed to parse JSON sent from ' + xhr.responseURL);
-                return null;
-              }
+        default: {
+          // If `prefixLen` is set, it implies the response should be parsed
+          // as JSON once the prefix of length `prefixLen` is stripped from
+          // it. Emulate the behavior above where null is returned on failure
+          // to parse.
+          if (prefixLen) {
+            try {
+              return JSON.parse(xhr.responseText.substring(prefixLen));
+            } catch (_) {
+              console.warn('Failed to parse JSON sent from ' + xhr.responseURL);
+              return null;
             }
-
-            return xhr.responseText;
           }
+          return xhr.responseText;
+        }
       }
     } catch (e) {
       this.rejectCompletes(new Error('Could not parse response. ' + e.message));
@@ -403,9 +371,8 @@ Polymer({
   /**
    * Aborts the request.
    */
-  abort: function () {
+  abort: function() {
     this._setAborted(true);
-
     this.xhr.abort();
   },
 
@@ -416,23 +383,17 @@ Polymer({
    * @return {*} Either the encoded body as a string, if successful,
    *     or the unaltered body object if no encoding could be inferred.
    */
-  _encodeBodyObject: function (body, contentType) {
+  _encodeBodyObject: function(body, contentType) {
     if (typeof body == 'string') {
-      return body; // Already encoded.
+      return body;  // Already encoded.
     }
-
-    var bodyObj =
-    /** @type {Object} */
-    body;
-
+    var bodyObj = /** @type {Object} */ (body);
     switch (contentType) {
-      case 'application/json':
+      case ('application/json'):
         return JSON.stringify(bodyObj);
-
-      case 'application/x-www-form-urlencoded':
+      case ('application/x-www-form-urlencoded'):
         return this._wwwFormUrlEncode(bodyObj);
     }
-
     return body;
   },
 
@@ -440,16 +401,17 @@ Polymer({
    * @param {Object} object The object to encode as x-www-form-urlencoded.
    * @return {string} .
    */
-  _wwwFormUrlEncode: function (object) {
+  _wwwFormUrlEncode: function(object) {
     if (!object) {
       return '';
     }
-
     var pieces = [];
-    Object.keys(object).forEach(function (key) {
+    Object.keys(object).forEach(function(key) {
       // TODO(rictic): handle array values here, in a consistent way with
       //   iron-ajax params.
-      pieces.push(this._wwwFormUrlEncodePiece(key) + '=' + this._wwwFormUrlEncodePiece(object[key]));
+      pieces.push(
+          this._wwwFormUrlEncodePiece(key) + '=' +
+          this._wwwFormUrlEncodePiece(object[key]));
     }, this);
     return pieces.join('&');
   },
@@ -458,22 +420,23 @@ Polymer({
    * @param {*} str A key or value to encode as x-www-form-urlencoded.
    * @return {string} .
    */
-  _wwwFormUrlEncodePiece: function (str) {
+  _wwwFormUrlEncodePiece: function(str) {
     // Spec says to normalize newlines to \r\n and replace %20 spaces with +.
     // jQuery does this as well, so this is likely to be widely compatible.
     if (str === null || str === undefined || !str.toString) {
       return '';
     }
 
-    return encodeURIComponent(str.toString().replace(/\r?\n/g, '\r\n')).replace(/%20/g, '+');
+    return encodeURIComponent(str.toString().replace(/\r?\n/g, '\r\n'))
+        .replace(/%20/g, '+');
   },
 
   /**
    * Updates the status code and status text.
    */
-  _updateStatus: function () {
+  _updateStatus: function() {
     this._setStatus(this.xhr.status);
-
-    this._setStatusText(this.xhr.statusText === undefined ? '' : this.xhr.statusText);
+    this._setStatusText(
+        (this.xhr.statusText === undefined) ? '' : this.xhr.statusText);
   }
 });

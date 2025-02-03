@@ -1,29 +1,25 @@
 package ua.com.fielden.platform.ref_hierarchy;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.NoKey;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.NoKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.EntityTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
-import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
 /**
- * Functional entity for reference hierarchy master component, used as a transport between reference hierarchy master and server. Server receives data that is used to determine next sub hierarchy to load and returns it to the client.
+ * Functional entity for representing a reference hierarchy master component, used as transport between reference hierarchy master and server.
+ * The server receives the data used to determine the next sub-hierarchy to load and returns it to the client.
  *
  * @author TG Team
  *
@@ -51,24 +47,28 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     @Title(value = "Reference Hierarchy Filter", desc = "Text to match entity types or entity instances")
     private String referenceHierarchyFilter;
 
+    @IsProperty
+    @Title(value = "Active dependencies only?", desc = "Check to show only active dependencies in “Referenced By” that prevent entity deactivation.")
+    private boolean activeOnly;
+
     @IsProperty(AbstractEntity.class)
     @Title(value = "Generated Hierarchy", desc = "Generated type or instance level of hierarchy")
-    private List<AbstractEntity<?>> generatedHierarchy = new ArrayList<>();
+    private final List<AbstractEntity<?>> generatedHierarchy = new ArrayList<>();
 
     @IsProperty(Long.class)
-    @Title(value = "Loaded hiererchy", desc = "The indexes of tree items on each level where returned hieararchy should be inserted")
-    private List<Long> loadedHierarchy = new ArrayList<>();
+    @Title(value = "Loaded hierarchy", desc = "The indexes of the tree items at each level where returned reference data should be inserted.")
+    private final List<Long> loadedHierarchy = new ArrayList<>();
 
     @IsProperty
-    @Title(value = "Page Size", desc = "Page size of inctances to load")
+    @Title(value = "Page Size", desc = "The page size of instances to load.")
     private Integer pageSize;
 
     @IsProperty
-    @Title(value = "Page Number", desc = "Page number of instances to load")
+    @Title(value = "Page Number", desc = "The page number of instances to load.")
     private Integer pageNumber;
 
     @IsProperty
-    @Title(value = "Page Count", desc = "The data page count")
+    @Title(value = "Page Count", desc = "The count of data pages.")
     private Integer pageCount;
 
     @IsProperty
@@ -94,8 +94,7 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     }
 
     public ReferenceHierarchy setLoadedHierarchyLevel(final ReferenceHierarchyLevel level) {
-        setLoadedLevel(level.name());
-        return this;
+        return setLoadedLevel(level.name());
     }
 
     public ReferenceHierarchyLevel getLoadedHierarchyLevel() {
@@ -176,6 +175,16 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
 
     public ReferenceHierarchy() {
         setKey(NO_KEY);
+    }
+
+    public boolean isActiveOnly() {
+        return activeOnly;
+    }
+
+    @Observable
+    public ReferenceHierarchy setActiveOnly(final boolean activeOnly) {
+        this.activeOnly = activeOnly;
+        return this;
     }
 
     @Observable

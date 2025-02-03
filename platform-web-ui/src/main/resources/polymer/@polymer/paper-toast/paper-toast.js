@@ -1,3 +1,9 @@
+import { IronA11yAnnouncer } from '../iron-a11y-announcer/iron-a11y-announcer.js';
+import { IronOverlayBehavior, IronOverlayBehaviorImpl } from '../iron-overlay-behavior/iron-overlay-behavior.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+import { Base } from '../polymer/polymer-legacy.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,13 +14,10 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import { IronA11yAnnouncer } from "../iron-a11y-announcer/iron-a11y-announcer.js";
-import { IronOverlayBehavior, IronOverlayBehaviorImpl } from "../iron-overlay-behavior/iron-overlay-behavior.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
-import { Base } from "../polymer/polymer-legacy.js"; // Keeps track of the toast currently opened.
 
+// Keeps track of the toast currently opened.
 var currentToast = null;
+
 /**
 Material design: [Snackbars &
 toasts](https://www.google.com/design/spec/components/snackbars-toasts.html)
@@ -68,7 +71,6 @@ element, make sure you've imported `paper-styles/typography.html`.
 @demo demo/index.html
 @hero hero.svg
 */
-
 Polymer({
   _template: html`
     <style>
@@ -115,79 +117,58 @@ Polymer({
     <span id="label">{{text}}</span>
     <slot></slot>
 `,
+
   is: 'paper-toast',
   behaviors: [IronOverlayBehavior],
+
   properties: {
     /**
      * The element to fit `this` into.
      * Overridden from `Polymer.IronFitBehavior`.
      */
-    fitInto: {
-      type: Object,
-      value: window,
-      observer: '_onFitIntoChanged'
-    },
+    fitInto: {type: Object, value: window, observer: '_onFitIntoChanged'},
 
     /**
      * The orientation against which to align the dropdown content
      * horizontally relative to `positionTarget`.
      * Overridden from `Polymer.IronFitBehavior`.
      */
-    horizontalAlign: {
-      type: String,
-      value: 'left'
-    },
+    horizontalAlign: {type: String, value: 'left'},
 
     /**
      * The orientation against which to align the dropdown content
      * vertically relative to `positionTarget`.
      * Overridden from `Polymer.IronFitBehavior`.
      */
-    verticalAlign: {
-      type: String,
-      value: 'bottom'
-    },
+    verticalAlign: {type: String, value: 'bottom'},
 
     /**
      * The duration in milliseconds to show the toast.
      * Set to `0`, a negative number, or `Infinity`, to disable the
      * toast auto-closing.
      */
-    duration: {
-      type: Number,
-      value: 3000
-    },
+    duration: {type: Number, value: 3000},
 
     /**
      * The text to display in the toast.
      */
-    text: {
-      type: String,
-      value: ''
-    },
+    text: {type: String, value: ''},
 
     /**
      * Overridden from `IronOverlayBehavior`.
      * Set to false to enable closing of the toast by clicking outside it.
      */
-    noCancelOnOutsideClick: {
-      type: Boolean,
-      value: true
-    },
+    noCancelOnOutsideClick: {type: Boolean, value: true},
 
     /**
      * Overridden from `IronOverlayBehavior`.
      * Set to true to disable auto-focusing the toast or child nodes with
      * the `autofocus` attribute` when the overlay is opened.
      */
-    noAutoFocus: {
-      type: Boolean,
-      value: true
-    }
+    noAutoFocus: {type: Boolean, value: true}
   },
-  listeners: {
-    'transitionend': '__onTransitionEnd'
-  },
+
+  listeners: {'transitionend': '__onTransitionEnd'},
 
   /**
    * Read-only. Deprecated. Use `opened` from `IronOverlayBehavior`.
@@ -196,7 +177,6 @@ Polymer({
    */
   get visible() {
     Base._warn('`visible` is deprecated, use `opened` instead');
-
     return this.opened;
   },
 
@@ -208,7 +188,7 @@ Polymer({
     return this.duration > 0 && this.duration !== Infinity;
   },
 
-  created: function () {
+  created: function() {
     this._autoClose = null;
     IronA11yAnnouncer.requestAvailability();
   },
@@ -219,30 +199,27 @@ Polymer({
    * @param {(Object|string)=} properties Properties to be set before opening the toast.
    * e.g. `toast.show('hello')` or `toast.show({text: 'hello', duration: 3000})`
    */
-  show: function (properties) {
+  show: function(properties) {
     if (typeof properties == 'string') {
-      properties = {
-        text: properties
-      };
+      properties = {text: properties};
     }
-
     for (var property in properties) {
       if (property.indexOf('_') === 0) {
-        Base._warn('The property "' + property + '" is private and was not set.');
+        Base._warn(
+            'The property "' + property + '" is private and was not set.');
       } else if (property in this) {
         this[property] = properties[property];
       } else {
         Base._warn('The property "' + property + '" is not valid.');
       }
     }
-
     this.open();
   },
 
   /**
    * Hide the toast. Same as `close()` from `IronOverlayBehavior`.
    */
-  hide: function () {
+  hide: function() {
     this.close();
   },
 
@@ -250,7 +227,7 @@ Polymer({
    * Called on transitions of the toast, indicating a finished animation
    * @private
    */
-  __onTransitionEnd: function (e) {
+  __onTransitionEnd: function(e) {
     // there are different transitions that are happening when opening and
     // closing the toast. The last one so far is for `opacity`.
     // This marks the end of the transition, so we check for this to determine
@@ -268,57 +245,51 @@ Polymer({
    * Overridden from `IronOverlayBehavior`.
    * Called when the value of `opened` changes.
    */
-  _openedChanged: function () {
+  _openedChanged: function() {
     if (this._autoClose !== null) {
       this.cancelAsync(this._autoClose);
       this._autoClose = null;
     }
-
     if (this.opened) {
       if (currentToast && currentToast !== this) {
         currentToast.close();
       }
-
       currentToast = this;
-      this.fire('iron-announce', {
-        text: this.text
-      });
-
+      this.fire('iron-announce', {text: this.text});
       if (this._canAutoClose) {
         this._autoClose = this.async(this.close, this.duration);
       }
     } else if (currentToast === this) {
       currentToast = null;
     }
-
     IronOverlayBehaviorImpl._openedChanged.apply(this, arguments);
   },
 
   /**
    * Overridden from `IronOverlayBehavior`.
    */
-  _renderOpened: function () {
+  _renderOpened: function() {
     this.classList.add('paper-toast-open');
   },
 
   /**
    * Overridden from `IronOverlayBehavior`.
    */
-  _renderClosed: function () {
+  _renderClosed: function() {
     this.classList.remove('paper-toast-open');
   },
 
   /**
    * @private
    */
-  _onFitIntoChanged: function (fitInto) {
+  _onFitIntoChanged: function(fitInto) {
     this.positionTarget = fitInto;
   }
+
   /**
    * Fired when `paper-toast` is opened.
    *
    * @event 'iron-announce'
    * @param {{text: string}} detail Contains text that will be announced.
    */
-
 });

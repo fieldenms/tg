@@ -1,4 +1,3 @@
-'use strict';
 /* globals Symbol: false, Uint8Array: false, WeakMap: false */
 /*!
  * deep-eql
@@ -6,16 +5,33 @@
  * MIT Licensed
  */
 
-var type = require('type-detect');
+function type(obj) {
+  if (typeof obj === 'undefined') {
+    return 'undefined';
+  }
+
+  if (obj === null) {
+    return 'null';
+  }
+
+  const stringTag = obj[Symbol.toStringTag];
+  if (typeof stringTag === 'string') {
+    return stringTag;
+  }
+  const sliceStart = 8;
+  const sliceEnd = -1;
+  return Object.prototype.toString.call(obj).slice(sliceStart, sliceEnd);
+}
+
 function FakeMap() {
   this._key = 'chai/deep-eql__' + Math.random() + Date.now();
 }
 
 FakeMap.prototype = {
-  get: function getMap(key) {
+  get: function get(key) {
     return key[this._key];
   },
-  set: function setMap(key, value) {
+  set: function set(key, value) {
     if (Object.isExtensible(key)) {
       Object.defineProperty(key, this._key, {
         value: value,
@@ -25,7 +41,7 @@ FakeMap.prototype = {
   },
 };
 
-var MemoizeMap = typeof WeakMap === 'function' ? WeakMap : FakeMap;
+export var MemoizeMap = typeof WeakMap === 'function' ? WeakMap : FakeMap;
 /*!
  * Check to see if the MemoizeMap has recorded a result of the two operands
  *
@@ -76,8 +92,7 @@ function memoizeSet(leftHandOperand, rightHandOperand, memoizeMap, result) {
  * Primary Export
  */
 
-module.exports = deepEqual;
-module.exports.MemoizeMap = MemoizeMap;
+export default deepEqual;
 
 /**
  * Assert deeply nested sameValue equality between two objects of any type.
@@ -207,8 +222,9 @@ function extensiveDeepEqualByType(leftHandOperand, rightHandOperand, leftHandTyp
     case 'function':
     case 'WeakMap':
     case 'WeakSet':
-    case 'Error':
       return leftHandOperand === rightHandOperand;
+    case 'Error':
+      return keysEqual(leftHandOperand, rightHandOperand, [ 'name', 'message', 'code' ], options);
     case 'Arguments':
     case 'Int8Array':
     case 'Uint8Array':
@@ -233,6 +249,19 @@ function extensiveDeepEqualByType(leftHandOperand, rightHandOperand, leftHandTyp
       return entriesEqual(leftHandOperand, rightHandOperand, options);
     case 'Map':
       return entriesEqual(leftHandOperand, rightHandOperand, options);
+    case 'Temporal.PlainDate':
+    case 'Temporal.PlainTime':
+    case 'Temporal.PlainDateTime':
+    case 'Temporal.Instant':
+    case 'Temporal.ZonedDateTime':
+    case 'Temporal.PlainYearMonth':
+    case 'Temporal.PlainMonthDay':
+      return leftHandOperand.equals(rightHandOperand);
+    case 'Temporal.Duration':
+      return leftHandOperand.total('nanoseconds') === rightHandOperand.total('nanoseconds');
+    case 'Temporal.TimeZone':
+    case 'Temporal.Calendar':
+      return leftHandOperand.toString() === rightHandOperand.toString();
     default:
       return objectEqual(leftHandOperand, rightHandOperand, options);
   }
@@ -260,12 +289,17 @@ function regexpEqual(leftHandOperand, rightHandOperand) {
  */
 
 function entriesEqual(leftHandOperand, rightHandOperand, options) {
-  // IE11 doesn't support Set#entries or Set#@@iterator, so we need manually populate using Set#forEach
-  if (leftHandOperand.size !== rightHandOperand.size) {
+  try {
+    // IE11 doesn't support Set#entries or Set#@@iterator, so we need manually populate using Set#forEach
+    if (leftHandOperand.size !== rightHandOperand.size) {
+      return false;
+    }
+    if (leftHandOperand.size === 0) {
+      return true;
+    }
+  } catch (sizeError) {
+    // things that aren't actual Maps or Sets will throw here
     return false;
-  }
-  if (leftHandOperand.size === 0) {
-    return true;
   }
   var leftHandItems = [];
   var rightHandItems = [];
@@ -378,6 +412,18 @@ function getEnumerableKeys(target) {
   return keys;
 }
 
+function getEnumerableSymbols(target) {
+  var keys = [];
+  var allKeys = Object.getOwnPropertySymbols(target);
+  for (var i = 0; i < allKeys.length; i += 1) {
+    var key = allKeys[i];
+    if (Object.getOwnPropertyDescriptor(target, key).enumerable) {
+      keys.push(key);
+    }
+  }
+  return keys;
+}
+
 /*!
  * Determines if two objects have matching values, given a set of keys. Defers to deepEqual for the equality check of
  * each key. If any value of the given key is not equal, the function will return false (early).
@@ -410,14 +456,16 @@ function keysEqual(leftHandOperand, rightHandOperand, keys, options) {
  * @param {Object} [options] (Optional)
  * @return {Boolean} result
  */
-
 function objectEqual(leftHandOperand, rightHandOperand, options) {
   var leftHandKeys = getEnumerableKeys(leftHandOperand);
   var rightHandKeys = getEnumerableKeys(rightHandOperand);
+  var leftHandSymbols = getEnumerableSymbols(leftHandOperand);
+  var rightHandSymbols = getEnumerableSymbols(rightHandOperand);
+  leftHandKeys = leftHandKeys.concat(leftHandSymbols);
+  rightHandKeys = rightHandKeys.concat(rightHandSymbols);
+
   if (leftHandKeys.length && leftHandKeys.length === rightHandKeys.length) {
-    leftHandKeys.sort();
-    rightHandKeys.sort();
-    if (iterableEqual(leftHandKeys, rightHandKeys) === false) {
+    if (iterableEqual(mapSymbols(leftHandKeys).sort(), mapSymbols(rightHandKeys).sort()) === false) {
       return false;
     }
     return keysEqual(leftHandOperand, rightHandOperand, leftHandKeys, options);
@@ -452,4 +500,14 @@ function objectEqual(leftHandOperand, rightHandOperand, options) {
  */
 function isPrimitive(value) {
   return value === null || typeof value !== 'object';
+}
+
+function mapSymbols(arr) {
+  return arr.map(function mapSymbol(entry) {
+    if (typeof entry === 'symbol') {
+      return entry.toString();
+    }
+
+    return entry;
+  });
 }

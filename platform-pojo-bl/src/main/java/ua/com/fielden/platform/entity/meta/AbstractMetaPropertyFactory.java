@@ -21,9 +21,9 @@ import ua.com.fielden.platform.utils.StringConverter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -47,14 +47,14 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final FinalValidator[] persistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(true, false)};
     protected final FinalValidator[] persistedOnlyAndNullIsValueFinalValidator = new FinalValidator[]{new FinalValidator(true, true)};
     protected final Cache<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = CacheBuilder.newBuilder().weakKeys().initialCapacity(300).concurrencyLevel(50).build();
-    protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new HashMap<>();
-    protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new HashMap<>();
-    protected final Map<Integer, MaxValueValidator> maxValueValidators = new HashMap<>();
-    protected final Map<Class<?>, Map<String, GePropertyValidator<?>>> geRangeValidators = new HashMap<>();
-    protected final Map<Class<?>, Map<String, LePropertyValidator<?>>> leRangeValidators = new HashMap<>();
+    protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new ConcurrentHashMap<>();
+    protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new ConcurrentHashMap<>();
+    protected final Map<Integer, MaxValueValidator> maxValueValidators = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, Map<String, GePropertyValidator>> geRangeValidators = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, Map<String, LePropertyValidator>> leRangeValidators = new ConcurrentHashMap<>();
     // type, property, array of handlers
-    protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = new HashMap<>();
-    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = new HashMap<>();
+    protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = new ConcurrentHashMap<>();
 
     // *** INJECTABLE FIELDS
     private Injector injector;
@@ -445,9 +445,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
                                                                    final Class<?> upperBoundaryPropertyType,
                                                                    final String[] lowerBoundaryProperties) {
         return geRangeValidators
-                .computeIfAbsent(entity.getType(), key -> new HashMap<>())
+                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
                 .computeIfAbsent(upperBoundaryProperty,
-                                 key -> new GePropertyValidator<>(lowerBoundaryProperties,
+                           key -> new GePropertyValidator<>(lowerBoundaryProperties,
                                                                   injector.getInstance(RangeValidatorFunction.forPropertyType(upperBoundaryPropertyType))));
     }
 
@@ -456,10 +456,11 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
                                                                    final Class<?> lowerBoundaryPropertyType,
                                                                    final String[] upperBoundaryProperties) {
         return leRangeValidators
-                .computeIfAbsent(entity.getType(), key -> new HashMap<>())
+                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
                 .computeIfAbsent(lowerBoundaryProperty,
-                                 key -> new LePropertyValidator<>(upperBoundaryProperties,
+                           key -> new LePropertyValidator<>(upperBoundaryProperties,
                                                                   injector.getInstance(RangeValidatorFunction.forPropertyType(lowerBoundaryPropertyType))));
+
 
     }
 
@@ -489,7 +490,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         final Class<?> type = entity.getType();
         Map<String, IAfterChangeEventHandler<?>> typeHandlers = afterChangeEventHandlers.get(type);
         if (typeHandlers == null) {
-            typeHandlers = new HashMap<>();
+            typeHandlers = new ConcurrentHashMap<>();
             afterChangeEventHandlers.put(entity.getType(), typeHandlers);
         }
         IAfterChangeEventHandler<?> propHandler = typeHandlers.get(propertyName);

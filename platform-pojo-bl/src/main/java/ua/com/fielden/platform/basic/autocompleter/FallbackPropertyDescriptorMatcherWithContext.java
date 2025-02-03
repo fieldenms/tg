@@ -18,9 +18,9 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 public class FallbackPropertyDescriptorMatcherWithContext<CONTEXT extends AbstractEntity<?>, T extends AbstractEntity<?>> extends AbstractSearchPropertyDescriptorByKeyWithContext<CONTEXT, T> {
 
     /**
-     * Creates fallback matcher for {@link PropertyDescriptor}s using enclosing entity type.
+     * Creates fallback matcher for {@link PropertyDescriptor}s using an enclosing entity type.
      * 
-     * @param enclosingEntityType
+     * @param enclosingEntityType  an entity for which property definitions are obtained.
      */
     public FallbackPropertyDescriptorMatcherWithContext(final Class<T> enclosingEntityType) {
         super(enclosingEntityType);
