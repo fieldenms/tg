@@ -98,7 +98,7 @@ final class JavaPoet {
     }
 
     public static Optional<CodeBlock> annotationMember(final AnnotationSpec annotSpec, final String memberName) {
-        return Optional.of(annotSpec.members.get(memberName)).map(List::getFirst);
+        return Optional.ofNullable(annotSpec.members.get(memberName)).map(List::getFirst);
     }
 
     /**
