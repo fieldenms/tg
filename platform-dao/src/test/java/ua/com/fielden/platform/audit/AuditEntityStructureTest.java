@@ -15,11 +15,9 @@ import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
-import static ua.com.fielden.platform.audit.AbstractAuditEntity.CHANGED_PROPS;
 import static ua.com.fielden.platform.audit.AuditEntityGenerator.NON_AUDITED_PROPERTIES;
 import static ua.com.fielden.platform.audit.AuditUtils.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
@@ -78,7 +76,6 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
                 .add(new Prop(ID, Long.class, PERSISTENT))
                 .add(new Prop(VERSION, Long.class, PERSISTENT))
                 .add(new Prop(AUDITED_ENTITY, TgVehicle.class, PERSISTENT))
-                .add(new Prop(CHANGED_PROPS, newParameterizedType(Set.class, tgVehicleAuditPropType), PLAIN))
                 .addAll(persistentPropertiesOfTgVehicle.stream()
                                 .filter(pm -> !NON_AUDITED_PROPERTIES.contains(pm.name()))
                                 .map(pm -> new Prop(AuditUtils.auditPropertyName(pm.name()), pm.type().genericJavaType(), PERSISTENT))

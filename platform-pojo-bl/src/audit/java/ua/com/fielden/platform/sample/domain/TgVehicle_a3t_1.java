@@ -2,10 +2,8 @@ package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
@@ -46,13 +44,6 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
   @SkipEntityExistsValidation
   @IsProperty
   private TgVehicle auditedEntity;
-
-  @Title(
-      value = "Changed Properties",
-      desc = "Properties changed as part of the audit event."
-  )
-  @IsProperty(TgVehicle_a3t_1_Prop.class)
-  private final Set<TgVehicle_a3t_1_Prop> changedProps = new HashSet<>();
 
   @IsProperty
   @MapTo("A3T_KEY")
@@ -166,17 +157,6 @@ public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
   @Observable
   public TgVehicle_a3t_1 setAuditedEntity(final TgVehicle auditedEntity) {
     this.auditedEntity = auditedEntity;
-    return this;
-  }
-
-  public Set<TgVehicle_a3t_1_Prop> getChangedProps() {
-    return Collections.unmodifiableSet(this.changedProps);
-  }
-
-  @Observable
-  public TgVehicle_a3t_1 setChangedProps(final Set<TgVehicle_a3t_1_Prop> changedProps) {
-    this.changedProps.clear();
-    this.changedProps.addAll(changedProps);
     return this;
   }
 

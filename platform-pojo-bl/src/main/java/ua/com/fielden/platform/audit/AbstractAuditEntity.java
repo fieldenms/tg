@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.security.user.User;
 
 import java.util.Date;
-import java.util.Set;
 
 /**
  * Base type for all audit-entity types.
@@ -15,11 +14,11 @@ import java.util.Set;
  * It is expected that an audit-entity type declares key-member property {@link #AUDITED_ENTITY} that represents a reference to the audited entity.
  * This property cannot be declared in this base type due to a limitation on using type variables in property types.
  * <p>
- * It is also expected that each audit-entity type will participate in a one-to-many association with an entity type derived
- * from {@link AbstractAuditProp}, to represent properties, values of which changed during an audit event.
- * Thus, all audit-entity types are expected to declare collectional property {@link #CHANGED_PROPS} and implement its accessor - {@link #getChangedProps()};
- * an abstract setter is not declared in this base type because there is no suitable type for the setter's parameter
- * (method types are contravariant in the parameter type).
+ * Each audit-entity type is in a one-to-many association with {@linkplain AbstractAuditProp an audit-prop type },
+ * to represent properties, values of which changed during an audit event.
+ * This association, however, is implicit -- it is not modelled via a collectional property.
+ * Instead, the union of such associations is explicitly modelled by corresponding
+ * {@linkplain AbstractSynAuditEntity synthetic audit-entity} and {@linkplain AbstractSynAuditProp audit-prop} types.
  *
  * @param <E>  type of the audited entity
  */
@@ -45,15 +44,6 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     public static final String AUDITED_ENTITY = "auditedEntity";
 
     /**
-     * Name of the property that is declared by specific audit-entity types.
-     * This property models the one-to-many relationship between an audit-entity and {@linkplain AbstractAuditProp audit-prop} entities.
-     * Its type is a {@link Set} parameterised with a corresponding audit-prop type subclassed from {@link AbstractAuditProp}.
-     * <p>
-     * For example, audit-entity {@code VehicleAudit} is expected to declare property {@code changedProps} of type {@code Set<VehicleAuditProp>}.
-     */
-    public static final String CHANGED_PROPS = "changedProps";
-
-    /**
      * The composite key order that must be specified by the {@link #AUDITED_ENTITY} property.
      */
     // Placing this property first ensures that its column comes first in the multi-column unique index that is always
@@ -69,11 +59,6 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
      * Setter for property {@link #AUDITED_ENTITY}.
      */
     public abstract AbstractAuditEntity<E> setAuditedEntity(E auditedEntity);
-
-    /**
-     * Getter for property {@link #CHANGED_PROPS}.
-     */
-    public abstract Set<? extends AbstractAuditProp<? extends AbstractAuditEntity<E>>> getChangedProps();
 
     @IsProperty
     @MapTo
