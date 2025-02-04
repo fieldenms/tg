@@ -23,8 +23,8 @@ import '/resources/components/tg-color-picker-dialog.js';
 import '/resources/images/tg-rich-text-editor-icons.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 
-/* TODO adjust filename, probably in prosemirror dependency; also how about deployment mode? */
-excludeErrors( e => e.filename && e.filename.includes("toastui-editor-all") && e.error && e.error.name === 'TransformError');
+/* TODO How about deployment mode? */
+excludeErrors( e => e.filename && e.filename.includes("prosemirror-transform/dist/index") && e.error && e.error.name === 'TransformError');
 
 /**
  * Defines plugin for fake selection. Fake selection allows to keep text look like it is selected when editor loses the focus.
