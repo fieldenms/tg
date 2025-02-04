@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-    <title>ToastUI wrapper example</title>
-    <link rel="stylesheet" href="/resources/toastui-editor/toastui-editor.min.css"/>
+
+import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import Editor from '/resources/polymer/lib/toastui-editor-lib.js';
+
+const template = html`
+    <link rel="stylesheet" href="/resources/spikes/toastui/toastui-editor.min.css"/>
     <style>
         .toastui-editor-defaultUI {
             border: none !important;
@@ -45,38 +44,38 @@
             text-decoration: underline !important;
         }
     </style>
-    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
-    <script src="/resources/polymer/web-animations-js/web-animations-next-lite.min.js"></script>
-    <!--script src="/resources/spikes/shadow-selection-polifill.js"></script-->
-    <script type="module">
-        import '/resources/spikes/plain-toastui-editor-wrapper.js';
-    </script>
-    <script type="module">
-        import '/resources/toastui-editor/toastui-editor-all.js';
-        const editor = new toastui.Editor({
-            el: document.querySelector('#editor'),
+    <div id="editor"></div>`; 
+
+class PlainToastuiEditorWrapper extends PolymerElement {
+
+    static get template() { 
+        return template;
+    }
+
+    static get properties() {
+        return {    
+            _editor: Object,
+        }
+    }
+
+    ready() {
+        super.ready();
+        this._editor = new Editor({
+            el: this.$.editor,
             height: "500px",
             initialValue: "<h1>Hello World</h1>",
             initialEditType: 'wysiwyg',
             hideModeSwitch: true,
             events: {
-                caretChange: (e) => {console.log("----basic toast ui example selection changed----", e)}
+                caretChange: this._selectionChange.bind(this)
             },
         });
-    </script>
-    <style>
-        html {
-            font-size: 10pt;
-        }
-        body {
-            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 10pt;
-        }
-    </style>
-</head>
-<body>
-    <plain-toastui-editor-wrapper></plain-toastui-editor-wrapper>
-    <hr>
-    <div id="editor"></div>
-</body>
-</html>
+    }
+
+    _selectionChange (e) {
+        console.log("----plain toast ui editor wrapper----", e);
+    }
+
+}
+
+customElements.define('plain-toastui-editor-wrapper', PlainToastuiEditorWrapper);
