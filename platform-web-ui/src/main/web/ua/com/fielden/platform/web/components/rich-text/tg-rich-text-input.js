@@ -142,9 +142,14 @@ function colorTextPlugin(context, options) {
         },
         toHTMLRenderers: {
             htmlInline: {
-                span(node, { entering }) {
-                    return entering
-                        ? { type: 'openTag', tagName: 'span', attributes: node.attrs }
+                span(node, context) {
+                    const colorStyles = node.attrs.style &&node.attrs.style.split(";")
+                        .map(styleParam => styleParam.split(":"))
+                        .filter(stylePair => stylePair[0].trim() === 'color')
+                        .map(stylePair => `${stylePair[0]}:${stylePair[1]}`)
+                        .join(";");
+                    return context.entering
+                        ? { type: 'openTag', tagName: 'span', attributes: {style: colorStyles} }
                         : { type: 'closeTag', tagName: 'span' };
                 },
             },
