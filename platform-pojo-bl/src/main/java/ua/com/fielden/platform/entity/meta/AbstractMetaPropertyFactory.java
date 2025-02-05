@@ -50,8 +50,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new ConcurrentHashMap<>();
     protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new ConcurrentHashMap<>();
     protected final Map<Integer, MaxValueValidator> maxValueValidators = new ConcurrentHashMap<>();
-    protected final Map<Class<?>, Map<String, GePropertyValidator>> geRangeValidators = new ConcurrentHashMap<>();
-    protected final Map<Class<?>, Map<String, LePropertyValidator>> leRangeValidators = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, Map<String, GePropertyValidator<?>>> geRangeValidators = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, Map<String, LePropertyValidator<?>>> leRangeValidators = new ConcurrentHashMap<>();
     // type, property, array of handlers
     protected final Map<Class<?>, Map<String, IBeforeChangeEventHandler<?>[]>> beforeChangeEventHandlers = new ConcurrentHashMap<>();
     protected final Map<Class<?>, Map<String, IAfterChangeEventHandler<?>>> afterChangeEventHandlers = new ConcurrentHashMap<>();
