@@ -216,18 +216,7 @@ final class RichTextAsHtmlCoreTextExtractor {
     }
 
     private static CoreTextBuilder formatText(final TextNode text, final CoreTextBuilder builder) {
-        if (isOnlyChild(text)) {
-            return builder.append(text.getWholeText().strip());
-        }
-        else if (isFirstChild(text)) {
-            return builder.append(text.getWholeText().stripLeading());
-        }
-        else if (isLastChild(text)) {
-            return builder.append(text.getWholeText().stripTrailing());
-        }
-        else {
-            return builder.append(text.getWholeText());
-        }
+        return builder.append(text.getWholeText());
     }
 
     /**
