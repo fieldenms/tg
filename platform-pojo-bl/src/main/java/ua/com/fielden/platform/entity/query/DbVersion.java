@@ -36,6 +36,12 @@ public enum DbVersion {
             return format("ALTER TABLE %s ALTER COLUMN %s %s %s", tableName, columnName, columnType, nullabilityString);
         }
 
+        @Override
+        public String dropIndexSql(final CharSequence indexName, final CharSequence tableName, final boolean ifExists) {
+            return format("DROP INDEX %s [%s] ON [%s]",
+                          ifExists ? "IF EXISTS" : "",
+                          indexName, tableName);
+        }
     },
     ORACLE(CaseSensitivity.SENSITIVE, " ") {
         public String idColumnName() {
@@ -102,6 +108,13 @@ public enum DbVersion {
                 case NULL -> "ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL".formatted(tableName, columnName);
                 case NOT_NULL -> "ALTER TABLE %s ALTER COLUMN %s SET NOT NULL".formatted(tableName, columnName);
             };
+        }
+
+        @Override
+        public String dropIndexSql(final CharSequence indexName, final CharSequence tableName, final boolean ifExists) {
+            return format("DROP INDEX %s %s",
+                          ifExists ? "IF EXISTS" : "",
+                          indexName);
         }
     };
 
@@ -229,6 +242,10 @@ public enum DbVersion {
      * Generates an SQL statement that deletes the specified column from the specified table.
      */
     public String deleteColumnSql(final CharSequence table, final CharSequence columnName) {
+        throw new UnsupportedOperationException(this.toString());
+    }
+
+    public String dropIndexSql(final CharSequence indexName, final CharSequence tableName, final boolean ifExists) {
         throw new UnsupportedOperationException(this.toString());
     }
 
