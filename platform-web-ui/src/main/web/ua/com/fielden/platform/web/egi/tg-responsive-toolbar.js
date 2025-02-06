@@ -55,8 +55,14 @@ const template = html`
         paper-icon-button.revers {
             transform: scale(-1, 1);
         }
+        div[disabled] {
+            pointer-events: none;
+        }
+        #expandToolbarButton {
+            pointer-events:all;
+        }
     </style>
-    <div id="toolbar" class="grid-toolbar">
+    <div id="toolbar" class="grid-toolbar" disabled$="[[disabled]]">
         <slot></slot>
         <div id="leftToolbarContainer" class="grid-toolbar-content">
             <slot id="top_action_selctor" name="entity-specific-action"></slot>
@@ -67,7 +73,7 @@ const template = html`
         </div>
     </div>
     <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8" always-on-top>
-        <div id="hiddenToolbar" class="dropdown-content" slot="dropdown-content">
+        <div id="hiddenToolbar" class="dropdown-content" slot="dropdown-content" disabled$="[[disabled]]">
             <div id="specificActionContainer"></div>
             <div id="standartActionContainer"></div>
         </div>
@@ -124,6 +130,12 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
 
     static get properties () {
         return {
+            disabled:  {
+                type: Boolean,
+                value: false,
+                reflectToAttribute: true
+
+            },
             //Points to last visible action on toolbar.
             _lastVisibleToolbarElement: Object
         };
