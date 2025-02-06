@@ -153,6 +153,43 @@
 
                 master.retrieve();
             });
+
+            test('gets failed for restricted RichText property tags', function (done) {
+                master.entityId = '216';
+                const edProperty = master.$.editor_4_richTextProp;
+
+                master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                    const oldExpectedValue = { formattedText: '<p>Rich text for entity with RICH TEXT KEY1</p>', coreText: 'Rich text for entity with RICH TEXT KEY1' };
+                    const expectedValue = { formattedText: '<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="image.png" contenteditable="false"><br></p>', coreText: '' };
+
+                    // value ok?
+                    assert.ok(validatedEntity.get('richTextProp'), 'Property value should be initialised.');
+                    assert.deepEqual(validatedEntity.get('richTextProp'), oldExpectedValue, 'Property value remain the same (validation did not succeed).');
+
+                    // value is changed?
+                    assert.strictEqual(validatedEntity.prop('richTextProp').isChangedFromOriginal(), false, 'Instance meta-prop should be NOT changedFromOriginal.');
+
+                    // value validationresult?
+                    assert.ok(validatedEntity.prop('richTextProp').validationResult(), 'Instance meta-prop should have non-empty (unsuccessful) validation result.');
+                    assert.strictEqual(validatedEntity.prop('richTextProp').validationResult().message, 'Input contains unsafe HTML:\n1. Tag [img] has violating attributes: src', 'Property has incorrect validation result message.');
+
+                    // binding value ok?
+                    assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
+                    assert.deepEqual(bindingEntity.get('richTextProp'), expectedValue, 'Binding property value should be correct.');
+
+                    done();
+                };
+
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    // ACTUAL PROPERTY CHANGE
+                    edProperty._editingValue = '<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="image.png" contenteditable="false"><br></p>';
+                    edProperty.commit();
+
+                    master.validate();
+                };
+
+                master.retrieve();
+            });
         });
         
         suite('saving', function() {
@@ -162,7 +199,7 @@
                 master = fixture('MasterFixture');
                 reflector = document.querySelector('#reflector');
             });
-            
+
             test('works for new entity', function (done) {
                 const edProperty = master.$.editor_4_richTextProp;
 
@@ -276,6 +313,46 @@
                     master.$.editor_4_key._editingValue = 'KEY_TO_PASS_VALIDATION_BEFORE_SAVE_' + (new Date()).getTime();
                     master.$.editor_4_key.commit();
                     edProperty._editingValue = '<p>Rich text for existing entity</p>';
+                    edProperty.commit();
+
+                    master.save();
+                };
+
+                master.retrieve();
+            });
+
+            test('gets failed for restricted RichText property tags', function (done) {
+                const edProperty = master.$.editor_4_richTextProp;
+
+                master.postSaved = function(potentiallySavedOrNewEntity, bindingEntity) {
+                    const oldExpectedValue = null;
+                    const expectedValue = { formattedText: '<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="image.png" contenteditable="false"><br></p>', coreText: '' };
+
+                    assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
+
+                    // value ok?
+                    assert.deepEqual(potentiallySavedOrNewEntity.get('richTextProp'), oldExpectedValue, 'Property value should be correct.');
+
+                    // value is changed?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').isChangedFromOriginal(), false, 'Instance meta-prop should be NOT changedFromOriginal.');
+
+                    // value validationresult?
+                    assert.ok(potentiallySavedOrNewEntity.prop('richTextProp').validationResult(), 'Instance meta-prop should have non-empty (unsuccessful) validation result.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').validationResult().message, 'Input contains unsafe HTML:\n1. Tag [img] has violating attributes: src', 'Property has incorrect validation result message.');
+
+                    // binding value ok?
+                    assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
+                    assert.deepEqual(bindingEntity.get('richTextProp'), expectedValue, 'Binding property value should be correct.');
+
+                    done();
+                };
+
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    // ACTUAL PROPERTY CHANGE
+                    master.$.editor_4_key._editingValue = 'KEY_TO_PASS_VALIDATION_BEFORE_SAVE_' + (new Date()).getTime();
+                    master.$.editor_4_key.commit();
+                    edProperty._editingValue = '<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="image.png" contenteditable="false"><br></p>';
                     edProperty.commit();
 
                     master.save();
