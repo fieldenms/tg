@@ -75,6 +75,7 @@ public class RichTextHtmlSanitisationTest {
         assertSanitizationSuccess("one <a href='mailto://example.org'>two</a> three");
         assertSanitizationFailure("one <a href='javascript://example.org'>two</a> three");
         assertSanitizationFailure("one <a href='tel://example.org'>two</a> three");
+        assertSanitizationFailure("<img src='data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==' />");
     }
 
     @Test
