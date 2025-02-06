@@ -108,7 +108,7 @@ public final class StringToRichTextMigration {
     /**
      * Use this method when a property changes type from String to RichText.
      * <p>
-     * For example, {@code WorkActivity.desc : String} becomes {@code WorkActivity.desc : RichText}.
+     * For example, {@code desc : String} becomes {@code richDesc : RichText}.
      */
     public Tool migratePropertyType(final Class<? extends AbstractEntity<?>> entityType, final String property) {
         return new ToolImpl(entityType, property, property);
@@ -117,7 +117,9 @@ public final class StringToRichTextMigration {
     /**
      * Use this method when a String property is being replaced by a distinct RichText property.
      * <p>
-     * For example, {@code WorkActivity.desc : String} is replaced by {@code WorkActivity.note : RichText}.
+     * For example, {@code desc : String} is replaced by {@code richDesc : RichText}.
+     * <p>
+     * Both properties must be persistent at the time of executing this method.
      */
     public Tool migrateToNewProperty(final Class<? extends AbstractEntity<?>> entityType, final String stringProperty, final String richTextProperty) {
         return new ToolImpl(entityType, stringProperty, richTextProperty);
@@ -293,8 +295,14 @@ public final class StringToRichTextMigration {
         }
 
         private void generateInitialMigration(final Consumer<? super String> sqlConsumer) {
+            sqlConsumer.accept("""
+            
+            ***** IMPORTANT *****
+            To ensure correctness of the rollback script, it is necessary to record the date and time when this script (stage 1) is executed.
+            
+            """);
+
             // 1. Add a column for each RichText component.
-            sqlConsumer.accept("\n");
             sqlConsumer.accept(sqlComment("*** Add columns for RichText components."));
             Stream.of(formattedTextColDef.schemaString(dialect, true), coreTextColDef.schemaString(dialect, true))
                     .map(colSchema -> dbVersion.addColumnSql(tableDdl.getTableName(), colSchema))
@@ -408,7 +416,14 @@ public final class StringToRichTextMigration {
         private void generateRollback(final Date scriptGenDate, final Consumer<? super String> sqlConsumer) {
             // 1. For each new or modified value of the RichText property, populate the String property from the core text component.
             //    This is only possible if the entity type extends AbstractPersistentEntity, which has properties lastUpdatedBy and createdBy.
-            sqlConsumer.accept(sqlComment("*** Populate the original String property with new/modified values of RichText property."));
+            sqlConsumer.accept(sqlComment("""
+            *** Populate the original String property with new/modified values of RichText property.
+            
+            ***** IMPORTANT *****
+            NOTE: A date is used to identify records that were created after the introduction of the RichText property.
+            The value for this date should be set to the moment of executing the stage 1 script.
+            Therefore, please adjust the date used below, which, by default, represents the moment when this script was generated.
+            """));
             final String sql = switch (dbVersion) {
                 case MSSQL, POSTGRESQL -> {
                     final String scriptGenDateSql = dateToSqlString(scriptGenDate);

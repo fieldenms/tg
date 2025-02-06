@@ -1,0 +1,368 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-master basic tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <test-fixture id="MasterFixture">
+        <template>
+               <tg-TgEntityWithRichTextProp-master
+                id="master" 
+                entity-type="ua.com.fielden.platform.sample.domain.TgEntityWithRichTextProp"
+                entity-id="new" 
+                current-state="EDIT">
+            </tg-TgEntityWithRichTextProp-master>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+
+        import '/app/tg-reflector.js';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgEntityWithRichTextProp';
+
+        suite('retrieval', function() {
+            let master, reflector;
+        
+            setup(function() {
+                master = fixture('MasterFixture');
+                  reflector = document.querySelector('#reflector');
+            });
+        
+            test('works for new entity', function(done) {
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    assert.strictEqual(entity.type().fullClassName(), 'ua.com.fielden.platform.sample.domain.TgEntityWithRichTextProp', 'The type of entity is not correct.');
+                    assert.strictEqual(entity.get('id'), null, 'The id of entity is not correct.');
+                    assert.strictEqual(entity.version, 0, 'The version of entity is not correct.');
+                
+                    // properties:
+                    assert.strictEqual(typeof entity.get('richTextProp'), 'object', 'The entity property is not correct.');
+                    assert.strictEqual(entity.get('richTextProp'), null, 'The entity property is not correct.');
+
+                    // instance meta-properties
+                    assert.strictEqual(entity.prop('richTextProp').isChangedFromOriginal(), false, 'The entity instance prop should be not changedFromOriginal.');
+                    assert.strictEqual(entity.prop('richTextProp').validationResult(), null, 'The entity instance prop should have empty validation result.');
+                    assert.strictEqual(entity.prop('richTextProp').isRequired(), false, 'The entity instance prop should be not required.');
+                    assert.strictEqual(entity.prop('richTextProp').isEditable(), true, 'The entity instance prop should be editable.');
+                    assert.strictEqual(entity.prop('richTextProp').isVisible(), true, 'The entity instance prop should be visible.');
+                
+                    // binding value ok?
+                    assert.strictEqual(typeof bindingEntity.get('richTextProp'), 'object', 'Binding property should be initialised.');
+                    assert.strictEqual(bindingEntity.get('richTextProp'), null, 'Binding property should be rich text representation.');
+
+                    done();
+                };
+                
+                master.retrieve();
+            });
+            
+            test('works for new persisted entity', function(done) {
+                master.entityId = '216';
+                
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    assert.strictEqual(entity.type().fullClassName(), 'ua.com.fielden.platform.sample.domain.TgEntityWithRichTextProp', 'The type of entity is not correct.');
+                    assert.strictEqual(entity.get('id'), 216, 'The id of entity is not correct.');
+                    assert.strictEqual(entity.version, 0, 'The version of entity is not correct.');
+
+                    // properties:
+                    const expectedValue = { formattedText: '<p>Rich text for entity with RICH TEXT KEY1</p>', coreText: 'Rich text for entity with RICH TEXT KEY1' };
+                    assert.deepEqual(entity.get('richTextProp'), expectedValue, 'The entity property is not correct.');
+
+                    // instance meta-properties
+                    assert.strictEqual(entity.prop('richTextProp').isChangedFromOriginal(), false, 'The entity instance prop should be not changedFromOriginal.');
+                    assert.strictEqual(entity.prop('richTextProp').validationResult(), null, 'The entity instance prop should have empty validation result.');
+                    assert.strictEqual(entity.prop('richTextProp').isRequired(), false, 'The entity instance prop should be not required.');
+                    assert.strictEqual(entity.prop('richTextProp').isEditable(), true, 'The entity instance prop should be editable.');
+                    assert.strictEqual(entity.prop('richTextProp').isVisible(), true, 'The entity instance prop should be visible.');
+
+                    // binding value ok?
+                    assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
+                    assert.deepEqual(bindingEntity.get('richTextProp'), expectedValue, 'Binding property should be rich text representation.');
+
+                    done();
+                };
+
+                master.retrieve();
+            });
+        });
+        
+        suite('validation', function() {
+            let master, reflector;
+        
+            setup(function() {
+                master = fixture('MasterFixture');
+                reflector = document.querySelector('#reflector');
+            });
+
+            test('works for RichText property', function (done) {
+                master.entityId = '216';
+                const edProperty = master.$.editor_4_richTextProp;
+
+                master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                    const expectedValue = { formattedText: '<p>Rich text for entity <del>without</del> RICH TEXT KEY1</p>', coreText: 'Rich text for entity without RICH TEXT KEY1' };
+
+                    // value ok?
+                    assert.ok(validatedEntity.get('richTextProp'), 'Property value should be initialised.');
+                    assert.deepEqual(validatedEntity.get('richTextProp'), expectedValue, 'Property value should be correct.');
+
+                    // value is changed?
+                    assert.strictEqual(validatedEntity.prop('richTextProp').isChangedFromOriginal(), true, 'Instance meta-prop should be changedFromOriginal.');
+
+                    // value validationresult?
+                    assert.strictEqual(validatedEntity.prop('richTextProp').validationResult(), null, 'Instance meta-prop should have empty (successful) validation result.');
+
+                    // binding value ok?
+                    assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
+                    assert.deepEqual(bindingEntity.get('richTextProp'), expectedValue, 'Binding property should be correct number.');
+
+                    done();
+                };
+
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    const expectedValue = { formattedText: '<p>Rich text for entity with RICH TEXT KEY1</p>', coreText: 'Rich text for entity with RICH TEXT KEY1' };
+
+                    // value ok?
+                    assert.ok(entity.get('richTextProp'), 'Property value should be initialised.');
+                    assert.deepEqual(entity.get('richTextProp'), expectedValue, 'Property value should be correct.');
+
+                    // value is changed?
+                    assert.strictEqual(entity.prop('richTextProp').isChangedFromOriginal(), false, 'Instance meta-prop should be not changedFromOriginal.');
+
+                    // value validationresult?
+                    assert.strictEqual(entity.prop('richTextProp').validationResult(), null, 'Instance meta-prop should have empty (successful) validation result.');
+
+                    // binding value ok?
+                    assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
+                    assert.deepEqual(bindingEntity.get('richTextProp'), expectedValue, 'Binding property should be rich text representation.');
+                    
+                    // ACTUAL PROPERTY CHANGE
+                    edProperty._editingValue = '<p>Rich text for entity <del>without</del> RICH TEXT KEY1</p>';
+                    edProperty.commit();
+
+                    master.validate();
+                };
+
+                master.retrieve();
+            });
+
+            test('gets failed for restricted RichText property tags', function (done) {
+                master.entityId = '216';
+                const edProperty = master.$.editor_4_richTextProp;
+
+                master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                    const oldExpectedValue = { formattedText: '<p>Rich text for entity with RICH TEXT KEY1</p>', coreText: 'Rich text for entity with RICH TEXT KEY1' };
+                    const expectedValue = { formattedText: '<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="image.png" contenteditable="false"><br></p>', coreText: '' };
+
+                    // value ok?
+                    assert.ok(validatedEntity.get('richTextProp'), 'Property value should be initialised.');
+                    assert.deepEqual(validatedEntity.get('richTextProp'), oldExpectedValue, 'Property value remain the same (validation did not succeed).');
+
+                    // value is changed?
+                    assert.strictEqual(validatedEntity.prop('richTextProp').isChangedFromOriginal(), false, 'Instance meta-prop should be NOT changedFromOriginal.');
+
+                    // value validationresult?
+                    assert.ok(validatedEntity.prop('richTextProp').validationResult(), 'Instance meta-prop should have non-empty (unsuccessful) validation result.');
+                    assert.strictEqual(validatedEntity.prop('richTextProp').validationResult().message, 'Input contains unsafe HTML:\n1. Tag [img] has violating attributes: src', 'Property has incorrect validation result message.');
+
+                    // binding value ok?
+                    assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
+                    assert.deepEqual(bindingEntity.get('richTextProp'), expectedValue, 'Binding property value should be correct.');
+
+                    done();
+                };
+
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    // ACTUAL PROPERTY CHANGE
+                    edProperty._editingValue = '<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="image.png" contenteditable="false"><br></p>';
+                    edProperty.commit();
+
+                    master.validate();
+                };
+
+                master.retrieve();
+            });
+        });
+        
+        suite('saving', function() {
+            let master, reflector;
+        
+            setup(function() {
+                master = fixture('MasterFixture');
+                reflector = document.querySelector('#reflector');
+            });
+
+            test('works for new entity', function (done) {
+                const edProperty = master.$.editor_4_richTextProp;
+
+                master.postSaved = function(potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
+
+                    const expectedValue = { formattedText: '<p>Rich text for new entity</p>', coreText: 'Rich text for new entity' };
+
+                    // value ok?
+                    assert.ok(potentiallySavedOrNewEntity.get('richTextProp'), 'Property value should be initialised.');
+                    assert.deepEqual(potentiallySavedOrNewEntity.get('richTextProp'), expectedValue, 'Property value should be correct.');
+
+                    // value is changed?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').isChangedFromOriginal(), false, 'Instance meta-prop should be changedFromOriginal.');
+
+                    // value validationresult?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').validationResult(), null, 'Instance meta-prop should have empty (successful) validation result.');
+
+                    // binding value ok?
+                    assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
+                    assert.deepEqual(bindingEntity.get('richTextProp'), expectedValue, 'Binding property value should be correct.');
+
+                    done();
+                };
+
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    assert.strictEqual(entity.get('id'), null, 'Entity id should be null.');
+                    assert.strictEqual(entity.version, 0, 'Entity version should be initial.');
+                    // value ok?
+                    assert.strictEqual(entity.get('richTextProp'), null, 'Property value should be correct.');
+
+                    // value is changed?
+                    assert.strictEqual(entity.prop('richTextProp').isChangedFromOriginal(), false, 'Instance meta-prop should be not changedFromOriginal.');
+
+                    // value validationresult?
+                    assert.strictEqual(entity.prop('richTextProp').validationResult(), null, 'Instance meta-prop should have empty (successful) validation result.');
+
+                    // binding value ok?
+                    assert.strictEqual(bindingEntity.get('richTextProp'), null, 'Binding property should be rich text representation.');
+                    
+                    // ACTUAL PROPERTY CHANGE
+                    master.$.editor_4_key._editingValue = 'KEY_TO_PASS_VALIDATION_BEFORE_SAVE_' + (new Date()).getTime();
+                    master.$.editor_4_key.commit();
+                    edProperty._editingValue = '<p>Rich text for new entity</p>';
+                    edProperty.commit();
+
+                    master.save();
+                };
+
+                master.retrieve();
+            });
+
+            test('works for existing entity', function (done) {
+                const edProperty = master.$.editor_4_richTextProp;
+
+                master.postSaved = function(potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be 0.');
+
+                    const expectedValue = { formattedText: '<p>Rich text for existing entity</p>', coreText: 'Rich text for existing entity' };
+
+                    // value ok?
+                    assert.ok(potentiallySavedOrNewEntity.get('richTextProp'), 'Property value should be initialised.');
+                    assert.deepEqual(potentiallySavedOrNewEntity.get('richTextProp'), expectedValue, 'Property value should be correct.');
+
+                    // value is changed?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').isChangedFromOriginal(), false, 'Instance meta-prop should be changedFromOriginal.');
+
+                    // value validationresult?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').validationResult(), null, 'Instance meta-prop should have empty (successful) validation result.');
+
+                    // binding value ok?
+                    assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
+                    assert.deepEqual(bindingEntity.get('richTextProp'), expectedValue, 'Binding property should be correct number.');
+
+                    // ACTUAL PROPERTY CHANGE
+                    edProperty._editingValue = '<p>Rich text for existing, but changed, entity</p>';
+                    edProperty.commit();
+                    
+                    // kick in the second save and thus the second part of this test 
+                    this.postSaved = this.postSavedForExisting;
+                    this.save();
+                }.bind(master);
+                
+                master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should remain not null.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.version, 1, 'Entity version should be increased.');
+
+                    const expectedValue = { formattedText: '<p>Rich text for existing, but changed, entity</p>', coreText: 'Rich text for existing, but changed, entity' };
+
+                    // value ok?
+                    assert.ok(potentiallySavedOrNewEntity.get('richTextProp'), 'Property value should be initialised.');
+                    assert.deepEqual(potentiallySavedOrNewEntity.get('richTextProp'), expectedValue, 'Property value should be correct.');
+
+                    // value is changed?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').isChangedFromOriginal(), false, 'Instance meta-prop should be changedFromOriginal.');
+
+                    // value validationresult?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').validationResult(), null, 'Instance meta-prop should have empty (successful) validation result.');
+
+                    // binding value ok?
+                    assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
+                    assert.deepEqual(bindingEntity.get('richTextProp'), expectedValue, 'Binding property should be correct number.');
+
+                    done();  
+                }.bind(master);
+
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    // ACTUAL PROPERTY CHANGE
+                    master.$.editor_4_key._editingValue = 'KEY_TO_PASS_VALIDATION_BEFORE_SAVE_' + (new Date()).getTime();
+                    master.$.editor_4_key.commit();
+                    edProperty._editingValue = '<p>Rich text for existing entity</p>';
+                    edProperty.commit();
+
+                    master.save();
+                };
+
+                master.retrieve();
+            });
+
+            test('gets failed for restricted RichText property tags', function (done) {
+                const edProperty = master.$.editor_4_richTextProp;
+
+                master.postSaved = function(potentiallySavedOrNewEntity, bindingEntity) {
+                    const oldExpectedValue = null;
+                    const expectedValue = { formattedText: '<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="image.png" contenteditable="false"><br></p>', coreText: '' };
+
+                    assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
+
+                    // value ok?
+                    assert.deepEqual(potentiallySavedOrNewEntity.get('richTextProp'), oldExpectedValue, 'Property value should be correct.');
+
+                    // value is changed?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').isChangedFromOriginal(), false, 'Instance meta-prop should be NOT changedFromOriginal.');
+
+                    // value validationresult?
+                    assert.ok(potentiallySavedOrNewEntity.prop('richTextProp').validationResult(), 'Instance meta-prop should have non-empty (unsuccessful) validation result.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').validationResult().message, 'Input contains unsafe HTML:\n1. Tag [img] has violating attributes: src', 'Property has incorrect validation result message.');
+
+                    // binding value ok?
+                    assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
+                    assert.deepEqual(bindingEntity.get('richTextProp'), expectedValue, 'Binding property value should be correct.');
+
+                    done();
+                };
+
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    // ACTUAL PROPERTY CHANGE
+                    master.$.editor_4_key._editingValue = 'KEY_TO_PASS_VALIDATION_BEFORE_SAVE_' + (new Date()).getTime();
+                    master.$.editor_4_key.commit();
+                    edProperty._editingValue = '<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="image.png" contenteditable="false"><br></p>';
+                    edProperty.commit();
+
+                    master.save();
+                };
+
+                master.retrieve();
+            });
+
+        });
+    </script>
+</body>
+
+</html>
