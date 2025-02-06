@@ -141,6 +141,12 @@ public final class StringToRichTextMigration {
 
     private final class ToolImpl implements Tool {
 
+        private static final String IMPORTANT_MESSAGE = """
+        ********** IMPORTANT **********
+        * Make sure to address warnings that may have been printed above!
+        *******************************
+        """;
+
         private final Class<? extends AbstractEntity<?>> entityType;
         private final Optional<PropertyMetadata.Persistent> maybeStringPropertyMetadata;
         private final PropertyMetadata.Persistent richTextPropertyMetadata;
@@ -149,6 +155,7 @@ public final class StringToRichTextMigration {
         private final ColumnDefinition formattedTextColDef;
         private final ColumnDefinition coreTextColDef;
         private final String stringColumnTypeName;
+        private final String batchDelimiter;
 
         private ToolImpl(
                 final Class<? extends AbstractEntity<?>> entityType,
@@ -186,6 +193,39 @@ public final class StringToRichTextMigration {
             stringColumnTypeName = sameProperty
                     ? Placeholder.STRING_COLUMN_TYPE.toString()
                     : tableDdl.getColumnDefinition(stringProperty).sqlTypeName;
+
+            batchDelimiter = switch (dbVersion) {
+                case MSSQL -> "GO";
+                default -> "";
+            };
+
+            // Must be the last statement in the constructor.
+            validate();
+        }
+
+        private void validate() {
+            // Print directly to System.out, as logging may be disabled.
+
+            // New property's column length should not be smaller.
+            maybeStringPropertyMetadata.ifPresent(strProp -> {
+                if (richTextPropertyMetadata.data().column().length != null &&
+                    strProp.data().column().length != null &&
+                    richTextPropertyMetadata.data().column().length < strProp.data().column().length)
+                {
+                    System.out.println(format("[WARN] Length of RichText property [%s] is less than that of String property [%s]. " +
+                                              "This may cause issues during data migration.",
+                                              richTextPropertyMetadata.name(), strProp.name()));
+                }
+                else if (richTextPropertyMetadata.data().column().length == null &&
+                         strProp.data().column().length != null)
+                {
+                    System.out.println(format("[WARN] Length of RichText property [%s] is unspecified. " +
+                                              "Make sure it is >= length of String property [%s].",
+                                              richTextPropertyMetadata.name(), strProp.name()));
+                }
+            });
+
+            System.out.println();
         }
 
         @Override
@@ -193,18 +233,26 @@ public final class StringToRichTextMigration {
             final var sb = new StringBuilder();
             generateSqlStatements(s -> {
                 sb.append(s);
-                if (!s.isBlank() && !s.startsWith("-- ") && !s.matches("^.*\\s*;\\s*$")) {
+                if (needsSemicolon(s)) {
                     sb.append(';');
                 }
                 if (!s.endsWith("\n")) {
                     sb.append('\n');
                 }
             });
+
+            System.out.println();
+            System.out.println(IMPORTANT_MESSAGE);
+            System.out.println();
             return sb.toString();
         }
 
         @Override
         public void generateSqlStatements(final Consumer<? super String> sqlConsumer) {
+            _generateSqlStatements(wrapSqlConsumer(sqlConsumer));
+        }
+
+        private void _generateSqlStatements(final Consumer<? super String> sqlConsumer) {
             final var scriptGenDate = dates.now().toDate();
 
             sqlConsumer.accept(sqlCommentHeader("Generated SQL script for data migration from String to RichText"));
@@ -238,6 +286,10 @@ public final class StringToRichTextMigration {
             sqlConsumer.accept(sqlCommentHeader("2b. Rollback"));
             sqlConsumer.accept("\n");
             generateRollback(scriptGenDate, sqlConsumer);
+
+            System.out.println();
+            System.out.println(IMPORTANT_MESSAGE);
+            System.out.println();
         }
 
         private void generateInitialMigration(final Consumer<? super String> sqlConsumer) {
@@ -246,9 +298,12 @@ public final class StringToRichTextMigration {
             sqlConsumer.accept(sqlComment("*** Add columns for RichText components."));
             Stream.of(formattedTextColDef.schemaString(dialect, true), coreTextColDef.schemaString(dialect, true))
                     .map(colSchema -> dbVersion.addColumnSql(tableDdl.getTableName(), colSchema))
+                    .flatMap(sql -> Stream.of(sql, batchDelimiter))
                     .forEach(sqlConsumer);
             // Create indices for RichText components.
             tableDdl.createNonUniqueIndicesSchema(Stream.of(formattedTextColDef, coreTextColDef), dialect)
+                    .stream()
+                    .flatMap(sql -> Stream.of(sql, batchDelimiter))
                     .forEach(sqlConsumer);
 
             // 2. Remove the requiredness constraint of the String property.
@@ -265,12 +320,14 @@ public final class StringToRichTextMigration {
                     """));
                 sqlConsumer.accept("\n");
                 sqlConsumer.accept(dropAllColumnIndicesMssql(tableDdl.getTableName(), stringColumnName));
+                sqlConsumer.accept(batchDelimiter);
                 sqlConsumer.accept("\n");
                 sqlConsumer.accept(sqlComment("Done deleting dependent indices."));
                 sqlConsumer.accept("\n");
             }
 
             sqlConsumer.accept(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), stringColumnName, Placeholder.STRING_COLUMN_TYPE, NULL));
+            sqlConsumer.accept(batchDelimiter);
 
             // 3. Populate values for the RichText property from values for the String property.
             //    a. Formatted text should be populated as HTML, with respect to the client-side RichText editor.
@@ -283,10 +340,12 @@ public final class StringToRichTextMigration {
             sqlConsumer.accept("\n");
             sqlConsumer.accept(sqlComment("*** Populate values for the formatted text component of RichText."));
             sqlConsumer.accept(FormattedTextSql.get(dbVersion).sql(tableDdl.getTableName(), stringColumnName, formattedTextColDef.name));
+            sqlConsumer.accept(batchDelimiter);
 
             sqlConsumer.accept("\n");
             sqlConsumer.accept(sqlComment("*** Populate values for the core text component of RichText."));
             sqlConsumer.accept(CoreTextSql.get(dbVersion).sql(tableDdl.getTableName(), stringColumnName, coreTextColDef.name));
+            sqlConsumer.accept(batchDelimiter);
         }
 
         private void generateCompleteMigration(final Consumer<? super String> sqlConsumer) {
@@ -303,6 +362,7 @@ public final class StringToRichTextMigration {
                 """));
                 sqlConsumer.accept("\n");
                 sqlConsumer.accept(dropAllColumnIndicesMssql(tableDdl.getTableName(), stringColumnName));
+                sqlConsumer.accept(batchDelimiter);
                 sqlConsumer.accept("\n");
                 sqlConsumer.accept(sqlComment("Done deleting dependent indices."));
                 sqlConsumer.accept("\n");
@@ -312,13 +372,36 @@ public final class StringToRichTextMigration {
             // https://www.postgresql.org/docs/17/sql-altertable.html#SQL-ALTERTABLE-DESC-DROP-COLUMN
 
             sqlConsumer.accept(dbVersion.deleteColumnSql(tableDdl.getTableName(), stringColumnName));
+            sqlConsumer.accept(batchDelimiter);
             sqlConsumer.accept("\n");
 
             // 2. If the RichText property has a requiredness constraint, add the {@code NOT NULL} constraint to its columns.
             if (richTextPropertyMetadata.is(REQUIRED)) {
-                sqlConsumer.accept(sqlComment("*** Enforce the requiredness constraint for the RichText property."));
+                sqlConsumer.accept(sqlComment("""
+                *** Enforce the requiredness constraint for the RichText property.
+                Indices, if any exist, need to be dropped beforehand and recreated afterwards.
+                Make sure that the following statements are aligned with the current state of indices.
+                """));
+
+                sqlConsumer.accept(dbVersion.dropIndexSql(tableDdl.getIndexName(formattedTextColDef), tableDdl.getTableName(), true));
+                sqlConsumer.accept(batchDelimiter);
                 sqlConsumer.accept(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), formattedTextColDef.name, formattedTextColDef.sqlTypeName, NOT_NULL));
+                sqlConsumer.accept(batchDelimiter);
+
+                tableDdl.createNonUniqueIndicesSchema(Stream.of(formattedTextColDef), dialect)
+                        .stream()
+                        .flatMap(sql -> Stream.of(sql, batchDelimiter))
+                        .forEach(sqlConsumer);
+
+                sqlConsumer.accept(dbVersion.dropIndexSql(tableDdl.getIndexName(coreTextColDef), tableDdl.getTableName(), true));
+                sqlConsumer.accept(batchDelimiter);
                 sqlConsumer.accept(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), coreTextColDef.name, coreTextColDef.sqlTypeName, NOT_NULL));
+                sqlConsumer.accept(batchDelimiter);
+
+                tableDdl.createNonUniqueIndicesSchema(Stream.of(coreTextColDef), dialect)
+                        .stream()
+                        .flatMap(sql -> Stream.of(sql, batchDelimiter))
+                        .forEach(sqlConsumer);
             }
         }
 
@@ -349,6 +432,7 @@ public final class StringToRichTextMigration {
             };
             if (AbstractPersistentEntity.class.isAssignableFrom(entityType)) {
                 sqlConsumer.accept(sql);
+                sqlConsumer.accept(batchDelimiter);
             }
             else {
                 sqlConsumer.accept(sqlComment("""
@@ -367,6 +451,7 @@ public final class StringToRichTextMigration {
                     default -> throw new UnsupportedOperationException(dbVersion.toString());
                 };
                 sqlConsumer.accept(sqlComment(altSql));
+                sqlConsumer.accept(sqlComment(batchDelimiter));
             }
 
             sqlConsumer.accept("\n");
@@ -379,16 +464,35 @@ public final class StringToRichTextMigration {
                         if (stringPropertyMetadata.is(REQUIRED)) {
                             sqlConsumer.accept(sqlComment("*** Restore the requiredness constraint for the original String property."));
                             sqlConsumer.accept(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), stringColumnName, stringColumnTypeName, NOT_NULL));
+                            sqlConsumer.accept(batchDelimiter);
                         }
                     },
                     () -> {
                         // We don't have access to the definition of the String property, so we can't know if it was required or not.
                         sqlConsumer.accept(sqlComment("*** Uncomment to restore the requiredness constraint for the original String property, if it had one."));
                         sqlConsumer.accept(sqlComment(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), stringColumnName, stringColumnTypeName, NOT_NULL)));
+                        sqlConsumer.accept(sqlComment(batchDelimiter));
                     }
             );
         }
 
+    }
+
+    private boolean needsSemicolon(final String s) {
+        if (dbVersion == DbVersion.MSSQL) {
+            if (s.strip().equals("GO")) {
+                return false;
+            }
+        }
+
+        return !s.isBlank() && !s.startsWith("-- ") && !s.matches("^.*\\s*;\\s*$");
+    }
+
+    private Consumer<? super String> wrapSqlConsumer(final Consumer<? super String> sqlConsumer) {
+        return sql -> {
+            final var theSql = needsSemicolon(sql) ? sql + ';' : sql;
+            sqlConsumer.accept(theSql);
+        };
     }
 
     /**

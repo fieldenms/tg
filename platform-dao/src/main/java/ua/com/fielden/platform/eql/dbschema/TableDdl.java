@@ -205,8 +205,39 @@ public class TableDdl {
                         return true;
                     }
                 })
-                .map(col -> "CREATE INDEX I_%1$s_%2$s ON %1$s(%2$s);".formatted(this.tableName, col.name))
+                .map(col -> "CREATE INDEX %s ON %s(%s)".formatted(indexName(this.tableName, col.name), this.tableName, col.name))
                 .collect(toList());
+    }
+
+    /**
+     * Returns the name of an index for the specified column.
+     * <p>
+     * It is <b>not</b> required for the specified column to be present in this table.
+     */
+    public String getIndexName(final ColumnDefinition column) {
+        return indexName(this.tableName, column.name);
+    }
+
+    /**
+     * Returns the name of an index for the specified property.
+     * <p>
+     * It is an error if the specified property is not contained in this table.
+     *
+     * @param property  a property path.
+     *                  <ul>
+     *                    <li> If a property is component-typed, the path must be a full path to the component
+     *                         (e.g., {@code note.coreText} for property {@code note : RichText}).
+     *                    <li> If a property is union-typed, the path must be a full path to a union member
+     *                         (e.g., {@code location.workshop} for union-typed property {@code location : Location}, where union members are {@code workshop, station}).
+     *                    <li> Otherwise, the path must be a simple property name.
+     *                  </ul>
+     */
+    public String getIndexName(final CharSequence property) {
+        return getIndexName(getColumnDefinition(property.toString()));
+    }
+
+    private static String indexName(final CharSequence tableName, final CharSequence columnName) {
+        return "I_%s_%s".formatted(tableName, columnName);
     }
 
     /**

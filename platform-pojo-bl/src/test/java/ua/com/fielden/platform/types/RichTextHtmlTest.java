@@ -295,6 +295,16 @@ After quote.
                        """);
     }
 
+    @Test
+    public void spaces() {
+        assertCoreText("two three four", "<b>two </b><i>three</i> four");
+        assertCoreText("two three four", "<b>two </b><i> three</i> four");
+        assertCoreText("two three four", "<b>two </b> <i>three</i> four");
+        assertCoreText("two three four", " <b>two </b> <i>three</i> four");
+        assertCoreText("two three four", "<b> two </b> <i>three</i> four");
+        assertCoreText("hello world", "hello \n<p> world </p>");
+    }
+
     private static void assertCoreText(final String expected, final String input) {
         assertEquals(expected, RichText.fromHtml(input).coreText());
     }
