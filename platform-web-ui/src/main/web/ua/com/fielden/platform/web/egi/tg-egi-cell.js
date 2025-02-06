@@ -111,6 +111,12 @@ const template = html`
         del {
             color: #999;
         }
+        code {
+            background-color: #eee;
+            border-radius: 3px;
+            font-family: courier, monospace;
+            padding: 0 3px;
+        }
     </style>
     <div class="cell-background" style$="[[_backgroundRendHints]]" modified$="[[_modified]]"></div>
     <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" icon="[[_value]]"></iron-icon>
