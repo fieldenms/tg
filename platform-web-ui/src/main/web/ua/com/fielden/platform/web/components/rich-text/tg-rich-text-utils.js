@@ -2,19 +2,31 @@
  * List of available converters
  */
 const RichTextConverter = {
-    'BR': convertBreak,
+    'DIV': remainTheSame,
     'H1': convertHeader,
     'H2': convertHeader,
     'H3': convertHeader,
     'P': convertParagraph,
+    'EM': remainTheSame,
+    'STRONG': remainTheSame,
+    'DEL': remainTheSame,
+    'SPAN': remainTheSame,
+    'A': remainTheSame,
     'UL': convertUnorderedList,
     'OL': convertOrderedList,
-    'LI': convertListItem
+    'LI': convertListItem,
+    'BR': convertBreak
 }
 
 /**********************Converters***************************************************/
-function convertBreak(breakElement) {
-    return null;
+function defaultConverter(element) {
+    const code = document.createElement('code');
+    code.innerText = `[${element.tagName.toLowerCase()}]`;
+    return code;
+}
+
+function remainTheSame(element) {
+    return element;
 }
 
 function convertHeader(header) {
@@ -54,6 +66,10 @@ function convertListItem(listItem) {
     }
     return moveChildren(listItem, spanItem);
 }
+
+function convertBreak(breakElement) {
+    return null;
+}
 /***********************************************************************************/
 
 function moveChildren(from, to) {
@@ -64,6 +80,7 @@ function moveChildren(from, to) {
 }
 
 function convertNode(root) {
+    //Convert root' children first
     [...root.childNodes].forEach(child => {
         const convertedNode = convertNode(child);
         if (convertedNode) {
@@ -72,9 +89,16 @@ function convertNode(root) {
             root.removeChild(child);
         }
     });
-    if (root.tagName && RichTextConverter[root.tagName]) {
-        return RichTextConverter[root.tagName](root);
+    //And then try to convert root element if it has a tagName (i.e. is HTMLElement)
+    if (root.tagName) {
+        //If converter is present then convert it.
+        if (RichTextConverter[root.tagName]) {
+            return RichTextConverter[root.tagName](root);
+        }
+        //Otherwise use default converter.
+        return defaultConverter(root);
     }
+    //Otherwise return root element if it is a node (i.e. doesn't have tagName)
     return root;
 }
 
