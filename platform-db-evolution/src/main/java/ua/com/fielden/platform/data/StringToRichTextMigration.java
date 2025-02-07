@@ -489,6 +489,29 @@ public final class StringToRichTextMigration {
                         sqlConsumer.accept(sqlComment(batchDelimiter));
                     }
             );
+
+            // 3. Optionally drop columns for the RichText property.
+            sqlConsumer.accept(sqlComment("*** If necessary, drop columns for the RichText property."));
+            sqlConsumer.accept("\n");
+            sqlConsumer.accept(sqlComment("1. Core text"));
+            sqlConsumer.accept(sqlComment("Delete all dependent indices first."));
+            sqlConsumer.accept("\n");
+            sqlConsumer.accept(sqlComment(dropAllColumnIndicesMssql(tableDdl.getTableName(), coreTextColDef.name)));
+            sqlConsumer.accept(sqlComment(batchDelimiter));
+            sqlConsumer.accept("\n");
+            sqlConsumer.accept(sqlComment("Now drop the column."));
+            sqlConsumer.accept(sqlComment(dbVersion.deleteColumnSql(tableDdl.getTableName(), coreTextColDef.name)));
+            sqlConsumer.accept(sqlComment(batchDelimiter));
+            sqlConsumer.accept("\n");
+            sqlConsumer.accept(sqlComment("2. Formatted text"));
+            sqlConsumer.accept(sqlComment("Delete all dependent indices first."));
+            sqlConsumer.accept("\n");
+            sqlConsumer.accept(sqlComment(dropAllColumnIndicesMssql(tableDdl.getTableName(), formattedTextColDef.name)));
+            sqlConsumer.accept(sqlComment(batchDelimiter));
+            sqlConsumer.accept("\n");
+            sqlConsumer.accept(sqlComment("Now drop the column."));
+            sqlConsumer.accept(sqlComment(dbVersion.deleteColumnSql(tableDdl.getTableName(), formattedTextColDef.name)));
+            sqlConsumer.accept(sqlComment(batchDelimiter));
         }
 
     }
