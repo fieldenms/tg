@@ -7,7 +7,6 @@ import { IronOverlayManager } from '/resources/polymer/@polymer/iron-overlay-beh
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
-import { excludeErrors } from '/resources/components/tg-global-error-handler.js';
 
 import Editor from '/resources/polymer/lib/toastui-editor-lib.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
@@ -22,9 +21,6 @@ import '/resources/components/tg-link-dialog.js';
 import '/resources/components/tg-color-picker-dialog.js';
 import '/resources/images/tg-rich-text-editor-icons.js';
 import '/resources/egi/tg-responsive-toolbar.js';
-
-/* TODO How about deployment mode? */
-excludeErrors( e => e.filename && e.filename.includes("prosemirror-transform/dist/index") && e.error && e.error.name === 'TransformError');
 
 /**
  * Defines plugin for fake selection. Fake selection allows to keep text look like it is selected when editor loses the focus.
