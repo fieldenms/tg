@@ -13,11 +13,11 @@ import static java.lang.String.format;
  * Although it returns a {@link Result}, returned instances are not guaranteed to contain an informative message.
  * It is up to the actual validators to provide them.
  * <p>
- * Range validation is supported only for some types. {@link #forPropertyType(Class)} can be used to obtain a function
- * type suitable for a given property type.
+ * Range validation is supported only for some types.
+ * Method {@link #forPropertyType(Class)} can be used to get a function type that is suitable for a given property type.
  * <p>
- * Most implementations should only override {@link #coreValidate(MetaProperty, Object, MetaProperty, Object)}}, but if
- * more precise control over properties with {@code null} values is needed, then override {@link #validate(MetaProperty, Object, MetaProperty, Object)}}.
+ * Most implementations should only override {@link #coreValidate(MetaProperty, Object, MetaProperty, Object)}},
+ * but if more precise control over properties with {@code null} values is needed, then override {@link #validate(MetaProperty, Object, MetaProperty, Object)}}.
  */
 public abstract class RangeValidatorFunction<T> {
 
@@ -40,8 +40,8 @@ public abstract class RangeValidatorFunction<T> {
                                            final MetaProperty<T> endProperty, final T endValue);
 
     /**
-     * Returns a function type that supports range validation of properties of the given type.
-     * If the type is unsupported, throws an exception.
+     * Returns a function type that supports range validation for properties of the given type.
+     * If the type is unsupported, an exception is thrown.
      * Returned function type should be instantiated with an {@linkplain Injector#getInstance(Class) injector}.
      */
     public static <T> Class<RangeValidatorFunction<T>> forPropertyType(final Class<T> propertyType) {
