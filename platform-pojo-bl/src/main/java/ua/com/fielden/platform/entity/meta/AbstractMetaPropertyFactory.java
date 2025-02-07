@@ -439,8 +439,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         return geRangeValidators
                 .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
                 .computeIfAbsent(upperBoundaryProperty,
-                           key -> new GePropertyValidator<>(lowerBoundaryProperties,
-                                                                  injector.getInstance(RangeValidatorFunction.forPropertyType(upperBoundaryPropertyType))));
+                                 key -> injector.getInstance(GePropertyValidator.Factory.class)
+                                         .create(lowerBoundaryProperties,
+                                                 injector.getInstance(RangeValidatorFunction.forPropertyType(upperBoundaryPropertyType))));
     }
 
     private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity,
@@ -450,8 +451,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         return leRangeValidators
                 .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
                 .computeIfAbsent(lowerBoundaryProperty,
-                           key -> new LePropertyValidator<>(upperBoundaryProperties,
-                                                                  injector.getInstance(RangeValidatorFunction.forPropertyType(lowerBoundaryPropertyType))));
+                                 key -> injector.getInstance(LePropertyValidator.Factory.class)
+                                         .create(upperBoundaryProperties,
+                                                 injector.getInstance(RangeValidatorFunction.forPropertyType(lowerBoundaryPropertyType))));
 
 
     }

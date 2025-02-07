@@ -4,14 +4,9 @@ import com.google.inject.Injector;
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.error.Result;
-
-import static java.lang.String.format;
 
 /**
  * A function used to implement {@link LePropertyValidator} and {@link GePropertyValidator}.
- * Although it returns a {@link Result}, returned instances are not guaranteed to contain an informative message.
- * It is up to the actual validators to provide them.
  * <p>
  * Range validation is supported only for some types.
  * Method {@link #forPropertyType(Class)} can be used to get a function type that is suitable for a given property type.
@@ -25,12 +20,11 @@ public abstract class RangeValidatorFunction<T> {
                            final MetaProperty<T> endProperty, final T endValue)
     {
         if (startValue == null && endValue == null) {
-            return Result.successful("Null is not applicable for validation.");
+            return Result.Ok.$;
         } else if (startValue == null && endValue != null) {
-            return Result.failure(format("Property [%s] cannot be specified without property [%s]",
-                                         endProperty.getTitle(), startProperty.getTitle()));
+            return Result.EmptyStart.$;
         } else if (startValue != null && endValue == null) {
-            return Result.successful();
+            return Result.Ok.$;
         } else {
             return coreValidate(startProperty, startValue, endProperty, endValue);
         }
@@ -38,6 +32,20 @@ public abstract class RangeValidatorFunction<T> {
 
     protected abstract Result coreValidate(final MetaProperty<T> startProperty, final T startValue,
                                            final MetaProperty<T> endProperty, final T endValue);
+
+    public sealed interface Result {
+        enum Ok implements Result { $ };
+
+        /**
+         * A failure condition, where the start value of the range is empty, while the end value is not.
+         */
+        enum EmptyStart implements Result { $ };
+
+        /**
+         * A failure condition, where the start value of the range is greater than the end value.
+         */
+        enum Fail implements Result { $ };
+    }
 
     /**
      * Returns a function type that supports range validation for properties of the given type.
@@ -59,14 +67,12 @@ public abstract class RangeValidatorFunction<T> {
 
     @Singleton
     public static final class ComparableValidator<X extends Comparable<X>> extends RangeValidatorFunction<X> {
+
         @Override
         public Result coreValidate(final MetaProperty<X> startProperty, final X startValue,
                                    final MetaProperty<X> endProperty, final X endValue)
         {
-            return startValue.compareTo(endValue) > 0
-                    ? Result.failuref("Property [%s] (value: %s) cannot be greater than property [%s] (value: %s).",
-                                      startProperty.getTitle(), startValue, endProperty.getTitle(), endValue)
-                    : Result.successful();
+            return startValue.compareTo(endValue) > 0 ? Result.Fail.$ : Result.Ok.$;
         }
     }
 
