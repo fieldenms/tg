@@ -119,7 +119,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
                 } else if (String.class == propertyType) {
                     yield new IBeforeChangeEventHandler[] { createMaxLengthValidator(((Max) annotation).value()) };
                 }
-                throw new RuntimeException("Property " + propertyName + " of type " + propertyType.getName() + " does not support Max validation.");
+                throw new EntityDefinitionException("Property [%s] of type [%s] does not support Max validation.".formatted(propertyName, propertyType.getName()));
             }
             case DOMAIN -> new IBeforeChangeEventHandler[] { domainValidationConfig.getValidator(entity.getType(), propertyName) };
             case BEFORE_CHANGE -> createBeforeChange(entity, propertyName, (BeforeChange) annotation);
