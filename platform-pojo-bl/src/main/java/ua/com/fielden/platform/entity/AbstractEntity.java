@@ -630,7 +630,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                         earlyRuntimePropertyDefinitionValidation(propName, type, isCollectional, isPropertyAnnotation, propertyAnnotationType); // computationally heavy
                     }
 
-                    // if setter is annotated then try to instantiate specified validator
+                    // if a setter is annotated, then try to instantiate the specified validator.
                     final var annotationsAndValidators = collectValidators(metaPropertyFactory, field, type, isCollectional, isEntityPersistent, shouldNotSkipKeyChangeValidation);
                     final var declaredValidationAnnotations = annotationsAndValidators._1;
                     final var validators = annotationsAndValidators._2;
@@ -774,9 +774,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     /**
      * Analyses property definition to collect and instantiate all property validators.
-     * Among the returned annotations and validators are both explicit (i.e., directly present on a property) and
-     * implicit ones. An example of implicit validation is the standard validation of {@code String}-typed property {@code key}
-     * (see {@link SkipDefaultStringKeyMemberValidation}).
+     * Among the returned annotations and validators are both explicit (i.e. directly present on a property) and implicit ones.
+     * An example of implicit validation is the standard validation of {@code String}-typed property {@code key} (see {@link SkipDefaultStringKeyMemberValidation}).
      *
      * @return  a pair of validation annotations that apply to the property and a map {@code {ValidationAnnotation : {validator : result}}}
      */
@@ -820,14 +819,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * If an annotation type that is not mergeable is encountered, this method fails.
      */
     private Map<Class<? extends Annotation>, Annotation> mergeAnnotations(final Set<Annotation> annotations) {
-        if (annotations.isEmpty()) {
-            return ImmutableMap.of();
-        }
-        else {
-            return annotations.stream()
-                    .collect(groupingBy(Annotation::annotationType,
-                                        collectingAndThen(toList(), AbstractEntity::mergeAnnotations_)));
-        }
+        return annotations.stream().collect(groupingBy(Annotation::annotationType, collectingAndThen(toList(), AbstractEntity::mergeAnnotations_)));
     }
 
     /**
