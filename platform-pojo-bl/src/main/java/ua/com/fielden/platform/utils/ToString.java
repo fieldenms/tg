@@ -138,7 +138,7 @@ public final class ToString {
      * Builds the string and returns it.
      */
     public String toString() {
-        return stringJoiner.toString();
+        return $();
     }
 
     /**
