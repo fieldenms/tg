@@ -74,6 +74,12 @@ After quote.
     }
 
     @Test
+    public void links_inside_a_word_break_the_word() {
+        assertCoreText("me mo (https://example.com) ry",
+                       "me<a href='https://example.com'>mo</a>ry");
+    }
+
+    @Test
     public void image_links_are_transformed_to_image_description_followed_by_parenthesised_uri() {
         assertCoreText("my lovely cat (cat.jpeg)",
                        "<img alt='my lovely cat' src='cat.jpeg' />");
@@ -131,7 +137,9 @@ After quote.
     public void headings_are_removed() {
         assertCoreText("Introduction", "<h1> Introduction");
         assertCoreText("Introduction", " <h2 > Introduction </h2>");
-        assertCoreText("Introduction to", "<h1> Introduction <h2> to ");
+        assertCoreText("Introduction to", "<h1> Introduction <h2> to");
+        assertCoreText("Introduction to mathematics", " <h1> Introduction <h2> to</h2>mathematics");
+        assertCoreText("Introduction to mathematics", "<h1> Introduction <h2> to </h2>mathematics");
     }
 
     @Test
@@ -185,14 +193,14 @@ After quote.
     }
 
     @Test
-    public void simple_ordered_lists_are_squashed_into_a_single_line_with_list_tags_removed() {
-        assertCoreText("one two",
+    public void simple_ordered_lists_are_squashed_into_a_single_line_with_list_tags_replaced_by_numbers() {
+        assertCoreText("1. one 2. two",
                        """
                        <ol>
                          <li>one
                               <lI>   two
                        """);
-        assertCoreText("one two",
+        assertCoreText("1. one 2. two",
                        """
                        <ol>
                          <li>one
@@ -202,14 +210,14 @@ After quote.
     }
 
     @Test
-    public void simple_unordered_lists_are_squashed_into_a_single_line_with_list_tags_removed() {
-        assertCoreText("one two",
+    public void simple_unordered_lists_are_squashed_into_a_single_line_with_list_tags_replaced_by_dashes() {
+        assertCoreText("- one - two",
                        """
                        <ul>
                          <li>one
                               <lI>   two
                        """);
-        assertCoreText("one two",
+        assertCoreText("- one - two",
                        """
                        <ul>
                          <li>one
@@ -219,8 +227,8 @@ After quote.
     }
 
     @Test
-    public void list_items_with_content_are_squashed_into_a_single_line_with_list_tags_removed() {
-        assertCoreText("item content more stuff",
+    public void ordered_list_items_with_content_are_squashed_into_a_single_line_with_list_tags_replaced_by_dash_characters() {
+        assertCoreText("1. item content 2. more stuff",
                        """
                        <ol>
                          <li> item
@@ -233,8 +241,8 @@ After quote.
     }
 
     @Test
-    public void nested_list_items_are_squashed_into_a_single_line_with_list_tags_removed() {
-        assertCoreText("item 1 subitem 1 subitem 2 item 2 subitem 3",
+    public void nested_list_items_are_squashed_into_a_single_line_with_list_tags_replaced_by_corresponding_characters() {
+        assertCoreText("1. item 1 - subitem 1 - subitem 2 2. item 2 1. subitem 3",
                        """
                        <ol>
                          <li> item 1
@@ -247,6 +255,54 @@ After quote.
                            <ol> <li> subitem 3 </ol>
                        </ol>
                        """);
+    }
+
+    @Test
+    public void certain_tags_within_a_word_are_removed_without_breaking_the_word() {
+        assertCoreText("memory", "me<b>mo</b>ry");
+        assertCoreText("memory", "me<i>mo</i>ry");
+        assertCoreText("memory", "me<u>mo</u>ry");
+        assertCoreText("memory", "me<code>mo</code>ry");
+        assertCoreText("memory", "me<sub>mo</sub>ry");
+        assertCoreText("memory", "me<s>mo</s>ry");
+        assertCoreText("memory", "me<span style='color: #4CAF50 !important'>mo</span>ry");
+    }
+
+    @Test
+    public void separable_tags_are_separated_from_surrounding_text() {
+        assertCoreText("hello world", "hello<img />world");
+        assertCoreText("first second third", "first<p>second</p>third");
+        assertCoreText("first second third", "first\n<p>second</p>\nthird");
+        assertCoreText("first second third", "first<p>\nsecond\n</p>third");
+        assertCoreText("first second third", "first<p>\nsecond\n</p>\nthird");
+        assertCoreText("first second third", "\nfirst<p>\r\nsecond\n</p>\nthird\r\n");
+   }
+
+    @Test
+    public void toastUi_task_items_are_marked_using_standard_Markdown_markers_for_task_items() {
+        assertCoreText("- [ ] task 1 - [ ] task 2 - [x] task 3 - [ ] subtask 1 - [x] subtask 2 - [x] task 4",
+                       """
+                       <ul>
+                       <li class="task-list-item"><p>task 1</p></li>
+                       <li class="task-list-item"><p>task 2</p></li>
+                       <li class="task-list-item checked"><p>task 3</p></li>
+                         <ul>
+                         <li class="task-list-item"><p>subtask 1</p></li>
+                         <li class="task-list-item checked"><p>subtask 2</p></li>
+                         </ul>
+                       <li class="task-list-item checked"><p>task 4</p></li>
+                       </ul>
+                       """);
+    }
+
+    @Test
+    public void spaces() {
+        assertCoreText("two three four", "<b>two </b><i>three</i> four");
+        assertCoreText("two three four", "<b>two </b><i> three</i> four");
+        assertCoreText("two three four", "<b>two </b> <i>three</i> four");
+        assertCoreText("two three four", " <b>two </b> <i>three</i> four");
+        assertCoreText("two three four", "<b> two </b> <i>three</i> four");
+        assertCoreText("hello world", "hello \n<p> world </p>");
     }
 
     private static void assertCoreText(final String expected, final String input) {

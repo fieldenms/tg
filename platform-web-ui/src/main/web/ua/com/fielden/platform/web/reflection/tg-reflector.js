@@ -1074,6 +1074,16 @@ const _moneyVal = function (value) {
     return value['amount'];
 };
 /**
+ * Checks whether non-null 'value' represents rich text value.
+ */
+const _isRichText = function (value) {
+    return _isPropertyValueObject(value, 'formattedText');
+};
+const _richTextVal = function (value) {
+    return value['formattedText'];
+};
+
+/**
  * Checks whether non-null 'value' represents colour value.
  */
 const _isColour = function (value) {
@@ -1118,6 +1128,8 @@ const _equalsEx = function (value1, value2) {
         return value2 !== null && _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
     } else if (value1 !== null && _isHyperlink(value1)) {
         return value2 !== null && _isHyperlink(value2) && _equalsEx(_hyperlinkVal(value1), _hyperlinkVal(value2));
+    } else if (value1 !== null && _isRichText(value1)) {
+        return value2 !== null && _isRichText(value2) && _equalsEx(_richTextVal(value1), _richTextVal(value2));
     }
     return value1 === value2;
 };
@@ -1212,6 +1224,8 @@ const _convert = function (value) {
         // That's because they are processed manually on client and only gets back to server with some data.
         // Here we allows such processing instead of throwing 'unsupported type' exception.
         return value;
+    } else if (typeof value === 'object' && value.hasOwnProperty('coreText') && value.hasOwnProperty('formattedText')) { // for rich text type
+        return value;
     } else {
         throw new _UCEPrototype(value);
     }
@@ -1282,6 +1296,8 @@ const _toString = function (bindingValue, rootEntityType, property) {
         return _colourVal(bindingValue); // represents string -- no conversion required
     } else if (_isHyperlink(bindingValue)) {
         return _hyperlinkVal(bindingValue); // represents string -- no conversion required
+    } else if (_isRichText(bindingValue)) {
+        return _richTextVal(bindingValue); // represents string -- no conversion required
     } else if (typeof bindingValue === 'object' && Object.getOwnPropertyNames(bindingValue).length === 0) {
         // See method _convert that explains the use case of the properties with {} value.
         // We provide ability to even convert binding representation of these properties to string, which is, naturally, ''.

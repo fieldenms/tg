@@ -12,10 +12,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequ
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -36,6 +33,7 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModif
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
@@ -45,7 +43,10 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import javax.annotation.Nullable;
 
 /**
  * Implements the concept of a meta-property for full, not proxied, properties of instrumented entity instances.
@@ -255,10 +256,14 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     /**
-     * A helper method that identify whether {@code newValue} is {@code null}, blank (if string) or {@code false} (if boolean).
-     *
-     * @param newValue
-     * @return
+     * This predicate is true for values that represent the absence of a value.
+     * First and foremost, it is true for {@code null}.
+     * If {@code newValue} is not null, then the result depends on its type.
+     * <ul>
+     *   <li> String - true if the value is blank (empty or all whitespace).
+     *   <li> Boolean - true if the value is {@code false} or can be parsed as {@code false} with {@link Boolean#parseBoolean(String)}.
+     *   <li> RichText - true if the core text is blank.
+     * </ul>
      */
     private boolean isNullOrEmptyOrFalse(final T newValue /*, final T oldValue */) {
         // IMPORTANT : need to check NotNullValidator usage on existing logic. There is the case, when
@@ -267,7 +272,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // The current condition is essential for UI binding logic.
         return (newValue == null) || /* && (oldValue != null) */
                (isString(type) && StringUtils.isBlank(newValue.toString())) ||
-               (isBoolean(type) && !Boolean.parseBoolean(newValue.toString()));
+               (isBoolean(type) && !Boolean.parseBoolean(newValue.toString())) ||
+               (isRichText(type) && StringUtils.isBlank(((RichText) newValue).coreText()));
     }
 
     /**
@@ -427,18 +433,27 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     /**
-     * Returns the last result of the first validator associated with {@link ValidationAnnotation} value in a synchronised manner if all validators for this annotation succeeded,
-     * or the last result of the first failed validator. Most validation annotations are associated with a single validator. But some, such as
-     * {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
-     *
-     * @param va
-     *            -- validation annotation.
-     * @return
+     * Returns a validation result from a validator associated with the specified annotation.
+     * If there are validation errors among the associated validators, the first error is returned.
+     * Otherwise, a successful result or {@code null} is returned.
+     * <p>
+     * Most validation annotations are associated with a single validator.
+     * But some, such as {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
+     * <p>
+     * It is an error if this property has no validators associated with the specified annotation.
      */
     @Override
-    public final Result getValidationResult(final ValidationAnnotation va) {
+    public @Nullable Result getValidationResult(final ValidationAnnotation va) {
         final Result failure = getFirstFailureFor(va);
-        return failure != null ? failure : validators.get(va).values().iterator().next();
+        if (failure != null) {
+            return failure;
+        }
+        else if (!validators.containsKey(va)) {
+            throw new InvalidArgumentException("There are no validators associated with annotation [%s] in [%s]".formatted(va, this));
+        }
+        else {
+            return validators.get(va).values().iterator().next();
+        }
     }
 
     /**
@@ -588,13 +603,10 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     /**
-     * Returns the first failure associated with <code>annotation</code> value.
-     *
-     * @param annotation
-     * @return
+     * Returns the first failure associated with the annotation, or {@code null} if there is none.
      */
-    private final Result getFirstFailureFor(final ValidationAnnotation annotation) {
-        final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(annotation);
+    private @Nullable Result getFirstFailureFor(final ValidationAnnotation annotation) {
+        final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.getOrDefault(annotation, Map.of());
         for (final Result result : annotationHandlers.values()) {
             if (result != null && !result.isSuccessful()) {
                 return result;

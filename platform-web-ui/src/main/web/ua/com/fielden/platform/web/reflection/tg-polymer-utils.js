@@ -340,3 +340,51 @@ const _userName = function () {
 export const localStorageKey = function (subject) {
     return `${_userName()}_${subject}`;
 };
+
+/**
+ * Creates simple dummy entity to bind it to entity master
+ */
+export const createDummyBindingEntity = function (customPropObject, propDefinition) {
+    const reflector = new TgReflector();
+    const fullEntityType = reflector.getEntityPrototype();
+    fullEntityType.compoundOpenerType = () => null;
+
+    const fullEntity = reflector.newEntityEmpty();
+
+    fullEntity.get = prop => {
+        if (prop === '') { // empty property name means 'entity itself'
+            return fullEntity;
+        }
+        return fullEntity[prop];
+    };
+    fullEntity._type = fullEntityType;
+    fullEntity.id = -1;
+    fullEntity.version = 0;
+    Object.keys(customPropObject).forEach(key => {
+        fullEntity[key] = customPropObject[key].value;
+    });
+    
+    const bindingView = reflector.newEntityEmpty();
+    bindingView['id'] = -1;
+    bindingView['version'] = 0;
+    bindingView['@@touchedProps'] = {
+        names: [],
+        values: [],
+        counts: []
+    };
+    bindingView['@@origin'] = fullEntity;
+    Object.keys(customPropObject).forEach(key => {
+        bindingView[key] = customPropObject[key].value;
+        bindingView[`@${key}_editable`] = customPropObject[key].editable;
+    });
+    bindingView.get = prop => {
+        if (prop === '') { // empty property name means 'entity itself'
+            return bindingView;
+        }
+        return bindingView[prop];
+    };
+    const bindingViewType = reflector.getEntityPrototype();
+    bindingViewType.prop = propDefinition;
+    bindingView._type = bindingViewType;
+    return bindingView;
+}
