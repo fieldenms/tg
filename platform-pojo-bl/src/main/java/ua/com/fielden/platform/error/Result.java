@@ -19,13 +19,12 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
  * <p>
  * Result is considered successful if no exception {@code ex} was specified.
  * <p>
- * Result itself is an exception, and thus can not only be returned as a method result, but also thrown if appropriate.
+ * `Result` itself is an exception, and thus cannot only be returned as a method result, but also thrown if appropriate.
  *
  * @author TG Team
  *
  */
 public class Result extends RuntimeException {
-    private static final long serialVersionUID = 1L;
     private static final String SUCCESSFUL = "Successful";
     private static final String NULL_POINTER_EXCEPTION = "Null pointer exception";
     private static final String EXT_SEPARATOR = "<extended/>";
