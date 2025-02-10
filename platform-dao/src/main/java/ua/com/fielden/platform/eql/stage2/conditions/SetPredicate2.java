@@ -9,23 +9,18 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.SetPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISetOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 
-public class SetPredicate2 implements ICondition2<SetPredicate3> {
-    public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
-    public final ISetOperand2<? extends ISetOperand3> rightOperand;
-    public final boolean negated;
-
-    public SetPredicate2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final boolean negated, final ISetOperand2<? extends ISetOperand3> rightOperand) {
-        this.leftOperand = leftOperand;
-        this.rightOperand = rightOperand;
-        this.negated = negated;
-    }
+public record SetPredicate2 (ISingleOperand2<? extends ISingleOperand3> leftOperand,
+                             boolean negated,
+                             ISetOperand2<? extends ISetOperand3> rightOperand)
+        implements ICondition2<SetPredicate3>, ToString.IFormattable
+{
 
     @Override
     public boolean ignore() {
@@ -34,9 +29,12 @@ public class SetPredicate2 implements ICondition2<SetPredicate3> {
 
     @Override
     public TransformationResultFromStage2To3<SetPredicate3> transform(final TransformationContextFromStage2To3 context) {
-        final TransformationResultFromStage2To3<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
-        final TransformationResultFromStage2To3<? extends ISetOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResultFromStage2To3<>(new SetPredicate3(leftOperandTr.item, negated, rightOperandTr.item), rightOperandTr.updatedContext);
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(
+                context);
+        final TransformationResultFromStage2To3<? extends ISetOperand3> rightOperandTr = rightOperand.transform(
+                leftOperandTr.updatedContext);
+        return new TransformationResultFromStage2To3<>(
+                new SetPredicate3(leftOperandTr.item, negated, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override
@@ -53,29 +51,17 @@ public class SetPredicate2 implements ICondition2<SetPredicate3> {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + leftOperand.hashCode();
-        result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + rightOperand.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof SetPredicate2)) {
-            return false;
-        }
-
-        final SetPredicate2 other = (SetPredicate2) obj;
-
-        return Objects.equals(leftOperand, other.leftOperand) &&
-                Objects.equals(rightOperand, other.rightOperand) &&
-                (negated == other.negated);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("negated", negated)
+                .add("left", leftOperand)
+                .add("right", rightOperand)
+                .$();
     }
+
 }

@@ -1,25 +1,22 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import static java.util.stream.Collectors.toSet;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.OperandsBasedSet3;
+import ua.com.fielden.platform.utils.ToString;
 
-public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
-    private final List<ISingleOperand2<? extends ISingleOperand3>> operands;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-    public OperandsBasedSet2(final List<ISingleOperand2<? extends ISingleOperand3>> operands) {
-        this.operands = operands;
-    }
+import static java.util.stream.Collectors.toSet;
+
+public record OperandsBasedSet2 (List<ISingleOperand2<? extends ISingleOperand3>> operands)
+        implements ISetOperand2<OperandsBasedSet3>, ToString.IFormattable
+{
 
     @Override
     public TransformationResultFromStage2To3<OperandsBasedSet3> transform(final TransformationContextFromStage2To3 context) {
@@ -47,26 +44,17 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return operands.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
-    
+
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + operands.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof OperandsBasedSet2)) {
-            return false;
-        }
-        final OperandsBasedSet2 other = (OperandsBasedSet2) obj;
-        
-        return Objects.equals(operands, other.operands);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("operands", operands)
+                .$();
     }
+
 }

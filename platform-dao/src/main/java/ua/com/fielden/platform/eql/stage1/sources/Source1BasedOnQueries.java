@@ -14,6 +14,7 @@ import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 
@@ -119,7 +120,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
     private static boolean allGenerated(final List<SourceQuery2> models) {
         final boolean allGenerated = true;
         for (SourceQuery2 sourceQuery2 : models) {
-            if (!sourceQuery2.yields.allGenerated) {
+            if (!sourceQuery2.yields.allGenerated()) {
                 return false;
             }
         }
@@ -142,26 +143,18 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof Source1BasedOnQueries)) {
-            return false;
-        }
-
-        final Source1BasedOnQueries other = (Source1BasedOnQueries) obj;
-
-        return Objects.equals(models, other.models) && Objects.equals(isSyntheticEntity, other.isSyntheticEntity);
+        return this == obj ||
+               obj instanceof Source1BasedOnQueries that
+               && Objects.equals(models, that.models)
+               && isSyntheticEntity == that.isSyntheticEntity
+               && super.equals(that);
     }
 
     @Override
-    public String toString() {
-        return "Source(%s, alias=%s, id=%s, models=(%s))".formatted(sourceType().getTypeName(), alias, id, CollectionUtil.toString(models, "; "));
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("isSyntheticEntity", isSyntheticEntity)
+                .add("models", models);
     }
 
 }

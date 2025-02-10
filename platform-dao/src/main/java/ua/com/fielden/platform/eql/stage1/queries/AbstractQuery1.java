@@ -1,30 +1,11 @@
 package ua.com.fielden.platform.eql.stage1.queries;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
-import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
-import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
-import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_BYS;
-import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_BYS;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
-import ua.com.fielden.platform.eql.stage1.PropResolution;
-import ua.com.fielden.platform.eql.stage1.QueryComponents1;
-import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-import ua.com.fielden.platform.eql.stage1.TransformationResultFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.*;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
@@ -37,17 +18,23 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sundries.GroupBy2;
-import ua.com.fielden.platform.eql.stage2.sundries.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.sundries.OrderBy2;
-import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
-import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
+import ua.com.fielden.platform.eql.stage2.sundries.*;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.utils.ToString;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
+import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
+import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.conditions;
+import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_BYS;
+import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_BYS;
 /**
  * Base class for stage 1 data structures representing an EQL query, suitable for transformation into stage 2.
  * There are four kinds of structures for representing queries depending on its usage:
@@ -60,11 +47,11 @@ import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.conditio
  * </ol>
  *
  */
-public abstract class AbstractQuery1 {
+public abstract class AbstractQuery1 implements ToString.IFormattable {
 
     public static final String ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY = "Cannot find yield [%s] used within order by operation.";
 
-    public final IJoinNode1<? extends IJoinNode2<?>> joinRoot;
+    public final Optional<IJoinNode1<? extends IJoinNode2<?>>> maybeJoinRoot;
     public final Conditions1 whereConditions;
     public final Conditions1 udfConditions;
     public final Yields1 yields;
@@ -84,7 +71,7 @@ public abstract class AbstractQuery1 {
     public final boolean shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
 
     public AbstractQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
-        this.joinRoot = queryComponents.joinRoot();
+        this.maybeJoinRoot = queryComponents.maybeJoinRoot();
         this.whereConditions = queryComponents.whereConditions();
         this.udfConditions = queryComponents.udfConditions();
         this.yields = queryComponents.yields();
@@ -97,7 +84,7 @@ public abstract class AbstractQuery1 {
 
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
-        result.addAll(joinRoot != null ? joinRoot.collectEntityTypes() : emptySet());
+        maybeJoinRoot.map(ITransformableFromStage1To2::collectEntityTypes).ifPresent(result::addAll);
         result.addAll(whereConditions.collectEntityTypes());
         result.addAll(yields.collectEntityTypes());
         result.addAll(groups.collectEntityTypes());
@@ -113,7 +100,7 @@ public abstract class AbstractQuery1 {
      * @return
      */
     protected QueryComponents2 transformSourceless(final TransformationContextFromStage1To2 context) {
-        return new QueryComponents2(null /*joinRoot*/, whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
+        return new QueryComponents2(Optional.empty(), whereConditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
 
     /**
@@ -122,7 +109,9 @@ public abstract class AbstractQuery1 {
      * @param context
      * @return
      */
-    protected final QueryComponents2 transformQueryComponents(final TransformationContextFromStage1To2 context) {
+    protected final QueryComponents2 transformQueryComponents(final TransformationContextFromStage1To2 context,
+                                                              final IJoinNode1<? extends IJoinNode2<?>> joinRoot)
+    {
         final TransformationResultFromStage1To2<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(context);
         final TransformationContextFromStage1To2 enhancedContext = joinRootTr.updatedContext;
         final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
@@ -132,7 +121,7 @@ public abstract class AbstractQuery1 {
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         // it is important to enhance yields after orderings to enable functioning of 'orderBy().yield(..)' in application to properties rather than true yields
         final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource());
-        return new QueryComponents2(joinRoot2, whereConditions2, enhancedYields2, groups2, orderings2);
+        return new QueryComponents2(Optional.of(joinRoot2), whereConditions2, enhancedYields2, groups2, orderings2);
     }
 
     /**
@@ -172,7 +161,7 @@ public abstract class AbstractQuery1 {
             return EMPTY_GROUP_BYS;
         }
 
-        final List<GroupBy2> enhanced = groupBys.getGroups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
+        final List<GroupBy2> enhanced = groupBys.groups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
         return new GroupBys2(enhanced);
     }
 
@@ -183,8 +172,8 @@ public abstract class AbstractQuery1 {
 
         final List<OrderBy2> enhanced = new ArrayList<>();
 
-        for (final OrderBy2 original : orderBys.getOrderBys()) {
-            enhanced.addAll(original.operand != null ? transformForOperand(original.operand, original.isDesc) :
+        for (final OrderBy2 original : orderBys.orderBys()) {
+            enhanced.addAll(original.operand() != null ? transformForOperand(original.operand(), original.isDesc()) :
                 transformForYield(original, yields, mainSource));
         }
 
@@ -192,24 +181,24 @@ public abstract class AbstractQuery1 {
     }
 
     private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (yields.getYieldsMap().containsKey(original.yieldName)) {
-            final Yield2 yield = yields.getYieldsMap().get(original.yieldName);
-            if (yield.operand instanceof Prop2 yieldedProp && needsExtraction(yieldedProp.lastPart(), yieldedProp.penultPart())) {
-                return transformForOperand(yieldedProp, original.isDesc);
+        if (yields.getYieldsMap().containsKey(original.yieldName())) {
+            final Yield2 yield = yields.getYieldsMap().get(original.yieldName());
+            if (yield.operand() instanceof Prop2 yieldedProp && needsExtraction(yieldedProp.lastPart(), yieldedProp.penultPart())) {
+                return transformForOperand(yieldedProp, original.isDesc());
             } else {
                 return asList(original);
             }
         }
 
         if (yields.getYieldsMap().isEmpty()) {
-            final PropResolution propResolution = Prop1.resolvePropAgainstSource(mainSource, new Prop1(original.yieldName, false));
+            final PropResolution propResolution = Prop1.resolvePropAgainstSource(mainSource, new Prop1(original.yieldName(), false));
             if (propResolution != null) {
                 final List<AbstractQuerySourceItem<?>> path = enhancePath(propResolution.getPath());
-                return transformForOperand(new Prop2(mainSource, path), original.isDesc);
+                return transformForOperand(new Prop2(mainSource, path), original.isDesc());
             }
         }
 
-        throw new EqlStage1ProcessingException(ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY.formatted(original.yieldName));
+        throw new EqlStage1ProcessingException(ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY.formatted(original.yieldName()));
     }
 
     private static List<OrderBy2> transformForOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
@@ -219,7 +208,7 @@ public abstract class AbstractQuery1 {
     }
 
     private static List<GroupBy2> enhance(final GroupBy2 original) {
-        return original.operand instanceof Prop2 originalOperandAsProp
+        return original.operand() instanceof Prop2 originalOperandAsProp
                 ? extract(originalOperandAsProp).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList())
                 : asList(original);
     }
@@ -233,7 +222,7 @@ public abstract class AbstractQuery1 {
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + ((joinRoot == null) ? 0 : joinRoot.hashCode());
+        result = prime * result + maybeJoinRoot.hashCode();
         result = prime * result + yields.hashCode();
         result = prime * result + (yieldAll ? 1231 : 1237);
         result = prime * result + (shouldMaterialiseCalcPropsAsColumnsInSqlQuery ? 1231 : 1237);
@@ -242,24 +231,42 @@ public abstract class AbstractQuery1 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof AbstractQuery1)) {
-            return false;
-        }
-
-        final AbstractQuery1 other = (AbstractQuery1) obj;
-
-        return Objects.equals(resultType, other.resultType) &&
-                Objects.equals(joinRoot, other.joinRoot) &&
-                Objects.equals(yields, other.yields) &&
-                Objects.equals(whereConditions, other.whereConditions) &&
-                Objects.equals(udfConditions, other.udfConditions) &&
-                Objects.equals(groups, other.groups) &&
-                Objects.equals(orderings, other.orderings) &&
-                Objects.equals(yieldAll, other.yieldAll) &&
-                Objects.equals(shouldMaterialiseCalcPropsAsColumnsInSqlQuery, other.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
+        return this == obj
+               || obj instanceof AbstractQuery1 that
+                  && Objects.equals(resultType, that.resultType)
+                  && Objects.equals(maybeJoinRoot, that.maybeJoinRoot)
+                  && Objects.equals(yields, that.yields)
+                  && Objects.equals(whereConditions, that.whereConditions)
+                  && Objects.equals(udfConditions, that.udfConditions)
+                  && Objects.equals(groups, that.groups)
+                  && Objects.equals(orderings, that.orderings)
+                  && Objects.equals(yieldAll, that.yieldAll)
+                  && Objects.equals(shouldMaterialiseCalcPropsAsColumnsInSqlQuery, that.shouldMaterialiseCalcPropsAsColumnsInSqlQuery);
     }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines);
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("resultType", resultType)
+                .add("yieldAll", yieldAll)
+                .add("shouldMaterialiseCalcPropsAsColumnsInSqlQuery", shouldMaterialiseCalcPropsAsColumnsInSqlQuery)
+                .addIfPresent("join", maybeJoinRoot)
+                .addIfNot("where", whereConditions, Conditions1::isEmpty)
+                .addIfNot("udf", udfConditions, Conditions1::isEmpty)
+                .addIfNot("yields", yields, Yields1::isEmpty)
+                .addIfNot("groups", groups, GroupBys1::isEmpty)
+                .addIfNot("orderings", orderings, OrderBys1::isEmpty)
+                .pipe(this::addToString)
+                .$();
+    }
+
+    protected ToString addToString(final ToString toString) {
+        return toString;
+    }
+
 }

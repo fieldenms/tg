@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -13,19 +9,17 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.JoinInnerNode2;
+import ua.com.fielden.platform.utils.ToString;
 
-public class JoinInnerNode1 implements IJoinNode1<JoinInnerNode2> {
-    public final IJoinNode1<? extends IJoinNode2<?>> leftNode;
-    public final IJoinNode1<? extends IJoinNode2<?>> rightNode;
-    public final JoinType joinType;
-    public final Conditions1 joinConditions;
+import java.util.HashSet;
+import java.util.Set;
 
-    public JoinInnerNode1(final IJoinNode1<?> leftNode, final IJoinNode1<?> rightNode, final JoinType joinType, final Conditions1 joinConditions) {
-        this.leftNode = leftNode;
-        this.rightNode = rightNode;
-        this.joinType = joinType;
-        this.joinConditions = joinConditions;
-    }
+public record JoinInnerNode1 (IJoinNode1<? extends IJoinNode2<?>> leftNode,
+                              IJoinNode1<? extends IJoinNode2<?>> rightNode,
+                              JoinType joinType,
+                              Conditions1 joinConditions)
+        implements IJoinNode1<JoinInnerNode2>, ToString.IFormattable
+{
 
     @Override
     public TransformationResultFromStage1To2<JoinInnerNode2> transform(final TransformationContextFromStage1To2 context) {
@@ -49,33 +43,20 @@ public class JoinInnerNode1 implements IJoinNode1<JoinInnerNode2> {
         result.addAll(joinConditions.collectEntityTypes());
         return result;
     }
-    
+
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + leftNode.hashCode();
-        result = prime * result + rightNode.hashCode();
-        result = prime * result + joinConditions.hashCode();
-        result = prime * result + joinType.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof JoinInnerNode1)) {
-            return false;
-        }
-        
-        final JoinInnerNode1 other = (JoinInnerNode1) obj;
-        
-        return Objects.equals(leftNode, other.leftNode) &&
-                Objects.equals(rightNode, other.rightNode) &&
-                Objects.equals(joinType, other.joinType) &&
-                Objects.equals(joinConditions, other.joinConditions);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("type", joinType)
+                .add("left", leftNode)
+                .add("right", rightNode)
+                .addIfNot("conditions", joinConditions, Conditions1::isEmpty)
+                .$();
     }
+
 }
