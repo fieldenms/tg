@@ -20,11 +20,11 @@ public abstract class RangeValidatorFunction<T> {
                            final MetaProperty<T> endProperty, final T endValue)
     {
         if (startValue == null && endValue == null) {
-            return Result.Ok.$;
+            return Result.Success.$;
         } else if (startValue == null && endValue != null) {
             return Result.EmptyStart.$;
         } else if (startValue != null && endValue == null) {
-            return Result.Ok.$;
+            return Result.Success.$;
         } else {
             return coreValidate(startProperty, startValue, endProperty, endValue);
         }
@@ -34,7 +34,7 @@ public abstract class RangeValidatorFunction<T> {
                                            final MetaProperty<T> endProperty, final T endValue);
 
     public sealed interface Result {
-        enum Ok implements Result { $ };
+        enum Success implements Result { $ };
 
         /**
          * A failure condition, where the start value of the range is empty, while the end value is not.
@@ -44,7 +44,7 @@ public abstract class RangeValidatorFunction<T> {
         /**
          * A failure condition, where the start value of the range is greater than the end value.
          */
-        enum Fail implements Result { $ };
+        enum Failure implements Result { $ };
     }
 
     /**
@@ -72,7 +72,7 @@ public abstract class RangeValidatorFunction<T> {
         public Result coreValidate(final MetaProperty<X> startProperty, final X startValue,
                                    final MetaProperty<X> endProperty, final X endValue)
         {
-            return startValue.compareTo(endValue) > 0 ? Result.Fail.$ : Result.Ok.$;
+            return startValue.compareTo(endValue) > 0 ? Result.Failure.$ : Result.Success.$;
         }
     }
 

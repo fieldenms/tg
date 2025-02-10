@@ -5,8 +5,8 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.RangeValidatorFunction.Result.EmptyStart;
-import ua.com.fielden.platform.entity.validation.RangeValidatorFunction.Result.Fail;
-import ua.com.fielden.platform.entity.validation.RangeValidatorFunction.Result.Ok;
+import ua.com.fielden.platform.entity.validation.RangeValidatorFunction.Result.Failure;
+import ua.com.fielden.platform.entity.validation.RangeValidatorFunction.Result.Success;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -55,7 +55,7 @@ public final class LePropertyValidator<T> implements IBeforeChangeEventHandler<T
         return Result.successful();
     }
 
-    private <T> Result toResult(
+    private Result toResult(
             final RangeValidatorFunction.Result validationResult,
             final MetaProperty<T> startProperty,
             final T startValue,
@@ -63,19 +63,16 @@ public final class LePropertyValidator<T> implements IBeforeChangeEventHandler<T
             final T endValue)
     {
         return switch (validationResult) {
-            case Ok $ -> successful();
+            case Success $ ->
+                    successful();
             case EmptyStart $ ->
                     failuref("Property [%s] cannot be specified without property [%s]", endProperty.getTitle(), startProperty.getTitle());
-            case Fail $ -> {
-                if (Date.class.isAssignableFrom(startProperty.getType())) {
-                    yield failuref("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).",
-                                   startProperty.getTitle(), dates.toString((Date) startValue),
-                                   endProperty.getTitle(), dates.toString((Date) endValue));
-                }
-                else {
-                    yield failuref("%s cannot be greater than %s.", startProperty.getTitle(), endProperty.getTitle());
-                }
-            }
+            case Failure $ ->
+                    Date.class.isAssignableFrom(startProperty.getType())
+                    ? failuref("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).",
+                               startProperty.getTitle(), dates.toString((Date) startValue),
+                               endProperty.getTitle(), dates.toString((Date) endValue))
+                    : failuref("%s cannot be greater than %s.", startProperty.getTitle(), endProperty.getTitle());
         };
     }
 
