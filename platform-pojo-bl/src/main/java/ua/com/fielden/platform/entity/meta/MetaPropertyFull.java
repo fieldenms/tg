@@ -33,6 +33,7 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModif
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
@@ -44,6 +45,8 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import javax.annotation.Nullable;
 
 /**
  * Implements the concept of a meta-property for full, not proxied, properties of instrumented entity instances.
@@ -430,18 +433,27 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     /**
-     * Returns the last result of the first validator associated with {@link ValidationAnnotation} value in a synchronised manner if all validators for this annotation succeeded,
-     * or the last result of the first failed validator. Most validation annotations are associated with a single validator. But some, such as
-     * {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
-     *
-     * @param va
-     *            -- validation annotation.
-     * @return
+     * Returns a validation result from a validator associated with the specified annotation.
+     * If there are validation errors among the associated validators, the first error is returned.
+     * Otherwise, a successful result or {@code null} is returned.
+     * <p>
+     * Most validation annotations are associated with a single validator.
+     * But some, such as {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
+     * <p>
+     * It is an error if this property has no validators associated with the specified annotation.
      */
     @Override
-    public final Result getValidationResult(final ValidationAnnotation va) {
+    public @Nullable Result getValidationResult(final ValidationAnnotation va) {
         final Result failure = getFirstFailureFor(va);
-        return failure != null ? failure : validators.get(va).values().iterator().next();
+        if (failure != null) {
+            return failure;
+        }
+        else if (!validators.containsKey(va)) {
+            throw new InvalidArgumentException("There are no validators associated with annotation [%s] in [%s]".formatted(va, this));
+        }
+        else {
+            return validators.get(va).values().iterator().next();
+        }
     }
 
     /**
@@ -591,13 +603,10 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     /**
-     * Returns the first failure associated with <code>annotation</code> value.
-     *
-     * @param annotation
-     * @return
+     * Returns the first failure associated with the annotation, or {@code null} if there is none.
      */
-    private final Result getFirstFailureFor(final ValidationAnnotation annotation) {
-        final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(annotation);
+    private @Nullable Result getFirstFailureFor(final ValidationAnnotation annotation) {
+        final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.getOrDefault(annotation, Map.of());
         for (final Result result : annotationHandlers.values()) {
             if (result != null && !result.isSuccessful()) {
                 return result;
