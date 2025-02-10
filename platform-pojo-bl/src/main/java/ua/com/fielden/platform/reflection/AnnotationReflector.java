@@ -112,14 +112,14 @@ public final class AnnotationReflector {
             throw new InvalidArgumentException("Argument [annotatedElement] cannot be null.");
         }
         return switch (annotatedElement) {
-            case Class klass -> getAnnotationForClass(annotationType, klass);
+            case Class<?> klass -> getAnnotationForClass(annotationType, klass);
             case Field field -> (A) getFieldAnnotations(field).get(annotationType);
             case Method method -> (A) getMethodAnnotations(method).get(annotationType);
             default -> throw new ReflectionException(format("Reflecting on annotations for [%s] is not supported.", annotatedElement.getClass().getTypeName()));
         };
     }
 
-    private static Map<Class<? extends Annotation>, Annotation> getFieldAnnotations(final Field field) {
+    public static Map<Class<? extends Annotation>, Annotation> getFieldAnnotations(final Field field) {
         final Class<?> klass = field.getDeclaringClass();
         final String name = field.getName();
 
@@ -134,7 +134,7 @@ public final class AnnotationReflector {
         return annotationExtractionHelper(field, name, cachedFieldAnnotations);
     }
 
-    private static Map<Class<? extends Annotation>, Annotation> getMethodAnnotations(final Method method) {
+    public static Map<Class<? extends Annotation>, Annotation> getMethodAnnotations(final Method method) {
         final Class<?> klass = method.getDeclaringClass();
         final String name = method.getName();
 
@@ -177,12 +177,11 @@ public final class AnnotationReflector {
     // //////////////////////////////////METHOD RELATED ////////////////////////////////////////
     /**
      *
-     * Returns a list of methods (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
+     * Returns a list of methods (including private, protected, and public) annotated with the specified annotation.
+     * This method processes the whole class hierarchy.
      * <p>
-     * Important : overridden methods resolves as different. (e.g.: both overridden "getKey()" from {@link AbstractUnionEntity} and original "getKey()" from {@link AbstractEntity}
-     * will be returned for {@link AbstractUnionEntity} descendant)
-     *
-     *
+     * Important: overridden methods resolve as different (e.g., both overridden methods `getKey()` from {@link AbstractUnionEntity} and the original `getKey()` from {@link AbstractEntity}
+     * will be returned for {@link AbstractUnionEntity} descendant).
      *
      * @param type
      * @param annotation -- optional annotation argument; if empty arugment is provided then all methods of the specified type are returned

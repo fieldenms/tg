@@ -1,31 +1,35 @@
 'use strict';
+
 var EventEmitter = require('events').EventEmitter;
 var Pending = require('./pending');
 var debug = require('debug')('mocha:runnable');
-var milliseconds = require('./ms');
+var milliseconds = require('ms');
 var utils = require('./utils');
+const {
+  createInvalidExceptionError,
+  createMultipleDoneError,
+  createTimeoutError
+} = require('./errors');
 
 /**
  * Save timer references to avoid Sinon interfering (see GH-237).
+ * @private
  */
-
-/* eslint-disable no-unused-vars, no-native-reassign */
 var Date = global.Date;
 var setTimeout = global.setTimeout;
-var setInterval = global.setInterval;
 var clearTimeout = global.clearTimeout;
-var clearInterval = global.clearInterval;
-/* eslint-enable no-unused-vars, no-native-reassign */
-
 var toString = Object.prototype.toString;
+
+var MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
 module.exports = Runnable;
 
 /**
- * Initialize a new `Runnable` with the given `title` and callback `fn`.  Derived from [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter)
+ * Initialize a new `Runnable` with the given `title` and callback `fn`.
  *
  * @class
- * @extends EventEmitter
+ * @extends external:EventEmitter
+ * @public
  * @param {String} title
  * @param {Function} fn
  */
@@ -37,11 +41,14 @@ function Runnable(title, fn) {
   this.sync = !this.async;
   this._timeout = 2000;
   this._slow = 75;
-  this._enableTimeouts = true;
-  this.timedOut = false;
   this._retries = -1;
-  this._currentRetry = 0;
-  this.pending = false;
+  utils.assignNewMochaID(this);
+  Object.defineProperty(this, 'id', {
+    get() {
+      return utils.getMochaID(this);
+    }
+  });
+  this.reset();
 }
 
 /**
@@ -50,25 +57,57 @@ function Runnable(title, fn) {
 utils.inherits(Runnable, EventEmitter);
 
 /**
- * Set & get timeout `ms`.
- *
- * @api private
- * @param {number|string} ms
- * @return {Runnable|number} ms or Runnable instance.
+ * Resets the state initially or for a next run.
  */
-Runnable.prototype.timeout = function(ms) {
+Runnable.prototype.reset = function () {
+  this.timedOut = false;
+  this._currentRetry = 0;
+  this.pending = false;
+  delete this.state;
+  delete this.err;
+};
+
+/**
+ * Get current timeout value in msecs.
+ *
+ * @private
+ * @returns {number} current timeout threshold value
+ */
+/**
+ * @summary
+ * Set timeout threshold value (msecs).
+ *
+ * @description
+ * A string argument can use shorthand (e.g., "2s") and will be converted.
+ * The value will be clamped to range [<code>0</code>, <code>2^<sup>31</sup>-1</code>].
+ * If clamped value matches either range endpoint, timeouts will be disabled.
+ *
+ * @private
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout#Maximum_delay_value}
+ * @param {number|string} ms - Timeout threshold value.
+ * @returns {Runnable} this
+ * @chainable
+ */
+Runnable.prototype.timeout = function (ms) {
   if (!arguments.length) {
     return this._timeout;
-  }
-  // see #1652 for reasoning
-  if (ms === 0 || ms > Math.pow(2, 31)) {
-    this._enableTimeouts = false;
   }
   if (typeof ms === 'string') {
     ms = milliseconds(ms);
   }
-  debug('timeout %d', ms);
-  this._timeout = ms;
+
+  // Clamp to range
+  var range = [0, MAX_TIMEOUT];
+  ms = utils.clamp(ms, range);
+
+  // see #1652 for reasoning
+  if (ms === range[0] || ms === range[1]) {
+    this._timeout = 0;
+  } else {
+    this._timeout = ms;
+  }
+  debug('timeout %d', this._timeout);
+
   if (this.timer) {
     this.resetTimeout();
   }
@@ -78,11 +117,11 @@ Runnable.prototype.timeout = function(ms) {
 /**
  * Set or get slow `ms`.
  *
- * @api private
+ * @private
  * @param {number|string} ms
  * @return {Runnable|number} ms or Runnable instance.
  */
-Runnable.prototype.slow = function(ms) {
+Runnable.prototype.slow = function (ms) {
   if (!arguments.length || typeof ms === 'undefined') {
     return this._slow;
   }
@@ -95,38 +134,22 @@ Runnable.prototype.slow = function(ms) {
 };
 
 /**
- * Set and get whether timeout is `enabled`.
- *
- * @api private
- * @param {boolean} enabled
- * @return {Runnable|boolean} enabled or Runnable instance.
- */
-Runnable.prototype.enableTimeouts = function(enabled) {
-  if (!arguments.length) {
-    return this._enableTimeouts;
-  }
-  debug('enableTimeouts %s', enabled);
-  this._enableTimeouts = enabled;
-  return this;
-};
-
-/**
  * Halt and mark as pending.
  *
  * @memberof Mocha.Runnable
  * @public
- * @api public
  */
-Runnable.prototype.skip = function() {
-  throw new Pending('sync skip');
+Runnable.prototype.skip = function () {
+  this.pending = true;
+  throw new Pending('sync skip; aborting execution');
 };
 
 /**
  * Check if this runnable or its parent suite is marked as pending.
  *
- * @api private
+ * @private
  */
-Runnable.prototype.isPending = function() {
+Runnable.prototype.isPending = function () {
   return this.pending || (this.parent && this.parent.isPending());
 };
 
@@ -135,8 +158,8 @@ Runnable.prototype.isPending = function() {
  * @return {boolean}
  * @private
  */
-Runnable.prototype.isFailed = function() {
-  return !this.isPending() && this.state === 'failed';
+Runnable.prototype.isFailed = function () {
+  return !this.isPending() && this.state === constants.STATE_FAILED;
 };
 
 /**
@@ -144,16 +167,16 @@ Runnable.prototype.isFailed = function() {
  * @return {boolean}
  * @private
  */
-Runnable.prototype.isPassed = function() {
-  return !this.isPending() && this.state === 'passed';
+Runnable.prototype.isPassed = function () {
+  return !this.isPending() && this.state === constants.STATE_PASSED;
 };
 
 /**
  * Set or get number of retries.
  *
- * @api private
+ * @private
  */
-Runnable.prototype.retries = function(n) {
+Runnable.prototype.retries = function (n) {
   if (!arguments.length) {
     return this._retries;
   }
@@ -163,9 +186,9 @@ Runnable.prototype.retries = function(n) {
 /**
  * Set or get current retry
  *
- * @api private
+ * @private
  */
-Runnable.prototype.currentRetry = function(n) {
+Runnable.prototype.currentRetry = function (n) {
   if (!arguments.length) {
     return this._currentRetry;
   }
@@ -178,10 +201,9 @@ Runnable.prototype.currentRetry = function(n) {
  *
  * @memberof Mocha.Runnable
  * @public
- * @api public
  * @return {string}
  */
-Runnable.prototype.fullTitle = function() {
+Runnable.prototype.fullTitle = function () {
   return this.titlePath().join(' ');
 };
 
@@ -190,62 +212,33 @@ Runnable.prototype.fullTitle = function() {
  *
  * @memberof Mocha.Runnable
  * @public
- * @api public
- * @return {string}
+ * @return {string[]}
  */
-Runnable.prototype.titlePath = function() {
+Runnable.prototype.titlePath = function () {
   return this.parent.titlePath().concat([this.title]);
 };
 
 /**
  * Clear the timeout.
  *
- * @api private
+ * @private
  */
-Runnable.prototype.clearTimeout = function() {
+Runnable.prototype.clearTimeout = function () {
   clearTimeout(this.timer);
-};
-
-/**
- * Inspect the runnable void of private properties.
- *
- * @api private
- * @return {string}
- */
-Runnable.prototype.inspect = function() {
-  return JSON.stringify(
-    this,
-    function(key, val) {
-      if (key[0] === '_') {
-        return;
-      }
-      if (key === 'parent') {
-        return '#<Suite>';
-      }
-      if (key === 'ctx') {
-        return '#<Context>';
-      }
-      return val;
-    },
-    2
-  );
 };
 
 /**
  * Reset the timeout.
  *
- * @api private
+ * @private
  */
-Runnable.prototype.resetTimeout = function() {
+Runnable.prototype.resetTimeout = function () {
   var self = this;
-  var ms = this.timeout() || 1e9;
+  var ms = this.timeout() || MAX_TIMEOUT;
 
-  if (!this._enableTimeouts) {
-    return;
-  }
   this.clearTimeout();
-  this.timer = setTimeout(function() {
-    if (!self._enableTimeouts) {
+  this.timer = setTimeout(function () {
+    if (self.timeout() === 0) {
       return;
     }
     self.callback(self._timeoutError(ms));
@@ -256,10 +249,10 @@ Runnable.prototype.resetTimeout = function() {
 /**
  * Set or get a list of whitelisted globals for this test run.
  *
- * @api private
+ * @private
  * @param {string[]} globals
  */
-Runnable.prototype.globals = function(globals) {
+Runnable.prototype.globals = function (globals) {
   if (!arguments.length) {
     return this._allowedGlobals;
   }
@@ -270,14 +263,16 @@ Runnable.prototype.globals = function(globals) {
  * Run the test and invoke `fn(err)`.
  *
  * @param {Function} fn
- * @api private
+ * @private
  */
-Runnable.prototype.run = function(fn) {
+Runnable.prototype.run = function (fn) {
   var self = this;
   var start = new Date();
   var ctx = this.ctx;
   var finished;
-  var emitted;
+  var errorWasHandled = false;
+
+  if (this.isPending()) return fn();
 
   // Sometimes the ctx exists, but it is not runnable
   if (ctx && ctx.runnable) {
@@ -286,17 +281,11 @@ Runnable.prototype.run = function(fn) {
 
   // called multiple times
   function multiple(err) {
-    if (emitted) {
+    if (errorWasHandled) {
       return;
     }
-    emitted = true;
-    var msg = 'done() called multiple times';
-    if (err && err.message) {
-      err.message += " (and Mocha's " + msg + ')';
-      self.emit('error', err);
-    } else {
-      self.emit('error', new Error(msg));
-    }
+    errorWasHandled = true;
+    self.emit('error', createMultipleDoneError(self, err));
   }
 
   // finished
@@ -313,14 +302,23 @@ Runnable.prototype.run = function(fn) {
     self.clearTimeout();
     self.duration = new Date() - start;
     finished = true;
-    if (!err && self.duration > ms && self._enableTimeouts) {
+    if (!err && self.duration > ms && ms > 0) {
       err = self._timeoutError(ms);
     }
     fn(err);
   }
 
-  // for .resetTimeout()
+  // for .resetTimeout() and Runner#uncaught()
   this.callback = done;
+
+  if (this.fn && typeof this.fn.call !== 'function') {
+    done(
+      new TypeError(
+        'A runnable must be passed a function as its second argument.'
+      )
+    );
+    return;
+  }
 
   // explicit async with `done` argument
   if (this.async) {
@@ -328,44 +326,38 @@ Runnable.prototype.run = function(fn) {
 
     // allows skip() to be used in an explicit async context
     this.skip = function asyncSkip() {
-      done(new Pending('async skip call'));
-      // halt execution.  the Runnable will be marked pending
-      // by the previous call, and the uncaught handler will ignore
-      // the failure.
+      this.pending = true;
+      done();
+      // halt execution, the uncaught handler will ignore the failure.
       throw new Pending('async skip; aborting execution');
     };
 
-    if (this.allowUncaught) {
-      return callFnAsync(this.fn);
-    }
     try {
       callFnAsync(this.fn);
     } catch (err) {
-      emitted = true;
-      done(utils.getError(err));
-    }
-    return;
-  }
-
-  if (this.allowUncaught) {
-    if (this.isPending()) {
-      done();
-    } else {
-      callFn(this.fn);
+      // handles async runnables which actually run synchronously
+      errorWasHandled = true;
+      if (err instanceof Pending) {
+        return; // done() is already called in this.skip()
+      } else if (this.allowUncaught) {
+        throw err;
+      }
+      done(Runnable.toValueOrError(err));
     }
     return;
   }
 
   // sync or promise-returning
   try {
-    if (this.isPending()) {
-      done();
-    } else {
-      callFn(this.fn);
-    }
+    callFn(this.fn);
   } catch (err) {
-    emitted = true;
-    done(utils.getError(err));
+    errorWasHandled = true;
+    if (err instanceof Pending) {
+      return done();
+    } else if (this.allowUncaught) {
+      throw err;
+    }
+    done(Runnable.toValueOrError(err));
   }
 
   function callFn(fn) {
@@ -373,13 +365,13 @@ Runnable.prototype.run = function(fn) {
     if (result && typeof result.then === 'function') {
       self.resetTimeout();
       result.then(
-        function() {
+        function () {
           done();
           // Return null so libraries like bluebird do not warn about
           // subsequently constructed Promises.
           return null;
         },
-        function(reason) {
+        function (reason) {
           done(reason || new Error('Promise rejected with no or falsy reason'));
         }
       );
@@ -397,7 +389,7 @@ Runnable.prototype.run = function(fn) {
   }
 
   function callFnAsync(fn) {
-    var result = fn.call(ctx, function(err) {
+    var result = fn.call(ctx, function (err) {
       if (err instanceof Error || toString.call(err) === '[object Error]') {
         return done(err);
       }
@@ -429,13 +421,54 @@ Runnable.prototype.run = function(fn) {
  * @returns {Error} a "timeout" error
  * @private
  */
-Runnable.prototype._timeoutError = function(ms) {
-  var msg =
-    'Timeout of ' +
-    ms +
-    'ms exceeded. For async tests and hooks, ensure "done()" is called; if returning a Promise, ensure it resolves.';
+Runnable.prototype._timeoutError = function (ms) {
+  let msg = `Timeout of ${ms}ms exceeded. For async tests and hooks, ensure "done()" is called; if returning a Promise, ensure it resolves.`;
   if (this.file) {
     msg += ' (' + this.file + ')';
   }
-  return new Error(msg);
+  return createTimeoutError(msg, ms, this.file);
 };
+
+var constants = utils.defineConstants(
+  /**
+   * {@link Runnable}-related constants.
+   * @public
+   * @memberof Runnable
+   * @readonly
+   * @static
+   * @alias constants
+   * @enum {string}
+   */
+  {
+    /**
+     * Value of `state` prop when a `Runnable` has failed
+     */
+    STATE_FAILED: 'failed',
+    /**
+     * Value of `state` prop when a `Runnable` has passed
+     */
+    STATE_PASSED: 'passed',
+    /**
+     * Value of `state` prop when a `Runnable` has been skipped by user
+     */
+    STATE_PENDING: 'pending'
+  }
+);
+
+/**
+ * Given `value`, return identity if truthy, otherwise create an "invalid exception" error and return that.
+ * @param {*} [value] - Value to return, if present
+ * @returns {*|Error} `value`, otherwise an `Error`
+ * @private
+ */
+Runnable.toValueOrError = function (value) {
+  return (
+    value ||
+    createInvalidExceptionError(
+      'Runnable failed with falsy or undefined exception. Please throw an Error instead.',
+      value
+    )
+  );
+};
+
+Runnable.constants = constants;

@@ -23,9 +23,12 @@ public class DomainMetadataBuilder {
     }
 
     public IDomainMetadata build() {
-        // pre-populate generator's cache
-        entityTypes.parallelStream().forEach(generator::forEntity);
-        COMPONENT_TYPES.parallelStream().forEach(generator::forComponent);
+        // Pre-populate generator's cache.
+        // Do not use parallelStream() for processing as this leads to a deadlock due to loading of mutually dependent classes in parallel.
+        // The deadlock happens upon initialisation of PropertyNature, which has several static fields.
+        // See https://stackoverflow.com/questions/53682182/class-initialization-deadlock-mechanism-explanation for a discussion on this topic.
+        entityTypes.forEach(generator::forEntity);
+        COMPONENT_TYPES.forEach(generator::forComponent);
 
         return new DomainMetadataImpl(generator);
     }

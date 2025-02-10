@@ -25,7 +25,8 @@ import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator;
-import ua.com.fielden.platform.entity.validation.annotation.*;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.EntityIocModule;
@@ -58,7 +59,6 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotationOptionally;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
 import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
@@ -66,6 +66,7 @@ import static ua.com.fielden.platform.reflection.Finder.isKeyOrKeyMember;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
@@ -629,7 +630,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                         earlyRuntimePropertyDefinitionValidation(propName, type, isCollectional, isPropertyAnnotation, propertyAnnotationType); // computationally heavy
                     }
 
-                    // if setter is annotated then try to instantiate specified validator
+                    // if a setter is annotated, then try to instantiate the specified validator.
                     final var annotationsAndValidators = collectValidators(metaPropertyFactory, field, type, isCollectional, isEntityPersistent, shouldNotSkipKeyChangeValidation);
                     final var declaredValidationAnnotations = annotationsAndValidators._1;
                     final var validators = annotationsAndValidators._2;
@@ -773,9 +774,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
     /**
      * Analyses property definition to collect and instantiate all property validators.
-     * Among the returned annotations and validators are both explicit (i.e., directly present on a property) and
-     * implicit ones. An example of implicit validation is the standard validation of {@code String}-typed property {@code key}
-     * (see {@link SkipDefaultStringKeyMemberValidation}).
+     * Among the returned annotations and validators are both explicit (i.e. directly present on a property) and implicit ones.
+     * An example of implicit validation is the standard validation of {@code String}-typed property {@code key} (see {@link SkipDefaultStringKeyMemberValidation}).
      *
      * @return  a pair of validation annotations that apply to the property and a map {@code {ValidationAnnotation : {validator : result}}}
      */
@@ -819,14 +819,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * If an annotation type that is not mergeable is encountered, this method fails.
      */
     private Map<Class<? extends Annotation>, Annotation> mergeAnnotations(final Set<Annotation> annotations) {
-        if (annotations.isEmpty()) {
-            return ImmutableMap.of();
-        }
-        else {
-            return annotations.stream()
-                    .collect(groupingBy(Annotation::annotationType,
-                                        collectingAndThen(toList(), AbstractEntity::mergeAnnotations_)));
-        }
+        return annotations.stream().collect(groupingBy(Annotation::annotationType, collectingAndThen(toList(), AbstractEntity::mergeAnnotations_)));
     }
 
     /**
@@ -983,17 +976,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return null;
     }
 
+    private static final SequencedSet<Class<? extends Annotation>> fieldValidationAnnotationTypes = linkedSetOf(
+            ValidationAnnotation.UNIQUE.getType(),
+            ValidationAnnotation.FINAL.getType(),
+            ValidationAnnotation.LE_PROPETY.getType(),
+            ValidationAnnotation.GE_PROPETY.getType(),
+            ValidationAnnotation.BEFORE_CHANGE.getType());
     /**
      * Finds all explicitly declared validation annotations for a property and its mutators.
      */
     public Set<Annotation> findValidationAnnotationsForProperty(final Field field, final Class<?> type) {
         final var annotations = ImmutableSet.<Annotation>builder();
         annotations.addAll(extractSetterAnnotations(field, type));
-        getAnnotationOptionally(field, BeforeChange.class).ifPresent(annotations::add);
-        getAnnotationOptionally(field, Unique.class).ifPresent(annotations::add);
-        getAnnotationOptionally(field, Final.class).ifPresent(annotations::add);
-        getAnnotationOptionally(field, LeProperty.class).ifPresent(annotations::add);
-        getAnnotationOptionally(field, GeProperty.class).ifPresent(annotations::add);
+        AnnotationReflector.getFieldAnnotations(field).values().stream().filter(annotation -> fieldValidationAnnotationTypes.contains(annotation.annotationType())).forEach(annotations::add);
         return annotations.build();
     }
 

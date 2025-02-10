@@ -1,3 +1,9 @@
+import '../polymer/polymer-legacy.js';
+import '../iron-ajax/iron-ajax.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { dom } from '../polymer/lib/legacy/polymer.dom.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,11 +14,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import "../iron-ajax/iron-ajax.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { dom } from "../polymer/lib/legacy/polymer.dom.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
+
 /**
 `<iron-form>` is a wrapper around the HTML `<form>` element, that can
 validate and submit both custom and native HTML elements. Note that this
@@ -90,7 +92,6 @@ attach it to the `<iron-form>`:
 @hero hero.svg
 @demo demo/index.html
 */
-
 Polymer({
   _template: html`
     <style>
@@ -105,38 +106,32 @@ Polymer({
     <!-- This form is used for submission -->
     <form id="helper" action\$="[[action]]" method\$="[[method]]" enctype\$="[[enctype]]"></form>
 `,
+
   is: 'iron-form',
+
   properties: {
     /*
      * Set this to true if you don't want the form to be submitted through an
      * ajax request, and you want the page to redirect to the action URL
      * after the form has been submitted.
      */
-    allowRedirect: {
-      type: Boolean,
-      value: false
-    },
-
+    allowRedirect: {type: Boolean, value: false},
     /**
      * HTTP request headers to send. See PolymerElements/iron-ajax for
      * more details. Only works when `allowRedirect` is false.
      */
     headers: {
       type: Object,
-      value: function () {
+      value: function() {
         return {};
       }
     },
-
     /**
      * Set the `withCredentials` flag on the request. See
      * PolymerElements/iron-ajax for more details. Only works when
      * `allowRedirect` is false.
      */
-    withCredentials: {
-      type: Boolean,
-      value: false
-    }
+    withCredentials: {type: Boolean, value: false},
   },
 
   /**
@@ -181,35 +176,31 @@ Polymer({
   /**
    * @return {void}
    */
-  attached: function () {
+  attached: function() {
     // We might have been detached then re-attached.
     // Avoid searching again for the <form> if we already found it.
     if (this._form) {
       return;
-    } // Search for the `<form>`, if we don't find it, observe for
+    }
+    // Search for the `<form>`, if we don't find it, observe for
     // mutations.
-
-
     this._form = dom(this).querySelector('form');
-
     if (this._form) {
-      this._init(); // Since some elements might not be upgraded yet at this time,
+      this._init();
+      // Since some elements might not be upgraded yet at this time,
       // we won't be able to look into their shadowRoots for submittables.
       // We wait a tick and check again for any missing submittable default
       // values.
-
-
       this.async(this._saveInitialValues.bind(this), 1);
     } else {
-      this._nodeObserver = dom(this).observeNodes(function (mutations) {
+      this._nodeObserver = dom(this).observeNodes(function(mutations) {
         for (var i = 0; i < mutations.addedNodes.length; i++) {
           if (mutations.addedNodes[i].tagName === 'FORM') {
-            this._form = mutations.addedNodes[i]; // At this point in time, all custom elements are expected
+            this._form = mutations.addedNodes[i];
+            // At this point in time, all custom elements are expected
             // to be upgraded, hence we'll be able to traverse their
             // shadowRoots.
-
             this._init();
-
             dom(this).unobserveNodes(this._nodeObserver);
             this._nodeObserver = null;
           }
@@ -221,20 +212,19 @@ Polymer({
   /**
    * @return {void}
    */
-  detached: function () {
+  detached: function() {
     if (this._nodeObserver) {
       dom(this).unobserveNodes(this._nodeObserver);
       this._nodeObserver = null;
     }
   },
-  _init: function () {
+
+  _init: function() {
     this._form.addEventListener('submit', this.submit.bind(this));
+    this._form.addEventListener('reset', this.reset.bind(this));
 
-    this._form.addEventListener('reset', this.reset.bind(this)); // Save the initial values.
-
-
+    // Save the initial values.
     this._defaults = this._defaults || new WeakMap();
-
     this._saveInitialValues();
   },
 
@@ -248,7 +238,7 @@ Polymer({
    * the form, or if your elements are asynchronously setting their values.
    * @return {void}
    */
-  saveResetValues: function () {
+  saveResetValues: function() {
     this._saveInitialValues(true);
   },
 
@@ -256,29 +246,22 @@ Polymer({
    * @param {boolean=} overwriteValues
    * @return {void}
    */
-  _saveInitialValues: function (overwriteValues) {
+  _saveInitialValues: function(overwriteValues) {
     var nodes = this._getValidatableElements();
-
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
-
       if (!this._defaults.has(node) || overwriteValues) {
         // Submittables are expected to have `value` property,
         // that's what gets serialized.
-        var defaults = {
-          value: node.value
-        };
-
+        var defaults = {value: node.value};
         if ('checked' in node) {
           defaults.checked = node.checked;
-        } // In 1.x iron-form would reset `invalid`, so
+        }
+        // In 1.x iron-form would reset `invalid`, so
         // keep it here for backwards compat.
-
-
         if ('invalid' in node) {
           defaults.invalid = node.invalid;
         }
-
         this._defaults.set(node, defaults);
       }
     }
@@ -288,31 +271,28 @@ Polymer({
    * Validates all the required elements (custom and native) in the form.
    * @return {boolean} True if all the elements are valid.
    */
-  validate: function () {
+  validate: function() {
     // If you've called this before distribution happened, bail out.
     if (!this._form) {
       return false;
     }
 
-    if (this._form.getAttribute('novalidate') === '') return true; // Start by making the form check the native elements it knows about.
+    if (this._form.getAttribute('novalidate') === '')
+      return true;
 
+    // Start by making the form check the native elements it knows about.
     var valid = this._form.checkValidity();
+    var elements = this._getValidatableElements();
 
-    var elements = this._getValidatableElements(); // Go through all the elements, and validate the custom ones.
-
-
+    // Go through all the elements, and validate the custom ones.
     for (var el, i = 0; el = elements[i], i < elements.length; i++) {
       // This is weird to appease the compiler. We assume the custom element
       // has a validate() method, otherwise we can't check it.
-      var validatable =
-      /** @type {{validate: (function() : boolean)}} */
-      el;
-
+      var validatable = /** @type {{validate: (function() : boolean)}} */ (el);
       if (validatable.validate) {
         valid = !!validatable.validate() && valid;
       }
     }
-
     return valid;
   },
 
@@ -322,13 +302,13 @@ Polymer({
    * @param {Event=} event
    * @return {void}
    */
-  submit: function (event) {
+  submit: function(event) {
     // We are not using this form for submission, so always cancel its event.
     if (event) {
       event.preventDefault();
-    } // If you've called this before distribution happened, bail out.
+    }
 
-
+    // If you've called this before distribution happened, bail out.
     if (!this._form) {
       return;
     }
@@ -336,24 +316,29 @@ Polymer({
     if (!this.validate()) {
       this.fire('iron-form-invalid');
       return;
-    } // Remove any existing children in the submission form (from a previous
+    }
+
+    // Remove any existing children in the submission form (from a previous
     // submit).
-
-
     this.$.helper.textContent = '';
-    var json = this.serializeForm(); // If we want a redirect, submit the form natively.
 
+    var json = this.serializeForm();
+
+    // If we want a redirect, submit the form natively.
     if (this.allowRedirect) {
       // If we're submitting the form natively, then create a hidden element for
       // each of the values.
       for (var element in json) {
-        this.$.helper.appendChild(this._createHiddenElement(element, json[element]));
-      } // Copy the original form attributes.
+        this.$.helper.appendChild(
+            this._createHiddenElement(element, json[element]));
+      }
 
-
+      // Copy the original form attributes.
       this.$.helper.action = this._form.getAttribute('action');
       this.$.helper.method = this._form.getAttribute('method') || 'GET';
-      this.$.helper.contentType = this._form.getAttribute('enctype') || 'application/x-www-form-urlencoded';
+      this.$.helper.contentType = this._form.getAttribute('enctype') ||
+          'application/x-www-form-urlencoded';
+
       this.$.helper.submit();
       this.fire('iron-form-submit');
     } else {
@@ -367,33 +352,31 @@ Polymer({
    * @param {Event=} event
    * @return {void}
    */
-  reset: function (event) {
+  reset: function(event) {
     // We are not using this form for submission, so always cancel its event.
-    if (event) event.preventDefault(); // If you've called this before distribution happened, bail out.
+    if (event)
+      event.preventDefault();
 
+    // If you've called this before distribution happened, bail out.
     if (!this._form) {
       return;
-    } // Ensure the native form fired the `reset` event.
+    }
+
+    // Ensure the native form fired the `reset` event.
     // User might have bound `<button on-click="_resetIronForm">`, or directly
     // called `ironForm.reset()`. In these cases we want to first reset the
     // native form.
-
-
     if (!event || event.type !== 'reset' || event.target !== this._form) {
       this._form.reset();
-
       return;
-    } // Load the initial values.
+    }
 
-
+    // Load the initial values.
     var nodes = this._getValidatableElements();
-
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
-
       if (this._defaults.has(node)) {
         var defaults = this._defaults.get(node);
-
         for (var propName in defaults) {
           node[propName] = defaults[propName];
         }
@@ -410,42 +393,43 @@ Polymer({
    * @return {!Object<string, *>} An object containing name-value pairs for elements that
    *                  would be submitted.
    */
-  serializeForm: function () {
+  serializeForm: function() {
     // Only elements that have a `name` and are not disabled are submittable.
     var elements = this._getSubmittableElements();
-
     var json = {};
-
     for (var i = 0; i < elements.length; i++) {
       var values = this._serializeElementValues(elements[i]);
-
       for (var v = 0; v < values.length; v++) {
         this._addSerializedElement(json, elements[i].name, values[v]);
       }
     }
-
     return json;
   },
-  _handleFormResponse: function (event) {
+
+  _handleFormResponse: function(event) {
     this.fire('iron-form-response', event.detail);
   },
-  _handleFormError: function (event) {
+
+  _handleFormError: function(event) {
     this.fire('iron-form-error', event.detail);
   },
-  _makeAjaxRequest: function (json) {
+
+  _makeAjaxRequest: function(json) {
     // Initialize the iron-ajax element if we haven't already.
     if (!this.request) {
       this.request = document.createElement('iron-ajax');
-      this.request.addEventListener('response', this._handleFormResponse.bind(this));
+      this.request.addEventListener(
+          'response', this._handleFormResponse.bind(this));
       this.request.addEventListener('error', this._handleFormError.bind(this));
-    } // Native forms can also index elements magically by their name (can't make
+    }
+
+    // Native forms can also index elements magically by their name (can't make
     // this up if I tried) so we need to get the correct attributes, not the
     // elements with those names.
-
-
     this.request.url = this._form.getAttribute('action');
     this.request.method = this._form.getAttribute('method') || 'GET';
-    this.request.contentType = this._form.getAttribute('enctype') || 'application/x-www-form-urlencoded';
+    this.request.contentType = this._form.getAttribute('enctype') ||
+        'application/x-www-form-urlencoded';
     this.request.withCredentials = this.withCredentials;
     this.request.headers = this.headers;
 
@@ -453,31 +437,24 @@ Polymer({
       this.request.body = json;
     } else {
       this.request.params = json;
-    } // Allow for a presubmit hook
+    }
 
-
-    var event = this.fire('iron-form-presubmit', {}, {
-      cancelable: true
-    });
-
+    // Allow for a presubmit hook
+    var event = this.fire('iron-form-presubmit', {}, {cancelable: true});
     if (!event.defaultPrevented) {
       this.request.generateRequest();
       this.fire('iron-form-submit', json);
     }
   },
-  _getValidatableElements: function () {
-    return this._findElements(this._form, true
-    /* ignoreName */
-    , false
-    /* skipSlots */
-    );
+
+  _getValidatableElements: function() {
+    return this._findElements(
+        this._form, true /* ignoreName */, false /* skipSlots */);
   },
-  _getSubmittableElements: function () {
-    return this._findElements(this._form, false
-    /* ignoreName */
-    , false
-    /* skipSlots */
-    );
+
+  _getSubmittableElements: function() {
+    return this._findElements(
+        this._form, false /* ignoreName */, false /* skipSlots */);
   },
 
   /**
@@ -490,20 +467,19 @@ Polymer({
    * @return {!Array<!Node>}
    * @private
    */
-  _findElements: function (parent, ignoreName, skipSlots, submittable) {
+  _findElements: function(parent, ignoreName, skipSlots, submittable) {
     submittable = submittable || [];
     var nodes = dom(parent).querySelectorAll('*');
-
     for (var i = 0; i < nodes.length; i++) {
       // An element is submittable if it is not disabled, and if it has a
       // name attribute.
-      if (!skipSlots && (nodes[i].localName === 'slot' || nodes[i].localName === 'content')) {
+      if (!skipSlots &&
+          (nodes[i].localName === 'slot' || nodes[i].localName === 'content')) {
         this._searchSubmittableInSlot(submittable, nodes[i], ignoreName);
       } else {
         this._searchSubmittable(submittable, nodes[i], ignoreName);
       }
     }
-
     return submittable;
   },
 
@@ -516,22 +492,21 @@ Polymer({
    * @return {void}
    * @private
    */
-  _searchSubmittableInSlot: function (submittable, node, ignoreName) {
+  _searchSubmittableInSlot: function(submittable, node, ignoreName) {
     var assignedNodes = dom(node).getDistributedNodes();
 
     for (var i = 0; i < assignedNodes.length; i++) {
       if (assignedNodes[i].nodeType === Node.TEXT_NODE) {
         continue;
-      } // Note: assignedNodes does not contain <slot> or <content> because
+      }
+
+      // Note: assignedNodes does not contain <slot> or <content> because
       // getDistributedNodes flattens the tree.
-
-
       this._searchSubmittable(submittable, assignedNodes[i], ignoreName);
-
       var nestedAssignedNodes = dom(assignedNodes[i]).querySelectorAll('*');
-
       for (var j = 0; j < nestedAssignedNodes.length; j++) {
-        this._searchSubmittable(submittable, nestedAssignedNodes[j], ignoreName);
+        this._searchSubmittable(
+            submittable, nestedAssignedNodes[j], ignoreName);
       }
     }
   },
@@ -545,13 +520,12 @@ Polymer({
    * @return {void}
    * @private
    */
-  _searchSubmittable: function (submittable, node, ignoreName) {
+  _searchSubmittable: function(submittable, node, ignoreName) {
     if (this._isSubmittable(node, ignoreName)) {
       submittable.push(node);
     } else if (node.root) {
-      this._findElements(node.root, ignoreName, true
-      /* skipSlots */
-      , submittable);
+      this._findElements(
+          node.root, ignoreName, true /* skipSlots */, submittable);
     }
   },
 
@@ -566,10 +540,14 @@ Polymer({
    * @return {boolean}
    * @private
    */
-  _isSubmittable: function (node, ignoreName) {
-    return !node.disabled && (ignoreName ? node.name || typeof node.validate === 'function' : node.name);
+  _isSubmittable: function(node, ignoreName) {
+    return (
+        !node.disabled &&
+        (ignoreName ? node.name || typeof node.validate === 'function' :
+                      node.name));
   },
-  _serializeElementValues: function (element) {
+
+  _serializeElementValues: function(element) {
     // We will assume that every custom element that needs to be serialized
     // has a `value` property, and it contains the correct value.
     // The only weird one is an element that implements
@@ -589,8 +567,9 @@ Polymer({
     // 5. Buttons are hard. The button that was clicked to submit the form
     //    is the one who's name/value gets sent to the server.
     var tag = element.tagName.toLowerCase();
-
-    if (tag === 'button' || tag === 'input' && (element.type === 'submit' || element.type === 'reset')) {
+    if (tag === 'button' ||
+        (tag === 'input' &&
+         (element.type === 'submit' || element.type === 'reset'))) {
       return [];
     }
 
@@ -599,42 +578,48 @@ Polymer({
     } else if (tag === 'input') {
       return this._serializeInputValues(element);
     } else {
-      if (element['_hasIronCheckedElementBehavior'] && !element.checked) return [];
+      if (element['_hasIronCheckedElementBehavior'] && !element.checked)
+        return [];
       return [element.value];
     }
   },
-  _serializeSelectValues: function (element) {
-    var values = []; // A <select multiple> has an array of options, some of which can be
-    // selected.
 
+  _serializeSelectValues: function(element) {
+    var values = [];
+
+    // A <select multiple> has an array of options, some of which can be
+    // selected.
     for (var i = 0; i < element.options.length; i++) {
       if (element.options[i].selected) {
         values.push(element.options[i].value);
       }
     }
-
     return values;
   },
-  _serializeInputValues: function (element) {
+
+  _serializeInputValues: function(element) {
     // Most of the inputs use their 'value' attribute, with the exception
     // of radio buttons, checkboxes and file.
-    var type = element.type.toLowerCase(); // Don't do anything for unchecked checkboxes/radio buttons.
-    // Don't do anything for file, since that requires a different request.
+    var type = element.type.toLowerCase();
 
-    if ((type === 'checkbox' || type === 'radio') && !element.checked || type === 'file') {
+    // Don't do anything for unchecked checkboxes/radio buttons.
+    // Don't do anything for file, since that requires a different request.
+    if (((type === 'checkbox' || type === 'radio') && !element.checked) ||
+        type === 'file') {
       return [];
     }
-
     return [element.value];
   },
-  _createHiddenElement: function (name, value) {
+
+  _createHiddenElement: function(name, value) {
     var input = document.createElement('input');
     input.setAttribute('type', 'hidden');
     input.setAttribute('name', name);
     input.setAttribute('value', value);
     return input;
   },
-  _addSerializedElement: function (json, name, value) {
+
+  _addSerializedElement: function(json, name, value) {
     // If the name doesn't exist, add it. Otherwise, serialize it to
     // an array,
     if (json[name] === undefined) {
@@ -643,7 +628,6 @@ Polymer({
       if (!Array.isArray(json[name])) {
         json[name] = [json[name]];
       }
-
       json[name].push(value);
     }
   }

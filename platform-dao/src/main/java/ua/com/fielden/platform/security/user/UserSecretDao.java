@@ -45,7 +45,7 @@ public class UserSecretDao extends CommonEntityDao<UserSecret> implements UserSe
     @Override
     public final String hashPasswd(final String passwd, final String salt) {
         try {
-            return crypto.calculatePBKDF2WithHmacSHA1(passwd, salt);
+            return crypto.calculatePBKDF2WithHmacSHA256(passwd, salt);
         } catch (final SignatureException ex) {
             logger.error(ex);
             throw new SecurityException("Could not hash user password.", ex);

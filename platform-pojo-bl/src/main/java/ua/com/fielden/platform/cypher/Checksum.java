@@ -23,15 +23,16 @@ public class Checksum {
     private Checksum() {}
 
     /**
-     * Calculates a SHA1 code and the size (number of bytes) for a content of the input stream.
-     * 
+    /**
+     * Calculates a SHA256 code and the size (number of bytes) for the content of the input stream {@code is}.
+     *
      * @param is
      * @return
-     * @throws Exception
+     * @throws ChecksumException
      */
-    public static Pair<String, Long> sha1(final InputStream is) {
+    public static Pair<String, Long> sha256(final InputStream is) {
         try {
-            final MessageDigest md = MessageDigest.getInstance("SHA1");
+            final MessageDigest md = MessageDigest.getInstance("SHA256");
             final byte[] dataBytes = new byte[1024];
             int nread = 0;
             long size = 0;
@@ -43,24 +44,7 @@ public class Checksum {
             final byte[] mdbytes = md.digest();
             return pair(HexString.bufferToHex(mdbytes, 0, mdbytes.length), size);
         } catch (final Exception ex) {
-            throw new ChecksumException("Exception occurred while calculating SHA1 for an input stream.", ex);
-        }
-    }
-
-    /**
-     * Calculates a SHA1 code for the passed in byte array.
-     * 
-     * @param dataBytes
-     * @return
-     */
-    public static String sha1(final byte[] dataBytes) {
-        try {
-            final MessageDigest md = MessageDigest.getInstance("SHA1");
-            md.update(dataBytes);
-            final byte[] mdbytes = md.digest();
-            return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
-        } catch (final Exception ex) {
-            throw new ChecksumException("Exception occurred while calculating SHA1 for a byte array.", ex);
+            throw new ChecksumException("Exception occurred while calculating SHA256 for an input stream.", ex);
         }
     }
 
@@ -82,13 +66,13 @@ public class Checksum {
     }
 
     /**
-     * Takes an existing file or a directory and calculates checksum for that file or all files in a directory (excluding sub-directories) returning a map of file
-     * name/checksum/file size entries, where file name is a key and checksum/file size is represented by a {@link Pair} class.
-     * 
+     * Takes an existing file or a directory and calculates checksum for that file or all files in the directory (excluding subdirectories).
+     * Returns a map of filename/checksum/file size entries, where filename is a key and the checksum/file-size pair is a value represented by a {@link Pair}.
+     *
      * @param fileOrDirectory
      * @return
      */
-    public static Map<String, Pair<String, Long>> sha1(final File fileOrDirectory) {
+    public static Map<String, Pair<String, Long>> sha256(final File fileOrDirectory) {
         if (!fileOrDirectory.exists()) {
             throw new IllegalArgumentException("File or directory should exist.");
         }
@@ -98,36 +82,17 @@ public class Checksum {
             if (fileOrDirectory.isDirectory()) {
                 for (final File file : fileOrDirectory.listFiles()) {
                     if (file.isFile()) {
-                        result.put(file.getName(), sha1(new FileInputStream(file)));
+                        result.put(file.getName(), sha256(new FileInputStream(file)));
                     }
                 }
             } else {
-                result.put(fileOrDirectory.getName(), sha1(new FileInputStream(fileOrDirectory)));
+                result.put(fileOrDirectory.getName(), sha256(new FileInputStream(fileOrDirectory)));
             }
 
             return result;
         } catch (final Exception ex) {
-            throw new ChecksumException("Exception occurred while calculating SHA1 for a file or directory.", ex);
+            throw new ChecksumException("Exception occurred while calculating SHA256 for a file or directory.", ex);
         }
     }
 
-    /**
-     * Calculates a SHA1 code for string value.
-     * 
-     * @param value
-     * @return
-     */
-    public static String sha1(final String value) {
-        try {
-            final MessageDigest md = MessageDigest.getInstance("SHA1");
-            final byte[] data = value.getBytes();
-            md.update(data, 0, data.length);
-
-            final byte[] mdbytes = md.digest();
-
-            return HexString.bufferToHex(mdbytes, 0, mdbytes.length);
-        } catch (final Exception ex) {
-            throw new ChecksumException("Exception occurred while calculating SHA1 for a string.", ex);
-        }
-    }
 }

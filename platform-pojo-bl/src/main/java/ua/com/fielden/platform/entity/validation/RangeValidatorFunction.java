@@ -4,20 +4,15 @@ import com.google.inject.Injector;
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.error.Result;
-
-import static java.lang.String.format;
 
 /**
  * A function used to implement {@link LePropertyValidator} and {@link GePropertyValidator}.
- * Although it returns a {@link Result}, returned instances are not guaranteed to contain an informative message.
- * It is up to the actual validators to provide them.
  * <p>
- * Range validation is supported only for some types. {@link #forPropertyType(Class)} can be used to obtain a function
- * type suitable for a given property type.
+ * Range validation is supported only for some types.
+ * Method {@link #forPropertyType(Class)} can be used to get a function type that is suitable for a given property type.
  * <p>
- * Most implementations should only override {@link #coreValidate(MetaProperty, Object, MetaProperty, Object)}}, but if
- * more precise control over properties with {@code null} values is needed, then override {@link #validate(MetaProperty, Object, MetaProperty, Object)}}.
+ * Most implementations should only override {@link #coreValidate(MetaProperty, Object, MetaProperty, Object)}},
+ * but if more precise control over properties with {@code null} values is needed, then override {@link #validate(MetaProperty, Object, MetaProperty, Object)}}.
  */
 public abstract class RangeValidatorFunction<T> {
 
@@ -25,12 +20,11 @@ public abstract class RangeValidatorFunction<T> {
                            final MetaProperty<T> endProperty, final T endValue)
     {
         if (startValue == null && endValue == null) {
-            return Result.successful("Null is not applicable for validation.");
+            return Result.Success;
         } else if (startValue == null && endValue != null) {
-            return Result.failure(format("Property [%s] cannot be specified without property [%s]",
-                                         endProperty.getTitle(), startProperty.getTitle()));
+            return Result.EmptyStart;
         } else if (startValue != null && endValue == null) {
-            return Result.successful();
+            return Result.Success;
         } else {
             return coreValidate(startProperty, startValue, endProperty, endValue);
         }
@@ -39,9 +33,21 @@ public abstract class RangeValidatorFunction<T> {
     protected abstract Result coreValidate(final MetaProperty<T> startProperty, final T startValue,
                                            final MetaProperty<T> endProperty, final T endValue);
 
+    public enum Result {
+        Success,
+        /**
+         * A failure condition, where the start value of the range is empty, while the end value is not.
+         */
+        EmptyStart,
+        /**
+         * A failure condition, where the start value of the range is greater than the end value.
+         */
+        Failure;
+    }
+
     /**
-     * Returns a function type that supports range validation of properties of the given type.
-     * If the type is unsupported, throws an exception.
+     * Returns a function type that supports range validation for properties of the given type.
+     * If the type is unsupported, an exception is thrown.
      * Returned function type should be instantiated with an {@linkplain Injector#getInstance(Class) injector}.
      */
     public static <T> Class<RangeValidatorFunction<T>> forPropertyType(final Class<T> propertyType) {
@@ -59,14 +65,12 @@ public abstract class RangeValidatorFunction<T> {
 
     @Singleton
     public static final class ComparableValidator<X extends Comparable<X>> extends RangeValidatorFunction<X> {
+
         @Override
         public Result coreValidate(final MetaProperty<X> startProperty, final X startValue,
                                    final MetaProperty<X> endProperty, final X endValue)
         {
-            return startValue.compareTo(endValue) > 0
-                    ? Result.failuref("Property [%s] (value: %s) cannot be greater than property [%s] (value: %s).",
-                                      startProperty.getTitle(), startValue, endProperty.getTitle(), endValue)
-                    : Result.successful();
+            return startValue.compareTo(endValue) > 0 ? Result.Failure : Result.Success;
         }
     }
 

@@ -1,3 +1,5 @@
+import './boot.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,9 +9,9 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import './boot.js';
+
 let CSS_URL_RX = /(url\()([^)]*)(\))/g;
-let ABS_URL = /(^\/)|(^#)|(^[\w-\d]*:)/;
+let ABS_URL = /(^\/[^\/])|(^#)|(^[\w-\d]*:)/;
 let workingURL;
 let resolveDoc;
 /**
@@ -23,33 +25,36 @@ let resolveDoc;
  * @param {?string=} baseURI Base URI to resolve the URL against
  * @return {string} resolved URL
  */
-
-export function resolveUrl(url, baseURI) {
+function resolveUrl(url, baseURI) {
   if (url && ABS_URL.test(url)) {
     return url;
-  } // Lazy feature detection.
-
-
+  }
+  if (url === '//') {
+    return url;
+  }
+  // Lazy feature detection.
   if (workingURL === undefined) {
     workingURL = false;
-
     try {
       const u = new URL('b', 'http://a');
       u.pathname = 'c%20d';
-      workingURL = u.href === 'http://a/c%20d';
-    } catch (e) {// silently fail
+      workingURL = (u.href === 'http://a/c%20d');
+    } catch (e) {
+      // silently fail
     }
   }
-
   if (!baseURI) {
     baseURI = document.baseURI || window.location.href;
   }
-
   if (workingURL) {
-    return new URL(url, baseURI).href;
-  } // Fallback to creating an anchor into a disconnected document.
-
-
+    try {
+      return (new URL(url, baseURI)).href;
+    } catch (e) {
+      // Bad url or baseURI structure. Do not attempt to resolve.
+      return url;
+    }
+  }
+  // Fallback to creating an anchor into a disconnected document.
   if (!resolveDoc) {
     resolveDoc = document.implementation.createHTMLDocument('temp');
     resolveDoc.base = resolveDoc.createElement('base');
@@ -57,11 +62,12 @@ export function resolveUrl(url, baseURI) {
     resolveDoc.anchor = resolveDoc.createElement('a');
     resolveDoc.body.appendChild(resolveDoc.anchor);
   }
-
   resolveDoc.base.href = baseURI;
   resolveDoc.anchor.href = url;
   return resolveDoc.anchor.href || url;
+
 }
+
 /**
  * Resolves any relative URL's in the given CSS text against the provided
  * `ownerDocument`'s `baseURI`.
@@ -70,12 +76,14 @@ export function resolveUrl(url, baseURI) {
  * @param {string} baseURI Base URI to resolve the URL against
  * @return {string} Processed CSS text with resolved URL's
  */
-
-export function resolveCss(cssText, baseURI) {
-  return cssText.replace(CSS_URL_RX, function (m, pre, url, post) {
-    return pre + '\'' + resolveUrl(url.replace(/["']/g, ''), baseURI) + '\'' + post;
+function resolveCss(cssText, baseURI) {
+  return cssText.replace(CSS_URL_RX, function(m, pre, url, post) {
+    return pre + '\'' +
+      resolveUrl(url.replace(/["']/g, ''), baseURI) +
+      '\'' + post;
   });
 }
+
 /**
  * Returns a path from a given `url`. The path includes the trailing
  * `/` from the url.
@@ -83,7 +91,8 @@ export function resolveCss(cssText, baseURI) {
  * @param {string} url Input URL to transform
  * @return {string} resolved path
  */
-
-export function pathFromUrl(url) {
+function pathFromUrl(url) {
   return url.substring(0, url.lastIndexOf('/') + 1);
 }
+
+export { pathFromUrl, resolveCss, resolveUrl };
