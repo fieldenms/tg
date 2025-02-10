@@ -20,6 +20,7 @@ createStyleModule('tg-rich-text-styles', `
         padding: 0 !important;
     }
     .toastui-editor-contents {
+        text-align: initial;
         font-family: inherit !important;
         font-size: 16px !important; /*this font size was taken from paper-style typography. It was taken from there because there is no other way to inherit or specify a proper font-size*/
     }
