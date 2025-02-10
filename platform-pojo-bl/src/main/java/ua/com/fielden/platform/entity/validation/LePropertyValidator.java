@@ -4,9 +4,6 @@ import com.google.inject.ImplementedBy;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.RangeValidatorFunction.Result.EmptyStart;
-import ua.com.fielden.platform.entity.validation.RangeValidatorFunction.Result.Failure;
-import ua.com.fielden.platform.entity.validation.RangeValidatorFunction.Result.Success;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -63,11 +60,11 @@ public final class LePropertyValidator<T> implements IBeforeChangeEventHandler<T
             final T endValue)
     {
         return switch (validationResult) {
-            case Success $ ->
+            case Success ->
                     successful();
-            case EmptyStart $ ->
+            case EmptyStart ->
                     failuref("Property [%s] cannot be specified without property [%s]", endProperty.getTitle(), startProperty.getTitle());
-            case Failure $ ->
+            case Failure ->
                     Date.class.isAssignableFrom(startProperty.getType())
                     ? failuref("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).",
                                startProperty.getTitle(), dates.toString((Date) startValue),
