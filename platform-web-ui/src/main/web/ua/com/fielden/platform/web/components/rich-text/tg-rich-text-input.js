@@ -415,8 +415,14 @@ function scrollWhenListItem(event) {
  * @returns converted text
  */
 function getEditorHTMLText() {
-    const html = this._editor.getHTML();
-    return this._fakeSelection ? html.replace(/<mark>(.*?)<\/mark>/g, '$1') : html;
+    //First check whether value in editor is empty. getMarkdown should be used for that purpose, because getHtml for empty value will return '<p><br></p>' and getText will return '\n'
+    //If the value is not empty that remove fake selection from html text and return it.
+    if (this._editor.getMarkdown().length > 0) {
+        const html = this._editor.getHTML();
+        return this._fakeSelection ? html.replace(/<mark>(.*?)<\/mark>/g, '$1') : html;
+    }
+    //Otherwise return "". This is needed, because empty value for editing value should remain "" to make refresh cycle work.
+    return "";
 }
 
 /**
