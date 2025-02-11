@@ -150,6 +150,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [setValidationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
+    public void setUnhandledErrorValidationResult(final Result validationResult) {
+        throw new StrictProxyException(format("Invalid call [setUnhandledErrorValidationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
     public void setRequiredValidationResult(final Result validationResult) {
         throw new StrictProxyException(format("Invalid call [setRequiredValidationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }

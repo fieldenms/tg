@@ -26,6 +26,8 @@ public enum ValidationAnnotation {
     DOMAIN(DomainValidation.class), //
     BEFORE_CHANGE(BeforeChange.class), //
     UNIQUE(Unique.class),
+    /** Represents an unhandled error that occured during the processing of raw property values. */
+    UNHANDLED_ERROR(UnhandledErrorValidation.class),
     DYNAMIC(Dynamic.class); // DYNAMIC validation logic is encapsulated inside the setters.
 
     private final Class<? extends Annotation> type;

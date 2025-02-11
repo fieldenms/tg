@@ -385,6 +385,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         setValidationResultNoSynch(key, handler, validationResult);
     }
 
+    @Override
+    public final void setUnhandledErrorValidationResult(final Result validationResult) {
+        setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.UNHANDLED_ERROR);
+    }
+
     /**
      * Sets validation result specifically for {@link ValidationAnnotation.REQUIRED};
      *
