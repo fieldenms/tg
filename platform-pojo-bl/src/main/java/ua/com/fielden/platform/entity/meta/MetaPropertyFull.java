@@ -324,7 +324,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                         setLastInvalidValue(newValue);
                         return result;
                     }
-                } else {
+                } else if (vs.getKey() != ValidationAnnotation.UNHANDLED_ERROR) {
                     pair.setValue(null);
                 }
             }
