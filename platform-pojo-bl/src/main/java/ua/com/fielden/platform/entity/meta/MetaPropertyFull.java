@@ -444,8 +444,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * <p>
      * Most validation annotations are associated with a single validator.
      * But some, such as {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
-     * <p>
-     * It is an error if this property has no validators associated with the specified annotation.
      */
     @Override
     public @Nullable Result getValidationResult(final ValidationAnnotation va) {
@@ -454,7 +452,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             return failure;
         }
         else if (!validators.containsKey(va)) {
-            throw new InvalidArgumentException("There are no validators associated with annotation [%s] in [%s]".formatted(va, this));
+            return null;
         }
         else {
             return validators.get(va).values().iterator().next();

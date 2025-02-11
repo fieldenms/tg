@@ -22,6 +22,8 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
+import ua.com.fielden.platform.entity.validation.StubValidator;
+import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -322,7 +324,7 @@ public class EntityResourceUtils {
             // Generally speaking, it is not expected to receive any exceptions in this code i.e. the exception is thrown in cases of yet unsupported conversions etc.
             // However, some edge-case conversions (like in Rich Text) may fail.
             // These conversion errors need to be associated with property as validation errors.
-            entity.getProperty(name).setDomainValidationResult(exception instanceof Result result ? result : failure(exception));
+            entity.getProperty(name).setUnhandledErrorValidationResult(exception instanceof Result result ? result : failure(exception));
             logger.error(exception.getMessage(), exception);
         }
     }
@@ -510,7 +512,9 @@ public class EntityResourceUtils {
             // before it was made required, the property may have been in error in other validator, and the entity at the time may have been not constructed fully (the property validation state being stale);
             // need to revalidate without requiredness validation
             if (!isCriteriaEntity && !mp.isValid()) { // only do this for Entity Master entities and trigger revalidation only for erroneous (after req error clearing) properties
+                final var unhandledError = mp.getValidationResult(ValidationAnnotation.UNHANDLED_ERROR);
                 mp.revalidate(true);
+                mp.setUnhandledErrorValidationResult(unhandledError);
             }
         });
         return entity;
@@ -535,7 +539,9 @@ public class EntityResourceUtils {
                 // before it was made required, the property may have been in error in other validator, and the entity at the time may have been not constructed fully (the property validation state being stale);
                 // need to revalidate without requiredness validation
                 if (!isCriteriaEntity && !mp.isValid()) { // only do this for Entity Master entities and trigger revalidation only for erroneous (after req error clearing) properties
+                    final var unhandledError = mp.getValidationResult(ValidationAnnotation.UNHANDLED_ERROR);
                     mp.revalidate(true);
+                    mp.setUnhandledErrorValidationResult(unhandledError);
                 }
             });
         }
