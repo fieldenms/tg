@@ -6,9 +6,7 @@ import org.commonmark.parser.IncludeSourceSpans;
 import org.commonmark.parser.Parser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
-import org.owasp.html.CssSchema;
-import org.owasp.html.HtmlPolicyBuilder;
-import org.owasp.html.PolicyFactory;
+import org.owasp.html.*;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.text.commonmark.CommonMark;
 import ua.com.fielden.platform.text.owasp.html.SimpleHtmlChangeListener;
@@ -19,6 +17,7 @@ import ua.com.fielden.platform.utils.StringRangeReplacement;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
@@ -26,8 +25,7 @@ import static org.owasp.html.Sanitizers.BLOCKS;
 import static org.owasp.html.Sanitizers.IMAGES;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
-import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
+import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 // NOTE: Consider replacing the OWASP sanitiser by jsoup sanitiser (https://jsoup.org/cookbook/cleaning-html/safelist-sanitiser).
 //       OWASP sanitiser discards useless tags like the one below, even when a policy allows it, and there is no way
@@ -442,7 +440,9 @@ public final class RichTextSanitiser {
             .and(allowEmptyElementsPolicy())
             .and(allowLinks())
             .and(allowCommonElements())
-            .and(allowToastUi());
+            .and(allowToastUi())
+            .and(new HtmlPolicyBuilder().withPreprocessor(StyleAttributeProcessor.INSTANCE).toFactory())
+            ;
 
     /**
      * A visitor of {@link HtmlInline} nodes and any {@link Text} nodes following them.
@@ -500,4 +500,65 @@ public final class RichTextSanitiser {
         }
     }
     // @formatter:on
+
+    /**
+     * A pre-processor that removes {@code style} attributes that have a blank value or don't have a value at all.
+     * <p>
+     * Examples:
+     * <ul>
+     *   <li> {@code <p style=''>}
+     *   <li> {@code <p style='  '>}
+     *   <li> {@code <p style>}
+     *   <li> {@code <p style class='foo'>}
+     * </ul>
+     *
+     * Such attributes need to be removed because the OWASP sanitiser considers them invalid and reports an error.
+     * While sanitisation of other attributes can be configured via {@link AttributePolicy}, the {@code style} attribute
+     * is a special case that cannot be configured.
+     */
+    private static final class StyleAttributeProcessor implements HtmlStreamEventProcessor {
+
+        static final StyleAttributeProcessor INSTANCE = new StyleAttributeProcessor();
+
+        /**
+         * Matches the basic case when the attribute value is {@code style}.
+         * <p>
+         * Also, matches an edge case where the value is 2 or more {@code style} separated by spaces, which may occur given
+         * HTML such as {@code <p style= style style>}.
+         * Although the mentioned HTML contains 2 attributes: {@code style=style} and {@code style}, the OWASP sanitiser
+         * parses it as a single attribute {@code style='style style'}.
+         */
+        private static final Pattern STYLE_VALUE_PATTERN = Pattern.compile("(\\s*style\\s*)*");
+
+        @Override
+        public HtmlStreamEventReceiver wrap(final HtmlStreamEventReceiver sink) {
+            return new HtmlStreamEventReceiverWrapper(sink) {
+                @Override
+                public void openTag(final String elementName, final List<String> attrs) {
+                    // `attrs` should come in pairs (name, value), thus the length of attrs should be even.
+                    // But if it's not, then process the sublist [0, n - 1] and append the nth element to the result.
+                    final List<String> newAttrs = !attrs.contains("style")
+                            // Optimisation.
+                            ? attrs
+                            : windowed(attrs.stream(), 2)
+                                    .filter(w -> w.size() < 2 || !isEmptyStyle(w.get(0), w.get(1)))
+                                    .flatMap(Collection::stream)
+                                    // A mutable list is expected by the OWASP sanitiser.
+                                    .collect(Collectors.toCollection(ArrayList::new));
+
+                    super.openTag(elementName, newAttrs);
+                }
+
+                static boolean isEmptyStyle(final String name, final String value) {
+                    // If the original HTML contains an attribute without a value, then its name is used as the value,
+                    // resulting in a pair (name, name).
+                    return name.equalsIgnoreCase("style") &&
+                           (value.isBlank() ||
+                            STYLE_VALUE_PATTERN.matcher(value).matches());
+                }
+            };
+        }
+
+    }
+
 }

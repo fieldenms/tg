@@ -9,6 +9,23 @@ import static org.junit.Assert.fail;
 public class RichTextHtmlSanitisationTest {
 
     @Test
+    public void empty_style_is_allowed() {
+        assertSanitizationSuccess("<p style=''>");
+        assertSanitizationSuccess("<p style='color: #4CAF50'>");
+        assertSanitizationSuccess("<p style=''>");
+        assertSanitizationSuccess("<p style=>");
+        assertSanitizationSuccess("<p style=  >");
+        assertSanitizationSuccess("<p style>");
+        assertSanitizationSuccess("<p style style>");
+        assertSanitizationSuccess("<p style style style>");
+        assertSanitizationSuccess("<p style= style style>");
+        assertSanitizationSuccess("<p style style=' ' style>");
+        assertSanitizationSuccess("<p style='style'>");
+        assertSanitizationSuccess("<p style='style '>");
+        assertSanitizationSuccess("<p style='color: black' style>");
+    }
+
+    @Test
     public void all_features_supported_in_web_ui_editor_are_allowed() {
         assertSanitizationSuccess(
         """
