@@ -528,7 +528,7 @@ public final class RichTextSanitiser {
          * Although the mentioned HTML contains 2 attributes: {@code style=style} and {@code style}, the OWASP sanitiser
          * parses it as a single attribute {@code style='style style'}.
          */
-        private static final Pattern STYLE_VALUE_PATTERN = Pattern.compile("(\\s*style\\s*)*");
+        private static final Pattern STYLE_VALUE_PATTERN = Pattern.compile("\\s*style(?>\\s+style)*\\s*");
 
         @Override
         public HtmlStreamEventReceiver wrap(final HtmlStreamEventReceiver sink) {
