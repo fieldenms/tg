@@ -11,13 +11,15 @@ import java.util.Set;
 
 public final class RichTextValidator extends AbstractBeforeChangeEventHandler<RichText> {
 
+    public static final String PREFIX_ERR = RichTextSanitiser.STANDARD_ERROR_PREFIX;
+
     @Override
     public Result handle(
             final MetaProperty<RichText> property,
             final RichText newValue,
             final Set<Annotation> mutatorAnnotations)
     {
-        return RichTextSanitiser.sanitiseHtml(newValue);
+        return RichTextSanitiser.sanitiseHtml(newValue, RichTextSanitiser.standardErrorFormatter);
     }
 
 }
