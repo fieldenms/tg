@@ -36,12 +36,15 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
  * <p>
  * It is regarded that one such calculated property depends on another if its expression directly or transitively (via other calculated properties) refers to sub-property(ies) of that other calculated property.
  * <p>
- * The knowledge of these dependencies is required to generate correct sequence of SQL JOINs.
+ * The knowledge of these dependencies is required to generate a correct sequence of SQL JOINs.
  *
  * @author TG Team
  *
  */
 public class DependentCalcPropsOrder {
+
+    public static final String ERR_IN_EXPRESSION_FOR_CALCULATED_PROPERTY = "There is an error in the expression for calculated property [%s.%s].";
+    public static final String ERR_CYCLIC_DEPENDENCIES_BETWEEN_CALCULATED_PROPERTIES = "There are cyclic dependencies between calculated properties of [%s]. Properties: [%s].";
 
     private DependentCalcPropsOrder() {}
 
@@ -79,14 +82,14 @@ public class DependentCalcPropsOrder {
                 }
                 propDependencies.put(calcPropChunk.name(), determineCalcPropChunksSets(externalProps));
             } catch (final Exception ex) {
-                throw new EqlException("There is an error in the expression for calculated property [%s.%s].".formatted(querySourceInfo.javaType().getTypeName(), calcPropChunk.name()), ex);
+                throw new EqlException(ERR_IN_EXPRESSION_FOR_CALCULATED_PROPERTY.formatted(querySourceInfo.javaType().getTypeName(), calcPropChunk.name()), ex);
             }
         }
 
         try {
             return orderDependentCalcProps(calcPropsOfEntityType, propDependencies);
         } catch (final TopologicalSortException $) {
-            throw new EqlException(format("There are cyclic dependencies between calculated properties of [%s]. Properties: [%s]",
+            throw new EqlException(ERR_CYCLIC_DEPENDENCIES_BETWEEN_CALCULATED_PROPERTIES.formatted(
                                           querySourceInfo.javaType().getSimpleName(),
                                           CollectionUtil.toString(calcPropsOfEntityType, ",")));
         }
@@ -95,12 +98,12 @@ public class DependentCalcPropsOrder {
     /**
      * Enlist prop chunks for all calculated properties of the given entity type.
      *
-     * @param et
+     * @param qsi
      * @return
      */
-    private static List<PropChunk> determineCalcPropChunks(final QuerySourceInfo<?> et) {
+    private static List<PropChunk> determineCalcPropChunks(final QuerySourceInfo<?> qsi) {
         final List<PropChunk> result = new ArrayList<>();
-        for (final AbstractQuerySourceItem<?> prop : et.getProps().values()) {
+        for (final AbstractQuerySourceItem<?> prop : qsi.getProps().values()) {
             if (prop.expression != null && !prop.name.equals(KEY)) {
                 result.add(new PropChunk(prop.name, prop));
             } else if (prop.hasExpression() && prop instanceof QuerySourceItemForComponentType<?> propOfQuerySourceItemForComponentType) {
@@ -143,12 +146,12 @@ public class DependentCalcPropsOrder {
     }
 
     /**
-     * Removes from provided map of dependencies those entries, that have no dependencies and there is no dependencies upon them.
+     * Removes from a provided map of dependencies those entries, that have no dependencies and there is no dependencies upon them.
      *
      * @param mapOfDependencies
      * @return
      */
-    private static final Map<String, Set<String>> filterMapOfDependencies(final Map<String, Set<String>> mapOfDependencies) {
+    private static Map<String, Set<String>> filterMapOfDependencies(final Map<String, Set<String>> mapOfDependencies) {
         final Set<String> usedAsDependency = new HashSet<>();
         for (final Set<String> dependencies : mapOfDependencies.values()) {
             usedAsDependency.addAll(dependencies);
@@ -166,18 +169,18 @@ public class DependentCalcPropsOrder {
     }
 
     /**
-     * Determines for the given set of Prop2 instances 2 sets of names:
+     * Determines for the given set of Prop2 instances two sets of names:
      * <ol>
-     * <li> names of first prop chunks of props that are calculated and have no subprops
-     * <li> names of first prop chunks of props that are calculated and have subprops
+     * <li> names of first prop chunks for props that are calculated and have no subprops
+     * <li> names of first prop chunks for props that are calculated and have subprops
      * </ol>
      *
      * @param props
      * @return
      */
     private static T2<Set<String>, Set<String>> determineCalcPropChunksSets(final Set<Prop2> props) {
-        final Set<String> calcPropsWithSubprops = new HashSet<>();
-        final Set<String> calcPropsWithoutSubprops = new HashSet<>();
+        final var calcPropsWithSubprops = new HashSet<String>();
+        final var calcPropsWithoutSubprops = new HashSet<String>();
 
         for (final Prop2 prop2 : props) {
             final T3<String, Boolean, Boolean> firstProp = obtainFirstChunkInfo(prop2.getPath());
@@ -211,4 +214,5 @@ public class DependentCalcPropsOrder {
         }
         throw new EqlStage2ProcessingException(currentPropName, null);
     }
+
 }
