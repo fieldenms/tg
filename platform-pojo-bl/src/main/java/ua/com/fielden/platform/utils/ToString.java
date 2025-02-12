@@ -218,7 +218,9 @@ public final class ToString {
     /**
      * The most general format implementation that can be used to create arbitrary simple formats.
      */
-    public record Format (CharSequence beforeFields, CharSequence afterFields, CharSequence fieldDelimiter,
+    public record Format (CharSequence beforeFields,
+                          CharSequence afterFields,
+                          CharSequence fieldDelimiter,
                           @Nullable Predicate<Object> valueFilter,
                           BiFunction<String, Object, String> fieldFormatter)
             implements IFormat
@@ -410,11 +412,10 @@ public final class ToString {
 
         private static boolean isFormattable(final Object object) {
             // keep this method in sync with formatValue by testing against all types used in the switch
-            return object != null
-                   && (object instanceof IFormattable
-                       || object instanceof Map<?, ?>
-                       || object instanceof Collection<?>
-                       || object instanceof T2<?, ?>);
+            return object instanceof IFormattable
+                    || object instanceof Map<?, ?>
+                    || object instanceof Collection<?>
+                    || object instanceof T2<?, ?>;
         }
 
         private String formatMap(final Map<?, ?> map) {
