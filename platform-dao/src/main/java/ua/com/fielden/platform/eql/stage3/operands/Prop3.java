@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
@@ -42,20 +43,18 @@ public class Prop3 extends AbstractSingleOperand3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof Prop3)) {
-            return false;
-        }
-
-        final Prop3 other = (Prop3) obj;
-
-        return Objects.equals(name, other.name) && Objects.equals(source, other.source);
+        return this == obj
+               || obj instanceof Prop3 that
+                  && Objects.equals(name, that.name)
+                  && Objects.equals(source, that.source)
+                  && super.equals(that);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("name", name)
+                .add("source", source);
+    }
+
 }

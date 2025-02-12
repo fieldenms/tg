@@ -83,7 +83,7 @@ public class EqlQueryTransformer {
     }
 
     private static List<YieldedColumn> getYieldedColumns(final Yields3 model) {
-        return unmodifiableList(model.getYields().stream().map(yield -> new YieldedColumn(yield.alias, yield.type, yield.column)).collect(toList()));
+        return unmodifiableList(model.getYields().stream().map(yield -> new YieldedColumn(yield.alias(), yield.type(), yield.column())).collect(toList()));
     }
 
 }

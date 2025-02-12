@@ -17,6 +17,7 @@ import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.utils.StreamUtils;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,7 +52,9 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
 
     @Override
     public ResultQuery2 transform(final TransformationContextFromStage1To2 context) {
-        return new ResultQuery2(joinRoot == null ? transformSourceless(context) : transformQueryComponents(context), resultType);
+        final var queryComponents = maybeJoinRoot.map(joinRoot -> transformQueryComponents(context, joinRoot))
+                .orElseGet(() -> transformSourceless(context));
+        return new ResultQuery2(queryComponents, resultType);
     }
 
     /**
@@ -76,8 +79,8 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     }
 
     private Yields2 enhanceNonEmptyAndNotYieldAll(final Yield2 fstYield, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (yields.getYields().size() == 1 && isEmpty(fstYield.alias) && isPersistedEntityType(resultType)) {
-            return new Yields2(List.of(new Yield2(fstYield.operand, ID, fstYield.hasNonnullableHint)));
+        if (yields.getYields().size() == 1 && isEmpty(fstYield.alias()) && isPersistedEntityType(resultType)) {
+            return new Yields2(List.of(new Yield2(fstYield.operand(), ID, fstYield.hasNonnullableHint())));
         }
 
         // TODO: Need to remove the explicit yields, not contained in the fetch model to be consistent with the approach used in EQL2.
@@ -148,4 +151,11 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof ResultQuery1 && Objects.equal(fetchModel, ((ResultQuery1) obj).fetchModel);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .addIfNotNull("fetch", fetchModel);
+    }
+
 }

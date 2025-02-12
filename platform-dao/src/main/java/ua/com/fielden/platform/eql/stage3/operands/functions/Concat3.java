@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,9 +27,9 @@ public class Concat3 extends AbstractFunction3 {
         switch (dbVersion) {
         case H2:
         case MSSQL:
-            return format(" (%s)", operands.stream().map(so -> operandToSqlAsString(metadata, dbVersion, so)).collect(joining(" + ")));
+            return " (%s)".formatted(operands.stream().map(so -> operandToSqlAsString(metadata, dbVersion, so)).collect(joining(" + ")));
         case POSTGRESQL:
-            return format(" (%s)", operands.stream().map(so -> operandToSqlAsString(metadata, dbVersion, so)).collect(joining(" || ")));
+            return " (%s)".formatted(operands.stream().map(so -> operandToSqlAsString(metadata, dbVersion, so)).collect(joining(" || ")));
         default:
             return super.sql(metadata, dbVersion);
         }
@@ -44,16 +45,14 @@ public class Concat3 extends AbstractFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-    
-        if (!(obj instanceof Concat3)) {
-            return false;
-        }
-        
-        final Concat3 other = (Concat3) obj;
-        
-        return Objects.equals(operands, other.operands);
+        return this == obj
+               || obj instanceof Concat3 that
+                  && Objects.equals(this.operands, that.operands);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("operands", operands);
+    }
+
 }

@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
+
+import java.util.Objects;
 
 abstract class SingleOperandFunction3 extends AbstractFunction3 {
 
@@ -24,21 +25,15 @@ abstract class SingleOperandFunction3 extends AbstractFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!(obj instanceof SingleOperandFunction3)) {
-            return false;
-        }
+        return this == obj
+               || obj instanceof SingleOperandFunction3 that
+                  && Objects.equals(operand, that.operand)
+                  && super.equals(obj);
+    }
 
-        if (!super.equals(obj)) {
-            return false;
-        }        
-
-        final SingleOperandFunction3 other = (SingleOperandFunction3) obj;
-        
-        return Objects.equals(operand, other.operand);
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("operand", operand);
     }
 
 }
