@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableList;
 import org.commonmark.node.*;
 import org.commonmark.parser.IncludeSourceSpans;
 import org.commonmark.parser.Parser;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Element;
 import org.owasp.html.*;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.text.commonmark.CommonMark;
@@ -111,32 +109,29 @@ public final class RichTextSanitiser {
      * <p>
      * The sanitisation policy is specified via {@link #POLICY_FACTORY}.
      *
-     * @return  a result that contains the given HTML if it's safe, otherwise a failure
+     * @return  a result of {@link String} that contains the given HTML if it's safe, otherwise a failure
      */
-    static Result sanitiseHtml(final String input) {
-        class $ {
-            static final RichTextAsHtmlCoreTextExtractor.Extension extension = new RichTextAsHtmlCoreTextExtractor.Extension() {
-                static final String TOAST_UI_CHECKED_CLASS = "checked";
-                static final String TOAST_UI_TASK_ITEM_CLASS = "task-list-item";
-
-                @Override
-                public boolean isTaskItem(final Element element) {
-                    return element.hasClass(TOAST_UI_TASK_ITEM_CLASS);
-                }
-
-                @Override
-                public boolean isTaskItemChecked(final Element element) {
-                    return element.hasClass(TOAST_UI_TASK_ITEM_CLASS) && element.hasClass(TOAST_UI_CHECKED_CLASS);
-                }
-            };
-        }
-
+    public static Result sanitiseHtml(final String input) {
         final var violations = findViolations(input);
         return violations.isEmpty()
-                ? successful(new RichText(input, RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.extension)))
+                ? successful(input)
                 : failure(input, "Input contains unsafe HTML:\n" +
-                                enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
-                                        .collect(joining("\n")));
+                                 enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
+                                         .collect(joining("\n")));
+    }
+
+    /**
+     * Sanitises the {@link RichText#formattedText()} as described in {@link #sanitiseHtml(String)}.
+     *
+     * @return  a result that contains the specified {@link RichText} if it's safe, otherwise a failure
+     */
+    public static Result sanitiseHtml(final RichText richText) {
+        final var violations = findViolations(richText.formattedText());
+        return violations.isEmpty()
+                ? successful(richText)
+                : failure(richText, "Input contains unsafe HTML:\n" +
+                                    enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
+                                            .collect(joining("\n")));
     }
 
     /**

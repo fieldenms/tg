@@ -25,6 +25,7 @@ import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator;
+import ua.com.fielden.platform.entity.validation.RichTextValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
@@ -856,6 +857,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             if (atEntityExists != null) {
                 annotations.add(atEntityExists);
             }
+        }
+
+        if (EntityUtils.isRichText(propType)) {
+            annotations.add(BeforeChangeAnnotation.newInstance(new HandlerAnnotation(RichTextValidator.class).newInstance()));
         }
 
         return unmodifiableSequencedSet(annotations);
