@@ -859,7 +859,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
         }
 
-        if (EntityUtils.isRichText(propType)) {
+        if (EntityUtils.isRichText(propType) &&
+            annotations.stream().noneMatch(at -> at instanceof BeforeChange bch && BeforeChangeAnnotation.hasHandler(bch, RichTextValidator.class)))
+        {
             annotations.add(BeforeChangeAnnotation.newInstance(new HandlerAnnotation(RichTextValidator.class).newInstance()));
         }
 
