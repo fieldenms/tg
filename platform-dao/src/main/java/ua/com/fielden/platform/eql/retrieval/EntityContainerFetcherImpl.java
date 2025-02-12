@@ -37,7 +37,7 @@ import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQuer
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithoutPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.build;
 import static ua.com.fielden.platform.eql.retrieval.HibernateScalarsExtractor.getSortedScalars;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 @Singleton
 final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
@@ -108,29 +108,37 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qpm) {
         class $ {
-        static boolean isIdOnlyQuery(final QueryModelResult<?> queryModelResult) {
-            return isPersistedEntityType(queryModelResult.resultType()) && queryModelResult.yieldedColumns().size() == 1 && ID.equals(queryModelResult.yieldedColumns().get(0).name())
-                   // This condition prevents the recursive call below from recursing further (which would never terminate),
-                   // but it's unclear why this particular condition was chosen. Effectively, it's true only for such QPMs
-                   // that have a fetch model wider than their yields (i.e., a sole ID yield).
-                   && !(queryModelResult.fetchModel().getPrimProps().size() == 1 && queryModelResult.fetchModel().getPrimProps().contains(ID) &&
-                        queryModelResult.fetchModel().getRetrievalModels().isEmpty());
-        }
+            /**
+             * This predicate identifies cases where only ID is yielded, and a query needs to be extended to a query for retrieving an entity with that ID instead of just an ID value as a number.
+             *
+             * @param queryModelResult
+             * @return
+             */
+            static boolean isIdOnlyQuery(final QueryModelResult<?> queryModelResult) {
+                return isPersistentEntityType(queryModelResult.resultType())
+                       && queryModelResult.yieldedColumns().size() == 1
+                       && ID.equals(queryModelResult.yieldedColumns().getFirst().name())
+                       && !(queryModelResult.fetchModel().getPrimProps().size() == 1 && queryModelResult.fetchModel().getPrimProps().contains(ID) &&
+                            queryModelResult.fetchModel().getRetrievalModels().isEmpty());
+            }
         }
 
         final QueryModelResult<E> modelResult = EqlQueryTransformer.getModelResult(
                 qpm, dbVersionProvider.dbVersion(), filter, userProvider.getUsername(), dates, domainMetadata,
                 eqlTables, querySourceInfoProvider);
 
-        // TODO: This piece of code is supposedly responsible for "re-fetching the whole entity by ID in order to be able to enhance it",
-        //       but its effect and purpose is not understood yet.
-        //       See Issue #1991.
+        // This piece of code is responsible for "re-fetching the whole entity by ID in order to be able to enhance it".
+        // This is necessary to convert yielded IDs to fully-fledged entities.
+        // This does not apply to entity aggregates where IDs might be yielded – they are treated as numbers.
+        // See Issue #1991 (https://github.com/fieldenms/tg/issues/1991).
         if ($.isIdOnlyQuery(modelResult)) {
             final var idOnlyQuery = select(modelResult.resultType())
                     .where().prop(ID).in().model((SingleResultQueryModel<?>) qpm.queryModel)
                     .model();
             final var idOnlyQpm = new QueryProcessingModel<>(idOnlyQuery, qpm.orderModel, qpm.fetchModel, qpm.getParamValues(), qpm.lightweight);
-            return getModelResult(idOnlyQpm);
+            return EqlQueryTransformer.getModelResult(
+                    idOnlyQpm, dbVersionProvider.dbVersion(), filter, userProvider.getUsername(), dates, domainMetadata,
+                    eqlTables, querySourceInfoProvider);
         } else {
             return modelResult;
         }
