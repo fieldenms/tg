@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.entity.validation.RichTextValidator;
 
 import java.util.Objects;
 
@@ -24,8 +25,10 @@ import java.util.Objects;
  * <ul>
  *   <li> {@link IsProperty#length()} applies to {@link #coreText}.
  * </ul>
- * All newly created instances must go through validation, which performs sanitisation (e.g., {@linkplain RichTextSanitiser#sanitiseHtml(String)}).
- * Persistent values are considered valid, and their instances are created using type {@link Persisted}, which bypasses validation.
+ * Sanitisation of the markup is performed by {@link RichTextValidator}.
+ * Therefore, it is possible to create {@link RichText} values that contain unsafe markup.
+ * <p>
+ * Core text is obtained from the formatted text upon creating a {@link RichText} value.
  */
 public sealed class RichText permits RichText.Persisted {
 
@@ -73,8 +76,7 @@ public sealed class RichText permits RichText.Persisted {
     }
 
     /**
-     * Creates {@link RichText} by parsing the input as HTML and sanitising it.
-     * Throws an exception if the HTML is deemed to be unsafe.
+     * Creates {@link RichText} by parsing the input as HTML and extracting core text.
      */
     public static RichText fromHtml(final String input) {
         class $ {
@@ -100,7 +102,8 @@ public sealed class RichText permits RichText.Persisted {
 
     /**
      * Represents persisted values.
-     * <b>The constructor must be used only when retrieving values from a database</b>, because it doesn't perform validation.
+     * <b>The constructor must be used only when retrieving values from a database</b>,
+     * because it uses the provided core text instead of extracting it from the formatted text.
      */
     static final class Persisted extends RichText {
         /**

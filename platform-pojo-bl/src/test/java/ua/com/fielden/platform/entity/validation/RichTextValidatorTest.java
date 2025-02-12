@@ -30,14 +30,14 @@ public class RichTextValidatorTest {
 
         entity.setText(RichText.fromHtml("<script> alert(1) </script>"));
         assertFalse(entity.getProperty("text").isValid());
-        assertTrue(entity.getProperty("text").getFirstFailure().getMessage().startsWith(RichTextValidator.PREFIX_ERR));
+        assertTrue(entity.getProperty("text").getFirstFailure().getMessage().startsWith(RichTextValidator.PREFIX_ERR_UNSAFE_INPUT));
 
         entity.setText(RichText.fromHtml("safe"));
         assertTrue(entity.getProperty("text").isValid());
 
         entity.setText(RichText.fromHtml("<script> alert(2) </script>"));
         assertFalse(entity.getProperty("text").isValid());
-        assertTrue(entity.getProperty("text").getFirstFailure().getMessage().startsWith(RichTextValidator.PREFIX_ERR));
+        assertTrue(entity.getProperty("text").getFirstFailure().getMessage().startsWith(RichTextValidator.PREFIX_ERR_UNSAFE_INPUT));
     }
 
     @Test
