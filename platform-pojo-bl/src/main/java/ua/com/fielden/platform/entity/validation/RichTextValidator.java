@@ -11,7 +11,10 @@ import java.util.Set;
 
 /**
  * Default validator for {@link RichText} values.
- * It performs HTML sanitisation of formatted text, rejecting values that contain unsafe HTML.
+ * It is implicitly enabled for all {@link RichText} properties.
+ * This validator can also be explicitly declared on a property, although the effect will be the same as in its absence.
+ * <p>
+ * This validator performs HTML sanitisation of formatted text, rejecting values that contain unsafe HTML.
  */
 public final class RichTextValidator extends AbstractBeforeChangeEventHandler<RichText> {
 
