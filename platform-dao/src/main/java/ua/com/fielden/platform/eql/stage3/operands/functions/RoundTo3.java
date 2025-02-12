@@ -15,7 +15,7 @@ public class RoundTo3 extends TwoOperandsFunction3 {
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        return String.format("ROUND(%s, %s)", operand1.sql(metadata, dbVersion), operand2.sql(metadata, dbVersion));
+        return format("ROUND(%s, %s)", operand1.sql(metadata, dbVersion), operand2.sql(metadata, dbVersion));
     }
     
     @Override

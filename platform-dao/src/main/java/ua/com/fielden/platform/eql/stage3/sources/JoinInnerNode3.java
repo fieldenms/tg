@@ -8,8 +8,10 @@ import ua.com.fielden.platform.utils.ToString;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
-public record JoinInnerNode3 (IJoinNode3 leftNode, IJoinNode3 rightNode,
-                              JoinType joinType, Conditions3 joinConditions)
+public record JoinInnerNode3 (IJoinNode3 leftNode,
+                              IJoinNode3 rightNode,
+                              JoinType joinType,
+                              Conditions3 joinConditions)
         implements IJoinNode3, ToString.IFormattable
 {
 

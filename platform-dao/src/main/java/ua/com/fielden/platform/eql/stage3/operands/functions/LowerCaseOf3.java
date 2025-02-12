@@ -16,7 +16,7 @@ public class LowerCaseOf3 extends SingleOperandFunction3 {
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        return String.format("LOWER(%s)", operandToSqlAsString(metadata, dbVersion, operand));
+        return format("LOWER(%s)", operandToSqlAsString(metadata, dbVersion, operand));
     }
 
     @Override

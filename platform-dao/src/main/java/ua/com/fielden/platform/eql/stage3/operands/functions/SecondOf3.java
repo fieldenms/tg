@@ -15,16 +15,12 @@ public class SecondOf3 extends SingleOperandFunction3 {
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        switch (dbVersion) {
-        case H2:
-            return String.format("SECOND(%s)", operand.sql(metadata, dbVersion));
-        case MSSQL:
-            return String.format("DATEPART(ss, %s)", operand.sql(metadata, dbVersion));
-        case POSTGRESQL:
-            return String.format("CAST(EXTRACT(SECOND FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
-        default:
-            return super.sql(metadata, dbVersion);
-        }
+        return switch (dbVersion) {
+            case H2 -> format("SECOND(%s)", operand.sql(metadata, dbVersion));
+            case MSSQL -> format("DATEPART(ss, %s)", operand.sql(metadata, dbVersion));
+            case POSTGRESQL -> format("CAST(EXTRACT(SECOND FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
+            default -> super.sql(metadata, dbVersion);
+        };
     }
 
     @Override
