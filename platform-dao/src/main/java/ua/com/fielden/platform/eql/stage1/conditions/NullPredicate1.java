@@ -10,9 +10,9 @@ import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.conditions.NullPredicate2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -26,14 +26,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
  *
  * @author TG Team
  */
-public class NullPredicate1 implements ICondition1<ICondition2<?>> {
-    private final ISingleOperand1<? extends ISingleOperand2<?>> operand;
-    private final boolean negated;
-
-    public NullPredicate1(final ISingleOperand1<? extends ISingleOperand2<?>> operand, final boolean negated) {
-        this.operand = operand;
-        this.negated = negated;
-    }
+public record NullPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> operand, boolean negated)
+        implements ICondition1<ICondition2<?>>, ToString.IFormattable
+{
 
     @Override
     public ICondition2<?> transform(final TransformationContextFromStage1To2 context) {
@@ -66,26 +61,16 @@ public class NullPredicate1 implements ICondition1<ICondition2<?>> {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + operand.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof NullPredicate1)) {
-            return false;
-        }
-
-        final NullPredicate1 other = (NullPredicate1) obj;
-
-        return Objects.equals(negated, other.negated) && Objects.equals(operand, other.operand);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("negated", negated)
+                .add("operand", operand)
+                .$();
     }
+
 }

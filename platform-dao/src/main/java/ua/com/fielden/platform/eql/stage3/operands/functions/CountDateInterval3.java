@@ -6,6 +6,7 @@ import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Objects;
 
@@ -136,20 +137,15 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof CountDateInterval3)) {
-            return false;
-        }
-        
-        final CountDateInterval3 other = (CountDateInterval3) obj;
-        
-        return Objects.equals(intervalUnit, other.intervalUnit);
+        return this == obj
+               || obj instanceof CountDateInterval3 that
+                  && Objects.equals(intervalUnit, that.intervalUnit)
+                  && super.equals(that);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("unit", intervalUnit);
+    }
+
 }

@@ -22,6 +22,13 @@ public class InvalidArgumentException extends AbstractPlatformRuntimeException {
         return cause instanceof InvalidArgumentException ? (InvalidArgumentException) cause : new InvalidArgumentException(msg, cause);
     }
 
+    public static <X> X requireNonNull(final X argument, final String name) {
+        if (argument == null) {
+            throw new InvalidArgumentException("Argument [%s] must not be null.".formatted(name));
+        }
+        return argument;
+    }
+
     public InvalidArgumentException(final String msg) {
         super(msg);
     }

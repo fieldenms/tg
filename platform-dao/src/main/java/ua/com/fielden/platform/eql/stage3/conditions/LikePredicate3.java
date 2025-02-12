@@ -4,21 +4,13 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-
-import java.util.Objects;
+import ua.com.fielden.platform.utils.ToString;
 
 import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
 
-public class LikePredicate3 implements ICondition3 {
-    public final ISingleOperand3 leftOperand;
-    public final ISingleOperand3 rightOperand;
-    public final LikeOptions options;
-
-    public LikePredicate3(final ISingleOperand3 leftOperand, final ISingleOperand3 rightOperand, final LikeOptions options) {
-        this.leftOperand = leftOperand;
-        this.rightOperand = rightOperand;
-        this.options = options;
-    }
+public record LikePredicate3(ISingleOperand3 leftOperand, ISingleOperand3 rightOperand, LikeOptions options)
+        implements ICondition3, ToString.IFormattable
+{
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
@@ -29,30 +21,17 @@ public class LikePredicate3 implements ICondition3 {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + leftOperand.hashCode();
-        result = prime * result + options.hashCode();
-        result = prime * result + rightOperand.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof LikePredicate3)) {
-            return false;
-        }
-
-        final LikePredicate3 other = (LikePredicate3) obj;
-
-        return Objects.equals(leftOperand, other.leftOperand) &&
-                Objects.equals(rightOperand, other.rightOperand) &&
-                Objects.equals(options, other.options);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .addIf("options", options, opts -> opts != LikeOptions.DEFAULT_OPTIONS)
+                .add("left", leftOperand)
+                .add("right", rightOperand)
+                .$();
     }
 
 }

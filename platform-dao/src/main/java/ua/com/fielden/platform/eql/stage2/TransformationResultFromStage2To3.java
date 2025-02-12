@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.eql.stage2;
 
+import javax.annotation.Nullable;
+
 public class TransformationResultFromStage2To3<T> {
-    public final T item;
+    /**
+     * The transformed item or {@code null} if no transformation took place.
+     */
+    public final @Nullable T item;
     public final TransformationContextFromStage2To3 updatedContext;
 
     public TransformationResultFromStage2To3(final T item, final TransformationContextFromStage2To3 updatedContext) {
