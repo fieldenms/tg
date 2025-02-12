@@ -1,16 +1,11 @@
 package ua.com.fielden.platform.eql.meta.utils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-
-import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 
 public class TopologicalSort {
+
+    public static final String ERR_CYCLE_IN_GRAPH = "Topological sorting is impossible due to a cycle in the input graph.";
 
     private TopologicalSort() {}
 
@@ -29,7 +24,7 @@ public class TopologicalSort {
             }
 
             if (nextSorted == null) {
-                throw new TopologicalSortException("Topological sorting is impossible due to a cycle in the input graph.");
+                throw new TopologicalSortException(ERR_CYCLE_IN_GRAPH);
             }
 
             sorted.add(nextSorted);
