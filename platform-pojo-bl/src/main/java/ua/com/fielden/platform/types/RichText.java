@@ -1,18 +1,14 @@
 package ua.com.fielden.platform.types;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
-import java.util.*;
-
-import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.joining;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
+import java.util.Objects;
 
 /**
  * Rich text is text which has attributes beyond those of plain text (e.g., styles such as colour, boldface, italic),
@@ -81,8 +77,25 @@ public sealed class RichText permits RichText.Persisted {
      * Throws an exception if the HTML is deemed to be unsafe.
      */
     public static RichText fromHtml(final String input) {
-        final RichText richText = RichTextSanitiser.sanitiseHtml(input).getInstanceOrElseThrow();
-        return richText;
+        class $ {
+            static final RichTextAsHtmlCoreTextExtractor.Extension extension = new RichTextAsHtmlCoreTextExtractor.Extension() {
+                static final String TOAST_UI_CHECKED_CLASS = "checked";
+                static final String TOAST_UI_TASK_ITEM_CLASS = "task-list-item";
+
+                @Override
+                public boolean isTaskItem(final Element element) {
+                    return element.hasClass(TOAST_UI_TASK_ITEM_CLASS);
+                }
+
+                @Override
+                public boolean isTaskItemChecked(final Element element) {
+                    return element.hasClass(TOAST_UI_TASK_ITEM_CLASS) && element.hasClass(TOAST_UI_CHECKED_CLASS);
+                }
+            };
+        }
+
+        final var coreText = RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.extension);
+        return new RichText(input, coreText);
     }
 
     /**
