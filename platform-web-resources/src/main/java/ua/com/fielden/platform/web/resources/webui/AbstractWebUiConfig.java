@@ -269,11 +269,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public String genFullcalendarElement() {
-        return webUiBuilder.genFullcalendarElement(independentTimeZone);
-    }
-
-    @Override
     public final String genMainWebUIComponent() {
         final String mainWebUiComponent = ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js");
         if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {

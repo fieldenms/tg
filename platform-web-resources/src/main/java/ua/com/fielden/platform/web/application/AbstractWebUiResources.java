@@ -32,10 +32,6 @@ import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
  *
  */
 public abstract class AbstractWebUiResources extends Application {
-    /**
-     * Path to generated (and its source as well) tg-fullcalendar component.
-     */
-    public static final String FULLCALENDAR_PATH = "/resources/components/fullcalendar/tg-fullcalendar.js";
     protected final Injector injector;
 
     protected final Logger logger = LogManager.getLogger(getClass());
@@ -112,7 +108,6 @@ public abstract class AbstractWebUiResources extends Application {
         guardedRouter.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
         guardedRouter.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, dates));
-        guardedRouter.attach(FULLCALENDAR_PATH, new FullcalendarResourceFactory(webResourceLoader, deviceProvider, dates));
         // type meta info resource
         guardedRouter.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(webResourceLoader, deviceProvider, dates));

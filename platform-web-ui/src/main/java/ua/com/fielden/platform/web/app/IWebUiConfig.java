@@ -92,13 +92,6 @@ public interface IWebUiConfig extends IMenuRetriever {
     String genWebUiPreferences();
 
     /**
-     * Generates app-specific 'tg-fullcalendar' element source.
-     *
-     * @return
-     */
-    String genFullcalendarElement();
-
-    /**
      * Returns the instance of {@link IEventSourceEmitterRegister} that will is created for this web application to manage registered clients.
      *
      * @return

@@ -234,25 +234,6 @@ public class WebUiBuilder implements IWebUiBuilder {
                 .replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
     }
 
-    /**
-     * Generates 'tg-fullcalendar' element source with timezone enhancements based on independent time-zone mode setting.
-     */
-    public String genFullcalendarElement(final boolean independentTimeZoneMode) {
-        return getText("ua/com/fielden/platform/web/components/fullcalendar/tg-fullcalendar.js").
-            replace("@genImport", independentTimeZoneMode ? """
-                import { momentTimezonePlugin } from '/resources/fullcalendar/moment-timezone/fullcalendar-with-timezones-lib.js';
-                import { now } from '/resources/reflection/tg-date-utils.js';
-            """ : "").
-            replace("@genConfig", independentTimeZoneMode ? """
-                ,
-                plugins: [ momentTimezonePlugin ],
-                timeZone: '%s',
-                now: function() {
-                    return now().toDate().toISOString(); // Return in ISO 8601 string format, as per default implementation
-                }
-            """.formatted(TimeZone.getDefault().getID()) : "");
-    }
-
     @Override
     public IWebUiBuilder addCustomView(final AbstractCustomView customView) {
         viewMap.put(customView.getViewName(), customView);

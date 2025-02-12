@@ -36,7 +36,6 @@ import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
 import static ua.com.fielden.platform.utils.ResourceLoader.getText;
-import static ua.com.fielden.platform.web.application.AbstractWebUiResources.FULLCALENDAR_PATH;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.*;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
@@ -84,8 +83,6 @@ public class WebResourceLoader implements IWebResourceLoader {
             return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> StringUtils.replace(src, "@title", "Login Reset Request"));
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genWebUiPreferences());
-        } else if (FULLCALENDAR_PATH.equalsIgnoreCase(resourceUri)) {
-            return ofNullable(webUiConfig.genFullcalendarElement());
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genMainWebUIComponent());
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceUri)) {

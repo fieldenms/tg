@@ -1,4 +1,6 @@
-import { fullcalendarStyles, FullCalendar } from '/resources/fullcalendar/fullcalendar-lib.js';@genImport
+import { fullcalendarStyles, FullCalendar } from '/resources/fullcalendar/fullcalendar-lib.js';
+import { momentTimezonePlugin } from '/resources/fullcalendar/moment-timezone/fullcalendar-with-timezones-lib.js';
+import { now } from '/resources/reflection/tg-date-utils.js';
 import '/resources/components/tg-dropdown-switch.js';
 import '/resources/layout/tg-flex-layout.js';
 import '/resources/images/tg-icons.js';
@@ -187,7 +189,7 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
         this._mobileToolbarLayout = [['justified', 'center', [], []], ['select:pos=center']];
 
         // configures calendar
-        this._calendar = new FullCalendar.Calendar(this.$.calendarContainer, {
+        const config = {
             initialView: 'dayGridMonth',
             headerToolbar: false,
             datesSet: (dataInfo) => {
@@ -210,8 +212,14 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
                 hour12: false
             },
             height: 'auto',
-            firstDay: this._appConfig.firstDayOfWeek@genConfig
-          });
+            firstDay: this._appConfig.firstDayOfWeek
+        };
+        if (moment.defaultZone) {
+            config.plugins = [ momentTimezonePlugin ];
+            config.timeZone = moment.defaultZone.name;
+            config.now = () => now().toDate().toISOString(); // Return in ISO 8601 string format, as per default implementation
+        }
+        this._calendar = new FullCalendar.Calendar(this.$.calendarContainer, config);
           this._calendar.render();
           this.currentView = 'dayGridMonth';
           //Initialising edit action

@@ -36,7 +36,6 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.cypher.Checksum.sha1;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.web.application.AbstractWebUiResources.FULLCALENDAR_PATH;
 
 /**
  * A set of utilities to facilitate Web UI application vulcanization.
@@ -239,7 +238,6 @@ public class VulcanizingUtility {
      * Copies template for 'rollup.config.js' and adjusts it according to <code>profile</code>.
      *
      * @param webResourceLoader
-     * @param logger
      * @param profile
      */
     private static void adjustRootResources(final IWebResourceLoader webResourceLoader, final String profile) {
@@ -334,19 +332,9 @@ public class VulcanizingUtility {
         }
         downloadSource("app", "tg-app-config.js", webResourceLoader);
         downloadSource("app", "tg-app.js", webResourceLoader);
-        final var pathAndName = pathAndName(FULLCALENDAR_PATH);
-        downloadSource(pathAndName._1, pathAndName._2, webResourceLoader);
         LOGGER.info("\t\t\tDownloading generated resource 'application-startup-resources.js'...");
         downloadSource("app", "application-startup-resources.js", webResourceLoader);
         LOGGER.info("\tDownloaded generated resources.");
-    }
-
-    /**
-     * Splits full path to 'path' and 'name'. Delimited by "/". Can also be prepended with "/".
-     */
-    private static T2<String, String> pathAndName(final String fullPath) {
-        final var path = stream(fullPath.split("/")).filter(not(String::isBlank)).toList();
-        return T2.t2(join("/", path.subList(0, path.size() - 1)), path.getLast());
     }
 
     /**
