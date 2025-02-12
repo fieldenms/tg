@@ -3,6 +3,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
+import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 
 import { TgFileProcessingBehavior } from '/resources/file_operations/tg-file-processing-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';

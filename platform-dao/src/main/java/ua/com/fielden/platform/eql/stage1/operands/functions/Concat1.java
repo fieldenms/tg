@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.operands.functions;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage1.ITransformableFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -24,20 +25,19 @@ public record Concat1 (List<? extends ISingleOperand1<? extends ISingleOperand2<
 
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        return operands.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+        return operands.stream().map(ITransformableFromStage1To2::collectEntityTypes).flatMap(Set::stream).collect(toSet());
     }
-    
+
     @Override
     public String toString() {
         return toString(ToString.separateLines);
     }
-    
+
     @Override
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
                 .addIfNotEmpty("operands", operands)
                 .$();
     }
-    
 
 }

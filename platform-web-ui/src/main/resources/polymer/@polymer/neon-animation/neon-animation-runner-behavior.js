@@ -1,3 +1,6 @@
+import '../polymer/polymer-legacy.js';
+import { NeonAnimatableBehavior } from './neon-animatable-behavior.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,33 +11,32 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { NeonAnimatableBehavior } from './neon-animatable-behavior.js';
+
 /**
  * `NeonAnimationRunnerBehavior` adds a method to run animations.
  *
  * @polymerBehavior NeonAnimationRunnerBehavior
  */
+const NeonAnimationRunnerBehaviorImpl = {
 
-export const NeonAnimationRunnerBehaviorImpl = {
-  _configureAnimations: function (configs) {
+  _configureAnimations: function(configs) {
     var results = [];
     var resultsToPlay = [];
 
     if (configs.length > 0) {
       for (let config, index = 0; config = configs[index]; index++) {
-        let neonAnimation = document.createElement(config.name); // is this element actually a neon animation?
-
+        let neonAnimation = document.createElement(config.name);
+        // is this element actually a neon animation?
         if (neonAnimation.isNeonAnimation) {
-          let result = null; // Closure compiler does not work well with a try / catch here.
+          let result = null;
+          // Closure compiler does not work well with a try / catch here.
           // .configure needs to be explicitly defined
-
           if (!neonAnimation.configure) {
             /**
              * @param {Object} config
              * @return {AnimationEffectReadOnly}
              */
-            neonAnimation.configure = function (config) {
+            neonAnimation.configure = function(config) {
               return null;
             };
           }
@@ -43,7 +45,7 @@ export const NeonAnimationRunnerBehaviorImpl = {
           resultsToPlay.push({
             result: result,
             config: config,
-            neonAnimation: neonAnimation
+            neonAnimation: neonAnimation,
           });
         } else {
           console.warn(this.is + ':', config.name, 'not found!');
@@ -54,8 +56,8 @@ export const NeonAnimationRunnerBehaviorImpl = {
     for (var i = 0; i < resultsToPlay.length; i++) {
       let result = resultsToPlay[i].result;
       let config = resultsToPlay[i].config;
-      let neonAnimation = resultsToPlay[i].neonAnimation; // configuration or play could fail if polyfills aren't loaded
-
+      let neonAnimation = resultsToPlay[i].neonAnimation;
+      // configuration or play could fail if polyfills aren't loaded
       try {
         // Check if we have an Effect rather than an Animation
         if (typeof result.cancel != 'function') {
@@ -70,30 +72,29 @@ export const NeonAnimationRunnerBehaviorImpl = {
         results.push({
           neonAnimation: neonAnimation,
           config: config,
-          animation: result
+          animation: result,
         });
       }
     }
 
     return results;
   },
-  _shouldComplete: function (activeEntries) {
-    var finished = true;
 
+  _shouldComplete: function(activeEntries) {
+    var finished = true;
     for (var i = 0; i < activeEntries.length; i++) {
       if (activeEntries[i].animation.playState != 'finished') {
         finished = false;
         break;
       }
     }
-
     return finished;
   },
-  _complete: function (activeEntries) {
+
+  _complete: function(activeEntries) {
     for (var i = 0; i < activeEntries.length; i++) {
       activeEntries[i].neonAnimation.complete(activeEntries[i].config);
     }
-
     for (var i = 0; i < activeEntries.length; i++) {
       activeEntries[i].animation.cancel();
     }
@@ -104,41 +105,32 @@ export const NeonAnimationRunnerBehaviorImpl = {
    * @param {string=} type
    * @param {!Object=} cookie
    */
-  playAnimation: function (type, cookie) {
+  playAnimation: function(type, cookie) {
     var configs = this.getAnimationConfig(type);
-
     if (!configs) {
       return;
     }
-
     this._active = this._active || {};
-
     if (this._active[type]) {
       this._complete(this._active[type]);
-
       delete this._active[type];
     }
 
     var activeEntries = this._configureAnimations(configs);
 
     if (activeEntries.length == 0) {
-      this.fire('neon-animation-finish', cookie, {
-        bubbles: false
-      });
+      this.fire('neon-animation-finish', cookie, {bubbles: false});
       return;
     }
 
     this._active[type] = activeEntries;
 
     for (var i = 0; i < activeEntries.length; i++) {
-      activeEntries[i].animation.onfinish = function () {
+      activeEntries[i].animation.onfinish = function() {
         if (this._shouldComplete(activeEntries)) {
           this._complete(activeEntries);
-
           delete this._active[type];
-          this.fire('neon-animation-finish', cookie, {
-            bubbles: false
-          });
+          this.fire('neon-animation-finish', cookie, {bubbles: false});
         }
       }.bind(this);
     }
@@ -147,11 +139,11 @@ export const NeonAnimationRunnerBehaviorImpl = {
   /**
    * Cancels the currently running animations.
    */
-  cancelAnimation: function () {
+  cancelAnimation: function() {
     for (var k in this._active) {
       var entries = this._active[k];
 
-      for (var j in entries) {
+                    for (var j in entries) {
         entries[j].animation.cancel();
       }
     }
@@ -159,6 +151,9 @@ export const NeonAnimationRunnerBehaviorImpl = {
     this._active = {};
   }
 };
-/** @polymerBehavior */
 
-export const NeonAnimationRunnerBehavior = [NeonAnimatableBehavior, NeonAnimationRunnerBehaviorImpl];
+/** @polymerBehavior */
+const NeonAnimationRunnerBehavior =
+    [NeonAnimatableBehavior, NeonAnimationRunnerBehaviorImpl];
+
+export { NeonAnimationRunnerBehavior, NeonAnimationRunnerBehaviorImpl };

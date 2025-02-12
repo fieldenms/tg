@@ -1,3 +1,6 @@
+import '../polymer/polymer-legacy.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,8 +11,6 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
 const template = html`
 <custom-style>
   <style is="custom-style">

@@ -1,3 +1,5 @@
+import './boot.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,10 +9,11 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import './boot.js';
+
 const caseMap = {};
 const DASH_TO_CAMEL = /-[a-z]/g;
 const CAMEL_TO_DASH = /([A-Z])/g;
+
 /**
  * @fileoverview Module with utilities for converting between "dash-case" and
  * "camelCase" identifiers.
@@ -23,10 +26,14 @@ const CAMEL_TO_DASH = /([A-Z])/g;
  * @param {string} dash Dash-case identifier
  * @return {string} Camel-case representation of the identifier
  */
-
-export function dashToCamelCase(dash) {
-  return caseMap[dash] || (caseMap[dash] = dash.indexOf('-') < 0 ? dash : dash.replace(DASH_TO_CAMEL, m => m[1].toUpperCase()));
+function dashToCamelCase(dash) {
+  return caseMap[dash] || (
+    caseMap[dash] = dash.indexOf('-') < 0 ? dash : dash.replace(DASH_TO_CAMEL,
+      (m) => m[1].toUpperCase()
+    )
+  );
 }
+
 /**
  * Converts "camelCase" identifier (e.g. `fooBarBaz`) to "dash-case"
  * (e.g. `foo-bar-baz`).
@@ -34,7 +41,10 @@ export function dashToCamelCase(dash) {
  * @param {string} camel Camel-case identifier
  * @return {string} Dash-case representation of the identifier
  */
-
-export function camelToDashCase(camel) {
-  return caseMap[camel] || (caseMap[camel] = camel.replace(CAMEL_TO_DASH, '-$1').toLowerCase());
+function camelToDashCase(camel) {
+  return caseMap[camel] || (
+    caseMap[camel] = camel.replace(CAMEL_TO_DASH, '-$1').toLowerCase()
+  );
 }
+
+export { camelToDashCase, dashToCamelCase };

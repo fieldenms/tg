@@ -15,16 +15,12 @@ public class DateOf3 extends SingleOperandFunction3 {
     
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        switch (dbVersion) {
-        case H2:
-            return String.format("CAST(%s AS DATE)", operand.sql(metadata, dbVersion));
-        case MSSQL:
-            return String.format("DATEADD(dd, DATEDIFF(dd, 0, %s), 0)", operand.sql(metadata, dbVersion));
-        case POSTGRESQL:
-            return String.format("DATE_TRUNC('day', cast (%s as timestamp))", operand.sql(metadata, dbVersion));
-        default:
-            return super.sql(metadata, dbVersion);
-        }    
+        return switch (dbVersion) {
+            case H2 -> format("CAST(%s AS DATE)", operand.sql(metadata, dbVersion));
+            case MSSQL -> format("DATEADD(dd, DATEDIFF(dd, 0, %s), 0)", operand.sql(metadata, dbVersion));
+            case POSTGRESQL -> format("DATE_TRUNC('day', cast (%s as timestamp))", operand.sql(metadata, dbVersion));
+            default -> super.sql(metadata, dbVersion);
+        };
     }
     
     @Override

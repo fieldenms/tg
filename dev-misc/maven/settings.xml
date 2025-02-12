@@ -13,7 +13,7 @@
         <repository>
           <id>restlet</id>  
           <name>Restlet Repository</name>  
-          <url>http://maven.restlet.org/</url>  
+          <url>https://maven.restlet.talend.com</url>  
           <releases><enabled>true</enabled></releases>
           <snapshots><enabled>true</enabled></snapshots>
         </repository>        
@@ -34,3 +34,4 @@
     <activeProfile>central-and-restlet</activeProfile>
   </activeProfiles>
 </settings>
+

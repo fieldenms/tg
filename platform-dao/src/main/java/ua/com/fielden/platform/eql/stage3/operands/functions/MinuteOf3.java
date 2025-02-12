@@ -15,16 +15,12 @@ public class MinuteOf3 extends SingleOperandFunction3 {
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        switch (dbVersion) {
-        case H2:
-            return String.format("MINUTE(%s)", operand.sql(metadata, dbVersion));
-        case MSSQL:
-            return String.format("DATEPART(mi, %s)", operand.sql(metadata, dbVersion));
-        case POSTGRESQL:
-            return String.format("CAST(EXTRACT(MINUTE FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
-        default:
-            return super.sql(metadata, dbVersion);
-        }
+        return switch (dbVersion) {
+            case H2 -> format("MINUTE(%s)", operand.sql(metadata, dbVersion));
+            case MSSQL -> format("DATEPART(mi, %s)", operand.sql(metadata, dbVersion));
+            case POSTGRESQL -> format("CAST(EXTRACT(MINUTE FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
+            default -> super.sql(metadata, dbVersion);
+        };
     }
 
     @Override

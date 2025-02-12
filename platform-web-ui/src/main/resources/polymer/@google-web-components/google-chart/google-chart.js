@@ -1,3 +1,9 @@
+import { PolymerElement } from '../../@polymer/polymer/polymer-element.js';
+import { timeOut } from '../../@polymer/polymer/lib/utils/async.js';
+import { Debouncer } from '../../@polymer/polymer/lib/utils/debounce.js';
+import { createChartWrapper, dataTable } from './loader.js';
+import { html } from '../../@polymer/polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -7,11 +13,43 @@ The complete set of contributors may be found at https://polymer.github.io/CONTR
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at https://polymer.github.io/PATENTS.txt
 */
-import "../../@polymer/iron-ajax/iron-request.js";
-import './google-chart-loader.js';
-import { Polymer } from "../../@polymer/polymer/lib/legacy/polymer-fn.js";
-import { html } from "../../@polymer/polymer/lib/utils/html-tag.js";
-import { dom } from "../../@polymer/polymer/lib/legacy/polymer.dom.js";
+
+const DEFAULT_EVENTS = ['ready', 'select'];
+
+/**
+ * Constructor names for supported chart types.
+ *
+ * `ChartWrapper` expects a constructor name and assumes `google.visualization`
+ *  as the default namespace.
+ *
+ * @type {!Object<string, (string|undefined)>}
+ */
+const CHART_TYPES = {
+  'area': 'AreaChart',
+  'bar': 'BarChart',
+  'md-bar': 'google.charts.Bar',
+  'bubble': 'BubbleChart',
+  'calendar': 'Calendar',
+  'candlestick': 'CandlestickChart',
+  'column': 'ColumnChart',
+  'combo': 'ComboChart',
+  'gauge': 'Gauge',
+  'geo': 'GeoChart',
+  'histogram': 'Histogram',
+  'line': 'LineChart',
+  'md-line': 'google.charts.Line',
+  'org': 'OrgChart',
+  'pie': 'PieChart',
+  'sankey': 'Sankey',
+  'scatter': 'ScatterChart',
+  'md-scatter': 'google.charts.Scatter',
+  'stepped-area': 'SteppedAreaChart',
+  'table': 'Table',
+  'timeline': 'Timeline',
+  'treemap': 'TreeMap',
+  'wordtree': 'WordTree',
+};
+
 /**
 `google-chart` encapsulates Google Charts as a web component, allowing you to easily visualize
 data. From simple line charts to complex hierarchical tree maps, the chart element provides a
@@ -63,58 +101,107 @@ on the `html` tag of your document.
 
     <html lang="ja">
 
-@demo
+@demo demo/index.html
 */
+class GoogleChart extends PolymerElement {
+  static get template() {
+    return html`
+      <style>
+        :host {
+          display: -webkit-flex;
+          display: -ms-flex;
+          display: flex;
+          margin: 0;
+          padding: 0;
+          width: 400px;
+          height: 300px;
+        }
 
-Polymer({
-  /** @override */
-  _template: html`
-    <style>
-      :host {
-        display: -webkit-flex;
-        display: -ms-flex;
-        display: flex;
-        margin: 0;
-        padding: 0;
-        width: 400px;
-        height: 300px;
-      }
+        :host([hidden]) {
+          display: none;
+        }
 
-      :host([hidden]) {
-        display: none;
-      }
+        :host([type="gauge"]) {
+          width: 300px;
+          height: 300px;
+        }
 
-      :host([type="gauge"]) {
-        width: 300px;
-        height: 300px;
-      }
+        #chartdiv {
+          width: 100%;
+        }
 
-      #chartdiv {
-        width: 100%;
-      }
-    </style>
-    <div id="styles"></div>
-    <google-chart-loader id="loader" type="[[type]]"></google-chart-loader>
-    <div id="chartdiv"></div>
-  `,
-  is: 'google-chart',
+        /* Workaround for slow initial ready event for tables. */
+        .google-visualization-table-loadtest {
+          padding-left: 6px;
+        }
+      </style>
+      <div id="styles"></div>
+      <div id="chartdiv"></div>
+    `;
+  }
 
   /**
    * Fired after a chart type is rendered and ready for interaction.
    *
    * @event google-chart-ready
-   * @param {{chart: !Object}} The raw chart object.
+   * @param {{chart: !Object}} detail The raw chart object.
    */
 
   /**
    * Fired when the user makes a selection in the chart.
    *
    * @event google-chart-select
-   * @param {{chart: !Object}} The raw chart object.
+   * @param {{chart: !Object}} detail The raw chart object.
    */
 
   /** Polymer element properties. */
-  properties: {
+  static get properties() {
+    return {
+      type: {
+        type: String,
+        observer: GoogleChart.prototype._typeChanged,
+      },
+      events: Array,
+      options: Object,
+      cols: {
+        type: Array,
+        observer: GoogleChart.prototype._rowsOrColumnsChanged,
+      },
+      rows: {
+        type: Array,
+        observer: GoogleChart.prototype._rowsOrColumnsChanged,
+      },
+      data: {
+        // Note: type: String, because it is parsed manually in the observer.
+        type: String,
+        observer: GoogleChart.prototype._dataChanged,
+      },
+      view: {
+        type: Object,
+        observer: GoogleChart.prototype._viewChanged,
+      },
+      selection: {
+        type: Array,
+        notify: true,
+        observer: GoogleChart.prototype._setSelection,
+      },
+      drawn: {
+        type: Boolean,
+        readOnly: true,
+      },
+      _data: Object,
+    };
+  }
+
+  static get observers() {
+    return [
+      'redraw(_data, options.*)',
+    ];
+  }
+
+  constructor() {
+    super();
+
     /**
      * Sets the type of the chart.
      *
@@ -142,12 +229,10 @@ Polymer({
      *
      * See <a href="https://google-developers.appspot.com/chart/interactive/docs/gallery">Google Visualization API reference (Chart Gallery)</a>
      * for details.
+     *
+     * @type {string}
      */
-    type: {
-      type: String,
-      value: 'column',
-      observer: '_typeChanged'
-    },
+    this.type = 'column';
 
     /**
      * Enumerates the chart events that should be fired.
@@ -156,17 +241,13 @@ Polymer({
      * fires on `ready` and `select`. If you would like to be notified of
      * other chart events, use this property to list them.
      * Events `ready` and `select` are always fired.
+     *
      * Changes to this property are _not_ observed. Events are attached only
      * at chart construction time.
      *
      * @type {!Array<string>}
      */
-    events: {
-      type: Array,
-      value: function () {
-        return [];
-      }
-    },
+    this.events = [];
 
     /**
      * Sets the options for the chart.
@@ -188,9 +269,7 @@ Polymer({
      *
      * @type {!Object|undefined}
      */
-    options: {
-      type: Object
-    },
+    this.options = undefined;
 
     /**
      * Sets the data columns for this object.
@@ -204,12 +283,9 @@ Polymer({
      * See <a href="https://google-developers.appspot.com/chart/interactive/docs/reference#DataTable_addColumn">Google Visualization API reference (addColumn)</a>
      * for column definition format.
      *
-     * @type {!Array|undefined}
+     * @type {!Array<*>|undefined}
      */
-    cols: {
-      type: Array,
-      observer: '_rowsOrColumnsChanged'
-    },
+    this.cols = undefined;
 
     /**
      * Sets the data rows for this object.
@@ -223,12 +299,9 @@ Polymer({
      * See <a href="https://google-developers.appspot.com/chart/interactive/docs/reference#addrow">Google Visualization API reference (addRow)</a>
      * for row format.
      *
-     * @type {!Array<!Array>|undefined}
+     * @type {!Array<!Array<*>>|undefined}
      */
-    rows: {
-      type: Array,
-      observer: '_rowsOrColumnsChanged'
-    },
+    this.rows = undefined;
 
     /**
      * Sets the entire dataset for this object.
@@ -248,15 +321,12 @@ Polymer({
      *  ["Category 2", 1.1]]</pre>
      *
      * @type {!google.visualization.DataTable|
-     *        !Array<!Array>|
-     *        {cols: !Array, rows: (!Array<!Array>|undefined)}|
+     *        !Array<!Array<*>>|
+     *        {cols: !Array<*>, rows: (!Array<!Array<*>>|undefined)}|
      *        string|
      *        undefined}
      */
-    data: {
-      type: String,
-      observer: '_dataChanged'
-    },
+    this.data = undefined;
 
     /**
      * Sets the entire dataset for this object to a Google DataView.
@@ -268,10 +338,7 @@ Polymer({
      *
      * @type {!google.visualization.DataView|undefined}
      */
-    view: {
-      type: Object,
-      observer: '_viewChanged'
-    },
+    this.view = undefined;
 
     /**
      * Selected datapoint(s) in the chart.
@@ -288,217 +355,180 @@ Polymer({
      *   [{row:0,column:1}, {row:1, column:null}]
      * </pre>
      *
-     * @type {!Array|undefined}
+     * @type {!Array<*>|undefined}
      */
-    selection: {
-      type: Array,
-      notify: true,
-      observer: '_setSelection'
-    },
+    this.selection = undefined;
+
 
     /**
      * Whether the chart is currently rendered.
+     *
+     * @type {boolean}
      */
-    drawn: {
-      type: Boolean,
-      readOnly: true,
-      value: false
-    },
+    this.drawn;
+    this._setDrawn(false);
 
-    /** @type {?Object} Internal Google Visualization chart object */
-    _chart: {
-      type: Object,
-      value: null
-    },
+    /**
+     * Internal data displayed on the chart.
+     *
+     * This property has protected visibility because it is used from an observer.
+     *
+     * @protected {!google.visualization.DataTable|
+     *             !google.visualization.DataView|
+     *             undefined}
+     */
+    this._data = undefined;
 
-    /** @type {?google.visualization.DataView} Internal data state */
-    _dataView: {
-      type: Object,
-      value: null
-    }
-  },
-  observers: ['_draw(_chart, _dataView)', '_subOptionChanged(options.*)'],
-  listeners: {
-    'google-chart-select': '_updateSelection',
-    'google-chart-ready': '_onChartReady'
-  },
+    /**
+     * Internal chart object.
+     * @private {!google.visualization.ChartWrapper|null}
+     */
+    this._chartWrapper = null;
 
-  /** @type {?Array} Internal selection state */
-  _selection: null,
+    /** @private {?Debouncer} */
+    this._redrawDebouncer = null;
+  }
+
+  /** @override */
+  ready() {
+    super.ready();
+    createChartWrapper(/** @type {!HTMLElement} */ (this.$['chartdiv'])).then((chartWrapper) => {
+      this._chartWrapper = chartWrapper;
+      this._typeChanged();
+      google.visualization.events.addListener(chartWrapper, 'ready', () => {
+        this._setDrawn(true);
+      });
+      google.visualization.events.addListener(chartWrapper, 'select', () => {
+        this.selection = chartWrapper.getChart().getSelection();
+      });
+      this._propagateEvents(DEFAULT_EVENTS, chartWrapper);
+    });
+  }
 
   /** Reacts to chart type change. */
-  _typeChanged: function () {
-    // We need to create a new chart and redraw.
-    const loader =
-    /** @type {!GoogleChartLoaderElement} */
-    this.$.loader;
-    loader.create(this.type, this.$.chartdiv).then(function (chart) {
-      // only add link stylesheet elements if there are none already
+  _typeChanged() {
+    if (this._chartWrapper == null) return;
+    this._chartWrapper.setChartType(CHART_TYPES[this.type] || this.type);
+    const lastChart = this._chartWrapper.getChart();
+    google.visualization.events.addOneTimeListener(this._chartWrapper, 'ready', () => {
+      const chart = this._chartWrapper.getChart();
+      if (chart !== lastChart) {
+        this._propagateEvents(this.events.filter((eventName) => !DEFAULT_EVENTS.includes(eventName)), chart);
+      }
       if (!this.$.styles.children.length) {
         this._localizeGlobalStylesheets();
       }
+      if (this.selection) {
+        this._setSelection();
+      }
+    });
+    this.redraw();
+  }
 
-      Object.keys(this.events.concat(['select', 'ready']).reduce(function (set, eventName) {
-        set[eventName] = true;
-        return set;
-      }, {})).forEach(function (eventName) {
-        loader.fireOnChartEvent(chart, eventName);
+  /**
+   * Adds listeners to propagate events from the chart.
+   *
+   * @param {!Array<string>} events
+   * @param {*} eventTarget
+   * @private
+   */
+  _propagateEvents(events, eventTarget) {
+    for (const eventName of events) {
+      google.visualization.events.addListener(eventTarget, eventName, (event) => {
+        this.dispatchEvent(new CustomEvent(`google-chart-${eventName}`, {
+          bubbles: true,
+          composed: true,
+          detail: {
+            chart: this._chartWrapper.getChart(),
+            data: event,
+          }}));
       });
-
-      this._setDrawn(false);
-
-      this._chart = chart;
-    }.bind(this));
-  },
-
-  /** Reacts to `options` subproperty change. */
-  _subOptionChanged: function (optionChangeDetails) {
-    this.options = optionChangeDetails.base; // Debounce to allow for multiple option changes in one redraw
-
-    this.debounce('optionChangeRedraw', () => {
-      this.redraw();
-    }, 5);
-  },
+    }
+  }
 
   /** Sets the selectiton on the chart. */
-  _setSelection: function () {
-    // Note: Some charts (e.g. TreeMap) must have a selection.
-    if (!this.drawn || !this.selection || this.selection === this._selection) {
-      return;
+  _setSelection() {
+    if (this._chartWrapper == null) return;
+    const chart = this._chartWrapper.getChart();
+    if (chart == null) return;
+    if (chart.setSelection) {
+      // Workaround for timeline chart which emits select event on setSelection.
+      // See issue #256.
+      if (this.type === 'timeline') {
+        const oldSelection = JSON.stringify(chart.getSelection());
+        const newSelection = JSON.stringify(this.selection);
+        if (newSelection === oldSelection) return;
+      }
+      chart.setSelection(this.selection);
     }
-
-    if (this._chart.setSelection) {
-      this._chart.setSelection(this.selection);
-    }
-
-    this._selection = this.selection;
-  },
-
-  /** Updates current selection. */
-  _updateSelection: function () {
-    const selection = this._chart.getSelection();
-
-    this._selection = selection;
-    this.selection = selection;
-  },
-
-  /** Reacts to chart ready event. */
-  _onChartReady: function () {
-    this._setDrawn(true);
-
-    this._selection = null;
-
-    this._setSelection();
-  },
+  }
 
   /**
    * Redraws the chart.
    *
    * Called automatically when data/type/selection attributes change.
    * Call manually to handle view updates, page resizes, etc.
-   *
-   * @method redraw
    */
-  redraw: function () {
-    if (!this._chart || !this._dataView) {
-      return;
-    }
+  redraw() {
+    if (this._chartWrapper == null || this._data == null) return;
+    this._chartWrapper.setDataTable(this._data);
+    this._chartWrapper.setOptions(this.options || {});
 
-    this._draw(this._chart, this._dataView);
-  },
-
-  /**
-  * Renders the chart using the provided data.
-  * @param {?Object|undefined} chart Internal Google Visualization chart object.
-  * @param {?google.visualization.DataView|undefined} data  Internal data state
-  */
-  _draw: function (chart, data) {
-    if (chart == null || data == null) {
-      return;
-    }
-
-    try {
-      this._setDrawn(false);
-
-      chart.draw(data, this.options || {});
-    } catch (error) {
-      this.$.chartdiv.textContent = error;
-    }
-  },
+    this._setDrawn(false);
+    this._redrawDebouncer = Debouncer.debounce(this._redrawDebouncer, timeOut.after(5), () => {
+      this._chartWrapper.draw();
+    });
+  }
 
   /**
    * Returns the chart serialized as an image URI.
    *
-   * Call this after the chart is drawn (google-chart-render event).
+   * Call this after the chart is drawn (google-chart-ready event).
    *
    * @return {?string} Returns image URI.
    */
   get imageURI() {
-    if (!this._chart) {
-      return null;
-    }
+    if (this._chartWrapper == null) return null;
+    const chart = this._chartWrapper.getChart();
+    return chart && chart.getImageURI();
+  }
 
-    return this._chart.getImageURI();
-  },
-
-  /**
-   * Handles changes to the `view` attribute.
-   *
-   * @param {!google.visualization.DataView|undefined} view The new view value
-   */
-  _viewChanged: function (view) {
-    if (!view) {
-      return;
-    }
-
-    this._dataView = view;
-  },
+  /** Handles changes to the `view` attribute. */
+  _viewChanged() {
+    if (!this.view) { return; }
+    this._data = this.view;
+  }
 
   /** Handles changes to the rows & columns attributes. */
-  _rowsOrColumnsChanged: function () {
-    var rows = this.rows,
-        cols = this.cols;
-
-    if (!rows || !cols) {
-      return;
-    }
-
-    const loader =
-    /** @type {!GoogleChartLoaderElement} */
-    this.$.loader;
-    loader.dataTable(undefined).then(function (dataTable) {
-      cols.forEach(function (col) {
-        dataTable.addColumn(col);
-      });
-      dataTable.addRows(rows);
-      return dataTable;
-    }.bind(this)).then(loader.dataView.bind(loader)).then(function (dataView) {
-      this._dataView = dataView;
-    }.bind(this)).catch(function (reason) {
+  async _rowsOrColumnsChanged() {
+    const {rows, cols} = this;
+    if (!rows || !cols) return;
+    try {
+      const dt = await dataTable({cols});
+      dt.addRows(rows);
+      this._data = dt;
+    } catch (reason) {
       this.$.chartdiv.textContent = reason;
-    }.bind(this));
-  },
+    }
+  }
 
   /**
    * Handles changes to the `data` attribute.
    *
-   * @param {
-   *     !google.visualization.DataTable|
-   *     !Array<!Array>|
-   *     {cols: !Array, rows: (!Array<!Array>|undefined)}|
+   * @param {!google.visualization.DataTable|
+   *     !Array<!Array<*>>|
+   *     {cols: !Array<*>, rows: (!Array<!Array<*>>|undefined)}|
    *     string|
    *     undefined} data The new data value
    */
-  _dataChanged: function (data) {
+  _dataChanged(data) {
     var dataPromise;
+    if (!data) { return; }
 
-    if (!data) {
-      return;
-    }
+    var isString = false;
 
-    var isString = false; // Polymer 2 will not call observer if type:Object is set and fails, so
+    // Polymer 2 will not call observer if type:Object is set and fails, so
     // we must parse the string ourselves.
-
     try {
       /**
        * @suppress {checkTypes} `JSON.parse` expects a string but here it tries to deserialize
@@ -511,37 +541,29 @@ Polymer({
 
     if (isString) {
       // Load data asynchronously, from external URL.
-      var request =
-      /** @type {!IronRequestElement} */
-      document.createElement('iron-request');
-      dataPromise = request.send({
-        url:
-        /** @type {string} */
-        data,
-        handleAs: 'json'
-      }).then(function (xhr) {
-        return xhr.response;
-      });
+      dataPromise = fetch(data)
+          .then((/** @type {!Response} */ response) => response.json());
     } else {
       // Data is all ready to be processed.
       dataPromise = Promise.resolve(data);
     }
-
-    const loader =
-    /** @type {!GoogleChartLoaderElement} */
-    this.$.loader;
-    dataPromise.then(loader.dataTable.bind(loader)).then(loader.dataView.bind(loader)).then(function (dataView) {
-      this._dataView = dataView;
-    }.bind(this));
-  },
+    dataPromise.then(dataTable)
+        .then((/** @type {!google.visualization.DataTable} */ data) => {
+          this._data = data;
+        });
+  }
 
   /**
    * Queries global document head for google charts link#load-css-* and clones
    * them into the local root's div#styles element for shadow dom support.
+   *
+   * @private
    */
-  _localizeGlobalStylesheets: function () {
+  _localizeGlobalStylesheets() {
     // get all gchart stylesheets
-    var stylesheets = dom(document.head).querySelectorAll('link[rel="stylesheet"][type="text/css"]');
+    var stylesheets = document.head
+        .querySelectorAll('link[rel="stylesheet"][type="text/css"]');
+
     var stylesheetsArray = Array.from(stylesheets);
 
     for (var i = 0; i < stylesheetsArray.length; i++) {
@@ -554,8 +576,13 @@ Polymer({
         clonedLinkEl.setAttribute('rel', 'stylesheet');
         clonedLinkEl.setAttribute('type', 'text/css');
         clonedLinkEl.setAttribute('href', sheetLinkEl.getAttribute('href'));
-        dom(this.$.styles).appendChild(clonedLinkEl);
+
+        this.$.styles.appendChild(clonedLinkEl);
       }
     }
   }
-});
+}
+
+customElements.define('google-chart', GoogleChart);
+
+export { GoogleChart };

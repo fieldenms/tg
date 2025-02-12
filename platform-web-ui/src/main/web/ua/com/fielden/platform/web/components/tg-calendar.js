@@ -2,7 +2,6 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-media-query/iron-media-query.js'
-import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
@@ -14,6 +13,7 @@ import '/resources/components/tg-month-selector.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import moment from '/resources/polymer/lib/moment-lib.js'; // used for moment.localeData(). ...
 import {_momentTz} from '/resources/reflection/tg-date-utils.js';
 
 const template = html`

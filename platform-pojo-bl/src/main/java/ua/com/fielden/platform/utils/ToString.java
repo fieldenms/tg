@@ -16,15 +16,15 @@ import static java.util.stream.Collectors.joining;
  * A utility that assists with implementation of the {@link Object#toString()} method.
  * <p>
  * To use this utility, one should choose a {@linkplain Format format}, either a pre-defined one or create one's own via {@link #formatBuilder()}.
- * Then, one of {@link Format#toString(Object)} methods should be used, which serve as entries to the fluent API provided
- * by {@link ToString}. Finally, {@link ToString#$()} or {@link ToString#toString()} should be used to obtain the result.
+ * Then, one of {@link Format#toString(Object)} methods should be used, which serve as entries to the fluent API provided by {@link ToString}.
+ * Finally, {@link ToString#$()} or {@link ToString#toString()} should be used to get the result.
  * <p>
- * {@link ToString} instances contain a mutable container which accumulates the string being built. Thus, instances are
- * mutable and should not be shared.
+ * {@link ToString} instances contain a mutable container which accumulates the string being built.
+ * Thus, instances are mutable and should not be shared.
  *
  * <h3> Usage pattern for superclasses </h3>
- * When there is a superclass that declares fields that should be included in the string representation, the following
- * pattern is recommended:
+ * When there is a superclass that declares fields that should be included in the string representation,
+ * the following pattern is recommended:
  * {@snippet :
  class Super {
     private final Object x;
@@ -44,7 +44,7 @@ class Sub extends Super {
 
     @Override
     protected ToString addToString(final ToString toString) {
-        // always call super to take deep hierarchies into account
+        // always call `super` to take hierarchy into account
         return super.addToString(toString).add("y", y);
     }
 }
@@ -63,7 +63,7 @@ class Super implements IFormattable {
         return toString(ToString.separateLines);
     }
 
-    // override to include more fields
+    // override to include additional fields
     protected ToString addToString(final ToString toString) {
         return toString;
     }
@@ -138,7 +138,7 @@ public final class ToString {
      * Builds the string and returns it.
      */
     public String toString() {
-        return stringJoiner.toString();
+        return $();
     }
 
     /**
@@ -157,13 +157,13 @@ public final class ToString {
     }
 
     /**
-     * This interface should be implemented by any class whose instances can be formatted from another class that uses
-     * such an {@link IFormat} that recommends its users to implement {@link IFormattable}.
+     * This interface should be implemented by any class whose instances can be formatted from another class,
+     * which uses such an {@link IFormat} that recommends its users to implement {@link IFormattable}.
      * <p>
      * For example, if class {@code B} uses {@link IFormat} for its string representation and has a field of type {@code A},
-     * then, depending on the {@link IFormat} used, if {@code A} implements {@link IFormattable}, it will know that it
-     * is being formatted in a context (in the context of {@code B} in this example), and thus can contribute to a prettier
-     * format.
+     * then, depending on the {@link IFormat} used, if {@code A} implements {@link IFormattable},
+     * it will know that it is being formatted in a context (in the context of {@code B} in this example),
+     * and thus can contribute to a prettier format.
      * <p>
      * One use case of this facility is multi-line formats that use increasing levels of indentation.
      */
@@ -189,27 +189,32 @@ public final class ToString {
         }
 
         /**
-         * Sequence of characters that is prepended before formatting fields. Typically, this is an opening delimiter.
+         * Sequence of characters that is prepended before formatting fields.
+         * Typically, this is an opening delimiter.
          */
         CharSequence beforeFields();
 
         /**
-         * Sequence of characters that is appended after formatting fields. Typically, this is a closing delimiter.
+         * Sequence of characters that is appended after formatting fields.
+         * Typically, this is a closing delimiter.
          */
         CharSequence afterFields();
 
         /**
-         * Sequence of characters that is inserted between formatted fields. It is used only if there are 2 or more fields.
+         * Sequence of characters that is inserted between formatted fields.
+         * It is used only if there are 2 or more fields.
          */
         CharSequence fieldDelimiter();
 
         /**
-         * A predicate that determines whether a field will be formatted. It is applied to a field's value, which may be null.
+         * A predicate that determines whether a field will be formatted.
+         * It is applied to a field's value, which may be null.
          */
         Predicate<Object> valueFilter();
 
         /**
-         * A function that formats a field. It is applied to a field's name and its value, which may be null.
+         * A function that formats a field.
+         * It is applied to a field's name and its value, which may be null.
          */
         BiFunction<String, Object, String> fieldFormatter();
 
@@ -218,7 +223,9 @@ public final class ToString {
     /**
      * The most general format implementation that can be used to create arbitrary simple formats.
      */
-    public record Format (CharSequence beforeFields, CharSequence afterFields, CharSequence fieldDelimiter,
+    public record Format (CharSequence beforeFields,
+                          CharSequence afterFields,
+                          CharSequence fieldDelimiter,
                           @Nullable Predicate<Object> valueFilter,
                           BiFunction<String, Object, String> fieldFormatter)
             implements IFormat
@@ -399,6 +406,7 @@ public final class ToString {
         }
 
         private String formatValue(final Object value) {
+            // IMPORTANT: update `isFormattable` by testing against all types used in the switch
             return switch (value) {
                 case IFormattable it -> it.toString(setDepth(depth + 1));
                 case Map<?, ?> it -> setDepth(depth + 1).formatMap(it);
@@ -409,12 +417,11 @@ public final class ToString {
         }
 
         private static boolean isFormattable(final Object object) {
-            // keep this method in sync with formatValue by testing against all types used in the switch
-            return object != null
-                   && (object instanceof IFormattable
-                       || object instanceof Map<?, ?>
-                       || object instanceof Collection<?>
-                       || object instanceof T2<?, ?>);
+            // IMPORTANT: keep this method in sync with `formatValue` by testing against all types used in the switch
+            return object instanceof IFormattable
+                    || object instanceof Map<?, ?>
+                    || object instanceof Collection<?>
+                    || object instanceof T2<?, ?>;
         }
 
         private String formatMap(final Map<?, ?> map) {

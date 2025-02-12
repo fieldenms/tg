@@ -4,20 +4,22 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 
 /**
- * An annotation for indicating mutators that require domain specific validation logic. In {@link ValidationAnnotation} enumeration it make the last entry, which means that it will
- * be last in the order of validation execution logic.
+ * An annotation for indicating mutators that require domain-specific validation logic.
+ * In {@link ValidationAnnotation} enumeration it makes the last entry, which means that it will be last in the order of validation execution logic.
  * <p>
- * <b>IMPORTANT:</b><i>In case of a collectional property (refer {@link AbstractEntity} for more details) there can be up to three mutators requiring domain validation. However,
- * there can be only one domain validator associated with any particular property. Therefore, specific validator implementation should take into account the fact that values for
- * parameters <code>newValue</code> and <code>oldValue</code> passed into method
- * {@link IBeforeChangeEventHandler#handle(ua.com.fielden.platform.entity.meta.MetaProperty, Object, Object, Object, Mutator)} depend on what mutator it is invoked. </i>
+ * <b>IMPORTANT:</b><i>In case of a collectional property (refer {@link AbstractEntity} for more details) there can be up to three mutators requiring domain validation.
+ * However, there can be only one domain validator associated with any particular property.
+ * Therefore, specific validator implementation should take into account the fact that values for parameters <code>newValue</code> and <code>oldValue</code> passed into method
+ * {@link IBeforeChangeEventHandler#handle(MetaProperty, Object, Set)} depends on a mutator it is invoked for. </i>
  * <p>
  * The following rules should be taken into account when implementing validators for collectional properties:
  * <ul>
@@ -31,7 +33,7 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
  * @author TG Team
  * 
  */
-@Deprecated
+@Deprecated(forRemoval = false)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
 public @interface DomainValidation {

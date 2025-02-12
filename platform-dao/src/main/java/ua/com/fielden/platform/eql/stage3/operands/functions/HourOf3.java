@@ -15,16 +15,12 @@ public class HourOf3 extends SingleOperandFunction3 {
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        switch (dbVersion) {
-        case H2:
-            return String.format("HOUR(%s)", operand.sql(metadata, dbVersion));
-        case MSSQL:
-            return String.format("DATEPART(hh, %s)", operand.sql(metadata, dbVersion));
-        case POSTGRESQL:
-            return String.format("CAST(EXTRACT(HOUR FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
-        default:
-            return super.sql(metadata, dbVersion);
-        }
+        return switch (dbVersion) {
+            case H2 -> format("HOUR(%s)", operand.sql(metadata, dbVersion));
+            case MSSQL -> format("DATEPART(hh, %s)", operand.sql(metadata, dbVersion));
+            case POSTGRESQL -> format("CAST(EXTRACT(HOUR FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
+            default -> super.sql(metadata, dbVersion);
+        };
     }
 
     @Override

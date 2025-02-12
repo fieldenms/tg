@@ -1,3 +1,7 @@
+import '../utils/boot.js';
+import { dedupingMixin } from '../utils/mixin.js';
+import { addListener, removeListener } from '../utils/gestures.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,9 +11,7 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import '../utils/boot.js';
-import { dedupingMixin } from '../utils/mixin.js';
-import { addListener, removeListener } from '../utils/gestures.js';
+
 /**
  * Element class mixin that provides API for adding Polymer's cross-platform
  * gesture events to nodes.
@@ -22,17 +24,12 @@ import { addListener, removeListener } from '../utils/gestures.js';
  * @mixinFunction
  * @polymer
  * @summary Element class mixin that provides API for adding Polymer's
- *   cross-platform
- * gesture events to nodes
- */
-
-export const GestureEventListeners = dedupingMixin(
-/**
+ *   cross-platform gesture events to nodes
  * @template T
  * @param {function(new:T)} superClass Class to apply mixin to.
  * @return {function(new:T)} superClass with mixin applied.
  */
-superClass => {
+const GestureEventListeners = dedupingMixin((superClass) => {
   /**
    * @polymer
    * @mixinClass
@@ -53,6 +50,7 @@ superClass => {
         super._addEventListenerToNode(node, eventName, handler);
       }
     }
+
     /**
      * Remove the event listener to the node if it is a gestures event.
      *
@@ -62,15 +60,14 @@ superClass => {
      * @return {void}
      * @override
      */
-
-
     _removeEventListenerFromNode(node, eventName, handler) {
       if (!removeListener(node, eventName, handler)) {
         super._removeEventListenerFromNode(node, eventName, handler);
       }
     }
-
   }
 
   return GestureEventListeners;
 });
+
+export { GestureEventListeners };

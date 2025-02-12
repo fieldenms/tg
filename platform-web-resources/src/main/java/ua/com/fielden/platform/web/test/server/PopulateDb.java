@@ -1,24 +1,11 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
-
-import java.io.FileInputStream;
-import java.math.BigDecimal;
-import java.util.Currency;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.util.SortedSet;
-
+import fielden.test_app.close_leave.TgCloseLeaveExample;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.joda.time.DateTime;
-
-import fielden.test_app.close_leave.TgCloseLeaveExample;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
@@ -29,46 +16,30 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
-import ua.com.fielden.platform.sample.domain.ITgPerson;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
-import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
-import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.sample.domain.composite.TgMinorComponent;
+import ua.com.fielden.platform.sample.domain.composite.TgRollingStockMajorComponent;
+import ua.com.fielden.platform.sample.domain.composite.TgRollingStockMinorComponent;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.DbUtils;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
+
+import java.io.FileInputStream;
+import java.math.BigDecimal;
+import java.util.*;
+
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -153,6 +124,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
     @Override
     protected void populateDomain() {
+        // NOTE: If new test entities need to be populated, it must be done at the very end of this method.
+        //       This is because Web UI tests rely on a specific order of entity IDs.
+
         LOGGER.info("Creating and populating the development database...");
 
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
@@ -174,45 +148,62 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         LOGGER.info("\tPopulate testing entities...");
-        final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setRequiredValidatedProp(30)
+        final var ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setRequiredValidatedProp(30)
                 .setDesc("Description for entity with key 1. This is a relatively long description to demonstrate how well does is behave during value autocompletion."));
-        final TgPersistentEntityWithProperties ent2 = save(new_(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14).setDesc("Description for entity with key 2.").setRequiredValidatedProp(30));
-        final TgPersistentEntityWithProperties ent3 = save(new_(TgPersistentEntityWithProperties.class, "KEY3").setIntegerProp(15).setDesc("Description for entity with key 3.").setRequiredValidatedProp(30));
+        final var ent2 = save(new_(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14).setDesc("Description for entity with key 2.").setRequiredValidatedProp(30));
+        final var ent3 = save(new_(TgPersistentEntityWithProperties.class, "KEY3").setIntegerProp(15).setDesc("Description for entity with key 3.").setRequiredValidatedProp(30));
         save(ent2.setEntityProp(ent3));
         save(new_(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setMoneyProp(new Money("23.0", Currency.getInstance("USD"))).setDesc("Description for entity with key 4.").setRequiredValidatedProp(30));
         save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)).setDesc("Description for entity with key 5.").setRequiredValidatedProp(30));
         save(new_(TgPersistentEntityWithProperties.class, "KEY6").setIntegerProp(61).setStringProp("ok").setDesc("Description for entity with key 6.").setRequiredValidatedProp(30).setBigDecimalProp(new BigDecimal("12"))); // id = 10L
         save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7.").setRequiredValidatedProp(30));
         save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
-        final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
-                // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
-                // .setProducerInitProp(ent1)
-                .setIntegerProp(7).setMoneyProp(new Money("7.0", Currency.getInstance("USD"))).setBigDecimalProp(new BigDecimal("7.7"))
-                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30)
-                .setColourProp(Colour.RED).setHyperlinkProp(new Hyperlink("https://www.fielden.com.au"));
-        de.setDesc("Default entity description");
-        final TgPersistentEntityWithProperties defaultEnt = save(de);
-        final TgPersistentEntityWithProperties staleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY10").setConflictingProp("initial").setNonConflictingProp("initial").setDesc("Description for entity with key 10.").setRequiredValidatedProp(30));
+        final var defaultEnt = save(
+                new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
+                        // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
+                        // .setProducerInitProp(ent1)
+                        .setIntegerProp(7)
+                        .setMoneyProp(new Money("7.0", Currency.getInstance("USD")))
+                        .setBigDecimalProp(new BigDecimal("7.7"))
+                        .setStringProp("ok_def")
+                        .setBooleanProp(true)
+                        .setDateProp(new DateTime(7777L).toDate())
+                        .setRequiredValidatedProp(30)
+                        .setColourProp(Colour.RED)
+                        .setHyperlinkProp(new Hyperlink("https://www.fielden.com.au"))
+                        .setDesc("Default entity description"));
+        final var staleEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY10").setConflictingProp("initial")
+                                           .setNonConflictingProp("initial")
+                                           .setDesc("Description for entity with key 10.")
+                                           .setRequiredValidatedProp(30));
         save(staleEnt1.setConflictingProp("persistently modified").setRequiredValidatedProp(30));
 
-        final TgPersistentCompositeEntity ce = new_composite(TgPersistentCompositeEntity.class, defaultEnt, 10);
-        ce.setDesc("Default composite entity description as a long text to demonstrate proper word wrapping as part of displaying the autocompleted values.");
-        final TgPersistentCompositeEntity compositeEnt1 = save(ce);
+        final var compositeEnt1 = save(
+                new_composite(TgPersistentCompositeEntity.class, defaultEnt, 10)
+                        .setDesc("Default composite entity description as a long text to demonstrate proper word wrapping as part of displaying the autocompleted values."));
 
-        final TgPersistentEntityWithProperties exampleEntToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY11").setStringProp("ok").setIntegerProp(43).setEntityProp(defaultEnt).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compositeEnt1).setDesc("Description for entity with key 11.").setRequiredValidatedProp(30);
-        final TgPersistentEntityWithProperties exampleEnt1 = save(exampleEntToBeSaved);
+        final var ent11 = save(
+                new_(TgPersistentEntityWithProperties.class, "KEY11")
+                        .setStringProp("ok")
+                        .setIntegerProp(43)
+                        .setEntityProp(defaultEnt)
+                        .setBigDecimalProp(new BigDecimal(23).setScale(5))
+                        .setDateProp(new DateTime(960000L).toDate())
+                        .setBooleanProp(true)
+                        .setCompositeProp(compositeEnt1)
+                        .setDesc("Description for entity with key 11.")
+                        .setRequiredValidatedProp(30));
 
-        save(new_(TgFetchProviderTestEntity.class, "FETCH1").setProperty(exampleEnt1).setAdditionalProperty(su));
+        save(new_(TgFetchProviderTestEntity.class, "FETCH1").setProperty(ent11).setAdditionalProperty(su));
 
         LOGGER.info("\tPopulate demo entities...");
         createDemoDomain(ent1, ent3, compositeEnt1);
 
-        final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc"));
-        save(colourEntity);
+        save(new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc")));
         save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS").setCritOnlySingleProp(new Date()));
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
 
-        final UserRole stationMgr = save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
+        final var stationMgr = save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
         save(new_composite(UserAndRoleAssociation.class, su, stationMgr));
         save(new_(UserRole.class, "TEST_ROLE1", "A role, which has access to the the station managing functionality."));
         save(new_(UserRole.class, "TEST_ROLE2", "A role, which has access to the the station managing functionality."));
@@ -224,11 +215,17 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(UserRole.class, "TEST_ROLE8", "A role, which has access to the the station managing functionality."));
         save(new_(UserRole.class, "TEST_ROLE9", "A role, which has access to the the station managing functionality."));
 
-        final TgCollectionalSerialisationParent csp1 = save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
+        final var csp1 = save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
         save(new_composite(TgCollectionalSerialisationChild.class, csp1, "1").setDesc("desc1"));
 
-        final TgEntityWithPropertyDescriptor ewpd1 = save(new_(TgEntityWithPropertyDescriptor.class, "KEY1").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp"))); // has children -- to be used for collectional crit-only multi criteria
-        final TgEntityWithPropertyDescriptor ewpd2 = save(new_(TgEntityWithPropertyDescriptor.class, "KEY2").setParent(ewpd1)); // has children -- to be used for collectional crit-only multi criteria
+        // has children -- to be used for collectional crit-only
+        final var ewpd1 = save(new_(TgEntityWithPropertyDescriptor.class, "KEY1")
+                                       .setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
+
+        // multi criteria
+
+        // has children -- to be used for collectional crit-only multi criteria
+        final var ewpd2 = save(new_(TgEntityWithPropertyDescriptor.class, "KEY2").setParent(ewpd1));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY3").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")).setParent(ewpd1));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY4").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "bigDecimalProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY5").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "entityProp")).setParent(ewpd2));
@@ -244,8 +241,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
 
-        final TgPersistentEntityWithProperties filteredEntity = save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
-        final TgPersistentEntityWithProperties savedDefaultEntity = save(defaultEnt.setEntityProp(filteredEntity));
+        final var filteredEntity = save(new_(TgPersistentEntityWithProperties.class, "FILTERED")
+                                                .setIntegerProp(43)
+                                                .setRequiredValidatedProp(30)
+                                                .setDesc("Description for filtered entity.")
+                                                .setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
+        final var savedDefaultEntity = save(defaultEnt.setEntityProp(filteredEntity));
 
         save(new_(TgCloseLeaveExample.class, "KEY1").setDesc("desc 1"));
         save(new_(TgCloseLeaveExample.class, "KEY2").setDesc("desc 2"));
@@ -260,17 +261,63 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgCompoundEntity.class, "KEY5").setActive(true).setDesc("desc 5"));
 
         save(new_(TgCompoundEntity.class, "FILTERED1").setActive(true).setDesc("Description for filtered TgCompoundEntity entity."));
-        final TgCompoundEntity filteredEntity2 = save(new_(TgCompoundEntity.class, "FILTERED2").setActive(true).setDesc("Description for TgCompoundEntity entity, for which TgCompoundEntityDetail is filtered."));
+        final var filteredEntity2 = save(new_(TgCompoundEntity.class, "FILTERED2").setActive(true).setDesc("Description for TgCompoundEntity entity, for which TgCompoundEntityDetail is filtered."));
         save(new_composite(TgCompoundEntityChild.class, filteredEntity2, new Date()).setDesc("Description for filtered TgCompoundEntityChild entity."));
 
-        final TgCompoundEntity test1 = save(new_(TgCompoundEntity.class, "1TEST").setActive(true).setDesc("1TEST (1TEST detail)"));
+        final var test1 = save(new_(TgCompoundEntity.class, "1TEST").setActive(true).setDesc("1TEST (1TEST detail)"));
         save(new_composite(TgCompoundEntityChild.class, test1, new Date()).setDesc("Description for TgCompoundEntityChild entity of 1TEST."));
 
-        final TgPersistentCompositeEntity ceWith0 = new_composite(TgPersistentCompositeEntity.class, savedDefaultEntity, 0);
-        final TgPersistentCompositeEntity compWith0Saved = save(ceWith0);
+        final var compWith0 = save(new_composite(TgPersistentCompositeEntity.class, savedDefaultEntity, 0));
 
-        final TgPersistentEntityWithProperties entWith0CompKeyToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY12").setStringProp("ok").setIntegerProp(43).setEntityProp(savedDefaultEntity).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compWith0Saved).setDesc("Description for entity with key 12.").setRequiredValidatedProp(30);
-        save(entWith0CompKeyToBeSaved);
+        save(new_(TgPersistentEntityWithProperties.class, "KEY12")
+                     .setStringProp("ok")
+                     .setIntegerProp(43)
+                     .setEntityProp(savedDefaultEntity)
+                     .setBigDecimalProp(new BigDecimal(23).setScale(5))
+                     .setDateProp(new DateTime(960000L).toDate())
+                     .setBooleanProp(true)
+                     .setCompositeProp(compWith0)
+                     .setDesc("Description for entity with key 12.")
+                     .setRequiredValidatedProp(30));
+
+        final var compWithEmptySecondKey = save(
+                new_composite(TgPersistentCompositeEntity.class)
+                        .setKey1(savedDefaultEntity)
+                        .setDesc("Default composite entity description as a long text to demonstrate proper word wrapping as part of displaying the autocompleted values."));
+
+        save(new_(TgPersistentEntityWithProperties.class, "KEY13")
+                     .setStringProp("ok")
+                     .setIntegerProp(43)
+                     .setEntityProp(savedDefaultEntity)
+                     .setBigDecimalProp(new BigDecimal(23).setScale(5))
+                     .setDateProp(new DateTime(960000L).toDate())
+                     .setBooleanProp(true)
+                     .setCompositeProp(compWithEmptySecondKey)
+                     .setDesc("Description for entity with key 12.")
+                     .setRequiredValidatedProp(30));
+
+        // The case when all components are present.
+        {
+            final var rsMajorComp = save(new_composite(TgRollingStockMajorComponent.class, "Locomotive", "Electrical Equipment"));
+            final var minorComp = save(new_composite(TgMinorComponent.class, "Batteries", "Lithium-Ion"));
+            final var rsMinorComp = save(new_composite(TgRollingStockMinorComponent.class, rsMajorComp, minorComp));
+            save(ent11.setCompProp(rsMinorComp));
+        }
+
+        // The case when TgRollingStockMinorComponent is missing minorComponent.
+        {
+            final var rsMajorComp = save(new_composite(TgRollingStockMajorComponent.class, "Wagon", "Electrical Equipment"));
+            final var rsMinorComp = save(new_composite(TgRollingStockMinorComponent.class, rsMajorComp, null));
+            save(ent3.setCompProp(rsMinorComp));
+        }
+
+        // The case when TgRollingStockMajorComponent is missing majorComponent.
+        {
+            final var rsMajorComp = save(new_composite(TgRollingStockMajorComponent.class, "Wagon", null));
+            final var minorComp = save(new_composite(TgMinorComponent.class, "Batteries", "Lead-Acid"));
+            final var rsMinorComp = save(new_composite(TgRollingStockMinorComponent.class, rsMajorComp, minorComp));
+            save(ent2.setCompProp(rsMinorComp));
+        }
 
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
