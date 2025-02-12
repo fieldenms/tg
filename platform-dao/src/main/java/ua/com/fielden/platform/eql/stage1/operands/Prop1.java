@@ -27,6 +27,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 public record Prop1(String propPath, boolean external) implements ISingleOperand1<Prop2>, ToString.IFormattable {
 
     public static final String ERR_CANNOT_RESOLVE_PROPERTY = "Cannot resolve property [%s].";
+    public static final String ERR_AMBIGUITY_WHILE_RESOLVING_PROPERTY_1 = "Ambiguity while resolving property [%s] against [%s]. Both [%s] and [%s] are resolvable.";
+    public static final String ERR_AMBIGUITY_WHILE_RESOLVING_PROPERTY_2 = "Ambiguity while resolving property [%s].";
 
     @Override
     public Prop2 transform(final TransformationContextFromStage1To2 context) {
@@ -68,9 +70,7 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
                 if (!asIsResolution.isSuccessful()) {
                     return new PropResolution(source, aliaslessResolution.getResolved());
                 } else {
-                    throw new EqlStage1ProcessingException(format(
-                            "Ambiguity while resolving property [%s] against [%s]. Both [%s] and [%s] are resolvable.",
-                            prop.propPath, source, prop.propPath, aliaslessPropName));
+                    throw new EqlStage1ProcessingException(ERR_AMBIGUITY_WHILE_RESOLVING_PROPERTY_1.formatted(prop.propPath, source, prop.propPath, aliaslessPropName));
                 }
             }
         }
@@ -85,7 +85,7 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
                 .collect(toImmutableList());
 
         if (result.size() > 1) {
-            throw new EqlStage1ProcessingException(format("Ambiguity while resolving property [%s]", prop.propPath));
+            throw new EqlStage1ProcessingException(ERR_AMBIGUITY_WHILE_RESOLVING_PROPERTY_2.formatted(prop.propPath));
         }
 
         return first(result);
