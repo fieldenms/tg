@@ -14,7 +14,6 @@ import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
-import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.meta.EntityMetadata;
@@ -37,6 +36,7 @@ import static java.util.stream.Collectors.*;
 import static java.util.stream.Stream.concat;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
+import static ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnQueries.ERR_YIELD_INTO_NON_EXISTENT_PROPERTY;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
@@ -67,18 +67,19 @@ public class QuerySourceInfoProvider {
     Could not determine type for property [%s] in a source query with source type [%s].
     Declared type: [%s]. Actual yield type: [%s]."\
     """;
-
     private static final String ERR_NON_RETRIEVABLE_PROP_YIELDED_WITH_DOT_EXPRESSION =
     "Non-retrievable property [%s] cannot be used as a dot-notated yield alias (in a source query with source type [%s]).\n";
-
     private static final String ERR_MISSING_CALC_PROPS_ORDER =
     """
     Analysis of dependent calculated properties wasn't performed for entity type [%s]. \
     This could indicate either an unregistered domain type or a generated type with added dependent calculated properties, which isn't supported.\
     """;
+    public static final String ERR_FAILED_GENERATION_FOR_SYNTHETIC_ENTITY = "Could not generate modelled entity info for synthetic entity [%s].";
 
     /** Used to obtain models for synthetic entities. */
     private static final QueryModelToStage1Transformer QUERY_MODEL_TO_STAGE_1_TRANSFORMER = new QueryModelToStage1Transformer();
+    public static final String WARN_GENERATING_MODELS_FOR_SYNTHETIC_ENTITY_MAY_AFFECT_PERFORMANCE = "Generating models for synthetic entity [%s] on demand. This may affect performance if attempted frequently.";
+    public static final String ERR_EXPECTED_SYNTHETIC_ENTITY = "Expected a synthetic entity type, but was: %s";
 
     /** Association between an entity type and its declared query source info. */
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, QuerySourceInfo<?>> declaredQuerySourceInfoMap;
@@ -102,12 +103,13 @@ public class QuerySourceInfoProvider {
         declaredQuerySourceInfoMap.values()
                 .forEach(ei -> ei.addProps(generateQuerySourceItems(declaredQuerySourceInfoMap, ei.javaType())));
 
-        // Modelled query source infos require a bit more work for synthetic entities, but for other entities are the same
-        // as the declared ones. Models of union entities are implicitly generated and have no interdependencies, thus
-        // don't require the extra work like synthetic models do.
-        // modelledQuerySourceInfoMap needs to be mutable so that it can be used while we are populating it.
-        // This constructor is quite complex, passing "this" to other parts of the system.
+        // Modelled query source infos require a bit more work for synthetic entities, but for other entities are the same as the declared ones.
+        // Models of union entities are implicitly generated and have no interdependencies.
+        // Thus, they don't require any extra work like synthetic models do.
+        // Map `modelledQuerySourceInfoMap` needs to be mutable so that it can be used while we are populating it.
+        // This constructor is quite complex, passing `this` to other parts of the system.
         modelledQuerySourceInfoMap = new ConcurrentHashMap<>(declaredQuerySourceInfoMap.size());
+
         // 1. Reuse declared query source infos for non-synthetic entities.
         // These must be created first so that they can be used during processing of synthetic types.
         declaredQuerySourceInfoMap.forEach((entityType, declaredQsi) -> {
@@ -135,10 +137,10 @@ public class QuerySourceInfoProvider {
                 try {
                     final var modelledQuerySourceInfo = generateModelledQuerySourceInfoForSyntheticType(seType, seModels.get(seType));
                     modelledQuerySourceInfoMap.put(modelledQuerySourceInfo.javaType(), modelledQuerySourceInfo);
-                } catch (final Exception e) {
-                    final var msg = "Could not generate modelled entity info for synthetic entity [" + seType + "].";
-                    LOGGER.error(msg, e);
-                    throw new EqlMetadataGenerationException(msg, e);
+                } catch (final Exception ex) {
+                    final var msg = ERR_FAILED_GENERATION_FOR_SYNTHETIC_ENTITY.formatted(seType);
+                    LOGGER.error(msg, ex);
+                    throw new EqlMetadataGenerationException(msg, ex);
                 }
             }
         } catch (final TopologicalSortException $) {
@@ -208,25 +210,24 @@ public class QuerySourceInfoProvider {
                     }
                     else {
                         // This yield is using a non-declared property as an alias.
-                        // Most likely this is the case of EntityAggregates. Otherwise, this could indicate an invalid query.
+                        // Most likely, this is the case of EntityAggregates.
+                        // Otherwise, this could indicate an invalid query.
 
                         if (sourceType != EntityAggregates.class) {
                             // Verify that the property exists in the entity type.
                             // This could be valid if a non-retrievable property (e.g., crit-only) is yielded into.
                             if (!domainMetadata.forEntity(sourceType).hasProperty(yield.name())) {
-                                throw new EqlStage1ProcessingException(
-                                        format(Source1BasedOnQueries.ERR_YIELD_INTO_NON_EXISTENT_PROPERTY, yield.name(), sourceType.getSimpleName()));
+                                throw new EqlStage1ProcessingException(ERR_YIELD_INTO_NON_EXISTENT_PROPERTY.formatted(yield.name(), sourceType.getSimpleName()));
                             }
                         }
 
                         if (yield.propType() == null) {
                             // yield.propType() can be null if the yield uses a dot-expression as an alias (e.g., "price.amount").
                             // Effectively, this disables the use of such aliases in a source query with modelAsAggregate().
-                            // The source type could also be an entity type other than EntityAggregates, which would indicate
-                            // an invalid yield that uses a non-retrievable (sub-)property as an alias.
+                            // The source type could also be an entity type other than EntityAggregates.
+                            // This would indicate an invalid yield that uses a non-retrievable (sub-)property as an alias.
                             // TODO: Support this if necessary.
-                            throw new EqlStage1ProcessingException(
-                                    format(ERR_NON_RETRIEVABLE_PROP_YIELDED_WITH_DOT_EXPRESSION, yield.name(), sourceType.getSimpleName()));
+                            throw new EqlStage1ProcessingException(ERR_NON_RETRIEVABLE_PROP_YIELDED_WITH_DOT_EXPRESSION.formatted(yield.name(), sourceType.getSimpleName()));
                         } else {
                             return yield.propType().isNotNull() && isEntityType(yield.propType().javaType())
                                     ? new QuerySourceItemForEntityType<>(yield.name(),
@@ -279,16 +280,15 @@ public class QuerySourceInfoProvider {
         final var pmUtils = domainMetadata.propertyMetadataUtils();
         final var entityMetadata = domainMetadata.forEntity(entityType);
 
-        /*
-         * Exclude properties that have no meaning from the persistence perspective.
-         * In other words, values for such properties cannot be retrieved from a database.
-         * Effectively, for persistent entities, only calculated and persistent properties can be retrieved.
-         * Properties of any other nature are considered such that do not have anything to do with persistence.
-         * For synthetic entities, properties of any nature can be retrieved as long as they are yielded or can be calculated.
-         * This is why it is considered that such entities do not have "pure" properties that cannot be retrieved.
-         * Although, it is possible to declare a plain property and not use it in the model for yielding.
-         * Attempts to specify such properties in a fetch model when retrieving a synthetic entity, should result in a runtime exception.
-         */
+
+        // Exclude properties that have no meaning from the persistence perspective.
+        // In other words, values for such properties cannot be retrieved from a database.
+        // Effectively, for persistent entities, only calculated and persistent properties can be retrieved.
+        // Properties of any other nature are considered such that do not have anything to do with persistence.
+        // For synthetic entities, properties of any nature can be retrieved as long as they are yielded or can be calculated.
+        // This is why it is considered that such entities do not have "pure" properties that cannot be retrieved.
+        // Although, it is possible to declare a plain property and not use it in the model for yielding.
+        // Attempts to specify such properties in a fetch model when retrieving a synthetic entity should result in a runtime exception.
         return entityMetadata.properties().stream()
             .filter(pm -> !pm.isCritOnly())
             .filter(pm -> !(pm.isPlain() && entityMetadata.isPersistent()))
@@ -432,12 +432,11 @@ public class QuerySourceInfoProvider {
             return models;
         } else {
             // This branch is intended to be executed by platform tests, allowing to use entity types without registering them in the application domain.
-            LOGGER.warn(format("Generating models for synthetic entity [%s] on demand. This may affect performance if attempted frequently.",
-                               entityType.getSimpleName()));
+            LOGGER.warn(() -> WARN_GENERATING_MODELS_FOR_SYNTHETIC_ENTITY_MAY_AFFECT_PERFORMANCE.formatted(entityType.getSimpleName()));
             final var entityMetadata = domainMetadata.forEntity(entityType);
             return entityMetadata.asSynthetic()
                     .map(em -> em.data().models().stream().map(QUERY_MODEL_TO_STAGE_1_TRANSFORMER::generateAsUncorrelatedSourceQuery).collect(toImmutableList()))
-                    .orElseThrow(() -> new EqlMetadataGenerationException(format("Expected a synthetic entity type, but was: %s", entityMetadata)));
+                    .orElseThrow(() -> new EqlMetadataGenerationException(ERR_EXPECTED_SYNTHETIC_ENTITY.formatted(entityMetadata)));
         }
     }
 
