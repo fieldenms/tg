@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 
-import static java.lang.Boolean.FALSE;
 import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.calculatedProp;
@@ -20,6 +19,11 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
 final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
+
+    public static final String ERR_UNKNOWN_COMPONENT_TYPE = "Unknown component type: %s.";
+    public static final String ERR_MISSING_PROPERTY = "Missing property [%s] in [%s]. Expected by [%s].";
+    public static final String ERR_MISSING_HIBERNATE_TYPE = "Expected Hibernate type to be present for [%s].";
+    public static final String ERR_INVALID_PROPERTY_TYPE = "Invalid type [%s] of property [%s.%s].";
 
     private final IDomainMetadata domainMetadata;
     private final DomainMetadataGenerator generator;
@@ -74,7 +78,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
 
     private List<PropertyMetadata> subPropertiesForComponent(final PropertyMetadata prop, final PropertyTypeMetadata.Component ct) {
         final var componentTypeMetadata = domainMetadata.forComponent(ct.javaType())
-                .orElseThrow(() -> new DomainMetadataGenerationException("Unknown component type: %s".formatted(ct.javaType().getTypeName())));
+                .orElseThrow(() -> new DomainMetadataGenerationException(ERR_UNKNOWN_COMPONENT_TYPE.formatted(ct.javaType().getTypeName())));
         return switch (prop) {
             case PropertyMetadata.Persistent it -> subPropertiesForComponentPersistent(it, componentTypeMetadata);
             case Calculated it -> subPropertiesForComponentCalculated(it, componentTypeMetadata);
@@ -94,7 +98,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
 
         return zip(stream(componentHibType.getPropertyNames()), stream(componentHibType.getPropertyTypes()), (subPropName, subHibType) -> {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
-                    .orElseThrow(() -> new DomainMetadataGenerationException("Missing property [%s] in [%s]. Expected by [%s].".formatted(subPropName, componentTypeMetadata, componentHibType)));
+                    .orElseThrow(() -> new DomainMetadataGenerationException(ERR_MISSING_PROPERTY.formatted(subPropName, componentTypeMetadata, componentHibType)));
             return PropertyMetadataImpl.Builder.toBuilder(prop)
                     .name(subPropName).type(subProp.type()).hibType(subHibType)
                     .build();
@@ -106,7 +110,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
             final TypeMetadata.Component componentTypeMetadata)
     {
         if (prop.hibType() == null) {
-            throw new DomainMetadataGenerationException("Expected Hibernate type to be present for [%s].".formatted(prop));
+            throw new DomainMetadataGenerationException(ERR_MISSING_HIBERNATE_TYPE.formatted(prop));
         }
         final var componentHibType = (ICompositeUserTypeInstantiate) prop.hibType();
 
@@ -115,7 +119,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
 
         return zip(stream(subPropNames), stream(componentHibType.getPropertyTypes()), (subPropName, subHibType) -> {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
-                    .orElseThrow(() -> new DomainMetadataGenerationException("Missing property [%s] in [%s]. Expected by [%s].".formatted(subPropName, componentTypeMetadata, componentHibType)));
+                    .orElseThrow(() -> new DomainMetadataGenerationException(ERR_MISSING_PROPERTY.formatted(subPropName, componentTypeMetadata, componentHibType)));
 
             final var mapToColumn = getPropertyAnnotationOptionally(MapTo.class, componentJavaType, subPropName)
                     .map(MapTo::value).orElse("");
@@ -136,19 +140,19 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
             final TypeMetadata.Component componentTypeMetadata)
     {
         if (prop.hibType() == null) {
-            throw new DomainMetadataGenerationException("Expected Hibernate type to be present for [%s]".formatted(prop));
+            throw new DomainMetadataGenerationException(ERR_MISSING_HIBERNATE_TYPE.formatted(prop));
         }
         final var componentHibType = (ICompositeUserTypeInstantiate) prop.hibType();
 
         return zip(stream(componentHibType.getPropertyNames()), stream(componentHibType.getPropertyTypes()), (subPropName, subHibType) -> {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
-                    .orElseThrow(() -> new DomainMetadataGenerationException("Missing property [%s] in [%s]. Expected by [%s].".formatted(subPropName, componentTypeMetadata, componentHibType)));
+                    .orElseThrow(() -> new DomainMetadataGenerationException(ERR_MISSING_PROPERTY.formatted(subPropName, componentTypeMetadata, componentHibType)));
             return calculatedProp(subPropName, subProp.type(), subHibType, prop.data()).build();
         }).toList();
     }
 
     private static String invalidPropType(final Object type, final Object owner, final Object prop) {
-        return "Invalid type [%s] of property [%s.%s]".formatted(type, owner, prop);
+        return ERR_INVALID_PROPERTY_TYPE.formatted(type, owner, prop);
     }
 
     private static String failedProp(final Object owner, final Object prop, final Object... rest) {
