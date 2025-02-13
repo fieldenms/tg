@@ -420,12 +420,16 @@ final class DomainMetadataGenerator {
     }
 
     /**
-     *  "id" - depends on the enclosing entity's nature:
-     * - Persistent - included as persistent.
-     * - Synthetic:
-     *   - With entity-typed key - implicitly calculated making it equal to "key".
-     *   - Else - included as plain.
-     * - Else - excluded.
+     * Semantics of {@code id} depends on the enclosing entity's nature:
+     * <ul>
+     *   <li> Persistent - included as persistent.
+     *   <li> Synthetic:
+     *     <ul>
+     *       <li> Entity-typed key - implicitly calculated making it equal to {@code key}.
+     *       <li> Else - included as plain.
+     *     </ul
+     *   <li> Else - excluded.
+     * </ul>
      */
     private Optional<PropertyMetadata> mkPropId(final EntityMetadataBuilder<?, ?> entityBuilder) {
         final PropertyMetadata propId = persistentProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY,
