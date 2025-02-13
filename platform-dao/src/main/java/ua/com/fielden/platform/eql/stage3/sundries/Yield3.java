@@ -24,11 +24,11 @@ import static ua.com.fielden.platform.persistence.types.PlaceholderType.newPlace
  *   <li> When directly enclosed by an {@linkplain ua.com.fielden.platform.eql.stage3.queries.SubQueryForExists3 existence sub-query}.
  *   <li> When directly enclosed by a {@linkplain ua.com.fielden.platform.eql.stage3.queries.SubQuery3 sub-query}.
  * </ul>
- * @param type  the expected type of this yield.
+ * @param type  the expected type of this yield:
  * <ul>
- *   <li>for calculated properties -- the type declared at the model level; the type of {@link #operand} will be
+ *   <li>For calculated properties -- the type declared at the model level; the type of {@link #operand} will be
  *       inferred from the actual expression and may be different.
- *   <li>for other operands -- equal to the type of {@link #operand}.
+ *   <li>For other operands -- equal to the type of {@link #operand}.
  * </ul>
  */
 public record Yield3 (ISingleOperand3 operand, String alias, String column, PropType type) implements ToString.IFormattable {

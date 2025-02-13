@@ -4,16 +4,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.types.either.Either;
-import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.utils.StreamUtils;
 
-import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
 
@@ -21,6 +15,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
  * The default implementation of {@link IDomainMetadata}.
  */
 final class DomainMetadataImpl implements IDomainMetadata {
+
+    public static final String ERR_ENTITY_TYPE_CANNOT_BE_SUBJECT_TO_METADATA_GENERATION = "Entity type [%s] cannot be subject to metadata generation.";
 
     private final DomainMetadataGenerator generator;
     private final PropertyMetadataUtils pmUtils;
@@ -63,8 +59,7 @@ final class DomainMetadataImpl implements IDomainMetadata {
     @Override
     public EntityMetadata forEntity(final Class<? extends AbstractEntity<?>> entityType) {
         return forEntityOpt(entityType)
-                .orElseThrow(() -> new DomainMetadataGenerationException(
-                        "Entity type [%s] cannot be subject to metadata generation.".formatted(entityType.getTypeName())));
+                .orElseThrow(() -> new DomainMetadataGenerationException(ERR_ENTITY_TYPE_CANNOT_BE_SUBJECT_TO_METADATA_GENERATION.formatted(entityType.getTypeName())));
     }
 
     @Override
@@ -82,13 +77,9 @@ final class DomainMetadataImpl implements IDomainMetadata {
         return forType(enclosingType).flatMap(tm -> {
             final String[] names = splitPropPathToArray(propPath);
             // Optimise for the most common cases.
-            switch (names.length) {
-                case 1 -> {
-                    return propertyFromType(tm, names[0]);
-                }
-                case 2 -> {
-                    return propertyFromType(tm, names[0]).flatMap(pm0 -> forProperty_(pm0, names[1]));
-                }
+            return switch (names.length) {
+                case 1 -> propertyFromType(tm, names[0]);
+                case 2 -> propertyFromType(tm, names[0]).flatMap(pm0 -> forProperty_(pm0, names[1]));
                 default -> {
                     var optPm = propertyFromType(tm, names[0]);
                     for (int i = 1; i < names.length; i++) {
@@ -98,9 +89,9 @@ final class DomainMetadataImpl implements IDomainMetadata {
                         final var name = names[i];
                         optPm = forProperty_(optPm.get(), name);
                     }
-                    return optPm;
+                    yield optPm;
                 }
-            }
+            };
         });
     }
 
