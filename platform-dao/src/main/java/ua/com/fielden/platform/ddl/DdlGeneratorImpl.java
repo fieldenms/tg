@@ -52,7 +52,7 @@ class DdlGeneratorImpl implements IDdlGenerator {
         final Set<String> ddlTables = new LinkedHashSet<>();
         final Set<String> ddlFKs = new LinkedHashSet<>();
 
-        types.filter(EntityUtils::isPersistedEntityType).forEach(entityType -> {
+        types.filter(EntityUtils::isPersistentEntityType).forEach(entityType -> {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
             ddlTables.add(tableDefinition.createTableSchema(dialect));
             ddlTables.add(tableDefinition.createPkSchema(dialect));

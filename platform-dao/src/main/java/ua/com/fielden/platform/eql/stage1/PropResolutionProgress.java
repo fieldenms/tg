@@ -3,12 +3,10 @@ package ua.com.fielden.platform.eql.stage1;
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
 
 public class PropResolutionProgress {
@@ -51,6 +49,6 @@ public class PropResolutionProgress {
 
     private boolean lastResolvedHasPersistentEntityType() {
         // by ensuring that part preceding ID is not just entity, but persistent entity it is achieved that implicit calc-prop of ID on an union entity is not skipped here
-        return !resolved.isEmpty() && isPersistedEntityType(resolved.getLast().javaType());
+        return !resolved.isEmpty() && isPersistentEntityType(resolved.getLast().javaType());
     }
 }

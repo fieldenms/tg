@@ -7,7 +7,6 @@ import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForUnionType;
 import ua.com.fielden.platform.eql.stage1.ITransformableFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
-import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -25,7 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 /**
  * A structure used for representing queries in the FROM/JOIN statements.
@@ -98,7 +97,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromSt
         }
 
         final Yield2 firstYield = yields.getYields().iterator().next();
-        if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias()) && isPersistedEntityType(resultType)) {
+        if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias()) && isPersistentEntityType(resultType)) {
             return new Yields2(listOf(new Yield2(firstYield.operand(), ID, firstYield.hasNonnullableHint())));
         }
 

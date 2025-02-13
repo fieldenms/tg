@@ -1,5 +1,27 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ua.com.fielden.platform.entity.*;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
+import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
+import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isInterface;
 import static java.util.Collections.unmodifiableList;
@@ -14,58 +36,9 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCritOnlyDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayAsDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayDescDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityDescDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityTitleDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isIgnoreDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isLengthDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isPrecisionDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isResultOnlyDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isScaleDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isSecreteDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isTrailingZerosDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityToOpenCompoundMaster;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.IContinuationData;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.DateOnly;
-import ua.com.fielden.platform.entity.annotation.DisplayDescription;
-import ua.com.fielden.platform.entity.annotation.Ignore;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.ResultOnly;
-import ua.com.fielden.platform.entity.annotation.TimeOnly;
-import ua.com.fielden.platform.entity.annotation.UpperCase;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
-import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
-import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -115,7 +88,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         entityTypeInfo.setKey(type.getName());
 
         // let's inform the client of the type's persistence nature
-        if (isPersistedEntityType(type)) {
+        if (isPersistentEntityType(type)) {
             entityTypeInfo.set_persistent(true);
         }
 

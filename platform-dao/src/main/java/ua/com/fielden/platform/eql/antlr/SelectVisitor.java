@@ -136,7 +136,7 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
     }
 
     private ISource1<? extends ISource2<?>> compileEntitySource(final Class<? extends AbstractEntity<?>> entityType, final String alias) {
-        if (isPersistedEntityType(entityType)) {
+        if (isPersistentEntityType(entityType)) {
             return new Source1BasedOnPersistentType(entityType, alias, transformer.nextSourceId());
         }
         else if (isSyntheticEntityType(entityType) || isSyntheticBasedOnPersistentEntityType(entityType) || isUnionEntityType(entityType)) {

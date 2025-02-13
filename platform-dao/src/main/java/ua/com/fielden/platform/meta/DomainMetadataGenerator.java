@@ -825,7 +825,7 @@ final class DomainMetadataGenerator {
     ////////////////////////////
 
     static EntityNature inferEntityNature(final Class<? extends AbstractEntity<?>> entityType) {
-        if (isPersistedEntityType(entityType)) {
+        if (isPersistentEntityType(entityType)) {
             return PERSISTENT;
         }
         else if (isSyntheticEntityType(entityType)) {

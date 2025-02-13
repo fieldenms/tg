@@ -75,6 +75,8 @@ public class EntityUtils {
     private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
     private static final Cache<Class<?>, Boolean> entityCriteriaTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
 
+    public static final String ERR_PERSISTENT_NATURE_OF_ENTITY_TYPE = "Could not determine persistent nature of entity type [%s].";
+
     /** Private default constructor to prevent instantiation. */
     private EntityUtils() {
     }
@@ -638,9 +640,9 @@ public class EntityUtils {
      * @param entityType
      * @return
      */
-    public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
+    public static boolean isOneToOne(@Nullable final Class<? extends AbstractEntity<?>> entityType) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
-        return keyType != null && isPersistedEntityType(keyType);
+        return isPersistentEntityType(keyType);
     }
 
     /**
@@ -656,7 +658,7 @@ public class EntityUtils {
     /**
      * Determines whether the provided entity type represents a persistent entity that can be stored in a database.
      */
-    public static boolean isPersistentEntityType(final Class<?> type) {
+    public static boolean isPersistentEntityType(@Nullable final Class<?> type) {
         if (type == null) {
             return false;
         } else {
@@ -667,7 +669,7 @@ public class EntityUtils {
                         && !isSyntheticEntityType(type)
                         && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null);
             } catch (final Exception ex) {
-                final String msg = "Could not determine persistent nature of entity type [%s].".formatted(type.getSimpleName());
+                final String msg = ERR_PERSISTENT_NATURE_OF_ENTITY_TYPE.formatted(type.getSimpleName());
                 logger.error(msg, ex);
                 throw new ReflectionException(msg, ex);
             }
@@ -680,7 +682,7 @@ public class EntityUtils {
      * In time, this method will be removed.
      */
     @Deprecated(forRemoval = true, since = "1.7.0")
-    public static boolean isPersistedEntityType(final Class<?> type) {
+    public static boolean isPersistedEntityType(@Nullable final Class<?> type) {
         return isPersistentEntityType(type);
     }
 
