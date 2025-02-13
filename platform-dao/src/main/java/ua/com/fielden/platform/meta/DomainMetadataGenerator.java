@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElseGet;
@@ -98,14 +97,26 @@ final class DomainMetadataGenerator {
 
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
 
+    public static final String ERR_COULD_NOT_LOAD_TYPE = "Could not load type [%s].";
+    public static final String ERR_CANNOT_OBTAIN_EXPRESSION_MODEL_FOR_CALCULATED_PROPERTY = "Cannot obtain expression model for calculated property [%s].";
+    public static final String ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS = "Ill-defined union entity [%s] has no union members.";
+    public static final String ERR_UNION_ENTITY_PROPERTY_NAME_CONFLICT =
+    """
+    Ill-defined union entity: %s
+    Common property and union property share the same name [%s].\
+    """;
+    public static final String ERR_TABLE_NAME_NOT_DETERMINED = "Could not determine table name for entity [%s].";
+    public static final String ERR_NO_MODEL_FOR_SYNTHETIC_ENTITY = "Could not obtain model(s) for synthetic entity [%s].";
+    public static final String ERR_SYNTHETIC_ENTITY_WITH_UNSUPPORTED_KEY_TYPE = "Entity [%s] is recognised as synthetic-based-on-persistent having an entity-typed key. This is not supported.";
+
     private final PropertyTypeMetadataGenerator propTypeMetadataGenerator = new PropertyTypeMetadataGenerator();
     private final HibernateTypeGenerator hibTypeGenerator;
     private final Map<String, PropColumn> specialPropColumns;
 
     /** Long-lasting (but not necessarily permanent) cache for entity types. */
-    private final Cache<Class<? extends AbstractEntity>, EntityMetadata> entityMetadataCache;
+    private final Cache<Class<? extends AbstractEntity<?>>, EntityMetadata> entityMetadataCache;
     /** Temporary cache for entity types. */
-    private final Cache<Class<? extends AbstractEntity>, EntityMetadata> tmpEntityMetadataCache;
+    private final Cache<Class<? extends AbstractEntity<?>>, EntityMetadata> tmpEntityMetadataCache;
     /** Permanent cache for component types. */
     private final Cache<Class<?>, TypeMetadata.Component> componentTypeMetadataCache;
 
@@ -245,7 +256,7 @@ final class DomainMetadataGenerator {
         return tmpEntityMetadataCache.getIfPresent(entityType);
     }
 
-    private Cache<Class<? extends AbstractEntity>, EntityMetadata> entityCacheFor(final Class<? extends AbstractEntity<?>> entityType) {
+    private Cache<Class<? extends AbstractEntity<?>>, EntityMetadata> entityCacheFor(final Class<? extends AbstractEntity<?>> entityType) {
         if (isProxied(entityType) || isMockNotFoundType(entityType)) {
             return tmpEntityMetadataCache;
         }
@@ -408,7 +419,8 @@ final class DomainMetadataGenerator {
         }
     }
 
-    /* "id" - depends on the enclosing entity's nature:
+    /**
+     *  "id" - depends on the enclosing entity's nature:
      * - Persistent - included as persistent.
      * - Synthetic:
      *   - With entity-typed key - implicitly calculated making it equal to "key".
@@ -425,10 +437,7 @@ final class DomainMetadataGenerator {
             case EntityMetadataBuilder.Synthetic s -> {
                 if (isSyntheticBasedOnPersistentEntityType(s.getJavaType())) {
                     if (isEntityType(getKeyType(s.getJavaType()))) {
-                        throw new EntityDefinitionException(format(
-                                "Entity [%s] is recognised as synthetic-based-on-persistent having an entity-typed key. " +
-                                "This is not supported.",
-                                s.getJavaType().getTypeName()));
+                        throw new EntityDefinitionException(ERR_SYNTHETIC_ENTITY_WITH_UNSUPPORTED_KEY_TYPE.formatted(s.getJavaType().getTypeName()));
                     }
                     yield Optional.of(plainProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY).build());
                 } else if (isEntityType(getKeyType(s.getJavaType()))) {
@@ -436,9 +445,9 @@ final class DomainMetadataGenerator {
                                                      PropertyNature.Calculated.data(expr().prop(KEY).model(), true, false))
                                               .build());
                 } else {
-                    // Uncoditionally include ID for other synthetic entities. Whether it's actually used (i.e., yielded
-                    // in the underlying model) will be known by QuerySourceInfoProvider, which is used to determine if
-                    // ID should be fetched.
+                    // Unconditionally include ID for other synthetic entities.
+                    // Whether it would actually be yielded in the underlying model will be known by QuerySourceInfoProvider,
+                    // which is used to determine the need to fetch ID.
                     yield Optional.of(plainProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY).build());
                 }
             }
@@ -514,7 +523,7 @@ final class DomainMetadataGenerator {
             // skip properties that have an unknown type
             final var optPropType = mkPropertyType(field);
             if (optPropType.isEmpty()) {
-                LOGGER.debug("Skipping metadata generation for property [%s] due to its unrecognised type.".formatted(field));
+                LOGGER.debug(() -> "Skipping metadata generation for property [%s] due to its unrecognised type.".formatted(field));
             }
             builder = optPropType
                     .map(propTypeMd -> plainProp(field.getName(), propTypeMd,
@@ -632,7 +641,7 @@ final class DomainMetadataGenerator {
                 return mapEntityToAnnotation.value();
             }
         } catch (final Exception ex) {
-            throw new DomainMetadataGenerationException("Could not determine table name for entity [%s].".formatted(entityType.getTypeName()), ex);
+            throw new DomainMetadataGenerationException(ERR_TABLE_NAME_NOT_DETERMINED.formatted(entityType.getTypeName()), ex);
         }
     }
 
@@ -656,7 +665,7 @@ final class DomainMetadataGenerator {
                 return ImmutableList.copyOf((List<EntityResultQueryModel<T>>) modelField.get(null));
             }
         } catch (final Exception ex) {
-            throw new DomainMetadataGenerationException("Could not obtain model(s) for synthetic entity [%s].".formatted(entityType.getSimpleName()), ex);
+            throw new DomainMetadataGenerationException(ERR_NO_MODEL_FOR_SYNTHETIC_ENTITY.formatted(entityType.getSimpleName()), ex);
 
         }
     }
@@ -715,7 +724,7 @@ final class DomainMetadataGenerator {
     {
         final List<Field> unionMembers = unionProperties(unionType);
         if (unionMembers.isEmpty()) {
-            throw new EntityDefinitionException("Ill-defined union entity [%s] has no union members.".formatted(unionType.getTypeName()));
+            throw new EntityDefinitionException(ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS.formatted(unionType.getTypeName()));
         }
         final List<String> unionMembersNames = unionMembers.stream().map(Field::getName).toList();
         final List<PropertyMetadata> props = new ArrayList<>();
@@ -732,9 +741,7 @@ final class DomainMetadataGenerator {
         final Class<?> firstUnionEntityPropType = unionMembers.getFirst().getType(); // e.g., WagonSlot in TgBogieLocation
         for (final String commonProp : commonProperties(unionType).stream().filter(n -> !DESC.equals(n) && !KEY.equals(n)).toList()) {
             if (unionMembersNames.contains(commonProp)) {
-                throw new EntityDefinitionException("""
-                                                    Ill-defined union entity: %s
-                                                    Common property and union property share the same name [%s].""".formatted(unionType.getTypeName(), commonProp));
+                throw new EntityDefinitionException(ERR_UNION_ENTITY_PROPERTY_NAME_CONFLICT.formatted(unionType.getTypeName(), commonProp));
             }
             final Field commonPropField = findFieldByName(firstUnionEntityPropType, commonProp);
             final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(commonPropField);
@@ -773,7 +780,7 @@ final class DomainMetadataGenerator {
         final String firstUnionPropName = (contextPropName == null ? "" :  contextPropName + ".") + iterator.next();
         var expressionModelInProgress = expr()
                 .caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName + "." + commonSubpropName);
-        for (; iterator.hasNext();) {
+        while (iterator.hasNext()) {
             final String unionPropName = (contextPropName == null ? "" :  contextPropName + ".") + iterator.next();
             expressionModelInProgress = expressionModelInProgress.when().prop(unionPropName).isNotNull().then().prop(unionPropName + "." + commonSubpropName);
         }
@@ -797,7 +804,7 @@ final class DomainMetadataGenerator {
                 return (ExpressionModel) exprField.get(null);
             }
         } catch (final Exception ex) {
-            throw new DomainMetadataGenerationException("Cannot obtain expression model for calculated property [%s].".formatted(prop), ex);
+            throw new DomainMetadataGenerationException(ERR_CANNOT_OBTAIN_EXPRESSION_MODEL_FOR_CALCULATED_PROPERTY.formatted(prop), ex);
         }
     }
 
@@ -815,7 +822,7 @@ final class DomainMetadataGenerator {
         try {
             return (Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.loadType(atCalculated.rootTypeName());
         } catch(final Exception ex) {
-            throw new DomainMetadataGenerationException("Could not load type [%s].".formatted(atCalculated.rootTypeName()), ex);
+            throw new DomainMetadataGenerationException(ERR_COULD_NOT_LOAD_TYPE.formatted(atCalculated.rootTypeName()), ex);
         }
     }
 

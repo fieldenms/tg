@@ -320,9 +320,10 @@ public class EntityUtils {
     }
 
     /**
-     * Returns current value(if property is valid, then its value, otherwise last incorrect value of corresponding meta-property) of property of passed entity.<br>
+     * Returns the current property value for an entity.<br>
+     * If the property is invalid, then its last invalid value is returned.
      * <br>
-     * Note : does not support dot-notated property names.
+     * Note: property dot-expressions are not supported.
      *
      * @param entity
      * @param propertyName
@@ -330,11 +331,7 @@ public class EntityUtils {
      */
     public static Object getCurrentValue(final AbstractEntity<?> entity, final String propertyName) {
         final MetaProperty<?> metaProperty = entity.getProperty(propertyName);
-        if (metaProperty == null) {
-            throw new IllegalArgumentException("Couldn't find meta-property named '" + propertyName + "' in " + entity);
-        } else {
-            return metaProperty.isValid() ? entity.get(propertyName) : metaProperty.getLastInvalidValue();
-        }
+        return metaProperty.isValid() ? entity.get(propertyName) : metaProperty.getLastInvalidValue();
     }
 
     /**
@@ -982,7 +979,7 @@ public class EntityUtils {
     }
 
     /**
-     * Splits dot.notated property in two parts: first level property and the rest of subproperties.
+     * Splits property dot-expression in two parts: first level property and the rest of subproperties.
      * If there is no rest, the 2nd pair element will be {@code null}.
      *
      * @param dotNotatedPropName
@@ -998,7 +995,7 @@ public class EntityUtils {
     }
 
     /**
-     * Splits dot.notated property in two parts: last subproperty (as second part) and prior subproperties.
+     * Splits property dot-expression in two parts: last subproperty (as second part) and prior subproperties.
      *
      * @param dotNotatedPropName
      * @return
