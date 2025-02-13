@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnQueries;
@@ -23,6 +24,9 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
 
     public static final String ERR_YIELD_INTO_NON_EXISTENT_PROPERTY =
             "Cannot yield into non-existing property [%s] in entity type [%s], which is being used as a query source.";
+    public static final String ERR_MODELS_OF_QUERY_SOURCE_HAVE_DIFFERENT_RESULT_TYPES =
+            "Models of query source have different result types %s. " +
+            "While making select(..) or join(..)/leftJoin(..) from multiple models it should be ensured that they are of the same result type.";
 
     private final List<SourceQuery1> models;
     private final boolean isSyntheticEntity;
@@ -46,7 +50,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
             }
 
             if (modelsResultTypes.size() != 1) {
-                throw new EqlStage1ProcessingException("Models of query source have different result types " + modelsResultTypes + ". While making select(..) or join(..)/leftJoin(..) from multiple models it should be ensured that they are of the same result type.");
+                throw new EqlStage1ProcessingException(ERR_MODELS_OF_QUERY_SOURCE_HAVE_DIFFERENT_RESULT_TYPES.formatted(modelsResultTypes));
             }
 
             return modelsResultTypes.iterator().next();
@@ -79,7 +83,7 @@ public class Source1BasedOnQueries extends AbstractSource1<Source2BasedOnQueries
 
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        return isSyntheticEntity ? Set.of(sourceType()) : models.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+        return isSyntheticEntity ? Set.of(sourceType()) : models.stream().map(AbstractQuery1::collectEntityTypes).flatMap(Set::stream).collect(toSet());
     }
 
     @Override
