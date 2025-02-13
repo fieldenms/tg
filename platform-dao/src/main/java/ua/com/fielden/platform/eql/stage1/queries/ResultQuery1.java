@@ -29,16 +29,15 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.first;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 /**
  * Represents a top-level query that produces results.
  * <h3> Transformation to stage 2 </h3>
  * Processing of yields is subject to the following rules:
  * <ul>
- *   <li> In case of no explicit yields or "yield all", the query source is used to expand the yields, which are then
- *        filtered according to the fetch model. Yields are expanded by taking each property from the query source and
- *        yielding it as if {@code yield().prop("x").as("x")} was used.
+ *   <li> In case of no explicit yields or "yield all", the query source is used to expand the yields, which are then adjusted according to the fetch model.
+ *        Yields are expanded by taking each property from the query source and yielding it as if {@code yield().prop("x").as("x")} was used.
  *   <li> In case of a single unaliased yield when the query result is a persistent entity type, alias {@code id} is used.
  * </ul>
  *
@@ -65,7 +64,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
      * <ol>
      * <li> No yields or {@code yieldAll} - adds all properties that belong to {@code mainSource} and are also present in the fetch model.
      *   <ul>
-     *   <li> In case of entity-typed properties and being one of the queries constructed during fetching process (i.e., not the main user query),
+     *   <li> In the case of entity-typed properties and being one of the queries constructed during the fetching process (i.e., not the main user query),
      *        their properties are also included (if they exist in the fetch model) to improve query performance.
      *   <li> In case of synthetic entities (excluding the case of fetching totals only), {@code id} is also yielded.
      *        This is necessary to overcome the current limitation of fetch strategies that ignore {@code id} for synthetic entities.
@@ -82,7 +81,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     }
 
     private Yields2 enhanceNonEmptyAndNotYieldAll(final Yield2 fstYield, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (yields.getYields().size() == 1 && isEmpty(fstYield.alias()) && isPersistedEntityType(resultType)) {
+        if (yields.getYields().size() == 1 && isEmpty(fstYield.alias()) && isPersistentEntityType(resultType)) {
             return new Yields2(List.of(new Yield2(fstYield.operand(), ID, fstYield.hasNonnullableHint())));
         }
 
@@ -125,8 +124,8 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
      * @param prop a property source
      * @return a stream of optional sub-properties of {@code prop}; the result can stream empty optionals.
      */
-    // TODO: More than 1 empty optinal in the stream can lead to unexpected results. Consider changing the return type
-    //       to Optional<Stream>
+    // TODO: More than 1 empty optional in the stream can lead to unexpected results.
+    //       Consider changing the return type to Optional<Stream>.
     private static Stream<Optional<AbstractQuerySourceItem<?>>> streamSubProps(final AbstractQuerySourceItem<?> prop) {
         return switch (prop) {
             case QuerySourceItemForUnionType<?> unionTypedProp ->
