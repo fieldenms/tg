@@ -9,6 +9,8 @@ import ua.com.fielden.platform.types.RichTextSanitiser;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
+import static ua.com.fielden.platform.error.Result.successful;
+
 /**
  * Default validator for {@link RichText} values.
  * It is implicitly enabled for all {@link RichText} properties.
@@ -30,6 +32,10 @@ public final class RichTextValidator extends AbstractBeforeChangeEventHandler<Ri
             final RichText newValue,
             final Set<Annotation> mutatorAnnotations)
     {
+        if (newValue == null) {
+            return successful();
+        }
+
         return RichTextSanitiser.sanitiseHtml(newValue, RichTextSanitiser.standardErrorFormatter);
     }
 

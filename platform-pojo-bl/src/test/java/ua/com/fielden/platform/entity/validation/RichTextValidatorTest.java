@@ -48,4 +48,16 @@ public class RichTextValidatorTest {
         assertTrue(entity.getProperty("text").isValid());
     }
 
+    @Test
+    public void null_value_for_RichText_passes_validation() {
+        final var entity = factory.newEntity(EntityWithRichText.class);
+
+        entity.setText(RichText.fromHtml("<script> alert(1) </script>"));
+        assertFalse(entity.getProperty("text").isValid());
+        assertTrue(entity.getProperty("text").getFirstFailure().getMessage().startsWith(RichTextValidator.PREFIX_ERR_UNSAFE_INPUT));
+
+        entity.setText(null);
+        assertTrue(entity.getProperty("text").isValid());
+    }
+
 }
