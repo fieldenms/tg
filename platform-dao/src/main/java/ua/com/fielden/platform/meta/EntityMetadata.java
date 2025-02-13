@@ -27,7 +27,7 @@ public sealed interface EntityMetadata extends TypeMetadata {
 
     EntityNature nature();
 
-    EntityNature.Data data();
+    EntityNature.Data<?> data();
 
     Collection<PropertyMetadata> properties();
 
