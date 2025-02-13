@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.utils.ImmutableSetUtils.insert;
@@ -29,6 +31,18 @@ public class ImmutableSetUtilsTest {
                      union(Set.of(), Set.of("a")));
         assertEquals(Set.of(),
                      union(Set.of(), Set.of()));
+    }
+
+    @Test
+    public void union_is_identity_for_equal_iterables() {
+        final var set1 = Set.of("a", "b", "c");
+        assertEquals(set1, union(set1, set1));
+
+        final var set2 = ImmutableSet.of("a", "b", "c");
+        assertEquals(set2, union(set2, set2));
+
+        final Supplier<Set<Object>> makeSet3 = () -> ImmutableSet.of("a", "b", "c");
+        assertEquals(makeSet3.get(), union(makeSet3.get(), makeSet3.get()));
     }
 
 }

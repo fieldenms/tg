@@ -22,12 +22,19 @@ public final class ImmutableSetUtils {
      */
     public static <X extends Y, Y> Set<Y> insert(final Iterable</*@Nonnull*/ X> xs, final /*@Nonnull*/ Y y) {
         final var size = Iterables.size(xs);
-        return size == 0
-                ? ImmutableSet.of(y)
-                : ImmutableSet.<Y>builderWithExpectedSize(size + 1)
-                        .addAll(xs)
-                        .add(y)
-                        .build();
+
+        if (size == 0) {
+            return ImmutableSet.of(y);
+        }
+        else if (xs instanceof ImmutableSet<X> set && set.contains(y)) {
+            return (Set<Y>) set;
+        }
+        else {
+            return ImmutableSet.<Y>builderWithExpectedSize(size + 1)
+                    .addAll(xs)
+                    .add(y)
+                    .build();
+        }
     }
 
     /**
@@ -37,6 +44,10 @@ public final class ImmutableSetUtils {
      * @param ys  must not contain null elements
      */
     public static <X extends Y, Y> Set<Y> union(final Iterable</*@Nonnull*/ X> xs, final Iterable</*@Nonnull*/ Y> ys) {
+        if (xs == ys && ys instanceof ImmutableSet<Y> set) {
+            return set;
+        }
+
         final int xsSize = Iterables.size(xs);
         final int ysSize;
 

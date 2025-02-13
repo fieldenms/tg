@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.utils.ImmutableMapUtils.*;
@@ -48,6 +50,30 @@ public class ImmutableMapUtilsTest {
     public void unionRight_uses_values_from_the_second_map_if_duplicate_keys_are_encountered() {
         assertEquals(Map.of("one", 10, "two", 2, "three", 30),
                      unionRight(Map.of("one", 1, "three", 3), Map.of("one", 10, "two", 2, "three", 30)));
+    }
+
+    @Test
+    public void uionLeft_is_identity_for_equal_maps() {
+        final var map1 = Map.of("one", 1, "two", 2);
+        assertEquals(map1, unionLeft(map1, map1));
+
+        final var map2 = ImmutableMap.of("one", 1, "two", 2);
+        assertEquals(map2, unionLeft(map2, map2));
+
+        final Supplier<Map<Object, Object>> makeMap3 = () -> ImmutableMap.of("one", 1, "two", 2);
+        assertEquals(makeMap3.get(), unionLeft(makeMap3.get(), makeMap3.get()));
+    }
+
+    @Test
+    public void uionRight_is_identity_for_equal_maps() {
+        final var map1 = Map.of("one", 1, "two", 2);
+        assertEquals(map1, unionRight(map1, map1));
+
+        final var map2 = ImmutableMap.of("one", 1, "two", 2);
+        assertEquals(map2, unionRight(map2, map2));
+
+        final Supplier<Map<Object, Object>> makeMap3 = () -> ImmutableMap.of("one", 1, "two", 2);
+        assertEquals(makeMap3.get(), unionRight(makeMap3.get(), makeMap3.get()));
     }
 
 }

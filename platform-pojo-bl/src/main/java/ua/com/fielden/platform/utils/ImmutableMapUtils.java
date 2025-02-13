@@ -102,7 +102,12 @@ public final class ImmutableMapUtils {
             final Map</*@Nonnull*/ K, /*@Nonnull*/ V1> map1,
             final Map</*@Nonnull*/ K, /*@Nonnull*/ V2> map2)
     {
-        return union((k, v1, v2) -> v2, map1, map2);
+        if (map1 == map2 && map2 instanceof ImmutableMap<K,V2> map) {
+            return (Map<K, SV>) map;
+        }
+        else {
+            return union((k, v1, v2) -> v2, map1, map2);
+        }
     }
 
     /**
@@ -117,7 +122,12 @@ public final class ImmutableMapUtils {
             final Map</*@Nonnull*/ K, /*@Nonnull*/ V1> map1,
             final Map</*@Nonnull*/ K, /*@Nonnull*/ V2> map2)
     {
-        return union((k, v1, v2) -> v1, map1, map2);
+        if (map1 == map2 && map1 instanceof ImmutableMap<K,V1> map) {
+            return (Map<K, SV>) map;
+        }
+        else {
+            return union((k, v1, v2) -> v1, map1, map2);
+        }
     }
 
 
