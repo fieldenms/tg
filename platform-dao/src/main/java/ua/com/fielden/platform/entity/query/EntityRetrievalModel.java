@@ -19,7 +19,6 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
@@ -28,7 +27,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
@@ -45,15 +45,15 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  *   <li> Any properties explicitly included by {@code FM} are included into {@code RM}.
  *        Any sub-fetch models among them are combined with those used during previous steps.
  *        For example, given entity-typed property {@code P}, if the fetch category resulted in a sub-retrieval model
- *        {@code RM_P} (with an underlying fetch model {@code RMFM_P}) for {@code P} and {@code P} is explicitly included
- *        into {@code FM} with a sub-fetch model {@code FM_P}, then {@code FM_P} is combined with {@code RMFM_P} to produce
- *        the final sub-retrieval model for {@code P}.
+ *        {@code RM_P} (with an underlying fetch model {@code RMFM_P}) for {@code P},
+ *        and {@code P} is explicitly included into {@code FM} with a sub-fetch model {@code FM_P},
+ *        then {@code FM_P} is combined with {@code RMFM_P} to produce the final sub-retrieval model for {@code P}.
  *   <li> The set of proxied properties is constructed.
  * </ol>
  *
  * <h4> Processing of entity-typed properties </h4>
- * Property {@code P} with entity type {@code E} may be explored during construction of a retrieval model, which will result in
- * a richer sub-model for that property.
+ * Property {@code P} with entity type {@code E} may be explored during construction of a retrieval model,
+ * which will result in a richer sub-model for that property.
  * <p>
  * If {@code P} is explored, then:
  * <ul>
@@ -69,7 +69,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  * <h4> Fetch categories </h4>
  * See the documentation {@link FetchCategory} for a description of each category.
  * <p>
- * Some categories deserve more detail:
+ * Some categories deserve additional clarification:
  * <ol>
  *   <li> {@link FetchCategory#KEY_AND_DESC}
  *     <ul>
@@ -77,30 +77,34 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  *     </ul>
  *   <li> {@link FetchCategory#DEFAULT}
  *     <ul>
- *       <li> if entity has a simple entity-typed (but not a union) {@code key}, then it is explored further;
- *       <li> if entity has a composite key, then all entity-typed (but not a union) key members are explored further;
+ *       <li> if an entity has a simple entity-typed (but not a union) {@code key}, then it is explored further;
+ *       <li> if an entity has a composite key, then all entity-typed (but not a union) key members are explored further;
  *     </ul>
- *   <li> {@link FetchCategory#ALL} - equivalent to {@link FetchCategory#DEFAULT} but without special handling of entity-typed
- *        keys and key members.
+ *   <li> {@link FetchCategory#ALL} - equivalent to {@link FetchCategory#DEFAULT},
+ *        but without special handling of entity-typed keys and key members.
  * </ol>
  *
  * <h4> Processing of property {@code key} </h4>
  * <ul>
- *   <li> If an entity has a composite key, it is expanded into its key members, which are always explored further.
- *        Property {@code key} itself is never included in such case. This is due to it having different types at Java
- *        and EQL levels. In Java it is {@link DynamicEntityKey}, in EQl - a string, because it's an implicitly calculated
- *        property that represents a concatenation of key members. If {@code key} was to be retrieved, then it would
- *        be required to parse its string value into a {@link DynamicEntityKey}. Instead, a composite {@code key} is never
- *        included in a retrieval model, and the constructor of {@link AbstractEntity} takes care of initialising its value.
- *   <li> If an entity is a union, {@code key} is included, as well as all of the union members, which are always explored further.
+ *   <li> If an entity has a composite key, the retrieval model is expanded to include all the key members, which are always explored further.
+ *        Property {@code key} itself is never included in such cases as it is effective a "virtual" property, having different types at Java and EQL levels.
+ *        More specifically, it is {@link DynamicEntityKey} in Java, and a string in EQL, because it is implicitly calculated
+ *        (i.e. key members are converted to string and concatenated with a key value separator to produce the key value).
+ *        If such {@code key} were to be retrieved, then it would be required to parse its string value into a {@link DynamicEntityKey}.
+ *        Instead, a composite {@code key} is never included in a retrieval model, and the constructor of {@link AbstractEntity} takes care of initialising its value.
+ *   <li> If an entity is a union, {@code key} is included together with all the union members, which are always explored further.
  * </ul>
  *
  * <h4> Implementation Details </h4>
- * When inspecting property types for a potential entity type {@link PropertyTypeMetadata.Wrapper#unwrap(PropertyTypeMetadata)}
- * is used because of the way fetch models are constructed -- heuristically, and one case where unwrapping is needed is
- * collectional properties: fetch models know only about the collectional element type.
+ * When inspecting property types for a potential entity type,
+ * method {@link PropertyTypeMetadata.Wrapper#unwrap(PropertyTypeMetadata)} is used because of the way fetch models are constructed -- heuristically.
+ * One case where unwrapping is needed is collectional properties: fetch models know only about the collectional element type.
  */
 public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
+
+    public static final String ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find entity-typed property [%s] to be excluded from fetched properties of entity type [%s].";
+    public static final String ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find property [%s] to be excluded from fetched properties of entity type [%s].";
+    public static final String ERR_NON_EXISTING_PROPERTY = "Trying to fetch entity [%s] with non-existing property [%s].";
 
     private final fetch<T> originalFetch;
     /** Indicates whether this fetch is the top-most (graph root) or a nested one (subgraph). */
@@ -523,14 +527,12 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             if (optPm.filter(pm -> pm.type().isEntity()).isPresent()) {
                 final var removalResult = entityProps.remove(propName);
                 if (removalResult == null) {
-                    throw new EqlException(format("Couldn't find entity-typed property [%s] to be excluded from fetched properties of entity [%s].",
-                                                  propName, entityType.getSimpleName()));
+                    throw new EqlException(ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH.formatted(propName, entityType.getSimpleName()));
                 }
             } else {
                 final var removalResult = primProps.remove(propName);
                 if (!removalResult) {
-                    throw new EqlException(format("Couldn't find property [%s] to be excluded from fetched properties of entity type [%s].",
-                                                  propName, entityType.getSimpleName()));
+                    throw new EqlException(ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH.formatted(propName, entityType.getSimpleName()));
                 }
             }
         }
@@ -552,8 +554,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 if (querySourceInfo.hasProp(propName)) {
                     return Optional.empty();
                 }
-                throw new EqlException(format("Trying to fetch entity [%s] with non-existing property [%s]",
-                                              entityType.getSimpleName(), propName));
+                throw new EqlException(ERR_NON_EXISTING_PROPERTY.formatted(entityType.getSimpleName(), propName));
             }
             return optPm;
         }
