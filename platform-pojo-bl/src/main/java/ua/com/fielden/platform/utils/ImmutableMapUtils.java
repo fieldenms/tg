@@ -8,11 +8,9 @@ import java.util.Map;
 import static java.lang.String.format;
 
 /**
- * Utilites for immutable {@linkplain Map maps}.
+ * Utilities for immutable {@linkplain Map maps}.
  * <p>
  * <b>Null as either key or value is not permitted</b>.
- *
- * @see ImmutableCollectionUtil
  */
 public final class ImmutableMapUtils {
 
@@ -41,9 +39,11 @@ public final class ImmutableMapUtils {
      * Returns an immutable map that contains entries from both maps.
      * The provided combining function is used to resolve conflicts (when a key is present in both maps).
      *
-     * @param combiner  function that combines values from both maps associated with the same key, must not return null
-     * @param map1  must not contain null key or null values
-     * @param map2  must not contain null key or null values
+     * @param combiner  function that combines values from both maps associated with the same key, must not return null.
+     *                  Calls have the form {@code combiner(key, value1, value2)}, where {@code value1} is from {@code map1}
+     *                  and {@code value2} is from {@code map2}.
+     * @param map1  must not contain null keys or null values
+     * @param map2  must not contain null keys or null values
      */
     public static <K, V1 extends SV, V2 extends SV, SV> Map<K, SV> union(
             final Function3<? super K, ? super V1, ? super V2, SV> combiner,
@@ -90,10 +90,10 @@ public final class ImmutableMapUtils {
         }
     }
 
-
     /**
+     * Right-biased union.
      * Returns an immutable map that contains entries from both maps.
-     * If duplicate keys are encountered, values from {@code map2} are used.
+     * If both maps have an entry for the same key, the value from {@code map2} is used.
      *
      * @param map1  must not contain null key or null values
      * @param map2  must not contain null key or null values
@@ -106,8 +106,9 @@ public final class ImmutableMapUtils {
     }
 
     /**
+     * Left-biased union.
      * Returns an immutable map that contains entries from both maps.
-     * If duplicate keys are encountered, values from {@code map1} are used.
+     * If both maps have an entry for the same key, the value from {@code map1} is used.
      *
      * @param map1  must not contain null key or null values
      * @param map2  must not contain null key or null values
