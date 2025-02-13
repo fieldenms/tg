@@ -217,7 +217,7 @@ function runLinkIfPossible(el) {
 }
 
 function mouseDownHandler(e) {
-    if ((e.button == 0 && (e.ctrlKey || e.metaKey)) || e.type.startsWith("touch")) {
+    if (e.button == 0 || e.type.startsWith("touch")) {
         longPress = false;
         shortPress = true;
         const el = e.target;

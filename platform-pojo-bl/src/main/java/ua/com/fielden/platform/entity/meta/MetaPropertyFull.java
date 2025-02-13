@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.meta;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -33,7 +32,6 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModif
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
@@ -432,27 +430,37 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         annotationHandlers.put(handler, validationResult);
     }
 
-    /**
-     * Returns a validation result from a validator associated with the specified annotation.
-     * If there are validation errors among the associated validators, the first error is returned.
-     * Otherwise, a successful result or {@code null} is returned.
-     * <p>
-     * Most validation annotations are associated with a single validator.
-     * But some, such as {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
-     * <p>
-     * It is an error if this property has no validators associated with the specified annotation.
-     */
     @Override
-    public @Nullable Result getValidationResult(final ValidationAnnotation va) {
+    public Optional<Result> findValidationResult(final ValidationAnnotation va) {
+        final Result failure = getFirstFailureFor(va);
+        if (failure != null) {
+            return Optional.of(failure);
+        }
+        else if (!validators.containsKey(va)) {
+            return Optional.empty();
+        }
+        else {
+            return Optional.ofNullable(validators.get(va).values().iterator().next());
+        }
+    }
+
+    @Override
+    public Result getValidationResult(final ValidationAnnotation va) {
         final Result failure = getFirstFailureFor(va);
         if (failure != null) {
             return failure;
         }
         else if (!validators.containsKey(va)) {
-            throw new InvalidArgumentException("There are no validators associated with annotation [%s] in [%s]".formatted(va, this));
+            throw new IllegalStateException("There are no validation results associated with annotation [%s] in [%s]".formatted(va, this));
         }
         else {
-            return validators.get(va).values().iterator().next();
+            final var result = validators.get(va).values().iterator().next();
+            if (result == null) {
+                throw new IllegalStateException("There are no validation results associated with annotation [%s] in [%s]".formatted(va, this));
+            }
+            else {
+                return result;
+            }
         }
     }
 
@@ -899,7 +907,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 // a special case if the boolean properties where current values cannot be null by definition
                 // in this case we only need to rely on the last attempted value -- if it null then there was no attempt to assign any boolean value
                 if ((((getValue() == null || isBoolean(type)) && getLastAttemptedValue() == null)) ||
-                    ofNullable(getValidationResult(ValidationAnnotation.REQUIRED)).map(res -> res.isSuccessful()).orElse(true)) {
+                    findValidationResult(ValidationAnnotation.REQUIRED).map(Result::isSuccessful).orElse(true)) {
                     setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
                 } else { // otherwise, it is necessary to enforce reassignment of the last attempted value to trigger revalidation
                     setEnforceMutator(true);
