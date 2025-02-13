@@ -45,11 +45,11 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
  */
 public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromStage1To2<ResultQuery2> {
 
-    public final IRetrievalModel<?> fetchModel;
+    public final IRetrievalModel<?> retrievalModel;
 
-    public ResultQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType, final IRetrievalModel<?> fetchModel) {
+    public ResultQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType, final IRetrievalModel<?> retrievalModel) {
         super(queryComponents, requireNonNull(resultType));
-        this.fetchModel = fetchModel;
+        this.retrievalModel = retrievalModel;
     }
 
     @Override
@@ -92,13 +92,13 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     }
 
     private Yields2 enhanceAll(final ISource2<? extends ISource3> mainSource) {
-        final boolean isNotTopFetch = fetchModel != null && !fetchModel.topLevel();
+        final boolean isNotTopFetch = retrievalModel != null && !retrievalModel.isTopLevel();
         final var enhancedYields = mainSource.querySourceInfo().getProps().values().stream()
                 // Narrow down the set of yields to those included in the fetch model.
-                .filter(level1Prop -> fetchModel == null || fetchModel.containsProp(level1Prop.name))
+                .filter(level1Prop -> retrievalModel == null || retrievalModel.containsProp(level1Prop.name))
                 // prop -> stream of prop path components
                 .flatMap(level1Prop -> {
-                    final var level1PropFetchModel = fetchModel == null ? null : fetchModel.getRetrievalModelOpt(level1Prop.name).orElse(null);
+                    final var level1PropFetchModel = retrievalModel == null ? null : retrievalModel.getRetrievalModelOpt(level1Prop.name).orElse(null);
                     if (isNotTopFetch && level1PropFetchModel != null && level1Prop instanceof QuerySourceItemForEntityType<?> level1EntityProp) {
                         // yielding sub-properties
                         return level1EntityProp.querySourceInfo.getProps().values().stream()
@@ -142,19 +142,19 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((fetchModel == null) ? 0 : fetchModel.hashCode());
+        result = prime * result + ((retrievalModel == null) ? 0 : retrievalModel.hashCode());
         return prime * result + ResultQuery1.class.getName().hashCode();
     }
 
     @Override
     public boolean equals(final Object obj) {
-        return this == obj || super.equals(obj) && obj instanceof ResultQuery1 && Objects.equal(fetchModel, ((ResultQuery1) obj).fetchModel);
+        return this == obj || super.equals(obj) && obj instanceof ResultQuery1 && Objects.equal(retrievalModel, ((ResultQuery1) obj).retrievalModel);
     }
 
     @Override
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString)
-                .addIfNotNull("fetch", fetchModel);
+                .addIfNotNull("retrieval", retrievalModel);
     }
 
 }

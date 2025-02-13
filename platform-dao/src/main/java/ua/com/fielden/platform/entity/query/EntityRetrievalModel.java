@@ -231,7 +231,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     }
 
     @Override
-    public boolean topLevel() {
+    public boolean isTopLevel() {
         return topLevel;
     }
 

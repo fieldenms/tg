@@ -113,7 +113,7 @@ public final class EntityAggregatesRetrievalModel implements IRetrievalModel<Ent
     }
 
     @Override
-    public boolean topLevel() {
+    public boolean isTopLevel() {
         return true;
     }
 

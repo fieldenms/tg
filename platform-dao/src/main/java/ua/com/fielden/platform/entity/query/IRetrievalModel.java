@@ -1,19 +1,19 @@
 package ua.com.fielden.platform.entity.query;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 /**
  * Represents a retrieval model.
- * At a high level, this abstraction is very similar to that of fetch models, the difference being that the API of fetch
- * models is designed to be used by application developers, while this abstraction is used by the EQL-SQL transpiler and
- * the query execution engine.
+ * At a high level, this abstraction is very similar to that of fetch models.
+ * The difference is that the API of fetch models is designed to be used by application developers,
+ * while this abstraction is used by the EQL-SQL transpiler and the query execution engine.
  *
  * @param <T>  the entity type that can be retrieved with a retrieval model instance
  * @see ua.com.fielden.platform.entity.query.fluent.fetch
@@ -54,11 +54,11 @@ public sealed interface IRetrievalModel<T extends AbstractEntity<?>> permits Ent
     boolean containsProxy(final String propName);
 
     /**
-     * Indicates whether this fetch model is at the root of the entity graph. In other words, if this method returns
-     * {@code true}, this fetch model is not a part of some other fetch model (i.e., there is no such fetch model whose
-     * {@link #getRetrievalModels()} includes this fetch model.)
+     * Indicates whether this retrieval model is at the root of the entity graph.
+     * If this method returns {@code true}, this retrieval model is not a part of some other fetch model.
+     * In other words, there is no such retrieval model whose {@link #getRetrievalModels()} includes this retrieval model.
      */
-    boolean topLevel();
+    boolean isTopLevel();
 
     /**
      * Creates a retrieval model that corresponds to the entity type that the fetch model is associated with.
