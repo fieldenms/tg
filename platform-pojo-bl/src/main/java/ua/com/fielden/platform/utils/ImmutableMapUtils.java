@@ -5,14 +5,14 @@ import ua.com.fielden.platform.utils.function.Function3;
 
 import java.util.Map;
 
-import static java.lang.String.format;
-
 /**
  * Utilities for immutable {@linkplain Map maps}.
  * <p>
  * <b>Null as either key or value is not permitted</b>.
  */
 public final class ImmutableMapUtils {
+
+    public static final String ERR_NULL_VALUES_ARE_NOT_PERMITTED = "Map must not contain null values. Null was associated with key: %s.";
 
     /**
      * Returns an immutable map that contains the given key and value, and all entries from the given map.
@@ -61,16 +61,14 @@ public final class ImmutableMapUtils {
             final var builder = ImmutableMap.<K, SV>builderWithExpectedSize(map1.size() + map2.size());
             map1.forEach((key, value1) -> {
                 if (value1 == null) {
-                    throw new NullPointerException(
-                            format("Map must not contain null values. Null was associated with key: %s", key));
+                    throw new NullPointerException(ERR_NULL_VALUES_ARE_NOT_PERMITTED.formatted(key));
                 }
 
                 final SV resultValue;
                 if (map2.containsKey(key)) {
                     final var value2 = map2.get(key);
                     if (value2 == null) {
-                        throw new NullPointerException(
-                                format("Map must not contain null values. Null was associated with key: %s", key));
+                        throw new NullPointerException(ERR_NULL_VALUES_ARE_NOT_PERMITTED.formatted(key));
                     }
                     resultValue = combiner.apply(key, value1, value2);
                 }
