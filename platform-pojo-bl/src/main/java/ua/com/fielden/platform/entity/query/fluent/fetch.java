@@ -20,8 +20,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.ImmutableCollectionUtil.append;
-import static ua.com.fielden.platform.utils.ImmutableCollectionUtil.concat;
+import static ua.com.fielden.platform.utils.ImmutableSetUtils.insert;
+import static ua.com.fielden.platform.utils.ImmutableSetUtils.union;
 
 /**
  * Represents an entity graph that describes the shape of an entity to be fetched.
@@ -173,7 +173,7 @@ public class fetch<T extends AbstractEntity<?>> {
                            fetchCategory,
                            instrumented,
                            includedPropsWithModels,
-                           append(includedProps, propName.toString()),
+                           insert(includedProps, propName.toString()),
                            excludedProps);
     }
 
@@ -224,7 +224,7 @@ public class fetch<T extends AbstractEntity<?>> {
                                fetchCategory,
                                instrumented,
                                includedPropsWithModels,
-                               concat(includedProps, Iterables.transform(propNames, CharSequence::toString)),
+                               union(includedProps, Iterables.transform(propNames, CharSequence::toString)),
                                excludedProps);
         }
     }
@@ -251,7 +251,7 @@ public class fetch<T extends AbstractEntity<?>> {
                            instrumented,
                            includedPropsWithModels,
                            includedProps,
-                           append(excludedProps, propName.toString()));
+                           insert(excludedProps, propName.toString()));
     }
 
     /**
@@ -302,7 +302,7 @@ public class fetch<T extends AbstractEntity<?>> {
                                instrumented,
                                includedPropsWithModels,
                                includedProps,
-                               concat(excludedProps, Iterables.transform(propNames, CharSequence::toString)));
+                               union(excludedProps, Iterables.transform(propNames, CharSequence::toString)));
         }
     }
 
@@ -441,8 +441,8 @@ public class fetch<T extends AbstractEntity<?>> {
                            ImmutableMapUtils.union((k, fetch1, fetch2) -> fetch1.unionWith(fetch2),
                                                    includedPropsWithModels,
                                                    second.includedPropsWithModels),
-                           concat(includedProps, second.includedProps),
-                           concat(excludedProps, second.excludedProps));
+                           union(includedProps, second.includedProps),
+                           union(excludedProps, second.excludedProps));
     }
 
 }
