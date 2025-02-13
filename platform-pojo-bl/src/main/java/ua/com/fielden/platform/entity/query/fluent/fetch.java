@@ -20,8 +20,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.utils.ImmutableCollectionUtil.concat;
 import static ua.com.fielden.platform.utils.ImmutableCollectionUtil.append;
+import static ua.com.fielden.platform.utils.ImmutableCollectionUtil.concat;
 
 /**
  * Represents an entity graph that describes the shape of an entity to be fetched.
@@ -38,7 +38,9 @@ import static ua.com.fielden.platform.utils.ImmutableCollectionUtil.append;
  * @see ua.com.fielden.platform.entity.query.IRetrievalModel
  */
 public class fetch<T extends AbstractEntity<?>> {
-    public static final String ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
+    public static final String ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s].";
+    public static final String ERR_PROPERTY_IS_ALREADY_PRESENT = "Property [%s] is already present within fetch model.";
+    public static final String ERR_INVALID_PROPERTY_FOR_ENTITY = "Property [%s] is not present within [%s] entity.";
 
     /**
      * Standard fetch categories, ordered by richness, descendingly.
@@ -76,8 +78,10 @@ public class fetch<T extends AbstractEntity<?>> {
          * <ul>
          *   <li> {@code id} is included if it belongs to the entity type;
          *   <li> {@code version} is included if the entity type is persistent;
-         *   <li> {@code refCount} and {@code active} are included if entity type is activatable;
-         *   <li> the group of "last updated by" properties is included if the entity type is persistent and has those properties.
+         *   <li> {@code refCount} and {@code active} are included entities extending {@link ua.com.fielden.platform.entity.ActivatableAbstractEntity},
+         *        as they are generally required when saving changes;
+         *   <li> the group of "last updated" properties is included for entities extending {@link ua.com.fielden.platform.entity.AbstractPersistentEntity},
+         *        as they are generally required when saving changes (unlike the "created" group of properties).
          * </ul>
          */
         ID_AND_VERSION,
@@ -135,7 +139,7 @@ public class fetch<T extends AbstractEntity<?>> {
     
     private void checkForDuplicate(final String propName) {
         if (includedPropsWithModels.containsKey(propName) || includedProps.contains(propName) || excludedProps.contains(propName)) {
-            throw new IllegalArgumentException("Property [" + propName + "] is already present within fetch model!");
+            throw new IllegalArgumentException(ERR_PROPERTY_IS_ALREADY_PRESENT.formatted(propName));
         }
     }
     
@@ -144,7 +148,7 @@ public class fetch<T extends AbstractEntity<?>> {
                 !ID.equals(propName) &&
                 !VERSION.equals(propName) &&
                 !isPropertyPresent(entityType, propName)) {
-            throw new IllegalArgumentException("Property [" + propName + "] is not present within [" + entityType.getSimpleName() + "] entity!");
+            throw new IllegalArgumentException(ERR_INVALID_PROPERTY_FOR_ENTITY.formatted(propName, entityType.getSimpleName()));
         }
     }
 
@@ -317,8 +321,8 @@ public class fetch<T extends AbstractEntity<?>> {
         if (entityType != EntityAggregates.class) {
             final Class<?> propType = determinePropertyType(entityType, propName);
             if (propType != fetchModel.entityType) {
-                throw new EqlException(format(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES,
-                                              propType, propName, entityType.getSimpleName(), fetchModel.getEntityType().getSimpleName()));
+                throw new EqlException(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES
+                                       .formatted(propType, propName, entityType.getSimpleName(), fetchModel.getEntityType().getSimpleName()));
             }
         }
 
@@ -367,7 +371,7 @@ public class fetch<T extends AbstractEntity<?>> {
     @Override
     public boolean equals(final Object obj) {
         return obj == this
-               || obj instanceof fetch that
+               || obj instanceof fetch<?> that
                   && fetchCategory == that.fetchCategory
                   && instrumented == that.instrumented
                   && Objects.equals(entityType, that.entityType)
