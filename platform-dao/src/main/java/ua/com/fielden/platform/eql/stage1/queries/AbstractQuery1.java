@@ -125,11 +125,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
     }
 
     /**
-     * Should add implicit yields, if required. This logic depends on a specific query kind.
-     *
-     * @param yields
-     * @param mainSource
-     * @return
+     * Enhances the specified yields. Enhancements that are performed are specific to each query kind.
      */
     abstract protected EnhancedYields enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource);
 

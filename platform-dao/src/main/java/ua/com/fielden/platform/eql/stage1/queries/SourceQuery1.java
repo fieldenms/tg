@@ -10,7 +10,6 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
@@ -72,6 +71,18 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromSt
         return new SourceQuery2(queryComponents, resultType);
     }
 
+    /**
+     * Enhances yields according to the following rules:
+     * <ol>
+     * <li> No yields or {@code yieldAll} - adds properties that belong to {@code mainSource} and satisfy the following:
+     *   <ul> Calculated properties are excluded, unless {@link #shouldMaterialiseCalcPropsAsColumnsInSqlQuery} is true
+     *        and a calculated property can be materialised.
+     *   <li> Other retrievable properties are included.
+     *   </ul>
+     * <li> A single unaliased yield, when the query result type is a persistent entity, gets alias {@code "id"}.
+     * <li> Otherwise, no enhancements are performed.
+     * </ol>
+     */
     @Override
     protected EnhancedYields enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.isEmpty() || yieldAll) {

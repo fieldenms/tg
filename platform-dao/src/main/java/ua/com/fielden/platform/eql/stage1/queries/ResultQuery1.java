@@ -62,7 +62,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     }
 
     /**
-     * Enhances {@code yields}, which were determined during EQL stage2 processing, with additional yields:
+     * Enhances yields according to the following rules:
      * <ol>
      * <li> No yields or {@code yieldAll} - adds all properties that belong to {@code mainSource} and are also present in the fetch model.
      *   <ul>
@@ -72,6 +72,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
      *        This is necessary to overcome the current limitation of fetch strategies that ignore {@code id} for synthetic entities.
      *   </ul>
      * <li> A single unalised yield with the result type being a persistent entity type - enhances that yield with {@code "id"} as alias.
+     * <li> Otherwise, no enhancements are performed.
      * </ol>
      */
     @Override
