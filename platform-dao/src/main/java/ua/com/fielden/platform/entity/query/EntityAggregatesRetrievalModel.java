@@ -31,7 +31,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
  * <ul>
  *   <li> They are always top-level.
  *   <li> The set of proxied properties is always empty.
- *   <li> {@link #containsOnlyTotals()} is always false.
  * </ul>
  */
 public final class EntityAggregatesRetrievalModel implements IRetrievalModel<EntityAggregates> {
