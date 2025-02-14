@@ -43,24 +43,25 @@ function convertParagraph(paragraph) {
 
 function convertUnorderedList(unorderedList) {
     const unorderedSpan = document.createElement('span');
+    unorderedSpan.classList.add('list');
     unorderedSpan.classList.add('unordered-list');
     return moveChildren(unorderedList, unorderedSpan);
 }
 
 function convertOrderedList(orderedList) {
     const orderedSpan = document.createElement('span');
+    orderedSpan.classList.add('list');
     orderedSpan.classList.add('ordered-list');
     return moveChildren(orderedList, orderedSpan);
 }
 
 function convertListItem(listItem) {
     const spanItem = document.createElement('span');
-    if (listItem.parentElement.tagName === 'UL') {
-        if (listItem.classList.contains('task-list-item')) {
-            [...listItem.classList].forEach(classItem => spanItem.classList.add(classItem));
-        } else {
-            spanItem.classList.add('unordered-list-item');
-        }
+    spanItem.classList.add("list-item");
+    if (listItem.classList.contains('task-list-item')) {
+        [...listItem.classList].forEach(classItem => spanItem.classList.add(classItem));
+    } else if (listItem.parentElement.tagName === 'UL') {
+        spanItem.classList.add('unordered-list-item');
     } else if (listItem.parentElement.tagName === 'OL') {
         spanItem.classList.add('ordered-list-item');
     }
