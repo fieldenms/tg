@@ -662,8 +662,8 @@ const template = html`
         .custom-responsive-toolbar {
             --tg-responsove-toolbar-expand-button: {
                 padding: 0;
-                width: 18px;
-                height: 18px;
+                width: 22px;
+                height: 22px;
                 color:var(--paper-input-container-color, var(--secondary-text-color));
             };
             --tg-responsove-toolbar-dropdown-content: {
@@ -1110,7 +1110,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     _getActionStyle() {
-        return `width: 18px;height:18px;cursor:pointer;margin-right:8px;color:var(--paper-input-container-color, var(--secondary-text-color));`;
+        return `width:22px;height:22px;cursor:pointer;margin-right:8px;color:var(--paper-input-container-color, var(--secondary-text-color));`;
     }
 }
 
