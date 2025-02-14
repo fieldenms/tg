@@ -10,6 +10,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
@@ -47,6 +48,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
  */
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromStage1To2<SourceQuery2> {
 
+    public static final String ERR_NO_YIELDS = """
+        Nothing can be yielded from a source query: no explicit yields and nothing can be auto-yielded from the query source.
+        Either explicit yields should be added, or the query source modified.
+        """;
     public final boolean isCorrelated;
 
     public SourceQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType, final boolean isCorrelated) {
@@ -68,8 +73,8 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromSt
     }
 
     @Override
-    protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (yields.getYields().isEmpty() || yieldAll) {
+    protected EnhancedYields enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+        if (yields.isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
 
             for (final Entry<String, AbstractQuerySourceItem<?>> el : mainSource.querySourceInfo().getProps().entrySet()) {
@@ -90,18 +95,26 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromSt
                     }
                 }
             }
-            final boolean allGenerated = mainSource.querySourceInfo().isComprehensive && yields.getYields().isEmpty() && !shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
+            final boolean allGenerated = mainSource.querySourceInfo().isComprehensive && yields.isEmpty() && !shouldMaterialiseCalcPropsAsColumnsInSqlQuery;
             // generated yields with shouldMaterialiseCalcPropsAsColumnsInSqlQuery=true will produce different QuerySourceInfo from the canonical one (calc props will be yielded, thus turned from calc to persistent)
             // if necessary additional separate cache can be created for such cases (allGeneratedButWithCalcPropsMaterialised)
-            return new Yields2(enhancedYields, allGenerated);
+            return new EnhancedYields(new Yields2(enhancedYields, allGenerated)) {
+                @Override protected String formatErrorEmptyYields() {
+                    return ToString.separateLines
+                            .toString(ERR_NO_YIELDS)
+                            .add("Calculated properties materialised", shouldMaterialiseCalcPropsAsColumnsInSqlQuery)
+                            .add("Source", mainSource.toStringCompact())
+                            .$();
+                }
+            };
         }
 
         final Yield2 firstYield = yields.getYields().iterator().next();
         if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias()) && isPersistentEntityType(resultType)) {
-            return new Yields2(listOf(new Yield2(firstYield.operand(), ID, firstYield.hasNonnullableHint())));
+            return new EnhancedYields(new Yields2(listOf(new Yield2(firstYield.operand(), ID, firstYield.hasNonnullableHint()))));
         }
 
-        return yields;
+        return new EnhancedYields(yields);
     }
 
     @Override

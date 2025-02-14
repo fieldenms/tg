@@ -45,6 +45,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
  */
 public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromStage1To2<ResultQuery2> {
 
+    public static final String ERR_NO_YIELDS = "Nothing can be yielded. Either the query source is empty, or yields were discarded by the fetch model.\n";
+
     public final IRetrievalModel<?> retrievalModel;
 
     public ResultQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType, final IRetrievalModel<?> retrievalModel) {
@@ -73,25 +75,25 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
      * </ol>
      */
     @Override
-    protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+    protected EnhancedYields enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         return first(yields.getYields())
                 .filter($ -> !yieldAll)
                 .map(fstYield -> enhanceNonEmptyAndNotYieldAll(fstYield, yields, mainSource))
                 .orElseGet(() -> enhanceAll(mainSource));
     }
 
-    private Yields2 enhanceNonEmptyAndNotYieldAll(final Yield2 fstYield, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+    private EnhancedYields enhanceNonEmptyAndNotYieldAll(final Yield2 fstYield, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYields().size() == 1 && isEmpty(fstYield.alias()) && isPersistentEntityType(resultType)) {
-            return new Yields2(List.of(new Yield2(fstYield.operand(), ID, fstYield.hasNonnullableHint())));
+            return new EnhancedYields(new Yields2(List.of(new Yield2(fstYield.operand(), ID, fstYield.hasNonnullableHint()))));
         }
 
         // TODO: Need to remove the explicit yields, not contained in the fetch model to be consistent with the approach used in EQL2.
         //       This is more of a desire to guarantee that columns in the SELECT statement are not wider than the fetch model specifies.
 
-        return yields;
+        return new EnhancedYields(yields);
     }
 
-    private Yields2 enhanceAll(final ISource2<? extends ISource3> mainSource) {
+    private EnhancedYields enhanceAll(final ISource2<? extends ISource3> mainSource) {
         final boolean isNotTopFetch = retrievalModel != null && !retrievalModel.isTopLevel();
         final var enhancedYields = mainSource.querySourceInfo().getProps().values().stream()
                 // Narrow down the set of yields to those included in the fetch model.
@@ -115,7 +117,15 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
                                          false))
                 .toList();
 
-        return new Yields2(enhancedYields);
+        return new EnhancedYields(new Yields2(enhancedYields)) {
+           @Override protected String formatErrorEmptyYields() {
+               return ToString.separateLines
+                       .toString(ERR_NO_YIELDS)
+                       .addIfNotNull("Retrieval model", retrievalModel)
+                       .add("Source", mainSource.toStringCompact())
+                       .$();
+           }
+       };
     }
 
     /**
