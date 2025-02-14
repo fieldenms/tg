@@ -1,5 +1,5 @@
 import { NodeSelection, TextSelection, Selection, AllSelection } from '../../prosemirror-state/dist/index.js';
-import { Slice, Fragment, DOMSerializer, DOMParser, Mark } from '../../prosemirror-model/dist/index.js';
+import { DOMSerializer, Slice, Fragment, DOMParser, Mark } from '../../prosemirror-model/dist/index.js';
 import { dropPoint } from '../../prosemirror-transform/dist/index.js';
 
 const domIndex = function (node) {
@@ -4705,7 +4705,6 @@ class DOMObserver {
             view.input.lastFocus = 0;
             selectionToDOM(view);
             this.currentSelection.set(sel);
-            view.scrollToSelection();
         }
         else if (from > -1 || newSel) {
             if (from > -1) {
@@ -5645,6 +5644,17 @@ class EditorView {
     */
     pasteText(text, event) {
         return doPaste(this, text, null, true, event || new ClipboardEvent("paste"));
+    }
+    /**
+    Serialize the given slice as it would be if it was copied from
+    this editor. Returns a DOM element that contains a
+    representation of the slice as its children, a textual
+    representation, and the transformed slice (which can be
+    different from the given input due to hooks like
+    [`transformCopied`](https://prosemirror.net/docs/ref/#view.EditorProps.transformCopied)).
+    */
+    serializeForClipboard(slice) {
+        return serializeForClipboard(this, slice);
     }
     /**
     Removes the editor from the DOM and destroys all [node
