@@ -50,7 +50,15 @@ const template = html`
         .ordered-list:not(:last-child) {
             margin-right: 8px;
         }
-        .unordered-list-item:not(:last-child) {
+        .list {
+            counter-reset: orderedList;
+        }
+        .list-item {
+            counter-increment: orderedList;
+        }
+        .unordered-list-item:not(:last-child),
+        .ordered-list-item:not(:last-child),
+        .task-list-item:not(:last-child) {
             margin-right: 8px;
         }
         .unordered-list-item::before {
@@ -63,9 +71,6 @@ const template = html`
             height: 5px;
             border-radius: 50%;
             background-color: #ccc;
-        }
-        .task-list-item:not(:last-child) {
-            margin-right: 8px;
         }
         .task-list-item::before {
             display: inline-block;
@@ -84,15 +89,6 @@ const template = html`
         }
         .task-list-item.checked::before {
             background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDE4IDE4Ij4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgZmlsbD0iIzRCOTZFNiI+CiAgICAgICAgICAgIDxnPgogICAgICAgICAgICAgICAgPGc+CiAgICAgICAgICAgICAgICAgICAgPHBhdGggZD0iTTE2IDBjMS4xMDUgMCAyIC44OTUgMiAydjE0YzAgMS4xMDUtLjg5NSAyLTIgMkgyYy0xLjEwNSAwLTItLjg5NS0yLTJWMkMwIC44OTUuODk1IDAgMiAwaDE0em0tMS43OTMgNS4yOTNjLS4zOS0uMzktMS4wMjQtLjM5LTEuNDE0IDBMNy41IDEwLjU4NSA1LjIwNyA4LjI5M2wtLjA5NC0uMDgzYy0uMzkyLS4zMDUtLjk2LS4yNzgtMS4zMi4wODMtLjM5LjM5LS4zOSAxLjAyNCAwIDEuNDE0bDMgMyAuMDk0LjA4M2MuMzkyLjMwNS45Ni4yNzggMS4zMi0uMDgzbDYtNiAuMDgzLS4wOTRjLjMwNS0uMzkyLjI3OC0uOTYtLjA4My0xLjMyeiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTEwNTAgLTI5NikgdHJhbnNsYXRlKDc4OCAxOTIpIHRyYW5zbGF0ZSgyNjIgMTA0KSIvPgogICAgICAgICAgICAgICAgPC9nPgogICAgICAgICAgICA8L2c+CiAgICAgICAgPC9nPgogICAgPC9nPgo8L3N2Zz4K);
-        }
-        .ordered-list {
-            counter-reset: orderedList;
-        }
-        .ordered-list-item {
-            counter-increment: orderedList;
-        }
-        .ordered-list-item:not(:last-child) {
-            margin-right: 8px;
         }
         .ordered-list-item::before {
             content: counter(orderedList)'.';
