@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
@@ -54,6 +55,11 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
 
     public Prop2(final ISource2<? extends ISource3> source, final List<AbstractQuerySourceItem<?>> path, final boolean shouldBeTreatedAsId) {
         super(shouldBeTreatedAsId ? LONG_PROP_TYPE : obtainPropType(path));
+
+        if (path.isEmpty()) {
+            throw new EqlStage2ProcessingException("Property path must not be empty.");
+        }
+
         this.source = source;
         this.path = path;
         this.propPath = path.stream().map(k -> k.name).collect(Collectors.joining("."));

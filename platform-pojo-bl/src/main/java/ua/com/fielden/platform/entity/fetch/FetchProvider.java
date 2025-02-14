@@ -1,43 +1,6 @@
 package ua.com.fielden.platform.entity.fetch;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNoneAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnlyAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_AND_VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.NONE;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.reflection.Finder.streamProperties;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotExpression;
-import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-import static ua.com.fielden.platform.utils.Pair.pair;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
+import com.google.common.collect.Iterables;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -50,6 +13,24 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.Map.Entry;
+
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.Finder.streamProperties;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.Pair.pair;
+
 /**
  * Default implementation for {@link IFetchProvider} contract.
  *
@@ -57,15 +38,26 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
+    public static final String ERR_PROPERTY_WAS_NOT_DECLARED_AS_FETCHING_PROPERTY = "The property [%s] was not declared as 'fetching' property in this entity [%s] fetch provider (please extend it).";
+    public static final String ERR_PROPERTY_FETCH_PROVIDER_IS_NULL = "The property fetch provider should not be null.";
+
     private final Class<T> entityType;
     private final LinkedHashMap<String, FetchProvider<AbstractEntity<?>>> propertyProviders;
     private fetch<T> fetchModel;
     /**
-     * EQL {@link FetchCategory} to be used when converting this fetch provider to EQL fetch model. At this stage only three categories are supported:
-     * {@link FetchCategory#KEY_AND_DESC}, {@link FetchCategory#ID_AND_VERSION} and {@link FetchCategory#NONE}.
+     * EQL {@link FetchCategory} to be used when converting this fetch provider to an EQL fetch model.
+     * At this stage only three categories are supported:
+     * <ul>
+     *     <li>{@link FetchCategory#KEY_AND_DESC},
+     *     <li>{@link FetchCategory#ID_AND_VERSION}, and
+     *     <li>{@link FetchCategory#NONE}.
+     * </ul>
      * <p>
-     * Important: please note that {@link FetchCategory#KEY_AND_DESC} (see EntityRetrievalModel.includeKeyAndDescOnly) and {@link FetchCategory#ID_AND_VERSION} (see EntityRetrievalModel.includeIdAndVersionOnly)
-     * categories include many more properties then their names state. Please, use {@link FetchCategory#NONE} in combination with methods {@link IFetchProvider#with(CharSequence, IFetchProvider)} if more granular approach is needed.
+     * <b>Important:</b>
+     * Please note that {@link FetchCategory#KEY_AND_DESC} (see EntityRetrievalModel.includeKeyAndDescOnly)
+     * and {@link FetchCategory#ID_AND_VERSION} (see EntityRetrievalModel.includeIdAndVersionOnly)
+     * categories include many more properties than their names state.
+     * Please, use {@link FetchCategory#NONE} in combination with methods {@link IFetchProvider#with(CharSequence, IFetchProvider)}, if more granular approach is needed.
      */
     final FetchCategory fetchCategory;
     private final boolean instrumented;
@@ -118,7 +110,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private FetchProvider<AbstractEntity<?>> providerForFirstLevel(final String property) {
         final FetchProvider<AbstractEntity<?>> propProvider = propertyProviders.get(property);
         if (propProvider == null) {
-            throw new IllegalArgumentException("The property fetch provider should not be null.");
+            throw new IllegalArgumentException(ERR_PROPERTY_FETCH_PROVIDER_IS_NULL);
         }
         return propProvider;
     }
@@ -127,7 +119,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     public <M extends AbstractEntity<?>> IFetchProvider<M> fetchFor(final CharSequence dotNotationProperty) throws IllegalArgumentException, IllegalStateException {
         validateEntityTyped(dotNotationProperty.toString());
         if (!shouldFetch(dotNotationProperty)) {
-            throw new IllegalStateException(String.format("The property [%s] was not declared as 'fetching' property in this entity [%s] fetch provider (please extend it).", dotNotationProperty, entityType.getSimpleName()));
+            throw new IllegalStateException(ERR_PROPERTY_WAS_NOT_DECLARED_AS_FETCHING_PROPERTY.formatted(dotNotationProperty, entityType.getSimpleName()));
         }
         return (FetchProvider<M>) providerForAllLevels(dotNotationProperty.toString());
     }
@@ -149,8 +141,6 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
 
     /**
      * Validates <code>dotNotationProperty</code> as the property inside <code>entityType</code>.
-     *
-     * @param dotNotationProperty
      */
     private Class<?> validate(final String dotNotationProperty) {
         final Class<?> propType;
@@ -168,8 +158,6 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
 
     /**
      * Validates <code>dotNotationProperty</code> as the entity-typed property inside <code>entityType</code>.
-     *
-     * @param dotNotationProperty
      */
     private void validateEntityTyped(final String dotNotationProperty) {
         final Class<?> propertyType = validate(dotNotationProperty);
@@ -179,9 +167,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     }
 
     /**
-     * Validates whether the <code>entityType</code>s for fetch providers are the same.
-     *
-     * @param dotNotationProperty
+     * Validates whether entity types for fetch providers are the same.
      */
     private static <M extends AbstractEntity<?>> void validateTypes(final FetchProvider<M> provider1, final FetchProvider<M> provider2) {
         if (!EntityUtils.equalsEx(provider1.entityType, provider2.entityType)) {
@@ -216,6 +202,17 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             copy.removeIfExists(prop.toString());
         }
         return copy;
+    }
+
+    @Override
+    public IFetchProvider<T> without(final Iterable<? extends CharSequence> dotNotationProperties) {
+        if (Iterables.isEmpty(dotNotationProperties)) {
+            return this;
+        } else {
+            final FetchProvider<T> copy = this.copy();
+            dotNotationProperties.forEach(prop -> copy.removeIfExists(prop.toString()));
+            return copy;
+        }
     }
 
     @Override
@@ -390,7 +387,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         }
         // enhance fetch provider with common property for each union type; if dotNotationProperty === "" then it is not present in common properties
         if (isUnionEntityType(entityType) && commonProperties((Class<AbstractUnionEntity>) entityType).contains(isDotExpression(dotNotationProperty) ? firstAndRest(dotNotationProperty).getKey() : dotNotationProperty)) {
-            unionProperties((Class<AbstractUnionEntity>) entityType).stream()
+            unionProperties((Class<AbstractUnionEntity>) entityType)
                 .forEach(unionPropField -> enhanceWith0(unionPropField.getName() + "." + dotNotationProperty, propertyProvider, defaultFetchCategory));
         }
         return this;
@@ -485,11 +482,11 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private FetchProvider<T> excludeCritOnlyAndCommonProps(final FetchProvider<T> fetchProvider) {
-        final List<String> critOnlyAndCommonProps = streamProperties(entityType, CritOnly.class).map(field -> field.getName()).collect(toCollection(ArrayList::new));
+        final List<String> critOnlyAndCommonProps = streamProperties(entityType, CritOnly.class).map(Field::getName).collect(toCollection(ArrayList::new));
         if (isUnionEntityType(entityType)) {
             critOnlyAndCommonProps.addAll(commonProperties((Class<? extends AbstractUnionEntity>) entityType));
         }
-        return critOnlyAndCommonProps.size() > 0 ? (FetchProvider<T>) fetchProvider.without(critOnlyAndCommonProps.get(0), critOnlyAndCommonProps.subList(1, critOnlyAndCommonProps.size()).toArray(new String[0])) : fetchProvider;
+        return (FetchProvider<T>) fetchProvider.without(critOnlyAndCommonProps);
     }
 
     @Override
@@ -628,7 +625,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             }
             if (!isUnionEntityType(entityType)) {
                 // only composite parts for composite entity and only 'key' otherwise
-                final List<String> keyMemberNames = getKeyMembers(entityType).stream().map(Field::getName).collect(toList());
+                final List<String> keyMemberNames = getKeyMembers(entityType).stream().map(Field::getName).toList();
                 for (final String keyMemberName: keyMemberNames) {
                     enhanceWith(keyMemberName, NONE);
                     addKeysTo(keyMemberName, false); // there is no need to fetch descriptions of key members -- 'desc' is only relevant to the top-level property
@@ -639,7 +636,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 }
             } else {
                 // in case of union type, need to add union sub-props with lean NONE fetch category and perform addKeysTo(...) for each of them;
-                final List<String> unionPropNames = unionProperties((Class<AbstractUnionEntity>) entityType).stream().map(Field::getName).collect(toList());
+                final List<String> unionPropNames = unionProperties((Class<AbstractUnionEntity>) entityType).stream().map(Field::getName).toList();
                 for (final String unionPropName: unionPropNames) {
                     enhanceWith(unionPropName, NONE);
                     addKeysTo(unionPropName, withDesc);
@@ -662,12 +659,13 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @param provider
      */
     private static <T extends AbstractEntity<?>> void extendWithIdAndVersion(final FetchProvider<T> provider) {
-        // The following lines are needed to make query execution possible. These properties can be trimmed at later stage (for example during serialisation).
-        if (isPersistedEntityType(provider.entityType)) {
-            provider.enhanceWith(ID); // ID is needed at this stage to perform query for persistent entity types.
+        // The following lines are needed to make query execution possible.
+        // These properties can be trimmed at later stage (e.g. during serialisation).
+        if (isPersistentEntityType(provider.entityType)) {
+            provider.enhanceWith(ID); // ID is needed at this stage to perform a query for persistent entity types.
             provider.enhanceWith(VERSION); // VERSION is needed not to convert entity values to idOnlyProxies during query execution.
         } else if (isSyntheticBasedOnPersistentEntityType(provider.entityType)) {
-            provider.enhanceWith(ID); // synthetic based on persistent types require ID (see EntityRetrievalModel.includeKeyAndDescOnly)
+            provider.enhanceWith(ID); // types that are synthetic based on persistent, require IDs (see EntityRetrievalModel.includeKeyAndDescOnly)
         }
     }
 

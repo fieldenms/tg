@@ -494,11 +494,12 @@ function applyColor(selectedColor) {
 function setDialogPosition(dialog, pos) {
     const dialogWidth = parseInt(dialog.style.width);
     const dialogHeight = parseInt(dialog.style.height);
-    let x = (pos[0].left + pos[1].left) / 2 - dialogWidth / 2;
-    let y = Math.max(pos[0].bottom, pos[1].bottom);
 
     const wWidth = getWindowWidth();
     const wHeight = getWindowHeight();
+
+    let x = (pos[0].left + pos[1].left) / 2 - dialogWidth / 2;
+    let y = Math.max(pos[0].bottom, pos[1].bottom);
 
     if (x < 0) {
         x = 0; 
@@ -517,12 +518,33 @@ function setDialogPosition(dialog, pos) {
     dialog.verticalOffset = y;
 }
 
+function repositionOpenedDialog () {
+    let openedDialog = null;
+    if (this.$.linkDropdown.opened) {
+        openedDialog = this.$.linkDropdown;
+    } else if (this.$.colorDropdown.opened) {
+        openedDialog = this.$.colorDropdown;
+    }
+    if (openedDialog) {
+        let position = null;
+        if (this._fakeSelection) {
+            const view = this._editor.wwEditor.view;
+            position = [view.coordsAtPos(this._fakeSelection[0]), view.coordsAtPos(this._fakeSelection[1])];
+        } else {
+            position = getSelectionCoordinates.bind(this)();
+        }
+        if (position) {
+            setDialogPosition(openedDialog, position);
+        }
+    }
+}
+
 function getWindowWidth () {
-    return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    return window.visualViewport.width;
 }
 
 function getWindowHeight () {
-    return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    return window.visualViewport.height;
 }
 
 /**
@@ -852,6 +874,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     disconnectedCallback() {
         super.disconnectedCallback();
         document.removeEventListener("keydown", this._handleAcceptEvent, true);
+    }
+
+    notifyResize () {
+        super.notifyResize();
+        repositionOpenedDialog.bind(this)();
     }
 
     /**

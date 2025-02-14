@@ -601,7 +601,7 @@ public class Finder {
     public static List<Field> getFields(final Class<?> type, final boolean withUnion) {
         final List<Field> properties = new ArrayList<>();
         Class<?> klass = type;
-        if (AbstractUnionEntity.class.isAssignableFrom(klass) && withUnion) {
+        if (withUnion && AbstractUnionEntity.class.isAssignableFrom(klass)) {
             properties.addAll(getUnionEntityFields((Class<AbstractUnionEntity>) type));
         } else {
             while (klass != Object.class) { // need to iterated thought
@@ -1075,7 +1075,7 @@ public class Finder {
                    // or the property type's key is compatible with the main entity type, which covers two possible cases:
                    // 1. a persistent entity that extends another persistent entity;
                    // 2. a synthetic entity, derived from a persistent entity (synthetic with ID).
-                   propertyTypeKeyType.isAssignableFrom(mainType) && (isPersistedEntityType(propertyTypeKeyType) || isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) propertyTypeKeyType));
+                   propertyTypeKeyType.isAssignableFrom(mainType) && (isPersistentEntityType(propertyTypeKeyType) || isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) propertyTypeKeyType));
         }
         return false;
     }

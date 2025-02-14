@@ -195,7 +195,7 @@ public class TableDdl {
     public List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
         return cols
-                .filter(col -> col.requiresIndex || isPersistedEntityType(col.javaType))
+                .filter(col -> col.requiresIndex || isPersistentEntityType(col.javaType))
                 .filter(col -> {
                     if (!col.indexApplicable) {
                         LOGGER.warn("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
@@ -260,7 +260,7 @@ public class TableDdl {
     public List<String> createFkSchema(final Dialect dialect) {
         // This statement should be suitable for the majority of SQL dialects
         final List<String> ddl = columnDefinitions().stream()
-                .filter(cd -> isPersistedEntityType(cd.javaType))
+                .filter(cd -> isPersistentEntityType(cd.javaType))
                 .map(cd -> {
                     final String thatTableName = tableName((Class<? extends AbstractEntity<?>>) cd.javaType);
                     return fkConstraint(dialect, this.tableName, cd.name, thatTableName);

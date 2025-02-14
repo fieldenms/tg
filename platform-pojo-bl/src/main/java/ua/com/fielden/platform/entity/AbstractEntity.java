@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
@@ -68,8 +67,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNume
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * <h3>General Info</h3>
@@ -770,7 +768,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     protected boolean isLinkPropertyRequiredButMissing(final String propertyName) {
-        return EntityUtils.isPersistedEntityType(getType()) && !Finder.hasLinkProperty(getType(), propertyName);
+        return isPersistentEntityType(getType()) && !Finder.hasLinkProperty(getType(), propertyName);
     }
 
     /**

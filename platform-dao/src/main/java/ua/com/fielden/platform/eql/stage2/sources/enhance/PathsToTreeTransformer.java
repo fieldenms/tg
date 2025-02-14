@@ -13,6 +13,7 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.HelperNodeForImplicitJoins;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 
 import java.util.*;
 
@@ -23,10 +24,16 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 public class PathsToTreeTransformer {
 
     private final QuerySourceInfoProvider querySourceInfoProvider;
+    private final IDomainMetadata domainMetadata;
     private final QueryModelToStage1Transformer gen;
 
-    public PathsToTreeTransformer(final QuerySourceInfoProvider querySourceInfoProvider, final QueryModelToStage1Transformer gen) {
+    public PathsToTreeTransformer(
+            final QuerySourceInfoProvider querySourceInfoProvider,
+            final IDomainMetadata domainMetadata,
+            final QueryModelToStage1Transformer gen)
+    {
         this.querySourceInfoProvider = querySourceInfoProvider;
+        this.domainMetadata = domainMetadata;
         this.gen = gen;
     }
 
@@ -120,7 +127,7 @@ public class PathsToTreeTransformer {
                                 calcChunk.data().expression.expressionModel().getTokenSource(),
                                 EqlCompilationResult.StandaloneExpression.class)
                         .model();
-                final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider).cloneWithAdded(sourceForCalcPropResolution);
+                final TransformationContextFromStage1To2 prc = TransformationContextFromStage1To2.forCalcPropContext(querySourceInfoProvider, domainMetadata).cloneWithAdded(sourceForCalcPropResolution);
                 final Expression2 exp2 = exp1.transform(prc);
                 final Set<Prop2> expProps = exp2.collectProps();
                 // separate into external and internal

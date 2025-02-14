@@ -70,6 +70,10 @@ abstract class EntityMetadataImpl<N extends EntityNature, D extends EntityNature
                 : left(noSuchPropertyException(javaType, metaProperty.getName()));
     }
 
+    public boolean hasProperty(final String name) {
+        return properties.containsKey(name);
+    }
+
     public N nature() {
         return nature;
     }
