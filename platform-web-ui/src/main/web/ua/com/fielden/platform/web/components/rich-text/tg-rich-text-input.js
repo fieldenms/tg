@@ -257,7 +257,7 @@ function mouseUpHandler(e) {
  * @returns 
  */
 function getElementToEdit(predicate, extractor) {
-    const selection = this._editor.getSelection();
+    const selection = this._getSelection();
     if (selection) {
         if (selection[0] === selection[1]) {
             //It means that only caret postion was set (no selection). Then take text and url from dom at caret position if it exists
@@ -324,7 +324,7 @@ function handleTaskListItemStatusChange(e) {
         if (this.shadowRoot.activeElement && isMobileApp()) {
             const pos = this._editor.wwEditor.view.posAtCoords({left:e.clientX, top:e.clientY});
             const node = pos && this._editor.wwEditor.view.domAtPos(pos.pos, pos.inside);
-            this._editor.setSelection(node.node.pmViewDesc.posAtStart, node.node.pmViewDesc.posAtStart);
+            this._applySelection(node.node.pmViewDesc.posAtStart, node.node.pmViewDesc.posAtStart);
         }
     }
 }
@@ -363,7 +363,7 @@ function editElement(predicate, extractor) {
     const element = getElementToEdit.bind(this)(predicate, extractor);
     if (element) {
         if (element.pos) {
-            this._editor.setSelection(element.pos[0], element.pos[1]);
+            this._applySelection(element.pos[0], element.pos[1]);
         }
         return element;
     }
@@ -432,7 +432,7 @@ function getEditorHTMLText() {
  * @param {Array} selection - array of inidices for which fake selection should be applied
  */
 function applyFakeSelection(selection) {
-    if (selection && selection[0] !== selection[1]) {
+    if (selection && selection.length == 2) {
         this._editor.exec('fakeSelect', {from: selection[0], to: selection[1]});
     }
 }
@@ -443,7 +443,9 @@ function applyFakeSelection(selection) {
  * @param {Array} selection - array of indices of fake selection start and finish. 
  */
 function applyFakeUnselection(selection) {
-    this._editor.exec('fakeUnselect', {from: selection[0], to: selection[1]});
+    if (selection && selection.length == 2) {
+        this._editor.exec('fakeUnselect', {from: selection[0], to: selection[1]});
+    }
 }
 
 function initLinkEditing() {
@@ -461,7 +463,7 @@ function initColorEditing() {
  * @param {String} text - URL description
  */
 function toggleLink(url, text) {
-    const selection = this._editor.getSelection();
+    const selection = this._getSelection();
     if (selection && selection[0] !== selection[1] && !url) {
         this._editor.exec('toggleLink');
     } else {
@@ -526,13 +528,7 @@ function repositionOpenedDialog () {
         openedDialog = this.$.colorDropdown;
     }
     if (openedDialog) {
-        let position = null;
-        if (this._fakeSelection) {
-            const view = this._editor.wwEditor.view;
-            position = [view.coordsAtPos(this._fakeSelection[0]), view.coordsAtPos(this._fakeSelection[1])];
-        } else {
-            position = getSelectionCoordinates.bind(this)();
-        }
+        let position = getSelectionCoordinates.bind(this)();
         if (position) {
             setDialogPosition(openedDialog, position);
         }
@@ -553,9 +549,9 @@ function getWindowHeight () {
  * @returns Array of the selection position
  */
 function getSelectionCoordinates() {
-    if (this._editor && this._editor.getSelection()) {
+    if (this._editor && this._getSelection()) {
         const view = this._editor.wwEditor.view;
-        const selection = this._editor.getSelection();
+        const selection = this._getSelection();
         return [view.coordsAtPos(selection[0]), view.coordsAtPos(selection[1])];
     }
 }
@@ -693,8 +689,8 @@ const template = html`
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Make your text bold, Ctrl+B, &#x2318;+B" on-down="_stopMouseEvent" on-tap="_applyBold"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text, Ctrl+I, &#x2318;+I" on-down="_stopMouseEvent" on-tap="_applyItalic"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it, Ctrl+S, &#x2318;+S" on-down="_stopMouseEvent" on-tap="_applyStrikethough"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-tap="_changeTextColor"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-tap="_toggleLink"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, &#x2318;+U" on-down="_stopMouseEvent" on-tap="_createBulletList"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Create a numbered list, Ctrl+O, &#x2318;+O" on-down="_stopMouseEvent" on-tap="_createOrderedList"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_stopMouseEvent" on-tap="_createTaskList"></iron-icon>
@@ -900,7 +896,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     focusInput() {
         if (this._editor) {
-            this._editor.focus();
+            this._editor.wwEditor.view.focus();
         }
     }
 
@@ -911,7 +907,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     _cut(event) {
-        const selection = this._editor.getSelection();
+        const selection = this._getSelection();
         if (selection && selection[0] !== selection[1]) {
             tearDownEvent(event.detail && event.detail.keyboardEvent);
             document.execCommand('cut');
@@ -940,7 +936,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _selectAll(event) {
         const from = 1, to = this._editor.wwEditor.view.state.tr.doc.content.size - 1;
-        this._editor.setSelection(from, to);
+        this._applySelection(from, to);
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
@@ -956,7 +952,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _applyStrikethough(event) {
         this._editor.exec('strike');
-        const selection = this._editor.getSelection();
+        const selection = this._getSelection();
         if (selection && selection[0] !== selection[1]) {
             tearDownEvent(event.detail && event.detail.keyboardEvent);
         }
@@ -965,7 +961,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     _changeTextColor(e) {
         scrollIntoView.bind(this)();
         const textColorObj = initColorEditing.bind(this)();
-        this._applyFakeSelect();
         if (textColorObj) {
             this.$.colorDialog.color = textColorObj.detail;
         }
@@ -976,7 +971,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     _toggleLink(e) {
         scrollIntoView.bind(this)();
         const link = initLinkEditing.bind(this)();
-        this._applyFakeSelect();
         if (link) {
             this.$.linkDialog.url = link.detail;
         }
@@ -1013,21 +1007,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         scrollIntoView.bind(this)();
     }
 
-    _applyFakeSelect() {
-        this._fakeSelection = this._editor.getSelection();
-        applyFakeSelection.bind(this)(this._fakeSelection);
-    }
-
-    _applyFakeUnselect() {
-        applyFakeUnselection.bind(this)(this._fakeSelection);
-        delete this._fakeSelection;
-    }
-
     _stopEditing(event) {
-        const selection = this._editor.getSelection();
+        const selection = this._getSelection();
         const cursorPosition = selection ? selection[1] : 0;
-        this._editor.setSelection(cursorPosition, cursorPosition);
+        this._applySelection(cursorPosition, cursorPosition);
         this._editor.blur();
+        delete this._fakeSelection;
         this.focus();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
@@ -1048,15 +1033,35 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _focusLost(e) {
         this.changeEventHandler(e);
-        if (this._fakeSelection) {
+        if (!this._fakeSelection) {
             this._fakeSelection = this._editor.getSelection();
             applyFakeSelection.bind(this)(this._fakeSelection);
+            this._editor.setSelection(this._fakeSelection[1], this._fakeSelection[1]); //clears selection
         }
     }
     
     _focusGain(e) {
         if (this._fakeSelection) {
             applyFakeUnselection.bind(this)(this._fakeSelection);
+            this._editor.setSelection(this._fakeSelection[0], this._fakeSelection[1]); //restors editor selection
+            delete this._fakeSelection;
+        }
+    }
+
+    _getSelection() {
+        if (this._fakeSelection) {
+            return this._fakeSelection;
+        }
+        return this._editor.getSelection();
+    }
+
+    _applySelection(from, to) {
+        if (this._fakeSelection) {
+            this._fakeSelection = [from, to];
+            applyFakeUnselection.bind(this)(this._fakeSelection);
+            applyFakeSelection.bind(this)(this._fakeSelection);
+        } else {
+            this._editor.setSelection(from, to);
         }
     }
 
@@ -1091,7 +1096,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
             if (dropDownContent && dropDownContent.resetState) {
                 dropDownContent.resetState();
-                this._applyFakeUnselect();
             }
         }
     }
