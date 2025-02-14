@@ -82,7 +82,7 @@ public class EntityResourceUtils {
     private static final String WARN_CONFLICT = "This property has been recently changed.";
     public static final String WARN_CENTRE_CONFIG_CONFLICT = "Configuration with this title already exists.";
     public static final String ERR_MORE_THEN_ONE_ENTITY_FOUND = "Please choose a specific value explicitly from a drop-down.";
-    private static final String INFO_RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
+    private static final String INFO_RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back %sto resolve the conflict or cancel all of your changes.";
     /**
      * Used to indicate the start of 'not found mock' serialisation sequence.
      */
@@ -420,7 +420,13 @@ public class EntityResourceUtils {
                     entity.getProperty(name).setDomainValidationResult(Result.warning(entity, WARN_CONFLICT));
                 } else {
                     logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
-                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, WARN_CONFLICT + " " + format(INFO_RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
+                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(
+                        entity,
+                        WARN_CONFLICT + " " + INFO_RESOLVE_CONFLICT_INSTRUCTION.formatted(
+                            staleOriginalValue instanceof RichText ? ""
+                            : "to [%s] ".formatted(Objects.toString(staleOriginalValue, ""))
+                        )
+                    ));
                 }
             } else {
                 performAction.run();
