@@ -103,7 +103,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
 
     public static final String ERR_UNKNOWN_FETCH_CATEGORY = "Unknown fetch category [%s].";
-    public static final String ERR_UNEXPECTED_PROPERTY_IN_RETRIEVAL_MODEL = "No such property [%s] in retrieval model:%n%s";
+    public static final String ERR_UNEXPECTED_PROPERTY_IN_RETRIEVAL_MODEL = "No property [%s] in retrieval model:%n%s";
     public static final String ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find entity-typed property [%s] to be excluded from fetched properties of entity type [%s].";
     public static final String ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find property [%s] to be excluded from fetched properties of entity type [%s].";
     public static final String ERR_NON_EXISTING_PROPERTY = "Trying to fetch entity [%s] with non-existing property [%s].";

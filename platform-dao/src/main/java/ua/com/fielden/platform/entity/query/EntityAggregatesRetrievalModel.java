@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.NONE;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
@@ -36,6 +35,13 @@ import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
  * </ul>
  */
 public final class EntityAggregatesRetrievalModel implements IRetrievalModel<EntityAggregates> {
+
+    public static final String ERR_UNEXPECTED_PROPERTY_IN_RETRIEVAL_MODEL = "No property [%s] in retrieval model:%n%s";
+    public static final String ERR_ONLY_FETCH_CATEGORY_NONE_IS_SUPPORTED = """
+            The only acceptable category for EntityAggregates entity type fetch model is NONE. \
+            Use EntityQueryUtils.fetchAggregates(..) method to create a correct fetch model.""";
+    public static final String ERR_PROPERTY_EXCLUSION_IS_UNSUPPORTED = "Property exclusion is not applicable to EntityAggregates.";
+    public static final String ERR_EMPTY_FETCH_MODEL = "Fetch model for EntityAggregates must not be empty.";
 
     private final Set<String> primProps;
     private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps;
@@ -71,7 +77,7 @@ public final class EntityAggregatesRetrievalModel implements IRetrievalModel<Ent
     public IRetrievalModel<? extends AbstractEntity<?>> getRetrievalModel(final CharSequence path) {
         final var model = getRetrievalModelOrNull(path);
         if (model == null) {
-            throw new EqlException(format("No such property [%s] in retrieval model:\n%s", path, this));
+            throw new EqlException(ERR_UNEXPECTED_PROPERTY_IN_RETRIEVAL_MODEL.formatted(path, this));
         }
         return model;
     }
@@ -119,30 +125,28 @@ public final class EntityAggregatesRetrievalModel implements IRetrievalModel<Ent
 
     private static void validateFetch(final fetch<EntityAggregates> originalFetch) {
         if (NONE != originalFetch.getFetchCategory()) {
-            throw new EqlException("""
-                    The only acceptable category for EntityAggregates entity type fetch model is NONE. \
-                    Use EntityQueryUtils.fetchAggregates(..) method to create a correct fetch model.""");
+            throw new EqlException(ERR_ONLY_FETCH_CATEGORY_NONE_IS_SUPPORTED);
         }
 
         if (!originalFetch.getExcludedProps().isEmpty()) {
-            throw new EqlException("The possibility to exclude certain properties cannot be be applied for EntityAggregates entity type fetch model.");
+            throw new EqlException(ERR_PROPERTY_EXCLUSION_IS_UNSUPPORTED);
         }
 
         if (originalFetch.getIncludedPropsWithModels().isEmpty() && originalFetch.getIncludedProps().isEmpty()) {
-            throw new EqlException("Fetch model for EntityAggregates entity type must not be empty.");
+            throw new EqlException(ERR_EMPTY_FETCH_MODEL);
         }
     }
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append("Fetch model:\n------------------------------------------------\n");
-        sb.append("\t original:\n" + originalFetch + "\n\n");
+        sb.append("\t original:\n").append(originalFetch).append("\n\n");
         sb.append(primProps);
-        if (entityProps.size() > 0) {
+        if (!entityProps.isEmpty()) {
             sb.append("\n------------------------------------------------");
             for (final Map.Entry<String, EntityRetrievalModel<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
-                sb.append("\n" + fetchEntry.getKey() + " <<< " + fetchEntry.getValue());
+                sb.append("\n").append(fetchEntry.getKey()).append(" <<< ").append(fetchEntry.getValue());
                 sb.append("\n------------------------------------------------");
             }
         }
