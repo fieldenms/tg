@@ -56,7 +56,7 @@ public class ValuePreprocessor {
             case DynamicEntityKey      it -> it.toString();
             case AbstractEntity<?> entity -> {
                 final var type = entity.getType();
-                yield entity.getId() == null && !(isPersistedEntityType(type) || isSyntheticEntityType(type) || isUnionEntityType(type))
+                yield entity.getId() == null && !(isPersistentEntityType(type) || isSyntheticEntityType(type) || isUnionEntityType(type))
                         ? entity.getKey() : entity.getId();
             }
             case Money money -> money.getAmount();

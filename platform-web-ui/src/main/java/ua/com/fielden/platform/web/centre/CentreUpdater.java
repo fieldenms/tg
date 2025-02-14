@@ -151,7 +151,7 @@ public class CentreUpdater {
             ? new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_INTEGER.apply((String) map.get("taxPercent")), STRING_TO_CURRENCY.apply((String) map.get("currency")))
             : new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_CURRENCY.apply((String) map.get("currency")));
     private static final Function<AbstractEntity<?>, String> ENTITY_TO_STRING = entity -> entityWithMocksToString((ent) -> {
-        if (isPersistedEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType()) || isUnionEntityType(ent.getType())) {
+        if (isPersistentEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType()) || isUnionEntityType(ent.getType())) {
             if (ent.getId() == null) {
                 // Usually persistent (or synthetic based on persistent) entities should have IDs when conversion to diff object is performed.
                 // However we have two edge-cases here.

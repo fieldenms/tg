@@ -54,7 +54,7 @@ public interface IDomainMetadata {
      * Provides access to property metadata.
      * An exception is thrown if either of the following holds:
      * <ul>
-     *   <li>a property with a given name cannot be found in the metadata for {@code enclosingType};
+     *   <li>a property cannot be located at the given path
      *   <li>{@code enclosingType} is not part of the domain, hence there is no metadata associated with it.
      * </ul>
      *

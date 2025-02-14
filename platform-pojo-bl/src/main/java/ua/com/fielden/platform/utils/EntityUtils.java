@@ -28,6 +28,7 @@ import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -73,6 +74,8 @@ public class EntityUtils {
     private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
     private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
     private static final Cache<Class<?>, Boolean> entityCriteriaTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
+
+    public static final String ERR_PERSISTENT_NATURE_OF_ENTITY_TYPE = "Could not determine persistent nature of entity type [%s].";
 
     /** Private default constructor to prevent instantiation. */
     private EntityUtils() {
@@ -317,9 +320,10 @@ public class EntityUtils {
     }
 
     /**
-     * Returns current value(if property is valid, then its value, otherwise last incorrect value of corresponding meta-property) of property of passed entity.<br>
+     * Returns the current property value for an entity.<br>
+     * If the property is invalid, then its last invalid value is returned.
      * <br>
-     * Note : does not support dot-notated property names.
+     * Note: property dot-expressions are not supported.
      *
      * @param entity
      * @param propertyName
@@ -327,11 +331,7 @@ public class EntityUtils {
      */
     public static Object getCurrentValue(final AbstractEntity<?> entity, final String propertyName) {
         final MetaProperty<?> metaProperty = entity.getProperty(propertyName);
-        if (metaProperty == null) {
-            throw new IllegalArgumentException("Couldn't find meta-property named '" + propertyName + "' in " + entity);
-        } else {
-            return metaProperty.isValid() ? entity.get(propertyName) : metaProperty.getLastInvalidValue();
-        }
+        return metaProperty.isValid() ? entity.get(propertyName) : metaProperty.getLastInvalidValue();
     }
 
     /**
@@ -637,13 +637,9 @@ public class EntityUtils {
      * @param entityType
      * @return
      */
-    public static boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
+    public static boolean isOneToOne(@Nullable final Class<? extends AbstractEntity<?>> entityType) {
         final Class<? extends Comparable<?>> keyType = getKeyType(entityType);
-        if (isEntityType(keyType)) {
-            return isPersistentEntityType(keyType);
-        } else {
-            return false;
-        }
+        return isPersistentEntityType(keyType);
     }
 
     /**
@@ -659,7 +655,7 @@ public class EntityUtils {
     /**
      * Determines whether the provided entity type represents a persistent entity that can be stored in a database.
      */
-    public static boolean isPersistentEntityType(final Class<?> type) {
+    public static boolean isPersistentEntityType(@Nullable final Class<?> type) {
         if (type == null) {
             return false;
         } else {
@@ -670,7 +666,7 @@ public class EntityUtils {
                         && !isSyntheticEntityType(type)
                         && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null);
             } catch (final Exception ex) {
-                final String msg = "Could not determine persistent nature of entity type [%s].".formatted(type.getSimpleName());
+                final String msg = ERR_PERSISTENT_NATURE_OF_ENTITY_TYPE.formatted(type.getSimpleName());
                 logger.error(msg, ex);
                 throw new ReflectionException(msg, ex);
             }
@@ -683,7 +679,7 @@ public class EntityUtils {
      * In time, this method will be removed.
      */
     @Deprecated(forRemoval = true, since = "1.7.0")
-    public static boolean isPersistedEntityType(final Class<?> type) {
+    public static boolean isPersistedEntityType(@Nullable final Class<?> type) {
         return isPersistentEntityType(type);
     }
 
@@ -743,21 +739,22 @@ public class EntityUtils {
     }
 
     /**
-     * A helper method to determine if {@code entityType} contains either static field "mode_" or "models_" of the appropriate types, which indicates that {@code entityType} is a synthetic entity.
+     * If {@code entityType} contains either static field "model_" or "models_" of the appropriate types, indicating that
+     * it's a synthetic entity, returns that field. Otherwise, returns {@code null}.
      * <p>
-     * It became required to traverse the type hierarchy instead of relying on declared fields with the implementation of issue <a href="https://github.com/fieldenms/tg/issues/1692">#1692</a>, which started generating types as subclasses of the original ones.
+     * Since issue <a href="https://github.com/fieldenms/tg/issues/1692">#1692</a>, which started generating types as
+     * subclasses of the original ones, static fields from supertypes are considered as well.
      *
-     * @param <T>
-     * @param entityType to be analysed.
-     * @return either a field corresponding to {@code model_} or {@code models_}, or {@code null}.
+     * @param entityType  entity type to be analysed
+     * @return either a field corresponding to {@code model_} or {@code models_}, or {@code null}
      */
-    public static <T extends AbstractEntity<?>> Field findSyntheticModelFieldFor(final Class<T> entityType) {
+    public static <T extends AbstractEntity<?>> @Nullable Field findSyntheticModelFieldFor(final Class<T> entityType) {
         Class<?> klass = entityType;
         while (klass != AbstractEntity.class) { // iterated thought hierarchy
             for (final Field field : klass.getDeclaredFields()) {
                 if (isStatic(field.getModifiers())) {
-                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) ||
-                        "models_".equals(field.getName()) && List.class.equals(field.getType())) {
+                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class == field.getType() ||
+                        "models_".equals(field.getName()) && List.class.isAssignableFrom(field.getType())) {
                         return field;
                     }
                 }
@@ -982,7 +979,7 @@ public class EntityUtils {
     }
 
     /**
-     * Splits dot.notated property in two parts: first level property and the rest of subproperties.
+     * Splits property dot-expression in two parts: first level property and the rest of subproperties.
      * If there is no rest, the 2nd pair element will be {@code null}.
      *
      * @param dotNotatedPropName
@@ -998,7 +995,7 @@ public class EntityUtils {
     }
 
     /**
-     * Splits dot.notated property in two parts: last subproperty (as second part) and prior subproperties.
+     * Splits property dot-expression in two parts: last subproperty (as second part) and prior subproperties.
      *
      * @param dotNotatedPropName
      * @return

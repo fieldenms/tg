@@ -10,7 +10,7 @@ import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 /**
@@ -39,8 +39,8 @@ public class HibernateTypeDeterminer {
      */
     public Object getHibernateType(final Class<?> javaType, final PersistentType persistentType) {
 
-        // if javaType represents a persistent entity then simply return ID type (which is LONG)
-        if (isPersistedEntityType(javaType) || isUnionEntityType(javaType)) {
+        // if javaType represents a persistent entity, then return ID type (which is LONG).
+        if (isPersistentEntityType(javaType) || isUnionEntityType(javaType)) {
             return H_LONG;
         }
         

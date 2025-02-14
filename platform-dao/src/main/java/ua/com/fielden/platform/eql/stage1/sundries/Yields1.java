@@ -8,13 +8,12 @@ import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
 
-import static java.lang.String.format;
 import static java.util.Collections.*;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.IFormattable {
     public static final Yields1 EMPTY_YIELDS = new Yields1(emptyList());
+    public static final String ERR_QUERY_CONTAINS_DUPLICATE_YIELDS = "Query contains duplicate yields for alias [%s].";
 
     public static Yields1 yields(final Collection<Yield1> yields) {
         return yields.isEmpty() ? EMPTY_YIELDS : new Yields1(yields);
@@ -33,7 +32,9 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
     }
 
     public Yields2 transform(final TransformationContextFromStage1To2 context) {
-        return yieldsMap.isEmpty() ? Yields2.EMPTY_YIELDS : new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).collect(toList()));
+        return yieldsMap.isEmpty()
+               ? Yields2.EMPTY_YIELDS
+               : new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).toList());
     }
 
     public Collection<Yield1> getYields() {
@@ -45,7 +46,9 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
     }
 
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        return yieldsMap.isEmpty() ? emptySet() : yieldsMap.values().stream().map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+        return yieldsMap.isEmpty()
+               ? emptySet()
+               : yieldsMap.values().stream().map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
 
     private static SortedMap<String, Yield1> makeYieldsMap(final Collection<Yield1> yields) {
@@ -53,8 +56,7 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
 
         for (final Yield1 yield : yields) {
             if (map.containsKey(yield.alias())) {
-                throw new EqlStage1ProcessingException(
-                        String.format("Query contains duplicate yields for alias [%s].", yield.alias()));
+                throw new EqlStage1ProcessingException(ERR_QUERY_CONTAINS_DUPLICATE_YIELDS.formatted(yield.alias()));
             }
             map.put(yield.alias(), yield);
         }

@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.query.EntityContainer;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.meta.EqlTables;
@@ -38,7 +37,7 @@ import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQuer
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithoutPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.build;
 import static ua.com.fielden.platform.eql.retrieval.HibernateScalarsExtractor.getSortedScalars;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 @Singleton
 final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
@@ -85,14 +84,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final Integer pageNumber,
             final Integer pageCapacity)
     {
-        final QueryModelResult<E> modelResult = EqlQueryTransformer.getModelResult(
-                queryModel, dbVersionProvider.dbVersion(), filter, userProvider.getUsername(), dates, domainMetadata,
-                eqlTables, querySourceInfoProvider);
-
-        if (idOnlyQuery(modelResult)) {
-            return listContainersForIdOnlyQuery(session, queryModel, modelResult.resultType(), pageNumber, pageCapacity);
-        }
-
+        final var modelResult = getModelResult(queryModel);
         final List<EntityContainer<E>> result = listContainersAsIs(session, modelResult, pageNumber, pageCapacity);
         // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
         return new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache)
@@ -105,14 +97,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final QueryProcessingModel<E, ?> queryModel,
             final Optional<Integer> fetchSize)
     {
-        final QueryModelResult<E> modelResult = EqlQueryTransformer.getModelResult(
-                queryModel, dbVersionProvider.dbVersion(), filter, userProvider.getUsername(), dates, domainMetadata,
-                eqlTables, querySourceInfoProvider);
-
-        if (idOnlyQuery(modelResult)) {
-            return streamContainersForIdOnlyQuery(session, queryModel, modelResult.resultType(), fetchSize);
-        }
-
+        final var modelResult = getModelResult(queryModel);
         final Stream<List<EntityContainer<E>>> stream = streamContainersAsIs(session, modelResult, fetchSize);
         // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
 
@@ -121,18 +106,42 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
         return stream.map(container -> entityContainerEnhancer.enhance(session, container, modelResult.fetchModel(), queryModel.getParamValues()));
     }
 
-    private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersForIdOnlyQuery(
-            final Session session,
-            final QueryProcessingModel<E, ?> queryModel,
-            final Class<E> resultType,
-            final Integer pageNumber,
-            final Integer pageCapacity)
-    {
-        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop(ID).in().model((SingleResultQueryModel<?>) queryModel.queryModel).model();
+    private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qpm) {
+        class $ {
+            /**
+             * This predicate identifies cases where only ID is yielded, and a query needs to be extended to a query for retrieving an entity with that ID instead of just an ID value as a number.
+             *
+             * @param queryModelResult
+             * @return
+             */
+            static boolean isIdOnlyQuery(final QueryModelResult<?> queryModelResult) {
+                return isPersistentEntityType(queryModelResult.resultType())
+                       && queryModelResult.yieldedColumns().size() == 1
+                       && ID.equals(queryModelResult.yieldedColumns().getFirst().name())
+                       && !(queryModelResult.fetchModel().getPrimProps().size() == 1 && queryModelResult.fetchModel().getPrimProps().contains(ID) &&
+                            queryModelResult.fetchModel().getRetrievalModels().isEmpty());
+            }
+        }
 
-        final QueryProcessingModel<E, EntityResultQueryModel<E>> idOnlyQpm = new QueryProcessingModel<>(idOnlyModel, queryModel.orderModel, queryModel.fetchModel, queryModel.getParamValues(), queryModel.lightweight);
+        final QueryModelResult<E> modelResult = EqlQueryTransformer.getModelResult(
+                qpm, dbVersionProvider.dbVersion(), filter, userProvider.getUsername(), dates, domainMetadata,
+                eqlTables, querySourceInfoProvider);
 
-        return listAndEnhanceContainers(session, idOnlyQpm, pageNumber, pageCapacity);
+        // This piece of code is responsible for "re-fetching the whole entity by ID in order to be able to enhance it".
+        // This is necessary to convert yielded IDs to fully-fledged entities.
+        // This does not apply to entity aggregates where IDs might be yielded – they are treated as numbers.
+        // See Issue #1991 (https://github.com/fieldenms/tg/issues/1991).
+        if ($.isIdOnlyQuery(modelResult)) {
+            final var idOnlyQuery = select(modelResult.resultType())
+                    .where().prop(ID).in().model((SingleResultQueryModel<?>) qpm.queryModel)
+                    .model();
+            final var idOnlyQpm = new QueryProcessingModel<>(idOnlyQuery, qpm.orderModel, qpm.fetchModel, qpm.getParamValues(), qpm.lightweight);
+            return EqlQueryTransformer.getModelResult(
+                    idOnlyQpm, dbVersionProvider.dbVersion(), filter, userProvider.getUsername(), dates, domainMetadata,
+                    eqlTables, querySourceInfoProvider);
+        } else {
+            return modelResult;
+        }
     }
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersAsIs(
@@ -156,19 +165,6 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
 
-    private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersForIdOnlyQuery(
-            final Session session,
-            final QueryProcessingModel<E, ?> queryModel,
-            final Class<E> resultType,
-            final Optional<Integer> fetchSize)
-    {
-        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop(ID).in().model((SingleResultQueryModel<?>) queryModel.queryModel).model();
-
-        final QueryProcessingModel<E, EntityResultQueryModel<E>> idOnlyQpm = new QueryProcessingModel<>(idOnlyModel, queryModel.orderModel, queryModel.fetchModel, queryModel.getParamValues(), queryModel.lightweight);
-
-        return streamAndEnhanceContainers(session, idOnlyQpm, fetchSize);
-    }
-
     private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersAsIs(
             final Session session,
             final QueryModelResult<E> modelResult,
@@ -186,9 +182,4 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
                                        .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
     }
 
-    private static boolean idOnlyQuery(final QueryModelResult<?> queryModelResult) {
-        return isPersistedEntityType(queryModelResult.resultType()) && queryModelResult.yieldedColumns().size() == 1 && ID.equals(queryModelResult.yieldedColumns().get(0).name())
-               && !(queryModelResult.fetchModel().getPrimProps().size() == 1 && queryModelResult.fetchModel().getPrimProps().contains(ID) &&
-                    queryModelResult.fetchModel().getRetrievalModels().isEmpty());
-    }
 }
