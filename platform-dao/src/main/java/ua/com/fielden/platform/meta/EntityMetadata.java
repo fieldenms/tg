@@ -27,7 +27,7 @@ public sealed interface EntityMetadata extends TypeMetadata {
 
     EntityNature nature();
 
-    EntityNature.Data data();
+    EntityNature.Data<?> data();
 
     Collection<PropertyMetadata> properties();
 
@@ -35,6 +35,8 @@ public sealed interface EntityMetadata extends TypeMetadata {
      * Retrieves metadata for a property if it exists in this entity type, otherwise throws an exception.
      * </p>
      * {@link #propertyOpt(String)} is a non-throwing alternative.
+     *
+     * @param name  simple property name
      */
     PropertyMetadata property(String name);
 
@@ -53,6 +55,15 @@ public sealed interface EntityMetadata extends TypeMetadata {
      * </ul>
      */
     Either<RuntimeException, Optional<PropertyMetadata>> property(MetaProperty<?> metaProperty);
+
+    /**
+     * Returns {@code true} if this entity type contains the specified property.
+     *
+     * @param name  simple property name
+     */
+    default boolean hasProperty(String name) {
+        return propertyOpt(name).isPresent();
+    }
 
     <R> R match(EntityMetadataVisitor<R> visitor);
 

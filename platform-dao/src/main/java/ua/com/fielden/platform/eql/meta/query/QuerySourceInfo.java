@@ -21,19 +21,23 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
 
     /**
-     * The type of a query source (either persistent entity, synthetic entity, union entity or entity aggregates).
+     * The type of this query source (either persistent entity, synthetic entity, union entity or entity aggregates).
      */
     private final Class<T> javaType;
 
     /**
-     * A map between java class field name representing a property and a corresponding query source item.
+     * Association between simple property names and their corresponding query source items.
      * The use of a sorted map is for convenience only (e.g., for unit testing).
      */
     private final SortedMap<String, AbstractQuerySourceItem<?>> propsMap = new TreeMap<>();
 
     /**
-     * If {@code true} indicates that all data-backed props from PE/SE are present in this query source info.
-     * In other words, it is a canonical representation (all properties) of the data source for a persistent entity (PE) or a synthetic entity (SE).
+     * Indicates whether this query source info is <i>comprehensive</i>, the meaning of which depends on the entity type:
+     * <ul>
+     *   <li> For a persistent entity - all retrievable properties are represented by this query source info.
+     *   <li> For a synthetic entity - all properties present in the underlying model are represented by this query source info.
+     * </ul>
+     * In other words, if a query source info is comprehensive, then it is a canonical representation of the respective data source.
      */
     public final boolean isComprehensive;
 
@@ -60,6 +64,10 @@ public class QuerySourceInfo<T extends AbstractEntity<?>> implements IResolvable
 
     public SortedMap<String, AbstractQuerySourceItem<?>> getProps() {
         return unmodifiableSortedMap(propsMap);
+    }
+
+    public boolean hasProp(final String name) {
+        return propsMap.containsKey(name);
     }
 
     @Override

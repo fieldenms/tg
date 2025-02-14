@@ -5,15 +5,22 @@ import java.util.Objects;
 import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
+import javax.annotation.Nullable;
+
 public class QuerySourceItemForPrimType<T> extends AbstractQuerySourceItem<T> {
     /** The type of this item or {@code null}. */
-    private final Class<T> itemType;
+    private final @Nullable Class<T> itemType;
 
-    public QuerySourceItemForPrimType(final String name, final Class<T> itemType, final Object hibType) {
+    public QuerySourceItemForPrimType(final String name, final @Nullable Class<T> itemType, final @Nullable Object hibType) {
         this(name, itemType, hibType, null);
     }
 
-    public QuerySourceItemForPrimType(final String name, final Class<T> itemType, final Object hibType, final CalcPropInfo expression) {
+    public QuerySourceItemForPrimType(
+            final String name,
+            final @Nullable Class<T> itemType,
+            final @Nullable Object hibType,
+            final @Nullable CalcPropInfo expression)
+    {
         super(name, hibType, expression);
         this.itemType = itemType;
     }

@@ -253,7 +253,7 @@ public final class AnnotationReflector {
      * @param type
      * @return
      */
-    public static Class<? extends Comparable<?>> getKeyType(final Class<?> type) {
+    public static Class<? extends Comparable<?>> getKeyType(@Nullable final Class<?> type) {
         final KeyType keyType = getAnnotationForClass(KeyType.class, type);
         return keyType != null ? keyType.value() : null;
     }

@@ -30,6 +30,8 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     private final List<SourceQuery3> models;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
+        // It is sufficient to use just the first model's yields because all models in a list must share the same yield aliases.
+        // See YieldInfoNodesGenerator.
         super("Q_" + sqlId, id, obtainColumnsFromYields(validateModels(models).getFirst().yields.getYields()));
         this.models = ImmutableList.copyOf(models);
     }

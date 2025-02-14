@@ -1,23 +1,8 @@
 package ua.com.fielden.platform.reflection;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-
-import java.lang.reflect.Field;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
@@ -26,6 +11,17 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.SupportsEntityExistsValidation;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * A set of utility functions to obtain metadata that is required (mainly) to instantiating instrumented entities.
@@ -119,7 +115,7 @@ public class EntityMetadata {
                         final Class<?> propType = determinePropType(entityType, field);
                         final SkipEntityExistsValidation seevAnnotation = getAnnotation(field, SkipEntityExistsValidation.class);
                         final boolean doNotSkipEntityExistsValidation = seevAnnotation == null || seevAnnotation.skipActiveOnly() || seevAnnotation.skipNew();
-                        return doNotSkipEntityExistsValidation && (isPersistedEntityType(propType) || isPropertyDescriptor(propType) || isSupportsEntityExistsValidation(propType) || isUnionEntityType(propType));
+                        return doNotSkipEntityExistsValidation && (isPersistentEntityType(propType) || isPropertyDescriptor(propType) || isSupportsEntityExistsValidation(propType) || isUnionEntityType(propType));
                     });
          } catch (final ExecutionException ex) {
              throw new ReflectionException(format("Could not determine applicability of EntityExists validation for property [%s] of entity [%s].", field.getName(), entityType.getName()), ex);

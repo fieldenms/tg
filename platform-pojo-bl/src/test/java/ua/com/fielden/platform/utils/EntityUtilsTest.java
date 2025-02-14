@@ -10,7 +10,8 @@ import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.domain.metadata.DomainExplorer;
-import ua.com.fielden.platform.entity.*;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.UserDefinableHelp;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
@@ -192,7 +193,7 @@ public class EntityUtilsTest {
 
     @Test
     public void non_persistent_and_non_synthetic_and_non_union_entities_are_recognised_as_such() {
-        assertFalse(isPersistedEntityType(Entity.class));
+        assertFalse(isPersistentEntityType(Entity.class));
         assertFalse(isSyntheticEntityType(Entity.class));
         assertFalse(isSyntheticBasedOnPersistentEntityType(Entity.class));
         assertFalse(isUnionEntityType(Entity.class));
@@ -200,7 +201,7 @@ public class EntityUtilsTest {
 
     @Test
     public void union_entity_is_recognised_as_such() {
-        assertFalse(isPersistedEntityType(UnionEntity.class));
+        assertFalse(isPersistentEntityType(UnionEntity.class));
         assertFalse(isSyntheticEntityType(UnionEntity.class));
         assertFalse(isSyntheticBasedOnPersistentEntityType(UnionEntity.class));
         assertTrue(isUnionEntityType(UnionEntity.class));
@@ -208,7 +209,7 @@ public class EntityUtilsTest {
 
     @Test
     public void persistent_entity_is_recognised_as_such() {
-        assertTrue(isPersistedEntityType(TgAuthor.class));
+        assertTrue(isPersistentEntityType(TgAuthor.class));
         assertFalse(isSyntheticEntityType(TgAuthor.class));
         assertFalse(isSyntheticBasedOnPersistentEntityType(TgAuthor.class));
         assertFalse(isUnionEntityType(TgAuthor.class));
@@ -218,7 +219,7 @@ public class EntityUtilsTest {
     public void generated_entity_based_on_persistent_entity_is_recognised_as_persistent() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAuthor.class);
         
-        assertTrue(isPersistedEntityType(newType));
+        assertTrue(isPersistentEntityType(newType));
         assertFalse(isSyntheticEntityType(newType));
         assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -228,7 +229,7 @@ public class EntityUtilsTest {
     public void generated_entity_with_nested_regeneration_based_on_persistent_entity_is_recognised_as_persistent() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAuthor.class, ThreadLocalRandom.current().nextInt(2, 7));
         
-        assertTrue(isPersistedEntityType(newType));
+        assertTrue(isPersistentEntityType(newType));
         assertFalse(isSyntheticEntityType(newType));
         assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -236,7 +237,7 @@ public class EntityUtilsTest {
 
     @Test
     public void synthetic_entity_is_recognised_as_such() {
-        assertFalse(isPersistedEntityType(TgAverageFuelUsage.class));
+        assertFalse(isPersistentEntityType(TgAverageFuelUsage.class));
         assertTrue(isSyntheticEntityType(TgAverageFuelUsage.class));
         assertFalse(isSyntheticBasedOnPersistentEntityType(TgAverageFuelUsage.class));
         assertFalse(isUnionEntityType(TgAverageFuelUsage.class));
@@ -246,7 +247,7 @@ public class EntityUtilsTest {
     public void generated_entity_based_on_synthetic_entity_is_recognised_as_synthetic() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAverageFuelUsage.class);
         
-        assertFalse(isPersistedEntityType(newType));
+        assertFalse(isPersistentEntityType(newType));
         assertTrue(isSyntheticEntityType(newType));
         assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -256,7 +257,7 @@ public class EntityUtilsTest {
     public void generated_entity_with_nested_regeneration_based_on_synthetic_entity_is_recognised_as_synthetic() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAverageFuelUsage.class, ThreadLocalRandom.current().nextInt(2, 7));
         
-        assertFalse(isPersistedEntityType(newType));
+        assertFalse(isPersistentEntityType(newType));
         assertTrue(isSyntheticEntityType(newType));
         assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -264,7 +265,7 @@ public class EntityUtilsTest {
 
     @Test
     public void synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() {
-        assertFalse(isPersistedEntityType(TgReVehicleModel.class));
+        assertFalse(isPersistentEntityType(TgReVehicleModel.class));
         assertTrue(isSyntheticEntityType(TgReVehicleModel.class));
         assertTrue(isSyntheticBasedOnPersistentEntityType(TgReVehicleModel.class));
         assertFalse(isUnionEntityType(TgReVehicleModel.class));
@@ -274,7 +275,7 @@ public class EntityUtilsTest {
     public void generated_entity_based_on_synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgReVehicleModel.class);
        
-        assertFalse(isPersistedEntityType(newType));
+        assertFalse(isPersistentEntityType(newType));
         assertTrue(isSyntheticEntityType(newType));
         assertTrue(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -284,7 +285,7 @@ public class EntityUtilsTest {
     public void generated_entity_with_nested_regeneration_based_on_synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgReVehicleModel.class, ThreadLocalRandom.current().nextInt(2, 7));
        
-        assertFalse(isPersistedEntityType(newType));
+        assertFalse(isPersistentEntityType(newType));
         assertTrue(isSyntheticEntityType(newType));
         assertTrue(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -292,7 +293,7 @@ public class EntityUtilsTest {
 
     @Test
     public void null_does_not_belong_to_any_of_entity_type_classiciations() {
-        assertFalse(isPersistedEntityType(null));
+        assertFalse(isPersistentEntityType(null));
         assertFalse(isSyntheticEntityType(null));
         assertFalse(isSyntheticBasedOnPersistentEntityType(null));
         assertFalse(isUnionEntityType(null));
