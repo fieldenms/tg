@@ -7,31 +7,49 @@ import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static java.util.Optional.empty;
 
 /**
- * A stream factory that produces a stream of groups that are made of the element from the base stream. 
- * The grouping of elements is performed sequentially using the provided grouping function of type {@link BiPredicate}.
+ * A stream factory that produces a stream of groups that contain elements of the base stream.
+ * The grouping of elements is performed sequentially according to the description of methods in this class.
  * 
  * @author TG Team
- *
  */
-public class SequentialGroupingStream {
+public final class SequentialGroupingStream {
 
     private SequentialGroupingStream() {}
 
     /**
-     * Creates a new stream based on {@code baseStream} by grouping its elements using the {@code grouping} predicate
-     * and an optional group size estimate to assist with estimating the size of the resultant stream.
+     * Creates a new stream based on {@code baseStream} by grouping its elements into non-empty groups of the specified size.
+     * The last group may be smaller if the number of elements in the base stream is not evenly divisible by the group size.
      * <p>
      * <b>Important: </b> <i>The base stream gets closed if the resultant stream is closed.</i>
+     *
+     * @param  groupSize  must be greater than 0
      */
-    public static <T> Stream<List<T>> stream(final Stream<T> baseStream, final BiPredicate<T, List<T>> grouping, final Optional<Integer> groupSizeEstimate) {
-        final var spliterator = new SequentialGroupSplitterator<>(baseStream, grouping, groupSizeEstimate);
+    public static <T> Stream<List<T>> stream(final Stream<T> baseStream, int groupSize) {
+        final var spliterator = new SequentialSizedGroupSpliterator<>(baseStream.spliterator(), groupSize);
+        return StreamSupport.stream(spliterator, false)
+                .onClose(baseStream::close);
+    }
+
+    /**
+     * Creates a new stream based on {@code baseStream} by grouping its elements using the {@code grouping} predicate
+     * and an optional group size estimate of the resultant stream (i.e., estimated number of groups).
+     * Empty groups are excluded from the result.
+     * <p>
+     * <b>Important: </b> <i>The base stream gets closed if the resultant stream is closed.</i>
+     *
+     * @param grouping  given {@code (currentElement, groupSoFar)}, returns {@code true} if the group should be closed
+     *                  ({@code currentElement} goes into the next group); otherwise, {@code currentElement} is added
+     *                  to the group and the grouping continues.
+     * @param  groupSizeEstimate  must be greater than 0
+     */
+    public static <T> Stream<List<T>> stream(final Stream<T> baseStream, final BiPredicate<T, List<T>> grouping, Optional<Integer> groupSizeEstimate) {
+        final var spliterator = new SequentialGroupSpliterator<>(baseStream, grouping, groupSizeEstimate);
         return StreamSupport.stream(spliterator, false)
                             .onClose(baseStream::close);
     }
@@ -43,13 +61,17 @@ public class SequentialGroupingStream {
         return stream(baseStream, grouping, empty());
     }
 
-    private static class SequentialGroupSplitterator<T> implements Spliterator<List<T>> {
+    private static final class SequentialGroupSpliterator<T> implements Spliterator<List<T>> {
+        // Null should not be used to denote absence of value because elements of the stream may themselves be null.
+        private static final Object NO_REMAINDER = new Object();
+
         private final Spliterator<T> baseSpliterator;
         private final BiPredicate<T, List<T>> grouping;
         private final int groupSizeEstimate;
-        private T remainder;
+        /** An element scheduled for the next group. */
+        private Object remainder = NO_REMAINDER;
 
-        public SequentialGroupSplitterator(final Stream<T> stream, final BiPredicate<T, List<T>> grouping, final Optional<Integer> groupSizeEstimate) {
+        public SequentialGroupSpliterator(final Stream<T> stream, final BiPredicate<T, List<T>> grouping, final Optional<Integer> groupSizeEstimate) {
             this.baseSpliterator = stream.spliterator();
             this.grouping = grouping;
             this.groupSizeEstimate = groupSizeEstimate.orElse(25);
@@ -60,48 +82,142 @@ public class SequentialGroupingStream {
 
         @Override
         public boolean tryAdvance(Consumer<? super List<T>> action) {
-            final List<T> group = new ArrayList<>(groupSizeEstimate);
-            if (remainder != null) {
-                group.add(remainder);
-                remainder = null;
+            final var group = new ArrayList<T>(groupSizeEstimate);
+
+            populateGroup(group);
+
+            if (group.isEmpty()) {
+                return false;
             }
-
-            final AtomicBoolean grew = new AtomicBoolean(false);
-            boolean advanced;
-            while (advanced = baseSpliterator.tryAdvance(el -> {
-                if (grouping.test(el, group)) {
-                    group.add(el);
-                    grew.set(true);
-                } else {
-                    remainder = el;
-                    grew.set(false);
-                }
-            }) && grew.get());
-
-            // an empty group gets ignored
-            if (!group.isEmpty()) {
+            else {
                 action.accept(group);
+                return true;
             }
+        }
 
-            final var couldAdvanceOrRemainingElementsExist = advanced || remainder != null;
-            return couldAdvanceOrRemainingElementsExist;
+        private void populateGroup(List<T> group) {
+            // Empty groups are ignored, so we must continue until at least one element is accepted.
+            // If there is a remainder, then we add it to the group and all the following elements that satisfy the predicate.
+            // Otherwise, there are 2 scenarios:
+            // 1. The next element satisifes the predicate - add it to the group and all the following elements that
+            // satisfy the predicate.
+            // 2. Otherwise, the group remains empty, we record the element as the remainder and continue.
+
+            boolean advanced = true;
+
+            while (advanced && group.isEmpty()) {
+                if (remainder != NO_REMAINDER) {
+                    group.add((T) remainder);
+                    remainder = NO_REMAINDER;
+                }
+
+                final var groupOpen = new AtomicBoolean(true);
+                while (advanced && groupOpen.get()) {
+                    advanced = baseSpliterator.tryAdvance(elt -> {
+                        if (grouping.test(elt, group)) {
+                            group.add(elt);
+                        } else {
+                            remainder = elt;
+                            groupOpen.set(false);
+                        }
+                    });
+                }
+            }
         }
 
         @Override
         public Spliterator<List<T>> trySplit() {
-            // no support for parallel processing
+            // Unsupported.
             return null;
         }
 
         @Override
         public long estimateSize() {
-            return 1 + baseSpliterator.estimateSize() / groupSizeEstimate;
+            final long baseSize = baseSpliterator.estimateSize();
+            if (!baseSpliterator.hasCharacteristics(Spliterator.SIZED) && baseSize == Long.MAX_VALUE) {
+                // Unknown size.
+                return Long.MAX_VALUE;
+            }
+            else {
+                return baseSize % groupSizeEstimate == 0
+                        ? baseSize / groupSizeEstimate
+                        : 1 + baseSize / groupSizeEstimate;
+            }
         }
 
         @Override
         public int characteristics() {
-            return baseSpliterator.characteristics();
+            // Lose SIZED & SUBSIZED due to only an estimate on size being available and the uninspectable nature of the
+            // grouping predicate.
+            // Lose SORTED because groups (instances of List) are not comparable.
+            return baseSpliterator.characteristics()
+                   & (~Spliterator.SIZED)
+                   & (~Spliterator.SUBSIZED)
+                   & (~Spliterator.SORTED);
         }
 
     }
+
+    private static final class SequentialSizedGroupSpliterator<T> implements Spliterator<List<T>> {
+
+        private final Spliterator<T> baseSpliterator;
+        private final int groupSize;
+
+        private SequentialSizedGroupSpliterator(final Spliterator<T> baseSpliterator, final int groupSize) {
+            if (groupSize <= 0) {
+                throw new IllegalArgumentException("Group size must be greater than 0.");
+            }
+            this.baseSpliterator = baseSpliterator;
+            this.groupSize = groupSize;
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super List<T>> action) {
+            var group = new ArrayList<T>(groupSize);
+
+            for (int i = 0; i < groupSize; i++) {
+                final boolean advanced = baseSpliterator.tryAdvance(group::add);
+                if (!advanced) {
+                    break;
+                }
+            }
+
+            if (!group.isEmpty()) {
+                action.accept(group);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        @Override
+        public Spliterator<List<T>> trySplit() {
+            // Unsupported.
+            return null;
+        }
+
+        @Override
+        public long estimateSize() {
+            final long baseSize = baseSpliterator.estimateSize();
+            if (!baseSpliterator.hasCharacteristics(Spliterator.SIZED) && baseSize == Long.MAX_VALUE) {
+                // Unknown size.
+                return Long.MAX_VALUE;
+            }
+            else {
+                return baseSize % groupSize == 0
+                        ? baseSize / groupSize
+                        : 1 + baseSize / groupSize;
+            }
+        }
+
+        @Override
+        public int characteristics() {
+            // Lose SORTED because groups (instances of List) are not comparable.
+            return baseSpliterator.characteristics()
+                   & (~Spliterator.SORTED);
+        }
+
+    }
+
 }
