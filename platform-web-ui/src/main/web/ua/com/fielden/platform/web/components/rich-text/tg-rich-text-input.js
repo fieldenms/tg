@@ -393,7 +393,7 @@ function rgbToHex(rgbString) {
  * @param {Object} event keyboard event
  */
 function preventUnwantedKeyboradEvents(event) {
-    if ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/) {
+    if (this.disabled || ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/)) {
         event.preventDefault();
     }
 }
