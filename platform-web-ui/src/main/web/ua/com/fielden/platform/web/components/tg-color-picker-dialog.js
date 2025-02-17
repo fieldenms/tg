@@ -13,6 +13,8 @@ import { tearDownEvent, createDummyBindingEntity } from '/resources/reflection/t
 const template = html`
     <style>
         :host {
+            background-color: white;
+            box-shadow: 0px 2px 6px #ccc;
             @apply --layout-vertical;
         }
         tg-colour-picker {

@@ -13,6 +13,8 @@ import {TgReflector} from '/app/tg-reflector.js';
 const template = html`
     <style>
         :host {
+            background-color: white;
+            box-shadow: 0px 2px 6px #ccc;
             @apply --layout-vertical;
         }
         tg-hyperlink-editor {
