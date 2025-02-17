@@ -670,10 +670,6 @@ const template = html`
                 padding: 8px 0 8px 8px;
             }
         }
-        .dropdown-content {
-            background-color: white;
-            box-shadow: 0px 2px 6px #ccc;
-        }
     </style>
     <iron-dropdown id="linkDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
         <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]"></tg-link-dialog>
@@ -965,6 +961,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             this.$.colorDialog.color = textColorObj.detail;
         }
         setDialogPosition(this.$.colorDropdown, getSelectionCoordinates.bind(this)());
+        document.body.appendChild(this.$.colorDropdown);
         this.$.colorDropdown.open();
     }
 
@@ -975,6 +972,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             this.$.linkDialog.url = link.detail;
         }
         setDialogPosition(this.$.linkDropdown, getSelectionCoordinates.bind(this)());
+        document.body.appendChild(this.$.linkDropdown);
         this.$.linkDropdown.open();
     }
 
@@ -1098,6 +1096,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             const dropDownContent = e.composedPath()[0].$.content.assignedNodes()[0];
             if (dropDownContent && dropDownContent.resetState) {
                 dropDownContent.resetState();
+                document.body.removeChild(e.composedPath()[0]);
             }
         }
     }
