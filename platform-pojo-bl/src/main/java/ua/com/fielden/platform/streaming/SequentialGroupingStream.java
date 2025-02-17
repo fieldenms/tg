@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.streaming;
 
+import ua.com.fielden.platform.utils.StreamUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +29,12 @@ public final class SequentialGroupingStream {
      * The last group may be smaller if the number of elements in the base stream is not evenly divisible by the group size.
      * <p>
      * <b>Important: </b> <i>The base stream gets closed if the resultant stream is closed.</i>
+     * <p>
+     * <b>Note:</b> Please use the equivalent method {@link StreamUtils#windowed(Stream, int)}.
      *
      * @param  groupSize  must be greater than 0
+     *
+     * @see StreamUtils#windowed(Stream, int)
      */
     public static <T> Stream<List<T>> stream(final Stream<T> baseStream, int groupSize) {
         final var spliterator = new SequentialSizedGroupSpliterator<>(baseStream.spliterator(), groupSize);
@@ -47,6 +53,8 @@ public final class SequentialGroupingStream {
      *                  ({@code currentElement} goes into the next group); otherwise, {@code currentElement} is added
      *                  to the group and the grouping continues.
      * @param  groupSizeEstimate  must be greater than 0
+     *
+     * @see StreamUtils#windowed(Stream, int)
      */
     public static <T> Stream<List<T>> stream(final Stream<T> baseStream, final BiPredicate<T, List<T>> grouping, Optional<Integer> groupSizeEstimate) {
         final var spliterator = new SequentialGroupSpliterator<>(baseStream, grouping, groupSizeEstimate);
