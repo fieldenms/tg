@@ -831,7 +831,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._getEditableContent().addEventListener("touchend", mouseUpHandler.bind(this));
         //Add mouse down handler to handle case when user presses mouse button on editor and moves it outside of the editor, which later prevents invokation of mouse up handler
         this._getEditableContent().addEventListener("mousedown", mouseEventRetranslator.bind(this), true);
-        //Add key down to prevent tab key on list
+        //Add key down to prevent select all action and key events when editor is disabled
         this._getEditableContent().addEventListener("keydown", preventUnwantedKeyboradEvents.bind(this), true);
         //Add key down to scroll into view when creating new list item on Enter key
         this._getEditableContent().addEventListener("keydown", scrollWhenListItem.bind(this));
@@ -846,11 +846,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.addOwnKeyBinding('ctrl+u meta+u', '_createBulletList');
         this.addOwnKeyBinding('ctrl+o meta+o', '_createOrderedList');
         this.addOwnKeyBinding('esc', '_stopEditing');
+        this.addOwnKeyBinding('tab', '_tabHandler');
         this.keyEventTarget = this._getEditableContent();
         //Adjust key event handler to be able to process events from _editor when event was prevented
         const prevKeyBindingHandler = this._onKeyBindingEvent.bind(this);
         this._onKeyBindingEvent = function (keyBindings, event) {
-            if (!this.disabled) {
+            if (!this.disabled || event.keyCode === 9) {
                 Object.defineProperty(event, 'defaultPrevented', {value: false});
                 prevKeyBindingHandler(keyBindings, event);
             }
@@ -1012,6 +1013,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._editor.blur();
         this.focus();
         tearDownEvent(event.detail && event.detail.keyboardEvent);
+    }
+
+    _tabHandler(event) {
+        if (this.disabled) {
+            this._editor.blur();
+        }
     }
 
     _valueChanged(newValue) {
