@@ -71,6 +71,10 @@ public final class AuditUtils {
         return type.getPackageName() + "." + simpleName;
     }
 
+    public static String getAuditTypeName(final CharSequence auditedTypeName, final int version) {
+        return auditedTypeName + "_" + AbstractAuditEntity.A3T + "_" + version;
+    }
+
     public static boolean isAuditEntityType(final Class<?> type) {
         return AbstractAuditEntity.class.isAssignableFrom(type);
     }
