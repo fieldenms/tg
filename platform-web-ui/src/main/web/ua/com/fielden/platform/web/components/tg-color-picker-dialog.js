@@ -35,7 +35,7 @@ const template = html`
     </style>
     <tg-colour-picker id="colorEditor" entity="[[_entity]]" property-name="colorProp"
         current-state="EDIT" prop-title="Text Color" prop-desc="The color of the selected text"
-        action="null" validation-callback="[[_validationCallback]]">
+        action="null" validation-callback="[[_validationCallback]]" toaster="[[toaster]]">
     </tg-colour-picker>
     <div class="actions">
         <paper-button raised roll="button" on-tap="cancelCallback" tooltip-text="Cancel text color">
@@ -61,6 +61,8 @@ export class TgColorPickerDialog extends PolymerElement {
 
             //private properties
             _validationCallback: Function,
+
+            toaster: Object,
 
             _entity: Object,
             

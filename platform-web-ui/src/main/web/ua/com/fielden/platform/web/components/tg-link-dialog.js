@@ -35,7 +35,7 @@ const template = html`
     </style>
     <tg-hyperlink-editor id="urlEditor" entity="[[_entity]]" property-name="urlProp"
         current-state="EDIT" prop-title="URL" prop-desc="Page URL to insert"
-        action="null" validation-callback="[[validationCallback]]">
+        action="null" validation-callback="[[validationCallback]]" toaster="[[toaster]]">
     </tg-hyperlink-editor>
     <div class="actions">
         <paper-button raised roll="button" on-tap="cancelCallback" tooltip-text="Do not insert a link">
@@ -60,6 +60,8 @@ export class TgLinkDialog extends PolymerElement {
             cancelCallback: Function,
 
             okCallback: Function,
+
+            toaster: Object,
 
             //private properties
 

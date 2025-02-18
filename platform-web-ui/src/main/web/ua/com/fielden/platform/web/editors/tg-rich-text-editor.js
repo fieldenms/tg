@@ -48,6 +48,7 @@ const customInputTemplate = html`
         class="custom-input paper-input-input"
         disabled="[[_disabled]]" 
         value="{{_editingValue}}"
+        toaster="[[toaster]]"
         change-event-handler="[[_onChange]]"
         key-down-handler="[[_onKeydown]]" 
         on-focus="_onFocus"
