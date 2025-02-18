@@ -672,10 +672,10 @@ const template = html`
         }
     </style>
     <iron-dropdown id="linkDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
-        <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]"></tg-link-dialog>
+        <tg-link-dialog id="linkDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelLinkInsertion]]" ok-callback="[[_acceptLink]]" toaster="[[toaster]]"></tg-link-dialog>
     </iron-dropdown>
     <iron-dropdown id="colorDropdown" style="width:300px;height:160px;" vertical-align="top" horizontal-align="left" always-on-top on-iron-overlay-closed="_dialogClosed" on-iron-overlay-opened="_dialogOpened">
-        <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]"></tg-color-picker-dialog>
+        <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]" toaster="[[toaster]]"></tg-color-picker-dialog>
     </iron-dropdown>
     <tg-responsive-toolbar class="custom-responsive-toolbar editor-toolbar" disabled$="[[disabled]]">
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:header-1" action-title="Heading 1" tooltip-text="Make your text header 1" on-down="_stopMouseEvent" on-tap="_applyHeader1"></iron-icon>
@@ -734,6 +734,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
                 value: false,
                 reflectToAttribute: true
             },
+
+            toaster: Object,
 
             _editor: Object,
             _fakeSelection: {
