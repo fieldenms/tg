@@ -54,7 +54,6 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-start;
             font-size: small;
-            padding: 6px;
             margin: 0px;
             overflow: hidden;
             -webkit-overflow-scrolling: touch;
@@ -88,9 +87,14 @@ const template = html`
             background-color: #E1F5FE;
         }
 
-        .item-container {
+        .item-scroll-container {
             width: 100%;
             overflow: auto;
+        }
+
+        .item-container {
+            padding: 6px;
+            width: fit-content;
         }
 
         .additional-prop {
@@ -505,7 +509,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 const id = this._makeId(index);
                 const paperItem = this.shadowRoot.querySelector("#" + id);
                 if (paperItem) {
-                    paperItem.innerHTML = `<div class="item-container">${html}</div>`;
+                    paperItem.innerHTML = `<div class="item-scroll-container"><div class="item-container">${html}</div></div>`;
                 }
             }
         }.bind(this));
