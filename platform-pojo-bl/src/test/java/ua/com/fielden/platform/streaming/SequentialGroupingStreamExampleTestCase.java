@@ -15,9 +15,9 @@ public class SequentialGroupingStreamExampleTestCase {
     public void grouping_by_sequentally_equal_elements_works_correctly_without_missing_first_and_last_stream_elements() {
         final Stream<List<String>> stream = SequentialGroupingStream.stream(
                 Stream.of("1", "1", "2", "2", "2", "3", "4", "4", "1"), 
-                (el, group) -> group.isEmpty() || group.get(0).equals(el));
+                (el, group) -> group.isEmpty() || group.getFirst().equals(el));
         
-        final List<List<String>> groups = stream.collect(Collectors.toList());
+        final List<List<String>> groups = stream.toList();
 
         assertEquals(5, groups.size());
         
@@ -47,7 +47,7 @@ public class SequentialGroupingStreamExampleTestCase {
                 Stream.of("1", "1", "2", "2", "2", "3", "4", "4", "1"), 
                 (el, group) -> group.size() < 2);
         
-        final List<List<String>> groups = stream.collect(Collectors.toList());
+        final List<List<String>> groups = stream.toList();
 
         assertEquals(5, groups.size());
         
@@ -77,7 +77,7 @@ public class SequentialGroupingStreamExampleTestCase {
                 Stream.of("1", "1", "2", "2", "2", "3", "4", "4", "1", "5"), 
                 (el, group) -> group.size() < 2);
         
-        final List<List<String>> groups = stream.collect(Collectors.toList());
+        final List<List<String>> groups = stream.toList();
 
         assertEquals(5, groups.size());
         
@@ -109,7 +109,7 @@ public class SequentialGroupingStreamExampleTestCase {
                 Stream.of("1"), 
                 (el, group) -> group.size() < 2);
         
-        final List<List<String>> groups = stream.collect(Collectors.toList());
+        final List<List<String>> groups = stream.toList();
 
         assertEquals(1, groups.size());
         
@@ -121,7 +121,7 @@ public class SequentialGroupingStreamExampleTestCase {
     public void grouping_an_empty_stream_produces_an_empty_stream() {
         final Stream<List<String>> stream = SequentialGroupingStream.stream(Stream.of(), (valueToCheck, list) -> list.size() < 2);
         
-        final List<List<String>> groups = stream.collect(Collectors.toList());
+        final List<List<String>> groups = stream.toList();
         
         assertEquals(0, groups.size());
     }
@@ -132,7 +132,7 @@ public class SequentialGroupingStreamExampleTestCase {
                 Stream.of("1", "1", "2"), 
                 (el, group) -> "non existing".equals(el));
         
-        final List<List<String>> groups = stream.collect(Collectors.toList());
+        final List<List<String>> groups = stream.toList();
 
         assertEquals(3, groups.size());
 
@@ -154,7 +154,7 @@ public class SequentialGroupingStreamExampleTestCase {
                 baseStream,
                 (el, group) -> group.isEmpty() || group.getFirst().equals(el))) {
             // run a terminal operation
-            final List<List<String>> groups = stream.collect(Collectors.toList());
+            final List<List<String>> groups = stream.toList();
             assertEquals(2, groups.size());
             assertFalse("Base stream was closed prematurely.", baseStreamIsClosed.get());
         }

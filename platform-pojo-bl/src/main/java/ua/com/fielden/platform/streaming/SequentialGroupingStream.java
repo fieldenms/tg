@@ -22,6 +22,9 @@ import static java.util.Optional.empty;
  */
 public final class SequentialGroupingStream {
 
+    public static final String ERR_NON_POSITIVE_GROUP_SIZE = "Group size must be greater than 0.";
+    public static final String ERR_NON_POSITIVE_GROUP_SIZE_ESTIMATE = "Group size estimate should be a positive integer.";
+
     private SequentialGroupingStream() {}
 
     /**
@@ -30,13 +33,14 @@ public final class SequentialGroupingStream {
      * <p>
      * <b>Important: </b> <i>The base stream gets closed if the resultant stream is closed.</i>
      * <p>
-     * <b>Note:</b> Please use the equivalent method {@link StreamUtils#windowed(Stream, int)}.
+     * <b>Note:</b> Prefer the use of method {@link StreamUtils#windowed(Stream, int)} as alternative.
      *
-     * @param  groupSize  must be greater than 0
+     * @param baseStream  a stream of data that needs to be grouped
+     * @param groupSize  must be greater than 0
      *
      * @see StreamUtils#windowed(Stream, int)
      */
-    public static <T> Stream<List<T>> stream(final Stream<T> baseStream, int groupSize) {
+    public static <T> Stream<List<T>> stream(final Stream<T> baseStream, final int groupSize) {
         final var spliterator = new SequentialSizedGroupSpliterator<>(baseStream.spliterator(), groupSize);
         return StreamSupport.stream(spliterator, false)
                 .onClose(baseStream::close);
@@ -56,7 +60,11 @@ public final class SequentialGroupingStream {
      *
      * @see StreamUtils#windowed(Stream, int)
      */
-    public static <T> Stream<List<T>> stream(final Stream<T> baseStream, final BiPredicate<T, List<T>> grouping, Optional<Integer> groupSizeEstimate) {
+    public static <T> Stream<List<T>> stream(
+            final Stream<T> baseStream,
+            final BiPredicate<T, List<T>> grouping,
+            final Optional<Integer> groupSizeEstimate)
+    {
         final var spliterator = new SequentialGroupSpliterator<>(baseStream, grouping, groupSizeEstimate);
         return StreamSupport.stream(spliterator, false)
                             .onClose(baseStream::close);
@@ -84,15 +92,13 @@ public final class SequentialGroupingStream {
             this.grouping = grouping;
             this.groupSizeEstimate = groupSizeEstimate.orElse(25);
             if (this.groupSizeEstimate <= 0) {
-                throw new IllegalArgumentException("Group size estimate should be a positive integer.");
+                throw new IllegalArgumentException(ERR_NON_POSITIVE_GROUP_SIZE_ESTIMATE);
             }
         }
 
         @Override
         public boolean tryAdvance(Consumer<? super List<T>> action) {
-            final var group = new ArrayList<T>(groupSizeEstimate);
-
-            populateGroup(group);
+            final var group = populateGroup();
 
             if (group.isEmpty()) {
                 return false;
@@ -103,14 +109,14 @@ public final class SequentialGroupingStream {
             }
         }
 
-        private void populateGroup(List<T> group) {
+        private List<T> populateGroup() {
             // Empty groups are ignored, so we must continue until at least one element is accepted.
             // If there is a remainder, then we add it to the group and all the following elements that satisfy the predicate.
             // Otherwise, there are 2 scenarios:
-            // 1. The next element satisifes the predicate - add it to the group and all the following elements that
-            // satisfy the predicate.
+            // 1. The next element satisfies the predicate - add it to the group and all the following elements that satisfy the predicate.
             // 2. Otherwise, the group remains empty, we record the element as the remainder and continue.
 
+            final var group = new ArrayList<T>(groupSizeEstimate);
             boolean advanced = true;
 
             while (advanced && group.isEmpty()) {
@@ -131,6 +137,8 @@ public final class SequentialGroupingStream {
                     });
                 }
             }
+
+            return group;
         }
 
         @Override
@@ -148,16 +156,16 @@ public final class SequentialGroupingStream {
             }
             else {
                 return baseSize % groupSizeEstimate == 0
-                        ? baseSize / groupSizeEstimate
-                        : 1 + baseSize / groupSizeEstimate;
+                       ? baseSize / groupSizeEstimate
+                       : 1 + baseSize / groupSizeEstimate;
             }
         }
 
         @Override
         public int characteristics() {
-            // Lose SIZED & SUBSIZED due to only an estimate on size being available and the uninspectable nature of the
-            // grouping predicate.
-            // Lose SORTED because groups (instances of List) are not comparable.
+            // Exclude SIZED & SUBSIZED due to "uninspectable" nature of the grouping predicate,
+            // which cannot be used to reliably identify the expected size of the resulting stream.
+            // Exclude SORTED because groups (instances of List) are not comparable.
             return baseSpliterator.characteristics()
                    & (~Spliterator.SIZED)
                    & (~Spliterator.SUBSIZED)
@@ -171,9 +179,10 @@ public final class SequentialGroupingStream {
         private final Spliterator<T> baseSpliterator;
         private final int groupSize;
 
+
         private SequentialSizedGroupSpliterator(final Spliterator<T> baseSpliterator, final int groupSize) {
             if (groupSize <= 0) {
-                throw new IllegalArgumentException("Group size must be greater than 0.");
+                throw new IllegalArgumentException(ERR_NON_POSITIVE_GROUP_SIZE);
             }
             this.baseSpliterator = baseSpliterator;
             this.groupSize = groupSize;
@@ -193,8 +202,7 @@ public final class SequentialGroupingStream {
             if (!group.isEmpty()) {
                 action.accept(group);
                 return true;
-            }
-            else {
+            } else {
                 return false;
             }
         }
@@ -214,14 +222,14 @@ public final class SequentialGroupingStream {
             }
             else {
                 return baseSize % groupSize == 0
-                        ? baseSize / groupSize
-                        : 1 + baseSize / groupSize;
+                       ? baseSize / groupSize
+                       : 1 + baseSize / groupSize;
             }
         }
 
         @Override
         public int characteristics() {
-            // Lose SORTED because groups (instances of List) are not comparable.
+            // Exclude SORTED because groups (instances of List) are not comparable.
             return baseSpliterator.characteristics()
                    & (~Spliterator.SORTED);
         }
