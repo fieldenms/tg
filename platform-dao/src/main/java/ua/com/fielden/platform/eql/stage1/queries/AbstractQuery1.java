@@ -161,7 +161,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
         if (originalConditions.ignore()) {
             return udfConditions2.ignore() ? EMPTY_CONDITIONS : udfConditions2;
         } else {
-            return udfConditions2.ignore() ? originalConditions : conditions(false, asList(asList(udfConditions2, originalConditions)));
+            return udfConditions2.ignore() ? originalConditions : conditions(false, List.of(asList(udfConditions2, originalConditions)));
         }
     }
 
@@ -170,7 +170,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
             return EMPTY_GROUP_BYS;
         }
 
-        final List<GroupBy2> enhanced = groupBys.groups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
+        final List<GroupBy2> enhanced = groupBys.groups().stream().map(AbstractQuery1::enhance).flatMap(List::stream).collect(Collectors.toList());
         return new GroupBys2(enhanced);
     }
 
