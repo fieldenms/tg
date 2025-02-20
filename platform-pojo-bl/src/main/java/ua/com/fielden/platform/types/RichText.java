@@ -109,7 +109,6 @@ public sealed class RichText permits RichText.Persisted {
         }
 
         // Validate the input before parsing it.
-        // Invalid inputs should not produce
         final var validationResult = RichTextSanitiser.sanitiseHtml(input);
         final var coreText = validationResult.isSuccessful()
                              ? RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.extension)
