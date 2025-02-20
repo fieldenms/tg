@@ -4,15 +4,14 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
-public class SequentialGroupingStreamExampleTestCase {
+public class SequentialGroupingStreamTestCase {
 
     @Test
-    public void grouping_by_sequentally_equal_elements_works_correctly_without_missing_first_and_last_stream_elements() {
+    public void grouping_by_sequentially_equal_elements_works_correctly_without_missing_first_and_last_stream_elements() {
         final Stream<List<String>> stream = SequentialGroupingStream.stream(
                 Stream.of("1", "1", "2", "2", "2", "3", "4", "4", "1"), 
                 (el, group) -> group.isEmpty() || group.getFirst().equals(el));
