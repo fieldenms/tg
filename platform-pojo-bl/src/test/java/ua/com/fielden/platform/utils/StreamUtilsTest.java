@@ -246,20 +246,9 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void windowing_a_stream_with_a_non_positive_window_size_results_in_parts_with_a_single_element_each() {
-        final Stream<List<Integer>> negWindowed = StreamUtils.windowed(Stream.of(0, 1, 2), -1);
-        final List<List<Integer>> negWindowedAsList = negWindowed.collect(toList());
-        assertEquals(3, negWindowedAsList.size());
-        assertEquals(listOf(0), negWindowedAsList.get(0));
-        assertEquals(listOf(1), negWindowedAsList.get(1));
-        assertEquals(listOf(2), negWindowedAsList.get(2));
-
-        final Stream<List<Integer>> zeroWindowed = StreamUtils.windowed(Stream.of(0, 1, 2), 0);
-        final List<List<Integer>> zeroWindowedAsList = zeroWindowed.collect(toList());
-        assertEquals(3, zeroWindowedAsList.size());
-        assertEquals(listOf(0), zeroWindowedAsList.get(0));
-        assertEquals(listOf(1), zeroWindowedAsList.get(1));
-        assertEquals(listOf(2), zeroWindowedAsList.get(2));
+    public void windowing_a_stream_with_a_non_positive_window_size_is_an_error() {
+        assertThrows(IllegalArgumentException.class, () -> StreamUtils.windowed(Stream.of(0, 1, 2), -1));
+        assertThrows(IllegalArgumentException.class, () -> StreamUtils.windowed(Stream.of(0, 1, 2), 0));
     }
 
     @Test
