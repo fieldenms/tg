@@ -23,8 +23,8 @@ import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -178,8 +178,8 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(entityFactory);
 
-        return SequentialGroupingStream.stream(stream, (el, group) -> group.size() < batchSize, Optional.of(batchSize))
-                                       .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
+        return StreamUtils.windowed(stream, batchSize)
+                .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
     }
 
 }

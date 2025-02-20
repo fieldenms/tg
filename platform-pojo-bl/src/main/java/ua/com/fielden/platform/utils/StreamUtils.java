@@ -238,10 +238,11 @@ public class StreamUtils {
      * @param <T> A type over which to stream.
      * @param source An input stream to be "windowed".
      * @param windowSize A window size.
+     *                   Must be greater than 0.
      * @return
      */
     public static <T> Stream<List<T>> windowed(final Stream<T> source, final int windowSize){
-        return SequentialGroupingStream.stream(source, (el, group) -> group.size() < windowSize);
+        return SequentialGroupingStream.stream(source, windowSize);
     }
 
     /**
