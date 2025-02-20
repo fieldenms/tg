@@ -10,6 +10,11 @@ import java.io.IOException;
 
 public class RichTextJsonDeserialiser extends StdDeserializer<RichText> {
 
+    public static final String ERR_UNEXPECTED_NULL_IN_FIELD_FORMATTED_TEXT = "Unexpected null in field [formattedText] in object %s.";
+    public static final String ERR_UNEXPECTED_NULL_IN_FIELD_CORE_TEXT = "Unexpected null in field [coreText] in object %s.";
+    public static final String ERR_MISSING_FIELD = "Missing field [%s] in object %s.";
+    public static final String ERR_WAS_EXPECTING_STRING = "Expected string in field [%s] but was %s, in object %s.";
+
     public RichTextJsonDeserialiser() {
         super(RichText.class);
     }
@@ -25,21 +30,21 @@ public class RichTextJsonDeserialiser extends StdDeserializer<RichText> {
             return null;
         }
         if (formattedTextNode.isNull()) {
-            throw new DeserialisationException("Unexpected null in field [formattedText] in object %s".formatted(node.toPrettyString()));
+            throw new DeserialisationException(ERR_UNEXPECTED_NULL_IN_FIELD_FORMATTED_TEXT.formatted(node.toPrettyString()));
         }
         if (coreTextNode.isNull()) {
-            throw new DeserialisationException("Unexpected null in field [coreText] in object %s".formatted(node.toPrettyString()));
+            throw new DeserialisationException(ERR_UNEXPECTED_NULL_IN_FIELD_CORE_TEXT.formatted(node.toPrettyString()));
         }
 
-        final String formattedText = requireText(formattedTextNode, "formattedText", node);
-        final String coreText = requireText(coreTextNode, "coreText", node);
+        final String formattedText = requireText(formattedTextNode,  RichText.FORMATTED_TEXT, node);
+        final String coreText = requireText(coreTextNode, RichText.CORE_TEXT, node);
         return new RichText.Persisted(formattedText, coreText);
     }
 
     private static JsonNode requireField(final JsonNode node, final String name) {
         final var subNode = node.get(name);
         if (subNode == null) {
-            throw new DeserialisationException("Missing field [%s] in object %s".formatted(name, node.toPrettyString()));
+            throw new DeserialisationException(ERR_MISSING_FIELD.formatted(name, node.toPrettyString()));
         }
         return subNode;
     }
@@ -50,7 +55,7 @@ public class RichTextJsonDeserialiser extends StdDeserializer<RichText> {
     private static String requireText(final JsonNode node, final String fieldName, final JsonNode parentNode) {
         final String text = node.textValue();
         if (text == null) {
-            throw new DeserialisationException("Expected string in field [%s] but was %s, in object %s".formatted(
+            throw new DeserialisationException(ERR_WAS_EXPECTING_STRING.formatted(
                     fieldName, node.getNodeType(), parentNode.toPrettyString()));
         }
         return text;
