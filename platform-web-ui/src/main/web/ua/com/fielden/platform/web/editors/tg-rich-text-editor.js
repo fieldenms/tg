@@ -57,7 +57,7 @@ const customInputTemplate = html`
         height="[[_calcHeight(height, entityType, propertyName)]]"
         tabindex='0'>
     </tg-rich-text-input>
-    <iron-icon id="resizer" icon="tg-icons:resize-bottom-right" on-tap="_resetHeight" on-down="_makeInputUnselectable" on-up="_makeInputSelectable" on-track="_resizeInput" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>`;
+    <iron-icon id="resizer" icon="tg-icons:resize-bottom-right" on-tap="_resetHeight" on-down="_makeInputUnselectable" on-track="_resizeInput" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
@@ -223,18 +223,8 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         return parent;
     }
 
-    _makeInputUnselectable () {
-        this.$.input.classList.toggle("noselect", true);
-        this.$.input.makeEditable(false);
-        document.styleSheets[0].insertRule('* { cursor: ns-resize !important; }', 0); // override custom cursors in all application with resizing cursor
-    }
-
-    _makeInputSelectable () {
-        this.$.input.classList.toggle("noselect", false);
-        this.$.input.makeEditable(!this._disabled);
-        if (document.styleSheets.length > 0 && document.styleSheets[0].cssRules.length > 0) {
-            document.styleSheets[0].deleteRule(0);
-        }
+    _makeInputUnselectable (e) {
+        tearDownEvent(e);
     }
 
     _resetHeight(e) {
