@@ -16,7 +16,7 @@ import static ua.com.fielden.platform.error.Result.successful;
  * It is implicitly enabled for all {@link RichText} properties.
  * This validator can also be explicitly declared on a property, although the effect will be the same as in its absence.
  * <p>
- * This validator performs HTML sanitisation of formatted text, rejecting values that contain unsafe HTML.
+ * This validator simply returns the validation result for `newValue` or success if the value is `null`.
  */
 public final class RichTextValidator extends AbstractBeforeChangeEventHandler<RichText> {
 

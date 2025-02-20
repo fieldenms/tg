@@ -20,18 +20,22 @@ import java.util.Objects;
  * if there exists a corresponding static factory method in this class (e.g., {@link RichText#fromHtml(String)}.
  * It also does not contain information about the markup language used in the formatted text.
  * <p>
- * This representation is immutable.
+ * This representation is immutable and sanitisation/validation is performed upon its construction.
  * <p>
  * Properties with this type are subject to the following rules:
  * <ul>
  *   <li> {@link IsProperty#length()} applies to {@link #coreText}.
  * </ul>
- * Sanitisation of the markup is performed by {@link RichTextValidator}.
- * Therefore, it is possible to create {@link RichText} values that contain unsafe markup.
+ * Entity properties of this type attain validator {@link RichTextValidator}.
+ * It is possible to create {@link RichText} values that contain unsafe markup, and its `validationResult` will contain the relevant information.
  * <p>
- * Core text is obtained from the formatted text upon creating a {@link RichText} value.
+ * Core text is obtained from the formatted text upon creating a {@link RichText} value, but only if the input passes validation.
+ * Otherwise, the value of `coreText` is empty.
  */
 public sealed class RichText permits RichText.Persisted {
+
+    public static final String ERR_FORMATTED_TEXT_MUST_NOT_BE_NULL = "Argument [formattedText] must not be null.";
+    public static final String ERR_CORE_TEXT_MUST_NOT_BE_NULL = "Argument [coreText] must not be null.";
 
     public static final String FORMATTED_TEXT = "formattedText";
     public static final String CORE_TEXT = "coreText";
@@ -60,10 +64,10 @@ public sealed class RichText permits RichText.Persisted {
     // !!! KEEP THIS CONSTRUCTOR PACKAGE PRIVATE !!!
     RichText(final String formattedText, final String coreText, final Result validationResult) {
         if (formattedText == null) {
-            throw new InvalidArgumentException("Argument [formattedText] must not be null.");
+            throw new InvalidArgumentException(ERR_FORMATTED_TEXT_MUST_NOT_BE_NULL);
         }
         if (coreText == null) {
-            throw new InvalidArgumentException("Argument [coreText] must not be null.");
+            throw new InvalidArgumentException(ERR_CORE_TEXT_MUST_NOT_BE_NULL);
         }
         this.formattedText = formattedText;
         this.coreText = coreText;
