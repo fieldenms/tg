@@ -49,4 +49,10 @@ public class Source2BasedOnPersistentType extends AbstractSource2 implements ISo
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof Source2BasedOnPersistentType;
     }
+
+    @Override
+    public String toStringCompact() {
+        return toString();
+    }
+
 }

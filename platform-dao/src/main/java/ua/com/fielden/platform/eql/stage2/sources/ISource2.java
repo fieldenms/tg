@@ -35,4 +35,10 @@ public interface ISource2<T extends ISource3> extends ITransformableFromStage2To
     boolean isExplicit(); // i.e. explicitly declared as part of user query or calculated property expression.
 
     boolean isPartOfCalcProp(); // indicates that given source has been generated as part of calc-prop expression processing (i.e. has not been explicitly stated within user query).
+
+    /**
+     * Returns a compact representation of this object.
+     * Intended for error messages, logs, etc.
+     */
+    String toStringCompact();
 }
