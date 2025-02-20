@@ -393,7 +393,7 @@ function rgbToHex(rgbString) {
  * @param {Object} event keyboard event
  */
 function preventUnwantedKeyboradEvents(event) {
-    if (this.disabled || ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/)) {
+    if ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/) {
         event.preventDefault();
     }
 }
@@ -848,7 +848,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.addOwnKeyBinding('ctrl+u meta+u', '_createBulletList');
         this.addOwnKeyBinding('ctrl+o meta+o', '_createOrderedList');
         this.addOwnKeyBinding('esc', '_stopEditing');
-        this.addOwnKeyBinding('tab', '_tabHandler');
         this.keyEventTarget = this._getEditableContent();
         //Adjust key event handler to be able to process events from _editor when event was prevented
         const prevKeyBindingHandler = this._onKeyBindingEvent.bind(this);
@@ -1017,12 +1016,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
-    _tabHandler(event) {
-        if (this.disabled) {
-            this._editor.blur();
-        }
-    }
-
     _valueChanged(newValue) {
         if(this._editor && newValue !== getEditorHTMLText.bind(this)()) {
             this._editor.setHTML(newValue, false);
@@ -1093,6 +1086,18 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     _disabledChanged(newDisabled, _editor) {
         if (_editor) {
             this.makeEditable(!newDisabled);
+            const handlersToRemove = ["keydown", "keypress", "keyup"];
+            const handlers = _editor.wwEditor.view.input.eventHandlers;
+            handlersToRemove.forEach(handler => {
+                if (handlers[handler]) {
+                    if (newDisabled) {
+                        this._getEditableContent().removeEventListener(handler, handlers[handler]);
+                    } else {
+                        this._getEditableContent().addEventListener(handler, handlers[handler]);
+                    }
+                }
+                
+            });
         }
     }
 
