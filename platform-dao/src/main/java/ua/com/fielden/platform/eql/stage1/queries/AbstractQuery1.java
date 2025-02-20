@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage1.queries;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.stage1.*;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
@@ -50,6 +49,7 @@ import static ua.com.fielden.platform.eql.stage2.sundries.OrderBys2.EMPTY_ORDER_
 public abstract class AbstractQuery1 implements ToString.IFormattable {
 
     public static final String ERR_CANNOT_FIND_YIELD_FOR_ORDER_BY = "Cannot find yield [%s] used within order by operation.";
+    public static final String ERR_EMPTY_YIELDS = "Internal EQL error: empty list of yields.";
 
     public final Optional<IJoinNode1<? extends IJoinNode2<?>>> maybeJoinRoot;
     public final Conditions1 whereConditions;
@@ -120,18 +120,32 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         // it is important to enhance yields after orderings to enable functioning of 'orderBy().yield(..)' in application to properties rather than true yields
-        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource());
+        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource()).yields;
         return new QueryComponents2(Optional.of(joinRoot2), whereConditions2, enhancedYields2, groups2, orderings2);
     }
 
     /**
-     * Should add implicit yields, if required. This logic depends on a specific query kind.
-     *
-     * @param yields
-     * @param mainSource
-     * @return
+     * Enhances the specified yields. Enhancements that are performed are specific to each query kind.
      */
-    abstract protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource);
+    abstract protected EnhancedYields enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource);
+
+    /**
+     * Constrains the result of {@link #enhanceYields(Yields2, ISource2)} to be non-empty.
+     */
+    protected static class EnhancedYields {
+        final Yields2 yields;
+
+        protected EnhancedYields(final Yields2 yields) {
+            if (yields.isEmpty()) {
+                throw new EqlStage1ProcessingException(formatErrorEmptyYields());
+            }
+            this.yields = yields;
+        }
+
+        protected String formatErrorEmptyYields() {
+            return ERR_EMPTY_YIELDS;
+        }
+    }
 
     /**
      * Injects user-defined filtering conditions into the main source WHERE conditions.
@@ -147,7 +161,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
         if (originalConditions.ignore()) {
             return udfConditions2.ignore() ? EMPTY_CONDITIONS : udfConditions2;
         } else {
-            return udfConditions2.ignore() ? originalConditions : conditions(false, asList(asList(udfConditions2, originalConditions)));
+            return udfConditions2.ignore() ? originalConditions : conditions(false, List.of(asList(udfConditions2, originalConditions)));
         }
     }
 
@@ -156,7 +170,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
             return EMPTY_GROUP_BYS;
         }
 
-        final List<GroupBy2> enhanced = groupBys.groups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
+        final List<GroupBy2> enhanced = groupBys.groups().stream().map(AbstractQuery1::enhance).flatMap(List::stream).collect(Collectors.toList());
         return new GroupBys2(enhanced);
     }
 

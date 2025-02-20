@@ -31,8 +31,8 @@ public class SubQueryForExists1 extends AbstractQuery1 implements ITransformable
     }
 
     @Override
-    protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        return yields.getYields().isEmpty() ? nullYields : yields;
+    protected EnhancedYields enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+        return new EnhancedYields(yields.isEmpty() ? nullYields : yields);
     }
 
     @Override
