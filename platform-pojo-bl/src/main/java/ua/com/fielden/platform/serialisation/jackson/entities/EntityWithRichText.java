@@ -17,16 +17,16 @@ public class EntityWithRichText extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Title", desc = "Desc")
     @Ignore
-    private RichText text;
+    private RichText richText;
 
     @Observable
-    public EntityWithRichText setText(final RichText text) {
-        this.text = text;
+    public EntityWithRichText setRichText(final RichText richText) {
+        this.richText = richText;
         return this;
     }
 
-    public RichText getText() {
-        return text;
+    public RichText getRichText() {
+        return richText;
     }
 
 }

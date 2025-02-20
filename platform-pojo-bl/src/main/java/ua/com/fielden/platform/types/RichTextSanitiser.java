@@ -62,7 +62,7 @@ public final class RichTextSanitiser {
      *
      * @return Result of {@link RichText}
      */
-    static Result sanitiseMarkdown(final String input) {
+    static RichText sanitiseMarkdown(final String input) {
         final var lines = NEWLINE_PATTERN.splitAsStream(input).toList();
 
         // consider invalid if there are policy violations
@@ -90,13 +90,13 @@ public final class RichTextSanitiser {
 
         final var violations = sanitiser.violations();
         if (!violations.isEmpty()) {
-            return failure(input, "Input contains unsafe HTML:\n" +
-                                  enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
-                                          .collect(joining("\n")));
+            return new RichText(input, "", failure(input, "Input contains unsafe HTML:\n" +
+                                                           enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
+                                                           .collect(joining("\n"))));
         }
         else {
             final String coreText = RichTextAsMarkdownCoreTextExtractor.toCoreText(root);
-            return successful(new RichText(input, coreText));
+            return new RichText(input, coreText, successful());
         }
     }
 

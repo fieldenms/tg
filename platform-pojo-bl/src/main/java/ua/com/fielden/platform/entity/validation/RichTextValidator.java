@@ -24,19 +24,14 @@ public final class RichTextValidator extends AbstractBeforeChangeEventHandler<Ri
      * Prefix of the error message indicating unsafe HTML.
      * May be used in test assertions.
      */
-    public static final String PREFIX_ERR_UNSAFE_INPUT = RichTextSanitiser.STANDARD_ERROR_PREFIX;
+    public static final String ERR_PREFIX_UNSAFE_INPUT = RichTextSanitiser.STANDARD_ERROR_PREFIX;
 
     @Override
-    public Result handle(
-            final MetaProperty<RichText> property,
-            final RichText newValue,
-            final Set<Annotation> mutatorAnnotations)
-    {
+    public Result handle(final MetaProperty<RichText> property, final RichText newValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue == null) {
             return successful();
         }
-
-        return RichTextSanitiser.sanitiseHtml(newValue, RichTextSanitiser.standardErrorFormatter);
+        return newValue.getValidationResult();
     }
 
 }

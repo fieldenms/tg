@@ -3,8 +3,17 @@ package ua.com.fielden.platform.types;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class RichTextHtmlTest {
+
+    @Test
+    public void unsafe_RichText_has_emtpy_coreText() {
+        final var unsafeHtml = "<script> alert(1) </script><p>some text</p>";
+        final var richText = RichText.fromHtml(unsafeHtml);
+        assertThat(richText.formattedText()).isEqualTo(unsafeHtml);
+        assertThat(richText.coreText()).isEmpty();
+    }
 
     @Test
     public void inline_tags_that_apply_text_style_are_removed() {

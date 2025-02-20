@@ -28,36 +28,36 @@ public class RichTextValidatorTest {
     public void unsafe_RichText_fails_validation() {
         final var entity = factory.newEntity(EntityWithRichText.class);
 
-        entity.setText(RichText.fromHtml("<script> alert(1) </script>"));
-        assertFalse(entity.getProperty("text").isValid());
-        assertTrue(entity.getProperty("text").getFirstFailure().getMessage().startsWith(RichTextValidator.PREFIX_ERR_UNSAFE_INPUT));
+        entity.setRichText(RichText.fromHtml("<script> alert(1) </script>"));
+        assertFalse(entity.getProperty("richText").isValid());
+        assertTrue(entity.getProperty("richText").getFirstFailure().getMessage().startsWith(RichTextValidator.ERR_PREFIX_UNSAFE_INPUT));
 
-        entity.setText(RichText.fromHtml("safe"));
-        assertTrue(entity.getProperty("text").isValid());
+        entity.setRichText(RichText.fromHtml("safe"));
+        assertTrue(entity.getProperty("richText").isValid());
 
-        entity.setText(RichText.fromHtml("<script> alert(2) </script>"));
-        assertFalse(entity.getProperty("text").isValid());
-        assertTrue(entity.getProperty("text").getFirstFailure().getMessage().startsWith(RichTextValidator.PREFIX_ERR_UNSAFE_INPUT));
+        entity.setRichText(RichText.fromHtml("<script> alert(2) </script>"));
+        assertFalse(entity.getProperty("richText").isValid());
+        assertTrue(entity.getProperty("richText").getFirstFailure().getMessage().startsWith(RichTextValidator.ERR_PREFIX_UNSAFE_INPUT));
     }
 
     @Test
     public void safe_RichText_passes_validation() {
         final var entity = factory.newEntity(EntityWithRichText.class);
 
-        entity.setText(RichText.fromHtml("<p> hello world </p>"));
-        assertTrue(entity.getProperty("text").isValid());
+        entity.setRichText(RichText.fromHtml("<p> hello world </p>"));
+        assertTrue(entity.getProperty("richText").isValid());
     }
 
     @Test
     public void null_value_for_RichText_passes_validation() {
         final var entity = factory.newEntity(EntityWithRichText.class);
 
-        entity.setText(RichText.fromHtml("<script> alert(1) </script>"));
-        assertFalse(entity.getProperty("text").isValid());
-        assertTrue(entity.getProperty("text").getFirstFailure().getMessage().startsWith(RichTextValidator.PREFIX_ERR_UNSAFE_INPUT));
+        entity.setRichText(RichText.fromHtml("<script> alert(1) </script>"));
+        assertFalse(entity.getProperty("richText").isValid());
+        assertTrue(entity.getProperty("richText").getFirstFailure().getMessage().startsWith(RichTextValidator.ERR_PREFIX_UNSAFE_INPUT));
 
-        entity.setText(null);
-        assertTrue(entity.getProperty("text").isValid());
+        entity.setRichText(null);
+        assertTrue(entity.getProperty("richText").isValid());
     }
 
 }

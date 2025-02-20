@@ -155,9 +155,9 @@ public class PojoValueMatcherTest {
     @Test
     public void search_by_RichText_property_matches_against_core_text() {
         final var entities = List.of(
-                factory.newByKey(EntityWithRichText.class, "1").setText(RichText.fromHtml("The <b>blue</b> sky")),
-                factory.newByKey(EntityWithRichText.class, "2").setText(RichText.fromHtml("The<br>big<br><p>bang</p>")));
-        final var matcher = new PojoValueMatcher<>(entities, "text", entities.size());
+                factory.newByKey(EntityWithRichText.class, "1").setRichText(RichText.fromHtml("The <b>blue</b> sky")),
+                factory.newByKey(EntityWithRichText.class, "2").setRichText(RichText.fromHtml("The<br>big<br><p>bang</p>")));
+        final var matcher = new PojoValueMatcher<>(entities, "richText", entities.size());
 
         assertEquals("Incorrect matches.", List.of(entities.get(0)), matcher.findMatches("%blue sky%"));
         assertEquals("Incorrect matches.", List.of(entities.get(1)), matcher.findMatches("%big bang%"));

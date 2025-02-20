@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.validation.RichTextValidator;
+import ua.com.fielden.platform.error.Result;
 
 import java.util.Objects;
 
@@ -16,7 +17,7 @@ import java.util.Objects;
  * and is expressed in some markup language (e.g., Markdown, HTML).
  * <p>
  * This representation does not commit to a fixed markup language, values can be created for arbitrary markup languages,
- * provided that there exists a corresponding static factory method in this class (e.g., {@link RichText#fromHtml(String)}.
+ * if there exists a corresponding static factory method in this class (e.g., {@link RichText#fromHtml(String)}.
  * It also does not contain information about the markup language used in the formatted text.
  * <p>
  * This representation is immutable.
@@ -47,14 +48,17 @@ public sealed class RichText permits RichText.Persisted {
     @Title(value = "Core Text", desc = "A text field with all HTML tags removed, intended for use in search functions and inline display, such as in EGI.")
     private final String coreText;
 
+    private final Result validationResult;
+
     /**
      * This constructor does not validate its arguments, thus <b>IT MUST BE KEPT PACKAGE PRIVATE</b>.
      *
-     * @param formattedText text with markup
-     * @param coreText      text without markup (its length is always less than or equal to that of formatted text)
+     * @param formattedText     text with markup
+     * @param coreText          text without markup (its length is always less than or equal to that of formatted text)
+     * @param validationResult  the result of validation
      */
     // !!! KEEP THIS CONSTRUCTOR PACKAGE PRIVATE !!!
-    RichText(final String formattedText, final String coreText) {
+    RichText(final String formattedText, final String coreText, final Result validationResult) {
         if (formattedText == null) {
             throw new InvalidArgumentException("Argument [formattedText] must not be null.");
         }
@@ -63,6 +67,11 @@ public sealed class RichText permits RichText.Persisted {
         }
         this.formattedText = formattedText;
         this.coreText = coreText;
+        this.validationResult = validationResult;
+    }
+
+    public Result getValidationResult() {
+        return validationResult;
     }
 
     // NOTE: If RichText with HTML as markup is accepted completely, Markdown support can potentially be removed.
@@ -71,8 +80,7 @@ public sealed class RichText permits RichText.Persisted {
      * Throws an exception if embedded HTML is deemed to be unsafe.
      */
     public static RichText fromMarkdown(final String input) {
-        final RichText richText = RichTextSanitiser.sanitiseMarkdown(input).getInstanceOrElseThrow();
-        return richText;
+        return RichTextSanitiser.sanitiseMarkdown(input);
     }
 
     /**
@@ -96,8 +104,13 @@ public sealed class RichText permits RichText.Persisted {
             };
         }
 
-        final var coreText = RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.extension);
-        return new RichText(input, coreText);
+        // Validate the input before parsing it.
+        // Invalid inputs should not produce
+        final var validationResult = RichTextSanitiser.sanitiseHtml(input);
+        final var coreText = validationResult.isSuccessful()
+                             ? RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.extension)
+                             : "";
+        return new RichText(input, coreText, validationResult);
     }
 
     /**
@@ -106,6 +119,9 @@ public sealed class RichText permits RichText.Persisted {
      * because it uses the provided core text instead of extracting it from the formatted text.
      */
     static final class Persisted extends RichText {
+
+        public static final Result SUCCESSFUL = Result.successful();
+
         /**
          * This constructor does not validate its arguments.
          *
@@ -113,7 +129,7 @@ public sealed class RichText permits RichText.Persisted {
          * @param coreText      text without markup (its length is always less than or equal to that of formatted text)
          */
         Persisted(final String formattedText, final String coreText) {
-            super(formattedText, coreText);
+            super(formattedText, coreText, SUCCESSFUL);
         }
 
         @Override
@@ -160,7 +176,7 @@ public sealed class RichText permits RichText.Persisted {
 
     @Override
     public final String toString() {
-        return "RichText[\n%s\n]".formatted(formattedText);
+        return "RichText[%n%s%n]".formatted(formattedText);
     }
 
 }
