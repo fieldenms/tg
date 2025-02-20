@@ -6,7 +6,6 @@ import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -68,14 +67,18 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     }
 
     @Override
-    protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (!yields.getYields().isEmpty()) {
-            return yields;
+    protected EnhancedYields enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+        final Yields2 result;
+
+        if (!yields.isEmpty()) {
+            result = yields;
         } else if (mainSource.querySourceInfo().getProps().containsKey(ID)) {
-            return new Yields2(listOf(new Yield2(new Prop2(mainSource, listOf(mainSource.querySourceInfo().getProps().get(ID))), ABSENT_ALIAS, false)));
+            result = new Yields2(listOf(new Yield2(new Prop2(mainSource, listOf(mainSource.querySourceInfo().getProps().get(ID))), ABSENT_ALIAS, false)));
         } else {
             throw new EqlStage1ProcessingException(ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID);
         }
+
+        return new EnhancedYields(result);
     }
 
     @Override

@@ -85,4 +85,13 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
                 .add("models", models);
     }
 
+    @Override
+    public String toStringCompact() {
+        // It is not simple to determine whether the full representation will be compact, so let's exclude `models`.
+        return ToString.standard
+                .toString(this.getClass())
+                .add("sourceType", sourceType().getSimpleName())
+                .$();
+    }
+
 }
