@@ -5,6 +5,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText.Property;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.RichTextHtmlSanitisationTest;
@@ -14,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.validation.UnhappyValidator.ERR_UNHAPPY_VALIDATOR;
+import static ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText.Property.richText;
 
 /**
  * A test case for validation with {@link DefaultValidatorForValueTypeWithValidation}.
@@ -34,16 +36,18 @@ public class RichTextValidatorTest {
 
         final RichText richText = RichText.fromHtml("<script> alert(1) </script>");
         assertThat(richText).isInstanceOf(RichText.Invalid.class);
+        assertFalse(richText.isValid().isSuccessful());
         entity.setRichText(richText);
-        assertFalse(entity.getProperty("richText").isValid());
-        assertThat(entity.getProperty("richText").getFirstFailure()).isEqualTo(richText.isValid());
+        assertFalse(entity.getProperty(Property.richText).isValid());
+        assertThat(entity.getProperty(Property.richText).getFirstFailure()).isEqualTo(richText.isValid());
 
         entity.setRichText(RichText.fromHtml("safe"));
-        assertTrue(entity.getProperty("richText").isValid());
+        assertTrue(entity.getProperty(Property.richText).isValid());
 
         entity.setRichText(RichText.fromHtml("<script> alert(2) </script>"));
-        assertFalse(entity.getProperty("richText").isValid());
-        assertTrue(entity.getProperty("richText").getFirstFailure().getMessage().startsWith(RichTextSanitiser.STANDARD_ERROR_PREFIX));
+        assertFalse(entity.getProperty(Property.richText).isValid());
+        assertThat(entity.getProperty(Property.richText).getFirstFailure().getMessage())
+                .startsWith(RichTextSanitiser.STANDARD_ERROR_PREFIX);
     }
 
     @Test
@@ -51,7 +55,7 @@ public class RichTextValidatorTest {
         final var entity = factory.newEntity(EntityWithRichText.class);
 
         entity.setRichText(RichText.fromHtml("<p> hello world </p>"));
-        assertTrue(entity.getProperty("richText").isValid());
+        assertTrue(entity.getProperty(Property.richText).isValid());
     }
 
     @Test
@@ -59,8 +63,9 @@ public class RichTextValidatorTest {
         final var entity = factory.newEntity(EntityWithRichText.class);
 
         entity.setRichText(RichText.fromHtml("<script> alert(1) </script>"));
-        assertFalse(entity.getProperty("richText").isValid());
-        assertTrue(entity.getProperty("richText").getFirstFailure().getMessage().startsWith(RichTextSanitiser.STANDARD_ERROR_PREFIX));
+        assertFalse(entity.getProperty(Property.richText).isValid());
+        assertThat(entity.getProperty(Property.richText).getFirstFailure().getMessage())
+                .startsWith(RichTextSanitiser.STANDARD_ERROR_PREFIX);
 
         entity.setRichText(null);
         assertTrue(entity.getProperty("richText").isValid());
@@ -69,15 +74,16 @@ public class RichTextValidatorTest {
     @Test
     public void required_RichText_property_setting_invalid_value_reports_validation_error_and_not_requiredness_error() {
         final var entity = factory.newEntity(EntityWithRichText.class);
-        entity.getProperty("richText").setRequired(true);
+        entity.getProperty(Property.richText).setRequired(true);
 
         final var invalidRichText = RichText.fromHtml("<script> alert(1) </script>");
         assertFalse(invalidRichText.isValid().isSuccessful());
-        assertTrue(RichText.Invalid.class.isAssignableFrom(invalidRichText.getClass()));
         entity.setRichText(invalidRichText);
-        assertFalse(entity.getProperty("richText").isValid());
-        assertThat(entity.getProperty("richText").getFirstFailure()).isEqualTo(invalidRichText.isValid());
-        assertTrue(entity.getProperty("richText").getFirstFailure().getMessage().startsWith(RichTextSanitiser.STANDARD_ERROR_PREFIX));
+        assertFalse(entity.getProperty(Property.richText).isValid());
+        assertThat(entity.getProperty(Property.richText).getFirstFailure())
+                .isEqualTo(invalidRichText.isValid());
+        assertThat(entity.getProperty(Property.richText).getFirstFailure().getMessage())
+                .startsWith(RichTextSanitiser.STANDARD_ERROR_PREFIX);
     }
 
     @Test
@@ -86,34 +92,41 @@ public class RichTextValidatorTest {
         entity.getProperty("richText").setRequired(true);
 
         final var blankRichText = RichText.fromHtml("          ");
+        assertThat(blankRichText.formattedText()).isBlank();
         assertTrue(blankRichText.isValid().isSuccessful());
         entity.setRichText(blankRichText);
-        assertFalse(entity.getProperty("richText").isValid());
-        assertThat(entity.getProperty("richText").getFirstFailure().getMessage()).isEqualTo("Required property [Title] is not specified for entity [Entity With Rich Text].");
+        assertFalse(entity.getProperty(Property.richText).isValid());
+        assertThat(entity.getProperty(Property.richText).getFirstFailure().getMessage())
+                .isEqualTo("Required property [Title] is not specified for entity [Entity With Rich Text].");
 
         final var richText = RichText.fromHtml("<b>some bold text</b>");
         assertTrue(richText.isValid().isSuccessful());
         entity.setRichText(richText);
-        assertTrue(entity.getProperty("richText").isValid());
+        assertTrue(entity.getProperty(Property.richText).isValid());
         assertThat(richText).isEqualTo(entity.getRichText());
 
         entity.setRichText(null);
-        assertFalse(entity.getProperty("richText").isValid());
-        assertThat(entity.getProperty("richText").getFirstFailure().getMessage()).isEqualTo("Required property [Title] is not specified for entity [Entity With Rich Text].");
+        assertFalse(entity.getProperty(Property.richText).isValid());
+        assertThat(entity.getProperty(Property.richText).getFirstFailure().getMessage())
+                .isEqualTo("Required property [Title] is not specified for entity [Entity With Rich Text].");
     }
 
     @Test
     public void default_RichText_validator_happens_before_any_other_BeforeChange_validation() {
         final var entity = factory.newEntity(EntityWithRichText.class);
+
         final var invalidRichText = RichText.fromHtml("<script> alert(1) </script>");
         entity.setUnhappyRichText(invalidRichText);
-        assertFalse(entity.getProperty("unhappyRichText").isValid());
-        assertThat(entity.getProperty("unhappyRichText").getFirstFailure()).isEqualTo(invalidRichText.isValid());
+        assertFalse(entity.getProperty(Property.unhappyRichText).isValid());
+        assertThat(entity.getProperty(Property.unhappyRichText).getFirstFailure())
+                .isEqualTo(invalidRichText.isValid());
 
         final var richText = RichText.fromHtml("<b>some bold text</b>");
         assertTrue(richText.isValid().isSuccessful());
         entity.setUnhappyRichText(richText);
-        assertFalse(entity.getProperty("unhappyRichText").isValid());
-        assertThat(entity.getProperty("unhappyRichText").getFirstFailure().getMessage()).isEqualTo(ERR_UNHAPPY_VALIDATOR);
+        assertFalse(entity.getProperty(Property.unhappyRichText).isValid());
+        assertThat(entity.getProperty(Property.unhappyRichText).getFirstFailure().getMessage())
+                .isEqualTo(ERR_UNHAPPY_VALIDATOR);
     }
+
 }

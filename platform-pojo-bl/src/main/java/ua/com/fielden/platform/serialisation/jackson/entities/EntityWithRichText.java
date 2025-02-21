@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.DefaultValidatorForValueTypeWithValidation;
 import ua.com.fielden.platform.entity.validation.UnhappyValidator;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.types.RichText;
 
 /**
@@ -16,6 +17,15 @@ import ua.com.fielden.platform.types.RichText;
 @KeyType(String.class)
 @DescTitle("Description")
 public class EntityWithRichText extends AbstractEntity<String> {
+
+    public enum Property implements IConvertableToPath {
+        richText, unhappyRichText;
+
+        @Override
+        public String toPath() {
+            return name();
+        }
+    }
 
     @IsProperty
     @MapTo
