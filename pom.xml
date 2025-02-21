@@ -20,6 +20,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>4.13.2</junit.version>
+        <assertj.version>3.27.3</assertj.version>
         <posgresql.version>42.7.4</posgresql.version>
         <mssql.version>12.6.2.jre11</mssql.version>
         <javapoet.version>1.13.0</javapoet.version>

@@ -272,58 +272,48 @@ public class EntityResourceUtils {
             final ICompanionObjectFinder coFinder,
             final boolean isEntityStale, final boolean isCriteriaEntity)
     {
-        try {
-            final Optional<String> optActiveProp = ofNullable((String) valAndOrigVal.get("activeProperty"));
-            if (apply) {
-                // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
-                final String valueToBeAppliedName = applyOriginalValue ? "origVal" : "val";
-                final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
-                final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), optActiveProp, coFinder);
-                final Object valueToBeApplied;
-                if (valToBeApplied != null && convertedValue == null) {
-                    final Class<?> propType = determinePropertyType(type, name);
-                    if (isEntityType(propType)) {
-                        // here valToBeApplied must be string; look at 'convert' method with 'reflectedValue' parameter always string for entity-typed 'propertyType'
-                        valueToBeApplied = createMockNotFoundEntity((Class<AbstractEntity<?>>) propType, (String) valToBeApplied);
-                    } else {
-                        valueToBeApplied = convertedValue;
-                    }
+        final Optional<String> optActiveProp = ofNullable((String) valAndOrigVal.get("activeProperty"));
+        if (apply) {
+            // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
+            final String valueToBeAppliedName = applyOriginalValue ? "origVal" : "val";
+            final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
+            final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), optActiveProp, coFinder);
+            final Object valueToBeApplied;
+            if (valToBeApplied != null && convertedValue == null) {
+                final Class<?> propType = determinePropertyType(type, name);
+                if (isEntityType(propType)) {
+                    // here valToBeApplied must be string; look at 'convert' method with 'reflectedValue' parameter always string for entity-typed 'propertyType'
+                    valueToBeApplied = createMockNotFoundEntity((Class<AbstractEntity<?>>) propType, (String) valToBeApplied);
                 } else {
                     valueToBeApplied = convertedValue;
                 }
-                validateAnd(() -> {
-                    // Value application should be enforced.
-                    // This is necessary not only for 'touched unmodified' properties (made earlier), but also for 'touched modified' and 'untouched modified' (new logic, 2017-12).
-                    // This is necessary because without enforcement, property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
-                    // This is due to the fact that 'modified' property value is always different from original value, but could be equal to the actual value of the property immediately before application.
-                    // This situation occurs where the property was modified indirectly from definers of other properties in method 'apply'.
-                    // 'enforce == true' guarantees that property application with validators / definers will always be actioned.
-                    entity.getProperty(name).setValue(valueToBeApplied, true);
-                }, () -> {
-                    return valueToBeApplied;
-                }, () -> {
-                    return applyOriginalValue ?
-                            valueToBeApplied :
-                            convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
-                }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
             } else {
-                // in case where no application is needed (unmodified untouched) the value should be validated only
-                validateAnd(() -> {
-                    // do nothing
-                }, () -> {
-                    return applyOriginalValue
-                            ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder)
-                            : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), optActiveProp, coFinder);
-                }, () -> {
-                    return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
-                }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                valueToBeApplied = convertedValue;
             }
-        } catch (final RuntimeException exception) {
-            // Generally speaking, it is not expected to receive any exceptions in this code i.e. the exception is thrown in cases of yet unsupported conversions etc.
-            // However, some edge-case conversions (like in Rich Text) may fail.
-            // These conversion errors need to be associated with property as validation errors.
-            entity.getProperty(name).setDomainValidationResult(exception instanceof Result result ? result : failure(exception));
-            logger.error(exception.getMessage(), exception);
+            validateAnd(() -> {
+                // Value application should be enforced.
+                // This is necessary not only for 'touched unmodified' properties (made earlier), but also for 'touched modified' and 'untouched modified' (new logic, 2017-12).
+                // This is necessary because without enforcement, property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
+                // This is due to the fact that 'modified' property value is always different from original value, but could be equal to the actual value of the property immediately before application.
+                // This situation occurs where the property was modified indirectly from definers of other properties in method 'apply'.
+                // 'enforce == true' guarantees that property application with validators / definers will always be actioned.
+                entity.getProperty(name).setValue(valueToBeApplied, true);
+            }, () -> {
+                return valueToBeApplied;
+            }, () -> {
+                return applyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
+            }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+        } else {
+            // in case where no application is needed (unmodified untouched) the value should be validated only
+            validateAnd(() -> {
+                // do nothing
+            }, () -> {
+                return applyOriginalValue
+                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder)
+                        : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), optActiveProp, coFinder);
+            }, () -> {
+                return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
+            }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
         }
     }
 

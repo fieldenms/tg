@@ -194,7 +194,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
                 modelAsEntity(EntityWithRichText.class);
         final var entity = co(EntityWithRichText.class).getEntity(from(query).model());
         assertNotNull(entity);
-        assertTrue(richText.equalsByText(entity.getText()));
+        assertEquals(richText, entity.getText());
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

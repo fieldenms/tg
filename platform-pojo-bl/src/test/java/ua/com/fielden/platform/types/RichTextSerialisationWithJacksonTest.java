@@ -58,9 +58,9 @@ public class RichTextSerialisationWithJacksonTest {
 
         assertNotNull(restoredEntity);
         assertNotSame(entity, restoredEntity);
-        assertTrue(entity.getText().equalsByText(restoredEntity.getText()));
-        assertFalse(restoredEntity.getProperty("text").isChangedFromOriginal());
-        assertFalse(restoredEntity.getProperty("text").isDirty());
+        assertEquals(entity.getRichText(), restoredEntity.getRichText());
+        assertFalse(restoredEntity.getProperty(EntityWithRichText.Property.richText).isChangedFromOriginal());
+        assertFalse(restoredEntity.getProperty(EntityWithRichText.Property.richText).isDirty());
     }
 
     @Test
@@ -71,9 +71,25 @@ public class RichTextSerialisationWithJacksonTest {
 
         assertNotNull(restoredEntity);
         assertNotSame(entity, restoredEntity);
-        assertTrue(entity.getText().equalsByText(restoredEntity.getText()));
-        assertFalse(restoredEntity.getProperty("text").isChangedFromOriginal());
-        assertFalse(restoredEntity.getProperty("text").isDirty());
+        assertEquals(entity.getRichText(), restoredEntity.getRichText());
+        assertFalse(restoredEntity.getProperty(EntityWithRichText.Property.richText).isChangedFromOriginal());
+        assertFalse(restoredEntity.getProperty(EntityWithRichText.Property.richText).isDirty());
+    }
+
+    /**
+     * Serialising and then deserialising an entity with an invalid value for a RichText property should result in the property value being {@code null}.
+     */
+    @Test
+    public void serialisation_of_invalid_RichText() {
+        final var richText = RichText.fromHtml("<script> alert(1) </script>");
+        final var entity = factory.createEntityWithRichText(richText);
+        final var restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithRichText.class);
+
+        assertNotNull(restoredEntity);
+        assertNotSame(entity, restoredEntity);
+        assertNull(restoredEntity.getRichText());
+        assertFalse(restoredEntity.getProperty(EntityWithRichText.Property.richText).isChangedFromOriginal());
+        assertFalse(restoredEntity.getProperty(EntityWithRichText.Property.richText).isDirty());
     }
 
 }
