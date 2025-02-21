@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.types;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.commonmark.node.Node;
 import org.commonmark.parser.IncludeSourceSpans;
 import org.commonmark.parser.Parser;
@@ -128,6 +129,24 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         else {
             return new Invalid(validationResult);
         }
+    }
+
+    /**
+     * Creates {@link RichText} from the input, treating it as plain text (HTML special characters are escaped).
+     * The result should always be valid (minus implementation errors).
+     */
+    public static RichText fromPlainText(final String input) {
+        final var escapedInput = escapeAsHtml(input);
+        return RichTextSanitiser.sanitiseHtml(escapedInput).getInstanceOrElseThrow();
+    }
+
+    /**
+     * Supports HTML 4 and HTML 5.
+     *
+     * @see <a href="https://www.w3.org/TR/2014/NOTE-html5-diff-20141209/#syntax">Differences between HTML 4 and 5</a>.
+     */
+    private static String escapeAsHtml(final String input) {
+        return StringEscapeUtils.escapeHtml4(input);
     }
 
     /**

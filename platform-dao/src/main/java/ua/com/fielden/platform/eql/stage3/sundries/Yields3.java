@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
+import com.google.common.collect.ImmutableSortedMap;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
@@ -10,17 +11,28 @@ import ua.com.fielden.platform.utils.ToString;
 import java.util.Collection;
 import java.util.List;
 import java.util.SortedMap;
-import java.util.function.Function;
+import java.util.TreeMap;
 
-import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
-import static java.util.Comparator.naturalOrder;
+import static java.util.Collections.unmodifiableSortedMap;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
 public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.IFormattable {
 
     public Yields3(final List<Yield3> yields) {
-        this(yields.stream().collect(toImmutableSortedMap(naturalOrder(), Yield3::alias, Function.identity())));
+        this(makeYieldsMap(yields));
+    }
+
+    private static SortedMap<String, Yield3> makeYieldsMap(final List<Yield3> yields) {
+        // We need to support duplicate map keys, hence manual map population.
+        if (yields.isEmpty()) {
+            return ImmutableSortedMap.of();
+        }
+        else {
+            final var map = new TreeMap<String, Yield3>();
+            yields.forEach(y -> map.put(y.alias(), y));
+            return unmodifiableSortedMap(map);
+        }
     }
 
     public boolean isEmpty() {

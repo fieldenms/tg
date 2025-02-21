@@ -55,9 +55,9 @@ const customInputTemplate = html`
         on-blur="_outFocus"
         min-height="[[minHeight]]"
         height="[[_calcHeight(height, entityType, propertyName)]]"
-        tabindex='0'>
+        tabindex$='[[_tabIndex(disabled)]]'>
     </tg-rich-text-input>
-    <iron-icon id="resizer" icon="tg-icons:resize-bottom-right" on-tap="_resetHeight" on-down="_makeInputUnselectable" on-track="_resizeInput" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>`;
+    <iron-icon id="resizer" icon="tg-icons:resize-bottom-right" on-tap="_resetHeight" on-down="_makeInputUnselectable" on-up="_makeInputSelectable" on-track="_resizeInput" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
@@ -223,8 +223,16 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         return parent;
     }
 
-    _makeInputUnselectable (e) {
+    _makeInputUnselectable(e) {
         tearDownEvent(e);
+        document.styleSheets[0].insertRule('* { cursor: ns-resize !important; }', 0); // override custom cursors in all application with resizing cursor
+    }
+
+    _makeInputSelectable(e) {
+        tearDownEvent(e);
+        if (document.styleSheets.length > 0 && document.styleSheets[0].cssRules.length > 0) {
+            document.styleSheets[0].deleteRule(0);
+        }
     }
 
     _resetHeight(e) {
@@ -298,6 +306,14 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         return this.reflector().equalsEx(_editingValue, this._transformedOriginalEditingValue === null ? _originalEditingValue : this._transformedOriginalEditingValue);
     }
 
+    /**
+     * Calculates tab index attribute for rich text input based on disabled state.
+     * 
+     * @param {Boolean} disabled determines whether editor is disabled or not
+     */
+    _tabIndex(disabled) {
+        return disabled ? "-1": "0";
+    }
 }
 
 customElements.define('tg-rich-text-editor', TgRichTextEditor);

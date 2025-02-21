@@ -295,12 +295,12 @@ public final class StringToRichTextMigration {
         }
 
         private void generateInitialMigration(final Consumer<? super String> sqlConsumer) {
-            sqlConsumer.accept("""
+            sqlConsumer.accept(sqlComment("""
             
             ***** IMPORTANT *****
             To ensure correctness of the rollback script, it is necessary to record the date and time when this script (stage 1) is executed.
             
-            """);
+            """));
 
             // 1. Add a column for each RichText component.
             sqlConsumer.accept(sqlComment("*** Add columns for RichText components."));

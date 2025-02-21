@@ -46,11 +46,15 @@ createStyleModule('tg-rich-text-styles', `
         margin-top: 0 !important;
         top: 9px !important; /* ~(10px or 9px depending on vertical align) = 24px(lineheight)/2 - 5px(point height)/2 */
     }
+    .toastui-editor-contents[contenteditable="false"] .task-list-item,
+    .toastui-editor-contents[contenteditable="false"] .task-list-item:before {
+        cursor: default; /*Need to set this style to dispaly default cursor for task list item in disabled editor*/
+    }
     .toastui-editor-contents .task-list-item {
         cursor: pointer; /*Need to set this style to display pointer cursor on checkboxes of task lins on Safari*/
     }
-    .toastui-editor-contents .task-list-item * {
-        cursor: auto; /*Set automatic cusrsor  on any element of task list to make pointer cursor available only on checkbox*/
+    .toastui-editor-contents .task-list-item>p {
+         cursor: text; /*Set automatic cusrsor  on any element of task list to make pointer cursor available only on checkbox*/
     }
     .toastui-editor-contents :not(table){
         line-height: 24px;

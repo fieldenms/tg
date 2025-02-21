@@ -339,12 +339,13 @@ function isPositionInBox(style, offsetX, offsetY) {
 }
 
 /**
- * Focuses rich text editor on keyboard event that doesn't includes any functional key except shift key.
+ * Focuses rich text editor on keyboard event that doesn't includes any functional key except shift key, and then inserts the character that was pressed.
+ * This function also takes into account the disabled state of input.
  * 
  * @param {Object} event keyboard event
  */
 function focusOnKeyDown(event) {
-    if ((event.keyCode === 13 || (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey)) && !this.shadowRoot.activeElement) {
+    if (!this.disabled && (event.keyCode === 13 || (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey)) && !this.shadowRoot.activeElement) {
         this._editor.moveCursorToStart(true);
         if (event.key.length === 1) {
             setTimeout(() => {this._editor.insertText(event.key)}, 1);
@@ -389,11 +390,12 @@ function rgbToHex(rgbString) {
 
 /**
  * Prevents ctrl+a event. This is used to handle select all action by tg-rich-text-input element.
+ * Also it prevents all keyboard events except 'tab' key if this input is disabled.
  * 
  * @param {Object} event keyboard event
  */
 function preventUnwantedKeyboradEvents(event) {
-    if ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/) {
+    if ((this.disabled && event.keyCode !== 9) || ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/)) {
         event.preventDefault();
     }
 }
@@ -852,7 +854,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         //Adjust key event handler to be able to process events from _editor when event was prevented
         const prevKeyBindingHandler = this._onKeyBindingEvent.bind(this);
         this._onKeyBindingEvent = function (keyBindings, event) {
-            if (!this.disabled || event.keyCode === 9) {
+            if (!this.disabled) {
                 Object.defineProperty(event, 'defaultPrevented', {value: false});
                 prevKeyBindingHandler(keyBindings, event);
             }

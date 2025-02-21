@@ -317,12 +317,54 @@ After quote.
         assertCoreText("hello world", "hello \n<p> world </p>");
     }
 
+    @Test
+    public void html_entities_are_escaped_in_RichText_from_plain_text() {
+        assertPlainText("bob & alice")
+                .formattedTextEquals("bob &amp; alice")
+                .coreTextEquals("bob & alice");
+        assertPlainText("boom!").coreTextEquals("boom!");
+        assertPlainText("user@mail.host").coreTextEquals("user@mail.host");
+        assertPlainText("https://domain.org").coreTextEquals("https://domain.org");
+        assertPlainText("<b> one </b>")
+                .formattedTextEquals("&lt;b&gt; one &lt;/b&gt;")
+                .coreTextEquals("<b> one </b>");
+        assertPlainText("<script> alert(1) </script>")
+                .formattedTextEquals("&lt;script&gt; alert(1) &lt;/script&gt;")
+                .coreTextEquals("<script> alert(1) </script>");
+    }
+
     private static void assertCoreText(final String expected, final String input) {
         assertEquals(expected, RichText.fromHtml(input).coreText());
     }
 
     private static void assertCoreTextId(final String input) {
         assertCoreText(input, input);
+    }
+
+    private static RichTextAssertor assertRichText(final RichText richText) {
+        return new RichTextAssertor(richText);
+    }
+
+    private static RichTextAssertor assertPlainText(final String input) {
+        return new RichTextAssertor(RichText.fromPlainText(input));
+    }
+
+    private static final class RichTextAssertor {
+        private final RichText richText;
+
+        private RichTextAssertor(final RichText richText) {
+            this.richText = richText;
+        }
+
+        public RichTextAssertor formattedTextEquals(final String expected) {
+            assertEquals("Unexpected formatted text", expected, richText.formattedText());
+            return this;
+        }
+
+        public RichTextAssertor coreTextEquals(final String expected) {
+            assertEquals("Unexpected core text", expected, richText.coreText());
+            return this;
+        }
     }
 
 }
