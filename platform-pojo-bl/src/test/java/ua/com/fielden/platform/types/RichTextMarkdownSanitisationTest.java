@@ -142,19 +142,19 @@ public class RichTextMarkdownSanitisationTest {
     }
 
     private void assertSanitizationFailure(final String input) {
-        assertFalse(RichTextSanitiser.sanitiseMarkdown(input).getValidationResult().isSuccessful());
+        assertFalse(RichTextSanitiser.sanitiseMarkdown(input).isSuccessful());
     }
 
     private void assertSanitizationSuccess(final String input) {
-        final Result result = RichTextSanitiser.sanitiseMarkdown(input).getValidationResult();
+        final Result result = RichTextSanitiser.sanitiseMarkdown(input);
         if (!result.isSuccessful()) {
             fail(result.getMessage());
         }
     }
 
     private void assertAfterSanitization(final String expected, final String input) {
-        final var richText = RichTextSanitiser.sanitiseMarkdown(input);
-        final var result = richText.getValidationResult();
+        final var richText = RichText.fromMarkdown(input);
+        final var result = richText.isValid();
         if (!result.isSuccessful()) {
             fail(result.getMessage());
         } else {

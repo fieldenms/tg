@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.validation;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.types.IWithValidation;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.RichTextSanitiser;
 
@@ -18,20 +19,13 @@ import static ua.com.fielden.platform.error.Result.successful;
  * <p>
  * This validator simply returns the validation result for `newValue` or success if the value is `null`.
  */
-public final class RichTextValidator extends AbstractBeforeChangeEventHandler<RichText> {
-
-    /**
-     * Prefix of the error message indicating unsafe HTML.
-     * May be used in test assertions.
-     */
-    public static final String ERR_PREFIX_UNSAFE_INPUT = RichTextSanitiser.STANDARD_ERROR_PREFIX;
+public final class DefaultValidatorForValueTypeWithValidation extends AbstractBeforeChangeEventHandler<IWithValidation> {
 
     @Override
-    public Result handle(final MetaProperty<RichText> property, final RichText newValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(MetaProperty<IWithValidation> property, IWithValidation newValue, Set<Annotation> mutatorAnnotations) {
         if (newValue == null) {
             return successful();
         }
-        return newValue.getValidationResult();
+        return newValue.isValid();
     }
-
 }

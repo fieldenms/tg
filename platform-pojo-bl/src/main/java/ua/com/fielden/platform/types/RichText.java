@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.types;
 
+import org.commonmark.node.Node;
+import org.commonmark.parser.IncludeSourceSpans;
+import org.commonmark.parser.Parser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -7,7 +10,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
-import ua.com.fielden.platform.entity.validation.RichTextValidator;
+import ua.com.fielden.platform.entity.validation.DefaultValidatorForValueTypeWithValidation;
 import ua.com.fielden.platform.error.Result;
 
 import java.util.Objects;
@@ -26,19 +29,23 @@ import java.util.Objects;
  * <ul>
  *   <li> {@link IsProperty#length()} applies to {@link #coreText}.
  * </ul>
- * Entity properties of this type attain validator {@link RichTextValidator}.
+ * Entity properties of this type attain validator {@link DefaultValidatorForValueTypeWithValidation}.
  * It is possible to create {@link RichText} values that contain unsafe markup, and its `validationResult` will contain the relevant information.
  * <p>
  * Core text is obtained from the formatted text upon creating a {@link RichText} value, but only if the input passes validation.
  * Otherwise, the value of `coreText` is empty.
  */
-public sealed class RichText permits RichText.Persisted {
+public sealed class RichText implements IWithValidation permits RichText.Persisted, RichText.Invalid {
 
     public static final String ERR_FORMATTED_TEXT_MUST_NOT_BE_NULL = "Argument [formattedText] must not be null.";
     public static final String ERR_CORE_TEXT_MUST_NOT_BE_NULL = "Argument [coreText] must not be null.";
+    public static final String ERR_FORMATTED_TEXT_MUST_BE_NULL = "Argument [formattedText] must be null.";
+    public static final String ERR_CORE_TEXT_MUST_BE_NULL = "Argument [coreText] must be null.";
 
     public static final String FORMATTED_TEXT = "formattedText";
     public static final String CORE_TEXT = "coreText";
+
+    private static final Result SUCCESSFUL = Result.successful();
 
     @IsProperty(length = Integer.MAX_VALUE)
     @MapTo
@@ -61,20 +68,31 @@ public sealed class RichText permits RichText.Persisted {
      * @param coreText          text without markup (its length is always less than or equal to that of formatted text)
      * @param validationResult  the result of validation
      */
-    // !!! KEEP THIS CONSTRUCTOR PACKAGE PRIVATE !!!
-    RichText(final String formattedText, final String coreText, final Result validationResult) {
-        if (formattedText == null) {
-            throw new InvalidArgumentException(ERR_FORMATTED_TEXT_MUST_NOT_BE_NULL);
+    // !!! KEEP THIS CONSTRUCTOR PRIVATE !!!
+    private RichText(final String formattedText, final String coreText, final Result validationResult) {
+        if (validationResult.isSuccessful()) {
+            if (formattedText == null) {
+                throw new InvalidArgumentException(ERR_FORMATTED_TEXT_MUST_NOT_BE_NULL);
+            }
+            if (coreText == null) {
+                throw new InvalidArgumentException(ERR_CORE_TEXT_MUST_NOT_BE_NULL);
+            }
         }
-        if (coreText == null) {
-            throw new InvalidArgumentException(ERR_CORE_TEXT_MUST_NOT_BE_NULL);
+        else {
+            if (formattedText != null) {
+                throw new InvalidArgumentException(ERR_FORMATTED_TEXT_MUST_BE_NULL);
+            }
+            if (coreText != null) {
+                throw new InvalidArgumentException(ERR_CORE_TEXT_MUST_BE_NULL);
+            }
         }
         this.formattedText = formattedText;
         this.coreText = coreText;
         this.validationResult = validationResult;
     }
 
-    public Result getValidationResult() {
+    @Override
+    public Result isValid() {
         return validationResult;
     }
 
@@ -84,7 +102,14 @@ public sealed class RichText permits RichText.Persisted {
      * Throws an exception if embedded HTML is deemed to be unsafe.
      */
     public static RichText fromMarkdown(final String input) {
-        return RichTextSanitiser.sanitiseMarkdown(input);
+        final Node root = Parser.builder().includeSourceSpans(IncludeSourceSpans.BLOCKS_AND_INLINES).build().parse(input);
+        final var validationResult = RichTextSanitiser.sanitiseMarkdown(input);
+        final var coreText = validationResult.isSuccessful()
+                             ? RichTextAsMarkdownCoreTextExtractor.toCoreText(root)
+                             : null;
+        return validationResult.isSuccessful()
+                ? new RichText(input, coreText, SUCCESSFUL)
+                : new Invalid(validationResult);
     }
 
     /**
@@ -112,8 +137,8 @@ public sealed class RichText permits RichText.Persisted {
         final var validationResult = RichTextSanitiser.sanitiseHtml(input);
         final var coreText = validationResult.isSuccessful()
                              ? RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.extension)
-                             : "";
-        return new RichText(input, coreText, validationResult);
+                             : null;
+        return validationResult.isSuccessful() ? new RichText(input, coreText, validationResult) : new Invalid(validationResult);
     }
 
     /**
@@ -122,8 +147,6 @@ public sealed class RichText permits RichText.Persisted {
      * because it uses the provided core text instead of extracting it from the formatted text.
      */
     static final class Persisted extends RichText {
-
-        public static final Result SUCCESSFUL = Result.successful();
 
         /**
          * This constructor does not validate its arguments.
@@ -138,6 +161,34 @@ public sealed class RichText permits RichText.Persisted {
         @Override
         Persisted asPersisted() {
             return this;
+        }
+    }
+
+    public static final class Invalid extends RichText {
+
+        /**
+         * This constructor does not validate its arguments, thus <b>IT MUST BE KEPT PACKAGE PRIVATE</b>.
+         *
+         * @param validationResult
+         *         the result of validation
+         */
+        Invalid(final Result validationResult) {
+            super(null, null, validationResult);
+        }
+
+        @Override
+        public String formattedText() {
+            throw new IllegalStateException("Formatted text is not available for invalid values.");
+        }
+
+        @Override
+        public String coreText() {
+            throw new IllegalStateException("Core text is not available for invalid values.");
+        }
+
+        @Override
+        Persisted asPersisted() {
+            throw new IllegalStateException("Invalid rich text cannot be persisted.");
         }
     }
 

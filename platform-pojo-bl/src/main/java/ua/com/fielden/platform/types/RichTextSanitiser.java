@@ -60,9 +60,9 @@ public final class RichTextSanitiser {
      * <p>
      * The sanitisation policy is specified via {@link #POLICY_FACTORY}.
      *
-     * @return Result of {@link RichText}
+     * @return Result
      */
-    static RichText sanitiseMarkdown(final String input) {
+    static Result sanitiseMarkdown(final String input) {
         final var lines = NEWLINE_PATTERN.splitAsStream(input).toList();
 
         // consider invalid if there are policy violations
@@ -89,15 +89,11 @@ public final class RichTextSanitiser {
         });
 
         final var violations = sanitiser.violations();
-        if (!violations.isEmpty()) {
-            return new RichText(input, "", failure(input, "Input contains unsafe HTML:\n" +
-                                                           enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
-                                                           .collect(joining("\n"))));
-        }
-        else {
-            final String coreText = RichTextAsMarkdownCoreTextExtractor.toCoreText(root);
-            return new RichText(input, coreText, successful());
-        }
+        return violations.isEmpty()
+               ? successful()
+               : failure(input, "Input contains unsafe HTML:\n" +
+                                         enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
+                                         .collect(joining("\n")));
     }
 
     /**
@@ -105,13 +101,6 @@ public final class RichTextSanitiser {
      */
     public static Result sanitiseHtml(final String input) {
         return sanitiseHtml(input, standardErrorFormatter);
-    }
-
-    /**
-     * Equivalent to {@link #sanitiseHtml(RichText, ErrorFormatter)}, but with a standard error formatter.
-     */
-    public static Result sanitiseHtml(final RichText richText) {
-        return sanitiseHtml(richText, standardErrorFormatter);
     }
 
     /**
@@ -129,7 +118,7 @@ public final class RichTextSanitiser {
     public static Result sanitiseHtml(final String input, final ErrorFormatter errorFormatter) {
         final var violations = findViolations(input);
         return violations.isEmpty()
-                ? successful(input)
+                ? successful()
                 : failure(input, errorFormatter.apply(violations));
     }
 

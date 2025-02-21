@@ -2,17 +2,20 @@ package ua.com.fielden.platform.types;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class RichTextHtmlTest {
 
     @Test
-    public void unsafe_RichText_has_emtpy_coreText() {
+    public void unsafe_RichText_has_formattedText_and_coreText_as_null() {
         final var unsafeHtml = "<script> alert(1) </script><p>some text</p>";
         final var richText = RichText.fromHtml(unsafeHtml);
-        assertThat(richText.formattedText()).isEqualTo(unsafeHtml);
-        assertThat(richText.coreText()).isEmpty();
+        assertThat(richText).isInstanceOf(RichText.Invalid.class);
+        assertThat(richText.isValid().isSuccessful()).isEqualTo(false);
+        assertThrows(IllegalStateException.class, richText::formattedText);
+        assertThrows(IllegalStateException.class, richText::coreText);
     }
 
     @Test

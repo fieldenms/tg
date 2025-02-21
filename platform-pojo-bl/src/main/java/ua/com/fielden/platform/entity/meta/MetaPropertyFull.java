@@ -1,32 +1,7 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
-import static ua.com.fielden.platform.utils.EntityUtils.*;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -45,6 +20,22 @@ import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.*;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * Implements the concept of a meta-property for full, not proxied, properties of instrumented entity instances.
@@ -264,14 +255,14 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * </ul>
      */
     private boolean isNullOrEmptyOrFalse(final T newValue /*, final T oldValue */) {
-        // IMPORTANT : need to check NotNullValidator usage on existing logic. There is the case, when
-        // should not to pass the validation : setRotable(null) in AdvicePosition when getRotable() == null!!!
-        // that is why - - "&& (oldValue != null)" - - was removed!!!!!
-        // The current condition is essential for UI binding logic.
+        // IMPORTANT: It is necessary to check NotNullValidator usage on existing logic.
+        //            There is a case where it should not to pass the validation : setRotable(null) in AdvicePosition while getRotable() == null!!!
+        //            That is why - - "&& (oldValue != null)" - - was removed!!!!!
+        //            The current condition is essential for UI binding logic.
         return (newValue == null) || /* && (oldValue != null) */
                (isString(type) && StringUtils.isBlank(newValue.toString())) ||
                (isBoolean(type) && !Boolean.parseBoolean(newValue.toString())) ||
-               (isRichText(type) && StringUtils.isBlank(((RichText) newValue).coreText()));
+               (isRichText(type) && !RichText.Invalid.class.isAssignableFrom(newValue.getClass()) && StringUtils.isBlank(((RichText) newValue).coreText()));
     }
 
     /**
