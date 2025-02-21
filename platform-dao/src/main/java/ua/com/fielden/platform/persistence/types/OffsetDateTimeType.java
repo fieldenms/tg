@@ -72,7 +72,7 @@ class OffsetDateTimeType extends AbstractSingleColumnStandardBasicType<Date> imp
     }
 
     @Override
-    public String objectToSQLString(final Date value, final Dialect dialect) throws Exception {
+    public String objectToSQLString(final Date value, final Dialect dialect) {
         return '\'' + new Timestamp(value.getTime()).toString() + '\'';
     }
 
