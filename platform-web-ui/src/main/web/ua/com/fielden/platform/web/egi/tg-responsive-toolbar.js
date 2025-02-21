@@ -29,6 +29,9 @@ const template = html`
             margin-left: 30px;
             @apply --layout-horizontal;
         }
+        :host {
+            cursor: default;
+        }
         :host(.custom-responsive-toolbar) #expandToolbarButton {
             @apply --tg-responsove-toolbar-expand-button;
         }
