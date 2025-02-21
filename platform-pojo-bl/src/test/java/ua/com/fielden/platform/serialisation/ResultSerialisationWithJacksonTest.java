@@ -13,8 +13,7 @@ import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.error.Result.*;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 import static ua.com.fielden.platform.serialisation.api.impl.Serialiser.createSerialiserWithJackson;
@@ -158,13 +157,17 @@ public class ResultSerialisationWithJacksonTest {
     @Test
     public void failure_Result_with_explicit_self_referencing_exception_serialises_and_deserialises_to_equal_value() {
         final var result = failure(new SelfReferencingException("Failure."));
-        assertFailureEqualsWithCustomException(result, serialiseAndDeserialise(result));
+        final var actualResult = serialiseAndDeserialise(result);
+        assertFailureEqualsWithCustomException(result, actualResult);
+        assertNull(actualResult.getEx().getCause()); // check actual deserialised self-reference
     }
 
     @Test
     public void failure_Result_with_explicit_exception_and_self_referencing_cause_serialises_and_deserialises_to_equal_value() {
         final var result = failure(new RuntimeException("Failure.", new SelfReferencingException("Cause.")));
-        assertFailureEqualsWithCustomExceptionAndCause(result, serialiseAndDeserialise(result));
+        final var actualResult = serialiseAndDeserialise(result);
+        assertFailureEqualsWithCustomExceptionAndCause(result, actualResult);
+        assertNull(actualResult.getEx().getCause().getCause()); // check actual deserialised self-reference
     }
 
 }
