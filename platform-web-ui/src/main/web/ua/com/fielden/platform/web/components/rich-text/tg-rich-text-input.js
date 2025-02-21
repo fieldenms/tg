@@ -854,7 +854,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         //Adjust key event handler to be able to process events from _editor when event was prevented
         const prevKeyBindingHandler = this._onKeyBindingEvent.bind(this);
         this._onKeyBindingEvent = function (keyBindings, event) {
-            if (!this.disabled || event.keyCode === 9) {
+            if (!this.disabled) {
                 Object.defineProperty(event, 'defaultPrevented', {value: false});
                 prevKeyBindingHandler(keyBindings, event);
             }
