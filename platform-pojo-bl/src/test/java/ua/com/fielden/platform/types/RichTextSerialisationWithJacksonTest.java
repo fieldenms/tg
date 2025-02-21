@@ -76,4 +76,20 @@ public class RichTextSerialisationWithJacksonTest {
         assertFalse(restoredEntity.getProperty("richText").isDirty());
     }
 
+    /**
+     * Serialising and then deserialising an entity with an invalid value for a RichText property should result in the property value being {@code null}.
+     */
+    @Test
+    public void serialisation_of_invalid_RichText() {
+        final var richText = RichText.fromHtml("<script> alert(1) </script>");
+        final var entity = factory.createEntityWithRichText(richText);
+        final var restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithRichText.class);
+
+        assertNotNull(restoredEntity);
+        assertNotSame(entity, restoredEntity);
+        assertNull(restoredEntity.getRichText());
+        assertFalse(restoredEntity.getProperty("richText").isChangedFromOriginal());
+        assertFalse(restoredEntity.getProperty("richText").isDirty());
+    }
+
 }

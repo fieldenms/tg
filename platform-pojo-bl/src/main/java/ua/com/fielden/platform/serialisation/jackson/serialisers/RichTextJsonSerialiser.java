@@ -18,10 +18,20 @@ public class RichTextJsonSerialiser extends StdSerializer<RichText> {
             throws IOException
     {
         generator.writeStartObject();
-        generator.writeFieldName(RichText.FORMATTED_TEXT);
-        generator.writeObject(richText.formattedText());
-        generator.writeFieldName(RichText.CORE_TEXT);
-        generator.writeObject(richText.coreText());
+
+        if (richText.isValid().isSuccessful()) {
+            generator.writeFieldName(RichText.FORMATTED_TEXT);
+            generator.writeObject(richText.formattedText());
+            generator.writeFieldName(RichText.CORE_TEXT);
+            generator.writeObject(richText.coreText());
+        }
+        else {
+            generator.writeFieldName(RichText.FORMATTED_TEXT);
+            generator.writeObject(null);
+            generator.writeFieldName(RichText.CORE_TEXT);
+            generator.writeObject(null);
+        }
+
         generator.writeEndObject();
     }
 
