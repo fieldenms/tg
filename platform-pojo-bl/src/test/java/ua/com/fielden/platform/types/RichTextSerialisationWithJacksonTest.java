@@ -58,7 +58,7 @@ public class RichTextSerialisationWithJacksonTest {
 
         assertNotNull(restoredEntity);
         assertNotSame(entity, restoredEntity);
-        assertTrue(entity.getRichText().equalsByText(restoredEntity.getRichText()));
+        assertEquals(entity.getRichText(), restoredEntity.getRichText());
         assertFalse(restoredEntity.getProperty("richText").isChangedFromOriginal());
         assertFalse(restoredEntity.getProperty("richText").isDirty());
     }
@@ -71,7 +71,7 @@ public class RichTextSerialisationWithJacksonTest {
 
         assertNotNull(restoredEntity);
         assertNotSame(entity, restoredEntity);
-        assertTrue(entity.getRichText().equalsByText(restoredEntity.getRichText()));
+        assertEquals(entity.getRichText(), restoredEntity.getRichText());
         assertFalse(restoredEntity.getProperty("richText").isChangedFromOriginal());
         assertFalse(restoredEntity.getProperty("richText").isDirty());
     }

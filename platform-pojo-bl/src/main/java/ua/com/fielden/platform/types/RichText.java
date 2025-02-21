@@ -204,23 +204,24 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         return new Persisted(formattedText, coreText);
     }
 
+    /**
+     * Rich text instances are equal only if both are valid and have equal formatted text and core text.
+     * Invalid instances are equal only to themselves.
+     */
     @Override
     public final boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
-        if (obj != null && obj.getClass() == this.getClass()) {
-            return this.equalsByText((RichText) obj);
-        }
-        return false;
-    }
 
-    /**
-     * Polymorphic {@link #equals(Object)}, where {@link RichText} can be compared to {@link Persisted} by comparing their formatted and core text values.
-     */
-    public final boolean equalsByText(final RichText that) {
-        return that == this ||
-               Objects.equals(this.formattedText, that.formattedText) && Objects.equals(this.coreText, that.coreText);
+        if (!(obj instanceof RichText that)) {
+            return false;
+        }
+
+        return this.isValid().isSuccessful()
+               && that.isValid().isSuccessful()
+               && Objects.equals(this.formattedText, that.formattedText)
+               && Objects.equals(this.coreText, that.coreText);
     }
 
     @Override
