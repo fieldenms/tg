@@ -9,11 +9,13 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.validation.DefaultValidatorForValueTypeWithValidation;
 import ua.com.fielden.platform.error.Result;
 
 import java.util.Objects;
+
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNull;
 
 /**
  * Rich text is text which has attributes beyond those of plain text (e.g., styles such as colour, boldface, italic),
@@ -33,14 +35,9 @@ import java.util.Objects;
  * It is possible to create {@link RichText} values that contain unsafe markup, and its `validationResult` will contain the relevant information.
  * <p>
  * Core text is obtained from the formatted text upon creating a {@link RichText} value, but only if the input passes validation.
- * Otherwise, the value of `coreText` is empty.
+ * Otherwise, neither core text, nor formatted text are available (their accessor methods throw an exception).
  */
 public sealed class RichText implements IWithValidation permits RichText.Persisted, RichText.Invalid {
-
-    public static final String ERR_FORMATTED_TEXT_MUST_NOT_BE_NULL = "Argument [formattedText] must not be null.";
-    public static final String ERR_CORE_TEXT_MUST_NOT_BE_NULL = "Argument [coreText] must not be null.";
-    public static final String ERR_FORMATTED_TEXT_MUST_BE_NULL = "Argument [formattedText] must be null.";
-    public static final String ERR_CORE_TEXT_MUST_BE_NULL = "Argument [coreText] must be null.";
 
     public static final String FORMATTED_TEXT = "formattedText";
     public static final String CORE_TEXT = "coreText";
@@ -71,20 +68,12 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     // !!! KEEP THIS CONSTRUCTOR PRIVATE !!!
     private RichText(final String formattedText, final String coreText, final Result validationResult) {
         if (validationResult.isSuccessful()) {
-            if (formattedText == null) {
-                throw new InvalidArgumentException(ERR_FORMATTED_TEXT_MUST_NOT_BE_NULL);
-            }
-            if (coreText == null) {
-                throw new InvalidArgumentException(ERR_CORE_TEXT_MUST_NOT_BE_NULL);
-            }
+            requireNonNull(formattedText, "formattedText");
+            requireNonNull(coreText, "coreText");
         }
         else {
-            if (formattedText != null) {
-                throw new InvalidArgumentException(ERR_FORMATTED_TEXT_MUST_BE_NULL);
-            }
-            if (coreText != null) {
-                throw new InvalidArgumentException(ERR_CORE_TEXT_MUST_BE_NULL);
-            }
+            requireNull(formattedText, "formattedText");
+            requireNull(coreText, "coreText");
         }
         this.formattedText = formattedText;
         this.coreText = coreText;
@@ -104,11 +93,8 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     public static RichText fromMarkdown(final String input) {
         final Node root = Parser.builder().includeSourceSpans(IncludeSourceSpans.BLOCKS_AND_INLINES).build().parse(input);
         final var validationResult = RichTextSanitiser.sanitiseMarkdown(input);
-        final var coreText = validationResult.isSuccessful()
-                             ? RichTextAsMarkdownCoreTextExtractor.toCoreText(root)
-                             : null;
         return validationResult.isSuccessful()
-                ? new RichText(input, coreText, SUCCESSFUL)
+                ? new RichText(input, RichTextAsMarkdownCoreTextExtractor.toCoreText(root), SUCCESSFUL)
                 : new Invalid(validationResult);
     }
 
@@ -135,10 +121,13 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
 
         // Validate the input before parsing it.
         final var validationResult = RichTextSanitiser.sanitiseHtml(input);
-        final var coreText = validationResult.isSuccessful()
-                             ? RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.extension)
-                             : null;
-        return validationResult.isSuccessful() ? new RichText(input, coreText, validationResult) : new Invalid(validationResult);
+        if (validationResult.isSuccessful()) {
+            final var coreText = RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.extension);
+            return new RichText(input, coreText, validationResult);
+        }
+        else {
+            return new Invalid(validationResult);
+        }
     }
 
     /**
@@ -167,10 +156,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     public static final class Invalid extends RichText {
 
         /**
-         * This constructor does not validate its arguments, thus <b>IT MUST BE KEPT PACKAGE PRIVATE</b>.
-         *
-         * @param validationResult
-         *         the result of validation
+         * @param validationResult  the result of validation
          */
         Invalid(final Result validationResult) {
             super(null, null, validationResult);
@@ -203,10 +189,18 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
 
     }
 
+    /**
+     * Returns formatted text if this instance is valid.
+     * Otherwise, throws an exception.
+     */
     public String formattedText() {
         return formattedText;
     }
 
+    /**
+     * Returns core text if this instance is valid.
+     * Otherwise, throws an exception.
+     */
     public String coreText() {
         return coreText;
     }

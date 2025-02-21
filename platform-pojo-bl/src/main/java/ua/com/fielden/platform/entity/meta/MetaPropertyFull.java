@@ -251,7 +251,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * <ul>
      *   <li> String - true if the value is blank (empty or all whitespace).
      *   <li> Boolean - true if the value is {@code false} or can be parsed as {@code false} with {@link Boolean#parseBoolean(String)}.
-     *   <li> RichText - true if the core text is blank.
+     *   <li> RichText - true if the core text is valid and blank.
      * </ul>
      */
     private boolean isNullOrEmptyOrFalse(final T newValue /*, final T oldValue */) {
@@ -262,7 +262,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         return (newValue == null) || /* && (oldValue != null) */
                (isString(type) && StringUtils.isBlank(newValue.toString())) ||
                (isBoolean(type) && !Boolean.parseBoolean(newValue.toString())) ||
-               (isRichText(type) && !RichText.Invalid.class.isAssignableFrom(newValue.getClass()) && StringUtils.isBlank(((RichText) newValue).coreText()));
+               (isRichText(type) && !(newValue instanceof RichText.Invalid) && StringUtils.isBlank(((RichText) newValue).coreText()));
     }
 
     /**

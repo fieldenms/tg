@@ -17,7 +17,7 @@ import static ua.com.fielden.platform.error.Result.failure;
  */
 public class UnhappyValidator implements IBeforeChangeEventHandler<Object> {
 
-    public static final String ERR_UNHAPPY_VALIDATOR = "Unhappy validator reject any value.";
+    public static final String ERR_UNHAPPY_VALIDATOR = "Unhappy validator rejects any value.";
 
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {

@@ -867,10 +867,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             final var newBce = annotations.stream().filter(at -> at instanceof BeforeChange).findFirst()
                                .map(at -> ((BeforeChange) at).value())
                                .map(handlers -> ArrayUtils.prepend(new HandlerAnnotation(DefaultValidatorForValueTypeWithValidation.class).newInstance(),
-                                                                            Stream.of(handlers).filter(handler -> handler.value() != DefaultValidatorForValueTypeWithValidation.class).toArray(Handler[]::new)))
+                                                                   Stream.of(handlers)
+                                                                           .filter(handler -> handler.value() != DefaultValidatorForValueTypeWithValidation.class)
+                                                                           .toArray(Handler[]::new)))
                                .map(BeforeChangeAnnotation::newInstance)
                                .orElseGet(() -> BeforeChangeAnnotation.newInstance(new HandlerAnnotation(DefaultValidatorForValueTypeWithValidation.class).newInstance()));
-            final var newAnnotations = Stream.concat(annotations.stream().filter(at -> !(at instanceof BeforeChange)), Stream.of(newBce)).collect(toCollection(LinkedHashSet::new));
+            final var newAnnotations = Stream.concat(annotations.stream().filter(at -> !(at instanceof BeforeChange)), Stream.of(newBce))
+                    .collect(toCollection(LinkedHashSet::new));
             return unmodifiableSequencedSet(newAnnotations);
         }
         else {

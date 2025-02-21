@@ -13,19 +13,20 @@ import java.util.Set;
 import static ua.com.fielden.platform.error.Result.successful;
 
 /**
- * Default validator for {@link RichText} values.
- * It is implicitly enabled for all {@link RichText} properties.
+ * Default validator for properties whose type implements {@link IWithValidation}.
+ * It is implicitly enabled for all such properties.
  * This validator can also be explicitly declared on a property, although the effect will be the same as in its absence.
  * <p>
- * This validator simply returns the validation result for `newValue` or success if the value is `null`.
+ * This validator simply returns the {@linkplain IWithValidation#isValid() validation result} for `newValue` or success if the value is `null`.
  */
 public final class DefaultValidatorForValueTypeWithValidation extends AbstractBeforeChangeEventHandler<IWithValidation> {
 
     @Override
-    public Result handle(MetaProperty<IWithValidation> property, IWithValidation newValue, Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<IWithValidation> property, final IWithValidation newValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue == null) {
             return successful();
         }
         return newValue.isValid();
     }
+
 }
