@@ -190,6 +190,17 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         Persisted asPersisted() {
             throw new IllegalStateException("Invalid rich text cannot be persisted.");
         }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(this);
+        }
+
+        @Override
+        public String toString() {
+            return "Invalid Rich Text [%s]".formatted(isValid());
+        }
+
     }
 
     public String formattedText() {
@@ -225,12 +236,12 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     }
 
     @Override
-    public final int hashCode() {
+    public int hashCode() {
         return Objects.hash(formattedText, coreText);
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "RichText[%n%s%n]".formatted(formattedText);
     }
 
