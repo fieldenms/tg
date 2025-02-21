@@ -344,7 +344,7 @@ function isPositionInBox(style, offsetX, offsetY) {
  * @param {Object} event keyboard event
  */
 function focusOnKeyDown(event) {
-    if ((event.keyCode === 13 || (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey)) && !this.shadowRoot.activeElement) {
+    if (!this.disabled && (event.keyCode === 13 || (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey)) && !this.shadowRoot.activeElement) {
         this._editor.moveCursorToStart(true);
         if (event.key.length === 1) {
             setTimeout(() => {this._editor.insertText(event.key)}, 1);
