@@ -74,26 +74,21 @@ public class Finder {
     ///////////////////////////////////// Finding/getting MetaProperties and PropertyDescriptors ////////////
     /**
      * Produces a list of property descriptors for "real properties" of a given entity type, including properties declared in its type hierarchy.
-     *
-     * @param <T>
-     * @param entityType
-     * @return
+     * Properties with denied introspection are excluded.
      */
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType) {
         return getPropertyDescriptors(entityType, f -> false);
     }
 
     /**
-     * The same as {@link #getPropertyDescriptors(Class)}, but with ability to skip some properties.
-     * This is convenient at times where some properties need to be skipped.
-     *
-     * @param <T>
-     * @param entityType
-     * @param shouldSkip
-     * @return
+     * The same as {@link #getPropertyDescriptors(Class)}, but with the ability to skip some properties.
+     * Properties with denied introspection are always excluded.
      */
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final Predicate<Field> shouldSkip) {
-        return streamRealProperties(entityType).filter(shouldSkip.negate()).map(f -> pd(entityType, f.getName())).collect(toList());
+        return streamRealProperties(entityType)
+                .filter(prop -> isIntrospectionAllowed(prop) && !shouldSkip.test(prop))
+                .map(f -> pd(entityType, f.getName()))
+                .collect(toList());
     }
 
     /**
@@ -109,8 +104,10 @@ public class Finder {
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final EntityFactory factory) {
         final List<PropertyDescriptor<T>> result = new ArrayList<>();
         for (final Field field : findProperties(entityType)) {
-            final PropertyDescriptor<T> pd = PropertyDescriptor.fromString(entityType.getName() + ":" + field.getName(), Optional.of(factory));
-            result.add(pd);
+            if (isIntrospectionAllowed(field)) {
+                final PropertyDescriptor<T> pd = PropertyDescriptor.fromString(entityType.getName() + ":" + field.getName(), Optional.of(factory));
+                result.add(pd);
+            }
         }
         return result;
     }
