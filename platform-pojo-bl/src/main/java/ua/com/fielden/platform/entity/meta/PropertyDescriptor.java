@@ -53,8 +53,8 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
 
     private static final Logger LOGGER = getLogger(PropertyDescriptor.class);
 
-    private static final String ERR_INTROSPECTION_DENIED =
-        "Property descriptor cannot be created. Introspection is denied for [%s.%s].";
+    private static final String ERR_INTROSPECTION_DENIED = "Introspection is denied for [%s.%s].";
+    public static final String ERR_COULD_NOT_BE_CREATED = "PropertyDescriptor could not be created from value [%s].";
 
     private Class<T> entityType;
     private String propertyName;
@@ -178,7 +178,7 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             inst.propertyName = propertyName;
             return inst;
         } catch (final Exception ex) {
-            final String msg = format("PropertyDescriptor could not be created from value [%s].", toStringRepresentation);
+            final String msg = format(ERR_COULD_NOT_BE_CREATED, toStringRepresentation);
             LOGGER.error(msg, ex);
             throw EntityException.wrapIfNecessary(msg, ex);
         }

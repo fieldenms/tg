@@ -92,27 +92,6 @@ public class Finder {
     }
 
     /**
-     * Same as above, but instantiation happens using entity factory.
-     *
-     * @param <T>
-     * @param entityType
-     * @param factory
-     * @return
-     * @deprecated Used only in the deprecated class {@code ValueMatcherFactory}.
-     */
-    @Deprecated
-    public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final EntityFactory factory) {
-        final List<PropertyDescriptor<T>> result = new ArrayList<>();
-        for (final Field field : findProperties(entityType)) {
-            if (isIntrospectionAllowed(field)) {
-                final PropertyDescriptor<T> pd = PropertyDescriptor.fromString(entityType.getName() + ":" + field.getName(), Optional.of(factory));
-                result.add(pd);
-            }
-        }
-        return result;
-    }
-
-    /**
      * Does much the same as {@link #findMetaProperty(AbstractEntity, String)}, but it retrieves all {@link MetaProperty}s specified in <code>dotExpr</code>. If, during
      * retrieval, some of the properties is null, then this method returns only that properties, which were retrieved.<br>
      * <br>
