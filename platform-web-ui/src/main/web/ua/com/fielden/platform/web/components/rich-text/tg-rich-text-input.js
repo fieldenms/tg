@@ -339,8 +339,7 @@ function isPositionInBox(style, offsetX, offsetY) {
 }
 
 /**
- * Focuses rich text editor on keyboard event that doesn't includes any functional key except shift key, and then inserts the character that was pressed.
- * This function also takes into account the disabled state of input.
+ * Focuses rich text editor on keyboard event that doesn't includes any functional key except shift key.
  * 
  * @param {Object} event keyboard event
  */
@@ -390,12 +389,11 @@ function rgbToHex(rgbString) {
 
 /**
  * Prevents ctrl+a event. This is used to handle select all action by tg-rich-text-input element.
- * Also it prevents all keyboard events except 'tab' key if this input is disabled.
  * 
  * @param {Object} event keyboard event
  */
 function preventUnwantedKeyboradEvents(event) {
-    if ((this.disabled && event.keyCode !== 9) || ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/)) {
+    if ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/) {
         event.preventDefault();
     }
 }
