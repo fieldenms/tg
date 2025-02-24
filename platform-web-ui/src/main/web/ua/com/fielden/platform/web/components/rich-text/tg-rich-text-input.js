@@ -1007,20 +1007,32 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     _createBulletList(e) {
-        this._editor.exec('bulletList');
-        tearDownEvent(e.detail && e.detail.keyboardEvent);
-        scrollIntoView.bind(this)();
+        try {
+            this._editor.exec('bulletList');
+            tearDownEvent(e.detail && e.detail.keyboardEvent);
+            scrollIntoView.bind(this)();
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     _createOrderedList(e) {
-        this._editor.exec('orderedList');
-        tearDownEvent(e.detail && e.detail.keyboardEvent);
-        scrollIntoView.bind(this)();
+        try {
+            this._editor.exec('orderedList');
+            tearDownEvent(e.detail && e.detail.keyboardEvent);
+            scrollIntoView.bind(this)();
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     _createTaskList(e) {
-        this._editor.exec('taskList');
-        scrollIntoView.bind(this)();
+        try {
+            this._editor.exec('taskList');
+            scrollIntoView.bind(this)();
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     _stopEditing(event) {
