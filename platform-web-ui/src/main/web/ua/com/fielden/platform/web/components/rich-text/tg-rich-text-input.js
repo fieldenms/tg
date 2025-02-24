@@ -407,7 +407,7 @@ function preventUnwantedKeyboradEvents(event) {
  */
 function scrollWhenListItem(event) {
     if (event.keyCode === 13 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) {
-        scrollIntoView.bind(this)()
+        setTimeout(() => {scrollIntoView.bind(this)()}, 0);
     }
 }
 
