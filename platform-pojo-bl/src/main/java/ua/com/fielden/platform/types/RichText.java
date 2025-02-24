@@ -137,7 +137,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
      */
     public static RichText fromPlainText(final String input) {
         final var escapedInput = escapeAsHtml(input);
-        return RichTextSanitiser.sanitiseHtml(escapedInput).getInstanceOrElseThrow();
+        return fromHtml(escapedInput);
     }
 
     /**
