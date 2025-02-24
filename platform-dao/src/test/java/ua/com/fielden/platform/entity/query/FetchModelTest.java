@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -11,6 +12,7 @@ import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithYieldId;
 import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithoutYieldId;
 import ua.com.fielden.platform.eql.meta.BaseEntQueryTCase1;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -23,10 +25,12 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertNotEmpty;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 
 public class FetchModelTest extends BaseEntQueryTCase1 {
 
@@ -639,6 +643,30 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
                 Set.of("union"));
         assertPropsAreNotFetched(produceRetrievalModel(Circular_UnionEntity.class, NONE),
                 Set.of("entity"));
+    }
+
+    @BeforeClass
+    public static void beforeCalculatedDescTests() {
+        assertTrue(hasDescProperty(EntityWithRichText.class));
+        assertTrue(DOMAIN_METADATA.forProperty(EntityWithRichText.class, DESC).isCalculated());
+    }
+
+    @Test
+    public void strategy_KEY_AND_DESC_includes_calculated_desc() {
+        assertPropsAreFetched(produceRetrievalModel(EntityWithRichText.class, KEY_AND_DESC),
+                              Set.of(DESC));
+    }
+
+    @Test
+    public void strategy_ALL_includes_calculated_desc() {
+        assertPropsAreFetched(produceRetrievalModel(EntityWithRichText.class, ALL),
+                              Set.of(DESC));
+    }
+
+    @Test
+    public void strategy_DEFAULT_includes_calculated_desc() {
+        assertPropsAreFetched(produceRetrievalModel(EntityWithRichText.class, DEFAULT),
+                              Set.of(DESC));
     }
 
 }
