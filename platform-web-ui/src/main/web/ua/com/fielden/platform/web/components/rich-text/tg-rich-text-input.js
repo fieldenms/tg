@@ -1012,7 +1012,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             tearDownEvent(e.detail && e.detail.keyboardEvent);
             scrollIntoView.bind(this)();
         } catch (e) {
-            console.error(e);
+            if (e.name === 'TransformError') {
+                console.error(e);
+            } else {
+                throw e;
+            }
         }
     }
 
@@ -1022,7 +1026,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             tearDownEvent(e.detail && e.detail.keyboardEvent);
             scrollIntoView.bind(this)();
         } catch (e) {
-            console.error(e);
+            if (e.name === 'TransformError') {
+                console.error(e);
+            } else {
+                throw e;
+            }
         }
     }
 
@@ -1031,7 +1039,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             this._editor.exec('taskList');
             scrollIntoView.bind(this)();
         } catch (e) {
-            console.error(e);
+            if (e.name === 'TransformError') {
+                console.error(e);
+            } else {
+                throw e;
+            }
         }
     }
 
