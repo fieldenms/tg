@@ -56,8 +56,9 @@ public class fetch<T extends AbstractEntity<?>> {
          * <ul>
          *   <li> collectional properties are excluded;
          *   <li> non-retrievable properties are excluded;
-         *   <li> calculated properties are excluded (unless they have a component type).
+         *   <li> calculated properties are excluded (unless they have a component type or the property is {@code desc}).
          * </ul>
+         * Property {@code desc} is always included if it belongs to the entity type.
          */
         ALL,
         /**
