@@ -42,6 +42,17 @@ public enum DbVersion {
                           ifExists ? "IF EXISTS" : "",
                           indexName, tableName);
         }
+
+        /**
+         * @see <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/replace-transact-sql?view=sql-server-ver16">SQL Server documentation</a>
+         */
+        public String replaceSql(final CharSequence expression, final CharSequence pattern, final CharSequence replacement) {
+            // Single quote can be escaped by doubling it up.
+            return format("REPLACE(%s, '%s', '%s')",
+                          expression,
+                          pattern.toString().replace("'", "''"),
+                          replacement.toString().replace("'", "''"));
+        }
     },
     ORACLE(CaseSensitivity.SENSITIVE, " ") {
         public String idColumnName() {
@@ -115,6 +126,17 @@ public enum DbVersion {
             return format("DROP INDEX %s %s",
                           ifExists ? "IF EXISTS" : "",
                           indexName);
+        }
+
+        /**
+         * @see <a href="https://www.postgresql.org/docs/8.2/functions-string.html">PostgreSQL documentation</a>
+         */
+        public String replaceSql(final CharSequence expression, final CharSequence pattern, final CharSequence replacement) {
+            // Single quote can be escaped by doubling it up.
+            return format("replace(%s, '%s', '%s')",
+                          expression,
+                          pattern.toString().replace("'", "''"),
+                          replacement.toString().replace("'", "''"));
         }
     };
 
@@ -246,6 +268,15 @@ public enum DbVersion {
     }
 
     public String dropIndexSql(final CharSequence indexName, final CharSequence tableName, final boolean ifExists) {
+        throw new UnsupportedOperationException(this.toString());
+    }
+
+    /**
+     * Generates an SQL statement that has the effect of calling function {@code REPLACE(expression, pattern, replacement)},
+     * which produces a string with the contents of {@code expression}, but with all occurences of {@code pattern} replaced
+     * by {@code replacement}.
+     */
+    public String replaceSql(final CharSequence expression, final CharSequence pattern, final CharSequence replacement) {
         throw new UnsupportedOperationException(this.toString());
     }
 

@@ -38,8 +38,13 @@ import static java.util.Collections.unmodifiableList;
  * <li> <b>Stage 1: property resolution</b>.
  *      Properties are resolved to their respective sources.
  *      An important part of this stage is the resolution of dot-notated properties.
- * <li> <b>Stage 2: processing of dot-expressions</b>
- *      Builds up implicit table joins that result from dot-expressions, substitutes calculated property names used in dot-expressions with their respective expressions.
+ * <li> <b>Stage 2:</b>
+ *      <ul>
+ *        <li> Processing of dot-expressions: builds up implicit table joins that result from dot-expressions,
+ *             substitutes calculated property names used in dot-expressions with their respective expressions.
+ *        <li> Substitution of literal values with parameters (crucial for strings as to prevent SQL injection).
+ *      </ul>
+ *
  * <li> <b>Stage 3: SQL generation</b>.
  *      This stage also gathers the information, needed to instantiate entities from the SQL query result.
  * </ol>
@@ -89,7 +94,7 @@ public final class EqlQueryTransformer {
         final ResultQuery2 query2 = query1.transform(context1);
 
         final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, domainMetadata, gen);
-        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlTables);
+        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlTables, dbVersionProvider.dbVersion());
         return query2.transform(context2);
     }
 
