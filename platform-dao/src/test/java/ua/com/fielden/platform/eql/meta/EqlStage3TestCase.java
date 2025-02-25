@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonPredicate3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -57,7 +56,7 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     private static <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem) {
-        return EqlQueryTransformer.transform(qem, filter, empty(), dates, eqlTables(), querySourceInfoProvider(), metadata()).item;
+        return eqlQueryTransformer().transform(qem, empty()).item;
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
