@@ -314,8 +314,18 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void isIntrospectionDenied_returns_true_for_properties_annotated_with_DenyIntrospection() {
+        assertTrue(isIntrospectionDenied(TgWagon.class, TgWagon.Property.internalNumber));
+    }
+
+    @Test
     public void isIntrospectionDenied_returns_false_for_entity_types_not_annotated_with_DenyIntrospection() {
         assertFalse(isIntrospectionDenied(Entity.class));
+    }
+
+    @Test
+    public void isIntrospectionDenied_returns_false_for_properties_not_annotated_with_DenyIntrospection() {
+        assertFalse(isIntrospectionDenied(TgWagon.class, TgWagon.Property.serialNo));
     }
 
     @Test
