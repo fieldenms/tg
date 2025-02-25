@@ -38,8 +38,7 @@ public class ResultSerialisationWithJacksonTest {
 
     @Test
     public void null_Result_serialises_and_deserialises_to_equal_value() {
-        final Result result = null;
-        assertEquals(result, serialiseAndDeserialise(result));
+        assertNull(serialiseAndDeserialise(null));
     }
 
     @Test
