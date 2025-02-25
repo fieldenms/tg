@@ -22,7 +22,6 @@ import static ua.com.fielden.platform.serialisation.api.impl.Serialiser.createSe
  * Unit tests to ensure correct {@link Result} serialisation / deserialisation using JACKSON engine.
  *
  * @author TG Team
- *
  */
 public class ResultSerialisationWithJacksonTest {
     private final Module module = new CommonTestEntityModuleWithPropertyFactory();
@@ -102,9 +101,10 @@ public class ResultSerialisationWithJacksonTest {
     }
 
     /**
-     * Asserts equality of {@code failure} and {@code actualFailure}, but ignores the fact that exception types may not be equal.<br>
-     * Specifically, our {@link ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser}
-     *   deserialises all root exceptions as {@link Exception}.
+     * Asserts equality of {@code failure} and {@code actualFailure}, but ignores the fact that exception types may not be equal.
+     * <p>
+     * Specifically, {@link ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser}
+     * deserialises all root exceptions as {@link Exception}.
      */
     private static void assertFailureEqualsWithCustomException(final Result failure, final Result actualFailure) {
         assertEquals(failure.getMessage(), actualFailure.getMessage());
@@ -130,10 +130,11 @@ public class ResultSerialisationWithJacksonTest {
     }
 
     /**
-     * Asserts equality of {@code failure} and {@code actualFailure} that contain {@link Throwable#getCause()}.<br>
-     * Ignores the fact that exception (and its cause) types may not be equal.<br>
-     * Specifically, our {@link ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser}
-     *   deserialises all root exceptions as {@link Exception} and all causes as {@link Throwable}.
+     * Asserts equality of {@code failure} and {@code actualFailure} that contain {@link Throwable#getCause()}.
+     * <p>
+     * Ignores the fact that exception (and its cause) types may not be equal.
+     * Specifically, {@link ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser}
+     * deserialises all root exceptions as {@link Exception} and all causes as {@link Throwable}.
      */
     private static void assertFailureEqualsWithCustomExceptionAndCause(final Result failure, final Result actualFailure) {
         assertFailureEqualsWithCustomException(failure, actualFailure);

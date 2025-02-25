@@ -4,7 +4,8 @@ import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 
 /**
  * Exception type that self-references in getter ({@link #getCause()}).
- * See https://github.com/fieldenms/tg/issues/2379 for more details.
+ * <p>
+ * See <a href="https://github.com/fieldenms/tg/issues/2379">Issue 2379<a> for more details.
  */
 public class SelfReferencingException extends AbstractPlatformRuntimeException {
 
