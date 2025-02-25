@@ -80,6 +80,8 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
      *            -- name of the property that directly belongs to the specified entity (i.e. support for dot notation does not make any sense in this case)
      */
     public PropertyDescriptor(final Class<T> entityType, final String propertyName) {
+        validateArguments(entityType, propertyName);
+
         final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
         setKey(pair.getKey());
         setDesc(pair.getValue());
@@ -166,9 +168,7 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
             final String propertyName = parts[1];
 
-            if (isIntrospectionDenied(entityType, propertyName)) {
-                throw new InvalidArgumentException(ERR_INTROSPECTION_DENIED.formatted(entityType.getSimpleName(), propertyName));
-            }
+            validateArguments(entityType, propertyName);
 
             final Pair<String, String> pair = getTitleAndDesc(propertyName, entityType);
             final PropertyDescriptor<T> inst = (PropertyDescriptor<T>) factory.map(f -> f.newByKey(PropertyDescriptor.class, pair.getKey())).orElse(new PropertyDescriptor<>());
@@ -183,4 +183,15 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             throw EntityException.wrapIfNecessary(msg, ex);
         }
     }
+
+    /**
+     * Validates the property being modelled by a property desctiptor.
+     * This method must always be called during initialisation.
+     */
+    private static void validateArguments(final Class<? extends AbstractEntity<?>> entityType, final String property) {
+        if (isIntrospectionDenied(entityType, property)) {
+            throw new InvalidArgumentException(ERR_INTROSPECTION_DENIED.formatted(entityType.getSimpleName(), property));
+        }
+    }
+
 }
