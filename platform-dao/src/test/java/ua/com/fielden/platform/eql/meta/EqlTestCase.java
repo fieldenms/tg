@@ -6,6 +6,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperTestIocModule;
+import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
@@ -65,6 +66,7 @@ public abstract class EqlTestCase {
     private static final IDomainMetadata DOMAIN_METADATA;
     private static final QuerySourceInfoProvider QUERY_SOURCE_INFO_PROVIDER;
     private static final EqlTables EQL_TABLES;
+    private static final EqlQueryTransformer EQL_QUERY_TRANSFORMER;
 
     static {
         final var dbVersionProvider = constantDbVersion(H2);
@@ -74,6 +76,7 @@ public abstract class EqlTestCase {
                 .build();
         QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
         EQL_TABLES = new EqlTables(DOMAIN_METADATA);
+        EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, dbVersionProvider);
     }
     
     protected static final QueryModelToStage1Transformer qb() {
@@ -98,6 +101,10 @@ public abstract class EqlTestCase {
 
     protected static EqlTables eqlTables() {
         return EQL_TABLES;
+    }
+
+    protected static EqlQueryTransformer eqlQueryTransformer() {
+        return EQL_QUERY_TRANSFORMER;
     }
 
 }

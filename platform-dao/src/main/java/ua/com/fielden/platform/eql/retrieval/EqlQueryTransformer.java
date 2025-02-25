@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.eql.retrieval;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.eql.meta.EqlTables;
@@ -52,18 +54,37 @@ import static java.util.Collections.unmodifiableList;
  *
  * @author TG Team
  */
-public class EqlQueryTransformer {
+@Singleton
+public final class EqlQueryTransformer {
 
-    private EqlQueryTransformer() {}
+    private final IFilter filter;
+    private final IDates dates;
+    private final EqlTables eqlTables;
+    private final QuerySourceInfoProvider querySourceInfoProvider;
+    private final IDomainMetadata domainMetadata;
+    private final IDbVersionProvider dbVersionProvider;
 
-    public static <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
-            final QueryProcessingModel<E, ?> qem,
+    // TODO: Make private once dependent EQL tests are refactored and use IoC.
+    @Inject
+    public EqlQueryTransformer(
             final IFilter filter,
-            final Optional<String> username,
             final IDates dates,
             final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final IDbVersionProvider dbVersionProvider)
+    {
+        this.filter = filter;
+        this.dates = dates;
+        this.eqlTables = eqlTables;
+        this.querySourceInfoProvider = querySourceInfoProvider;
+        this.domainMetadata = domainMetadata;
+        this.dbVersionProvider = dbVersionProvider;
+    }
+
+    public <E extends AbstractEntity<?>> TransformationResultFromStage2To3<ResultQuery3> transform(
+            final QueryProcessingModel<E, ?> qem,
+            final Optional<String> username)
     {
         final QueryModelToStage1Transformer gen = new QueryModelToStage1Transformer(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
@@ -76,20 +97,13 @@ public class EqlQueryTransformer {
         return query2.transform(context2);
     }
 
-    protected static <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(
+    <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(
             final QueryProcessingModel<E, ?> qem,
-            final DbVersion dbVersion,
-            final IFilter filter,
-            final Optional<String> username,
-            final IDates dates,
-            final IDomainMetadata domainMetadata,
-            final EqlTables eqlTables,
-            final QuerySourceInfoProvider querySourceInfoProvider)
+            final Optional<String> username)
     {
-        final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, filter, username, dates, 
-                                                                             eqlTables, querySourceInfoProvider, domainMetadata);
+        final TransformationResultFromStage2To3<ResultQuery3> tr = transform(qem, username);
         final ResultQuery3 entQuery3 = tr.item;
-        final String sql = entQuery3.sql(domainMetadata, dbVersion);
+        final String sql = entQuery3.sql(domainMetadata, dbVersionProvider.dbVersion());
         return new QueryModelResult<E>((Class<E>) entQuery3.resultType, sql, getYieldedColumns(entQuery3.yields), tr.updatedContext.getSqlParamValues(), qem.fetchModel);
     }
 
