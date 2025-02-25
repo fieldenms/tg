@@ -405,7 +405,7 @@ function preventUnwantedKeyboradEvents(event) {
  */
 function scrollWhenListItem(event) {
     if (event.keyCode === 13 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) {
-        scrollIntoView.bind(this)()
+        setTimeout(() => {scrollIntoView.bind(this)()}, 0);
     }
 }
 
@@ -837,6 +837,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._getEditableContent().addEventListener("keydown", preventUnwantedKeyboradEvents.bind(this), true);
         //Add key down to scroll into view when creating new list item on Enter key
         this._getEditableContent().addEventListener("keydown", scrollWhenListItem.bind(this));
+        this._getEditableContent().addEventListener("scroll", this._editorScrolled.bind(this));
         //Initiate key binding and key event target
         this.addOwnKeyBinding('ctrl+a meta+a', '_selectAll');
         this.addOwnKeyBinding('ctrl+b meta+b', '_applyBold');
@@ -873,6 +874,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     notifyResize () {
         super.notifyResize();
         repositionOpenedDialog.bind(this)();
+        this._editorScrolled();
     }
 
     /**
@@ -902,6 +904,20 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         const state = this._editor.wwEditor.createState();
         state.doc = this._editor.wwEditor.view.state.doc;
         this._editor.wwEditor.view.updateState(state);
+    }
+
+    _editorScrolled(e) {
+        let shadowStyle = "";
+        //Add top shadow if scrolltop is not 0
+        if (this._getEditableContent().scrollTop) {
+            shadowStyle += "inset 0 6px 6px -6px rgba(0,0,0,0.7)";
+        }
+        //If shadow style is not empty then add shadow style to editor, otherwise remove shadow 
+        if (shadowStyle) {
+            this._getEditableContent().style.boxShadow = shadowStyle;
+        } else {
+            this._getEditableContent().style.removeProperty('box-shadow');
+        }
     }
 
     _cut(event) {
@@ -991,20 +1007,44 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     _createBulletList(e) {
-        this._editor.exec('bulletList');
-        tearDownEvent(e.detail && e.detail.keyboardEvent);
-        scrollIntoView.bind(this)();
+        try {
+            this._editor.exec('bulletList');
+            tearDownEvent(e.detail && e.detail.keyboardEvent);
+            scrollIntoView.bind(this)();
+        } catch (e) {
+            if (e.name === 'TransformError') {
+                console.error(e);
+            } else {
+                throw e;
+            }
+        }
     }
 
     _createOrderedList(e) {
-        this._editor.exec('orderedList');
-        tearDownEvent(e.detail && e.detail.keyboardEvent);
-        scrollIntoView.bind(this)();
+        try {
+            this._editor.exec('orderedList');
+            tearDownEvent(e.detail && e.detail.keyboardEvent);
+            scrollIntoView.bind(this)();
+        } catch (e) {
+            if (e.name === 'TransformError') {
+                console.error(e);
+            } else {
+                throw e;
+            }
+        }
     }
 
     _createTaskList(e) {
-        this._editor.exec('taskList');
-        scrollIntoView.bind(this)();
+        try {
+            this._editor.exec('taskList');
+            scrollIntoView.bind(this)();
+        } catch (e) {
+            if (e.name === 'TransformError') {
+                console.error(e);
+            } else {
+                throw e;
+            }
+        }
     }
 
     _stopEditing(event) {

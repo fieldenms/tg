@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
 
 import java.lang.reflect.Field;
 import java.util.Optional;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
@@ -48,7 +50,11 @@ import ua.com.fielden.platform.utils.Pair;
 @KeyTitle(value = "Property", desc = "Property title")
 @DescTitle(value = "Description", desc = "Property description")
 public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEntity<String> {
+
     private static final Logger LOGGER = getLogger(PropertyDescriptor.class);
+
+    private static final String ERR_INTROSPECTION_DENIED = "Introspection is denied for [%s.%s].";
+    public static final String ERR_COULD_NOT_BE_CREATED = "PropertyDescriptor could not be created from value [%s].";
 
     private Class<T> entityType;
     private String propertyName;
@@ -160,6 +166,10 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
             final String propertyName = parts[1];
 
+            if (isIntrospectionDenied(entityType, propertyName)) {
+                throw new InvalidArgumentException(ERR_INTROSPECTION_DENIED.formatted(entityType.getSimpleName(), propertyName));
+            }
+
             final Pair<String, String> pair = getTitleAndDesc(propertyName, entityType);
             final PropertyDescriptor<T> inst = (PropertyDescriptor<T>) factory.map(f -> f.newByKey(PropertyDescriptor.class, pair.getKey())).orElse(new PropertyDescriptor<>());
             inst.setKey(pair.getKey());
@@ -168,7 +178,7 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             inst.propertyName = propertyName;
             return inst;
         } catch (final Exception ex) {
-            final String msg = format("PropertyDescriptor could not be created from value [%s].", toStringRepresentation);
+            final String msg = format(ERR_COULD_NOT_BE_CREATED, toStringRepresentation);
             LOGGER.error(msg, ex);
             throw EntityException.wrapIfNecessary(msg, ex);
         }
