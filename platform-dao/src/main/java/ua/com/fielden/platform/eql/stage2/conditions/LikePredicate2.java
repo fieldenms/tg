@@ -15,38 +15,38 @@ import java.util.Set;
 
 import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 
-public record LikePredicate2 (ISingleOperand2<? extends ISingleOperand3> leftOperand,
-                              ISingleOperand2<? extends ISingleOperand3> rightOperand,
+public record LikePredicate2 (ISingleOperand2<? extends ISingleOperand3> matchOperand,
+                              ISingleOperand2<? extends ISingleOperand3> patternOperand,
                               LikeOptions options)
         implements ICondition2<LikePredicate3>, ToString.IFormattable
 {
 
     @Override
     public boolean ignore() {
-        return leftOperand.ignore() || rightOperand.ignore();
+        return matchOperand.ignore() || patternOperand.ignore();
     }
 
     @Override
     public TransformationResultFromStage2To3<LikePredicate3> transform(final TransformationContextFromStage2To3 context) {
-        final TransformationResultFromStage2To3<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> matchOperandTr = matchOperand.transform(
                 context);
-        final TransformationResultFromStage2To3<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(
-                leftOperandTr.updatedContext);
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> patternOperandTr = patternOperand.transform(
+                matchOperandTr.updatedContext);
         return new TransformationResultFromStage2To3<>(
-                new LikePredicate3(leftOperandTr.item, rightOperandTr.item, options), rightOperandTr.updatedContext);
+                new LikePredicate3(matchOperandTr.item, patternOperandTr.item, options), patternOperandTr.updatedContext);
     }
 
     @Override
     public Set<Prop2> collectProps() {
         final Set<Prop2> result = new HashSet<>();
-        result.addAll(leftOperand.collectProps());
-        result.addAll(rightOperand.collectProps());
+        result.addAll(matchOperand.collectProps());
+        result.addAll(patternOperand.collectProps());
         return result;
     }
 
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        return concat(HashSet::new, leftOperand.collectEntityTypes(), rightOperand.collectEntityTypes());
+        return concat(HashSet::new, matchOperand.collectEntityTypes(), patternOperand.collectEntityTypes());
     }
 
     @Override
@@ -58,8 +58,8 @@ public record LikePredicate2 (ISingleOperand2<? extends ISingleOperand3> leftOpe
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
                 .addIf("options", options, opts -> opts != LikeOptions.DEFAULT_OPTIONS)
-                .add("left", leftOperand)
-                .add("right", rightOperand)
+                .add("match", matchOperand)
+                .add("pattern", patternOperand)
                 .$();
     }
 
