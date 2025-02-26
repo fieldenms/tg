@@ -255,7 +255,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
 
     @Override
     public String toString() {
-        return "RichText[%n%s%n]".formatted(formattedText);
+        return formattedText;
     }
 
 }
