@@ -23,6 +23,8 @@ public interface IDomainMetadata {
 
     /**
      * Returns all existing type metadata instances that are of the given metadata type.
+     * <p>
+     * To get metadata only for registered entities use {@link IDomainMetadataUtils#registeredEntities()}.
      */
     <T extends TypeMetadata> Stream<T> allTypes(Class<T> metadataType);
 

@@ -3,11 +3,10 @@ package ua.com.fielden.platform.test;
 import com.google.common.io.Files;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.ddl.IDdlGenerator;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadataUtils;
 import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 import java.io.File;
@@ -54,11 +53,10 @@ public abstract class DbCreator {
             final boolean execDdslScripts) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 
         this.testCaseType = testCaseType;
-        final var domainMetadata = config.getInstance(IDomainMetadata.class);
-        this.persistentEntitiesMetadata = config.getInstance(IApplicationDomainProvider.class)
-                .entityTypes()
-                .stream()
-                .flatMap(ty -> domainMetadata.forEntityOpt(ty).flatMap(EntityMetadata::asPersistent).stream())
+        this.persistentEntitiesMetadata = config.getInstance(IDomainMetadataUtils.class)
+                .registeredEntities()
+                .map(EntityMetadata::asPersistent)
+                .flatMap(Optional::stream)
                 .collect(toImmutableList());
 
         // this is a single place where a new DB connection is established
