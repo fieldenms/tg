@@ -5,13 +5,18 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 
 import java.util.stream.Stream;
 
-final class DomainMetadataUtils implements IDomainMetadataUtils {
+// TODO: Remove 'public' once dependent tests are rationalised with IoC.
+public final class DomainMetadataUtils implements IDomainMetadataUtils {
 
     private final IApplicationDomainProvider appDomain;
     private final IDomainMetadata domainMetadata;
 
+    /**
+     * <b> Do not use this constructor. Use IoC instead. </b>
+     * This constructor remains public to suppport platform tests that have not yet been rationalised with IoC.
+     */
     @Inject
-    private DomainMetadataUtils(final IApplicationDomainProvider appDomain, final IDomainMetadata domainMetadata) {
+    public DomainMetadataUtils(final IApplicationDomainProvider appDomain, final IDomainMetadata domainMetadata) {
         this.appDomain = appDomain;
         this.domainMetadata = domainMetadata;
     }
