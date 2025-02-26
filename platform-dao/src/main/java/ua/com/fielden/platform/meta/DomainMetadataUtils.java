@@ -20,7 +20,7 @@ final class DomainMetadataUtils implements IDomainMetadataUtils {
     public Stream<EntityMetadata> registeredEntities() {
         return appDomain.entityTypes()
                 .stream()
-                .flatMap(ty -> domainMetadata.forEntityOpt(ty).flatMap(EntityMetadata::asPersistent).stream());
+                .flatMap(ty -> domainMetadata.forEntityOpt(ty).stream());
     }
 
 }
