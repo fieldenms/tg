@@ -9,8 +9,12 @@ import ua.com.fielden.platform.entity.query.test_entities.Circular_EntityWithCom
 import ua.com.fielden.platform.entity.query.test_entities.Circular_UnionEntity;
 import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithYieldId;
 import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithoutYieldId;
-import ua.com.fielden.platform.eql.meta.BaseEntQueryTCase1;
+import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.persistence.types.EntityWithRichText;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -23,22 +27,37 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
+import static ua.com.fielden.platform.test.PlatformTestDomainTypes.entityTypes;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertNotEmpty;
 
-public class FetchModelTest extends BaseEntQueryTCase1 {
+public class FetchModelTest {
 
-    private static <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
+    private static final IDomainMetadata DOMAIN_METADATA;
+    private static final QuerySourceInfoProvider QUERY_SOURCE_INFO_PROVIDER;
+    static {
+        final var dbVersionProvider = constantDbVersion(DbVersion.POSTGRESQL);
+        DOMAIN_METADATA = new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+                entityTypes,
+                dbVersionProvider)
+                .build();
+        QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
+    }
+
+
+    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
         return IRetrievalModel.createRetrievalModel(fetchModel, DOMAIN_METADATA, QUERY_SOURCE_INFO_PROVIDER);
     }
     
-    private static <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final Class<T> entityType, final FetchCategory fetchCategory) {
+    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final Class<T> entityType, final FetchCategory fetchCategory) {
         return produceRetrievalModel(new fetch<T>(entityType, fetchCategory));
     }
 
-    private static <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(
+    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(
             final Class<T> entityType,
             final FetchCategory fetchCategory,
             final Function<? super fetch<T>, fetch<T>> finisher)
@@ -115,14 +134,14 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
         _composite_key_members_are_not_included(NONE);
     }
 
-    private static void _composite_key_members_are_included_recursively(final FetchCategory category) {
+    private void _composite_key_members_are_included_recursively(final FetchCategory category) {
         final var fetchModel = produceRetrievalModel(TgAuthorship.class, category);
         assertPropsAreFetched(fetchModel, Set.of("title", "author"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("author"), Set.of("name", "surname", "patronymic"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("author.name"), Set.of("key"));
     }
 
-    private static void _composite_key_members_are_not_included(final FetchCategory category) {
+    private void _composite_key_members_are_not_included(final FetchCategory category) {
         final var fetchModel = produceRetrievalModel(TgAuthorship.class, category);
         assertPropsAreNotFetched(fetchModel, Set.of("author", "title"));
     }
@@ -170,7 +189,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
         assertPropsAreNotFetched(fetchModel, Set.of("key"));
     }
 
-    private static void _composite_key_itself_is_not_included(
+    private void _composite_key_itself_is_not_included(
             final Class<? extends AbstractEntity<DynamicEntityKey>> entityType,
             final FetchCategory category)
     {
@@ -212,7 +231,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
         _all_calculated_properties_are_excluded(TgAuthor.class, NONE);
     }
 
-    private static void _only_those_calculated_properties_that_have_component_type_are_included(
+    private void _only_those_calculated_properties_that_have_component_type_are_included(
             final Class<? extends AbstractEntity<?>> entityType,
             final FetchCategory category)
     {
@@ -228,7 +247,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
                 });
     }
 
-    private static void _all_calculated_properties_are_included(
+    private void _all_calculated_properties_are_included(
             final Class<? extends AbstractEntity<?>> entityType,
             final FetchCategory category)
     {
@@ -242,7 +261,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
         assertPropsAreFetched(fetchModel, calculatedProps);
     }
 
-    private static void _all_calculated_properties_are_excluded(
+    private void _all_calculated_properties_are_excluded(
             final Class<? extends AbstractEntity<?>> entityType,
             final FetchCategory category)
     {
@@ -391,11 +410,11 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
     public void test_key_and_desc_fetching_of_fuel_usage() {
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, KEY_AND_DESC);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "date"));
-        
+
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
         assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
-       
+
         assertPropsAreProxied(fetchModel, Set.of("qty", "fuelType"));
     }
 
@@ -420,7 +439,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "fuelType"));
         assertPropsAreProxied(fetchModel, Set.of("date", "qty"));
-        
+
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
         assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
@@ -520,7 +539,7 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
         assertPropsAreFetched(fetchModel, Set.of("id"));
         assertPropsAreProxied(fetchModel, Set.of("version", "key", "location"));
     }
-    
+
     @Test
     public void fetch_composite_key_of_synthetic_entity() {
         final IRetrievalModel<TgPublishedYearly> fetchModel = produceRetrievalModel(TgPublishedYearly.class, KEY_AND_DESC);
@@ -639,6 +658,33 @@ public class FetchModelTest extends BaseEntQueryTCase1 {
                 Set.of("union"));
         assertPropsAreNotFetched(produceRetrievalModel(Circular_UnionEntity.class, NONE),
                 Set.of("entity"));
+    }
+
+    /*----------------------------------------------------------------------------
+     | Implicit fetching of calculated `desc`
+     -----------------------------------------------------------------------------*/
+
+    @Test
+    public void strategy_KEY_AND_DESC_calculated_desc_is_included() {
+        _calculated_desc_is_included(KEY_AND_DESC);
+    }
+
+    @Test
+    public void strategy_DEFAULT_calculated_desc_is_included() {
+        _calculated_desc_is_included(DEFAULT);
+    }
+
+    @Test
+    public void strategy_ALL_calculated_desc_is_included() {
+        _calculated_desc_is_included(ALL);
+    }
+
+    private void _calculated_desc_is_included(final FetchCategory category) {
+        final var entityMetadata = DOMAIN_METADATA.forEntity(EntityWithRichText.class);
+        assertTrue(entityMetadata.hasProperty(DESC));
+        assertTrue(entityMetadata.property(DESC).isCalculated());
+        assertPropsAreFetched(produceRetrievalModel(EntityWithRichText.class, category),
+                              Set.of(DESC));
     }
 
 }
