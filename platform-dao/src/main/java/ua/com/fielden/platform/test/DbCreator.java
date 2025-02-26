@@ -1,9 +1,14 @@
 package ua.com.fielden.platform.test;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
+import com.google.common.io.Files;
+import org.apache.logging.log4j.Logger;
+import org.hibernate.dialect.Dialect;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.ddl.IDdlGenerator;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,25 +17,12 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
-import org.apache.logging.log4j.Logger;
-import org.hibernate.dialect.Dialect;
-
-import com.google.common.io.Files;
-
-import ua.com.fielden.platform.ddl.IDdlGenerator;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
 
 /**
  * This is an abstraction that capture the logic for the initial test case related db creation and its re-creation from a generated script for all individual tests in the same test case.
@@ -62,7 +54,12 @@ public abstract class DbCreator {
             final boolean execDdslScripts) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 
         this.testCaseType = testCaseType;
-        this.persistentEntitiesMetadata = config.getInstance(IDomainMetadata.class).allTypes(EntityMetadata.Persistent.class).collect(toImmutableList());
+        final var domainMetadata = config.getInstance(IDomainMetadata.class);
+        this.persistentEntitiesMetadata = config.getInstance(IApplicationDomainProvider.class)
+                .entityTypes()
+                .stream()
+                .flatMap(ty -> domainMetadata.forEntityOpt(ty).flatMap(EntityMetadata::asPersistent).stream())
+                .collect(toImmutableList());
 
         // this is a single place where a new DB connection is established
         logger.info("CREATING DB CONNECTION...");
