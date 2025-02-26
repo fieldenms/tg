@@ -851,6 +851,8 @@ const TgEntityMasterBehaviorImpl = {
         self.addEventListener('binding-entity-appeared', function (event) {
             const target = event.composedPath()[0];
             if (target === this) {
+                //Need to reset scrolltop for entitity master's scrolling panel to prevent initial scrolling on macOS and iOS
+                this.$.masterDom.$.scrollableContainer.$.scrollablePanel.scrollTop = 0;
                 this.focusView();
                 if (!this._hasEmbededView()) {
                     this.async(function () {

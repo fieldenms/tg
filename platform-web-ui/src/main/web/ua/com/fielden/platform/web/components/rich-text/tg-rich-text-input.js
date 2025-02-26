@@ -1059,7 +1059,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     _valueChanged(newValue) {
         if(this._editor && newValue !== getEditorHTMLText.bind(this)()) {
             this._editor.setHTML(newValue, false);
-            this._editor.moveCursorToStart(false);//have to move cursor to the begining of the text because safari still scrolls to the bottom even after setting HTML with second paramter equal to false which means "do not move cursor to the end"
+            this._getEditableContent().scrollTop = 0;//have to reset scrollTop property because safari still scrolls to the bottom even after setting HTML with second paramter equal to false which means "do not move cursor to the end"
         }
     }
 
