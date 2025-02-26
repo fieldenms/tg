@@ -10,11 +10,12 @@ import ua.com.fielden.platform.entity.query.test_entities.Circular_UnionEntity;
 import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithYieldId;
 import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithoutYieldId;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.meta.DomainMetadataBuilder;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
+import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.*;
-import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.util.Arrays;
@@ -28,18 +29,28 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
+import static ua.com.fielden.platform.test.PlatformTestDomainTypes.entityTypes;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertNotEmpty;
 
-public class FetchModelTest extends AbstractDaoTestCase {
+public class FetchModelTest {
 
-    private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
+    private static final IDomainMetadata DOMAIN_METADATA;
+    private static final QuerySourceInfoProvider QUERY_SOURCE_INFO_PROVIDER;
+    static {
+        final var dbVersionProvider = constantDbVersion(DbVersion.POSTGRESQL);
+        DOMAIN_METADATA = new DomainMetadataBuilder(new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(),
+                entityTypes,
+                dbVersionProvider)
+                .build();
+        QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
+    }
+
 
     private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
-        return IRetrievalModel.createRetrievalModel(fetchModel,
-                                                    domainMetadata,
-                                                    getInstance(QuerySourceInfoProvider.class));
+        return IRetrievalModel.createRetrievalModel(fetchModel, DOMAIN_METADATA, QUERY_SOURCE_INFO_PROVIDER);
     }
     
     private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final Class<T> entityType, final FetchCategory fetchCategory) {
@@ -172,7 +183,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     @Test
     public void composite_key_itself_is_not_included_if_specified_explicitly() {
         final var entityType = TgFuelUsage.class;
-        assertTrue(domainMetadata.forProperty(entityType, "key").type().isCompositeKey());
+        assertTrue(DOMAIN_METADATA.forProperty(entityType, "key").type().isCompositeKey());
 
         final var fetchModel = produceRetrievalModel(fetchNone(entityType).with("key"));
         assertPropsAreNotFetched(fetchModel, Set.of("key"));
@@ -225,7 +236,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
             final FetchCategory category)
     {
         final var fetchModel = produceRetrievalModel(entityType, category);
-        domainMetadata.forEntity(entityType).properties().stream()
+        DOMAIN_METADATA.forEntity(entityType).properties().stream()
                 .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
                 .forEach(prop -> {
                     if (prop.type().isComponent()) {
@@ -241,7 +252,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
             final FetchCategory category)
     {
         final var fetchModel = produceRetrievalModel(entityType, category);
-        final var calculatedProps = domainMetadata.forEntity(entityType).properties().stream()
+        final var calculatedProps = DOMAIN_METADATA.forEntity(entityType).properties().stream()
                 .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
                 // Composite key itself is never included. See the documentation of EntityRetrievalModel.
                 .filter(prop -> !prop.type().isCompositeKey())
@@ -255,7 +266,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
             final FetchCategory category)
     {
         final var fetchModel = produceRetrievalModel(entityType, category);
-        final var calculatedProps = domainMetadata.forEntity(entityType).properties().stream()
+        final var calculatedProps = DOMAIN_METADATA.forEntity(entityType).properties().stream()
                 .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
                 .map(PropertyMetadata::name)
                 .toList();
@@ -399,11 +410,11 @@ public class FetchModelTest extends AbstractDaoTestCase {
     public void test_key_and_desc_fetching_of_fuel_usage() {
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, KEY_AND_DESC);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "date"));
-        
+
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
         assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
-       
+
         assertPropsAreProxied(fetchModel, Set.of("qty", "fuelType"));
     }
 
@@ -428,7 +439,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "fuelType"));
         assertPropsAreProxied(fetchModel, Set.of("date", "qty"));
-        
+
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
         assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
@@ -528,7 +539,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
         assertPropsAreFetched(fetchModel, Set.of("id"));
         assertPropsAreProxied(fetchModel, Set.of("version", "key", "location"));
     }
-    
+
     @Test
     public void fetch_composite_key_of_synthetic_entity() {
         final IRetrievalModel<TgPublishedYearly> fetchModel = produceRetrievalModel(TgPublishedYearly.class, KEY_AND_DESC);
@@ -562,7 +573,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     @Test
     public void critOnly_properties_are_never_included_implicitly() {
         final var entityType = TgVehicle.class;
-        final var critOnlyPropNames = domainMetadata.forEntity(entityType).properties().stream()
+        final var critOnlyPropNames = DOMAIN_METADATA.forEntity(entityType).properties().stream()
                 .map(PropertyMetadata::asCritOnly)
                 .flatMap(Optional::stream)
                 .map(PropertyMetadata::name)
@@ -577,7 +588,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     @Test
     public void critOnly_properties_are_included_if_specified_explicitly() {
         final var entityType = TgVehicle.class;
-        final var critOnlyPropNames = domainMetadata.forEntity(entityType).properties().stream()
+        final var critOnlyPropNames = DOMAIN_METADATA.forEntity(entityType).properties().stream()
                 .map(PropertyMetadata::asCritOnly)
                 .flatMap(Optional::stream)
                 .map(PropertyMetadata::name)
@@ -669,14 +680,11 @@ public class FetchModelTest extends AbstractDaoTestCase {
     }
 
     private void _calculated_desc_is_included(final FetchCategory category) {
-        final var entityMetadata = domainMetadata.forEntity(EntityWithRichText.class);
+        final var entityMetadata = DOMAIN_METADATA.forEntity(EntityWithRichText.class);
         assertTrue(entityMetadata.hasProperty(DESC));
         assertTrue(entityMetadata.property(DESC).isCalculated());
         assertPropsAreFetched(produceRetrievalModel(EntityWithRichText.class, category),
                               Set.of(DESC));
     }
-
-    @Override
-    protected void populateDomain() {}
 
 }
