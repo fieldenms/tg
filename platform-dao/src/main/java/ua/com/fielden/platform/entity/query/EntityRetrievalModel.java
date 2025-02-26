@@ -390,7 +390,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeAllFirstLevelPrimPropsAndKey() {
-            // Always include `desc`. This category should be a superset of KEY_AND_DESC.
+            // Always include `desc`.
+            // This category should be a superset of KEY_AND_DESC.
             if (entityMetadata.hasProperty(DESC)) {
                 primProps.add(DESC);
             }
@@ -435,7 +436,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeAllFirstLevelProps() {
-            // Always include `desc`. This category should be a superset of KEY_AND_DESC.
+            // Always include `desc`.
+            // This category should be a superset of KEY_AND_DESC.
             if (entityMetadata.hasProperty(DESC)) {
                 primProps.add(DESC);
             }
