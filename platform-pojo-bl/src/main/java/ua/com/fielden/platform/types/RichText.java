@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.validation.DefaultValidatorForValueTypeWithValidation;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.types.exceptions.ValueObjectException;
 
 import java.util.Objects;
 
@@ -45,7 +45,9 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     public static final String CORE_TEXT = "coreText";
     public static final String VALIDATION_RESULT = "validationResult";
 
-    private static final String ERR_UNACCEPTABLE_VALIDATION_RESULT = "Unacceptable validation result [%s] for invalid %s creation.";
+    public static final String ERR_INVALID_RICHTEXT_CANNOT_BE_CREATED_WITH_SUCCESSFUL_RESULT =
+            "Invalid RichText cannot be created with a successful validation result [%s]";
+
     private static final Result SUCCESSFUL = Result.successful();
 
     @IsProperty(length = Integer.MAX_VALUE)
@@ -90,12 +92,11 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     }
 
     /**
-     * Creates {@link RichText} from unsuccessful sanitisation validation result.
+     * Creates {@link RichText.Invalid} from an unsuccessful validation result.
+     * <p>
+     * It is an error if the specified result is successful.
      */
     public static RichText fromUnsuccessfulValidationResult(final Result validationResult) {
-        if (validationResult.isSuccessful()) {
-            throw new ValueObjectException(ERR_UNACCEPTABLE_VALIDATION_RESULT.formatted(validationResult, RichText.class.getSimpleName()));
-        }
         return new Invalid(validationResult);
     }
 
@@ -188,10 +189,19 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     public static final class Invalid extends RichText {
 
         /**
-         * @param validationResult  the result of validation
+         * @param validationResult  the result of validation, which must be unsuccessful
          */
-        Invalid(final Result validationResult) {
-            super(null, null, validationResult);
+        private Invalid(final Result validationResult) {
+            super(null, null, requireUnsuccessful(validationResult));
+        }
+
+        private static Result requireUnsuccessful(final Result validationResult) {
+            if (validationResult.isSuccessful()) {
+                throw new InvalidArgumentException(ERR_INVALID_RICHTEXT_CANNOT_BE_CREATED_WITH_SUCCESSFUL_RESULT.formatted(validationResult));
+            }
+            else {
+                return validationResult;
+            }
         }
 
         @Override
