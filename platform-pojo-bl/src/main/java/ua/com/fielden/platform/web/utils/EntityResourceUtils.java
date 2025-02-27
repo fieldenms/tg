@@ -730,11 +730,11 @@ public class EntityResourceUtils {
         }
         else if (object instanceof Map rawMap) {
             final var map = (Map<String, Object>) rawMap;
-            final var message = (String) map.get("message");
+            final var message = (String) map.get(Result.MESSAGE);
             if (message == null) {
                 throw new EntityResourceUtilsException("Message is required for RichText validaton result.");
             }
-            return failure(map.get("instance"), message);
+            return failure(map.get(Result.INSTANCE), message);
         }
         else {
             throw new EntityResourceUtilsException(
