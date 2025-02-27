@@ -30,14 +30,12 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.*;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
@@ -70,6 +68,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFromCriteriaType;
+import static ua.com.fielden.platform.types.RichText.VALIDATION_RESULT;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
@@ -693,9 +692,16 @@ public class EntityResourceUtils {
             return linkValue == null ? null : new Hyperlink(linkValue);
         } else if (RichText.class.isAssignableFrom(propertyType)){
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
-            // in a modified RichText value we care only about formatted text
-            final String formattedText = (String) map.get(RichText.FORMATTED_TEXT);
-            return formattedText == null ? null : RichText.fromHtml(formattedText);
+
+            final @Nullable Result validationResult = convertRichTextValidationResult(map.get(VALIDATION_RESULT));
+            if (validationResult != null) {
+                return RichText.fromUnsuccessfulValidationResult(validationResult);
+            }
+            else {
+                // in a modified RichText value we care only about formatted text
+                final String formattedText = (String) map.get(RichText.FORMATTED_TEXT);
+                return formattedText == null ? null : RichText.fromHtml(formattedText);
+            }
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else if (Class.class.isAssignableFrom(propertyType)) {
@@ -706,6 +712,36 @@ public class EntityResourceUtils {
             }
         } else {
             throw new UnsupportedOperationException(format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
+        }
+    }
+
+    /**
+     * Converts the specified object to a validation result for {@link RichText.Invalid}.
+     * If the object is {@code null}, returns {@code null}.
+     * Otherwise, the object must represent an unsuccessful validation result.
+     *
+     * @return  unsuccessful validation result or {@code null}
+     *
+     * @see RichTextJsonDeserialiser
+     */
+    private static @Nullable Result convertRichTextValidationResult(final @Nullable Object object) {
+        if (object == null) {
+            return null;
+        }
+        else if (object instanceof Map rawMap) {
+            final var map = (Map<String, Object>) rawMap;
+            final var message = (String) map.get("message");
+            if (message == null) {
+                throw new EntityResourceUtilsException("Message is required for RichText validaton result.");
+            }
+            return failure(map.get("instance"), message);
+        }
+        else {
+            throw new EntityResourceUtilsException(
+                    format("Conversion error: expected [%s.%s] with type [%s], but was [%s].",
+                           RichText.class.getSimpleName(), RichText.FORMATTED_TEXT,
+                           Map.class.getTypeName(),
+                           object.getClass().getTypeName()));
         }
     }
 
