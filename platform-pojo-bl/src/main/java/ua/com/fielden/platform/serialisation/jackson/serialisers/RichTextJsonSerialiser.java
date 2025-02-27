@@ -7,9 +7,7 @@ import ua.com.fielden.platform.types.RichText;
 
 import java.io.IOException;
 
-import static ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser.VALIDATION_RESULT;
-import static ua.com.fielden.platform.types.RichText.CORE_TEXT;
-import static ua.com.fielden.platform.types.RichText.FORMATTED_TEXT;
+import static ua.com.fielden.platform.types.RichText.*;
 
 public class RichTextJsonSerialiser extends StdSerializer<RichText> {
 

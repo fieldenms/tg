@@ -43,6 +43,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
 
     public static final String FORMATTED_TEXT = "formattedText";
     public static final String CORE_TEXT = "coreText";
+    public static final String VALIDATION_RESULT = "validationResult";
 
     private static final String ERR_UNACCEPTABLE_VALIDATION_RESULT = "Unacceptable validation result [%s] for invalid %s creation.";
     private static final Result SUCCESSFUL = Result.successful();

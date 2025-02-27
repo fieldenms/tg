@@ -10,7 +10,6 @@ import ua.com.fielden.platform.serialisation.jackson.exceptions.DeserialisationE
 
 import java.io.IOException;
 
-import static ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser.VALIDATION_RESULT;
 import static ua.com.fielden.platform.types.RichText.*;
 
 public class RichTextJsonDeserialiser extends StdDeserializer<RichText> {
