@@ -4,11 +4,17 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.RichTextJsonDeserialiser;
 
 import java.io.IOException;
 
 import static ua.com.fielden.platform.types.RichText.*;
 
+/**
+ * JSON serialiser for {@link RichText}.
+ * <p>
+ * {@link RichTextJsonDeserialiser} specifies possible forms of a serialised {@link RichText} object.
+ */
 public class RichTextJsonSerialiser extends StdSerializer<RichText> {
 
     public RichTextJsonSerialiser() {
