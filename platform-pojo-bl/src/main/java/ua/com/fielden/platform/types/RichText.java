@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.DefaultValidatorForValueTypeWithValidation;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.types.exceptions.ValueObjectException;
 
 import java.util.Objects;
 
@@ -43,6 +44,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     public static final String FORMATTED_TEXT = "formattedText";
     public static final String CORE_TEXT = "coreText";
 
+    private static final String ERR_UNACCEPTABLE_VALIDATION_RESULT = "Unacceptable validation result [%s] for invalid %s creation.";
     private static final Result SUCCESSFUL = Result.successful();
 
     @IsProperty(length = Integer.MAX_VALUE)
@@ -86,6 +88,16 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         return validationResult;
     }
 
+    /**
+     * Creates {@link RichText} from unsuccessful sanitisation validation result.
+     */
+    public static RichText fromUnsuccessfulValidationResult(final Result validationResult) {
+        if (validationResult.isSuccessful()) {
+            throw new ValueObjectException(ERR_UNACCEPTABLE_VALIDATION_RESULT.formatted(validationResult, RichText.class.getSimpleName()));
+        }
+        return new Invalid(validationResult);
+    }
+
     // NOTE: If RichText with HTML as markup is accepted completely, Markdown support can potentially be removed.
     /**
      * Creates {@link RichText} by parsing the input as Markdown and sanitising all embedded HTML.
@@ -96,7 +108,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         final var validationResult = RichTextSanitiser.sanitiseMarkdown(input);
         return validationResult.isSuccessful()
                 ? new RichText(input, RichTextAsMarkdownCoreTextExtractor.toCoreText(root), SUCCESSFUL)
-                : new Invalid(validationResult);
+                : fromUnsuccessfulValidationResult(validationResult);
     }
 
     /**
@@ -127,7 +139,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
             return new RichText(input, coreText, validationResult);
         }
         else {
-            return new Invalid(validationResult);
+            return fromUnsuccessfulValidationResult(validationResult);
         }
     }
 

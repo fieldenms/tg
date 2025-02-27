@@ -7,6 +7,10 @@ import ua.com.fielden.platform.types.RichText;
 
 import java.io.IOException;
 
+import static ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser.VALIDATION_RESULT;
+import static ua.com.fielden.platform.types.RichText.CORE_TEXT;
+import static ua.com.fielden.platform.types.RichText.FORMATTED_TEXT;
+
 public class RichTextJsonSerialiser extends StdSerializer<RichText> {
 
     public RichTextJsonSerialiser() {
@@ -19,17 +23,20 @@ public class RichTextJsonSerialiser extends StdSerializer<RichText> {
     {
         generator.writeStartObject();
 
-        if (richText.isValid().isSuccessful()) {
-            generator.writeFieldName(RichText.FORMATTED_TEXT);
+        final var validationResult = richText.isValid();
+        if (validationResult.isSuccessful()) {
+            generator.writeFieldName(FORMATTED_TEXT);
             generator.writeObject(richText.formattedText());
-            generator.writeFieldName(RichText.CORE_TEXT);
+            generator.writeFieldName(CORE_TEXT);
             generator.writeObject(richText.coreText());
         }
         else {
-            generator.writeFieldName(RichText.FORMATTED_TEXT);
+            generator.writeFieldName(FORMATTED_TEXT);
             generator.writeObject(null);
-            generator.writeFieldName(RichText.CORE_TEXT);
+            generator.writeFieldName(CORE_TEXT);
             generator.writeObject(null);
+            generator.writeFieldName(VALIDATION_RESULT);
+            generator.writeObject(validationResult);
         }
 
         generator.writeEndObject();

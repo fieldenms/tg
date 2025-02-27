@@ -3,41 +3,55 @@ package ua.com.fielden.platform.types;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.DeserialisationException;
 
 import java.io.IOException;
 
+import static ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser.VALIDATION_RESULT;
+import static ua.com.fielden.platform.types.RichText.*;
+
 public class RichTextJsonDeserialiser extends StdDeserializer<RichText> {
 
-    public static final String ERR_UNEXPECTED_NULL_IN_FIELD_FORMATTED_TEXT = "Unexpected null in field [formattedText] in object %s.";
-    public static final String ERR_UNEXPECTED_NULL_IN_FIELD_CORE_TEXT = "Unexpected null in field [coreText] in object %s.";
+    public static final String ERR_UNEXPECTED_NULL_IN_FIELD = "Unexpected null in field [%s] in object %s.";
     public static final String ERR_MISSING_FIELD = "Missing field [%s] in object %s.";
     public static final String ERR_WAS_EXPECTING_STRING = "Expected string in field [%s] but was %s, in object %s.";
+    private final ObjectMapper mapper;
 
-    public RichTextJsonDeserialiser() {
+    public RichTextJsonDeserialiser(final ObjectMapper mapper) {
         super(RichText.class);
+        this.mapper = mapper;
     }
 
     @Override
     public RichText deserialize(final JsonParser parser, final DeserializationContext ctx) throws IOException {
         final JsonNode node = parser.readValueAsTree();
-        final var formattedTextNode = requireField(node, RichText.FORMATTED_TEXT);
-        final var coreTextNode = requireField(node, RichText.CORE_TEXT);
+        final var formattedTextNode = requireField(node, FORMATTED_TEXT);
+        final var coreTextNode = requireField(node, CORE_TEXT);
 
-        // if all components are null, treat the whole as null
         if (formattedTextNode.isNull() && coreTextNode.isNull()) {
+            final var validationResultNode = node.get(VALIDATION_RESULT);
+            if (validationResultNode != null) {
+                if (validationResultNode.isNull()) {
+                    throw new DeserialisationException(ERR_UNEXPECTED_NULL_IN_FIELD.formatted(VALIDATION_RESULT, node.toPrettyString()));
+                }
+                final var result = validationResultNode.traverse(mapper).readValueAs(Result.class);
+                return fromUnsuccessfulValidationResult(result);
+            }
+            // if all components are null, treat the whole as null
             return null;
         }
         if (formattedTextNode.isNull()) {
-            throw new DeserialisationException(ERR_UNEXPECTED_NULL_IN_FIELD_FORMATTED_TEXT.formatted(node.toPrettyString()));
+            throw new DeserialisationException(ERR_UNEXPECTED_NULL_IN_FIELD.formatted(FORMATTED_TEXT, node.toPrettyString()));
         }
         if (coreTextNode.isNull()) {
-            throw new DeserialisationException(ERR_UNEXPECTED_NULL_IN_FIELD_CORE_TEXT.formatted(node.toPrettyString()));
+            throw new DeserialisationException(ERR_UNEXPECTED_NULL_IN_FIELD.formatted(CORE_TEXT, node.toPrettyString()));
         }
 
-        final String formattedText = requireText(formattedTextNode,  RichText.FORMATTED_TEXT, node);
-        final String coreText = requireText(coreTextNode, RichText.CORE_TEXT, node);
+        final String formattedText = requireText(formattedTextNode,  FORMATTED_TEXT, node);
+        final String coreText = requireText(coreTextNode, CORE_TEXT, node);
         return new RichText.Persisted(formattedText, coreText);
     }
 
