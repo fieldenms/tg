@@ -4,7 +4,7 @@
     <groupId>fielden</groupId>
     <artifactId>platform-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.8.0</version>
+    <version>1.8.1</version>
     <name>Trident Genesis Platform Parent</name>
     <description>
         Trident Genesis is a software application platform designed for development of EAM/ERP type applications.
