@@ -7,10 +7,7 @@ import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.security.user.User.EMAIL;
 import static ua.com.fielden.platform.security.user.User.SSO_ONLY;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -78,22 +75,27 @@ public interface IUser extends IEntityDao<User> {
 
     /**
      * Generates a temporal password reset UUID for a user that is identified by the provided username or email address.
-     * The generated UUID gets immediately associated with the user and the updated user is returned for further use such as email sending with reset URI.
+     * The generated UUID gets immediately associated with the user, and the updated user is returned for further use, such as email sending with reset URI.
      * <p>
      * An empty optional value is returned in case where no user was identified by the given username or email address.
      *
      * @param usernameOrEmail
+     * @param expirationTime  The moment in time at which generated UUID will become expired.
+     *                        It is expressed as a parameter to support different expiration periods for different circumstances, and to facilitate testing.
+     *                        For example, the expiration period for the initially created user could be 24 hours, but 15 minutes for password resets.
      * @return
      */
-    Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail);
+    Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail, final Date expirationTime);
 
     /**
      * Returns <code>true</code> if the provided <code>uuid</code> is associated with a user and has not yet expired.
      *
      * @param uuid
+     * @param now  The moment in time at which validation is performed.
+     *             It is expressed as a parameter to facilitate testing.
      * @return
      */
-    boolean isPasswordResetUuidValid(final String uuid);
+    boolean isPasswordResetUuidValid(final String uuid, final Date now);
 
     /**
      * Estimates password's strength returing <code>true</code> if the presented password is acceptable.

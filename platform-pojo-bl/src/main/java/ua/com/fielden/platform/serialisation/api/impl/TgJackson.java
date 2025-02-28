@@ -2,10 +2,7 @@ package ua.com.fielden.platform.serialisation.api.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.ResolvedType;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Charsets;
@@ -74,6 +71,11 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         entityTypeInfoGetter = new EntityTypeInfoGetter();
         this.serialisationTypeEncoder = serialisationTypeEncoder.setTgJackson(this);
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
+
+        // Gracefully serialise getters with self-references.
+        // This allows Result.ex serialisation with different types of causes potentially coming from external libs.
+        disable(SerializationFeature.FAIL_ON_SELF_REFERENCES);
+        enable(SerializationFeature.WRITE_SELF_REFERENCES_AS_NULL);
 
         // enable(SerializationFeature.INDENT_OUTPUT);
         // enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);

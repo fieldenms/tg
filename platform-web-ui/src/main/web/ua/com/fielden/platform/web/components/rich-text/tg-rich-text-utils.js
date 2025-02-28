@@ -11,7 +11,7 @@ const RichTextConverter = {
     'STRONG': remainTheSame,
     'DEL': remainTheSame,
     'SPAN': remainTheSame,
-    'A': remainTheSame,
+    'A': convertLink,
     'UL': convertUnorderedList,
     'OL': convertOrderedList,
     'LI': convertListItem,
@@ -39,6 +39,11 @@ function convertParagraph(paragraph) {
     const fragment = document.createElement('span');
     moveChildren(paragraph, fragment).appendChild(document.createTextNode(' '));
     return fragment;
+}
+
+function convertLink(link) {
+    link.setAttribute("tabindex", "-1");
+    return link;
 }
 
 function convertUnorderedList(unorderedList) {
