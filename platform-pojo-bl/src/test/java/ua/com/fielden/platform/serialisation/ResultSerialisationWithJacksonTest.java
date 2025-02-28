@@ -170,4 +170,23 @@ public class ResultSerialisationWithJacksonTest {
         assertNull(actualResult.getEx().getCause().getCause()); // check actual deserialised self-reference
     }
 
+    /**
+     * Exception type that self-references in getter ({@link #getCause()}).
+     * Exist for testing purposes only.
+     * <p>
+     * See <a href="https://github.com/fieldenms/tg/issues/2379">Issue 2379<a> for more details.
+     */
+    private static class SelfReferencingException extends RuntimeException {
+
+        public SelfReferencingException(final String message) {
+            super(message);
+        }
+
+        @Override
+        public synchronized Throwable getCause() {
+            return this;
+        }
+
+    }
+
 }
