@@ -44,6 +44,8 @@ public enum DbVersion {
         }
 
         /**
+         * If {@code expression} is SQL {@code NULL}, the result of the replace function is also {@code NULL}.
+         *
          * @see <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/replace-transact-sql?view=sql-server-ver16">SQL Server documentation</a>
          */
         public String replaceSql(final CharSequence expression, final CharSequence pattern, final CharSequence replacement) {
@@ -129,6 +131,8 @@ public enum DbVersion {
         }
 
         /**
+         * If {@code expression} is SQL {@code NULL}, the result of the replace function is also {@code NULL}.
+         *
          * @see <a href="https://www.postgresql.org/docs/8.2/functions-string.html">PostgreSQL documentation</a>
          */
         public String replaceSql(final CharSequence expression, final CharSequence pattern, final CharSequence replacement) {
