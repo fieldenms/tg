@@ -30,14 +30,12 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.*;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
@@ -70,6 +68,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFromCriteriaType;
+import static ua.com.fielden.platform.types.RichText.VALIDATION_RESULT;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
@@ -272,58 +271,48 @@ public class EntityResourceUtils {
             final ICompanionObjectFinder coFinder,
             final boolean isEntityStale, final boolean isCriteriaEntity)
     {
-        try {
-            final Optional<String> optActiveProp = ofNullable((String) valAndOrigVal.get("activeProperty"));
-            if (apply) {
-                // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
-                final String valueToBeAppliedName = applyOriginalValue ? "origVal" : "val";
-                final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
-                final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), optActiveProp, coFinder);
-                final Object valueToBeApplied;
-                if (valToBeApplied != null && convertedValue == null) {
-                    final Class<?> propType = determinePropertyType(type, name);
-                    if (isEntityType(propType)) {
-                        // here valToBeApplied must be string; look at 'convert' method with 'reflectedValue' parameter always string for entity-typed 'propertyType'
-                        valueToBeApplied = createMockNotFoundEntity((Class<AbstractEntity<?>>) propType, (String) valToBeApplied);
-                    } else {
-                        valueToBeApplied = convertedValue;
-                    }
+        final Optional<String> optActiveProp = ofNullable((String) valAndOrigVal.get("activeProperty"));
+        if (apply) {
+            // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
+            final String valueToBeAppliedName = applyOriginalValue ? "origVal" : "val";
+            final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
+            final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), optActiveProp, coFinder);
+            final Object valueToBeApplied;
+            if (valToBeApplied != null && convertedValue == null) {
+                final Class<?> propType = determinePropertyType(type, name);
+                if (isEntityType(propType)) {
+                    // here valToBeApplied must be string; look at 'convert' method with 'reflectedValue' parameter always string for entity-typed 'propertyType'
+                    valueToBeApplied = createMockNotFoundEntity((Class<AbstractEntity<?>>) propType, (String) valToBeApplied);
                 } else {
                     valueToBeApplied = convertedValue;
                 }
-                validateAnd(() -> {
-                    // Value application should be enforced.
-                    // This is necessary not only for 'touched unmodified' properties (made earlier), but also for 'touched modified' and 'untouched modified' (new logic, 2017-12).
-                    // This is necessary because without enforcement, property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
-                    // This is due to the fact that 'modified' property value is always different from original value, but could be equal to the actual value of the property immediately before application.
-                    // This situation occurs where the property was modified indirectly from definers of other properties in method 'apply'.
-                    // 'enforce == true' guarantees that property application with validators / definers will always be actioned.
-                    entity.getProperty(name).setValue(valueToBeApplied, true);
-                }, () -> {
-                    return valueToBeApplied;
-                }, () -> {
-                    return applyOriginalValue ?
-                            valueToBeApplied :
-                            convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
-                }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
             } else {
-                // in case where no application is needed (unmodified untouched) the value should be validated only
-                validateAnd(() -> {
-                    // do nothing
-                }, () -> {
-                    return applyOriginalValue
-                            ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder)
-                            : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), optActiveProp, coFinder);
-                }, () -> {
-                    return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
-                }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+                valueToBeApplied = convertedValue;
             }
-        } catch (final RuntimeException exception) {
-            // Generally speaking, it is not expected to receive any exceptions in this code i.e. the exception is thrown in cases of yet unsupported conversions etc.
-            // However, some edge-case conversions (like in Rich Text) may fail.
-            // These conversion errors need to be associated with property as validation errors.
-            entity.getProperty(name).setDomainValidationResult(exception instanceof Result result ? result : failure(exception));
-            logger.error(exception.getMessage(), exception);
+            validateAnd(() -> {
+                // Value application should be enforced.
+                // This is necessary not only for 'touched unmodified' properties (made earlier), but also for 'touched modified' and 'untouched modified' (new logic, 2017-12).
+                // This is necessary because without enforcement, property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
+                // This is due to the fact that 'modified' property value is always different from original value, but could be equal to the actual value of the property immediately before application.
+                // This situation occurs where the property was modified indirectly from definers of other properties in method 'apply'.
+                // 'enforce == true' guarantees that property application with validators / definers will always be actioned.
+                entity.getProperty(name).setValue(valueToBeApplied, true);
+            }, () -> {
+                return valueToBeApplied;
+            }, () -> {
+                return applyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
+            }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+        } else {
+            // in case where no application is needed (unmodified untouched) the value should be validated only
+            validateAnd(() -> {
+                // do nothing
+            }, () -> {
+                return applyOriginalValue
+                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder)
+                        : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), optActiveProp, coFinder);
+            }, () -> {
+                return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
+            }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
         }
     }
 
@@ -703,9 +692,16 @@ public class EntityResourceUtils {
             return linkValue == null ? null : new Hyperlink(linkValue);
         } else if (RichText.class.isAssignableFrom(propertyType)){
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
-            // in a modified RichText value we care only about formatted text
-            final String formattedText = (String) map.get(RichText.FORMATTED_TEXT);
-            return formattedText == null ? null : RichText.fromHtml(formattedText);
+
+            final @Nullable Result validationResult = convertRichTextValidationResult(map.get(VALIDATION_RESULT));
+            if (validationResult != null) {
+                return RichText.fromUnsuccessfulValidationResult(validationResult);
+            }
+            else {
+                // in a modified RichText value we care only about formatted text
+                final String formattedText = (String) map.get(RichText.FORMATTED_TEXT);
+                return formattedText == null ? null : RichText.fromHtml(formattedText);
+            }
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else if (Class.class.isAssignableFrom(propertyType)) {
@@ -716,6 +712,36 @@ public class EntityResourceUtils {
             }
         } else {
             throw new UnsupportedOperationException(format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
+        }
+    }
+
+    /**
+     * Converts the specified object to a validation result for {@link RichText.Invalid}.
+     * If the object is {@code null}, returns {@code null}.
+     * Otherwise, the object must represent an unsuccessful validation result.
+     *
+     * @return  unsuccessful validation result or {@code null}
+     *
+     * @see RichTextJsonDeserialiser
+     */
+    private static @Nullable Result convertRichTextValidationResult(final @Nullable Object object) {
+        if (object == null) {
+            return null;
+        }
+        else if (object instanceof Map rawMap) {
+            final var map = (Map<String, Object>) rawMap;
+            final var message = (String) map.get(Result.MESSAGE);
+            if (message == null) {
+                throw new EntityResourceUtilsException("Message is required for RichText validaton result.");
+            }
+            return failure(map.get(Result.INSTANCE), message);
+        }
+        else {
+            throw new EntityResourceUtilsException(
+                    format("Conversion error: expected [%s.%s] with type [%s], but was [%s].",
+                           RichText.class.getSimpleName(), RichText.FORMATTED_TEXT,
+                           Map.class.getTypeName(),
+                           object.getClass().getTypeName()));
         }
     }
 

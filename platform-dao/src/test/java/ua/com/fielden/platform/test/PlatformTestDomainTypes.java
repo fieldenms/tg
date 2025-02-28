@@ -2,7 +2,6 @@ package ua.com.fielden.platform.test;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.companion.PersistentEntityWithAllKindsOfProperties;
-import ua.com.fielden.platform.sample.domain.TrivialPersistentEntity;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.test_entities.EntityToFill;
@@ -10,15 +9,6 @@ import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamic
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.*;
-import ua.com.fielden.platform.sample.domain.*;
-import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
-import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity2;
-import ua.com.fielden.platform.persistence.types.EntityWithAutoAssignableProperties;
-import ua.com.fielden.platform.persistence.types.EntityWithExTaxAndTaxMoney;
-import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
-import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
-import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;

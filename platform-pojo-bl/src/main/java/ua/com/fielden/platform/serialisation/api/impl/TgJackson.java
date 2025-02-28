@@ -96,7 +96,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addDeserializer(Hyperlink.class, new HyperlinkJsonDeserialiser());
 
         this.module.addSerializer(RichText.class, new RichTextJsonSerialiser());
-        this.module.addDeserializer(RichText.class, new RichTextJsonDeserialiser());
+        this.module.addDeserializer(RichText.class, new RichTextJsonDeserialiser(this));
 
         this.module.addSerializer(Result.class, new ResultJsonSerialiser(this));
         this.module.addDeserializer(Result.class, new ResultJsonDeserialiser(this));

@@ -158,6 +158,9 @@
                     // assert.deepEqual(findProp(entities, "EntityWithMoney", "prop").stringLength(), undefined, "EntityWithMoney property has incorrect stringLength.");
                     assert.deepEqual(findProp(entities, "EntityWithMoney", "prop").integerMax(), null, "EntityWithMoney property has incorrect integerMax.");
                     assert.deepEqual(findProp(entities, "EntityWithMoney", "prop").integerMin(), 34, "EntityWithMoney property has incorrect integerMax.");
+                    assert.isOk(findProp(entities, "EntityWithRichText", "richText").lastInvalidValue(), "EntityWithRichText property should have non-empty lastInvalidValue.");
+                    assert.isOk(findProp(entities, "EntityWithRichText", "richText").lastInvalidValue().validationResult, "EntityWithRichText property should have non-empty lastInvalidValue validation result.");
+                    assert.strictEqual(findProp(entities, "EntityWithRichText", "richText").lastInvalidValue().validationResult.message, 'Input contains unsafe HTML:\n1. Violating tag: script', "EntityWithRichText property has incorrect lastInvalidValue validation result's message.");
 
                     // check EntityType properties
                     assert.deepEqual(find(entities, "EmptyEntity").type().isCompositeEntity(), false, "EmptyEntity should not be composite.");

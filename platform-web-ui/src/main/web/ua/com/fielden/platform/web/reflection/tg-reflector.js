@@ -29,6 +29,8 @@ const KEY_NOT_ASSIGNED = "[key is not assigned]"; // closely resembles AbstractE
 
 const STANDARD_COLLECTION_SEPARATOR = ', ';
 
+const VALIDATION_RESULT = '_validationResult';
+
 /**
  * Determines whether the result represents the error.
  */
@@ -295,7 +297,7 @@ var _createEntityInstancePropPrototype = function () {
      * IMPORTANT: do not use '_validationResult' field directly!
      */
     EntityInstanceProp.prototype.validationResult = function () {
-        return typeof this._validationResult === 'undefined' ? null : this._validationResult;
+        return typeof this[VALIDATION_RESULT] === 'undefined' ? null : this[VALIDATION_RESULT];
     }
 
     /**

@@ -1,21 +1,19 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
-import java.io.IOException;
-
-import org.apache.poi.ss.formula.functions.T;
-
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-
+import org.apache.poi.ss.formula.functions.T;
 import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
+
+import java.io.IOException;
 
 /**
  * Deserialiser for {@link Result} type.
@@ -40,21 +38,21 @@ public class ResultJsonDeserialiser extends StdDeserializer<Result> {
 
         final Class<T> resultType = (Class<T>) ClassesRetriever.findClass(node.get("@resultType").asText());
 
-        final String message = node.get("message").isNull() ? null : node.get("message").asText();
+        final String message = node.get(Result.MESSAGE).isNull() ? null : node.get(Result.MESSAGE).asText();
         final Object instance;
-        if (node.get("instance") == null) {
+        if (node.get(Result.INSTANCE) == null) {
             instance = null;
         } else {
             final JsonNode typeNameObj = node.get("@instanceType");
             final Class<?> instanceType = ClassesRetriever.findClass(typeNameObj.asText());
 
-            instance = mapper.readValue(node.get("instance").traverse(mapper), instanceType);
+            instance = mapper.readValue(node.get(Result.INSTANCE).traverse(mapper), instanceType);
         }
         final Exception ex;
-        if (node.get("ex") == null) {
+        if (node.get(Result.EX) == null) {
             ex = null;
         } else {
-            ex = mapper.readValue(node.get("ex").traverse(mapper), Exception.class);
+            ex = mapper.readValue(node.get(Result.EX).traverse(mapper), Exception.class);
         }
 
         // instantiate the result; warning type checking is required only when instance and message are not null

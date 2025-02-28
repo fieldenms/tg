@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
+import ua.com.fielden.platform.entity.validation.DefaultValidatorForValueTypeWithValidation;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator;
@@ -33,8 +34,10 @@ import ua.com.fielden.platform.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.types.IWithValidation;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ArrayUtils;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -856,7 +859,26 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
         }
 
-        return unmodifiableSequencedSet(annotations);
+        if (IWithValidation.class.isAssignableFrom(propType)) {
+            // Either BeforeChange already exists, and it may or may not have handler DefaultValidatorForValueTypeWithValidation,
+            // or BeforeChange does not exist at all.
+            // We need to make sure DefaultValidatorForValueTypeWithValidation is the first handler in BeforeChange.
+            // If it exists, we remove it in favour of a new one, placed at the beginning, so that it would execute before any other.
+            final var newBce = annotations.stream().filter(at -> at instanceof BeforeChange).findFirst()
+                               .map(at -> ((BeforeChange) at).value())
+                               .map(handlers -> ArrayUtils.prepend(new HandlerAnnotation(DefaultValidatorForValueTypeWithValidation.class).newInstance(),
+                                                                   Stream.of(handlers)
+                                                                           .filter(handler -> handler.value() != DefaultValidatorForValueTypeWithValidation.class)
+                                                                           .toArray(Handler[]::new)))
+                               .map(BeforeChangeAnnotation::newInstance)
+                               .orElseGet(() -> BeforeChangeAnnotation.newInstance(new HandlerAnnotation(DefaultValidatorForValueTypeWithValidation.class).newInstance()));
+            final var newAnnotations = Stream.concat(annotations.stream().filter(at -> !(at instanceof BeforeChange)), Stream.of(newBce))
+                    .collect(toCollection(LinkedHashSet::new));
+            return unmodifiableSequencedSet(newAnnotations);
+        }
+        else {
+            return unmodifiableSequencedSet(annotations);
+        }
     }
 
     private Set<Annotation> collectValidationAnnotationsForKey(final Field propField,

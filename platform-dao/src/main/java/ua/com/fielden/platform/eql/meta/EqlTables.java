@@ -3,10 +3,7 @@ package ua.com.fielden.platform.eql.meta;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadataUtils;
+import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 import javax.annotation.Nullable;
@@ -23,9 +20,10 @@ public class EqlTables {
     private final Map<Class<? extends AbstractEntity<?>>, EqlTable> tables;
 
     @Inject
-    public EqlTables(final IDomainMetadata domainMetadata) {
+    public EqlTables(final IDomainMetadata domainMetadata, final IDomainMetadataUtils domainMetadataUtils) {
         final var pmUtils = domainMetadata.propertyMetadataUtils();
-        tables = domainMetadata.allTypes(EntityMetadata.class).parallel()
+        tables = domainMetadataUtils.registeredEntities()
+                .parallel()
                 .map(EntityMetadata::asPersistent).flatMap(Optional::stream)
                 .collect(toConcurrentMap(EntityMetadata::javaType, em -> generateEqlTable(pmUtils, em)));
     }
