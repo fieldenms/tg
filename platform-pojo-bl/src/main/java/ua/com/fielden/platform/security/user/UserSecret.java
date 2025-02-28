@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
+import org.joda.time.DateTime;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
@@ -13,6 +14,8 @@ import ua.com.fielden.platform.entity.annotation.Secrete;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.Unique;
+
+import java.util.Date;
 
 /**
  * This is entity that represents a sensitive user information for authentication and password reset.
@@ -32,7 +35,6 @@ import ua.com.fielden.platform.entity.annotation.Unique;
 public class UserSecret extends AbstractPersistentEntity<User> {
 
     public static final String SECRET_RESET_UUID_SEPERATOR = "-";
-    public static final int RESER_UUID_EXPIRATION_IN_MUNUTES = 15;
 
     @IsProperty
     @MapTo

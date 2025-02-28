@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
 import java.util.Optional;
 
 import org.junit.Ignore;
@@ -16,8 +17,10 @@ import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
+import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test.runners.H2DomainDrivenTestCaseInSsoAuthModeRunner;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
  * A test case to cover user instantiation in the SSO authentication mode.
@@ -63,14 +66,19 @@ public class UserInSsoModeTestCase extends AbstractDaoTestCase {
     @Ignore
     public void in_SSO_authentication_mode_only_users_not_restricted_to_SSO_only_can_have_password_reset_UUID_generated() {
         final IUser coUser = co(User.class);
-        final Optional<UserSecret> secretForNotRestrictedUser = coUser.assignPasswordResetUuid("USER4");
+        final Optional<UserSecret> secretForNotRestrictedUser = coUser.assignPasswordResetUuid("USER4", expirationTime());
         assertTrue(secretForNotRestrictedUser.isPresent());
         assertNotNull(secretForNotRestrictedUser.get().getResetUuid());
 
-        final Optional<UserSecret> secretForRestrictedUser = coUser.assignPasswordResetUuid("USER3");
+        final Optional<UserSecret> secretForRestrictedUser = coUser.assignPasswordResetUuid("USER3", expirationTime());
         assertFalse(secretForRestrictedUser.isPresent());
     }
-    
+
+    private Date expirationTime() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        return consts.now().plusMinutes(15).toDate();
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
