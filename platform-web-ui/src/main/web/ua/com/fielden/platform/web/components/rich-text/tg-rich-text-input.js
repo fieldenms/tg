@@ -392,9 +392,12 @@ function rgbToHex(rgbString) {
  * 
  * @param {Object} event keyboard event
  */
-function preventUnwantedKeyboradEvents(event) {
-    if ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/) {
-        event.preventDefault();
+function handleEnterKeyOnSelectAll(event) {
+    const docSize = this._editor.wwEditor.view.state.tr.doc.content.size;
+    const selection = this._getSelection();
+    if (event.keyCode === 13 /*Enter*/ && selection && selection[0] === 0 && selection[1] === docSize /*All text is selected*/) {
+        this._editor.insertText("");
+        tearDownEvent(event);
     }
 }
 
@@ -834,12 +837,11 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         //Add mouse down handler to handle case when user presses mouse button on editor and moves it outside of the editor, which later prevents invokation of mouse up handler
         this._getEditableContent().addEventListener("mousedown", mouseEventRetranslator.bind(this), true);
         //Add key down to prevent select all action and key events when editor is disabled
-        this._getEditableContent().addEventListener("keydown", preventUnwantedKeyboradEvents.bind(this), true);
+        this._getEditableContent().addEventListener("keydown", handleEnterKeyOnSelectAll.bind(this), true);
         //Add key down to scroll into view when creating new list item on Enter key
         this._getEditableContent().addEventListener("keydown", scrollWhenListItem.bind(this));
         this._getEditableContent().addEventListener("scroll", this._editorScrolled.bind(this));
         //Initiate key binding and key event target
-        this.addOwnKeyBinding('ctrl+a meta+a', '_selectAll');
         this.addOwnKeyBinding('ctrl+b meta+b', '_applyBold');
         this.addOwnKeyBinding('ctrl+i meta+i', '_applyItalic');
         this.addOwnKeyBinding('ctrl+s meta+s', '_applyStrikethough');
@@ -946,12 +948,6 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
     _applyParagraph(event) {
         this._editor.exec('heading', { level: 0 });
-    }
-
-    _selectAll(event) {
-        const from = 1, to = this._editor.wwEditor.view.state.tr.doc.content.size - 1;
-        this._applySelection(from, to);
-        tearDownEvent(event.detail && event.detail.keyboardEvent);
     }
 
     _applyBold(event) {
