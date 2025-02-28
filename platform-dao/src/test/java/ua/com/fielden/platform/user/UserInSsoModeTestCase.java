@@ -1,17 +1,8 @@
 package ua.com.fielden.platform.user;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Date;
-import java.util.Optional;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.security.user.IUser;
@@ -21,6 +12,12 @@ import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test.runners.H2DomainDrivenTestCaseInSsoAuthModeRunner;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+
+import java.util.Date;
+import java.util.Optional;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
 
 /**
  * A test case to cover user instantiation in the SSO authentication mode.
@@ -76,7 +73,7 @@ public class UserInSsoModeTestCase extends AbstractDaoTestCase {
 
     private Date expirationTime() {
         final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
-        return consts.now().plusMinutes(15).toDate();
+        return consts.now().plusMinutes(RESET_UUID_EXPIRATION_IN_MUNUTES).toDate();
     }
 
     @Override
