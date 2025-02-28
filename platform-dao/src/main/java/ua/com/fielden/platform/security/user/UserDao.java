@@ -41,7 +41,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.util.Optional.*;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -109,7 +108,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             // which should be slim comparing to IUser.FETCH_PROVIDER
             return super.save(user);
         } else {
-            return save(user, of(FETCH_PROVIDER.fetchModel())).orElseThrow(id -> new EntityCompanionException(format(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE, id, user)));
+            return save(user, of(FETCH_PROVIDER.fetchModel())).orElseThrow(id -> new EntityCompanionException(ERR_USER_ID_WAS_RETURNED_INSTEAD_OF_AN_INSTANCE.formatted(id, user)));
         }
 
     }
@@ -435,7 +434,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             final UserSecretCo co$UserSecret = co$(UserSecret.class);
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
             final long expirationTimeMillis = expirationTime.getTime();
-            final String uuid = format("%s%s%s%s%s", user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, expirationTimeMillis);
+            final String uuid = "%s%s%s%s%s".formatted(user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, expirationTimeMillis);
             final var encodedUuid = UrlEscapers.urlFragmentEscaper().escape(uuid);
             return of(co$UserSecret.save(secret.setResetUuid(encodedUuid)));
         }
