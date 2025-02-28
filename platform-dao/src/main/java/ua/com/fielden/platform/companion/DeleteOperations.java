@@ -12,15 +12,11 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
-import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlTables;
-import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
-import ua.com.fielden.platform.utils.IDates;
 
 import javax.persistence.PersistenceException;
 import java.util.*;
@@ -52,31 +48,21 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private final Supplier<Session> session;
     private final Class<T> entityType;
     private final IEntityReader<T> reader;
-    private final IDomainMetadata domainMetadata;
-    private final IDbVersionProvider dbVersionProvider;
-    private final EqlTables eqlTables;
-    private final QuerySourceInfoProvider querySourceInfoProvider;
-    private final IDates dates;
     private final Supplier<EntityBatchDeleteByIdsOperation<T>> batchDeleteByIdsOp;
+    private final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory;
 
     @Inject
     public DeleteOperations(
             @Assisted final IEntityReader<T> reader,
             @Assisted final Supplier<Session> session,
             @Assisted final Class<T> entityType,
-            final IDomainMetadata domainMetadata,
-            final IDbVersionProvider dbVersionProvider,
             final EqlTables eqlTables,
-            final QuerySourceInfoProvider querySourceInfoProvider,
-            final IDates dates) {
+            final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory)
+    {
         this.reader = reader;
         this.session = session;
         this.entityType = entityType;
-        this.domainMetadata = domainMetadata;
-        this.dbVersionProvider = dbVersionProvider;
-        this.eqlTables = eqlTables;
-        this.querySourceInfoProvider = querySourceInfoProvider;
-        this.dates = dates;
+        this.entityBatchDeleteFactory = entityBatchDeleteFactory;
         this.batchDeleteByIdsOp = () -> new EntityBatchDeleteByIdsOperation<>(session.get(), eqlTables.getTableForEntityType(entityType));
     }
 
@@ -211,8 +197,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
             return defaultDelete(model, paramValues);
         } else {
-            return new EntityBatchDeleteByQueryModelOperation(domainMetadata, dbVersionProvider, eqlTables, querySourceInfoProvider, dates, session)
-                    .deleteEntities(model, paramValues);
+            return entityBatchDeleteFactory.create(session).deleteEntities(model, paramValues);
         }
     }
 
@@ -271,31 +256,21 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     // This factory must be implemented by hand since com.google.inject.assistedinject.FactoryModuleBuilder
     // does not support generic factory methods.
     static final class FactoryImpl implements Factory {
-        private final IDomainMetadata domainMetadata;
-        private final IDbVersionProvider dbVersionProvider;
+
         private final EqlTables eqlTables;
-        private final QuerySourceInfoProvider querySourceInfoProvider;
-        private final IDates dates;
+        private final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory;
 
         @Inject
-        FactoryImpl(final IDomainMetadata domainMetadata,
-                    final IDbVersionProvider dbVersionProvider,
-                    final EqlTables eqlTables,
-                    final QuerySourceInfoProvider querySourceInfoProvider,
-                    final IDates dates) {
-            this.domainMetadata = domainMetadata;
-            this.dbVersionProvider = dbVersionProvider;
+        FactoryImpl(final EqlTables eqlTables,
+                    final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory) {
             this.eqlTables = eqlTables;
-            this.querySourceInfoProvider = querySourceInfoProvider;
-            this.dates = dates;
+            this.entityBatchDeleteFactory = entityBatchDeleteFactory;
         }
 
         public <E extends AbstractEntity<?>> DeleteOperations<E> create(final IEntityReader<E> reader,
                                                                         final Supplier<Session> session,
                                                                         final Class<E> entityType) {
-            return new DeleteOperations<>(reader, session, entityType,
-                                          domainMetadata, dbVersionProvider, eqlTables,
-                                          querySourceInfoProvider, dates);
+            return new DeleteOperations<>(reader, session, entityType, eqlTables, entityBatchDeleteFactory);
         }
     }
 

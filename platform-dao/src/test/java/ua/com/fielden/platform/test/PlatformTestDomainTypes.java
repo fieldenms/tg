@@ -47,6 +47,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
     static {
         entityTypes.addAll(PlatformDomainTypes.typesNotDependentOnWebUI);
         // and test domain entities
+        add(TgPattern.class);
         add(TgPerson.class);
         add(TgPersonName.class);
         add(TgAuthor.class);
