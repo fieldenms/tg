@@ -55,7 +55,7 @@ const customInputTemplate = html`
         on-blur="_outFocus"
         min-height="[[minHeight]]"
         height="[[_calcHeight(height, entityType, propertyName)]]"
-        tabindex='0'>
+        tabindex$='[[_tabIndex(_disabled)]]'>
     </tg-rich-text-input>
     <iron-icon id="resizer" icon="tg-icons:resize-bottom-right" on-tap="_resetHeight" on-down="_makeInputUnselectable" on-up="_makeInputSelectable" on-track="_resizeInput" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
@@ -304,6 +304,15 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
      */
     _equalToOriginalValue (_editingValue, _originalEditingValue) {
         return this.reflector().equalsEx(_editingValue, this._transformedOriginalEditingValue === null ? _originalEditingValue : this._transformedOriginalEditingValue);
+    }
+
+    /**
+     * Calculates tab index attribute for rich text input based on disabled state.
+     * 
+     * @param {Boolean} disabled determines whether editor is disabled or not
+     */
+    _tabIndex(disabled) {
+        return disabled ? "-1": "0";
     }
 
 }
