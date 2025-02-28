@@ -20,9 +20,13 @@ This section should be completed with reference to section [Preparing PR](https:
 
 - [ ] Developer documentation (e.g., comments, Javadoc), have been provided where required.
 
-- [ ] New tests have been written, if required, to cover the new functionality.
+- [ ] New Java tests have been written or existing adjusted, if required, to cover the new functionality.
 
-- [ ] All tests (all existing tests and all new tests) pass successfully.
+- [ ] All existing and new Java tests pass successfully by running them with Maven.
+
+- [ ] New Web tests have been written or existing adjusted, if required, to cover the new functionality.
+
+- [ ] All existing and new Web tests pass successfully.
 
 - [ ] Established security practices have been followed, including the existence and attribution of security tokens.
 

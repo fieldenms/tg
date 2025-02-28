@@ -1,25 +1,14 @@
 package ua.com.fielden.platform.security.user;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Secrete;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
-import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.Unique;
+import ua.com.fielden.platform.entity.annotation.*;
 
 /**
- * This is entity that represents a sensitive user information for authentication and password reset.
+ * This is an entity that represents sensitive user information for authentication and password reset.
  * Instances of this entity should never be marshallable to the client-side -- neither as standalone instance nor as part of other entities.
  * <p>
- * Originally, the information that is now represented by this entity was a part of {@link User}. 
- * This made it too easy too leak authentication related information outside the application due to ubiquitous use of {@link User} instances in business related logic and entities.
+ * Originally, the information now represented by this entity was a part of {@link User}.
+ * That made it too easy to leak authentication related information outside the application due to ubiquitous use of {@link User} instances in business related logic and entities.
  *
  * @author TG Team
  *
@@ -32,7 +21,6 @@ import ua.com.fielden.platform.entity.annotation.Unique;
 public class UserSecret extends AbstractPersistentEntity<User> {
 
     public static final String SECRET_RESET_UUID_SEPERATOR = "-";
-    public static final int RESER_UUID_EXPIRATION_IN_MUNUTES = 15;
 
     @IsProperty
     @MapTo
