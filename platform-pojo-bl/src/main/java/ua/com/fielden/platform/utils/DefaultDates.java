@@ -139,7 +139,7 @@ public class DefaultDates implements IDates {
             final DateTime nowInClientTimeZone = new DateTime(tz);
             return independentTimeZone ? nowInClientTimeZone.withZoneRetainFields(getDefault()) : nowInClientTimeZone;
         })
-        .orElseGet(() -> new DateTime()); // now in server time-zone; used as a fallback where no time-zone was used.
+        .orElseGet(DateTime::new); // now in server time-zone; used as a fallback where no time-zone was used.
     }
 
     @Override

@@ -1,15 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.restlet.data.MediaType.TEXT_HTML;
-import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
-import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
-
-import java.util.Optional;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import com.google.common.util.concurrent.AtomicDouble;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
@@ -21,9 +12,6 @@ import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-
-import com.google.common.util.concurrent.AtomicDouble;
-
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.mail.SmtpEmailSender;
 import ua.com.fielden.platform.security.user.IUser;
@@ -36,6 +24,17 @@ import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
+import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.restlet.data.MediaType.TEXT_HTML;
+import static ua.com.fielden.platform.security.user.UserSecretCo.RESET_UUID_EXPIRATION_IN_MUNUTES;
+import static ua.com.fielden.platform.security.user.UserSecretCo.passwordResetExpirationTime;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
+
 /**
  * A web resource to initiate user login recovery procedure.
  *
@@ -43,10 +42,13 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  *
  */
 public class LoginInitiateResetResource extends AbstractWebResource {
-    
-    public static final String BINDING_PATH = "/forgotten";
 
-    private final Logger logger = LogManager.getLogger(LoginInitiateResetResource.class);
+    private static final Logger LOGGER = LogManager.getLogger(LoginInitiateResetResource.class);
+
+    public static final String BINDING_PATH = "/forgotten";
+    public static final String FILE_APP_LOGIN_INITIATE_RESET_HTML = "/app/login-initiate-reset.html";
+
+    public static final String PARAM_USERNAME_OR_EMAIL = "username_or_email";
 
     private final IWebResourceLoader webResourceLoader;
     private final String appUri;
@@ -78,14 +80,14 @@ public class LoginInitiateResetResource extends AbstractWebResource {
 
     @Override
     protected Representation get() {
-        return pageToProvideUsernameForPasswordReset("Login Reset Request", logger, webResourceLoader, getReference());
+        return pageToProvideUsernameForPasswordReset(webResourceLoader, getReference());
     }
 
-    private static Representation pageToProvideUsernameForPasswordReset(final String title, final Logger logger, final IWebResourceLoader webResourceLoader, final Reference reference) {
+    private static Representation pageToProvideUsernameForPasswordReset(final IWebResourceLoader webResourceLoader, final Reference reference) {
         try {
-            return createRepresentation(webResourceLoader, TEXT_HTML, "/app/login-initiate-reset.html", reference.getRemainingPart());
+            return createRepresentation(webResourceLoader, TEXT_HTML, FILE_APP_LOGIN_INITIATE_RESET_HTML, reference.getRemainingPart());
         } catch (final Exception ex) {
-            logger.fatal(ex);
+            LoginInitiateResetResource.LOGGER.fatal(ex);
             throw new IllegalStateException(ex);
         }
     }
@@ -95,21 +97,22 @@ public class LoginInitiateResetResource extends AbstractWebResource {
         try {
             
             final JsonRepresentation response = new JsonRepresentation("{\"msg\": \"Reset password email is probably sent.\"}");
-            final Form form = new Form(entity);
-            final String usernameOrEmail = form.getValues("username_or_email");
+            final String usernameOrEmail = new Form(entity).getValues(PARAM_USERNAME_OR_EMAIL);
             
-            // the user initiating a password reset is not logged in, therefore SU is used as the current user for auditing purposes
+            // The user initiating a password reset is not logged in.
+            // Therefore, SU is used as the current user for auditing purposes.
             up.setUsername(User.system_users.SU.name(), coFinder.find(User.class, true));
 
             final IUser co$User = coFinder.find(User.class, false);
-            final Optional<UserSecret> maybeUserSecret = co$User.assignPasswordResetUuid(usernameOrEmail);
+
+            final Optional<UserSecret> maybeUserSecret = co$User.assignPasswordResetUuid(usernameOrEmail, passwordResetExpirationTime());
 
             adjustResponseTime(maybeUserSecret.filter(secret -> !isEmpty(secret.getKey().getEmail())).map(this::reset));
 
             getResponse().setEntity(response);
 
         } catch (final Exception ex) {
-            logger.fatal(ex);
+            LOGGER.fatal(ex);
             getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s.\"}", "There was an error when attempting to request a password reset.")));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         }
@@ -165,13 +168,12 @@ public class LoginInitiateResetResource extends AbstractWebResource {
     /**
      * A function to randomly delay the response to reduce the risk of a timing-based attack.
      *
-     * @param computationStart
-     * @param computationEnd
+     * @param computeTime
      */
     private void adjustResponseTime(final Optional<Integer> computeTime) {
         computeStats(computeTime.orElse(0));
 
-        if (!computeTime.isPresent()) {
+        if (computeTime.isEmpty()) {
             try {
                 final int avg = (int) avgComputeTime.get();
                 final int var = (int) Math.sqrt(var2ComputeTime.get() / numberOfComputations.get()) + 1;
@@ -179,7 +181,7 @@ public class LoginInitiateResetResource extends AbstractWebResource {
                 final int sleepTime = avg + (rnd.nextBoolean() ? 1 : -1) * rnd.nextInt(var);
                 Thread.sleep(sleepTime);
             } catch (final Exception e) {
-                logger.debug("Interrupted sleep during login.", e);
+                LOGGER.debug("Interrupted sleep during login.", e);
             }
         }
     }
@@ -188,11 +190,11 @@ public class LoginInitiateResetResource extends AbstractWebResource {
         final StringBuilder builder = new StringBuilder();
         builder.append(format("We heard that you lost your %s password. Sorry about that!", appName));
         builder.append("\n\n");
-        builder.append(format("But don't worry! You can use the following link within %s minutes to reset your password:", RESER_UUID_EXPIRATION_IN_MUNUTES));
+        builder.append(format("But don't worry! You can use the following link within %s minutes to reset your password:", RESET_UUID_EXPIRATION_IN_MUNUTES));
         builder.append("\n\n");
         builder.append(format("%sreset_password/%s", appUri, resetUuid));
         builder.append("\n\n");
-        builder.append(format("If you don't use this link within %s minutes, it will expire. To get a new password reset link, visit %sforgotten", RESER_UUID_EXPIRATION_IN_MUNUTES, appUri));
+        builder.append(format("If you don't use this link within %s minutes, it will expire. To get a new password reset link, visit %sforgotten", RESET_UUID_EXPIRATION_IN_MUNUTES, appUri));
         builder.append("\n\n");
         builder.append("Thanks,\n");
         builder.append("Your support team");
