@@ -1,18 +1,13 @@
 package ua.com.fielden.platform.types;
 
+import org.apache.commons.text.StringEscapeUtils;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
-import java.util.*;
-
-import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.joining;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
+import java.util.Objects;
 
 /**
  * Rich text is text which has attributes beyond those of plain text (e.g., styles such as colour, boldface, italic),
@@ -83,6 +78,24 @@ public sealed class RichText permits RichText.Persisted {
     public static RichText fromHtml(final String input) {
         final RichText richText = RichTextSanitiser.sanitiseHtml(input).getInstanceOrElseThrow();
         return richText;
+    }
+
+    /**
+     * Creates {@link RichText} from the input, treating it as plain text (HTML special characters are escaped).
+     * The result should always be valid (minus implementation errors).
+     */
+    public static RichText fromPlainText(final String input) {
+        final var escapedInput = escapeAsHtml(input);
+        return RichTextSanitiser.sanitiseHtml(escapedInput).getInstanceOrElseThrow();
+    }
+
+    /**
+     * Supports HTML 4 and HTML 5.
+     *
+     * @see <a href="https://www.w3.org/TR/2014/NOTE-html5-diff-20141209/#syntax">Differences between HTML 4 and 5</a>.
+     */
+    private static String escapeAsHtml(final String input) {
+        return StringEscapeUtils.escapeHtml4(input);
     }
 
     /**

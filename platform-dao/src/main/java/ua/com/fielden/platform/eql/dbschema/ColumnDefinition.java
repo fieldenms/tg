@@ -86,17 +86,16 @@ public class ColumnDefinition {
     /**
      * Generates a DDL statement for a column based on provided RDBMS dialect.
      *
-     * @param dialect
-     * @return
+     * @param ignoreRequiredness  if {@code true}, the requiredness constraint is ignored ({@code NOT NULL} is not included)
      */
-    public String schemaString(final Dialect dialect) {
+    public String schemaString(final Dialect dialect, final boolean ignoreRequiredness) {
         final StringBuilder sb = new StringBuilder();
         sb.append(name);
         sb.append(" ");
 
         sb.append(sqlTypeName);
 
-        if (!nullable) {
+        if (!ignoreRequiredness && !nullable) {
             sb.append(" NOT NULL");
         }
 
@@ -106,6 +105,13 @@ public class ColumnDefinition {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Generates a DDL statement for a column based on provided RDBMS dialect.
+     */
+    public String schemaString(final Dialect dialect) {
+        return schemaString(dialect, false);
     }
 
     /**

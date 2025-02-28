@@ -11,6 +11,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
+import { simplifyRichText } from '/resources/components/rich-text/tg-rich-text-utils.js';
 
 export const EGI_CELL_PADDING = "0.6rem";
 export const EGI_CELL_PADDING_TEMPLATE = html`0.6rem`;
@@ -40,6 +41,77 @@ const template = html`
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        .unordered-list:not(:first-child),
+        .ordered-list:not(:first-child) {
+            margin-left: 8px;
+        }
+        .unordered-list:not(:last-child),
+        .ordered-list:not(:last-child) {
+            margin-right: 8px;
+        }
+        .list {
+            counter-reset: orderedList;
+        }
+        .list-item {
+            counter-increment: orderedList;
+        }
+        .unordered-list-item:not(:last-child),
+        .ordered-list-item:not(:last-child),
+        .task-list-item:not(:last-child) {
+            margin-right: 8px;
+        }
+        .unordered-list-item::before {
+            display: inline-block;
+            position: relative;
+            content: '';
+            vertical-align: middle;
+            margin-right: 3px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background-color: #ccc;
+        }
+        .task-list-item::before {
+            display: inline-block;
+            vertical-align: middle;
+            position: relative;
+            content: '';
+            border-radius: 2px;
+            top: -1px;
+            height: 14px;
+            width: 14px;
+            margin-right: 3px;
+            background: transparent url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDE4IDE4Ij4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgZmlsbD0iI0ZGRiIgc3Ryb2tlPSIjQ0NDIj4KICAgICAgICAgICAgPGc+CiAgICAgICAgICAgICAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMTAzMCAtMjk2KSB0cmFuc2xhdGUoNzg4IDE5MikgdHJhbnNsYXRlKDI0MiAxMDQpIj4KICAgICAgICAgICAgICAgICAgICA8cmVjdCB3aWR0aD0iMTciIGhlaWdodD0iMTciIHg9Ii41IiB5PSIuNSIgcng9IjIiLz4KICAgICAgICAgICAgICAgIDwvZz4KICAgICAgICAgICAgPC9nPgogICAgICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+Cg==);
+            background-repeat: no-repeat;
+            background-size: 14px 14px;
+            background-position: center;
+        }
+        .task-list-item.checked::before {
+            background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDE4IDE4Ij4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgZmlsbD0iIzRCOTZFNiI+CiAgICAgICAgICAgIDxnPgogICAgICAgICAgICAgICAgPGc+CiAgICAgICAgICAgICAgICAgICAgPHBhdGggZD0iTTE2IDBjMS4xMDUgMCAyIC44OTUgMiAydjE0YzAgMS4xMDUtLjg5NSAyLTIgMkgyYy0xLjEwNSAwLTItLjg5NS0yLTJWMkMwIC44OTUuODk1IDAgMiAwaDE0em0tMS43OTMgNS4yOTNjLS4zOS0uMzktMS4wMjQtLjM5LTEuNDE0IDBMNy41IDEwLjU4NSA1LjIwNyA4LjI5M2wtLjA5NC0uMDgzYy0uMzkyLS4zMDUtLjk2LS4yNzgtMS4zMi4wODMtLjM5LjM5LS4zOSAxLjAyNCAwIDEuNDE0bDMgMyAuMDk0LjA4M2MuMzkyLjMwNS45Ni4yNzggMS4zMi0uMDgzbDYtNiAuMDgzLS4wOTRjLjMwNS0uMzkyLjI3OC0uOTYtLjA4My0xLjMyeiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTEwNTAgLTI5NikgdHJhbnNsYXRlKDc4OCAxOTIpIHRyYW5zbGF0ZSgyNjIgMTA0KSIvPgogICAgICAgICAgICAgICAgPC9nPgogICAgICAgICAgICA8L2c+CiAgICAgICAgPC9nPgogICAgPC9nPgo8L3N2Zz4K);
+        }
+        .ordered-list-item::before {
+            content: counter(orderedList)'.';
+            margin-right: 3px;
+            color: #aaa;
+        }
+        del a span, del a {
+            text-decoration: line-through underline;
+        }
+        del span {
+            text-decoration: line-through;  
+        }
+        a span {
+            text-decoration: underline;
+        }
+        del {
+            color: #999;
+        }
+        code {
+            background-color: #eee;
+            border-radius: 3px;
+            font-family: courier, monospace;
+            padding: 0 3px;
         }
     </style>
     <div class="cell-background" style$="[[_backgroundRendHints]]" modified$="[[_modified]]"></div>
@@ -138,6 +210,13 @@ Polymer({
     },
 
     /**
+     * Determines whether property is RichText or not.
+     */
+    _isRichTextProp: function (_hostComponent, _entity, column) {
+        return _hostComponent && this._isProperty(column) && column.type && _entity && _hostComponent.isRichTextProp(_entity, column);
+    },
+
+    /**
      * Determines whether property is Hypelink or not.
      */
     _isHyperlinkProp: function (_hostComponent, _entity, column) {
@@ -217,6 +296,8 @@ Polymer({
         this._modified = this.egiEntity && this.egiEntity.entityModification && this.egiEntity.entityModification[this.column.property];
         if (this._isBooleanProp(this._hostComponent, this._entity, this.column)) {
             this._value = this._getBooleanIcon(this._hostComponent, this._entity, this.column);
+        } else if (this._isRichTextProp(this._hostComponent, this._entity, this.column)) {
+            this._value = simplifyRichText(this._getBindedValue(this._hostComponent, this._entity, this.column));
         } else {
             this._value = this._getBindedValue(this._hostComponent, this._entity, this.column);
         }

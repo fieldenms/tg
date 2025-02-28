@@ -43,7 +43,7 @@ const customInputTemplate = html`
             on-mousedown="_onMouseDown"
             on-focus="_onFocus"
             on-blur="_outFocus"
-            disabled$="[[_disabled}}"
+            disabled$="[[_disabled]]"
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"/>
     </iron-input>`;

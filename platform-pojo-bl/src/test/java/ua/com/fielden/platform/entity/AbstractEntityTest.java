@@ -39,6 +39,8 @@ import java.util.Set;
 import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.*;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertPresent;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 /**
@@ -235,8 +237,8 @@ public class AbstractEntityTest {
         assertEquals("Incorrect number of validators.", 2, bigDecimalsProperty.getValidators().size());
         assertTrue("Should have domain validation.", bigDecimalsProperty.getValidators().containsKey(ValidationAnnotation.DOMAIN));
         assertTrue("Should have not-null validation.", bigDecimalsProperty.getValidators().containsKey(ValidationAnnotation.REQUIRED));
-        assertNull("There should be no domain validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN));
-        assertNull("There should be no rquiredness validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED));
+        assertEmpty("There should be no domain validation result at this stage.", bigDecimalsProperty.findValidationResult(ValidationAnnotation.DOMAIN));
+        assertEmpty("There should be no rquiredness validation result at this stage.", bigDecimalsProperty.findValidationResult(ValidationAnnotation.REQUIRED));
         entity.setBigDecimals(List.of(new BigDecimal("2.0"), new BigDecimal("3.0")));
         entity.setBigDecimals(List.of(new BigDecimal("2.0")));
 
@@ -247,9 +249,9 @@ public class AbstractEntityTest {
         assertTrue("Incorrect isDirty.", bigDecimalsProperty.isDirty());
         assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
 
-        assertNotNull("There should be domain validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+        assertPresent("There should be domain validation result at this stage.", bigDecimalsProperty.findValidationResult(ValidationAnnotation.DOMAIN));
         assertTrue("Domain validation result should be successful.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
-        assertNotNull("There should be a requiredness validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED));
+        assertPresent("There should be a requiredness validation result at this stage.", bigDecimalsProperty.findValidationResult(ValidationAnnotation.REQUIRED));
         assertTrue("Requirendess validation result should be successful.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
 
         entity.setBigDecimals(null);
@@ -281,8 +283,8 @@ public class AbstractEntityTest {
         assertTrue("Incorrect isDirty.", bigDecimalsProperty.isDirty());
         assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
 
-        assertNotNull("There should be a domain validation result.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN));
-        assertNotNull("There should be requiredness validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED));
+        assertPresent("There should be a domain validation result.", bigDecimalsProperty.findValidationResult(ValidationAnnotation.DOMAIN));
+        assertPresent("There should be requiredness validation result at this stage.", bigDecimalsProperty.findValidationResult(ValidationAnnotation.REQUIRED));
         assertTrue("Requiredness validation result should be successful.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
 
         entity.addToBigDecimals(null);
@@ -315,9 +317,9 @@ public class AbstractEntityTest {
         assertTrue("Incorrect isDirty.", bigDecimalsProperty.isDirty());
         assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
 
-        assertNotNull("There should be domain validation result at this stage.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN));
+        assertPresent("There should be domain validation result at this stage.", bigDecimalsProperty.findValidationResult(ValidationAnnotation.DOMAIN));
         assertTrue("Domain validation result should be successful.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
-        assertNotNull("There should be requiredness validation result.", bigDecimalsProperty.getValidationResult(ValidationAnnotation.REQUIRED));
+        assertPresent("There should be requiredness validation result.", bigDecimalsProperty.findValidationResult(ValidationAnnotation.REQUIRED));
         assertEquals("Incorrect size for bigDecimals", 1, entity.getBigDecimals().size());
     }
 
@@ -548,7 +550,7 @@ public class AbstractEntityTest {
         } finally {
             assertFalse("The 'number' property have to be invalid.", property.isValid());
             assertTrue("DynamicValidator have to be not null after any Result has been thrown.", property.containsDynamicValidator());
-            assertNotNull("The result for DYNAMIC validator have to be not null.", property.getValidationResult(ValidationAnnotation.DYNAMIC));
+            assertPresent("The result for DYNAMIC validator have to be not null.", property.findValidationResult(ValidationAnnotation.DYNAMIC));
             assertFalse("The result for DYNAMIC validator have to be not successful.", property.getValidationResult(ValidationAnnotation.DYNAMIC).isSuccessful());
             assertEquals("The value in the 'number' property is not correct.", (Object) 10, entity.getNumber());
         }

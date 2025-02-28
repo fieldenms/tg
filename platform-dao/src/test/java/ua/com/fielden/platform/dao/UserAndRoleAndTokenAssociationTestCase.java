@@ -157,7 +157,7 @@ public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase 
     public void security_associations_can_be_retrieved() {
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
         final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.getAllEntities(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).model());
-        assertEquals("Incorrect number of security token/role associations.", 75, associations.size());
+        assertEquals("Incorrect number of security token/role associations.", 87, associations.size());
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token.", 2, roles.size());
         UserRole role = new_(UserRole.class, "ROLE1");

@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
+import org.apache.logging.log4j.Logger;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.usertype.UserType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.types.markers.IPropertyDescriptorType;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -10,15 +14,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Optional;
 
-import org.apache.logging.log4j.Logger;
-import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.usertype.UserType;
-
-import ua.com.fielden.platform.entity.exceptions.EntityException;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.types.markers.IPropertyDescriptorType;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  * Class that helps Hibernate to map {@link PropertyDescriptor} class into the database.
@@ -26,12 +22,13 @@ import ua.com.fielden.platform.types.markers.IPropertyDescriptorType;
  * @author TG Team
  */
 public class PropertyDescriptorType implements UserType, IPropertyDescriptorType {
+
     private static final Logger LOGGER = getLogger(PropertyDescriptorType.class);
     
     public static final PropertyDescriptorType INSTANCE = new PropertyDescriptorType();
     
     private static final int[] SQL_TYPES = { Types.VARCHAR };
-    
+
     @Override
     public int[] sqlTypes() {
         return SQL_TYPES;
@@ -45,16 +42,12 @@ public class PropertyDescriptorType implements UserType, IPropertyDescriptorType
     @Override
     public Object nullSafeGet(final ResultSet resultSet, final String[] names, final SharedSessionContractImplementor session, final Object owner) throws SQLException {
         final String propertyDescriptor = resultSet.getString(names[0]);
-        Object result = null;
-        if (!resultSet.wasNull()) {
-            try {
-                result = PropertyDescriptor.fromString(propertyDescriptor, Optional.empty()).beginInitialising();
-            } catch (final Exception ex) {
-                LOGGER.fatal(ex);
-                throw new HibernateException(format("Could not restore [%s] due to: %s", propertyDescriptor, ex.getMessage()));
-            }
+        if (resultSet.wasNull()) {
+            return null;
         }
-        return result;
+        else {
+            return PropertyDescriptor.fromString(propertyDescriptor, Optional.empty()).beginInitialising();
+        }
     }
 
     @Override
@@ -63,12 +56,7 @@ public class PropertyDescriptorType implements UserType, IPropertyDescriptorType
             return null;
         }
 
-        try {
-            return PropertyDescriptor.fromString((String) argument, Optional.of(factory)).beginInitialising();
-        } catch (final Exception ex) {
-            LOGGER.fatal(ex);
-            throw new EntityException(format("Could not instantiate instance of [%s] with value [%s] due to: %s", PropertyDescriptor.class.getName(), argument, ex.getMessage()));
-        }
+        return PropertyDescriptor.fromString((String) argument, Optional.of(factory)).beginInitialising();
     }
 
     @Override
