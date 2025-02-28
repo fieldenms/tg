@@ -92,8 +92,7 @@ Polymer({
         if (e.detail) {
             Array.prototype.forEach.call(this._datePrefixes, function (prefix) {
                 const accordion = self.shadowRoot.querySelector("#" + prefix);
-                const target = e.target || e.srcElement;
-                if (accordion !== target) {
+                if (accordion !== e.target) {
                     accordion.opened = false;
                 }
             });
@@ -106,7 +105,7 @@ Polymer({
     },
 
     _dateMetaValueChanged: function (e, detail) {
-        const source = e.target || e.srcElement;
+        const source = e.target;
         if (source.checked) {
             this._datePrefix = source.dateprefix;
             this._dateMnemonic = source.datemnemonic;
