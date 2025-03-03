@@ -52,7 +52,7 @@ public class WorkbookExporter {
                 sheetsData.add(export(entities.get(sheetIdx), propTitles.get(sheetIdx).getKey(), propTitles.get(sheetIdx).getValue(), dynamicProperties.get(sheetIdx), sheetTitles.get(sheetIdx)));
             }
         }
-        return export(sheetsData, Stream.empty(), Optional.of(entityMasterUrlProvider));
+        return export_(sheetsData, Optional.of(entityMasterUrlProvider));
     }
 
     private static <M extends AbstractEntity<?>> DataForWorkbookSheet<M> export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicColumnForExport>> dynamicProperties, final String sheetTitle) {
@@ -126,7 +126,7 @@ public class WorkbookExporter {
         final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>(DEFAULT_SHEET_TITLE, entities, propNamesAndTitles, new LinkedHashMap<>());
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         sheetsData.add(dataForWorkbookSheet);
-        return export(sheetsData, hyperlinks, maybeEntityMasterUrlProvider);
+        return export_(sheetsData, List.of(hyperlinks), maybeEntityMasterUrlProvider);
     }
 
     /**
@@ -166,12 +166,29 @@ public class WorkbookExporter {
         }
     }
 
-    private static SXSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData, final Stream<Map<String, String>> propertiesToHyperlinks, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
+    private static SXSSFWorkbook export_(
+            final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData,
+            final List<Stream<Map<String, String>>> propertiesToHyperlinksList,
+            final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider)
+    {
         final SXSSFWorkbook wb = new SXSSFWorkbook(SXSSF_WINDOW_SIZE);
-        for (final DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
+
+        for (int i = 0; i < sheetsData.size(); i++) {
+            final var sheetData = sheetsData.get(i);
+            final var propertiesToHyperlinks = propertiesToHyperlinksList.get(i);
             addSheetWithData(wb, sheetData, propertiesToHyperlinks, maybeEntityMasterUrlProvider);
         }
+
         return wb;
+    }
+
+    private static SXSSFWorkbook export_(
+            final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData,
+            final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider)
+    {
+        return export_(sheetsData,
+                       Stream. <Stream<Map<String, String>>> generate(Stream::empty).limit(sheetsData.size()).toList(),
+                       maybeEntityMasterUrlProvider);
     }
 
     private static <M extends AbstractEntity<?>> void addSheetWithData(final SXSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData, final Stream<Map<String, String>> propertiesToHyperlinks, final Optional<IEntityMasterUrlProvider> maybeEntityMasterUrlProvider) {
