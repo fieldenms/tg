@@ -17,10 +17,10 @@ import static ua.com.fielden.platform.types.RichText.*;
  * <p>
  * The result of deserialisation is one of the following:
  * <ol>
- *   <li> {@code null} - if formatted and core text are {@code null}, and validation result is absent.
+ *   <li> {@code null} - if formatted, core, and search text are all {@code null}, and validation result is absent.
  *   <li> {@link RichText.Invalid} - if validation result is present.
  *        A validation result is expected to be unsuccessful, it is an error otherwise.
- *   <li> Valid {@link RichText} - if both formatted and core text are present and are not {@code null}.
+ *   <li> Valid {@link RichText} - if both formatted, core, and search text are present and are not {@code null}.
  * </ol>
  * If neither of the above matches, it is an error.
  */
@@ -41,8 +41,9 @@ public class RichTextJsonDeserialiser extends StdDeserializer<RichText> {
         final JsonNode node = parser.readValueAsTree();
         final var formattedTextNode = requireField(node, FORMATTED_TEXT);
         final var coreTextNode = requireField(node, CORE_TEXT);
+        final var searchTextNode = requireField(node, SEARCH_TEXT);
 
-        if (formattedTextNode.isNull() && coreTextNode.isNull()) {
+        if (formattedTextNode.isNull() && coreTextNode.isNull() && searchTextNode.isNull()) {
             final var validationResultNode = node.get(VALIDATION_RESULT);
             if (validationResultNode != null) {
                 if (validationResultNode.isNull()) {
@@ -60,10 +61,14 @@ public class RichTextJsonDeserialiser extends StdDeserializer<RichText> {
         if (coreTextNode.isNull()) {
             throw new DeserialisationException(ERR_UNEXPECTED_NULL_IN_FIELD.formatted(CORE_TEXT, node.toPrettyString()));
         }
+        if (searchTextNode.isNull()) {
+            throw new DeserialisationException(ERR_UNEXPECTED_NULL_IN_FIELD.formatted(SEARCH_TEXT, node.toPrettyString()));
+        }
 
         final String formattedText = requireText(formattedTextNode,  FORMATTED_TEXT, node);
         final String coreText = requireText(coreTextNode, CORE_TEXT, node);
-        return new RichText.Persisted(formattedText, coreText);
+        final String searchText = requireText(searchTextNode, SEARCH_TEXT, node);
+        return new RichText.Persisted(formattedText, coreText, searchText);
     }
 
     private static JsonNode requireField(final JsonNode node, final String name) {
