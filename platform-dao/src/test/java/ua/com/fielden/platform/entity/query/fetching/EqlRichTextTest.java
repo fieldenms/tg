@@ -191,6 +191,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         final var query = select().
                 yield().val(richText.formattedText()).as("text.formattedText").
                 yield().val(richText.coreText()).as("text.coreText").
+                yield().val(richText.searchText()).as("text.searchText").
                 modelAsEntity(EntityWithRichText.class);
         final var entity = co(EntityWithRichText.class).getEntity(from(query).model());
         assertNotNull(entity);

@@ -126,6 +126,7 @@ public class MappingGenerationTest {
 \t<property name="text" type="ua.com.fielden.platform.types.RichTextType">
 \t\t<column name="TEXT_FORMATTEDTEXT"/>
 \t\t<column name="TEXT_CORETEXT"/>
+\t\t<column name="TEXT_SEARCHTEXT"/>
 \t</property>
 </class>
 
