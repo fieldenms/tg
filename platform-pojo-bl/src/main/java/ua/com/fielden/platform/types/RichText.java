@@ -36,13 +36,14 @@ import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException
  * Entity properties of this type attain validator {@link DefaultValidatorForValueTypeWithValidation}.
  * It is possible to create {@link RichText} values that contain unsafe markup, and its `validationResult` will contain the relevant information.
  * <p>
- * Core text is obtained from the formatted text upon creating a {@link RichText} value, but only if the input passes validation.
- * Otherwise, neither core text, nor formatted text are available (their accessor methods throw an exception).
+ * <b>Core text</b> and <b>search text</b> are obtained from formatted text upon creating a {@link RichText} value, but only if the input passes validation.
+ * Otherwise, no components are available (their accessor methods throw an exception).
  */
 public sealed class RichText implements IWithValidation permits RichText.Persisted, RichText.Invalid {
 
     public static final String FORMATTED_TEXT = "formattedText";
     public static final String CORE_TEXT = "coreText";
+    public static final String SEARCH_TEXT = "searchText";
     public static final String VALIDATION_RESULT = "validationResult";
 
     public static final String ERR_INVALID_RICHTEXT_CANNOT_BE_CREATED_WITH_SUCCESSFUL_RESULT =
@@ -59,8 +60,14 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     @IsProperty
     @MapTo
     @PersistentType("nstring")
-    @Title(value = "Core Text", desc = "A text field with all HTML tags removed, intended for use in search functions and inline display, such as in EGI.")
+    @Title(value = "Core Text", desc = "A simplified text with all HTML tags removed, intended for inline display, such as in EGI.")
     private final String coreText;
+
+    @IsProperty
+    @MapTo
+    @PersistentType("nstring")
+    @Title(value = "Search text", desc = "A simplified text with all HTML tags removed, intended for use in search functions.")
+    private final String searchText;
 
     private final Result validationResult;
 
@@ -69,20 +76,24 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
      *
      * @param formattedText     text with markup
      * @param coreText          text without markup (its length is always less than or equal to that of formatted text)
+     * @param searchText        text used for search
      * @param validationResult  the result of validation
      */
     // !!! KEEP THIS CONSTRUCTOR PRIVATE !!!
-    private RichText(final String formattedText, final String coreText, final Result validationResult) {
+    private RichText(final String formattedText, final String coreText, final String searchText, final Result validationResult) {
         if (validationResult.isSuccessful()) {
             requireNonNull(formattedText, "formattedText");
             requireNonNull(coreText, "coreText");
+            requireNonNull(searchText, "searchText");
         }
         else {
             requireNull(formattedText, "formattedText");
             requireNull(coreText, "coreText");
+            requireNull(searchText, "searchText");
         }
         this.formattedText = formattedText;
         this.coreText = coreText;
+        this.searchText = searchText;
         this.validationResult = validationResult;
     }
 
@@ -106,11 +117,13 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
      * Throws an exception if embedded HTML is deemed to be unsafe.
      */
     public static RichText fromMarkdown(final String input) {
-        final Node root = Parser.builder().includeSourceSpans(IncludeSourceSpans.BLOCKS_AND_INLINES).build().parse(input);
-        final var validationResult = RichTextSanitiser.sanitiseMarkdown(input);
-        return validationResult.isSuccessful()
-                ? new RichText(input, RichTextAsMarkdownCoreTextExtractor.toCoreText(root), SUCCESSFUL)
-                : fromUnsuccessfulValidationResult(validationResult);
+        // TODO: Remove this method.
+        throw new UnsupportedOperationException();
+        // final Node root = Parser.builder().includeSourceSpans(IncludeSourceSpans.BLOCKS_AND_INLINES).build().parse(input);
+        // final var validationResult = RichTextSanitiser.sanitiseMarkdown(input);
+        // return validationResult.isSuccessful()
+        //         ? new RichText(input, RichTextAsMarkdownCoreTextExtractor.toCoreText(root), SUCCESSFUL)
+        //         : fromUnsuccessfulValidationResult(validationResult);
     }
 
     /**
@@ -118,7 +131,22 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
      */
     public static RichText fromHtml(final String input) {
         class $ {
-            static final RichTextAsHtmlCoreTextExtractor.Extension extension = new RichTextAsHtmlCoreTextExtractor.Extension() {
+            static final RichTextAsHtmlCoreTextExtractor.Extension coreTextExtractorExtension = new RichTextAsHtmlCoreTextExtractor.Extension() {
+                static final String TOAST_UI_CHECKED_CLASS = "checked";
+                static final String TOAST_UI_TASK_ITEM_CLASS = "task-list-item";
+
+                @Override
+                public boolean isTaskItem(final Element element) {
+                    return element.hasClass(TOAST_UI_TASK_ITEM_CLASS);
+                }
+
+                @Override
+                public boolean isTaskItemChecked(final Element element) {
+                    return element.hasClass(TOAST_UI_TASK_ITEM_CLASS) && element.hasClass(TOAST_UI_CHECKED_CLASS);
+                }
+            };
+
+            static final RichTextAsHtmlSearchTextExtractor.Extension searchTextExtractorExtension = new RichTextAsHtmlSearchTextExtractor.Extension() {
                 static final String TOAST_UI_CHECKED_CLASS = "checked";
                 static final String TOAST_UI_TASK_ITEM_CLASS = "task-list-item";
 
@@ -137,8 +165,9 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         // Validate the input before parsing it.
         final var validationResult = RichTextSanitiser.sanitiseHtml(input);
         if (validationResult.isSuccessful()) {
-            final var coreText = RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.extension);
-            return new RichText(input, coreText, validationResult);
+            final var coreText = RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.coreTextExtractorExtension);
+            final var searchText = RichTextAsHtmlSearchTextExtractor.toSearchText(Jsoup.parse(input), $.searchTextExtractorExtension);
+            return new RichText(input, coreText, searchText, validationResult);
         }
         else {
             return fromUnsuccessfulValidationResult(validationResult);
@@ -175,9 +204,10 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
          *
          * @param formattedText text with markup
          * @param coreText      text without markup (its length is always less than or equal to that of formatted text)
+         * @param searchText    text used for search
          */
-        Persisted(final String formattedText, final String coreText) {
-            super(formattedText, coreText, SUCCESSFUL);
+        Persisted(final String formattedText, final String coreText, final String searchText) {
+            super(formattedText, coreText, searchText, SUCCESSFUL);
         }
 
         @Override
@@ -192,7 +222,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
          * @param validationResult  the result of validation, which must be unsuccessful
          */
         private Invalid(final Result validationResult) {
-            super(null, null, requireUnsuccessful(validationResult));
+            super(null, null, null, requireUnsuccessful(validationResult));
         }
 
         private static Result requireUnsuccessful(final Result validationResult) {
@@ -212,6 +242,11 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         @Override
         public String coreText() {
             throw new IllegalStateException("Core text is not available for invalid values.");
+        }
+
+        @Override
+        public String searchText() {
+            throw new IllegalStateException("Search text is not available for invalid values.");
         }
 
         @Override
@@ -247,8 +282,16 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         return coreText;
     }
 
+    /**
+     * Returns search text if this instance is valid.
+     * Otherwise, throws an exception.
+     */
+    public String searchText() {
+        return searchText;
+    }
+
     Persisted asPersisted() {
-        return new Persisted(formattedText, coreText);
+        return new Persisted(formattedText, coreText, searchText);
     }
 
     /**
@@ -268,12 +311,13 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         return this.isValid().isSuccessful()
                && that.isValid().isSuccessful()
                && Objects.equals(this.formattedText, that.formattedText)
-               && Objects.equals(this.coreText, that.coreText);
+               && Objects.equals(this.coreText, that.coreText)
+               && Objects.equals(this.searchText, that.searchText);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(formattedText, coreText);
+        return Objects.hash(formattedText, coreText, searchText);
     }
 
     @Override
