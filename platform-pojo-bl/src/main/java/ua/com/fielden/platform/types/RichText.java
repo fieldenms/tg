@@ -1,9 +1,6 @@
 package ua.com.fielden.platform.types;
 
 import org.apache.commons.text.StringEscapeUtils;
-import org.commonmark.node.Node;
-import org.commonmark.parser.IncludeSourceSpans;
-import org.commonmark.parser.Parser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -109,21 +106,6 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
      */
     public static RichText fromUnsuccessfulValidationResult(final Result validationResult) {
         return new Invalid(validationResult);
-    }
-
-    // NOTE: If RichText with HTML as markup is accepted completely, Markdown support can potentially be removed.
-    /**
-     * Creates {@link RichText} by parsing the input as Markdown and sanitising all embedded HTML.
-     * Throws an exception if embedded HTML is deemed to be unsafe.
-     */
-    public static RichText fromMarkdown(final String input) {
-        // TODO: Remove this method.
-        throw new UnsupportedOperationException();
-        // final Node root = Parser.builder().includeSourceSpans(IncludeSourceSpans.BLOCKS_AND_INLINES).build().parse(input);
-        // final var validationResult = RichTextSanitiser.sanitiseMarkdown(input);
-        // return validationResult.isSuccessful()
-        //         ? new RichText(input, RichTextAsMarkdownCoreTextExtractor.toCoreText(root), SUCCESSFUL)
-        //         : fromUnsuccessfulValidationResult(validationResult);
     }
 
     /**
