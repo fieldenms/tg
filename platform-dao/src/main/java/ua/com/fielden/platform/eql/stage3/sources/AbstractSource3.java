@@ -16,8 +16,8 @@ public abstract class AbstractSource3 implements ISource3, ToString.IFormattable
     private final Map<String, String> columns;
     private static final String MONEY_TYPE_SUBPROP_ENDING = ".amount";
     private static final int MONEY_TYPE_SUBPROP_ENDING_LENGTH = MONEY_TYPE_SUBPROP_ENDING.length();
-    private static final String RICHTEXT_CORE_TEXT_SUFFIX = '.' + RichText.CORE_TEXT;
-    private static final int RICHTEXT_CORE_TEXT_SUFFIX_LENGTH = RICHTEXT_CORE_TEXT_SUFFIX.length();
+    private static final String RICHTEXT_SEARCH_TEXT_SUFFIX = '.' + RichText.SEARCH_TEXT;
+    private static final int RICHTEXT_SEARCH_TEXT_SUFFIX_LENGTH = RICHTEXT_SEARCH_TEXT_SUFFIX.length();
 
     protected AbstractSource3(final String sqlAlias, final Integer id, final Map<String, String> columns) {
         this.sqlAlias = sqlAlias;
@@ -44,15 +44,15 @@ public abstract class AbstractSource3 implements ISource3, ToString.IFormattable
      * This method contains a workaround that enables shortcuts in yield aliases used in {@linkplain SourceQuery3 source queries}:
      * <ul>
      *   <li> {@code money} instead of {@code money.amount}
-     *   <li> {@code richText} instead of {@code richText.coreText}.
+     *   <li> {@code richText} instead of {@code richText.searchText}.
      * </ul>
      * This is only useful for {@link Source3BasedOnQueries}, because {@link Source3BasedOnTable} has its {@link #columns}
      * populated from {@link EqlTable} which provides column names for all component sub-properties.
      * Effectively, this enables a source query to use a component-typed property as an alias directly, while supporting
      * correct property resolution in its enclosing query.
      * For example, when a source query with a {@link Source3BasedOnQueries} as its source has a yield with alias {@code richText},
-     * its {@link #columns} will not contain component sub-properties ({@code richText.coreText} & {@code richText.formattedText}).
-     * At the same time, the enclosing query may use {@code prop("richText")} that will be expanded to {@code prop("richText.coreText")}
+     * its {@link #columns} will not contain RichText sub-properties ({@code richText.coreText} and others).
+     * At the same time, the enclosing query may use {@code prop("richText")} that will be expanded to {@code prop("richText.searchText")}
      * (given that the source query is based on an entity type with property {@code richText : RichText}).
      * Without this workaround, the resolution of the expanded property will fail.
      * <p>
@@ -71,8 +71,8 @@ public abstract class AbstractSource3 implements ISource3, ToString.IFormattable
         // The workaround
         if (propName.endsWith(MONEY_TYPE_SUBPROP_ENDING)) {
             return columns.get(propName.substring(0, propName.length() - MONEY_TYPE_SUBPROP_ENDING_LENGTH));
-        } else if (propName.endsWith(RICHTEXT_CORE_TEXT_SUFFIX)) {
-            return columns.get(propName.substring(0, propName.length() - RICHTEXT_CORE_TEXT_SUFFIX_LENGTH));
+        } else if (propName.endsWith(RICHTEXT_SEARCH_TEXT_SUFFIX)) {
+            return columns.get(propName.substring(0, propName.length() - RICHTEXT_SEARCH_TEXT_SUFFIX_LENGTH));
         }
 
         return null;

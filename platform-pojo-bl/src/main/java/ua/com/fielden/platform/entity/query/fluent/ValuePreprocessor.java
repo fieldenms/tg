@@ -60,7 +60,7 @@ public class ValuePreprocessor {
                         ? entity.getKey() : entity.getId();
             }
             case Money money -> money.getAmount();
-            case RichText richText -> richText.coreText();
+            case RichText richText -> richText.searchText();
             case null, default -> value;
         };
     }

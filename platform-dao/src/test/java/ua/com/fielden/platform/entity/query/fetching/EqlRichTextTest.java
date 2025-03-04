@@ -15,19 +15,22 @@ import static java.lang.String.join;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.types.RichText.CORE_TEXT;
-import static ua.com.fielden.platform.types.RichText.FORMATTED_TEXT;
+import static ua.com.fielden.platform.types.RichText.*;
 
 public class EqlRichTextTest extends AbstractDaoTestCase {
 
     @Test
-    public void RichText_property_is_interpreted_as_its_core_text() {
-        final var richText = RichText.fromHtml("<code>cons</code> <b>does not</b> evaluate its arguments in a <i>lazy</i> language.");
+    public void RichText_property_is_interpreted_as_its_search_text() {
+        final var richText = RichText.fromHtml("<b>Belief</b> as <a href='https://localhost'>anticipation</a> <i>controller</i>.");
         save(new_(EntityWithRichText.class, "1").setText(richText));
 
         assertTrue(co$(EntityWithRichText.class)
                            .exists(select(EntityWithRichText.class).where()
-                                           .prop("text").eq().val(richText.coreText())
+                                           .prop("text").eq().val(richText.searchText())
+                                           .model()));
+        assertTrue(co$(EntityWithRichText.class)
+                           .exists(select(EntityWithRichText.class).where()
+                                           .prop("text").iLike().val("%anticipation controller%")
                                            .model()));
     }
 
@@ -44,17 +47,33 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
                            .exists(select(EntityWithRichText.class).where()
                                            .prop(join(".", "text", FORMATTED_TEXT)).eq().val(richText.formattedText())
                                            .model()));
+        assertTrue(co$(EntityWithRichText.class)
+                           .exists(select(EntityWithRichText.class).where()
+                                           .prop(join(".", "text", SEARCH_TEXT)).eq().val(richText.searchText())
+                                           .model()));
     }
 
     @Test
-    public void RichText_value_is_interpreted_as_its_core_text() {
-        final var richText = RichText.fromHtml("<code>cons</code> <b>does not</b> evaluate its arguments in a <i>lazy</i> language.");
-        final var entityAgg = co(EntityAggregates.class).getEntity(
-                from(select().yield()
-                             .caseWhen().val(richText.coreText()).eq().val(richText).then().val("true").otherwise().val("false").end()
-                             .as("x").modelAsAggregate())
-                        .model());
-        assertEquals(entityAgg.get("x"), "true");
+    public void RichText_value_is_interpreted_as_its_search_text() {
+        final var richText = RichText.fromHtml("<b>Belief</b> as <a href='https://localhost'>anticipation</a> <i>controller</i>.");
+
+        {
+            final var entityAgg = co(EntityAggregates.class).getEntity(
+                    from(select().yield()
+                                 .caseWhen().val(richText.searchText()).eq().val(richText).then().val("true").otherwise().val("false").end()
+                                 .as("x").modelAsAggregate())
+                            .model());
+            assertEquals(entityAgg.get("x"), "true");
+        }
+
+        {
+            final var entityAgg = co(EntityAggregates.class).getEntity(
+                    from(select().yield()
+                                 .caseWhen().val(richText.searchText()).iLike().val("%anticipation controller%").then().val("true").otherwise().val("false").end()
+                                 .as("x").modelAsAggregate())
+                            .model());
+            assertEquals(entityAgg.get("x"), "true");
+        }
     }
 
     @Test
@@ -77,6 +96,17 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop(join(".", "text", CORE_TEXT)).like().val("привіт%").model()).model());
         assertNotNull(entity);
         assertEquals(richText.coreText(), entity.getText().coreText());
+    }
+
+    @Test
+    public void utf8_searchText_can_be_used_as_search_criteria() {
+        final var richText = RichText.fromHtml("привіт world");
+        save(new_(EntityWithRichText.class, "1").setText(richText));
+
+        final var co = co(EntityWithRichText.class);
+        final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop(join(".", "text", SEARCH_TEXT)).like().val("привіт%").model()).model());
+        assertNotNull(entity);
+        assertEquals(richText.searchText(), entity.getText().searchText());
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -165,8 +195,8 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
 
     @Test
     public void resulting_entities_cannot_be_instantiated_if_top_level_query_doesnt_yield_into_all_RichText_components_01() {
-        // Fails due to absence of text.formattedText yield alias in the top-level query.
-        // Error occurs during container instantiation, in RichText constructor, because formattedText is null.
+        // Fails due to absence of text.formattedText and text.searchText yield aliases in the top-level query.
+        // Error occurs during container instantiation, in RichText constructor, because unfetched components are null.
         final var query = select().
                 yield().val("без унікодів капут").as("text.coreText").
                 modelAsEntity(EntityWithRichText.class);
@@ -176,10 +206,17 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
 
     @Test
     public void resulting_entities_cannot_be_instantiated_if_top_level_query_doesnt_yield_into_all_RichText_components_02() {
-        // Fails due to absence of text.coreText yield in the top-level query.
-        // Error occurs during container instantiation, in RichText constructor, because coreText is null.
         final var query = select().
                 yield().val("без унікодів капут").as("text.formattedText").
+                modelAsEntity(EntityWithRichText.class);
+        assertThrows(InvalidArgumentException.class,
+                     () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
+    }
+
+    @Test
+    public void resulting_entities_cannot_be_instantiated_if_top_level_query_doesnt_yield_into_all_RichText_components_03() {
+        final var query = select().
+                yield().val("без унікодів капут").as("text.searchText").
                 modelAsEntity(EntityWithRichText.class);
         assertThrows(InvalidArgumentException.class,
                      () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
