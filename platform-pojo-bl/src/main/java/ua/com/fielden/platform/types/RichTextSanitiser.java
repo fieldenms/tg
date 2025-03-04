@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableList;
 import org.commonmark.node.*;
 import org.commonmark.parser.IncludeSourceSpans;
 import org.commonmark.parser.Parser;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Element;
 import org.owasp.html.*;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.text.commonmark.CommonMark;
@@ -16,6 +14,7 @@ import ua.com.fielden.platform.utils.StringRangeReplacement;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -61,7 +60,7 @@ public final class RichTextSanitiser {
      * <p>
      * The sanitisation policy is specified via {@link #POLICY_FACTORY}.
      *
-     * @return Result of {@link RichText}
+     * @return Result
      */
     static Result sanitiseMarkdown(final String input) {
         final var lines = NEWLINE_PATTERN.splitAsStream(input).toList();
@@ -90,15 +89,18 @@ public final class RichTextSanitiser {
         });
 
         final var violations = sanitiser.violations();
-        if (!violations.isEmpty()) {
-            return failure(input, "Input contains unsafe HTML:\n" +
-                                  enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
-                                          .collect(joining("\n")));
-        }
-        else {
-            final String coreText = RichTextAsMarkdownCoreTextExtractor.toCoreText(root);
-            return successful(new RichText(input, coreText));
-        }
+        return violations.isEmpty()
+               ? successful()
+               : failure(input, "Input contains unsafe HTML:\n" +
+                                         enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
+                                         .collect(joining("\n")));
+    }
+
+    /**
+     * Equivalent to {@link #sanitiseHtml(String, ErrorFormatter)}, but with a standard error formatter.
+     */
+    public static Result sanitiseHtml(final String input) {
+        return sanitiseHtml(input, standardErrorFormatter);
     }
 
     /**
@@ -111,33 +113,36 @@ public final class RichTextSanitiser {
      * <p>
      * The sanitisation policy is specified via {@link #POLICY_FACTORY}.
      *
-     * @return  a result that contains the given HTML if it's safe, otherwise a failure
+     * @return  a result of {@link String} that contains the given HTML if it's safe, otherwise a failure
      */
-    static Result sanitiseHtml(final String input) {
-        class $ {
-            static final RichTextAsHtmlCoreTextExtractor.Extension extension = new RichTextAsHtmlCoreTextExtractor.Extension() {
-                static final String TOAST_UI_CHECKED_CLASS = "checked";
-                static final String TOAST_UI_TASK_ITEM_CLASS = "task-list-item";
-
-                @Override
-                public boolean isTaskItem(final Element element) {
-                    return element.hasClass(TOAST_UI_TASK_ITEM_CLASS);
-                }
-
-                @Override
-                public boolean isTaskItemChecked(final Element element) {
-                    return element.hasClass(TOAST_UI_TASK_ITEM_CLASS) && element.hasClass(TOAST_UI_CHECKED_CLASS);
-                }
-            };
-        }
-
+    public static Result sanitiseHtml(final String input, final ErrorFormatter errorFormatter) {
         final var violations = findViolations(input);
         return violations.isEmpty()
-                ? successful(new RichText(input, RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.extension)))
-                : failure(input, "Input contains unsafe HTML:\n" +
-                                enumerate(violations.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
-                                        .collect(joining("\n")));
+                ? successful()
+                : failure(input, errorFormatter.apply(violations));
     }
+
+    /**
+     * Sanitises the {@link RichText#formattedText()} as described in {@link #sanitiseHtml(String, ErrorFormatter)}.
+     *
+     * @return  a result that contains the specified {@link RichText} if it's safe, otherwise a failure
+     */
+    public static Result sanitiseHtml(final RichText richText, final ErrorFormatter errorFormatter) {
+        final var violations = findViolations(richText.formattedText());
+        return violations.isEmpty()
+                ? successful(richText)
+                : failure(richText, errorFormatter.apply(violations));
+    }
+
+    @FunctionalInterface
+    public interface ErrorFormatter extends Function<List<String>, String> {}
+
+    public static final String STANDARD_ERROR_PREFIX = "Input contains unsafe HTML";
+
+    public static final ErrorFormatter standardErrorFormatter =
+            errors -> STANDARD_ERROR_PREFIX + ":\n" +
+                      enumerate(errors.stream(), 1, (e, i) -> "%s. %s".formatted(i, e))
+                              .collect(joining("\n"));
 
     /**
      * Creates a range that covers the same area of a text as the given source spans, which <b>must be contiguous</b>.

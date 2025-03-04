@@ -16,10 +16,7 @@ import ua.com.fielden.platform.eql.stage1.queries.AbstractQuery1;
 import ua.com.fielden.platform.eql.stage1.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
-import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.PropertyTypeMetadata;
+import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -94,11 +91,11 @@ public class QuerySourceInfoProvider {
     private final IDomainMetadata domainMetadata;
 
     @Inject
-    public QuerySourceInfoProvider(final IDomainMetadata domainMetadata) {
+    public QuerySourceInfoProvider(final IDomainMetadata domainMetadata, final IDomainMetadataUtils domainMetadataUtils) {
         this.domainMetadata = domainMetadata;
 
         // Declared query source infos are created for all entities.
-        declaredQuerySourceInfoMap = domainMetadata.allTypes(EntityMetadata.class)
+        declaredQuerySourceInfoMap = domainMetadataUtils.registeredEntities()
                 .collect(toConcurrentMap(EntityMetadata::javaType, em -> new QuerySourceInfo<>(em.javaType(), true)));
         declaredQuerySourceInfoMap.values()
                 .forEach(ei -> ei.addProps(generateQuerySourceItems(declaredQuerySourceInfoMap, ei.javaType())));
@@ -120,7 +117,7 @@ public class QuerySourceInfoProvider {
 
         // 2. Create modelled query source infos for synthetic entities by analysing their underlying models.
         // Transform underlying models of synthetic entities to stage 1.
-        seModels = domainMetadata.allTypes(EntityMetadata.class)
+        seModels = domainMetadataUtils.registeredEntities()
                 .map(EntityMetadata::asSynthetic).flatMap(Optional::stream)
                 .collect(toConcurrentMap(EntityMetadata::javaType,
                                          em -> em.data().models().stream().map(QUERY_MODEL_TO_STAGE_1_TRANSFORMER::generateAsUncorrelatedSourceQuery).toList()));
