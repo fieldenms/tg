@@ -14,8 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-import static ua.com.fielden.platform.types.RichText.CORE_TEXT;
-import static ua.com.fielden.platform.types.RichText.FORMATTED_TEXT;
+import static ua.com.fielden.platform.types.RichText.*;
 
 /**
  * Hibernate type mapping for component type {@link RichText}.
@@ -130,7 +129,11 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
         if (resultSet.wasNull()) {
             throw new UserTypeException("Core text is null when formatted text is present. Formatted text:\n%s".formatted(formattedText));
         }
-        return new RichText.Persisted(formattedText, coreText);
+        final String searchText = getText(resultSet, names[2]);
+        if (resultSet.wasNull()) {
+            throw new UserTypeException("Search text is null when formatted text is present. Formatted text:\n%s".formatted(formattedText));
+        }
+        return new RichText.Persisted(formattedText, coreText, searchText);
     }
 
     @Override
@@ -139,7 +142,8 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
             return null;
         }
         return new RichText.Persisted((String) arguments.get(FORMATTED_TEXT),
-                                      (String) arguments.get(CORE_TEXT));
+                                      (String) arguments.get(CORE_TEXT),
+                                      (String) arguments.get(SEARCH_TEXT));
     }
 
     @Override
@@ -152,31 +156,33 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
         if (value == null) {
             statement.setNull(index, StringType.INSTANCE.sqlType());
             statement.setNull(index + 1, StringType.INSTANCE.sqlType());
+            statement.setNull(index + 2, StringType.INSTANCE.sqlType());
         } else {
             final var richText = (RichText) value;
             setText(statement, index, richText.formattedText());
             setText(statement,index + 1, richText.coreText());
+            setText(statement,index + 2, richText.searchText());
         }
     }
 
     @Override
     public String[] getPropertyNames() {
-        return new String[] { FORMATTED_TEXT, CORE_TEXT };
+        return new String[] { FORMATTED_TEXT, CORE_TEXT, SEARCH_TEXT };
     }
 
     @Override
     public Type[] getPropertyTypes() {
-        return new Type[] { textType, textType };
+        return new Type[] { textType, textType, textType };
     }
 
     @Override
     public Object getPropertyValue(final Object component, final int property) {
         final var richText = (RichText) component;
-        if (property == 0) {
-            return richText.formattedText();
-        } else {
-            return richText.coreText();
-        }
+        return switch (property) {
+            case 0 -> richText.formattedText();
+            case 1 -> richText.coreText();
+            default -> richText.searchText();
+        };
     }
 
 }
