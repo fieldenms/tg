@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @author  TG Team
  */
-public interface IRichTextConfigWithHeight<T extends AbstractEntity<?>> extends IRichTextConfigWithMinHeight<T> {
+public interface IRichTextConfigWithHeight<T extends AbstractEntity<?>> extends IRichTextConfig1<T>{
 
     /**
      * Sets the height of rich text editor.

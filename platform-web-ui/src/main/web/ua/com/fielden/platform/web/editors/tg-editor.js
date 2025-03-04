@@ -191,7 +191,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             <div clss="editor-prefix" slot="prefix">
                 ${customPrefixAttribute}
             </div>
-            <div class="main-container" slot="input">
+            <div id="mainContainer" class="main-container" slot="input">
                 ${customInput}
                 ${inputLayer}
             </div>
