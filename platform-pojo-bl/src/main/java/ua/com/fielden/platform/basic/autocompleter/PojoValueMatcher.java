@@ -98,7 +98,7 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
             return false;
         }
         if (value instanceof RichText richText) {
-            return pattern.matcher(richText.coreText().toUpperCase()).find();
+            return pattern.matcher(richText.searchText().toUpperCase()).find();
         }
         else {
             return pattern.matcher(value.toString().toUpperCase()).find();
