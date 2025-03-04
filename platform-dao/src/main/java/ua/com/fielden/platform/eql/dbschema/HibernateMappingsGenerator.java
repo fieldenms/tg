@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.dbschema;
 import com.google.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
@@ -38,6 +37,7 @@ public class HibernateMappingsGenerator {
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
 
     private final IDomainMetadata domainMetadata;
+    private final IDomainMetadataUtils domainMetadataUtils;
     private final EqlTables eqlTables;
     private final IDbVersionProvider dbVersionProvider;
     private final PropertyMetadataUtils pmUtils;
@@ -45,11 +45,13 @@ public class HibernateMappingsGenerator {
 
     @Inject
     public HibernateMappingsGenerator(final IDomainMetadata domainMetadata,
+                                      final IDomainMetadataUtils domainMetadataUtils,
                                       final IDbVersionProvider dbVersionProvider,
                                       final EqlTables eqlTables,
                                       final PropertyInliner propertyInliner) {
         this.eqlTables = eqlTables;
         this.domainMetadata = domainMetadata;
+        this.domainMetadataUtils = domainMetadataUtils;
         this.pmUtils = domainMetadata.propertyMetadataUtils();
         this.dbVersionProvider = dbVersionProvider;
         this.propertyInliner = propertyInliner;
@@ -63,7 +65,8 @@ public class HibernateMappingsGenerator {
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        domainMetadata.allTypes(EntityMetadata.class).distinct()
+        domainMetadataUtils.registeredEntities()
+                .distinct()
                 .filter(EntityMetadata::isPersistent)
                 .sorted(comparing(em -> em.javaType().getSimpleName())) // sort for testing purposes
                 .forEach(em -> {

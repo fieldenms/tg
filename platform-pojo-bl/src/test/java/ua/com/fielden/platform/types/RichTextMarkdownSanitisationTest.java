@@ -153,11 +153,12 @@ public class RichTextMarkdownSanitisationTest {
     }
 
     private void assertAfterSanitization(final String expected, final String input) {
-        final Result result = RichTextSanitiser.sanitiseMarkdown(input);
+        final var richText = RichText.fromMarkdown(input);
+        final var result = richText.isValid();
         if (!result.isSuccessful()) {
             fail(result.getMessage());
         } else {
-            assertEquals(expected, result.getInstance(RichText.class).formattedText());
+            assertEquals(expected,richText.formattedText());
         }
     }
 
