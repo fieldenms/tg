@@ -13,7 +13,6 @@ import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.empty;
 import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
 public abstract class AbstractEqlShortcutTest extends EqlTestCase {
 
@@ -39,7 +38,7 @@ public abstract class AbstractEqlShortcutTest extends EqlTestCase {
     }
 
     private static <T extends AbstractEntity<?>> QueryModelResult<T> transformToModelResult(final QueryProcessingModel<T, ?> qem) {
-        return EqlQueryTransformer.getModelResult(qem, H2, filter, empty(), dates, metadata(), eqlTables(), querySourceInfoProvider());
+        return eqlQueryTransformer().getModelResult(qem, empty());
     }
 
     protected static final <T extends AbstractEntity<?>> QueryModelResult<T> transformToModelResult(final EntityResultQueryModel<T> queryModel) {
