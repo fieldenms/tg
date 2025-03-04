@@ -1,25 +1,6 @@
 package ua.com.fielden.platform.entity;
 
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.poi.ss.util.WorkbookUtil.validateSheetName;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.failuref;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEntityTitleAndDesc;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.security.tokens.Template.READ;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Stream;
-
 import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -35,6 +16,24 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.interfaces.IEntityMasterUrlProvider;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.poi.ss.util.WorkbookUtil.validateSheetName;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+
 /**
  * DAO implementation for companion object {@link EntityExportActionCo}.
  *
@@ -43,6 +42,14 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
  */
 @EntityType(EntityExportAction.class)
 public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> implements EntityExportActionCo {
+    public static final String ERR_EMPTY_SELECTION_FOR_EXPORT_OF_SELECTED = "Please select at least one entity to export from %s view.";
+    public static final String ERR_MISSING_IDS_FOR_EXPORT_OF_SELECTED = "Export of selected entities from %s view is not supported due to missing IDs.";
+    public static final String ERR_EXCEPTION_DURING_DATA_EXPORT = "An exception occurred during the data export.";
+    public static final String ERR_NOTHING_TO_EXPORT = "There is nothing to export.";
+
+    public static final String EXPORT_FILE_NAME_TEMPLATE = "export-of-%s.xlsx";
+    public static final String EXPORT_FILE_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
@@ -86,41 +93,47 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         // selectionCrit.getDynamicProperties() are used only for EntityExportAction and only in this class;
         //   they are initialised in below selectionCrit.export(...) calls; see selectionCrit.setDynamicProperties method callers for more details;
         //   that's why there is no need to initialise selectionCrit.getDynamicProperties() anywhere outside EntityExportAction, i.e. for other functional actions.
-        //Generate export data
-        final String entityTypeName = generateExportData(entity, topCentreContextHolder, entities, titles, propAndTitles, dynamicProperties);
+        // Generate export data
+        final String entityTypeName = generateExportData(entity, topCentreContextHolder, false, entities, titles, propAndTitles, dynamicProperties);
 
         if (entities.isEmpty()) {
-            throw failure("There is nothing to export");
+            throw failure(ERR_NOTHING_TO_EXPORT);
         }
 
-        entity.setFileName(String.format("export-of-%s.xlsx", entityTypeName));
-        entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        entity.setFileName(EXPORT_FILE_NAME_TEMPLATE.formatted(entityTypeName));
+        entity.setMime(EXPORT_FILE_MIME);
 
         try {
             entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles, dynamicProperties, titles, entityMasterUrlProvider)));
-        } catch (final IOException e) {
-            throw failure("An exception occurred during the data export.", e);
+        } catch (final IOException ex) {
+            throw failure(ERR_EXCEPTION_DURING_DATA_EXPORT, ex);
         } finally {
-            entities.forEach(entitiesStream -> entitiesStream.close());
+            entities.forEach(Stream::close);
         }
 
         return entity;
     }
 
-    private String generateExportData(final EntityExportAction entity, final CentreContextHolder contextEntry, final List<Stream<AbstractEntity<?>>> entities, final List<String> titles, final List<Pair<String[], String[]>> propAndTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties) {
+    private String generateExportData(
+            final EntityExportAction entity,
+            final CentreContextHolder contextEntry,
+            final boolean allowEmptySelectionForExportOfSelected,
+            final List<Stream<AbstractEntity<?>>> entities,
+            final List<String> titles,
+            final List<Pair<String[], String[]>> propAndTitles,
+            final List<List<List<DynamicColumnForExport>>> dynamicProperties)
+    {
         final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(contextEntry);
-        final Object resultSetHiden = contextEntry.getCustomObject().get("@@resultSetHidden");
-        if (resultSetHiden != null && !Boolean.valueOf(resultSetHiden.toString())) {
+        final Object resultSetHidden = contextEntry.getCustomObject().get("@@resultSetHidden");
+        if (resultSetHidden != null && !Boolean.parseBoolean(resultSetHidden.toString())) {
             final String sheetTitle = extractSheetTitle(selectionCrit);
             titles.add(sheetTitle);
-            entities.add(exportEntities(entity, selectionCrit, sheetTitle));
+            entities.add(exportEntities(entity, selectionCrit, sheetTitle, allowEmptySelectionForExportOfSelected));
             propAndTitles.add(selectionCrit.generatePropTitlesToExport());
             dynamicProperties.add(selectionCrit.getDynamicProperties());
         }
         if (!contextEntry.proxiedPropertyNames().contains("relatedContexts")) {
-            contextEntry.getRelatedContexts().entrySet().forEach(relatedContextEntry -> {
-                generateExportData(entity, relatedContextEntry.getValue(), entities, titles, propAndTitles, dynamicProperties);
-            });
+            contextEntry.getRelatedContexts().forEach((key, relatedContext) -> generateExportData(entity, relatedContext, true, entities, titles, propAndTitles, dynamicProperties));
         }
         return selectionCrit.getEntityClass().getSimpleName();
     }
@@ -144,18 +157,29 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         return title;
     }
 
-    private Stream<AbstractEntity<?>> exportEntities(final EntityExportAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String sheetTitle) {
+    private Stream<AbstractEntity<?>> exportEntities(
+            final EntityExportAction entity,
+            final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit,
+            final String sheetTitle,
+            final boolean allowNoSelectionForExportOfSelected)
+    {
         authoriseReading(selectionCrit.getEntityClass().getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // reading of entities should be authorised when exporting
         if (entity.isExportAll()) {
             return selectionCrit.export(new LinkedHashMap<>());
-        } else if (entity.isExportTop()) {
+        }
+        else if (entity.isExportTop()) {
             return selectionCrit.export(linkedMapOf(t2("fetchSize", entity.getNumber()))).limit(entity.getNumber());
-        } else {
-            final List<Long> selectedEntitiesIds = selectionCrit.centreContextHolder().getSelectedEntities().stream().map(AbstractEntity::getId).collect(toList());
+        }
+        // export selected items
+        else {
+            final List<Long> selectedEntitiesIds = selectionCrit.centreContextHolder().getSelectedEntities().stream().map(AbstractEntity::getId).toList();
             if (selectedEntitiesIds.isEmpty()) {
-                throw failuref("Please select at least one entity to export from %s view.", sheetTitle);
+                if (allowNoSelectionForExportOfSelected) {
+                    return Stream.empty();
+                }
+                throw failuref(ERR_EMPTY_SELECTION_FOR_EXPORT_OF_SELECTED, sheetTitle);
             } else if (selectedEntitiesIds.stream().anyMatch(Objects::isNull)) {
-                throw failuref("Export of selected entities from %s view is not supported due to missing IDs.", sheetTitle);
+                throw failuref(ERR_MISSING_IDS_FOR_EXPORT_OF_SELECTED, sheetTitle);
             }
             return selectionCrit.export(linkedMapOf(t2("ids", selectedEntitiesIds.toArray(new Long[0]))));
         }
