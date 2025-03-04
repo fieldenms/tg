@@ -786,7 +786,7 @@ Polymer({
     },
 
     _focusSubmenu: function (e) {
-        var target = e.target || e.srcElement;
+        const target = e.target;
         if (e.relatedTarget === this.$.menu) {
             if (target.opened && target.__content && target.__content.selected) {
                 target.__content.focus();

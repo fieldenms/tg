@@ -26,7 +26,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
  *
  * @param <T>
  */
-public class AlternativeViewConfigBuilder<T extends AbstractEntity<?>> implements IAlternativeView<T>, IAlternativeViewPreferred<T>, IAlternativeViewAlso<T>{
+public class AlternativeViewConfigBuilder<T extends AbstractEntity<?>> implements IAlternativeView<T>, IAlternativeViewPreferred<T>, IAlternativeViewAlso<T> {
 
     private final ResultSetBuilder<T> resultSetBuilder;
     private final EntityActionConfig alternativeViewAction;
@@ -79,5 +79,4 @@ public class AlternativeViewConfigBuilder<T extends AbstractEntity<?>> implement
     public IAlternativeViewWithActions<T> also() {
         return this;
     }
-
 }
