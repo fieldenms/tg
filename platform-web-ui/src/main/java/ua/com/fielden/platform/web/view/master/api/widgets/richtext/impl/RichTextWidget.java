@@ -19,7 +19,7 @@ public class RichTextWidget extends AbstractWidget {
     private final Class<? extends AbstractEntity<?>> entityType;
 
     private int height = 0; //default height
-    private int minHeight = 0; //default min height
+    private int minHeight = 25; //default min height
 
     /**
      * Creates new rich text widget for specified property in entityType and specified title/description pair.

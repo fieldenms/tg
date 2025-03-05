@@ -73,7 +73,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
             minHeight: {
                 type: String,
-                value: "16px"
+                value: "25px"
             },
 
             height: {
