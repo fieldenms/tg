@@ -690,6 +690,7 @@ const template = html`
         .editor-toolbar {
             overflow: hidden;
             padding-top: 8px;
+            flex-shrink: 0;
         }
         .custom-responsive-toolbar {
             --tg-responsove-toolbar-expand-button: {
