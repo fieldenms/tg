@@ -64,7 +64,9 @@ public sealed interface IRetrievalModel<T extends AbstractEntity<?>> permits Ent
      * Creates a retrieval model that corresponds to the entity type that the fetch model is associated with.
      */
     static <E extends AbstractEntity<?>> IRetrievalModel<E> createRetrievalModel(
-            final fetch<E> fetch, final IDomainMetadata domainMetadata, final QuerySourceInfoProvider qsip)
+            final fetch<E> fetch,
+            final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider qsip)
     {
         return fetch.getEntityType() == EntityAggregates.class
                 ? (IRetrievalModel<E>) new EntityAggregatesRetrievalModel((fetch<EntityAggregates>) fetch, domainMetadata, qsip)

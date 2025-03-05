@@ -390,6 +390,12 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void includeAllFirstLevelPrimPropsAndKey() {
+            // Always include `desc`.
+            // This category should be a superset of KEY_AND_DESC.
+            if (entityMetadata.hasProperty(DESC)) {
+                primProps.add(DESC);
+            }
+
             forEachProperty((prop, optPropMetadata) -> {
                 // Exclude all calculated properties except for components (legacy EQL2 behaviour).
                 // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour.
@@ -424,12 +430,18 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
             with(KEY, true);
 
-            if (hasDescProperty(entityType)) {
+            if (entityMetadata.hasProperty(DESC)) {
                 primProps.add(DESC);
             }
         }
 
         private void includeAllFirstLevelProps() {
+            // Always include `desc`.
+            // This category should be a superset of KEY_AND_DESC.
+            if (entityMetadata.hasProperty(DESC)) {
+                primProps.add(DESC);
+            }
+
             forEachProperty((prop, optPropMetadata) -> {
                 // Exclude all calculated properties except for components (legacy EQL2 behaviour).
                 // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour.

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.types.function.CharPredicate;
 
 public final class StringUtils {
 
@@ -56,6 +57,49 @@ public final class StringUtils {
      */
     public static int indexOfAnyBut(final CharSequence charSeq, final char... searchChars) {
         return indexOfAnyBut(charSeq, 0, charSeq.length(), searchChars);
+    }
+
+    /**
+     * Returns the index within the specified character sequence of the first character that matches the specified predicate.
+     * If there is no matching character, returns {@code -1}.
+     */
+    public static int indexOf(final CharSequence charSeq, final CharPredicate predicate) {
+        return indexOfOrElse(charSeq, predicate, -1);
+    }
+
+    /**
+     * Returns the index within the specified character sequence of the first character that matches the specified predicate.
+     * If there is no matching character, returns {@code otherIndex}.
+     */
+    public static int indexOfOrElse(final CharSequence charSeq, final CharPredicate predicate, final int otherIndex) {
+        for (int i = 0; i < charSeq.length(); i++) {
+            if (predicate.test(charSeq.charAt(i))) {
+                return i;
+            }
+        }
+        return otherIndex;
+    }
+
+    /**
+     * Deletes the trailing sequence of characters from the specified string builder each of which matches the specified predicate.
+     *
+     * @return  the specified {@link StringBuilder} instance
+     */
+    public static StringBuilder deleteTrailing(final StringBuilder stringBuilder, final CharPredicate predicate) {
+        int count = 0;
+        for (int i = stringBuilder.length() - 1; i >= 0; i--) {
+            if (predicate.test(stringBuilder.charAt(i))) {
+                count += 1;
+            } else {
+                break;
+            }
+        }
+
+        if (count > 0) {
+            stringBuilder.delete(stringBuilder.length() - count, stringBuilder.length());
+        }
+
+        return stringBuilder;
     }
 
     private StringUtils() {}

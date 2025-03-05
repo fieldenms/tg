@@ -421,7 +421,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 EntityUtils.isEnum(propertyType) || // exclude enumeration properties / entities
                 EntityUtils.isEntityType(propertyType) && Modifier.isAbstract(propertyType.getModifiers()) || // exclude properties / entities of entity type with 'abstract' modifier
                 EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresentForClass(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
-                EntityUtils.isEntityType(propertyType) && EntityUtils.isIntrospectionDenied((Class<? extends AbstractEntity<?>>) propertyType) || // exclude properties / entities of entity type with DenyIntrospection annotation
+                EntityUtils.isEntityType(propertyType) && EntityUtils.isIntrospectionDenied(propertyType) || // exclude properties / entities of entity type with DenyIntrospection annotation
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude ignored properties
                 // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.

@@ -4,10 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion;
-import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadataUtils;
+import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import javax.annotation.Nullable;
@@ -26,16 +23,20 @@ final class EntityBatchInsertTables {
     private final Map<String, TableStructForBatchInsertion> tables;
 
     @Inject
-    EntityBatchInsertTables(final IDomainMetadata domainMetadata) {
-        tables = generateTables(domainMetadata).collect(toConcurrentMap(t2 -> t2._1, t2 -> t2._2));
+    EntityBatchInsertTables(final IDomainMetadata domainMetadata, final IDomainMetadataUtils domainMetadataUtils) {
+        tables = generateTables(domainMetadata, domainMetadataUtils).collect(toConcurrentMap(t2 -> t2._1, t2 -> t2._2));
     }
 
     public @Nullable TableStructForBatchInsertion getTableStructsForBatchInsertion(final Class<? extends AbstractEntity<?>> entityType) {
         return tables.get(entityType.getName());
     }
 
-    private static Stream<T2<String, TableStructForBatchInsertion>> generateTables(final IDomainMetadata domainMetadata) {
-        return domainMetadata.allTypes(EntityMetadata.class).parallel()
+    private static Stream<T2<String, TableStructForBatchInsertion>> generateTables(
+            final IDomainMetadata domainMetadata,
+            final IDomainMetadataUtils domainMetadataUtils)
+    {
+        return domainMetadataUtils.registeredEntities()
+                .parallel()
                 .map(EntityMetadata::asPersistent).flatMap(Optional::stream)
                 .map(em -> t2(em.javaType().getName(), generateTableStructForBatchInsertion(domainMetadata, em)));
     }

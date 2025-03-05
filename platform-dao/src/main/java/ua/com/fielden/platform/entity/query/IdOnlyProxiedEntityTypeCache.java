@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.meta.EntityMetadata;
-import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadataUtils;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -26,8 +26,8 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
     private final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap;
 
     @Inject
-    public IdOnlyProxiedEntityTypeCache(final IDomainMetadata domainMetadata) {
-        typesMap = buildMap(domainMetadata);
+    public IdOnlyProxiedEntityTypeCache(final IDomainMetadataUtils domainMetadataUtils) {
+        typesMap = buildMap(domainMetadataUtils);
     }
 
     @Override
@@ -35,9 +35,10 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
         return (Class<? extends T>) typesMap.get(originalType);
     }
 
-    private Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> buildMap(final IDomainMetadata domainMetadata) {
+    private Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> buildMap(final IDomainMetadataUtils domainMetadataUtils) {
         // the following operations are a bit heavy and benefit from parallel processing
-        return domainMetadata.allTypes(EntityMetadata.class).parallel()
+        return domainMetadataUtils.registeredEntities()
+                .parallel()
                 .filter(EntityMetadata::isPersistent)
                 .map(em -> {
                     final var origType = em.javaType();

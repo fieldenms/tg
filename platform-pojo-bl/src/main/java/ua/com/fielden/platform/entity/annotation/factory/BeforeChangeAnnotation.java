@@ -62,6 +62,10 @@ public class BeforeChangeAnnotation {
         return merge(Arrays.asList(annotations));
     }
 
+    public static boolean hasHandler(final BeforeChange atBeforeChange, final Class<?> handlerType) {
+        return Arrays.stream(atBeforeChange.value()).anyMatch(atHandler -> atHandler.value() == handlerType);
+    }
+
     /**
      * Creates a new instance of {@link BeforeChange}.
      *

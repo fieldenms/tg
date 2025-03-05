@@ -6,7 +6,6 @@ import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException
 import ua.com.fielden.platform.types.either.Either;
 
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
@@ -36,16 +35,6 @@ final class DomainMetadataImpl implements IDomainMetadata {
     @Override
     public EntityMetadataUtils entityMetadataUtils() {
         return emUtils;
-    }
-
-    @Override
-    public Stream<TypeMetadata> allTypes() {
-        return generator.allTypes();
-    }
-
-    @Override
-    public <T extends TypeMetadata> Stream<T> allTypes(final Class<T> metadataType) {
-        return generator.allTypes(metadataType);
     }
 
     @Override

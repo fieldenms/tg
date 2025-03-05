@@ -27,15 +27,15 @@ var require_util = __commonJS({
 });
 
 // src/index.ts
-var src_exports = {};
-__export(src_exports, {
+var index_exports = {};
+__export(index_exports, {
   custom: () => custom,
-  default: () => src_default,
+  default: () => index_default,
   inspect: () => inspect,
   registerConstructor: () => registerConstructor,
   registerStringTag: () => registerStringTag
 });
-module.exports = __toCommonJS(src_exports);
+module.exports = __toCommonJS(index_exports);
 
 // src/helpers.ts
 var ansiColors = {
@@ -140,8 +140,7 @@ function truncate(string, length, tail = truncator) {
 function inspectList(list, options, inspectItem, separator = ", ") {
   inspectItem = inspectItem || options.inspect;
   const size = list.length;
-  if (size === 0)
-    return "";
+  if (size === 0) return "";
   const originalLength = options.truncate;
   let output = "";
   let peek = "";
@@ -195,8 +194,7 @@ function inspectProperty([key, value], options) {
 // src/array.ts
 function inspectArray(array, options) {
   const nonIndexProperties = Object.keys(array).slice(array.length);
-  if (!array.length && !nonIndexProperties.length)
-    return "[]";
+  if (!array.length && !nonIndexProperties.length) return "[]";
   options.truncate -= 4;
   const listContents = inspectList(array, options);
   options.truncate -= listContents.length;
@@ -225,8 +223,7 @@ function inspectTypedArray(array, options) {
   const name = getArrayName(array);
   options.truncate -= name.length + 4;
   const nonIndexProperties = Object.keys(array).slice(array.length);
-  if (!array.length && !nonIndexProperties.length)
-    return `${name}[]`;
+  if (!array.length && !nonIndexProperties.length) return `${name}[]`;
   let output = "";
   for (let i = 0; i < array.length; i++) {
     const string = `${options.stylize(truncate(array[i], options.truncate), "number")}${i === array.length - 1 ? "" : ", "}`;
@@ -285,10 +282,7 @@ function mapToEntries(map) {
   return entries;
 }
 function inspectMap(map, options) {
-  const size = map.size - 1;
-  if (size <= 0) {
-    return "Map{}";
-  }
+  if (map.size === 0) return "Map{}";
   options.truncate -= 7;
   return `Map{ ${inspectList(mapToEntries(map), options, inspectMapEntry)} }`;
 }
@@ -314,8 +308,7 @@ function inspectNumber(number, options) {
 // src/bigint.ts
 function inspectBigInt(number, options) {
   let nums = truncate(number.toString(), options.truncate - 1);
-  if (nums !== truncator)
-    nums += "n";
+  if (nums !== truncator) nums += "n";
   return options.stylize(nums, "bigint");
 }
 
@@ -336,8 +329,7 @@ function arrayFromSet(set) {
   return values;
 }
 function inspectSet(set, options) {
-  if (set.size === 0)
-    return "Set{}";
+  if (set.size === 0) return "Set{}";
   options.truncate -= 7;
   return `Set{ ${inspectList(arrayFromSet(set), options)} }`;
 }
@@ -441,8 +433,7 @@ function inspectClass(value, options) {
 
 // src/arguments.ts
 function inspectArguments(args, options) {
-  if (args.length === 0)
-    return "Arguments[]";
+  if (args.length === 0) return "Arguments[]";
   options.truncate -= 13;
   return `Arguments[ ${inspectList(args, options)} ]`;
 }
@@ -609,8 +600,7 @@ function inspect(value, opts = {}) {
   if (customInspect && value) {
     const output = inspectCustom(value, options, type);
     if (output) {
-      if (typeof output === "string")
-        return output;
+      if (typeof output === "string") return output;
       return inspect(output, options);
     }
   }
@@ -647,4 +637,4 @@ function registerStringTag(stringTag, inspector) {
   return true;
 }
 var custom = chaiInspect;
-var src_default = inspect;
+var index_default = inspect;

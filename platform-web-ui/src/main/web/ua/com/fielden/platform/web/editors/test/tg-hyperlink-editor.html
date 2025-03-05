@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hyperlink tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+</head>
+
+<body>
+    <test-fixture id="MasterFixture">
+        <template>
+            <tg-TgPersistentEntityWithProperties-master
+                id="master" 
+                entity-type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" 
+                entity-id="new" 
+                current-state="EDIT">
+            </tg-TgPersistentEntityWithProperties-master>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+
+        import { correctlyApproximatesFor, correctlyApproximatesErroneousValidationFor, correctlyApproximatesNoValidationFor, incorrectlyApproximatesFor } from '/resources/editors/test/tg-hyperlink-editor-approximation-test-utils.js';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+
+        suite('value approximates from', function() {
+            let master;
+
+            setup(function() {
+                master = fixture('MasterFixture');
+            });
+
+            const correctlyApproximates = correctlyApproximatesFor(() => master);
+            const correctlyApproximatesErroneousValidation = correctlyApproximatesErroneousValidationFor(() => master);
+            const correctlyApproximatesNoValidation = correctlyApproximatesNoValidationFor(() => master);
+            const incorrectlyApproximates = incorrectlyApproximatesFor(() => master);
+
+            (() => {
+                const target = ' ', result = '';
+                test(`[${target}] to [${result}]`, done => correctlyApproximatesNoValidation(done, target, result));
+            })();
+
+            (() => {
+                const target = ' \n \n', result = '';
+                test(`[${target}] (with \\n) to [${result}]`, done => correctlyApproximatesNoValidation(done, target, result));
+            })();
+
+            (() => {
+                const target = 'Hello world!', result = 'https://Hello world!', error = 'Value [https://Hello world!] is not a valid hyperlink.';
+                test(`[${target}] to [${result}] with toast error [${error}]`, done => correctlyApproximatesErroneousValidation(done, target, result, { value: result }, null, error));
+            })();
+
+            (() => {
+                const target = '  Hello world!', result = 'https://Hello world!', error = 'Value [https://Hello world!] is not a valid hyperlink.';
+                test(`[${target}] to [${result}] with toast error [${error}]`, done => correctlyApproximatesErroneousValidation(done, target, result, { value: result }, null, error));
+            })();
+
+            (() => {
+                const target = 'https://example.com', result = 'https://example.com';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result, { value: result }));
+            })();
+
+            (() => {
+                const target = 'https://example.com   ', result = 'https://example.com';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result, { value: result }));
+            })();
+
+            (() => {
+                const target = 'http://example.com', result = 'http://example.com';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result, { value: result }));
+            })();
+
+            (() => {
+                const target = 'ftp://example.com', result = 'ftp://example.com';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result, { value: result }));
+            })();
+
+            (() => {
+                const target = 'ftps://example.com', result = 'ftps://example.com';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result, { value: result }));
+            })();
+
+            (() => {
+                const target = 'mailto:doe@example.com', result = 'mailto:doe@example.com';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result, { value: result }));
+            })();
+
+            (() => {
+                const target = 'unknown://example.com', error = 'One of http, https, ftp, ftps or mailto hyperlink protocols is expected.';
+                test(`[${target}] to itself with under-editor error [${error}]`, done => incorrectlyApproximates(done, target, error));
+            })();
+
+            (() => {
+                const target = 'maaailto:doe@example.com', result = 'https://maaailto:doe@example.com';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result, { value: result }));
+            })();
+
+            (() => {
+                const target = 'example.com', result = 'https://example.com';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result, { value: result }));
+            })();
+
+            (() => {
+                const target = 'www.example.com', result = 'https://www.example.com';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result, { value: result }));
+            })();
+
+        });
+    </script>
+</body>
+
+</html>

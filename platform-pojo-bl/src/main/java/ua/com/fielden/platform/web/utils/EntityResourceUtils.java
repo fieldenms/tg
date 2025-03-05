@@ -30,14 +30,12 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.types.*;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
@@ -64,11 +62,13 @@ import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntit
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFromCriteriaType;
+import static ua.com.fielden.platform.types.RichText.VALIDATION_RESULT;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
@@ -81,7 +81,7 @@ public class EntityResourceUtils {
     private static final String WARN_CONFLICT = "This property has been recently changed.";
     public static final String WARN_CENTRE_CONFIG_CONFLICT = "Configuration with this title already exists.";
     public static final String ERR_MORE_THEN_ONE_ENTITY_FOUND = "Please choose a specific value explicitly from a drop-down.";
-    private static final String INFO_RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
+    private static final String INFO_RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back %sto resolve the conflict or cancel all of your changes.";
     /**
      * Used to indicate the start of 'not found mock' serialisation sequence.
      */
@@ -197,7 +197,7 @@ public class EntityResourceUtils {
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndOrigVal.containsKey("val")) { // this is a modified property
                 applyModifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                // logPropertyApplication("   Apply   touched   modified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             } else { // this is unmodified property
                 // IMPORTANT:
                 // Unlike to the case of untouched properties, all touched properties should be applied,
@@ -205,7 +205,7 @@ public class EntityResourceUtils {
                 // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
                 //  to have the ACE handlers executed for all touched properties.
                 applyUnmodifiedPropertyValue(type, touchedProp, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched unmodified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                // logPropertyApplication("   Apply   touched unmodified", true, true, type, touchedProp, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -250,7 +250,7 @@ public class EntityResourceUtils {
             if (apply) {
                 builder.append("=>\t");
                 for (final String propertyToLog: propertiesToLog) {
-                    builder.append(format("%8s = %8s ", propertyToLog, entity.get(propertyToLog)));
+                    builder.append(format("%8s = %8s (%8s) ", propertyToLog, entity.get(propertyToLog), entity.getProperty(propertyToLog).getFirstFailure()));
                 }
             }
             System.out.println(builder.toString()); // use logger instead of sysout if needed
@@ -271,7 +271,7 @@ public class EntityResourceUtils {
             final ICompanionObjectFinder coFinder,
             final boolean isEntityStale, final boolean isCriteriaEntity)
     {
-        final Optional<String> optActiveProp = ofNullable((String)valAndOrigVal.get("activeProperty"));
+        final Optional<String> optActiveProp = ofNullable((String) valAndOrigVal.get("activeProperty"));
         if (apply) {
             // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
             final String valueToBeAppliedName = applyOriginalValue ? "origVal" : "val";
@@ -419,7 +419,13 @@ public class EntityResourceUtils {
                     entity.getProperty(name).setDomainValidationResult(Result.warning(entity, WARN_CONFLICT));
                 } else {
                     logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
-                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, WARN_CONFLICT + " " + format(INFO_RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
+                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(
+                        entity,
+                        WARN_CONFLICT + " " + INFO_RESOLVE_CONFLICT_INSTRUCTION.formatted(
+                            staleOriginalValue instanceof RichText ? ""
+                            : "to [%s] ".formatted(Objects.toString(staleOriginalValue, ""))
+                        )
+                    ));
                 }
             } else {
                 performAction.run();
@@ -557,13 +563,13 @@ public class EntityResourceUtils {
         final Class<?> propertyType;
         if (AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(type) && AbstractFunctionalEntityForCollectionModification.isCollectionOfIds(propertyName)) {
             if (type.getAnnotatedSuperclass() == null) {
-                throw Result.failure(new IllegalStateException(format("The AnnotatedSuperclass of functional entity %s (for collection modification) is somehow not defined.", type.getSimpleName())));
+                throw failure(new IllegalStateException(format("The AnnotatedSuperclass of functional entity %s (for collection modification) is somehow not defined.", type.getSimpleName())));
             }
             if (!(type.getAnnotatedSuperclass().getType() instanceof ParameterizedType parameterizedEntityType)) {
-                throw Result.failure(new IllegalStateException(format("The AnnotatedSuperclass's Type %s of functional entity %s (for collection modification) is somehow not ParameterizedType.", type.getAnnotatedSuperclass().getType(), type.getSimpleName())));
+                throw failure(new IllegalStateException(format("The AnnotatedSuperclass's Type %s of functional entity %s (for collection modification) is somehow not ParameterizedType.", type.getAnnotatedSuperclass().getType(), type.getSimpleName())));
             }
             if (parameterizedEntityType.getActualTypeArguments().length != 1 || !(parameterizedEntityType.getActualTypeArguments()[0] instanceof Class)) {
-                throw Result.failure(new IllegalStateException(format("The type parameters %s of functional entity %s (for collection modification) is malformed.", Arrays.asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
+                throw failure(new IllegalStateException(format("The type parameters %s of functional entity %s (for collection modification) is malformed.", Arrays.asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
             }
             propertyType = (Class<?>) parameterizedEntityType.getActualTypeArguments()[0];
         } else {
@@ -686,9 +692,16 @@ public class EntityResourceUtils {
             return linkValue == null ? null : new Hyperlink(linkValue);
         } else if (RichText.class.isAssignableFrom(propertyType)){
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
-            // in a modified RichText value we care only about formatted text
-            final String formattedText = (String) map.get(RichText.FORMATTED_TEXT);
-            return formattedText == null ? null : RichText.fromHtml(formattedText);
+
+            final @Nullable Result validationResult = convertRichTextValidationResult(map.get(VALIDATION_RESULT));
+            if (validationResult != null) {
+                return RichText.fromUnsuccessfulValidationResult(validationResult);
+            }
+            else {
+                // in a modified RichText value we care only about formatted text
+                final String formattedText = (String) map.get(RichText.FORMATTED_TEXT);
+                return formattedText == null ? null : RichText.fromHtml(formattedText);
+            }
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else if (Class.class.isAssignableFrom(propertyType)) {
@@ -699,6 +712,36 @@ public class EntityResourceUtils {
             }
         } else {
             throw new UnsupportedOperationException(format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
+        }
+    }
+
+    /**
+     * Converts the specified object to a validation result for {@link RichText.Invalid}.
+     * If the object is {@code null}, returns {@code null}.
+     * Otherwise, the object must represent an unsuccessful validation result.
+     *
+     * @return  unsuccessful validation result or {@code null}
+     *
+     * @see RichTextJsonDeserialiser
+     */
+    private static @Nullable Result convertRichTextValidationResult(final @Nullable Object object) {
+        if (object == null) {
+            return null;
+        }
+        else if (object instanceof Map rawMap) {
+            final var map = (Map<String, Object>) rawMap;
+            final var message = (String) map.get(Result.MESSAGE);
+            if (message == null) {
+                throw new EntityResourceUtilsException("Message is required for RichText validaton result.");
+            }
+            return failure(map.get(Result.INSTANCE), message);
+        }
+        else {
+            throw new EntityResourceUtilsException(
+                    format("Conversion error: expected [%s.%s] with type [%s], but was [%s].",
+                           RichText.class.getSimpleName(), RichText.FORMATTED_TEXT,
+                           Map.class.getTypeName(),
+                           object.getClass().getTypeName()));
         }
     }
 

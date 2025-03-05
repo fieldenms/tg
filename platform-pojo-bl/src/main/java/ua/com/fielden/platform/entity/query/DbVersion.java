@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity.query;
 
+import ua.com.fielden.platform.reflection.Reflector;
+
 import static java.lang.String.format;
 import static ua.com.fielden.platform.error.Result.asRuntime;
-
-import ua.com.fielden.platform.reflection.Reflector;
 
 public enum DbVersion {
     MSSQL(CaseSensitivity.INSENSITIVE, " AS ") {
@@ -11,7 +11,38 @@ public enum DbVersion {
         public String nextSequenceValSql() {
             return "NEXT VALUE FOR %s".formatted(idSequenceName());
         }
-    }, 
+
+        @Override
+        public String addColumnSql(final CharSequence table, final CharSequence columnDefinition) {
+            return "ALTER TABLE " + table + " ADD " + columnDefinition;
+        }
+
+        @Override
+        public String deleteColumnSql(final CharSequence table, final CharSequence columnName) {
+            return "ALTER TABLE " + table + " DROP COLUMN " + columnName;
+        }
+
+        @Override
+        public String alterColumnNullabilitySql(
+                final CharSequence tableName,
+                final CharSequence columnName,
+                final CharSequence columnType,
+                final Nullability nullability)
+        {
+            final String nullabilityString = switch (nullability) {
+                case NULL -> "NULL";
+                case NOT_NULL -> "NOT NULL";
+            };
+            return format("ALTER TABLE %s ALTER COLUMN %s %s %s", tableName, columnName, columnType, nullabilityString);
+        }
+
+        @Override
+        public String dropIndexSql(final CharSequence indexName, final CharSequence tableName, final boolean ifExists) {
+            return format("DROP INDEX %s [%s] ON [%s]",
+                          ifExists ? "IF EXISTS" : "",
+                          indexName, tableName);
+        }
+    },
     ORACLE(CaseSensitivity.SENSITIVE, " ") {
         public String idColumnName() {
             return "TG_ID";
@@ -56,6 +87,35 @@ public enum DbVersion {
             return "NEXTVAL('%s')".formatted(idSequenceName());
         }
 
+        @Override
+        public String addColumnSql(final CharSequence table, final CharSequence columnDefinition) {
+            return "ALTER TABLE " + table + " ADD COLUMN " + columnDefinition;
+        }
+
+        @Override
+        public String deleteColumnSql(final CharSequence table, final CharSequence columnName) {
+            return "ALTER TABLE " + table + " DROP COLUMN " + columnName;
+        }
+
+        @Override
+        public String alterColumnNullabilitySql(
+                final CharSequence tableName,
+                final CharSequence columnName,
+                final CharSequence columnType,
+                final Nullability nullability)
+        {
+            return switch (nullability) {
+                case NULL -> "ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL".formatted(tableName, columnName);
+                case NOT_NULL -> "ALTER TABLE %s ALTER COLUMN %s SET NOT NULL".formatted(tableName, columnName);
+            };
+        }
+
+        @Override
+        public String dropIndexSql(final CharSequence indexName, final CharSequence tableName, final boolean ifExists) {
+            return format("DROP INDEX %s %s",
+                          ifExists ? "IF EXISTS" : "",
+                          indexName);
+        }
     };
 
     public final CaseSensitivity caseSensitivity;
@@ -138,6 +198,20 @@ public enum DbVersion {
         this.AS = AS;
     }
 
+    /**
+     * Generates an SQL statement that alters the nullability status of the specified column.
+     */
+    public String alterColumnNullabilitySql(
+            final CharSequence tableName,
+            final CharSequence columnName,
+            final CharSequence columnType,
+            final Nullability nullability)
+    {
+        throw new UnsupportedOperationException(this.toString());
+    }
+
+    public enum Nullability { NULL, NOT_NULL }
+
     public enum CaseSensitivity {
         INSENSITIVE, SENSITIVE;
     }
@@ -156,5 +230,23 @@ public enum DbVersion {
     }
     
     public abstract String nextSequenceValSql();
+
+    /**
+     * Generates an SQL statement that adds a column with the specified definition to the specified table.
+     */
+    public String addColumnSql(final CharSequence table, final CharSequence columnDefinition) {
+        throw new UnsupportedOperationException(this.toString());
+    }
+
+    /**
+     * Generates an SQL statement that deletes the specified column from the specified table.
+     */
+    public String deleteColumnSql(final CharSequence table, final CharSequence columnName) {
+        throw new UnsupportedOperationException(this.toString());
+    }
+
+    public String dropIndexSql(final CharSequence indexName, final CharSequence tableName, final boolean ifExists) {
+        throw new UnsupportedOperationException(this.toString());
+    }
 
 }

@@ -1,28 +1,11 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
-import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreJSONResult;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.List;
-
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -40,10 +23,23 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEnt
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+
+import java.util.*;
+
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
+import static ua.com.fielden.platform.types.RichText.fromHtml;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
+import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreJSONResult;
 
 /**
  * Resource for integration test of Java and JavaScript serialisation.
@@ -244,7 +240,7 @@ public class SerialisationTestResource extends AbstractWebResource {
                 return eq;
             }
         } else {
-            if (!equalsEx(value1, value2)) { // prop equality
+            if (!equalsEx(value1, value2) && value1 instanceof RichText.Invalid invalidRichText1 && value2 instanceof RichText.Invalid invalidRichText2 && !equalsEx(invalidRichText1.isValid(), invalidRichText2.isValid())) { // prop equality
                 return Result.failure(format("e1 [%s] (type = %s) " + valuePrefix + "prop [%s] value [%s] does not equal to e2 [%s] (type = %s) " + valuePrefix + "prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, toString(value1), e2, e2.getType().getSimpleName(), propName, toString(value2)));
             }
         }
@@ -428,6 +424,7 @@ public class SerialisationTestResource extends AbstractWebResource {
                 factory.createPropertyDescriptor(),
                 factory.createPropertyDescriptorInstrumented(),
                 factory.createEntityWithHyperlink(),
+                factory.createEntityWithRichText(null).setRichText(fromHtml("<script>alert(1);</script>")),
                 factory.createUninstrumentedEntity(true, EntityWithOtherEntity.class),
                 factory.createInstrumentedEntity(true, EntityWithOtherEntity.class),
                 factory.createUninstrumentedGeneratedEntity(true, EntityWithOtherEntity.class)._1,
