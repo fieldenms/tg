@@ -689,7 +689,7 @@ const template = html`
         }
         .editor-toolbar {
             overflow: hidden;
-            padding-top: 8px;
+            padding: 8px 0 8px 0;
             flex-shrink: 0;
         }
         .custom-responsive-toolbar {
