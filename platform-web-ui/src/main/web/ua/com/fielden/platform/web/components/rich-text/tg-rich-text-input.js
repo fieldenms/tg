@@ -19,7 +19,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 import { tgRichTextStyles } from '/resources/components/rich-text/tg-rich-text-styles.js';
 import '/resources/components/tg-link-dialog.js';
 import '/resources/components/tg-color-picker-dialog.js';
-import '/resources/images/tg-rich-text-editor-icons.js';
+import '/resources/images/editor-icons.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 
 /**
@@ -718,10 +718,10 @@ const template = html`
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, &#x2318;+U" on-down="_stopMouseEvent" on-tap="_createBulletList"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Create a numbered list, Ctrl+O, &#x2318;+O" on-down="_stopMouseEvent" on-tap="_createOrderedList"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_stopMouseEvent" on-tap="_createTaskList"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:header-1" action-title="Heading 1" tooltip-text="Make your text header 1" on-down="_stopMouseEvent" on-tap="_applyHeader1"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:header-2" action-title="Heading 2" tooltip-text="Make your text header 2" on-down="_stopMouseEvent" on-tap="_applyHeader2"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:header-3" action-title="Heading 3" tooltip-text="Make your text header 3" on-down="_stopMouseEvent" on-tap="_applyHeader3"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor-icons:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_stopMouseEvent" on-tap="_createTaskList"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor-icons:header-1" action-title="Heading 1" tooltip-text="Make your text header 1" on-down="_stopMouseEvent" on-tap="_applyHeader1"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor-icons:header-2" action-title="Heading 2" tooltip-text="Make your text header 2" on-down="_stopMouseEvent" on-tap="_applyHeader2"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor-icons:header-3" action-title="Heading 3" tooltip-text="Make your text header 3" on-down="_stopMouseEvent" on-tap="_applyHeader3"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, &#x2318;+Z" on-down="_stopMouseEvent" on-tap="_undo"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, &#x2318;+Y" on-down="_stopMouseEvent" on-tap="_redo"></iron-icon>
     </tg-responsive-toolbar>

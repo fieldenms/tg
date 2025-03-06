@@ -3,10 +3,12 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 
 import '/resources/editors/tg-singleline-text-editor.js';
 import '/resources/editors/tg-hyperlink-editor.js';
 import { tearDownEvent, createDummyBindingEntity} from '/resources/reflection/tg-polymer-utils.js';
+import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 
 import {TgReflector} from '/app/tg-reflector.js';
 
@@ -46,7 +48,7 @@ const template = html`
         </paper-button>
     </div>`;
     
-export class TgLinkDialog extends PolymerElement {
+export class TgLinkDialog extends mixinBehaviors([TgTooltipBehavior], PolymerElement) {
 
     static get template() { 
         return template;

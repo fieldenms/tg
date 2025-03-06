@@ -5,6 +5,8 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-input/iron-input.js';
 import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js';
 
+import '/resources/images/editor-icons.js';
+
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
@@ -75,7 +77,7 @@ const additionalTemplate = html`
 const customPrefixTemplate = html`
     <div class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
         <div on-tap="_openColourPicker" class="small-box prefix-custom-attributes" style$="[[_calcColourBoxStyle(_editingValue)]]">
-            <iron-icon class$="[[_calcColourSmallIconClass(_editingValue)]]" icon="close"></iron-icon>
+            <iron-icon class$="[[_calcColourSmallIconClass(_editingValue)]]" icon="editor-icons:auto-color" tooltip-text="auto color"></iron-icon>
         </div>
         <div class="prefix prefix-custom-attributes" style$="[[_calcColourPrefixStyle(_editingValue)]]">#</div>
     </div>`;
@@ -204,9 +206,9 @@ export class TgColourPicker extends TgEditor {
             '<div class="layout horizontal">' +
             '<div class="colour-box" on-tap="nonColourSelected" style="background-color:#F5F5F5">' +
             '<div class="dummy-box" style="background-color:#F5F5F5">' +
-            '<iron-icon class="icon" icon="icons:close"></iron-icon>' +
+            '<iron-icon class="icon" icon="editor-icons:auto-color" tooltip-text="auto color"></iron-icon>' +
             '</div>' +
-            '<iron-icon class="icon" icon="icons:close"></iron-icon>' +
+            '<iron-icon class="icon" icon="editor-icons:auto-color"></iron-icon>' +
             '</div>' +
             '<div class="colour-box" on-tap="colourSelected" style="background-color:#F44336">' +
             '<div class="dummy-box" style="background-color:#F44336"></div>' +
