@@ -17,7 +17,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.richtext.impl.RichTex
  */
 public class RichTextConfig<T extends AbstractEntity<?>>
         extends AbstractEditorWidgetConfig<T, RichTextWidget, IRichTextConfig0<T>>
-        implements IRichTextConfig<T>, IRichTextConfigWithMinHeight<T> {
+        implements IRichTextConfig<T> {
 
     public RichTextConfig(final RichTextWidget widget, final IPropertySelector<T> propSelector) {
         super(widget, propSelector);

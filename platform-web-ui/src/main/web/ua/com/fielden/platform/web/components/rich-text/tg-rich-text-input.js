@@ -689,7 +689,7 @@ const template = html`
         }
         .editor-toolbar {
             overflow: hidden;
-            padding-top: 8px;
+            padding: 8px 0 8px 0;
             flex-shrink: 0;
         }
         .custom-responsive-toolbar {
@@ -753,11 +753,13 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
             height: {
                 type: String,
+                value: '100%',
                 observer: "_heightChanged"
             },
 
             minHeight: {
                 type: String,
+                value: '25px',
                 observer: "_minHeightChanged"
             },
 
@@ -831,7 +833,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._editor = new Editor({
             el: this.$.editor,
             height: this.height,
-            minHeight: this.minHeight,
+            minHeight: '0',
             initialEditType: 'wysiwyg',
             events: {
                 change: this._htmlContentChanged.bind(this),
@@ -1151,8 +1153,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     _minHeightChanged(newMinHeight) {
-        if (this._editor) {
-            this._editor.setMinHeight(newMinHeight);
+        if (parseInt(newMinHeight) >= 25) {
+            this.$.editor.style.minHeight = newMinHeight;
         }
     }
 

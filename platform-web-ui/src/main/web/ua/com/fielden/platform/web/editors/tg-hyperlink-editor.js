@@ -38,6 +38,8 @@ const customInputTemplate = html`
 const customIconButtonsTemplate = html`<paper-icon-button on-tap="_openLink" icon="open-in-browser" class="open-button custom-icon-buttons" tabIndex="-1" tooltip-text="Open link"></paper-icon-button>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
+const MAILTO_PREFIX = 'mailto:';
+
 export class TgHyperlinkEditor extends TgEditor {
 
     static get template() { 
@@ -47,14 +49,13 @@ export class TgHyperlinkEditor extends TgEditor {
     /**
      * Converts the value from string representation into a JSON object that is used for representing value of Java type Hyperlink.
      */
-    convertFromString (value) {
-        var strValue = value.trim();
+    convertFromString (strValue) {
         if (strValue === '') {
             return null;
         } else {
             if ((strValue.startsWith('https://') || strValue.startsWith('http://') ||
                     strValue.startsWith('ftp://') || strValue.startsWith('ftps://') ||
-                    strValue.startsWith('mailto:')) === false) {
+                    strValue.startsWith(MAILTO_PREFIX)) === false) {
                 throw "One of http, https, ftp, ftps or mailto hyperlink protocols is expected.";
             }
 
@@ -73,6 +74,26 @@ export class TgHyperlinkEditor extends TgEditor {
             win.focus();
         }
     }
+
+    /**
+     * Overridden to provide value approximations.
+     */
+    _commitForDescendants () {
+        const trimmedValWithProtocol = this._trimAndPrependProtocol(this._editingValue);
+        if (!this.reflector().equalsEx(trimmedValWithProtocol, this._editingValue)) {
+            this._editingValue = trimmedValWithProtocol;
+        }
+    }
+
+    _trimAndPrependProtocol (editingValue) {
+        const strValue = editingValue.trim();
+        if (strValue === '' || strValue.includes('://') || strValue.includes(MAILTO_PREFIX)) {
+            return strValue;
+        } else {
+            return `https://${strValue}`;
+        }
+    }
+
 }
 
 customElements.define('tg-hyperlink-editor', TgHyperlinkEditor);
