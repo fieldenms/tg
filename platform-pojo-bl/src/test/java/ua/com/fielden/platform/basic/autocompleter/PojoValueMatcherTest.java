@@ -2,17 +2,19 @@ package ua.com.fielden.platform.basic.autocompleter;
 
 import com.google.inject.Injector;
 import org.junit.Test;
+import ua.com.fielden.platform.basic.ValueMatcherException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test_entities.Entity;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText;
 import ua.com.fielden.platform.types.RichText;
 
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher.matchByAnyPropPredicate;
 
 public class PojoValueMatcherTest {
@@ -153,15 +155,13 @@ public class PojoValueMatcherTest {
     }
 
     @Test
-    public void search_by_RichText_property_matches_against_search_text() {
+    public void search_by_RichText_property_is_unsupported() {
         final var entities = List.of(
-                factory.newByKey(EntityWithRichText.class, "1").setRichText(RichText.fromHtml("The <b>blue</b> sky")),
-                factory.newByKey(EntityWithRichText.class, "2").setRichText(RichText.fromHtml("The<br>big<br><p>bang</p>")),
-                factory.newByKey(EntityWithRichText.class, "2").setRichText(RichText.fromHtml("On the <a href='https://localhost'>website</a> it is.")));
-        final var matcher = new PojoValueMatcher<>(entities, "richText", entities.size());
+                factory.newByKey(EntityWithRichText.class, "1").setRichText(RichText.fromHtml("The <b>blue</b> sky")));
 
-        assertEquals("Incorrect matches.", List.of(entities.get(0)), matcher.findMatches("%blue sky%"));
-        assertEquals("Incorrect matches.", List.of(entities.get(1)), matcher.findMatches("%big bang%"));
-        assertEquals("Incorrect matches.", List.of(entities.get(2)), matcher.findMatches("%the website it is%"));}
+        final var matcher = new PojoValueMatcher<>(entities, EntityWithRichText.Property.richText.toPath(), entities.size());
+
+        assertThrows(ValueMatcherException.class, () -> matcher.findMatches("%blue sky%"));
+    }
 
 }
