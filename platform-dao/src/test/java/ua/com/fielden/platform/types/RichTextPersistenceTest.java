@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.types;
 
 import org.junit.Test;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
 
 public class RichTextPersistenceTest extends AbstractDaoTestCase {
@@ -41,7 +43,28 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
         assertEquals(fetchedEntity.getText(), richText);
     }
 
+    @Test
+    public void search_text_is_persisted_and_updated_along_with_RichText() {
+        final var key = "A";
+        final var entityA_1 = save(new_(EntityWithRichText.class, "A").setText(RichText.fromHtml("First")));
+        assertEquals("First", fetchSearchText(key));
+
+        final var entityA_2 = save(entityA_1.setText(RichText.fromHtml("Second")));
+        assertEquals("Second", fetchSearchText(key));
+    }
+
     @Override
     protected void populateDomain() {}
+
+    private String fetchSearchText(final String key) {
+        final var query = select(EntityWithRichText.class)
+                .where().prop("key").eq().val(key)
+                .yield().prop("text.searchText").as("searchText")
+                .modelAsAggregate();
+
+        return co(EntityAggregates.class)
+                .getEntity(from(query).model())
+                .get("searchText");
+    }
 
 }
