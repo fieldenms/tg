@@ -687,12 +687,12 @@ const template = html`
         a mark {
             text-decoration: underline;
         }
-        .editor-toolbar {
+        .custom-responsive-toolbar {
             overflow: hidden;
             padding: 8px 0 8px 0;
             flex-shrink: 0;
-        }
-        .custom-responsive-toolbar {
+            position: relative;
+            left: -5px;
             --tg-responsove-toolbar-expand-button: {
                 padding: 0;
                 width: 22px;
