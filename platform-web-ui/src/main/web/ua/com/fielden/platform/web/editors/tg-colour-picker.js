@@ -56,6 +56,8 @@ const additionalTemplate = html`
             display: block;
         }
         .small-box {
+            margin-top: 2px;
+            line-height: 0px;
             max-width: 14px;
             max-height: 14px;
             background-color: #FAFAFA;
@@ -69,7 +71,7 @@ const additionalTemplate = html`
         }
         .prefix {
             font-family: 'Roboto', 'Noto', sans-serif;
-            margin-left: 10px;
+            margin-left: 4px;
             font-size: 1rem;
         }
     </style>
