@@ -33,15 +33,11 @@ public class RichTextJsonSerialiser extends StdSerializer<RichText> {
             generator.writeObject(richText.formattedText());
             generator.writeFieldName(CORE_TEXT);
             generator.writeObject(richText.coreText());
-            generator.writeFieldName(SEARCH_TEXT);
-            generator.writeObject(richText.searchText());
         }
         else {
             generator.writeFieldName(FORMATTED_TEXT);
             generator.writeObject(null);
             generator.writeFieldName(CORE_TEXT);
-            generator.writeObject(null);
-            generator.writeFieldName(SEARCH_TEXT);
             generator.writeObject(null);
             generator.writeFieldName(VALIDATION_RESULT);
             generator.writeObject(validationResult);

@@ -8,7 +8,9 @@ import java.util.List;
  *
  * @author TG Team
  *
- * @param <T>
+ * @param <T>  type of values being matched
+ *
+ * @see ValueMatcherException
  */
 public interface IValueMatcher<T> {
 

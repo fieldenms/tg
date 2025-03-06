@@ -3,14 +3,12 @@ package ua.com.fielden.platform.types;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.validation.DefaultValidatorForValueTypeWithValidation;
 import ua.com.fielden.platform.error.Result;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
@@ -60,11 +58,18 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     @Title(value = "Core Text", desc = "A simplified text with all HTML tags removed, intended for inline display, such as in EGI.")
     private final String coreText;
 
+    /**
+     * The sole purpose of this component is to facilitate search.
+     * Therefore, it should be accessible only at the database level.
+     * Its value is lazily computed, which is expected to occur during persistence of RichText.
+     * Its value may also be assigned from a constructor argument when RichText is created from persistent state.
+     */
     @IsProperty
     @MapTo
     @PersistentType("nstring")
     @Title(value = "Search text", desc = "A simplified text with all HTML tags removed, intended for use in search functions.")
-    private final String searchText;
+    @DenyIntrospection
+    private String searchText;
 
     private final Result validationResult;
 
@@ -73,7 +78,6 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
      *
      * @param formattedText     text with markup
      * @param coreText          text without markup (its length is always less than or equal to that of formatted text)
-     * @param searchText        text used for search
      * @param validationResult  the result of validation
      */
     // !!! KEEP THIS CONSTRUCTOR PRIVATE !!!
@@ -81,7 +85,6 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         if (validationResult.isSuccessful()) {
             requireNonNull(formattedText, "formattedText");
             requireNonNull(coreText, "coreText");
-            requireNonNull(searchText, "searchText");
         }
         else {
             requireNull(formattedText, "formattedText");
@@ -127,7 +130,21 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
                     return element.hasClass(TOAST_UI_TASK_ITEM_CLASS) && element.hasClass(TOAST_UI_CHECKED_CLASS);
                 }
             };
+        }
 
+        // Validate the input before parsing it.
+        final var validationResult = RichTextSanitiser.sanitiseHtml(input);
+        if (validationResult.isSuccessful()) {
+            final var coreText = RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.coreTextExtractorExtension);
+            return new RichText(input, coreText, null, validationResult);
+        }
+        else {
+            return fromUnsuccessfulValidationResult(validationResult);
+        }
+    }
+
+    private static String makeSearchText(final RichText richText) {
+        class $ {
             static final RichTextAsHtmlSearchTextExtractor.Extension searchTextExtractorExtension = new RichTextAsHtmlSearchTextExtractor.Extension() {
                 static final String TOAST_UI_CHECKED_CLASS = "checked";
                 static final String TOAST_UI_TASK_ITEM_CLASS = "task-list-item";
@@ -144,16 +161,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
             };
         }
 
-        // Validate the input before parsing it.
-        final var validationResult = RichTextSanitiser.sanitiseHtml(input);
-        if (validationResult.isSuccessful()) {
-            final var coreText = RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.coreTextExtractorExtension);
-            final var searchText = RichTextAsHtmlSearchTextExtractor.toSearchText(Jsoup.parse(input), $.searchTextExtractorExtension);
-            return new RichText(input, coreText, searchText, validationResult);
-        }
-        else {
-            return fromUnsuccessfulValidationResult(validationResult);
-        }
+        return RichTextAsHtmlSearchTextExtractor.toSearchText(Jsoup.parse(richText.formattedText), $.searchTextExtractorExtension);
     }
 
     /**
@@ -186,9 +194,8 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
          *
          * @param formattedText text with markup
          * @param coreText      text without markup (its length is always less than or equal to that of formatted text)
-         * @param searchText    text used for search
          */
-        Persisted(final String formattedText, final String coreText, final String searchText) {
+        Persisted(final String formattedText, final String coreText, final @Nullable String searchText) {
             super(formattedText, coreText, searchText, SUCCESSFUL);
         }
 
@@ -268,7 +275,11 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
      * Returns search text if this instance is valid.
      * Otherwise, throws an exception.
      */
-    public String searchText() {
+    String searchText() {
+        if (searchText == null) {
+            searchText = makeSearchText(this);
+        }
+
         return searchText;
     }
 
@@ -293,13 +304,12 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         return this.isValid().isSuccessful()
                && that.isValid().isSuccessful()
                && Objects.equals(this.formattedText, that.formattedText)
-               && Objects.equals(this.coreText, that.coreText)
-               && Objects.equals(this.searchText, that.searchText);
+               && Objects.equals(this.coreText, that.coreText);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(formattedText, coreText, searchText);
+        return Objects.hash(formattedText, coreText);
     }
 
     @Override
