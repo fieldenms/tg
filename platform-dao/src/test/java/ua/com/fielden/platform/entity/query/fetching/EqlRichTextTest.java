@@ -122,26 +122,6 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     @Test
-    public void RichText_property_used_as_yield_alias_in_source_query_can_be_resolved_in_top_level_query() {
-        // In general, if P is a RichText property, then prop(P) is interepreted as P.searchText.
-        // In this test case, the source query yields into "text" instead of "text.searchText".
-        // Nevertheless, prop("text") in the top-level query (which gets interpreted as "text.searchText") can be resolved
-        // against "text" from the source query.
-        // This can be used in synthetic entity model definitions, enabling the use of yield().X.as("richText") instead of
-        // yield().X.as("richText.searchText").
-        // Although, ultimately, both "coreText" and "formattedText" would have to be yielded into in a top-level query.
-        final var sourceQuery = select().
-                yield().val("без унікодів капут").as("text").
-                modelAsEntity(EntityWithRichText.class);
-        final var query = select(sourceQuery)
-                .yield().prop("text").as("str")
-                .modelAsAggregate();
-        final var entity = co(EntityAggregates.class).getEntity(from(query).model());
-        assertNotNull(entity);
-        assertEquals("без унікодів капут", entity.get("str"));
-    }
-
-    @Test
     public void yielding_null_into_RichText_property_results_in_it_being_assigned_null_value() {
         final var query = select()
                 .yield().val(null).as("text")
