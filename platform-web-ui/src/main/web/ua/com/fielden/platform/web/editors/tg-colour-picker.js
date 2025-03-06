@@ -77,7 +77,7 @@ const additionalTemplate = html`
 const customPrefixTemplate = html`
     <div class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
         <div on-tap="_openColourPicker" class="small-box prefix-custom-attributes" style$="[[_calcColourBoxStyle(_editingValue)]]">
-            <iron-icon class$="[[_calcColourSmallIconClass(_editingValue)]]" icon="editor-icons:auto-color" tooltip-text="auto color"></iron-icon>
+            <iron-icon class$="[[_calcColourSmallIconClass(_editingValue)]]" icon="editor-icons:auto-color" tooltip-text="Auto colour"></iron-icon>
         </div>
         <div class="prefix prefix-custom-attributes" style$="[[_calcColourPrefixStyle(_editingValue)]]">#</div>
     </div>`;
@@ -206,7 +206,7 @@ export class TgColourPicker extends TgEditor {
             '<div class="layout horizontal">' +
             '<div class="colour-box" on-tap="nonColourSelected" style="background-color:#F5F5F5">' +
             '<div class="dummy-box" style="background-color:#F5F5F5">' +
-            '<iron-icon class="icon" icon="editor-icons:auto-color" tooltip-text="auto color"></iron-icon>' +
+            '<iron-icon class="icon" icon="editor-icons:auto-color" tooltip-text="Auto colour"></iron-icon>' +
             '</div>' +
             '<iron-icon class="icon" icon="editor-icons:auto-color"></iron-icon>' +
             '</div>' +
