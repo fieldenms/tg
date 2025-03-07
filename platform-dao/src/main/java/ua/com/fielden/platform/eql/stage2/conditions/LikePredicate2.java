@@ -16,6 +16,8 @@ import ua.com.fielden.platform.utils.ToString;
 import java.util.HashSet;
 import java.util.Set;
 
+import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.utils.CollectionUtil.concat;
 
 public record LikePredicate2 (ISingleOperand2<? extends ISingleOperand3> matchOperand,
@@ -23,13 +25,6 @@ public record LikePredicate2 (ISingleOperand2<? extends ISingleOperand3> matchOp
                               LikeOptions options)
         implements ICondition2<LikePredicate3>, ToString.IFormattable
 {
-
-    public static final String[] MSSQL_SEARCH_LIST =  { "["  , "_"   };
-    public static final String[] MSSQL_REPLACE_LIST = { "[[]", "[_]" };
-
-    // In PostgreSQL backslash is the default escape character in the LIKE clause, hence its special meaning and the need to be escaped.
-    public static final String[] POSTGRESQL_SEARCH_LIST =  { "\\" , "_"  };
-    public static final String[] POSTGRESQL_REPLACE_LIST = { "\\\\" , "\\_"};
 
     @Override
     public boolean ignore() {
@@ -82,7 +77,7 @@ public record LikePredicate2 (ISingleOperand2<? extends ISingleOperand3> matchOp
      * Escapes the specified operand if it is a literal string.
      */
     private ISingleOperand2<? extends ISingleOperand3> escapeLiteralString(
-            final ISingleOperand2 operand,
+            final ISingleOperand2<?> operand,
             final DbVersion dbVersion)
     {
         return switch (operand) {
@@ -93,8 +88,8 @@ public record LikePredicate2 (ISingleOperand2<? extends ISingleOperand3> matchOp
 
     private String escapeSqlString(final String string, final DbVersion dbVersion) {
         return switch (dbVersion) {
-            case MSSQL -> StringUtils.replaceEach(string, MSSQL_SEARCH_LIST, MSSQL_REPLACE_LIST);
-            case POSTGRESQL -> StringUtils.replaceEach(string, POSTGRESQL_SEARCH_LIST, POSTGRESQL_REPLACE_LIST);
+            case MSSQL -> StringUtils.replaceEach(string, MSSQL.searchList.toArray(new String[]{}), MSSQL.replacementList.toArray(new String[]{}));
+            case POSTGRESQL -> StringUtils.replaceEach(string, POSTGRESQL.searchList.toArray(new String[]{}), POSTGRESQL.replacementList.toArray(new String[]{}));
             default -> string;
         };
     }

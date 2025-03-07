@@ -11,7 +11,6 @@ import ua.com.fielden.platform.utils.ToString;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
-import static ua.com.fielden.platform.eql.stage2.conditions.LikePredicate2.*;
 import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
 
 public record LikePredicate3(ISingleOperand3 matchOperand, ISingleOperand3 patternOperand, LikeOptions options)
@@ -50,10 +49,10 @@ public record LikePredicate3(ISingleOperand3 matchOperand, ISingleOperand3 patte
             // Literal strings are escaped during stage2.
             case Value3 $ -> sql;
             default -> switch (dbVersion) {
-                case POSTGRESQL -> foldReplaceSql(sql, POSTGRESQL_SEARCH_LIST, POSTGRESQL_REPLACE_LIST, POSTGRESQL);
-                case MSSQL -> foldReplaceSql(sql, MSSQL_SEARCH_LIST, MSSQL_REPLACE_LIST, MSSQL);
+                case POSTGRESQL -> foldReplaceSql(sql, POSTGRESQL);
+                case MSSQL -> foldReplaceSql(sql, MSSQL);
                 default -> {
-                    LOGGER.warn(WARN_ESCAPING_NOT_SUPPORTED.formatted(dbVersion));
+                    LOGGER.warn(() -> WARN_ESCAPING_NOT_SUPPORTED.formatted(dbVersion));
                     yield sql;
                 }
             };
@@ -62,14 +61,12 @@ public record LikePredicate3(ISingleOperand3 matchOperand, ISingleOperand3 patte
 
     private static String foldReplaceSql(
             final CharSequence initSql,
-            final String[] searchList,
-            final String[] replaceList,
             final DbVersion dbVersion)
     {
         // Imperative implementation to avoid zipping and creating pairs.
         String accSql = initSql.toString();
-        for (int i = 0; i < searchList.length; i++) {
-            accSql = dbVersion.replaceSql(accSql, searchList[i], replaceList[i]);
+        for (int i = 0; i < dbVersion.searchList.size(); i++) {
+            accSql = dbVersion.replaceSql(accSql, dbVersion.searchList.get(i), dbVersion.replacementList.get(i));
         }
         return accSql;
     }
