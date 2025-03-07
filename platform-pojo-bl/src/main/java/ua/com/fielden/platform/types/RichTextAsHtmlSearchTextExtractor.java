@@ -20,7 +20,7 @@ import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
  * <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace">MDN Web Docs</a>,
  * with the following additional rules:
  * <ul>
- *   <li> Leading and trailing whitespace of the whole core text is always stripped.
+ *   <li> Leading and trailing whitespace of the whole search text is always stripped.
  * </ul>
  *
  * <h3> Links </h3>
@@ -50,7 +50,7 @@ final class RichTextAsHtmlSearchTextExtractor {
 
         final var builder = foldLeft(
                 nodes,
-                new CoreTextBuilder(),
+                new SearchTextBuilder(),
                 (builder0, node) -> {
                     final String leadingWs = node.previousSibling() != null && isSeparable(
                             node.previousSibling()) ? " " : "";
@@ -114,18 +114,18 @@ final class RichTextAsHtmlSearchTextExtractor {
         }
     };
 
-    private static final class CoreTextBuilder {
+    private static final class SearchTextBuilder {
 
         private final StringBuilder buffer;
 
-        private CoreTextBuilder() {
+        private SearchTextBuilder() {
             this.buffer = new StringBuilder();
         }
 
         /**
          * Appends the specified character sequence, handling whitespace accordingly.
          */
-        public CoreTextBuilder append(final CharSequence charSeq) {
+        public SearchTextBuilder append(final CharSequence charSeq) {
             if (charSeq.isEmpty()) {
                 return this;
             }
@@ -149,7 +149,7 @@ final class RichTextAsHtmlSearchTextExtractor {
         /**
          * Appends the specified character, handling whitespace accordingly.
          */
-        public CoreTextBuilder append(final char c) {
+        public SearchTextBuilder append(final char c) {
             final boolean isWs = Character.isWhitespace(c);
             if (isWs && (buffer.isEmpty() || Character.isWhitespace(buffer.charAt(buffer.length() - 1)))) {
                 // ignore
@@ -167,7 +167,7 @@ final class RichTextAsHtmlSearchTextExtractor {
          * This is not performed automatically by the appending methods.
          * Therefore, this method must be called to ensure that trailing whitespace is stripped.
          */
-        public CoreTextBuilder stripTrailing() {
+        public SearchTextBuilder stripTrailing() {
             StringUtils.deleteTrailing(buffer, Character::isWhitespace);
             return this;
         }
@@ -230,17 +230,17 @@ final class RichTextAsHtmlSearchTextExtractor {
         return Streams.stream(iterator);
     }
 
-    private static CoreTextBuilder formatText(final TextNode text, final CoreTextBuilder builder) {
+    private static SearchTextBuilder formatText(final TextNode text, final SearchTextBuilder builder) {
         return builder.append(text.getWholeText());
     }
 
     /**
      * This predicate is true for HTML elements that need to be separated by whitespace from surrounding text.
      * <p>
-     * For example, it is expected that {@code <h1>Introduction</h1>Once upon} would be transformed to core text
+     * For example, it is expected that {@code <h1>Introduction</h1>Once upon} would be transformed to search text
      * {@code Introduction Once upon}, which requires the contents of {@code h1} element to be separated from surrounding text.
      * <p>
-     * On the other hand, {@code l<b>aaa</b>rge} should be transformed to core text {@code laaarge}, requiring that the
+     * On the other hand, {@code l<b>aaa</b>rge} should be transformed to search text {@code laaarge}, requiring that the
      * contents of {@code b} are <b>not</b> separated from surrounding text.
      * <p>
      * Therefore, it is required to distinguish <i>separable</i> tags.
