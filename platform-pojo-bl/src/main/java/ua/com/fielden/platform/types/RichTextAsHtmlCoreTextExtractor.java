@@ -1,28 +1,37 @@
 package ua.com.fielden.platform.types;
 
-import com.google.common.collect.Streams;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import ua.com.fielden.platform.types.function.CharPredicate;
 import ua.com.fielden.platform.utils.StringUtils;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.utils.ImmutableMapUtils.unionLeft;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
- * Extracts <i>core text</i> from a HTML document.
- * <h3> Handling of whitespace </h3>
- * Whitespace is handled in accordance to rules outlined in
- * <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace">MDN Web Docs</a>,
- * with the following additional rules:
+ * Extracts <i>core text</i> from an HTML document.
  * <ul>
- *   <li> Leading and trailing whitespace of the whole core text is always stripped.
+ *   <li> HTML elements are removed, their text content is preserved.
+ *        Elements with other kinds of content (e.g., images) are removed entirely.
+ *   <li> HTML entities are unescaped. E.g., {@code &amp} is replaced by {@code &}.
+ *   <li> Line terminators are inserted near those HTML elements that are rendered on separate lines (e.g., {@code <li>}, {@code <p>}).
+ *   <li> Leading and trailing whitespace of the whole search text is always stripped.
+ *   <li> Links are replaced by {@code TEXT (LINK)}. Blank text, as well as blank links, are ignored.
+ *        Supported elements with links: {@code <a href=LINK>TEXT</a>}, {@code <img src=LINK alt=TEXT />}.
+ *   <li> Task lists, recognised by element attributes, are represented as follows:
+ *   <ul>
+ *     <li> {@code [ ]} - unchecked task item.
+ *     <li> {@code [x]} - checked task item.
+ *   </ul>
  * </ul>
  */
 final class RichTextAsHtmlCoreTextExtractor {
@@ -35,33 +44,88 @@ final class RichTextAsHtmlCoreTextExtractor {
      * Extracts the core text.
      */
     public static String toCoreText(final Node root, final Extension extension) {
-        final Stream<Node> nodes = traverse(
-                root,
-                node -> node instanceof Element element
-                        && (equalTagNames("a", element.tagName()) || equalTagNames("img", element.tagName())));
 
-        return foldLeft(nodes,
-                        new CoreTextBuilder(),
-                        (builder0, node) -> {
-                            final String leadingWs = node.previousSibling() != null && isSeparable(node.previousSibling()) ? " " : "";
-                            final var builder1 = builder0.append(leadingWs);
+        final var visitor = new NodeVisitor<CoreTextBuilder>() {
+            @Override
+            CoreTextBuilder visit(final Node node, final CoreTextBuilder builder0) {
+                final @Nullable var newlineStrategy = getNewlineStrategy(node);
 
-                            final var builder2 = switch (node) {
-                                case Element element when equalTagNames("a", element.tagName())
-                                        -> formatLink(element.attr("href"), element.text(), builder1);
-                                case Element element when equalTagNames("img", element.tagName())
-                                        -> formatLink(element.attr("src"), element.attr("alt"), builder1);
-                                case Element element when equalTagNames("li", element.tagName())
-                                        -> builder1.append(' ').append(chooseListMarker(element, extension)).append(' ');
-                                case TextNode textNode -> formatText(textNode, builder1);
-                                default -> builder1;
-                            };
+                // Sometimes inserting a newline before a node should be avoided.
+                // Refer to method needsNewlineBefore.
+                final CoreTextBuilder builder1;
+                if (!builder0.isBlank() && newlineStrategy != null && newlineStrategy.before && (newlineStrategy.force || needsNewlineBefore(node))) {
+                    builder1 = builder0.stripTrailing(isWhitespaceExceptNewline).appendLineTerminator(newlineStrategy.force);
+                }
+                else {
+                    final String leadingWs = node.previousSibling() != null && isSeparable(node.previousSibling()) ? " " : "";
+                    builder1 = builder0.append(leadingWs);
+                }
 
-                            final String trailingWs = node.nextSibling() != null && isSeparable(node.nextSibling()) ? " " : "";
-                            return builder2.append(trailingWs);
-                        })
+                final var builder2 = switch (node) {
+                    case Element element when equalTagNames("a", element.tagName())
+                            -> formatLink(element.attr("href"), element.text(), builder1);
+                    case Element element when equalTagNames("img", element.tagName())
+                            -> formatLink(element.attr("src"), element.attr("alt"), builder1);
+                    case Element element when equalTagNames("li", element.tagName())
+                            -> visitChildren(node,
+                                             builder1.append(' ').append(chooseListMarker(element, extension)).append(' '));
+                    case TextNode textNode -> formatText(textNode, builder1);
+                    default -> visitChildren(node, builder1);
+                };
+
+                if (!builder2.isBlank() && newlineStrategy != null && newlineStrategy.after) {
+                    return builder2.stripTrailing(isWhitespaceExceptNewline).appendLineTerminator(newlineStrategy.force);
+                }
+                else {
+                    final String trailingWs = node.nextSibling() != null && isSeparable(node.nextSibling()) ? " " : "";
+                    return builder2.append(trailingWs);
+                }
+            }
+
+            @Override
+            CoreTextBuilder visitChildren(final Node node, final CoreTextBuilder builder) {
+                return node instanceof Element element &&
+                       (equalTagNames("a", element.tagName()) || equalTagNames("img", element.tagName()))
+                        ? builder
+                        : super.visitChildren(node, builder);
+            }
+        };
+
+        return visitor.visit(root, new CoreTextBuilder())
                 .stripTrailing()
                 .build();
+    }
+
+    /**
+     * Determines whether it is necessary to insert a newline before a node.
+     * <p>
+     * In general, a newline should not be inserted before a node if it is inserted for its "previous" node
+     * (previous sibling if there is one, otherwise - parent).
+     * <p>
+     * For example, given HTML such as {@code <li> <p> hello </p> </li>}, the expected core text is a single line: {@code - hello}.
+     * Here the standard rule is overriden (the rule is to insert a new line before a paragraph begins).
+     */
+    private static boolean needsNewlineBefore(final Node node) {
+        final var nodeStrategy = getNewlineStrategy(node);
+        if (nodeStrategy == null || !nodeStrategy.before) {
+            return false;
+        }
+        else {
+            if (node.previousSibling() != null) {
+                // If a newline is inserted after the previous sibling, then it is not needed before this node.
+                final var prevSiblingStrategy = getNewlineStrategy(node.previousSibling());
+                return prevSiblingStrategy == null || !prevSiblingStrategy.after;
+            }
+            else if (node.parent() != null) {
+                // If a newline is inserted before the parent, then it is not needed before this node.
+                final var parentStrategy = getNewlineStrategy(node.parent());
+                return parentStrategy == null || !parentStrategy.before;
+            }
+            else {
+                // This must be the root node (should never happen).
+                return false;
+            }
+        }
     }
 
     public interface Extension {
@@ -131,6 +195,27 @@ final class RichTextAsHtmlCoreTextExtractor {
             return this;
         }
 
+        public CoreTextBuilder appendLineTerminator(final boolean force) {
+            if (force) {
+                return forceAppendLineTerminator();
+            }
+            else if (buffer.isEmpty() || Character.isWhitespace(buffer.charAt(buffer.length() - 1))) {
+                return this;
+            }
+            else {
+                return forceAppendLineTerminator();
+            }
+        }
+
+        private CoreTextBuilder forceAppendLineTerminator() {
+            buffer.append('\n');
+            return this;
+        }
+
+        public boolean isBlank() {
+            return org.apache.commons.lang3.StringUtils.isBlank(buffer);
+        }
+
         /**
          * Deletes trailing whitespace.
          * <p>
@@ -138,7 +223,14 @@ final class RichTextAsHtmlCoreTextExtractor {
          * Therefore, this method must be called to ensure that trailing whitespace is stripped.
          */
         public CoreTextBuilder stripTrailing() {
-            StringUtils.deleteTrailing(buffer, Character::isWhitespace);
+            return stripTrailing(Character::isWhitespace);
+        }
+
+        /**
+         * Deletes trailing characters that are identified by the predicate.
+         */
+        public CoreTextBuilder stripTrailing(final CharPredicate predicate) {
+            StringUtils.deleteTrailing(buffer, predicate);
             return this;
         }
 
@@ -150,54 +242,7 @@ final class RichTextAsHtmlCoreTextExtractor {
         public String build() {
             return buffer.toString();
         }
-    }
 
-    /**
-     * Returns a stream of nodes that represents a depth-first traversal of the specified tree.
-     * The root node, intermediate and leaf nodes are included in the stream.
-     *
-     * @param root  the root of the tree to traverse
-     * @param skipChildren  a predicate which is true for nodes whose children should be excluded from the stream
-     */
-    private static Stream<Node> traverse(final Node root, final Predicate<? super Node> skipChildren) {
-        final var iterator = new Iterator<Node>() {
-            Node node = root;
-
-            @Override
-            public boolean hasNext() {
-                return node != null;
-            }
-
-            @Override
-            public Node next() {
-                if (!hasNext()) { throw new NoSuchElementException(); }
-
-                final Node thisNode = node;
-
-                // Find the next node
-                if (node.childNodeSize() > 0 && !skipChildren.test(node)) {
-                    node = node.firstChild();
-                }
-                else {
-                    // Find the first next sibling, going up the tree
-                    Node nextNode = node;
-                    while (nextNode != root && nextNode.nextSibling() == null) {
-                        nextNode = nextNode.parentNode();
-                    }
-                    if (nextNode == root) {
-                        // Traversal is over
-                        node = null;
-                    } else {
-                        // If next sibling is null, traversal is over
-                        node = nextNode.nextSibling();
-                    }
-                }
-
-                return thisNode;
-            }
-        };
-
-        return Streams.stream(iterator);
     }
 
     private static CoreTextBuilder formatLink(final String destination, final String text, final CoreTextBuilder builder) {
@@ -218,6 +263,8 @@ final class RichTextAsHtmlCoreTextExtractor {
     private static CoreTextBuilder formatText(final TextNode text, final CoreTextBuilder builder) {
         return builder.append(text.getWholeText());
     }
+
+    private static final CharPredicate isWhitespaceExceptNewline = c -> c != '\n' && Character.isWhitespace(c);
 
     /**
      * This predicate is true for HTML elements that need to be separated by whitespace from surrounding text.
@@ -245,6 +292,36 @@ final class RichTextAsHtmlCoreTextExtractor {
     private static boolean isSeparable(final Node node) {
         return node instanceof Element element && isSeparable(element);
     }
+
+    private static @Nullable NewlineStrategy getNewlineStrategy(final Node node) {
+        return node instanceof Element element
+                ? getNewlineStrategy(element)
+                : null;
+    }
+
+    private static @Nullable NewlineStrategy getNewlineStrategy(final Element element) {
+        class $ {
+            static final Map<String, NewlineStrategy> NEWLINE_STRATEGIES = unionLeft(
+                    Set.of("br", "hr").stream().collect(toMap(Function.identity(), $ -> new NewlineStrategy(true, false, true))),
+                    Set.of("p", "li", "div", "pre",
+                           "h1", "h2", "h3", "h4", "h5", "h6",
+                           "blockquote", "dt", "dd",
+                           "tr", "thead", "tfoot", "caption")
+                            .stream().collect(toMap(Function.identity(), $ -> new NewlineStrategy(true, true, false))));
+
+        }
+
+        return $.NEWLINE_STRATEGIES.getOrDefault(element.tagName().toLowerCase(), null);
+    }
+
+    /**
+     * Strategy for inserting newlines around an HTML element.
+     *
+     * @param before  should a newline be inserted before the element?
+     * @param after   should a newline be inserted after the element?
+     * @param force   should a newline be inserted even if it is directly preceded by another newline?
+     */
+    record NewlineStrategy (boolean before, boolean after, boolean force) {}
 
     private static boolean isFirstChild(final Node node) {
         return node.previousSibling() == null;
@@ -284,6 +361,21 @@ final class RichTextAsHtmlCoreTextExtractor {
 
     private static Stream<Node> previousSiblings(final Node node) {
         return Stream.iterate(node.previousSibling(), Objects::nonNull, Node::previousSibling);
+    }
+
+    /**
+     * Depth-first traversal of an HTML tree.
+     */
+    private static abstract class NodeVisitor<S> {
+
+        abstract S visit(Node node, S state);
+
+        S visitChildren(Node node, S state) {
+            return foldLeft(node.childNodes().stream(),
+                            state,
+                            (s, n) -> visit(n, s));
+        }
+
     }
 
 }

@@ -63,9 +63,123 @@ public class RichTextHtmlTest {
     }
 
     @Test
-    public void core_text_block_quote_markers_are_removed() {
+    public void core_text_paragraphs_are_on_separate_lines() {
+        assertCoreText("one", "<p>one</p>");
+        assertCoreText("one", "<p>one");
+        assertCoreText("one\ntwo", "<p>one</p> two");
+        assertCoreText("one\ntwo", "one<p> two");
+        assertCoreText("one\ntwo", "one <p></p> two");
+        assertCoreText("one\ntwo", "one <p></p> <p></p> two");
+        assertCoreText("one\ntwo three", "<p>one</p> two three");
+        assertCoreText("one\ntwo\nthree", "<p>one</p> two <p>three");
+        assertCoreText("one\ntwo three", "<p>one</p> two three </p>");
+        assertCoreText("one two three\nfour five", "<p>one <b>two</b> three</p> four <i>five</i> </p>");
+    }
+
+    @Test
+    public void core_text_headings_are_on_separate_lines() {
+        assertCoreText("one\ntwo", "<h1>one</h1> two");
+        assertCoreText("one\n...\ntwo\n...", "<h1>one</h1> ... <h2> two </h2> ...");
+        assertCoreText("one\n...\ntwo\n...\nthree", "<h1>one</h1> ... <h2> two </h2> ... <h3> three");
+        assertCoreText("one\n...\ntwo\n...\nthree", "<h1>one</h1> ... <h2> two </h2> ... <h3> three </h3>");
+    }
+
+
+    @Test
+    public void search_text_headings_are_removed() {
+        assertSearchText("one two",
+                       "<h1>one</h1> two");
+        assertSearchText("one ... two ...",
+                       "<h1>one</h1> ... <h2> two </h2> ...");
+        assertSearchText("one ... two ... three",
+                       "<h1>one</h1> ... <h2> two </h2> ... <h3> three");
+        assertSearchText("one ... two ... three",
+                       "<h1>one</h1> ... <h2> two </h2> ... <h3> three </h3>");
+
+    }
+
+    @Test
+    public void core_text_br_element_forces_line_breaks() {
+        assertCoreText("one\ntwo", "one<br>two");
+        assertCoreText("one\n\ntwo", "one <br> <br> two");
+        assertCoreText("one\n\n\ntwo", "one <p><br></p> <br> two");
+        assertCoreText("one\n\n\ntwo", "one <p><br></p> <br> <p>two</p>");
+        assertCoreText("one\n\n\ntwo", "<p>one</p> <p><br></p> <br> <p>two</p>");
+    }
+
+    @Test
+    public void search_text_br_elements_are_removed() {
+        assertSearchText("one two three four five",
+                         """
+                         <br>
+                         <br> one two
+                         <br> <br>
+                         <br>
+                         three <br> four
+                         five <br>
+                         <br>
+                         """);
+    }
+
+    @Test
+    public void core_text_list_items_are_on_separate_lines() {
+        assertCoreText("""
+                       items:
+                       - first item
+                       - second item""",
+
+                       """
+                       <p>items:</p>
+                       <ul>
+                       <li> first
+                       item
+                       <li> second
+                       
+                       item
+                       </ul>
+                       """);
+
+        assertCoreText("""
+                       items:
+                       1. first item
+                       2. second item""",
+
+                       """
+                       <p>items:</p>
+                       <ol>
+                       <li> first
+                       item
+                       <li> second
+                       
+                       item
+                       </ol>
+                       """);
+    }
+
+    @Test
+    public void core_text_leading_whitespace_is_removed() {
+        assertCoreText("one", "<br> <p><br></p> <p><br><p> </p>  one");
+        assertCoreText("one\ntwo", "<br> <p></p> one <p> <p> </p>  two </p> </p>");
+    }
+
+    @Test
+    public void core_text_trailing_whitespace_is_removed() {
+        assertCoreText("one", "one<p></p> <p> <p><br></p>  <br>");
+        assertCoreText("one\ntwo", "<p></p> one <p> <p> </p>  two </p> </p> <br>");
+    }
+
+    @Test
+    public void core_text_trailing_whitespace_on_each_line_is_removed() {
+        assertCoreText("one\ntwo", "one   <p>two");
+        assertCoreText("one\ntwo", "one   <br>two");
+    }
+    
+    @Test
+    public void core_text_blockquote_markers_are_removed() {
         assertCoreText(
-"Words can be like X-rays, if you use them properly-they'll go through anything. You read and you're pierced. That's how it goes.",
+"""
+Words can be like X-rays, if you use them properly-they'll go through anything. You read and you're pierced. 
+That's how it goes.""",
 """
  <blockquote>
  <p>Words can be like X-rays, if you use them properly-they'll go through anything. You read and you're pierced.</p>
@@ -75,11 +189,10 @@ public class RichTextHtmlTest {
 
         assertCoreText(
 """
-Before quote. \
-Words can be like X-rays, if you use them properly-they'll go through anything. You read and you're pierced. \
-That's how it goes. \
-After quote.\
-""",
+Before quote.
+Words can be like X-rays, if you use them properly-they'll go through anything. You read and you're pierced.
+That's how it goes.
+After quote.""",
 """
 Before quote.
 <blockquote>
@@ -91,7 +204,7 @@ After quote.
     }
 
     @Test
-    public void search_text_block_quote_markers_are_removed() {
+    public void search_text_blockquote_markers_are_removed() {
         assertSearchText(
 "Words can be like X-rays, if you use them properly-they'll go through anything. You read and you're pierced. That's how it goes.",
 """
@@ -228,7 +341,10 @@ After quote.
                          hello
                        </pre>
                        """);
-        assertCoreText("one two three",
+        assertCoreText("""
+                       one
+                       two
+                       three""",
                        """
                        one
                          <PRe>
@@ -285,39 +401,27 @@ After quote.
     }
 
     @Test
-    public void core_text_headings_are_removed() {
-        assertCoreText("Introduction", "<h1> Introduction");
-        assertCoreText("Introduction", " <h2 > Introduction </h2>");
-        assertCoreText("Introduction to", "<h1> Introduction <h2> to");
-        assertCoreText("Introduction to mathematics", " <h1> Introduction <h2> to</h2>mathematics");
-        assertCoreText("Introduction to mathematics", "<h1> Introduction <h2> to </h2>mathematics");
-    }
-
-    @Test
-    public void search_text_headings_are_removed() {
-        assertSearchText("Introduction", "<h1> Introduction");
-        assertSearchText("Introduction", " <h2 > Introduction </h2>");
-        assertSearchText("Introduction to", "<h1> Introduction <h2> to");
-        assertSearchText("Introduction to mathematics", " <h1> Introduction <h2> to</h2>mathematics");
-        assertSearchText("Introduction to mathematics", "<h1> Introduction <h2> to </h2>mathematics");
-    }
-
-
-    @Test
-    public void core_text_thematic_breaks_are_removed() {
-        assertCoreText("one two",
+    public void core_text_thematic_break_is_replaced_by_newline() {
+        assertCoreText("""
+                       one
+                       two""",
                        """
                        one
                        <hr>
                        two
                        """);
-        assertCoreText("one two",
+        assertCoreText("""
+                       one
+                       two""",
                        """
                        one
                        <hr />
                        two
                        """);
-        assertCoreText("one two",
+        assertCoreText("""
+                       one
+
+                       two""",
                        """
                        one
                        <hr>
@@ -376,117 +480,42 @@ After quote.
     }
 
     @Test
-    public void core_text_br_tags_are_removed() {
-        assertCoreText("one two three four five",
-                       """
-                       <br>
-                       <br> one two
-                       <br> <br>
-                       <br>
-                       three <br> four
-                       five <br>
-                       <br>
-                       """);
-    }
-
-    @Test
-    public void search_text_br_tags_are_removed() {
-        assertSearchText("one two three four five",
-                       """
-                       <br>
-                       <br> one two
-                       <br> <br>
-                       <br>
-                       three <br> four
-                       five <br>
-                       <br>
-                       """);
-    }
-
-    @Test
-    public void core_text_simple_ordered_lists_are_squashed_into_a_single_line_with_list_tags_replaced_by_numbers() {
-        assertCoreText("1. one 2. two",
+    public void core_text_ordered_list_items_are_on_separate_lines_with_list_tags_replaced_by_numbers() {
+        assertCoreText("""
+                       1. one
+                       2. two""",
                        """
                        <ol>
                          <li>one
                               <lI>   two
                        """);
-        assertCoreText("1. one 2. two",
+        assertCoreText("""
+                       1. one
+                       2. two""",
                        """
                        <ol>
                          <li>one
                               <lI>   two
                                   </ol>
                        """);
-    }
-
-    @Test
-    public void search_text_simple_ordered_lists_are_squashed_into_a_single_line_with_list_tags_replaced_by_numbers() {
-        assertSearchText("1. one 2. two",
+        assertCoreText("""
+                       1. one
+                       details of one
+                       2. two details of two""",
                        """
                        <ol>
-                         <li>one
-                              <lI>   two
-                       """);
-        assertSearchText("1. one 2. two",
-                       """
-                       <ol>
-                         <li>one
-                              <lI>   two
-                                  </ol>
+                         <li> one
+                         <p> details of one
+
+                         <li> two
+
+                         details of two
+                       </ol>
                        """);
     }
 
     @Test
-    public void core_text_simple_unordered_lists_are_squashed_into_a_single_line_with_list_tags_replaced_by_dashes() {
-        assertCoreText("- one - two",
-                       """
-                       <ul>
-                         <li>one
-                              <lI>   two
-                       """);
-        assertCoreText("- one - two",
-                       """
-                       <ul>
-                         <li>one
-                              <lI>   two
-                                  </ul>
-                       """);
-    }
-
-    @Test
-    public void search_text_simple_unordered_lists_are_squashed_into_a_single_line_with_list_tags_replaced_by_dashes() {
-        assertSearchText("- one - two",
-                         """
-                         <ul>
-                           <li>one
-                                <lI>   two
-                         """);
-        assertSearchText("- one - two",
-                         """
-                         <ul>
-                           <li>one
-                                <lI>   two
-                                    </ul>
-                         """);
-    }
-
-    @Test
-    public void core_text_ordered_list_items_with_content_are_squashed_into_a_single_line_with_list_tags_replaced_by_dash_characters() {
-        assertCoreText("1. item content 2. more stuff",
-                       """
-                       <ol>
-                         <li> item
-                          content
-                          </li>
-                       <li> more
-                       
-                          stuff
-                       """);
-    }
-
-    @Test
-    public void search_text_ordered_list_items_with_content_are_squashed_into_a_single_line_with_list_tags_replaced_by_dash_characters() {
+    public void search_text_ordered_lists_are_squashed_into_a_single_line_with_list_tags_replaced_by_numbers() {
         assertSearchText("1. item content 2. more stuff",
                          """
                          <ol>
@@ -500,37 +529,88 @@ After quote.
     }
 
     @Test
-    public void core_text_nested_list_items_are_squashed_into_a_single_line_with_list_tags_replaced_by_corresponding_characters() {
-        assertCoreText("1. item 1 - subitem 1 - subitem 2 2. item 2 1. subitem 3",
+    public void core_text_unordered_list_items_are_on_separate_lines_with_list_tags_replaced_by_dashes() {
+        assertCoreText("""
+                       - one
+                       - two""",
+                       """
+                       <ul>
+                         <li>one
+                              <lI>   two
+                       """);
+        assertCoreText("""
+                       - one
+                       details of one
+                       - two details of two""",
+                       """
+                       <ul>
+                         <li> one
+                         <p> details of one
+
+                         <li> two
+                         
+                         details of two
+                       </ul>
+                       """);
+    }
+
+    @Test
+    public void search_text_unordered_lists_are_squashed_into_a_single_line_with_list_tags_replaced_by_dashes() {
+        assertSearchText("- one with details - two with more details",
+                         """
+                         <ul>
+                           <li>one
+                           with details
+                                <lI>   two
+
+                                with <b>more details</b>
+
+                                    </ul>
+                         """);
+    }
+
+    @Test
+    public void core_text_nested_lists() {
+        assertCoreText("""
+                       1. letters:
+                       - a
+                       - b
+                       2. numbers:
+                       1. one
+                       2. two""",
                        """
                        <ol>
-                         <li> item 1
-                           <ul>
-                             <li> subitem 1
-                             </li>
-                               <li> subitem 2
-                           </ul>
-                           <li>   item 2
-                           <ol> <li> subitem 3 </ol>
+                         <li> letters:
+                         <ul>
+                           <li> a
+                           <li> b
+                         </ul>
+                         <li> numbers:
+                         <ol>
+                           <li> one
+                           <li> two
+                         </ol>
                        </ol>
                        """);
     }
 
     @Test
-    public void search_text_nested_list_items_are_squashed_into_a_single_line_with_list_tags_replaced_by_corresponding_characters() {
-        assertSearchText("1. item 1 - subitem 1 - subitem 2 2. item 2 1. subitem 3",
-                         """
+    public void search_text_nested_lists() {
+        assertSearchText("1. letters: - a - b 2. numbers: 1. one 2. two",
+                       """
+                       <ol>
+                         <li> letters:
+                         <ul>
+                           <li> a
+                           <li> b
+                         </ul>
+                         <li> numbers:
                          <ol>
-                           <li> item 1
-                             <ul>
-                               <li> subitem 1
-                               </li>
-                                 <li> subitem 2
-                             </ul>
-                             <li>   item 2
-                             <ol> <li> subitem 3 </ol>
+                           <li> one
+                           <li> two
                          </ol>
-                         """);
+                       </ol>
+                       """);
     }
 
     @Test
@@ -558,26 +638,22 @@ After quote.
     @Test
     public void core_text_separable_tags_are_separated_from_surrounding_text() {
         assertCoreText("hello world", "hello<img />world");
-        assertCoreText("first second third", "first<p>second</p>third");
-        assertCoreText("first second third", "first\n<p>second</p>\nthird");
-        assertCoreText("first second third", "first<p>\nsecond\n</p>third");
-        assertCoreText("first second third", "first<p>\nsecond\n</p>\nthird");
-        assertCoreText("first second third", "\nfirst<p>\r\nsecond\n</p>\nthird\r\n");
    }
 
     @Test
     public void search_text_separable_tags_are_separated_from_surrounding_text() {
         assertSearchText("hello world", "hello<img />world");
-        assertSearchText("first second third", "first<p>second</p>third");
-        assertSearchText("first second third", "first\n<p>second</p>\nthird");
-        assertSearchText("first second third", "first<p>\nsecond\n</p>third");
-        assertSearchText("first second third", "first<p>\nsecond\n</p>\nthird");
-        assertSearchText("first second third", "\nfirst<p>\r\nsecond\n</p>\nthird\r\n");
     }
 
     @Test
     public void core_text_toastUi_task_items_are_marked_using_standard_Markdown_markers_for_task_items() {
-        assertCoreText("- [ ] task 1 - [ ] task 2 - [x] task 3 - [ ] subtask 1 - [x] subtask 2 - [x] task 4",
+        assertCoreText("""
+                       - [ ] task 1
+                       - [ ] task 2
+                       - [x] task 3
+                       - [ ] subtask 1
+                       - [x] subtask 2
+                       - [x] task 4""",
                        """
                        <ul>
                        <li class="task-list-item"><p>task 1</p></li>
@@ -616,7 +692,6 @@ After quote.
         assertCoreText("two three four", "<b>two </b> <i>three</i> four");
         assertCoreText("two three four", " <b>two </b> <i>three</i> four");
         assertCoreText("two three four", "<b> two </b> <i>three</i> four");
-        assertCoreText("hello world", "hello \n<p> world </p>");
     }
 
     @Test
@@ -626,7 +701,6 @@ After quote.
         assertSearchText("two three four", "<b>two </b> <i>three</i> four");
         assertSearchText("two three four", " <b>two </b> <i>three</i> four");
         assertSearchText("two three four", "<b> two </b> <i>three</i> four");
-        assertSearchText("hello world", "hello \n<p> world </p>");
     }
 
     @Test
