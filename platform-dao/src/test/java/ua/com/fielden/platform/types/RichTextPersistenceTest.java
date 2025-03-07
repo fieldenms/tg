@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertInstanceOf;
@@ -46,11 +46,44 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
     @Test
     public void search_text_is_persisted_and_updated_along_with_RichText() {
         final var key = "A";
-        final var entityA_1 = save(new_(EntityWithRichText.class, "A").setText(RichText.fromHtml("First")));
+        final var entityA_1 = save(new_(EntityWithRichText.class, key).setText(RichText.fromHtml("First")));
         assertEquals("First", fetchSearchText(key));
 
         final var entityA_2 = save(entityA_1.setText(RichText.fromHtml("Second")));
         assertEquals("Second", fetchSearchText(key));
+    }
+
+    @Test
+    public void search_text_is_persisted_even_when_not_retrieved() {
+        final var richText = RichText.fromHtml("Read the fine manual");
+        final var searchTerm = "%manual%";
+
+        final var entityA = save(new_(EntityWithRichText.class, "A").setText(richText));
+
+        // Retrieve entity A without searchText.
+        // Do not yield id to make entity B a new entity.
+        final var entityB = co$(EntityWithRichText.class).getEntity(
+                from(select(EntityWithRichText.class)
+                             .where().prop("key").eq().val(entityA.getKey())
+                             .yield().prop("text.formattedText").as("text.formattedText")
+                             .yield().prop("text.coreText").as("text.coreText")
+                             .yield().val("B").as("key")
+                             .modelAsEntity(EntityWithRichText.class))
+                        .model());
+        assertNotNull(entityA.getText());
+        // Do not assert that searchText is null, because invoking its getter will initialiase it.
+
+        final var entityB_saved = save(entityB);
+        assertNotEquals("Expected distinct entity identities.", entityA.getId(), entityB_saved.getId());
+
+        assertTrue("Expected entity B to have searchText persisted.",
+                   co(EntityWithRichText.class).exists(
+                           select(EntityWithRichText.class)
+                                   .where()
+                                   .prop("key").eq().val(entityB.getKey())
+                                   .and()
+                                   .prop("text").iLike().val(searchTerm)
+                                   .model()));
     }
 
     @Override
