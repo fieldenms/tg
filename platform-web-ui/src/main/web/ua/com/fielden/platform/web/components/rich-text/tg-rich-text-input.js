@@ -711,10 +711,10 @@ const template = html`
         <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]" toaster="[[toaster]]"></tg-color-picker-dialog>
     </iron-dropdown>
     <tg-responsive-toolbar class="custom-responsive-toolbar editor-toolbar" disabled$="[[disabled]]">
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Bold, Ctrl+B, &#x2318;+B" on-down="_stopMouseEvent" on-tap="_applyBold"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italic, Ctrl+I, &#x2318;+I" on-down="_stopMouseEvent" on-tap="_applyItalic"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Strikethrough, Ctrl+S, &#x2318;+S" on-down="_stopMouseEvent" on-tap="_applyStrikethough"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-color-text" action-title="Font colour" tooltip-text="Font colour" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Bold, Ctrl+B, &#x2318;+B" on-down="_stopMouseEvent" on-tap="_applyBold"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italic, Ctrl+I, &#x2318;+I" on-down="_stopMouseEvent" on-tap="_applyItalic"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Strikethrough, Ctrl+S, &#x2318;+S" on-down="_stopMouseEvent" on-tap="_applyStrikethough"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-color-text" action-title="Font colour" tooltip-text="Font colour" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:insert-link" action-title="Insert link" tooltip-text="Insert link" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Bulletpoints, Ctrl+U, &#x2318;+U" on-down="_stopMouseEvent" on-tap="_createBulletList"></iron-icon>
         <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Numbering, Ctrl+O, &#x2318;+O" on-down="_stopMouseEvent" on-tap="_createOrderedList"></iron-icon>
@@ -1199,8 +1199,17 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }
     }
 
+    _getSingleLetterActionStyle() {
+        return this._getActionStyleFor(true);
+    }
+
     _getActionStyle() {
-        return `width:22px;height:22px;cursor:pointer;margin-right:8px;color:var(--paper-input-container-color, var(--secondary-text-color));`;
+        return this._getActionStyleFor(false);
+    }
+
+    _getActionStyleFor(singleLetterIcon) {
+        const marginRight = singleLetterIcon ? 5 : 8;
+        return `width:22px;height:22px;cursor:pointer;margin-right:${marginRight}px;color:var(--paper-input-container-color, var(--secondary-text-color));`;
     }
 }
 
