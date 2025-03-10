@@ -596,40 +596,22 @@ public final class StringToRichTextMigration {
 
     /**
      * Generates an SQL statement that populates a column for the core text component.
-     * <p>
-     * The algorithm is based on the procedure that extracts core text from formatted text, and it goes thus:
-     * <ol>
-     *   <li> Replace all whitespace characters by the space character (standard ASCII space, 0x20).
-     *   <li> Replace all consecutive space characters by a single space character.
-     *   <li> Trim whitespace from both sides.
-     * </ol>
+     * All it does is trim whitespace from both sides.
      */
     private enum CoreTextSql {
         POSTGRESQL {
             @Override
             public String sql(final String table, final String sourceColumn, final String coreTextColumn) {
-                final String expr = "btrim(regexp_replace(%s, '%s+', ' ', 'g'), ' ')".formatted(sourceColumn, PSQL_WHITESPACE_CHAR_PATTERN);
+                final var expr = "btrim(%s, ' ')".formatted(sourceColumn);
                 return "UPDATE %s SET %s = %s".formatted(table, coreTextColumn, expr);
             }
         },
 
         MSSQL {
-            // Arguments to the TRANSLATE function
-            // https://learn.microsoft.com/en-us/sql/t-sql/functions/translate-transact-sql
-            private static final String CHARACTERS = MSSQL_WHITESPACE_CHARS_STRING;
-            private static final String TRANSLATIONS = "'%s'".formatted(" ".repeat(WHITESPACE_CODE_POINTS.length));
-
             @Override
             public String sql(final String table, final String sourceColumn, final String coreTextColumn) {
-                // Replace each whitespace character by a space character
-                final String s1 = "translate(%s, %s, %s)".formatted(sourceColumn, CHARACTERS, TRANSLATIONS);
-                // Squash consecutive spaces into a single space.
-                // This solution is based on https://stackoverflow.com/a/2455869, but instead of using '<>', char(5) and char(6) are used
-                // to avoid conflicts with characters in the original string.
-                final String s2 = "replace(replace(replace(%s, ' ', char(5) + char(6)), char(6) + char(5), ''), char(5) + char(6), ' ')"
-                        .formatted(s1);
                 // Trim spaces from both sides
-                final String expr = "trim(%s)".formatted(s2);
+                final var expr = "trim(%s)".formatted(sourceColumn);
                 return "UPDATE %s SET %s = %s".formatted(table, coreTextColumn, expr);
             }
         };
