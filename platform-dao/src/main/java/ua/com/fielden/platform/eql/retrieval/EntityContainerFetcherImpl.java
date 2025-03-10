@@ -13,17 +13,14 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.EntityContainer;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
-import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
-import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.util.List;
@@ -46,35 +43,29 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     private final IDomainMetadata domainMetadata;
     private final IDbVersionProvider dbVersionProvider;
-    private final EqlTables eqlTables;
     private final QuerySourceInfoProvider querySourceInfoProvider;
-    private final IFilter filter;
     private final IUserProvider userProvider;
-    private final IDates dates;
     private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private final EntityFactory entityFactory;
+    private final EqlQueryTransformer eqlQueryTransformer;
 
     @Inject
     EntityContainerFetcherImpl(
             final IDomainMetadata domainMetadata,
             final IDbVersionProvider dbVersionProvider,
-            final EqlTables eqlTables,
             final QuerySourceInfoProvider querySourceInfoProvider,
-            final IFilter filter,
             final IUserProvider userProvider,
-            final IDates dates,
             final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache,
-            final EntityFactory entityFactory)
+            final EntityFactory entityFactory,
+            final EqlQueryTransformer eqlQueryTransformer)
     {
         this.domainMetadata = domainMetadata;
         this.dbVersionProvider = dbVersionProvider;
-        this.eqlTables = eqlTables;
         this.querySourceInfoProvider = querySourceInfoProvider;
-        this.filter = filter;
         this.userProvider = userProvider;
-        this.dates = dates;
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
         this.entityFactory = entityFactory;
+        this.eqlQueryTransformer = eqlQueryTransformer;
     }
 
     @Override
@@ -123,9 +114,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             }
         }
 
-        final QueryModelResult<E> modelResult = EqlQueryTransformer.getModelResult(
-                qpm, dbVersionProvider.dbVersion(), filter, userProvider.getUsername(), dates, domainMetadata,
-                eqlTables, querySourceInfoProvider);
+        final QueryModelResult<E> modelResult = eqlQueryTransformer.getModelResult(qpm, userProvider.getUsername());
 
         // This piece of code is responsible for "re-fetching the whole entity by ID in order to be able to enhance it".
         // This is necessary to convert yielded IDs to fully-fledged entities.
@@ -136,9 +125,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
                     .where().prop(ID).in().model((SingleResultQueryModel<?>) qpm.queryModel)
                     .model();
             final var idOnlyQpm = new QueryProcessingModel<>(idOnlyQuery, qpm.orderModel, qpm.fetchModel, qpm.getParamValues(), qpm.lightweight);
-            return EqlQueryTransformer.getModelResult(
-                    idOnlyQpm, dbVersionProvider.dbVersion(), filter, userProvider.getUsername(), dates, domainMetadata,
-                    eqlTables, querySourceInfoProvider);
+            return eqlQueryTransformer.getModelResult(idOnlyQpm, userProvider.getUsername());
         } else {
             return modelResult;
         }

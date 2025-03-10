@@ -8,7 +8,9 @@ import ua.com.fielden.platform.eql.stage3.operands.Value3;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ToString;
 
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 
 import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
@@ -39,6 +41,17 @@ public record Value2 (Object value, boolean ignoreNull) implements ISingleOperan
     @Override
     public PropType type() {
         return value == null ? NULL_TYPE : propType(value.getClass(), hibTypeFromJavaType(value.getClass())); // TODO provide proper hibType once value original (not converted) will be taken into account.
+    }
+
+    /**
+     * Maps over this instance on the underlying value.
+     *
+     * @param fn  the mapping function.
+     *            Argument may be null.
+     */
+    public Value2 map(final Function</*Nullable*/ Object, Object> fn) {
+        final var newValue = fn.apply(value);
+        return Objects.equals(newValue, value) ? this : new Value2(newValue, ignoreNull);
     }
 
     @Override

@@ -13,8 +13,21 @@ const additionalTemplate = html`
         :host {
             min-width: 0;
         }
+        :host([auto-resize]) {
+            @apply --layout-vertical;
+        }
         #input {
             cursor: text;
+        }
+        :host([auto-resize]) #input {
+            @apply --layout-flex;
+        }
+        :host([auto-resize]) paper-input-container {
+            @apply --layout-vertical;
+            flex: 1 0 auto;    
+        }
+        :host([auto-resize]) .main-container {
+            @apply --layout-flex;
         }
         #resizer {
             position: absolute;
@@ -25,21 +38,6 @@ const additionalTemplate = html`
         }
         #resizer:hover {
             cursor: ns-resize;
-        }
-        .noselect {
-            -webkit-touch-callout: none;
-            /* iOS Safari */
-            -webkit-user-select: none;
-            /* Safari */
-            -khtml-user-select: none;
-            /* Konqueror HTML */
-            -moz-user-select: none;
-            /* Firefox */
-            -ms-user-select: none;
-            /* Internet Explorer/Edge */
-            user-select: none;
-            /* Non-prefixed version, currently
-               supported by Chrome and Opera */
         }
     </style>`;
 
@@ -57,7 +55,7 @@ const customInputTemplate = html`
         height="[[_calcHeight(height, entityType, propertyName)]]"
         tabindex$='[[_tabIndex(_disabled)]]'>
     </tg-rich-text-input>
-    <iron-icon id="resizer" icon="tg-icons:resize-bottom-right" on-tap="_resetHeight" on-down="_makeInputUnselectable" on-up="_makeInputSelectable" on-track="_resizeInput" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>`;
+    <iron-icon id="resizer" icon="tg-icons:resize-bottom-right" on-tap="_resetHeight" on-down="_makeInputUnselectable" on-up="_makeInputSelectable" on-track="_resizeInput" tooltip-text="Drag to resize<br>Double tap to reset height" hidden$="[[autoResize]]"></iron-icon>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
@@ -75,17 +73,19 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
             minHeight: {
                 type: String,
-                value: "16px"
+                value: "25px"
             },
 
             height: {
                 type: String,
-                value: "100px"
+                value: "100%"
             },
 
-            withoutResizing: {
+            autoResize: {
                 type: Boolean,
-                value: false
+                computed: "_isAutoResizable(height)",
+                observer: "_autoResizeChanged",
+                reflectToAttribute: true
             },
 
             /**
@@ -164,7 +164,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _calcHeight(height, entityType, propertyName) {
         if (height && entityType && propertyName) {
-            return this._readHeight() || height;
+            return height === '100%' ? height : (this._readHeight() || height);
         }
     }
 
@@ -174,7 +174,7 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
 
     _resizeInput (event) {
         const target = event.target || event.srcElement;
-        if (target === this.$.resizer && !this.withoutResizing) {
+        if (target === this.$.resizer && !this.autoResize) {
             switch (event.detail.state) {
                 case 'start':
                     break;
@@ -315,6 +315,42 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         return disabled ? "-1": "0";
     }
 
+    /**
+     * Calculates value that determines whether rich text editor is auto-resiziable or has static height.
+     * if height is equal to 100% it means that editor is autoresizable otherwise it has static height. 
+     * 
+     * @param {String} height - height of the rich text input. It might be '100%', 150px etc.
+     */
+    _isAutoResizable(height) {
+        return height === '100%';
+    }
+
+    /**
+     * Handles changes to autoResize property
+     * 
+     * @param {Boolean} newValue - new value for autResize property
+     */
+    _autoResizeChanged(newValue) {
+        const inputWrapper = this.decorator().$$(".input-wrapper");
+        const labelAndInputContainer = this.decorator().$.labelAndInputContainer;
+        const prefix = this.decorator().$$(".prefix");
+        const suffix = this.decorator().$$(".suffix");
+        if (newValue) {
+            inputWrapper.style.flexGrow = "1";
+            labelAndInputContainer.style.alignSelf = "stretch";
+            labelAndInputContainer.style.display = "flex";
+            labelAndInputContainer.style.flexDirection = "column";
+            prefix.style.alignSelf = "flex-start";
+            suffix.style.alignSelf = "flex-start";
+        } else {
+            inputWrapper.style.removeProperty("flex-grow");
+            labelAndInputContainer.style.removeProperty("align-self");
+            labelAndInputContainer.style.removeProperty("display");
+            labelAndInputContainer.style.removeProperty("flex-direction");
+            prefix.style.removeProperty("flex-start");
+            suffix.style.removeProperty("flex-start");
+        }
+    }
 }
 
 customElements.define('tg-rich-text-editor', TgRichTextEditor);

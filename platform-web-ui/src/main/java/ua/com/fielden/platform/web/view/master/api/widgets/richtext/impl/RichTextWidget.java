@@ -18,8 +18,8 @@ public class RichTextWidget extends AbstractWidget {
 
     private final Class<? extends AbstractEntity<?>> entityType;
 
-    private int height = 100; //default height
-    private int minHeight = 0; //default min height
+    private int height = 0; //default height
+    private int minHeight = 25; //default min height
 
     /**
      * Creates new rich text widget for specified property in entityType and specified title/description pair.
@@ -53,8 +53,10 @@ public class RichTextWidget extends AbstractWidget {
 
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> customAttr = super.createCustomAttributes();
-        customAttr.put("height", format("%spx", this.height));
         customAttr.put("entity-type", entityType.getName());
+        if (this.height > 0) {
+            customAttr.put("height", format("%spx", this.height));
+        }
         if (this.minHeight > 0) {
             customAttr.put("min-height", format("%spx", this.minHeight));
         }

@@ -19,7 +19,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 import { tgRichTextStyles } from '/resources/components/rich-text/tg-rich-text-styles.js';
 import '/resources/components/tg-link-dialog.js';
 import '/resources/components/tg-color-picker-dialog.js';
-import '/resources/images/tg-rich-text-editor-icons.js';
+import '/resources/images/editor-icons.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 
 /**
@@ -687,11 +687,12 @@ const template = html`
         a mark {
             text-decoration: underline;
         }
-        .editor-toolbar {
-            overflow: hidden;
-            padding-top: 8px;
-        }
         .custom-responsive-toolbar {
+            overflow: hidden;
+            padding: 8px 0 8px 0;
+            flex-shrink: 0;
+            position: relative;
+            left: -5px;
             --tg-responsove-toolbar-expand-button: {
                 padding: 0;
                 width: 22px;
@@ -710,19 +711,19 @@ const template = html`
         <tg-color-picker-dialog id="colorDialog" class="dropdown-content" slot="dropdown-content" cancel-callback="[[_cancelColorAction]]" ok-callback="[[_acceptColor]]" toaster="[[toaster]]"></tg-color-picker-dialog>
     </iron-dropdown>
     <tg-responsive-toolbar class="custom-responsive-toolbar editor-toolbar" disabled$="[[disabled]]">
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-bold" action-title="Bold" tooltip-text="Make your text bold, Ctrl+B, &#x2318;+B" on-down="_stopMouseEvent" on-tap="_applyBold"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-italic" action-title="Italic" tooltip-text="Italicize yor text, Ctrl+I, &#x2318;+I" on-down="_stopMouseEvent" on-tap="_applyItalic"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:strikethrough-s" action-title="Strikethrough" tooltip-text="Cross text out by drawing a line through it, Ctrl+S, &#x2318;+S" on-down="_stopMouseEvent" on-tap="_applyStrikethough"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-color-text" action-title="Font Color" tooltip-text="Change the color of your text" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:insert-link" action-title="Insert Link" tooltip-text="Insert link into your text" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-bulleted" action-title="Bullets" tooltip-text="Create a bulleted list, Ctrl+U, &#x2318;+U" on-down="_stopMouseEvent" on-tap="_createBulletList"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-numbered" action-title="Numbering" tooltip-text="Create a numbered list, Ctrl+O, &#x2318;+O" on-down="_stopMouseEvent" on-tap="_createOrderedList"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:list-checkbox" action-title="Task List" tooltip-text="Create a task list" on-down="_stopMouseEvent" on-tap="_createTaskList"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:header-1" action-title="Heading 1" tooltip-text="Make your text header 1" on-down="_stopMouseEvent" on-tap="_applyHeader1"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:header-2" action-title="Heading 2" tooltip-text="Make your text header 2" on-down="_stopMouseEvent" on-tap="_applyHeader2"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="tg-rich-text-editor:header-3" action-title="Heading 3" tooltip-text="Make your text header 3" on-down="_stopMouseEvent" on-tap="_applyHeader3"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="icons:undo" action-title="Undo" tooltip-text="Undo last action, Ctrl+Z, &#x2318;+Z" on-down="_stopMouseEvent" on-tap="_undo"></iron-icon>
-        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="icons:redo" action-title="Redo" tooltip-text="Redo last action, Ctrl+Y, &#x2318;+Y" on-down="_stopMouseEvent" on-tap="_redo"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-bold" tooltip-text="Bold, Ctrl+B, &#x2318;+B" on-down="_stopMouseEvent" on-tap="_applyBold"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-italic" tooltip-text="Italic, Ctrl+I, &#x2318;+I" on-down="_stopMouseEvent" on-tap="_applyItalic"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:strikethrough-s" tooltip-text="Strikethrough, Ctrl+S, &#x2318;+S" on-down="_stopMouseEvent" on-tap="_applyStrikethough"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getSingleLetterActionStyle()]]" class="entity-specific-action" icon="editor:format-color-text" tooltip-text="Font colour" on-down="_applyFakeSelect" on-tap="_changeTextColor"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:insert-link" tooltip-text="Insert link" on-down="_applyFakeSelect" on-tap="_toggleLink"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-bulleted" tooltip-text="Bulletpoints, Ctrl+U, &#x2318;+U" on-down="_stopMouseEvent" on-tap="_createBulletList"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor:format-list-numbered" tooltip-text="Numbering, Ctrl+O, &#x2318;+O" on-down="_stopMouseEvent" on-tap="_createOrderedList"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor-icons:list-checkbox" tooltip-text="Task list" on-down="_stopMouseEvent" on-tap="_createTaskList"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor-icons:header-1" tooltip-text="Header 1" on-down="_stopMouseEvent" on-tap="_applyHeader1"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor-icons:header-2" tooltip-text="Header 2" on-down="_stopMouseEvent" on-tap="_applyHeader2"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="editor-icons:header-3" tooltip-text="Header 3" on-down="_stopMouseEvent" on-tap="_applyHeader3"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="icons:undo" tooltip-text="Undo, Ctrl+Z, &#x2318;+Z" on-down="_stopMouseEvent" on-tap="_undo"></iron-icon>
+        <iron-icon slot="entity-specific-action" style$="[[_getActionStyle()]]" class="entity-specific-action" icon="icons:redo" tooltip-text="Redo, Ctrl+Y, &#x2318;+Y" on-down="_stopMouseEvent" on-tap="_redo"></iron-icon>
     </tg-responsive-toolbar>
     <div id="editor"></div>`; 
 
@@ -752,11 +753,13 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
 
             height: {
                 type: String,
+                value: '100%',
                 observer: "_heightChanged"
             },
 
             minHeight: {
                 type: String,
+                value: '25px',
                 observer: "_minHeightChanged"
             },
 
@@ -830,7 +833,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._editor = new Editor({
             el: this.$.editor,
             height: this.height,
-            minHeight: this.minHeight,
+            minHeight: '0',
             initialEditType: 'wysiwyg',
             events: {
                 change: this._htmlContentChanged.bind(this),
@@ -1150,8 +1153,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
     }
 
     _minHeightChanged(newMinHeight) {
-        if (this._editor) {
-            this._editor.setMinHeight(newMinHeight);
+        if (parseInt(newMinHeight) >= 25) {
+            this.$.editor.style.minHeight = newMinHeight;
         }
     }
 
@@ -1196,8 +1199,17 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         }
     }
 
+    _getSingleLetterActionStyle() {
+        return this._getActionStyleFor(true);
+    }
+
     _getActionStyle() {
-        return `width:22px;height:22px;cursor:pointer;margin-right:8px;color:var(--paper-input-container-color, var(--secondary-text-color));`;
+        return this._getActionStyleFor(false);
+    }
+
+    _getActionStyleFor(singleLetterIcon) {
+        const marginRight = singleLetterIcon ? 5 : 8;
+        return `width:22px;height:22px;cursor:pointer;margin-right:${marginRight}px;color:var(--paper-input-container-color, var(--secondary-text-color));`;
     }
 }
 

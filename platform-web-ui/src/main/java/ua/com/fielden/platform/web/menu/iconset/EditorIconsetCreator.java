@@ -10,13 +10,13 @@ import java.io.IOException;
  * @author TG Team
  *
  */
-public class RichTextEditorIconsetCreator {
+public class EditorIconsetCreator {
 
     public static void main(final String[] args) throws IOException {
-        final String srcFolder = "src/main/resources/images/rich-text-editor";
-        final String iconsetId = "tg-rich-text-editor";
+        final String srcFolder = "src/main/resources/images/editor-related";
+        final String iconsetId = "editor-icons";
         final int svgWidth = 24;
-        final String outputFile = "src/main/resources/images/tg-rich-text-editor-icons.js";
+        final String outputFile = "src/main/resources/images/editor-icons.js";
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility(iconsetId, svgWidth, srcFolder);
         iconsetUtility.createSvgIconset(outputFile);
     }

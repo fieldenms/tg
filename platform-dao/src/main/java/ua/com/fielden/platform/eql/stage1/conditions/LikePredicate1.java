@@ -19,21 +19,20 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concat;
  *
  * @author TG Team
  */
-public record LikePredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> leftOperand,
-                              ISingleOperand1<? extends ISingleOperand2<?>> rightOperand,
+public record LikePredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> matchOperand,
+                              ISingleOperand1<? extends ISingleOperand2<?>> patternOperand,
                               LikeOptions options)
         implements ICondition1<LikePredicate2>, ToString.IFormattable
 {
 
-
     @Override
     public LikePredicate2 transform(final TransformationContextFromStage1To2 context) {
-        return new LikePredicate2(leftOperand.transform(context), rightOperand.transform(context), options);
+        return new LikePredicate2(matchOperand.transform(context), patternOperand.transform(context), options);
     }
 
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        return concat(HashSet::new, leftOperand.collectEntityTypes(), rightOperand.collectEntityTypes());
+        return concat(HashSet::new, matchOperand.collectEntityTypes(), patternOperand.collectEntityTypes());
     }
 
     @Override
@@ -45,8 +44,8 @@ public record LikePredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> left
     public String toString(final ToString.IFormat format) {
         return format.toString(this)
                 .addIf("options", options, opts -> opts != LikeOptions.DEFAULT_OPTIONS)
-                .add("left", leftOperand)
-                .add("right", rightOperand)
+                .add("match", matchOperand)
+                .add("pattern", patternOperand)
                 .$();
     }
 
