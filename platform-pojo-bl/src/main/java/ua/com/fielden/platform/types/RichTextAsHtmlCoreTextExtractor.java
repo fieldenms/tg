@@ -281,7 +281,7 @@ final class RichTextAsHtmlCoreTextExtractor {
         class $ {
             // There are more separable tags than non-separable.
             static final Set<String> NON_SEPARABLE_TAGS = Set.of(
-                    "em", "i", "b", "strong", "u", "mark", "del", "s", "sub", "small", "sup", "span", "q", "code", "time");
+                    "a", "em", "i", "b", "strong", "u", "mark", "del", "s", "sub", "small", "sup", "span", "q", "code", "time");
         }
         return !$.NON_SEPARABLE_TAGS.contains(element.tagName().toLowerCase());
     }

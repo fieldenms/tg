@@ -274,9 +274,13 @@ After quote.
 
     @Test
     public void core_text_links_inside_a_word_break_the_word() {
-        assertCoreText("me mo (https://example.com) ry",
+        assertCoreText("memo (https://example.com)ry",
                        "me<a href='https://example.com'>mo</a>ry");
-        assertSearchText("me mo ry https://example.com",
+    }
+
+    @Test
+    public void search_text_links_inside_a_word_do_not_break_the_word() {
+        assertSearchText("memory https://example.com",
                          "me<a href='https://example.com'>mo</a>ry");
     }
 
