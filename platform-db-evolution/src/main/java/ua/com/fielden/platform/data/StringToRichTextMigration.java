@@ -17,7 +17,6 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.types.RichText;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -26,7 +25,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -145,9 +143,9 @@ public final class StringToRichTextMigration {
     private final class ToolImpl implements Tool {
 
         private static final String IMPORTANT_MESSAGE = """
-        ********** IMPORTANT **********
-        * Make sure to address warnings that may have been printed above!
-        *******************************
+        ########## IMPORTANT ##########
+        # Make sure to address warnings that may have been printed above!
+        ###############################
         """;
 
         private final Class<? extends AbstractEntity<?>> entityType;
@@ -300,13 +298,14 @@ public final class StringToRichTextMigration {
         private void generateInitialMigration(final Consumer<? super String> sqlConsumer) {
             sqlConsumer.accept(sqlComment("""
             
-            ***** IMPORTANT *****
+            ##### CRITICAL #####
             To ensure correctness of the rollback script, it is necessary to record the date and time when this script (stage 1) is executed.
-            
+            This is needed to correctly identify description values that changed since the migration to rich text descriptions.
+
             """));
 
             // 1. Add a column for each RichText component.
-            sqlConsumer.accept(sqlComment("*** Add columns for RichText components."));
+            sqlConsumer.accept(sqlComment("Add columns for RichText components."));
             Stream.of(formattedTextColDef.schemaString(dialect, true),
                       coreTextColDef.schemaString(dialect, true),
                       searchTextColDef.schemaString(dialect, true))
@@ -322,11 +321,10 @@ public final class StringToRichTextMigration {
             // 2. Remove the requiredness constraint of the String property.
 
             sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("*** Relax the requiredness constraint of the original String property."));
+            sqlConsumer.accept(sqlComment("Relax the requiredness constraint of the original String property."));
 
             // SQL Server requires dependent indices to be dropped first.
             if (dbVersion == DbVersion.MSSQL) {
-                sqlConsumer.accept("\n");
                 sqlConsumer.accept(sqlComment("""
                     All dependent indices need to be deleted first.
                     The following code dynamically forms and executes a statement that will delete all such indices.
@@ -352,17 +350,15 @@ public final class StringToRichTextMigration {
             //    c. Search text should be populated from the plain text as if it had been extracted from the formatted text.
 
             sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("*** Populate values for the formatted text component of RichText."));
+            sqlConsumer.accept(sqlComment("*** Populate values RichText."));
             sqlConsumer.accept(FormattedTextSql.get(dbVersion).sql(tableDdl.getTableName(), stringColumnName, formattedTextColDef.name));
             sqlConsumer.accept(batchDelimiter);
 
             sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("*** Populate values for the core text component of RichText."));
             sqlConsumer.accept(CoreTextSql.get(dbVersion).sql(tableDdl.getTableName(), stringColumnName, coreTextColDef.name));
             sqlConsumer.accept(batchDelimiter);
 
             sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("*** Populate values for the search text component of RichText."));
             sqlConsumer.accept(SearchTextSql.get(dbVersion).sql(tableDdl.getTableName(), stringColumnName, searchTextColDef.name));
             sqlConsumer.accept(batchDelimiter);
         }
@@ -370,11 +366,10 @@ public final class StringToRichTextMigration {
         private void generateCompleteMigration(final Consumer<? super String> sqlConsumer) {
             // 1. Delete the column for the original String property.
             sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("*** Delete the column for the original String property."));
+            sqlConsumer.accept(sqlComment("Delete the column for the original String property."));
 
             // SQL Server requires dependent indices to be dropped for a column to be deleted.
             if (dbVersion == DbVersion.MSSQL) {
-                sqlConsumer.accept("\n");
                 sqlConsumer.accept(sqlComment("""
                 All dependent indices need to be deleted first.
                 The following code dynamically forms and executes a statement that will delete all such indices.
@@ -397,7 +392,7 @@ public final class StringToRichTextMigration {
             // 2. If the RichText property has a requiredness constraint, add the {@code NOT NULL} constraint to its columns.
             if (richTextPropertyMetadata.is(REQUIRED)) {
                 sqlConsumer.accept(sqlComment("""
-                *** Enforce the requiredness constraint for the RichText property.
+                Enforce the requiredness constraint for the RichText property.
                 Indices, if any exist, need to be dropped beforehand and recreated afterwards.
                 Make sure that the following statements are aligned with the current state of indices.
                 """));
@@ -408,11 +403,19 @@ public final class StringToRichTextMigration {
                             sqlConsumer.accept(batchDelimiter);
                             sqlConsumer.accept(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), colDef.name, colDef.sqlTypeName, NOT_NULL));
                             sqlConsumer.accept(batchDelimiter);
+                            sqlConsumer.accept("\n");
 
-                            tableDdl.createNonUniqueIndicesSchema(Stream.of(colDef), dialect)
+                            final var indicesSql = tableDdl.createNonUniqueIndicesSchema(Stream.of(colDef), dialect)
                                     .stream()
                                     .flatMap(sql -> Stream.of(sql, batchDelimiter))
-                                    .forEach(sqlConsumer);
+                                    .toList();
+                            if (indicesSql.isEmpty()) {
+                                sqlConsumer.accept(sqlComment("No indices are required, so none need to be recreated."));
+                                sqlConsumer.accept("\n");
+                            }
+                            else {
+                                indicesSql.forEach(sqlConsumer);
+                            }
                         });
             }
         }
@@ -421,10 +424,10 @@ public final class StringToRichTextMigration {
             // 1. For each new or modified value of the RichText property, populate the String property from the core text component.
             //    This is only possible if the entity type extends AbstractPersistentEntity, which has properties lastUpdatedBy and createdBy.
             sqlConsumer.accept(sqlComment("""
-            *** Populate the original String property with new/modified values of RichText property.
+            Populate the original String property with new/modified values of RichText property.
             
-            ***** IMPORTANT *****
-            NOTE: A date is used to identify records that were created after the introduction of the RichText property.
+            ##### CRITICAL #####
+            A date is used to identify records that were created after the introduction of the RichText property.
             The value for this date should be set to the moment of executing the stage 1 script.
             Therefore, please adjust the date used below, which, by default, represents the moment when this script was generated.
             """));
@@ -481,39 +484,35 @@ public final class StringToRichTextMigration {
             maybeStringPropertyMetadata.ifPresentOrElse(
                     stringPropertyMetadata -> {
                         if (stringPropertyMetadata.is(REQUIRED)) {
-                            sqlConsumer.accept(sqlComment("*** Restore the requiredness constraint for the original String property."));
+                            sqlConsumer.accept(sqlComment("Restore the requiredness constraint for the original String property."));
                             sqlConsumer.accept(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), stringColumnName, stringColumnTypeName, NOT_NULL));
                             sqlConsumer.accept(batchDelimiter);
                         }
                     },
                     () -> {
                         // We don't have access to the definition of the String property, so we can't know if it was required or not.
-                        sqlConsumer.accept(sqlComment("*** Uncomment to restore the requiredness constraint for the original String property, if it had one."));
+                        sqlConsumer.accept(sqlComment("Uncomment to restore the requiredness constraint for the original String property, if it had one."));
                         sqlConsumer.accept(sqlComment(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), stringColumnName, stringColumnTypeName, NOT_NULL)));
                         sqlConsumer.accept(sqlComment(batchDelimiter));
                     }
             );
 
             // 3. Optionally drop columns for the RichText property.
-            sqlConsumer.accept(sqlComment("*** If necessary, drop columns for the RichText property."));
+            sqlConsumer.accept(sqlComment("If necessary, drop columns for the RichText property."));
 
-            List.of(T2.t2(coreTextColDef, "Core text"),
-                    T2.t2(formattedTextColDef, "Formatted text"),
-                    T2.t2(searchTextColDef, "Search text"))
-                    .forEach(pair -> pair.map((colDef, title) -> {
+            List.of(coreTextColDef, formattedTextColDef, searchTextColDef)
+                    .forEach(colDef -> {
                         sqlConsumer.accept("\n");
-                        sqlConsumer.accept(sqlComment("**** %s".formatted(title)));
+                        sqlConsumer.accept(sqlComment("Drop %s.%s".formatted(tableDdl.getTableName(), colDef.name)));
                         sqlConsumer.accept(sqlComment("Delete all dependent indices first."));
                         sqlConsumer.accept("\n");
                         sqlConsumer.accept(sqlComment(dropAllColumnIndicesMssql(tableDdl.getTableName(), colDef.name)));
                         sqlConsumer.accept(sqlComment(batchDelimiter));
                         sqlConsumer.accept("\n");
-                        sqlConsumer.accept(sqlComment("Now drop the column."));
                         sqlConsumer.accept(sqlComment(dbVersion.deleteColumnSql(tableDdl.getTableName(), colDef.name)));
                         sqlConsumer.accept(sqlComment(batchDelimiter));
                         sqlConsumer.accept("\n");
-                        return null;
-                    }));
+                    });
         }
 
     }
@@ -585,8 +584,8 @@ public final class StringToRichTextMigration {
 
     private static String sqlComment(final CharSequence text) {
         if (StringUtils.contains(text, '\n')) {
-            return Pattern.compile(Pattern.quote("\n")).splitAsStream(text)
-                    .map(ln -> "-- " + ln)
+            return Arrays.stream(StringUtils.splitPreserveAllTokens(text.toString(), '\n'))
+                    .map(ln -> ln.isBlank() ? "" : "-- " + ln)
                     .collect(joining("\n"));
         }
         else {
