@@ -70,7 +70,10 @@ public abstract class AbstractQuery2 implements ToString.IFormattable {
      * @return
      */
     protected TransformationResultFromStage2To3<QueryComponents3> transformQueryComponents(final TransformationContextFromStage2To3 context) {
-        final var this_ = UnionOrderById.INSTANCE.apply(this);
+        final AbstractQuery2 this_ = switch (context.dbVersion()) {
+            case MSSQL ->  UnionOrderById.INSTANCE.apply(this);
+            default -> this;
+        };
 
         return this_.transformQueryComponents_(context);
     }
