@@ -93,7 +93,7 @@ public final class EqlQueryTransformer {
         final ResultQuery2 query2 = query1.transform(context1);
 
         final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(querySourceInfoProvider, domainMetadata, gen);
-        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlTables);
+        final var context2 = new TransformationContextFromStage2To3(p2tt.transformFinally(query2.collectProps()), eqlTables, dbVersionProvider.dbVersion());
         return query2.transform(context2);
     }
 
