@@ -11,6 +11,7 @@ import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.OrderBy3;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
+import ua.com.fielden.platform.test.WithDbVersion;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.util.Optional;
@@ -34,11 +35,8 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @WithDbVersion(MSSQL)
     public void MSSQL_id_is_implicitly_ordered_by_in_union_query_with_explicit_ordering_and_yielded_id() {
-        if (dbVersion != MSSQL) {
-            return;
-        }
-
         final var queryModel = select(select(TeVehicle.class)
                                               .yield().prop("key").as("key")
                                               .yield().prop("id").as("id")
@@ -69,11 +67,8 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @WithDbVersion(POSTGRESQL)
     public void POSTGRESQL_id_is_NOT_implicitly_ordered_by_in_union_query_with_explicit_ordering_and_yielded_id() {
-        if (dbVersion != POSTGRESQL) {
-            return;
-        }
-
         final var queryModel = select(select(TeVehicle.class)
                                               .yield().prop("key").as("key")
                                               .yield().prop("id").as("id")
