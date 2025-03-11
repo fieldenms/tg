@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
 import org.junit.Before;
+import org.junit.ComparisonFailure;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.eql.stage3.conditions.NullPredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.CountAll3;
+import ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
@@ -278,12 +280,20 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
     }
 
+    private static ResultQuery3 resultQry(final IJoinNode3 sources, final Yields3 yields, final OrderBys3 ordering, final Class<?> resultType) {
+        return new ResultQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, ordering), resultType);
+    }
+
     //    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
     //        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), queryCategory, resultType);
     //    }
 
     private static SourceQuery3 sourceQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
         return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), conditions, yields, null, null), resultType);
+    }
+
+    private static SourceQuery3 sourceQry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
+        return new SourceQuery3(new QueryComponents3(Optional.ofNullable(sources), null, yields, null, null), resultType);
     }
 
     //    protected static EntQuery3 qry(final IQrySources3 sources, final Class<?> resultType) {
@@ -306,6 +316,10 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return resultQry(sources, yields, resultType);
     }
 
+    protected static ResultQuery3 qry(final IJoinNode3 sources, final Yields3 yields, final OrderBys3 ordering, final Class<?> resultType) {
+        return resultQry(sources, yields, ordering, resultType);
+    }
+
     protected static ResultQuery3 qry(final IJoinNode3 sources, final Yields3 yields) {
         return qry(sources, yields, EntityAggregates.class);
     }
@@ -320,6 +334,10 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
 
     protected static SourceQuery3 srcqry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields) {
         return sourceQry(sources, conditions, yields, EntityAggregates.class);
+    }
+
+    protected static SourceQuery3 srcqry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
+        return sourceQry(sources, yields, resultType);
     }
 
     //    protected static EntQuery3 subqry(final IQrySources3 sources, final Class<?> resultType) {
@@ -397,5 +415,11 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     @SafeVarargs
     protected static Conditions3 or(final List<? extends ICondition3>... conditions) {
         return new Conditions3(false, asList(conditions));
+    }
+
+    protected static void assertQueryEquals(final AbstractQuery3 expected, final AbstractQuery3 actual) {
+        if (!expected.equals(actual)) {
+            throw new ComparisonFailure("Queries have different structure.", expected.toString(), actual.toString());
+        }
     }
 }
