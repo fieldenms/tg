@@ -417,27 +417,48 @@ function rgbToHex(rgbString) {
 }
 
 /**
- * Prevents ctrl+a event. This is used to handle select all action by tg-rich-text-input element.
+ * Handles some key events before they get handled by Toast UI editor.
  * 
  * @param {Object} event keyboard event
  */
-function handleEnterKeyOnSelectAll(event) {
+function handleKeyEventsBeforeEditor(event) {
     const docSize = this._editor.wwEditor.view.state.tr.doc.content.size;
     const selection = this._getSelection();
     if (event.keyCode === 13 /*Enter*/ && selection && selection[0] === 0 && selection[1] === docSize /*All text is selected*/) {
         this._editor.insertText("");
         tearDownEvent(event);
+    } else if (event.keyCode === 32 /*space*/) {
+        this._editor.wwEditor.view.state.schema.marks.link.spec.inclusive = false;
     }
 }
 
 /**
- * Scrolls content when creating new list item
+ * Handles some key events after they were handled by Toast UI editor.
  * 
  * @param {Event} event keyboard event
  */
-function scrollWhenListItem(event) {
+function handleEditorKeyEvents(event) {
+    console.log(`keydown `, event);
     if (event.keyCode === 13 && getElementToEdit.bind(this)(el => el.tagName && el.tagName === 'LI', el => el)) {
         setTimeout(() => {scrollIntoView.bind(this)()}, 0);
+    }
+}
+
+function handleKeyup(e) {
+    if (e.keyCode === 32 /*space*/) {
+        this._editor.wwEditor.view.state.schema.marks.link.spec.inclusive = true;
+    }
+}
+
+function handleBeforeinput(e) {
+    if (e.data === ' ') {
+        this._editor.wwEditor.view.state.schema.marks.link.spec.inclusive = false;
+    }
+}
+
+function handleInput(e) {
+    if (e.data === ' ') {
+        setTimeout(() => this._editor.wwEditor.view.state.schema.marks.link.spec.inclusive = true, 0);
     }
 }
 
@@ -853,6 +874,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.triggerManual = true;
         //The following code is nedded to preserve whitespaces after loading html into editor.
         this._editor.wwEditor.schema.cached.domParser.rules.forEach(r => r.preserveWhitespace = "full");
+        //Make link inclusive which means that link will be active widget when cursor is placed at the end of it.
+        this._editor.wwEditor.view.state.schema.marks.link.spec.inclusive = true;
         //Make editable container not tabbable. It will remain focusable with mouse pointer. 
         this._getEditableContent().setAttribute('tabindex', '-1');
         //Add event listeners for tooltips on editor
@@ -867,10 +890,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this._getEditableContent().addEventListener("touchend", mouseUpHandler.bind(this));
         //Add mouse down handler to handle case when user presses mouse button on editor and moves it outside of the editor, which later prevents invokation of mouse up handler
         this._getEditableContent().addEventListener("mousedown", mouseEventRetranslator.bind(this), true);
-        //Add key down to prevent select all action and key events when editor is disabled
-        this._getEditableContent().addEventListener("keydown", handleEnterKeyOnSelectAll.bind(this), true);
-        //Add key down to scroll into view when creating new list item on Enter key
-        this._getEditableContent().addEventListener("keydown", scrollWhenListItem.bind(this));
+        this._getEditableContent().addEventListener("keydown", handleKeyEventsBeforeEditor.bind(this), true);
+        this._getEditableContent().addEventListener("keydown", handleEditorKeyEvents.bind(this));
+        this._getEditableContent().addEventListener("keyup", handleKeyup.bind(this));
+        //Next two event handlers needed to make link mark uninclusive and inclusive again on mobile devices which generates input events instead of keydown/keyup events. 
+        this._getEditableContent().addEventListener("beforeinput", handleBeforeinput.bind(this), true);
+        this._getEditableContent().addEventListener("input", handleInput.bind(this));
         this._getEditableContent().addEventListener("scroll", this._editorScrolled.bind(this));
         //Initiate key binding and key event target
         this.addOwnKeyBinding('ctrl+b meta+b', '_applyBold');
