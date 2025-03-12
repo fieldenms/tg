@@ -251,8 +251,8 @@ After quote.
     }
 
     /**
-     * Link text should be preserved as if it were regular text.
-     * URIs are placed at the end.
+     * Link text should be preserved as if it were a regular text.
+     * URIs are deduped and placed at the end.
      */
     @Test
     public void search_text_links() {
@@ -265,11 +265,15 @@ After quote.
         assertSearchText("the hackernews website https://news.ycombinator.com/",
                          "the <a href='https://news.ycombinator.com/' rel=nofollow><b>hackernews</b></a> website");
         assertSearchText("the website https://news.ycombinator.com/",
-                       "the <a href='https://news.ycombinator.com/' rel=nofollow></a> website");
+                         "the <a href='https://news.ycombinator.com/' rel=nofollow></a> website");
+        assertSearchText("the website is not as good as another website https://news.ycombinator.com/ https://news.ycombinator.com/another",
+                         "the <a href='https://news.ycombinator.com/' rel=nofollow>website</a> is not as good as <a href='https://news.ycombinator.com/another'>another website</a>");
+        assertSearchText("the website is as good as the same website https://news.ycombinator.com/",
+                         "the <a href='https://news.ycombinator.com/' rel=nofollow>website</a> is as good as the same <a href='https://news.ycombinator.com/' rel=nofollow>website</a>");
         assertSearchText("hackernews",
-                       "<a href=''>hackernews</a>");
+                         "<a href=''>hackernews</a>");
         assertSearchText("",
-                       "<a href=''>  </a>");
+                         "<a href=''>  </a>");
     }
 
     @Test
