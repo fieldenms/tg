@@ -149,7 +149,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
 
     private static String makeSearchText(final RichText richText) {
         class $ {
-            static final RichTextAsHtmlSearchTextExtractor.Extension searchTextExtractorExtension = new RichTextAsHtmlSearchTextExtractor.Extension() {
+            static final RichTextAsHtmlCoreTextExtractor.Extension searchTextExtractorExtension = new RichTextAsHtmlCoreTextExtractor.Extension() {
                 static final String TOAST_UI_CHECKED_CLASS = "checked";
                 static final String TOAST_UI_TASK_ITEM_CLASS = "task-list-item";
 

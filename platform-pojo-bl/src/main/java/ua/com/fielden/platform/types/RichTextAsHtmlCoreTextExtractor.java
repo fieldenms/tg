@@ -136,7 +136,7 @@ final class RichTextAsHtmlCoreTextExtractor {
 
     }
 
-    private static final Extension defaultExtension = new Extension() {
+    public static final Extension defaultExtension = new Extension() {
         @Override
         public boolean isTaskItem(final Element element) {
             return false;
@@ -267,17 +267,17 @@ final class RichTextAsHtmlCoreTextExtractor {
     private static final CharPredicate isWhitespaceExceptNewline = c -> c != '\n' && Character.isWhitespace(c);
 
     /**
-     * This predicate is true for HTML elements that need to be separated by whitespace from surrounding text.
+     * This predicate is true for HTML elements that need to be separated by whitespace from a surrounding text.
      * <p>
-     * For example, it is expected that {@code <h1>Introduction</h1>Once upon} would be transformed to core text
-     * {@code Introduction Once upon}, which requires the contents of {@code h1} element to be separated from surrounding text.
+     * For example, it is expected that {@code <h1>Introduction</h1>Once upon} would be transformed to search text
+     * {@code Introduction Once upon}, which requires the contents of {@code h1} element to be separated from a surrounding text.
      * <p>
-     * On the other hand, {@code l<b>aaa</b>rge} should be transformed to core text {@code laaarge}, requiring that the
-     * contents of {@code b} are <b>not</b> separated from surrounding text.
+     * On the other hand, {@code l<b>aaa</b>rge} should be transformed to search text {@code laaarge}, requiring that the
+     * contents of {@code b} are <b>not</b> separated from a surrounding text.
      * <p>
      * Therefore, it is required to distinguish <i>separable</i> tags.
      */
-    private static boolean isSeparable(final Element element) {
+    public static boolean isSeparable(final Element element) {
         class $ {
             // There are more separable tags than non-separable.
             static final Set<String> NON_SEPARABLE_TAGS = Set.of(
@@ -339,7 +339,7 @@ final class RichTextAsHtmlCoreTextExtractor {
         return name1.equalsIgnoreCase(name2);
     }
 
-    private static CharSequence chooseListMarker(final Element element, final Extension extension) {
+    public static CharSequence chooseListMarker(final Element element, final Extension extension) {
         if (extension.isTaskItemChecked(element)) {
             return "- [x]";
         }
@@ -347,11 +347,11 @@ final class RichTextAsHtmlCoreTextExtractor {
             return "- [ ]";
         }
         else if (element.parent() != null && equalTagNames("ol", element.parent().tagName())) {
-            // Ordered list
-            final var preceedingItemsCount = previousSiblings(element)
+            // An ordered list.
+            final var precedingItemsCount = previousSiblings(element)
                     .filter(sib -> sib instanceof Element sibElt && equalTagNames("li", sibElt.tagName()))
                     .count();
-            return String.valueOf(preceedingItemsCount + 1) + '.';
+            return String.valueOf(precedingItemsCount + 1) + '.';
         }
         else {
             // Unordered list
