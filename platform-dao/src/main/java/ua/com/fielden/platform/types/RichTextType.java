@@ -30,19 +30,21 @@ import static ua.com.fielden.platform.types.RichText.*;
  * <p>
  * <b>Implementation remark:</b>
  * <i>
- *  The platform guarantees that all RichText values are sanitised prior to being persisted.
+ *  The platform guarantees that all `RichText` values are sanitised prior to being persisted.
  *  Therefore, we avoid sanitisation when instantiating RichText from persisted values.
  *  Note that this is not simply a performance optimisation, but also a way to preserve the integrity of persisted values.
- *  It is not know what might happen if we sanitise an already sanitised text and perform extraction of core text again,
- *  which would preserve data integrity only if both the sanitiser and core text extractor are idempotent
- *  (we use 3rd party dependencies for both, so there is no guarantee they are and would stay idempotent).
+ *  It is not know what might happen if we sanitise an already sanitised text and perform extraction of the core text again,
+ *  which would preserve data integrity only if both the sanitiser and core text extractor are idempotent.
+ *  A 3rd party library is used for both, and there is no guarantee they are and would stay idempotent.
  *  In any case, {@link RichText} is designed to prohibit instantiation without sanitisation.
- *  The only way to persist a dangerous {@link RichText} value is to write to the DB directly, which would indicate a compromise of a much greater scale.
+ *  The only way to persist a dangerous {@link RichText} value is to write it to the DB directly, which would indicate a compromise of a much greater scale.
  *  </i>
  */
 public sealed class RichTextType extends AbstractCompositeUserType implements IRichTextType
         permits RichTextPostgresqlType
 {
+
+    public static final String ERR_TEXT_IS_NULL = "%s text is null when formatted text is present. Formatted text:%n%s";
 
     private static final RichTextType INSTANCE = new RichTextType();
 
@@ -127,11 +129,11 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
         }
         final String coreText = getText(resultSet, names[1]);
         if (resultSet.wasNull()) {
-            throw new UserTypeException("Core text is null when formatted text is present. Formatted text:\n%s".formatted(formattedText));
+            throw new UserTypeException(ERR_TEXT_IS_NULL.formatted("Core", formattedText));
         }
         final String searchText = getText(resultSet, names[2]);
         if (resultSet.wasNull()) {
-            throw new UserTypeException("Search text is null when formatted text is present. Formatted text:\n%s".formatted(formattedText));
+            throw new UserTypeException(ERR_TEXT_IS_NULL.formatted("Search", formattedText));
         }
         return new RichText.Persisted(formattedText, coreText, searchText);
     }

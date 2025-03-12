@@ -41,8 +41,12 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     public static final String SEARCH_TEXT = "searchText";
     public static final String VALIDATION_RESULT = "validationResult";
 
-    public static final String ERR_INVALID_RICHTEXT_CANNOT_BE_CREATED_WITH_SUCCESSFUL_RESULT =
+    public static final String ERR_INVALID_RICHTEXT_WITH_SUCCESSFUL_RESULT =
             "Invalid RichText cannot be created with a successful validation result [%s]";
+    public static final String ERR_ACCESSING_INVALID_VALUES =
+            "%s text is not available for invalid values.";
+    public static final String ERR_INVALID_RICH_TEXT_CANNOT_BE_PERSISTED =
+            "Invalid rich text cannot be persisted.";
 
     private static final Result SUCCESSFUL = Result.successful();
 
@@ -83,13 +87,13 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     // !!! KEEP THIS CONSTRUCTOR PRIVATE !!!
     private RichText(final String formattedText, final String coreText, final String searchText, final Result validationResult) {
         if (validationResult.isSuccessful()) {
-            requireNonNull(formattedText, "formattedText");
-            requireNonNull(coreText, "coreText");
+            requireNonNull(formattedText,  FORMATTED_TEXT);
+            requireNonNull(coreText, CORE_TEXT);
         }
         else {
-            requireNull(formattedText, "formattedText");
-            requireNull(coreText, "coreText");
-            requireNull(searchText, "searchText");
+            requireNull(formattedText, FORMATTED_TEXT);
+            requireNull(coreText, CORE_TEXT);
+            requireNull(searchText, SEARCH_TEXT);
         }
         this.formattedText = formattedText;
         this.coreText = coreText;
@@ -216,7 +220,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
 
         private static Result requireUnsuccessful(final Result validationResult) {
             if (validationResult.isSuccessful()) {
-                throw new InvalidArgumentException(ERR_INVALID_RICHTEXT_CANNOT_BE_CREATED_WITH_SUCCESSFUL_RESULT.formatted(validationResult));
+                throw new InvalidArgumentException(ERR_INVALID_RICHTEXT_WITH_SUCCESSFUL_RESULT.formatted(validationResult));
             }
             else {
                 return validationResult;
@@ -225,22 +229,22 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
 
         @Override
         public String formattedText() {
-            throw new IllegalStateException("Formatted text is not available for invalid values.");
+            throw new IllegalStateException(ERR_ACCESSING_INVALID_VALUES.formatted("Formatted"));
         }
 
         @Override
         public String coreText() {
-            throw new IllegalStateException("Core text is not available for invalid values.");
+            throw new IllegalStateException(ERR_ACCESSING_INVALID_VALUES.formatted("Core"));
         }
 
         @Override
         public String searchText() {
-            throw new IllegalStateException("Search text is not available for invalid values.");
+            throw new IllegalStateException(ERR_ACCESSING_INVALID_VALUES.formatted("Search"));
         }
 
         @Override
         Persisted asPersisted() {
-            throw new IllegalStateException("Invalid rich text cannot be persisted.");
+            throw new IllegalStateException(ERR_INVALID_RICH_TEXT_CANNOT_BE_PERSISTED);
         }
 
         @Override
