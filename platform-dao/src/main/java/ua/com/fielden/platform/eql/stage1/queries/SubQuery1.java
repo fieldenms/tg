@@ -6,7 +6,6 @@ import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -48,19 +47,18 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
 
     @Override
     public SubQuery2 transform(final TransformationContextFromStage1To2 context) {
-
-        if (joinRoot == null) {
-            final QueryComponents2 qb = transformSourceless(context);
-            return new SubQuery2(qb, enhance(null, qb.yields()), false);
-        }
-
-        final QueryComponents2 queryComponents2 = transformQueryComponents(context);
-        return new SubQuery2(queryComponents2, enhance(resultType, queryComponents2.yields()), isRefetchOnlyQuery());
+        return maybeJoinRoot.map(joinRoot -> {
+            final var queryComponents2 = transformQueryComponents(context, joinRoot);
+            return new SubQuery2(queryComponents2, enhance(resultType, queryComponents2.yields()), isRefetchOnlyQuery());
+        }).orElseGet(() -> {
+            final var queryComponents2 = transformSourceless(context);
+            return new SubQuery2(queryComponents2, enhance(null, queryComponents2.yields()), false);
+        });
     }
 
     private static PropType enhance(final Class<?> resultType, final Yields2 yields) {
         return resultType == null
-               ? yields.getYields().iterator().next().operand.type() // the case of modelAsPrimitive() no ResultType provided
+               ? yields.getYields().iterator().next().operand().type() // the case of modelAsPrimitive() no ResultType provided
                : propType(resultType, H_ENTITY); // the case of modelAsEntity(..)
     }
 
@@ -69,14 +67,18 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     }
 
     @Override
-    protected Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        if (!yields.getYields().isEmpty()) {
-            return yields;
+    protected EnhancedYields enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+        final Yields2 result;
+
+        if (!yields.isEmpty()) {
+            result = yields;
         } else if (mainSource.querySourceInfo().getProps().containsKey(ID)) {
-            return new Yields2(listOf(new Yield2(new Prop2(mainSource, listOf(mainSource.querySourceInfo().getProps().get(ID))), ABSENT_ALIAS, false)));
+            result = new Yields2(listOf(new Yield2(new Prop2(mainSource, listOf(mainSource.querySourceInfo().getProps().get(ID))), ABSENT_ALIAS, false)));
         } else {
             throw new EqlStage1ProcessingException(ERR_AUTO_YIELD_IMPOSSIBLE_FOR_QUERY_WITH_MAIN_SOURCE_HAVING_NO_ID);
         }
+
+        return new EnhancedYields(result);
     }
 
     @Override

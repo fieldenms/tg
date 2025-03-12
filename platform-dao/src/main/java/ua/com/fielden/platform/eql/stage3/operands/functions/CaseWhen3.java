@@ -8,6 +8,7 @@ import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,10 +37,10 @@ public class CaseWhen3 extends AbstractFunction3 {
         final StringBuffer sb = new StringBuffer();
         sb.append("CASE");
         for (final T2<ICondition3, ISingleOperand3> whenThen : whenThenPairs) {
-            sb.append(format(" WHEN %s THEN %s", whenThen._1.sql(metadata, dbVersion), getOperandSql(whenThen._2, metadata, dbVersion)));
+            sb.append(String.format(" WHEN %s THEN %s", whenThen._1.sql(metadata, dbVersion), getOperandSql(whenThen._2, metadata, dbVersion)));
         }
         if (elseOperand != null) {
-            sb.append(format(" ELSE %s", getOperandSql(elseOperand, metadata, dbVersion)));
+            sb.append(String.format(" ELSE %s", getOperandSql(elseOperand, metadata, dbVersion)));
         }
         sb.append(" END");
         return sb.toString();
@@ -85,20 +86,20 @@ public class CaseWhen3 extends AbstractFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }        
-        
-        if (!(obj instanceof CaseWhen3)) {
-            return false;
-        }
-
-        final CaseWhen3 other = (CaseWhen3) obj;
-
-        return Objects.equals(whenThenPairs, other.whenThenPairs) && Objects.equals(elseOperand, other.elseOperand) && Objects.equals(typeCast, other.typeCast);
+        return this == obj
+               || obj instanceof CaseWhen3 that
+                  && Objects.equals(whenThenPairs, that.whenThenPairs)
+                  && Objects.equals(elseOperand, that.elseOperand)
+                  && Objects.equals(typeCast, that.typeCast)
+                  && super.equals(that);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("whenThenPairs", whenThenPairs)
+                .addIfNotNull("else", elseOperand)
+                .addIfNotNull("typeCast", typeCast);
+    }
+
 }

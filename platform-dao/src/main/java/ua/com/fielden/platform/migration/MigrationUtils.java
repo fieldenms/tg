@@ -19,7 +19,7 @@ import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.EntityMetadata.keyTypeInfo;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 // TODO This class uses both typeful metadata and reflection + EntityTypeInfo. The latter should be replaced.
 public class MigrationUtils {
@@ -81,7 +81,7 @@ public class MigrationUtils {
             result.add(propName);
         } else {
             for (final T2<String, Class<?>> keyMember : keyMembers) {
-                if (!EntityUtils.isPersistedEntityType(keyMember._2)) {
+                if (!isPersistentEntityType(keyMember._2)) {
                     result.add(propName + "." + keyMember._1);
                 } else {
                     result.addAll(keyPaths(propName + "." + keyMember._1, (Class<? extends AbstractEntity<?>>) keyMember._2));
@@ -123,7 +123,7 @@ public class MigrationUtils {
             }
         } else {
             for (final T2<String, Class<?>> keyMember : keyMembers) {
-                if (!EntityUtils.isPersistedEntityType(keyMember._2)) {
+                if (!isPersistentEntityType(keyMember._2)) {
                     result.add(keyMember._1);
                 } else {
                     result.addAll(keyPaths(keyMember._1, (Class<? extends AbstractEntity<?>>) keyMember._2));
@@ -144,7 +144,7 @@ public class MigrationUtils {
             final long countOfNullValuedIndices = indices.values().stream().filter(Objects::isNull).count();
             if (countOfNullValuedIndices > 0 && countOfNullValuedIndices != indices.size()) {
                 throw new DataMigrationException("Mapping for prop [" + propMd.name() + "] does not have all its members specified: " + indices.entrySet().stream().filter(entry -> entry.getValue() == null).map(Entry::getKey).collect(toList()));
-            } else if (!indices.values().contains(null)) {
+            } else if (!indices.containsValue(null)) {
                 result.add(new PropInfo(propMd.name(), propMd.type(), propMd.column(), propMd.utcType(), new ArrayList<>(indices.values())));
                 usedPaths.addAll(propMd.leafProps());
             } else if (propMd.required() && !updater) {
@@ -180,14 +180,14 @@ public class MigrationUtils {
     }
 
     public static Object transformValue(final Class<?> type, final List<Object> values, final IdCache cache) {
-        if (!isPersistedEntityType(type)) {
-            return values.get(0);
+        if (!isPersistentEntityType(type)) {
+            return values.getFirst();
         } else {
             final Map<Object, Long> cacheForType = cache.getCacheForType((Class<? extends AbstractEntity<?>>) type);
-            final Object entityKeyObject = values.size() == 1 ? values.get(0) : values;
+            final Object entityKeyObject = values.size() == 1 ? values.getFirst() : values;
             final Long result = cacheForType.get(entityKeyObject);
-            if (values.size() == 1 && values.get(0) != null && result == null) {
-                System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: [" + values.get(0) + "]");
+            if (values.size() == 1 && values.getFirst() != null && result == null) {
+                System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: [" + values.getFirst() + "]");
             }
             if (values.size() > 1 && !containsOnlyNull(values) && result == null) {
                 System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values);

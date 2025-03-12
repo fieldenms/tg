@@ -6,54 +6,32 @@ import ua.com.fielden.platform.entity.query.fluent.enums.Quantifier;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
-import java.util.Objects;
-
-public class QuantifiedPredicate3 implements ICondition3 {
-    public final ISingleOperand3 leftOperand;
-    public final SubQuery3 rightOperand;
-    public final Quantifier quantifier;
-    public final ComparisonOperator operator;
-
-    public QuantifiedPredicate3(final ISingleOperand3 leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final SubQuery3 rightOperand) {
-        this.leftOperand = leftOperand;
-        this.rightOperand = rightOperand;
-        this.operator = operator;
-        this.quantifier = quantifier;
-    }
+public record QuantifiedPredicate3(ISingleOperand3 leftOperand, ComparisonOperator operator,
+                                   Quantifier quantifier, SubQuery3 rightOperand)
+        implements ICondition3, ToString.IFormattable
+{
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        return leftOperand.sql(metadata, dbVersion) + " " + operator + " " + quantifier + " " + rightOperand.sql(metadata, dbVersion);
+        return leftOperand.sql(metadata, dbVersion) + " " + operator + " " + quantifier + " " + rightOperand.sql(
+                metadata, dbVersion);
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + leftOperand.hashCode();
-        result = prime * result + operator.hashCode();
-        result = prime * result + quantifier.hashCode();
-        result = prime * result + rightOperand.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof QuantifiedPredicate3)) {
-            return false;
-        }
-
-        final QuantifiedPredicate3 other = (QuantifiedPredicate3) obj;
-
-        return Objects.equals(leftOperand, other.leftOperand) &&
-                Objects.equals(rightOperand, other.rightOperand) &&
-                Objects.equals(quantifier, other.quantifier) &&
-                Objects.equals(operator, other.operator);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("operand", operator)
+                .add("quantifier", quantifier)
+                .add("left", leftOperand)
+                .add("right", rightOperand)
+                .$();
     }
 
 }

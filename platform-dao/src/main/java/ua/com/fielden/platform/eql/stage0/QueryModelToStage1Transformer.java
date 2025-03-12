@@ -18,6 +18,7 @@ import ua.com.fielden.platform.eql.stage1.queries.SubQueryForExists1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sundries.OrderBys1;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -82,7 +83,7 @@ public class QueryModelToStage1Transformer {
         return new SubQueryForExists1(parseTokensIntoComponents(qryModel, null));
     }
 
-    private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
+    private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final @Nullable OrderingModel orderModel) {
         final EqlCompilationResult.Select result = new EqlCompiler(this).compile(qryModel.getTokenSource(), EqlCompilationResult.Select.class);
 
         if (orderModel != null && !result.orderBys().isEmpty()) {
@@ -90,11 +91,11 @@ public class QueryModelToStage1Transformer {
         }
         final OrderBys1 orderBys = orderModel != null ? produceOrderBys(orderModel) : result.orderBys();
 
-        final Conditions1 udfModel = result.joinRoot() == null
-                ? EMPTY_CONDITIONS
-                : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, result.joinRoot().mainSource());
+        final Conditions1 udfModel = result.maybeJoinRoot()
+                .map(joinRoot -> generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, joinRoot.mainSource()))
+                .orElse(EMPTY_CONDITIONS);
         return new QueryComponents1(
-                result.joinRoot(), result.whereConditions(), udfModel, result.yields(), result.groups(),
+                result.maybeJoinRoot(), result.whereConditions(), udfModel, result.yields(), result.groups(),
                 orderBys,
                 qryModel.isYieldAll(), qryModel.shouldMaterialiseCalcPropsAsColumnsInSqlQuery());
     }

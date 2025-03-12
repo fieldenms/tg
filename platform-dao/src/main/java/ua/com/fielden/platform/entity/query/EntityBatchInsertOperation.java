@@ -46,6 +46,8 @@ import static java.util.stream.Collectors.toList;
  */
 public class EntityBatchInsertOperation {
 
+    private static final int DEFAULT_BATCH_SIZE = 1;
+
     private final IDbVersionProvider dbVersionProvider;
     private final EntityBatchInsertTables entityBatchInsertTables;
     private final Supplier<TransactionalExecution> trExecSupplier;
@@ -67,9 +69,12 @@ public class EntityBatchInsertOperation {
      * Inserts streaming entities in batches of {@code batchSize},
      * Any persisted or non-persistent entities are skipped.
      * From this point of view, this function is different than {@link #batchInsert(List, int)}, which throws a runtime exception in such cases.
+     *
+     * @param  batchSize  if <= 0, a default batch size will be used.
      */
     public <T extends AbstractEntity<?>> int batchInsert(final Stream<T> stream, final int batchSize) {
-        return StreamUtils.windowed(stream.filter(ent -> ent.isPersistent() && !ent.isPersisted()), batchSize).mapToInt(xs -> batchInsert(xs, xs.size())).sum();
+        return StreamUtils.windowed(stream.filter(ent -> ent.isPersistent() && !ent.isPersisted()), checkBatchSize(batchSize))
+                .mapToInt(xs -> batchInsert(xs, xs.size())).sum();
     }
     
     /**
@@ -94,7 +99,7 @@ public class EntityBatchInsertOperation {
 
         final TransactionalExecution trEx = trExecSupplier.get(); // this is a single transaction that will save all batches. 
 
-        Iterators.partition(entities.iterator(), batchSize > 0 ? batchSize : 1) //
+        Iterators.partition(entities.iterator(), checkBatchSize(batchSize)) //
                 .forEachRemaining(batch -> { //
                     trEx.exec(conn -> {
                         try (final PreparedStatement pst = conn.prepareStatement(insertStmt)) {
@@ -130,6 +135,10 @@ public class EntityBatchInsertOperation {
                 });
 
         return insertedCount.get(); 
+    }
+
+    private static int checkBatchSize(final int batchSize) {
+        return batchSize > 0 ? batchSize : DEFAULT_BATCH_SIZE;
     }
 
     private static String generateInsertStmt(final String tableName, final List<String> columns, final DbVersion dbVersion) {

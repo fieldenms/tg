@@ -1,43 +1,27 @@
 package ua.com.fielden.platform.eql.retrieval;
 
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.persistence.HibernateConstants.H_BIGDECIMAL;
-import static ua.com.fielden.platform.persistence.HibernateConstants.H_BOOLEAN;
-import static ua.com.fielden.platform.persistence.HibernateConstants.H_DATETIME;
-import static ua.com.fielden.platform.persistence.HibernateConstants.H_ENTITY;
-import static ua.com.fielden.platform.persistence.HibernateConstants.H_INTEGER;
-import static ua.com.fielden.platform.persistence.HibernateConstants.H_LONG;
-import static ua.com.fielden.platform.persistence.HibernateConstants.H_STRING;
-import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
-import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
-import static ua.com.fielden.platform.utils.EntityUtils.*;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.type.Type;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
-import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
+import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForComponentType;
 import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
-import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
-import ua.com.fielden.platform.eql.retrieval.records.HibernateScalar;
-import ua.com.fielden.platform.eql.retrieval.records.QueryResultLeaf;
-import ua.com.fielden.platform.eql.retrieval.records.ValueTree;
-import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
+import ua.com.fielden.platform.eql.retrieval.records.*;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import java.math.BigDecimal;
+import java.util.*;
+
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.eql.meta.PropType.LONG_PROP_TYPE;
+import static ua.com.fielden.platform.persistence.HibernateConstants.*;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 public final class EntityResultTreeBuilder {
 
@@ -140,7 +124,7 @@ public final class EntityResultTreeBuilder {
                 currentGroup = yc.name();
 
                 // can be either ET prop, or primitive prop
-                if (yc.propType().isNotNull() && (isPersistedEntityType(yc.propType().javaType()) || isSyntheticEntityType(yc.propType().javaType()))) {
+                if (yc.propType().isNotNull() && (isPersistentEntityType(yc.propType().javaType()) || isSyntheticEntityType(yc.propType().javaType()))) {
                     currentResultType = (Class<? extends AbstractEntity<?>>) yc.propType().javaType();
                     currentGroupDetails.add(new YieldedColumn(ID, LONG_PROP_TYPE, yc.column()));
                 } else {

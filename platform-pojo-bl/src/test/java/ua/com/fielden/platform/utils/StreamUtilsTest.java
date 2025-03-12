@@ -246,20 +246,9 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void windowing_a_stream_with_a_non_positive_window_size_results_in_parts_with_a_single_element_each() {
-        final Stream<List<Integer>> negWindowed = StreamUtils.windowed(Stream.of(0, 1, 2), -1);
-        final List<List<Integer>> negWindowedAsList = negWindowed.collect(toList());
-        assertEquals(3, negWindowedAsList.size());
-        assertEquals(listOf(0), negWindowedAsList.get(0));
-        assertEquals(listOf(1), negWindowedAsList.get(1));
-        assertEquals(listOf(2), negWindowedAsList.get(2));
-
-        final Stream<List<Integer>> zeroWindowed = StreamUtils.windowed(Stream.of(0, 1, 2), 0);
-        final List<List<Integer>> zeroWindowedAsList = zeroWindowed.collect(toList());
-        assertEquals(3, zeroWindowedAsList.size());
-        assertEquals(listOf(0), zeroWindowedAsList.get(0));
-        assertEquals(listOf(1), zeroWindowedAsList.get(1));
-        assertEquals(listOf(2), zeroWindowedAsList.get(2));
+    public void windowing_a_stream_with_a_non_positive_window_size_is_an_error() {
+        assertThrows(IllegalArgumentException.class, () -> StreamUtils.windowed(Stream.of(0, 1, 2), -1));
+        assertThrows(IllegalArgumentException.class, () -> StreamUtils.windowed(Stream.of(0, 1, 2), 0));
     }
 
     @Test
@@ -315,6 +304,43 @@ public class StreamUtilsTest {
     public void supplyIfEmpty_returns_alternative_stream_if_original_is_empty() {
         final var xsAlternative = StreamUtils.supplyIfEmpty(Stream.empty(), () -> 0).limit(3).toList();
         assertEquals(CollectionUtil.listOf(0, 0, 0), xsAlternative);
+    }
+
+    @Test
+    public void removeAll_returns_a_stream_with_specified_elements_removed() {
+        assertEquals(IntStream.rangeClosed(6, 10).boxed().toList(),
+                     StreamUtils.removeAll(IntStream.rangeClosed(1, 10).boxed(),
+                                           IntStream.rangeClosed(1, 5).boxed().toList())
+                             .toList());
+
+        assertEquals(List.of("b"),
+                     StreamUtils.removeAll(Stream.of("a", "b", "c"), List.of("A", ".", "C"), String::equalsIgnoreCase)
+                             .toList());
+    }
+
+    @Test
+    public void removeAll_doesnt_remove_anything_if_items_to_remove_are_empty() {
+        assertEquals(List.of("a", "b"),
+                     StreamUtils.removeAll(Stream.of("a", "b"), List.of()).toList());
+
+        assertEquals(List.of("a", "b"),
+                     StreamUtils.removeAll(Stream.of("a", "b"), List.of(), String::equalsIgnoreCase)
+                             .toList());
+    }
+
+    @Test
+    public void removeAll_returns_an_empty_stream_given_an_empty_stream() {
+        assertEquals(List.of(),
+                     StreamUtils.removeAll(Stream.of(), List.of("a")).toList());
+
+        assertEquals(List.of(),
+                     StreamUtils.removeAll(Stream.of(), List.of("a"), String::equalsIgnoreCase).toList());
+    }
+
+    @Test
+    public void removeAll_with_default_predicate_allows_nulls_and_treats_them_like_other_objects() {
+        assertEquals(List.of("a"),
+                     StreamUtils.removeAll(Stream.of("a", null, null, "b"), listOf("b", null)).toList());
     }
 
     @Test

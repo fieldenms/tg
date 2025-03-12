@@ -1,28 +1,19 @@
 package ua.com.fielden.platform.eql.stage1.sundries;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableCollection;
-import static java.util.Collections.unmodifiableSortedMap;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
+import ua.com.fielden.platform.utils.ToString;
 
-public class Yields1 {
+import java.util.*;
+
+import static java.util.Collections.*;
+import static java.util.stream.Collectors.toSet;
+
+public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.IFormattable {
     public static final Yields1 EMPTY_YIELDS = new Yields1(emptyList());
-
-    private final SortedMap<String, Yield1> yieldsMap = new TreeMap<String, Yield1>();
+    public static final String ERR_QUERY_CONTAINS_DUPLICATE_YIELDS = "Query contains duplicate yields for alias [%s].";
 
     public static Yields1 yields(final Collection<Yield1> yields) {
         return yields.isEmpty() ? EMPTY_YIELDS : new Yields1(yields);
@@ -32,61 +23,57 @@ public class Yields1 {
         return yields.length == 0 ? EMPTY_YIELDS : new Yields1(yields);
     }
 
-    public Yields1(final Collection<Yield1> yields) {
-        for (final Yield1 yield : yields) {
-            addYield(yield);
-        }
+    private Yields1(final Collection<Yield1> yields) {
+        this(makeYieldsMap(yields));
     }
 
     private Yields1(final Yield1... yields) {
-        for (final Yield1 yield : yields) {
-            addYield(yield);
-        }
+        this(Arrays.asList(yields));
     }
 
     public Yields2 transform(final TransformationContextFromStage1To2 context) {
-        return yieldsMap.isEmpty() ? Yields2.EMPTY_YIELDS : new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).collect(toList()));
-    }
-
-    public void addYield(final Yield1 yield) {
-        if (yieldsMap.containsKey(yield.alias)) {
-            throw new EqlStage1ProcessingException(format("Query contains duplicate yields for alias [%s].", yield.alias));
-        }
-        yieldsMap.put(yield.alias, yield);
+        return yieldsMap.isEmpty()
+               ? Yields2.EMPTY_YIELDS
+               : new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).toList());
     }
 
     public Collection<Yield1> getYields() {
         return unmodifiableCollection(yieldsMap.values());
     }
 
-    public SortedMap<String, Yield1> getYieldsMap() {
-        return unmodifiableSortedMap(yieldsMap);
+    public boolean isEmpty() {
+        return yieldsMap.isEmpty();
     }
 
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        return yieldsMap.isEmpty() ? emptySet() : yieldsMap.values().stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+        return yieldsMap.isEmpty()
+               ? emptySet()
+               : yieldsMap.values().stream().map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+    }
+
+    private static SortedMap<String, Yield1> makeYieldsMap(final Collection<Yield1> yields) {
+        final var map = new TreeMap<String, Yield1>();
+
+        for (final Yield1 yield : yields) {
+            if (map.containsKey(yield.alias())) {
+                throw new EqlStage1ProcessingException(ERR_QUERY_CONTAINS_DUPLICATE_YIELDS.formatted(yield.alias()));
+            }
+            map.put(yield.alias(), yield);
+        }
+
+        return unmodifiableSortedMap(map);
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + yieldsMap.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Yields1)) {
-            return false;
-        }
-
-        final Yields1 other = (Yields1) obj;
-
-        return yieldsMap.equals(other.yieldsMap);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("yieldsMap", yieldsMap)
+                .$();
     }
+
 }

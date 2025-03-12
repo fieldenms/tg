@@ -1,3 +1,10 @@
+import '../polymer/polymer-legacy.js';
+import '../iron-icon/iron-icon.js';
+import '../paper-styles/default-theme.js';
+import { PaperInkyFocusBehavior } from '../paper-behaviors/paper-inky-focus-behavior.js';
+import { Polymer } from '../polymer/lib/legacy/polymer-fn.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,12 +15,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
-import "../iron-icon/iron-icon.js";
-import "../paper-styles/default-theme.js";
-import { PaperInkyFocusBehavior } from "../paper-behaviors/paper-inky-focus-behavior.js";
-import { Polymer } from "../polymer/lib/legacy/polymer-fn.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
+
 /**
 Material design: [Icon
 toggles](https://www.google.com/design/spec/components/buttons.html#buttons-toggle-buttons)
@@ -74,9 +76,9 @@ Custom property | Description | Default
 @element paper-icon-button
 @demo demo/index.html
 */
-
 Polymer({
   is: 'paper-icon-button',
+
   _template: html`
     <style>
       :host {
@@ -138,43 +140,39 @@ Polymer({
     <iron-icon id="icon" src="[[src]]" icon="[[icon]]"
                alt$="[[alt]]"></iron-icon>
   `,
-  hostAttributes: {
-    role: 'button',
-    tabindex: '0'
-  },
+
+  hostAttributes: {role: 'button', tabindex: '0'},
+
   behaviors: [PaperInkyFocusBehavior],
-  registered: function () {
+
+  registered: function() {
     this._template.setAttribute('strip-whitespace', '');
   },
+
   properties: {
     /**
      * The URL of an image for the icon. If the src property is specified,
      * the icon property should not be.
      */
-    src: {
-      type: String
-    },
+    src: {type: String},
 
     /**
      * Specifies the icon name or index in the set of icons available in
      * the icon's icon set. If the icon property is specified,
      * the src property should not be.
      */
-    icon: {
-      type: String
-    },
+    icon: {type: String},
 
     /**
      * Specifies the alternate text for the button, for accessibility.
      */
-    alt: {
-      type: String,
-      observer: '_altChanged'
-    }
+    alt: {type: String, observer: '_altChanged'}
   },
-  _altChanged: function (newValue, oldValue) {
-    var label = this.getAttribute('aria-label'); // Don't stomp over a user-set aria-label.
 
+  _altChanged: function(newValue, oldValue) {
+    var label = this.getAttribute('aria-label');
+
+    // Don't stomp over a user-set aria-label.
     if (!label || oldValue == label) {
       this.setAttribute('aria-label', newValue);
     }

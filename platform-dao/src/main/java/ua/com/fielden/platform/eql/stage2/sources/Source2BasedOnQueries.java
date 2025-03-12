@@ -1,13 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.sources;
 
-import static java.util.stream.Collectors.toSet;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
@@ -18,6 +10,11 @@ import ua.com.fielden.platform.eql.stage2.queries.AbstractQuery2;
 import ua.com.fielden.platform.eql.stage2.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnQueries;
+import ua.com.fielden.platform.utils.ToString;
+
+import java.util.*;
+
+import static java.util.stream.Collectors.toSet;
 
 public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<Source3BasedOnQueries> {
     private final List<SourceQuery2> models;
@@ -47,21 +44,11 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof Source2BasedOnQueries)) {
-            return false;
-        }
-
-        final Source2BasedOnQueries other = (Source2BasedOnQueries) obj;
-
-        return Objects.equals(models, other.models) && Objects.equals(isSyntheticEntity, other.isSyntheticEntity);
+        return this == obj
+               || obj instanceof Source2BasedOnQueries that
+                  && Objects.equals(models, that.models)
+                  && isSyntheticEntity == that.isSyntheticEntity
+                  && super.equals(that);
     }
 
     @Override
@@ -92,7 +79,19 @@ public class Source2BasedOnQueries extends AbstractSource2 implements ISource2<S
     }
 
     @Override
-    public String toString() {
-        return sourceType().getSimpleName();
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("isSyntheticEntity", isSyntheticEntity)
+                .add("models", models);
     }
+
+    @Override
+    public String toStringCompact() {
+        // It is not simple to determine whether the full representation will be compact, so let's exclude `models`.
+        return ToString.standard
+                .toString(this.getClass())
+                .add("sourceType", sourceType().getSimpleName())
+                .$();
+    }
+
 }

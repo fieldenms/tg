@@ -21,6 +21,7 @@ import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import static ua.com.fielden.platform.eql.antlr.EQLParser.*;
@@ -65,7 +66,7 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
         };
     }
 
-    private IJoinNode1<? extends IJoinNode2<?>> compileJoinRoot(final SelectContext ctx) {
+    private Optional<IJoinNode1<? extends IJoinNode2<?>>> compileJoinRoot(final SelectContext ctx) {
         final String alias = ctx.alias == null ? null : ((AsToken) ctx.alias).alias;
 
         final ISource1<?> firstSource;
@@ -75,12 +76,12 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
             case SelectToken.Values $ -> {
                 // TODO replace null by singleton of new ISource1 or IJoinNode1 subtype
                 // we can return early because sourceless selects can't have joins
-                return null;
+                return Optional.empty();
             }
             case SelectToken.Models tok -> firstSource = compileModelsSource(tok.models, alias);
         }
 
-        return compileJoin(new JoinLeafNode1(firstSource), ctx.join());
+        return Optional.of(compileJoin(new JoinLeafNode1(firstSource), ctx.join()));
     }
 
     /**
@@ -135,7 +136,7 @@ final class SelectVisitor extends AbstractEqlVisitor<EqlCompilationResult.Select
     }
 
     private ISource1<? extends ISource2<?>> compileEntitySource(final Class<? extends AbstractEntity<?>> entityType, final String alias) {
-        if (isPersistedEntityType(entityType)) {
+        if (isPersistentEntityType(entityType)) {
             return new Source1BasedOnPersistentType(entityType, alias, transformer.nextSourceId());
         }
         else if (isSyntheticEntityType(entityType) || isSyntheticBasedOnPersistentEntityType(entityType) || isUnionEntityType(entityType)) {

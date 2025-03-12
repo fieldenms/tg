@@ -1,14 +1,12 @@
 package ua.com.fielden.platform.entity.query;
 
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 public final class EntityContainer<R extends AbstractEntity<?>> {
     private final Class<R> resultType;
@@ -42,14 +40,14 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         }
 
         return (countAllDataItems() == 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null) || (isUnionEntityType(resultType) && countAllDataItems() == 0)
-        || (isPersistedEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) && primitives.containsKey(AbstractEntity.ID) && primitives.get(AbstractEntity.ID) == null;
+        || (isPersistentEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) && primitives.containsKey(AbstractEntity.ID) && primitives.get(AbstractEntity.ID) == null;
     }
 
     public Long getId() {
         final Object idObject = primitives.get(AbstractEntity.ID);
 
         if (idObject != null) {
-            return Long.valueOf(((Number) idObject).longValue());
+            return ((Number) idObject).longValue();
         } else if (isUnionEntityType(resultType)) {
             final Optional<Long> opId = entities.values().stream()
                     .map(EntityContainer::id)

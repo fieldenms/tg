@@ -8,6 +8,7 @@ import ua.com.fielden.platform.eql.stage3.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sundries.Yield3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.utils.StreamUtils;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,6 +30,8 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     private final List<SourceQuery3> models;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
+        // It is sufficient to use just the first model's yields because all models in a list must share the same yield aliases.
+        // See YieldInfoNodesGenerator.
         super("Q_" + sqlId, id, obtainColumnsFromYields(validateModels(models).getFirst().yields.getYields()));
         this.models = ImmutableList.copyOf(models);
     }
@@ -47,7 +50,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     }
     
     private static Map<String, String> obtainColumnsFromYields(final Collection<Yield3> yields) {
-        return yields.stream().collect(toMap(y -> y.alias, y -> y.column));
+        return yields.stream().collect(toMap(Yield3::alias, Yield3::column));
     }
 
     @Override
@@ -78,7 +81,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
         // in each column of the result set find the first value with non-NULL type; assume that all values in the same
         // column are compatible with each other in terms of their types
         return transpose(models, q -> q.yields.getYields().stream())
-                .map(column -> column.stream().map(y -> y.type).filter(PropType::isNotNull).findFirst().orElse(NO_EXPECTED_TYPE))
+                .map(column -> column.stream().map(Yield3::type).filter(PropType::isNotNull).findFirst().orElse(NO_EXPECTED_TYPE))
                 .toList();
     }
 
@@ -97,21 +100,15 @@ public class Source3BasedOnQueries extends AbstractSource3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof Source3BasedOnQueries)) {
-            return false;
-        }
-        
-        final Source3BasedOnQueries other = (Source3BasedOnQueries) obj;
-        
-        return Objects.equals(models, other.models);
+        return this == obj
+               || obj instanceof Source3BasedOnQueries that
+                  && Objects.equals(this.models, that.models)
+                  && super.equals(that);
+    }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("models", models);
     }
 
 }

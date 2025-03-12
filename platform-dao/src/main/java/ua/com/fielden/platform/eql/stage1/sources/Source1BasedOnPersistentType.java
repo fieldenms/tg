@@ -37,9 +37,4 @@ public class Source1BasedOnPersistentType extends AbstractSource1<Source2BasedOn
         return this == obj || super.equals(obj) && obj instanceof Source1BasedOnPersistentType;
     }
 
-    @Override
-    public String toString() {
-        return "Source(%s, alias=%s, id=%s)".formatted(sourceType().getTypeName(), alias, id);
-    }
-
 }

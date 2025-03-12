@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
-
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.CountOf3;
+
+import static ua.com.fielden.platform.eql.meta.PropType.INTEGER_PROP_TYPE;
 
 public class CountOf2 extends SingleOperandFunction2<CountOf3> {
     private final boolean distinct;
@@ -31,20 +31,10 @@ public class CountOf2 extends SingleOperandFunction2<CountOf3> {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof CountOf2)) {
-            return false;
-        }
-        
-        final CountOf2 other = (CountOf2) obj;
-        
-        return distinct == other.distinct;
+        return this == obj
+               || obj instanceof CountOf2 that
+                  && distinct == that.distinct
+                  && super.equals(that);
     }
+
 }

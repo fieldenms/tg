@@ -14,7 +14,7 @@ public class EqlDomainMetadataTest extends EqlTestCase {
 
     @Test
     public void topological_sorting_of_directly_and_transitively_dependent_calc_props_ensures_correct_order() {
-        final List<String> actOrder = DependentCalcPropsOrder.orderDependentCalcProps(querySourceInfoProvider(), qb(), querySourceInfoProvider().getModelledQuerySourceInfo(TeVehicle.class));
+        final List<String> actOrder = DependentCalcPropsOrder.orderDependentCalcProps(querySourceInfoProvider(), metadata(), qb(), querySourceInfoProvider().getModelledQuerySourceInfo(TeVehicle.class));
         final Integer replacedByTwicePosition = actOrder.indexOf("replacedByTwice");
         final Integer theSameVehiclePosition = actOrder.indexOf("theSameVehicle");
         final Integer replacedByTwiceModelPosition = actOrder.indexOf("replacedByTwiceModel");
