@@ -715,7 +715,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                              // Workaround: explicitly yield all audit and service properties, because yieldAll must not
                              // be used when there is only one audit-entity version (EQL will not compile).
                              codeSetOf(concatSet(activeAuditProperties.stream().map(PropertySpec::name).toList(),
-                                                 Set.of(ID, VERSION),
+                                                 Set.of(ID),
                                                  AbstractSynAuditEntity.BASE_PROPERTIES)),
                              // Yield null into hidden audit-properties
                              codeMapOf(mkNullYields(hiddenAuditProperties), "$S", "$L"))
@@ -768,7 +768,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                                     final var otherYieldsArg = codeSetOf(
                                             concatSet(Maps.filterValues(yields, Optional::isPresent).keySet()
                                                               .stream().map(PropertySpec::name).toList(),
-                                                      Set.of(AbstractEntity.ID, AbstractEntity.VERSION),
+                                                      Set.of(AbstractEntity.ID),
                                                       AbstractSynAuditEntity.BASE_PROPERTIES));
 
                                     return FieldSpec.builder(eqlQueryType,

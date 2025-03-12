@@ -29,16 +29,46 @@ public final class SynAuditEntityUtils {
             final Set<String> yields,
             final Map<String, Object> customYields)
     {
-        var part = EntityQueryUtils.select(auditEntityType)
-                .yieldAll();
-        for (final var yield : yields) {
-            part = part.yield().prop(yield).as(yield);
+        final var part = EntityQueryUtils.select(auditEntityType);
 
+        // This part is a bit tricky because we need to yield at least one property to get to the right fluent interface.
+        if (!yields.isEmpty()) {
+            final var yieldsIter = yields.iterator();
+            final var yield0 = yieldsIter.next();
+            return mkModelCurrent_(part.yield().prop(yield0).as(yield0),
+                                 yieldsIter,
+                                 customYields.entrySet().iterator())
+                    .modelAsEntity(synAuditEntityType);
         }
-        for (final var entry : customYields.entrySet()) {
-            part = part.yield().val(entry.getValue()).as(entry.getKey());
+        else if (!customYields.isEmpty()) {
+            final var customYieldsIter = customYields.entrySet().iterator();
+            final var customYield0 = customYieldsIter.next();
+            return mkModelCurrent_(part.yield().val(customYield0.getValue()).as(customYield0.getKey()),
+                                 yields.iterator(),
+                                 customYieldsIter)
+                    .modelAsEntity(synAuditEntityType);
         }
-        return part.modelAsEntity(synAuditEntityType);
+        else {
+            return part.modelAsEntity(synAuditEntityType);
+        }
+    }
+
+    private static ISubsequentCompletedAndYielded<? extends AbstractAuditEntity<?>> mkModelCurrent_(
+            ISubsequentCompletedAndYielded<? extends AbstractAuditEntity<?>> part,
+            final Iterator<String> yieldsIter,
+            final Iterator<Map.Entry<String, Object>> customYieldsIter)
+    {
+        while (yieldsIter.hasNext()) {
+            final var next = yieldsIter.next();
+            part = part.yield().prop(next).as(next);
+        }
+
+        while (customYieldsIter.hasNext()) {
+            final var next = customYieldsIter.next();
+            part = part.yield().val(next.getValue()).as(next.getKey());
+        }
+
+        return part;
     }
 
     /**

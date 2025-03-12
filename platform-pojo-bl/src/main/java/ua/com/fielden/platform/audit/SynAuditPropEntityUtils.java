@@ -20,7 +20,6 @@ public final class SynAuditPropEntityUtils {
     {
         return select(auditPropType)
                 .yield().prop(ID).as(ID)
-                .yield().prop(VERSION).as(VERSION)
                 .yield()
                     .model(select(auditType).where().prop(ID).eq().extProp(join(".", AbstractAuditProp.AUDIT_ENTITY, ID)).modelAsEntity(synAuditType))
                     .as(AbstractSynAuditProp.AUDIT_ENTITY)
