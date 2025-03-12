@@ -56,7 +56,7 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
         final var queryYields = yields(yieldProp("id", querySource, "id", LONG_PROP_TYPE),
                                        yieldProp("key", querySource, "key", STRING_PROP_TYPE));
         final var queryOrdering = orders(new OrderBy3(queryYields.yieldsMap().get("key"), false),
-                                         new OrderBy3(queryYields.yieldsMap().get("id"), true));
+                                         new OrderBy3(queryYields.yieldsMap().get("id"), false));
 
         final var expectedQry = qry(sources(querySource),
                                     queryYields,

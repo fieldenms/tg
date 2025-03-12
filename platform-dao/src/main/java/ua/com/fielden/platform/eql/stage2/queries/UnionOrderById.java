@@ -62,7 +62,8 @@ final class UnionOrderById {
                         .stream()
                         .filter(yield -> isPropId(yield.operand()))
                         .findAny();
-                return maybeYieldId.map(yield -> new OrderBy2(yield.alias(), true));
+                // The order must align with the index definition for `id`, which comes from its primary key constraint, where ascending is the default.
+                return maybeYieldId.map(yield -> new OrderBy2(yield.alias(), false));
             }
         }
     }
