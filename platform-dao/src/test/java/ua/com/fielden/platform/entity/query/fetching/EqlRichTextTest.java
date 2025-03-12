@@ -65,7 +65,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void RichText_components_can_be_used_as_values() {
+    public void RichText_components_formattedText_and_coreText_can_be_used_as_values() {
         final var richText = RichText.fromHtml("<code>cons</code> <b>does not</b> evaluate its arguments in a <i>lazy</i> language.");
         final var key = "1";
         save(new_(EntityWithRichText.class, key).setText(richText));
