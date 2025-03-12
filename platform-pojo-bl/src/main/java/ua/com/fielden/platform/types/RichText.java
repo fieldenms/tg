@@ -87,7 +87,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     // !!! KEEP THIS CONSTRUCTOR PRIVATE !!!
     private RichText(final String formattedText, final String coreText, final String searchText, final Result validationResult) {
         if (validationResult.isSuccessful()) {
-            requireNonNull(formattedText,  FORMATTED_TEXT);
+            requireNonNull(formattedText, FORMATTED_TEXT);
             requireNonNull(coreText, CORE_TEXT);
         }
         else {
@@ -238,7 +238,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         }
 
         @Override
-        public String searchText() {
+        String searchText() {
             throw new IllegalStateException(ERR_ACCESSING_INVALID_VALUES.formatted("Search"));
         }
 
