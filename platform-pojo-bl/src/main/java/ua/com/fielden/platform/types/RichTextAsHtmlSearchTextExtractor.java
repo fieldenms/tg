@@ -46,7 +46,7 @@ final class RichTextAsHtmlSearchTextExtractor {
                 node -> node instanceof Element element
                         && (equalTagNames("a", element.tagName()) || equalTagNames("img", element.tagName())));
 
-        final var links = new ArrayList<String>();
+        final var links = new LinkedHashSet<String>();
 
         final var builder = foldLeft(
                 nodes,
