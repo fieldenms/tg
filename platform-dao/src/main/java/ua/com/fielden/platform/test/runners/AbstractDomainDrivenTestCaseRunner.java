@@ -196,6 +196,10 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
 
     @Override
     protected boolean isIgnored(final FrameworkMethod child) {
+        if (super.isIgnored(child)) {
+            return true;
+        }
+
         final var atWithDbVersion = child.getAnnotation(WithDbVersion.class);
         final var dbVersionMatches = atWithDbVersion == null || atWithDbVersion.value() == dbVersionProvider.dbVersion();
         if (!dbVersionMatches) {
