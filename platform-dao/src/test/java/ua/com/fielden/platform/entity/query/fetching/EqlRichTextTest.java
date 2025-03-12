@@ -48,19 +48,19 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
                            .exists(select(EntityWithRichText.class).where()
                                            .prop("key").eq().val(key)
                                            .and()
-                                           .prop(join(".", "text", CORE_TEXT)).isNotNull()
+                                           .prop( "text.coreText").isNotNull()
                                            .model()));
         assertTrue(co$(EntityWithRichText.class)
                            .exists(select(EntityWithRichText.class).where()
                                            .prop("key").eq().val(key)
                                            .and()
-                                           .prop(join(".", "text", FORMATTED_TEXT)).isNotNull()
+                                           .prop("text.formattedText").isNotNull()
                                            .model()));
         assertTrue(co$(EntityWithRichText.class)
                            .exists(select(EntityWithRichText.class).where()
                                            .prop("key").eq().val(key)
                                            .and()
-                                           .prop(join(".", "text", SEARCH_TEXT)).isNotNull()
+                                           .prop("text.searchText").isNotNull()
                                            .model()));
     }
 
@@ -90,7 +90,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         save(new_(EntityWithRichText.class, "1").setText(richText));
 
         final var co = co(EntityWithRichText.class);
-        final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop(join(".", "text", FORMATTED_TEXT)).like().val("привіт%").model()).model());
+        final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop("text.formattedText").like().val("привіт%").model()).model());
         assertNotNull(entity);
         assertEquals(richText, entity.getText());
     }
@@ -101,7 +101,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         save(new_(EntityWithRichText.class, "1").setText(richText));
 
         final var co = co(EntityWithRichText.class);
-        final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop(join(".", "text", CORE_TEXT)).like().val("привіт%").model()).model());
+        final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop("text.coreText").like().val("привіт%").model()).model());
         assertNotNull(entity);
         assertEquals(richText.coreText(), entity.getText().coreText());
     }
@@ -112,7 +112,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         save(new_(EntityWithRichText.class, "1").setText(richText));
 
         final var co = co(EntityWithRichText.class);
-        final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop(join(".", "text", SEARCH_TEXT)).like().val("привіт%").model()).model());
+        final EntityWithRichText entity = co.getEntity(from(select(EntityWithRichText.class).where().prop("text.searchText").like().val("привіт%").model()).model());
         assertNotNull(entity);
         assertEquals(richText, entity.getText());
     }
