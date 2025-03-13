@@ -424,7 +424,7 @@ function rgbToHex(rgbString) {
 function handleKeyEventsBeforeEditor(event) {
     const docSize = this._editor.wwEditor.view.state.tr.doc.content.size;
     const selection = this._getSelection();
-    if (event.keyCode === 13 /*Enter*/ && selection && selection[0] === 1 && selection[1] === docSize - 1 /*All text is selected*/) {
+    if (event.keyCode === 13 /*Enter*/ && selection && selection[0] === 0 /*Text is selected from beginning*/) {
         this._editor.insertText("\n");
         tearDownEvent(event);
     } else if ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/) {
@@ -1164,7 +1164,12 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         if (this._fakeSelection) {
             return this._fakeSelection;
         }
-        return this._editor.getSelection();
+        const selection = this._editor.getSelection();
+        if (selection && selection[0] === 1 && selection[1] !== 1) {
+            this._editor.setSelection(0, selection[1]);
+            return this._editor.getSelection();
+        }
+        return selection;
     }
 
     _applySelection(from, to) {
