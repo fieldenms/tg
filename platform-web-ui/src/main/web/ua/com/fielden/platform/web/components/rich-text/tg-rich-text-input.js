@@ -425,7 +425,7 @@ function handleKeyEventsBeforeEditor(event) {
     const docSize = this._editor.wwEditor.view.state.tr.doc.content.size;
     const selection = this._getSelection();
     if (event.keyCode === 13 /*Enter*/ && selection && selection[0] === 1 && selection[1] === docSize - 1 /*All text is selected*/) {
-        this._editor.insertText("");
+        this._editor.insertText("\n");
         tearDownEvent(event);
     } else if ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/) {
         const from = 1, to = this._editor.wwEditor.view.state.tr.doc.content.size - 1;
