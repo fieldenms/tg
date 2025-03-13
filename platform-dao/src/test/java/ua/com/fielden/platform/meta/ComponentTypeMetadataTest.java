@@ -51,6 +51,9 @@ public class ComponentTypeMetadataTest {
                 .assertProperty(RichText.CORE_TEXT, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(String.class))
+                .assertProperty(RichText.SEARCH_TEXT, p -> p
+                        .assertIs(PropertyMetadata.Persistent.class)
+                        .type().assertIs(Primitive.class).assertJavaType(String.class))
                 .assertProperty(RichText.FORMATTED_TEXT, p -> p
                         .assertIs(PropertyMetadata.Persistent.class)
                         .type().assertIs(Primitive.class).assertJavaType(String.class));

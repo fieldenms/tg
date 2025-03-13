@@ -20,9 +20,11 @@ import static ua.com.fielden.platform.types.RichText.*;
  *   <li> {@code null} - if formatted and core text are {@code null}, and validation result is absent.
  *   <li> {@link RichText.Invalid} - if validation result is present.
  *        A validation result is expected to be unsuccessful, it is an error otherwise.
- *   <li> Valid {@link RichText} - if both formatted and core text are present and are not {@code null}.
+ *   <li> Valid {@link RichText} - if formatted and core text are present and are not {@code null}.
  * </ol>
  * If neither of the above matches, it is an error.
+ * <p>
+ * Search text is not included in serialisation processes.
  */
 public class RichTextJsonDeserialiser extends StdDeserializer<RichText> {
 
