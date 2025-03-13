@@ -735,14 +735,20 @@ Polymer({
         }
     },
     
-    _previousEntry: function () {
+    _previousEntry: function (e) {
+        if (e.detail && e.detail.keyboardEvent && e.detail.keyboardEvent.skipNavigation) {
+            return;
+        }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
             this._lastAction.previousEntry();
         }
     },
     
-    _nextEntry: function () {
+    _nextEntry: function (e) {
+        if (e.detail && e.detail.keyboardEvent && e.detail.keyboardEvent.skipNavigation) {
+            return;
+        }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
             this._lastAction.nextEntry();
