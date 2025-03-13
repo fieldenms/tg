@@ -424,8 +424,12 @@ function rgbToHex(rgbString) {
 function handleKeyEventsBeforeEditor(event) {
     const docSize = this._editor.wwEditor.view.state.tr.doc.content.size;
     const selection = this._getSelection();
-    if (event.keyCode === 13 /*Enter*/ && selection && selection[0] === 0 && selection[1] === docSize /*All text is selected*/) {
+    if (event.keyCode === 13 /*Enter*/ && selection && selection[0] === 1 && selection[1] === docSize - 1 /*All text is selected*/) {
         this._editor.insertText("");
+        tearDownEvent(event);
+    } else if ((event.ctrlKey || event.metaKey) &&  event.keyCode === 65/*a*/) {
+        const from = 1, to = this._editor.wwEditor.view.state.tr.doc.content.size - 1;
+        this._editor.setSelection(from, to);
         tearDownEvent(event);
     } else if (event.keyCode === 32 /*space*/) {
         this._editor.wwEditor.view.state.schema.marks.link.spec.inclusive = false;
