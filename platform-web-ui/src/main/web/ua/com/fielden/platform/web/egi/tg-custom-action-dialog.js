@@ -522,8 +522,8 @@ Polymer({
         'alt+m': '_invertMaximiseStateAndStore',
         'alt+x': 'closeDialog',
         'ctrl+up': '_firstEntry',
-        'ctrl+left': '_previousEntry',
-        'ctrl+right': '_nextEntry',
+        'ctrl+left alt+left': '_previousEntry',
+        'ctrl+right alt+right': '_nextEntry',
         'ctrl+down': '_lastEntry'
     },
 

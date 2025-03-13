@@ -909,7 +909,7 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
         this.addOwnKeyBinding('ctrl+y meta+y', '_redo');
         this.addOwnKeyBinding('ctrl+u meta+u', '_createBulletList');
         this.addOwnKeyBinding('ctrl+o meta+o', '_createOrderedList');
-        this.addOwnKeyBinding('ctrl+right meta+right ctrl+left meta+left', '_skipNavigation');
+        this.addOwnKeyBinding('ctrl+right alt+right ctrl+left alt+left', '_skipNavigation');
         this.addOwnKeyBinding('esc', '_stopEditing');
         this.keyEventTarget = this._getEditableContent();
         //Adjust key event handler to be able to process events from _editor when event was prevented
