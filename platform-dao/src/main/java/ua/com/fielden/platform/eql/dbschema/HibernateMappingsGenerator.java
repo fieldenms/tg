@@ -159,10 +159,15 @@ public class HibernateMappingsGenerator {
                     return propNameClause + columnClause + typeClause + lengthClause + precisionClause + scaleClause + endClause;
                 },
                 multipleColumns -> {
-                    final var sb = new StringBuffer();
+                    final var sb = new StringBuilder();
                     sb.append(propNameClause + typeClause + ">\n");
                     for (final String name : multipleColumns) {
-                        sb.append("\t\t<column name=\"" + name + "\"" + endClause);
+                        if (name.endsWith("_SEARCHTEXT")) {
+                            sb.append("\t\t<column name=\"" + name + "\" read=\"NULL\"" + endClause);
+                        }
+                        else {
+                            sb.append("\t\t<column name=\"" + name + "\"" + endClause);
+                        }
                     }
                     sb.append("\t</property>\n");
                     return sb.toString();

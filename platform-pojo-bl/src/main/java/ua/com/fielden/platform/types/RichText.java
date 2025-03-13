@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.validation.DefaultValidatorForValueTypeWithValidation;
 import ua.com.fielden.platform.error.Result;
 
-import javax.annotation.Nullable;
 import java.util.Objects;
 
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
@@ -63,17 +62,16 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
     private final String coreText;
 
     /**
-     * The sole purpose of this component is to facilitate search.
-     * Therefore, it should be accessible only at the database level.
-     * Its value is lazily computed, which is expected to occur during persistence of RichText.
-     * Its value may also be assigned from a constructor argument when RichText is created from persistent state.
+     * The sole purpose of this component is to facilitate search at the database level.
+     * The field exists strictly to define the structure, and never gets its value retrieved from a database.
+     * The actual search text value is computed at the time when instances of `RichText` are being persisted.
      */
     @IsProperty
     @MapTo
     @PersistentType("nstring")
     @Title(value = "Search text", desc = "A simplified text with all HTML tags removed, intended for use in search functions.")
     @DenyIntrospection
-    private String searchText;
+    private final String searchText = null;
 
     private final Result validationResult;
 
@@ -85,7 +83,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
      * @param validationResult  the result of validation
      */
     // !!! KEEP THIS CONSTRUCTOR PRIVATE !!!
-    private RichText(final String formattedText, final String coreText, final String searchText, final Result validationResult) {
+    private RichText(final String formattedText, final String coreText, final Result validationResult) {
         if (validationResult.isSuccessful()) {
             requireNonNull(formattedText, FORMATTED_TEXT);
             requireNonNull(coreText, CORE_TEXT);
@@ -93,11 +91,9 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         else {
             requireNull(formattedText, FORMATTED_TEXT);
             requireNull(coreText, CORE_TEXT);
-            requireNull(searchText, SEARCH_TEXT);
         }
         this.formattedText = formattedText;
         this.coreText = coreText;
-        this.searchText = searchText;
         this.validationResult = validationResult;
     }
 
@@ -140,14 +136,14 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         final var validationResult = RichTextSanitiser.sanitiseHtml(input);
         if (validationResult.isSuccessful()) {
             final var coreText = RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.coreTextExtractorExtension);
-            return new RichText(input, coreText, null, validationResult);
+            return new RichText(input, coreText, validationResult);
         }
         else {
             return fromUnsuccessfulValidationResult(validationResult);
         }
     }
 
-    private static String makeSearchText(final RichText richText) {
+    public static String makeSearchText(final RichText richText) {
         class $ {
             static final RichTextAsHtmlCoreTextExtractor.Extension searchTextExtractorExtension = new RichTextAsHtmlCoreTextExtractor.Extension() {
                 static final String TOAST_UI_CHECKED_CLASS = "checked";
@@ -199,8 +195,8 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
          * @param formattedText text with markup
          * @param coreText      text without markup (its length is always less than or equal to that of formatted text)
          */
-        Persisted(final String formattedText, final String coreText, final @Nullable String searchText) {
-            super(formattedText, coreText, searchText, SUCCESSFUL);
+        Persisted(final String formattedText, final String coreText) {
+            super(formattedText, coreText, SUCCESSFUL);
         }
 
         @Override
@@ -215,7 +211,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
          * @param validationResult  the result of validation, which must be unsuccessful
          */
         private Invalid(final Result validationResult) {
-            super(null, null, null, requireUnsuccessful(validationResult));
+            super(null, null, requireUnsuccessful(validationResult));
         }
 
         private static Result requireUnsuccessful(final Result validationResult) {
@@ -235,11 +231,6 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         @Override
         public String coreText() {
             throw new IllegalStateException(ERR_ACCESSING_INVALID_VALUES.formatted("Core"));
-        }
-
-        @Override
-        String searchText() {
-            throw new IllegalStateException(ERR_ACCESSING_INVALID_VALUES.formatted("Search"));
         }
 
         @Override
@@ -275,20 +266,8 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         return coreText;
     }
 
-    /**
-     * Returns search text if this instance is valid.
-     * Otherwise, throws an exception.
-     */
-    String searchText() {
-        if (searchText == null) {
-            searchText = makeSearchText(this);
-        }
-
-        return searchText;
-    }
-
     Persisted asPersisted() {
-        return new Persisted(formattedText, coreText, searchText);
+        return new Persisted(formattedText, coreText);
     }
 
     /**

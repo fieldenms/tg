@@ -65,7 +65,7 @@ public class RichTextJsonDeserialiser extends StdDeserializer<RichText> {
 
         final String formattedText = requireText(formattedTextNode,  FORMATTED_TEXT, node);
         final String coreText = requireText(coreTextNode, CORE_TEXT, node);
-        return new RichText.Persisted(formattedText, coreText, null);
+        return new RichText.Persisted(formattedText, coreText);
     }
 
     private static JsonNode requireField(final JsonNode node, final String name) {

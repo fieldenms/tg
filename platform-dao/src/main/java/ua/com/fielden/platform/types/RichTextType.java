@@ -132,10 +132,10 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
             throw new UserTypeException(ERR_TEXT_IS_NULL.formatted("Core", formattedText));
         }
         final String searchText = getText(resultSet, names[2]);
-        if (resultSet.wasNull()) {
-            throw new UserTypeException(ERR_TEXT_IS_NULL.formatted("Search", formattedText));
+        if (!resultSet.wasNull()) {
+            throw new UserTypeException("Search text should never be retrieved.");
         }
-        return new RichText.Persisted(formattedText, coreText, searchText);
+        return new RichText.Persisted(formattedText, coreText);
     }
 
     @Override
@@ -144,8 +144,7 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
             return null;
         }
         return new RichText.Persisted((String) arguments.get(FORMATTED_TEXT),
-                                      (String) arguments.get(CORE_TEXT),
-                                      (String) arguments.get(SEARCH_TEXT));
+                                      (String) arguments.get(CORE_TEXT));
     }
 
     @Override
@@ -163,7 +162,7 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
             final var richText = (RichText) value;
             setText(statement, index, richText.formattedText());
             setText(statement,index + 1, richText.coreText());
-            setText(statement,index + 2, richText.searchText());
+            setText(statement,index + 2, RichText.makeSearchText(richText));
         }
     }
 
@@ -183,7 +182,7 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
         return switch (property) {
             case 0 -> richText.formattedText();
             case 1 -> richText.coreText();
-            default -> richText.searchText();
+            default -> null;
         };
     }
 

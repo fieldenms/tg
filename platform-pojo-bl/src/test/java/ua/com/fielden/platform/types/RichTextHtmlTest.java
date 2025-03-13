@@ -16,7 +16,6 @@ public class RichTextHtmlTest {
         assertThat(richText.isValid().isSuccessful()).isEqualTo(false);
         assertThrows(IllegalStateException.class, richText::formattedText);
         assertThrows(IllegalStateException.class, richText::coreText);
-        assertThrows(IllegalStateException.class, richText::searchText);
     }
 
     @Test
@@ -736,7 +735,7 @@ After quote.
     }
 
     private static void assertSearchText(final String expected, final String input) {
-        assertEquals(expected, RichText.fromHtml(input).searchText());
+        assertEquals(expected, RichText.makeSearchText(RichText.fromHtml(input)));
     }
 
     private static RichTextAssertor assertRichText(final RichText richText) {
