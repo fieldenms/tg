@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -144,9 +143,9 @@ public final class StringToRichTextMigration {
     private final class ToolImpl implements Tool {
 
         private static final String IMPORTANT_MESSAGE = """
-        ********** IMPORTANT **********
-        * Make sure to address warnings that may have been printed above!
-        *******************************
+        ########## IMPORTANT ##########
+        # Make sure to address warnings that may have been printed above!
+        ###############################
         """;
 
         private final Class<? extends AbstractEntity<?>> entityType;
@@ -156,6 +155,7 @@ public final class StringToRichTextMigration {
         private final TableDdl tableDdl;
         private final ColumnDefinition formattedTextColDef;
         private final ColumnDefinition coreTextColDef;
+        private final ColumnDefinition searchTextColDef;
         private final String stringColumnTypeName;
         private final String batchDelimiter;
 
@@ -192,6 +192,7 @@ public final class StringToRichTextMigration {
             tableDdl = new TableDdl(new ColumnDefinitionExtractor(hibernateTypeMappings, dialect), entityType);
             formattedTextColDef = tableDdl.getColumnDefinition(richTextProperty + '.' + RichText.FORMATTED_TEXT);
             coreTextColDef = tableDdl.getColumnDefinition(richTextProperty + '.' + RichText.CORE_TEXT);
+            searchTextColDef = tableDdl.getColumnDefinition(richTextProperty + '.' + RichText.SEARCH_TEXT);
             stringColumnTypeName = sameProperty
                     ? Placeholder.STRING_COLUMN_TYPE.toString()
                     : tableDdl.getColumnDefinition(stringProperty).sqlTypeName;
@@ -297,19 +298,22 @@ public final class StringToRichTextMigration {
         private void generateInitialMigration(final Consumer<? super String> sqlConsumer) {
             sqlConsumer.accept(sqlComment("""
             
-            ***** IMPORTANT *****
+            ##### CRITICAL #####
             To ensure correctness of the rollback script, it is necessary to record the date and time when this script (stage 1) is executed.
-            
+            This is needed to correctly identify description values that changed since the migration to rich text descriptions.
+
             """));
 
             // 1. Add a column for each RichText component.
-            sqlConsumer.accept(sqlComment("*** Add columns for RichText components."));
-            Stream.of(formattedTextColDef.schemaString(dialect, true), coreTextColDef.schemaString(dialect, true))
+            sqlConsumer.accept(sqlComment("Add columns for RichText components."));
+            Stream.of(formattedTextColDef.schemaString(dialect, true),
+                      coreTextColDef.schemaString(dialect, true),
+                      searchTextColDef.schemaString(dialect, true))
                     .map(colSchema -> dbVersion.addColumnSql(tableDdl.getTableName(), colSchema))
                     .flatMap(sql -> Stream.of(sql, batchDelimiter))
                     .forEach(sqlConsumer);
             // Create indices for RichText components.
-            tableDdl.createNonUniqueIndicesSchema(Stream.of(formattedTextColDef, coreTextColDef), dialect)
+            tableDdl.createNonUniqueIndicesSchema(Stream.of(formattedTextColDef, coreTextColDef, searchTextColDef), dialect)
                     .stream()
                     .flatMap(sql -> Stream.of(sql, batchDelimiter))
                     .forEach(sqlConsumer);
@@ -317,11 +321,10 @@ public final class StringToRichTextMigration {
             // 2. Remove the requiredness constraint of the String property.
 
             sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("*** Relax the requiredness constraint of the original String property."));
+            sqlConsumer.accept(sqlComment("Relax the requiredness constraint of the original String property."));
 
             // SQL Server requires dependent indices to be dropped first.
             if (dbVersion == DbVersion.MSSQL) {
-                sqlConsumer.accept("\n");
                 sqlConsumer.accept(sqlComment("""
                     All dependent indices need to be deleted first.
                     The following code dynamically forms and executes a statement that will delete all such indices.
@@ -344,26 +347,29 @@ public final class StringToRichTextMigration {
             //          This step is crucial - without it, the editor may slightly transform the encoded text
             //          (e.g., by wrapping each line in a paragraph element <p>), which would make the property value dirty.
             //    b. Core text should be populated from the plain text as if it had been extracted from the formatted text.
+            //    c. Search text should be populated from the plain text as if it had been extracted from the formatted text.
 
             sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("*** Populate values for the formatted text component of RichText."));
+            sqlConsumer.accept(sqlComment("*** Populate values RichText."));
             sqlConsumer.accept(FormattedTextSql.get(dbVersion).sql(tableDdl.getTableName(), stringColumnName, formattedTextColDef.name));
             sqlConsumer.accept(batchDelimiter);
 
             sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("*** Populate values for the core text component of RichText."));
             sqlConsumer.accept(CoreTextSql.get(dbVersion).sql(tableDdl.getTableName(), stringColumnName, coreTextColDef.name));
+            sqlConsumer.accept(batchDelimiter);
+
+            sqlConsumer.accept("\n");
+            sqlConsumer.accept(SearchTextSql.get(dbVersion).sql(tableDdl.getTableName(), stringColumnName, searchTextColDef.name));
             sqlConsumer.accept(batchDelimiter);
         }
 
         private void generateCompleteMigration(final Consumer<? super String> sqlConsumer) {
             // 1. Delete the column for the original String property.
             sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("*** Delete the column for the original String property."));
+            sqlConsumer.accept(sqlComment("Delete the column for the original String property."));
 
             // SQL Server requires dependent indices to be dropped for a column to be deleted.
             if (dbVersion == DbVersion.MSSQL) {
-                sqlConsumer.accept("\n");
                 sqlConsumer.accept(sqlComment("""
                 All dependent indices need to be deleted first.
                 The following code dynamically forms and executes a statement that will delete all such indices.
@@ -386,30 +392,31 @@ public final class StringToRichTextMigration {
             // 2. If the RichText property has a requiredness constraint, add the {@code NOT NULL} constraint to its columns.
             if (richTextPropertyMetadata.is(REQUIRED)) {
                 sqlConsumer.accept(sqlComment("""
-                *** Enforce the requiredness constraint for the RichText property.
+                Enforce the requiredness constraint for the RichText property.
                 Indices, if any exist, need to be dropped beforehand and recreated afterwards.
                 Make sure that the following statements are aligned with the current state of indices.
                 """));
 
-                sqlConsumer.accept(dbVersion.dropIndexSql(tableDdl.getIndexName(formattedTextColDef), tableDdl.getTableName(), true));
-                sqlConsumer.accept(batchDelimiter);
-                sqlConsumer.accept(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), formattedTextColDef.name, formattedTextColDef.sqlTypeName, NOT_NULL));
-                sqlConsumer.accept(batchDelimiter);
+                List.of(formattedTextColDef, coreTextColDef, searchTextColDef)
+                        .forEach(colDef -> {
+                            sqlConsumer.accept(dbVersion.dropIndexSql(tableDdl.getIndexName(colDef), tableDdl.getTableName(), true));
+                            sqlConsumer.accept(batchDelimiter);
+                            sqlConsumer.accept(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), colDef.name, colDef.sqlTypeName, NOT_NULL));
+                            sqlConsumer.accept(batchDelimiter);
+                            sqlConsumer.accept("\n");
 
-                tableDdl.createNonUniqueIndicesSchema(Stream.of(formattedTextColDef), dialect)
-                        .stream()
-                        .flatMap(sql -> Stream.of(sql, batchDelimiter))
-                        .forEach(sqlConsumer);
-
-                sqlConsumer.accept(dbVersion.dropIndexSql(tableDdl.getIndexName(coreTextColDef), tableDdl.getTableName(), true));
-                sqlConsumer.accept(batchDelimiter);
-                sqlConsumer.accept(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), coreTextColDef.name, coreTextColDef.sqlTypeName, NOT_NULL));
-                sqlConsumer.accept(batchDelimiter);
-
-                tableDdl.createNonUniqueIndicesSchema(Stream.of(coreTextColDef), dialect)
-                        .stream()
-                        .flatMap(sql -> Stream.of(sql, batchDelimiter))
-                        .forEach(sqlConsumer);
+                            final var indicesSql = tableDdl.createNonUniqueIndicesSchema(Stream.of(colDef), dialect)
+                                    .stream()
+                                    .flatMap(sql -> Stream.of(sql, batchDelimiter))
+                                    .toList();
+                            if (indicesSql.isEmpty()) {
+                                sqlConsumer.accept(sqlComment("No indices are required, so none need to be recreated."));
+                                sqlConsumer.accept("\n");
+                            }
+                            else {
+                                indicesSql.forEach(sqlConsumer);
+                            }
+                        });
             }
         }
 
@@ -417,10 +424,10 @@ public final class StringToRichTextMigration {
             // 1. For each new or modified value of the RichText property, populate the String property from the core text component.
             //    This is only possible if the entity type extends AbstractPersistentEntity, which has properties lastUpdatedBy and createdBy.
             sqlConsumer.accept(sqlComment("""
-            *** Populate the original String property with new/modified values of RichText property.
+            Populate the original String property with new/modified values of RichText property.
             
-            ***** IMPORTANT *****
-            NOTE: A date is used to identify records that were created after the introduction of the RichText property.
+            ##### CRITICAL #####
+            A date is used to identify records that were created after the introduction of the RichText property.
             The value for this date should be set to the moment of executing the stage 1 script.
             Therefore, please adjust the date used below, which, by default, represents the moment when this script was generated.
             """));
@@ -477,41 +484,35 @@ public final class StringToRichTextMigration {
             maybeStringPropertyMetadata.ifPresentOrElse(
                     stringPropertyMetadata -> {
                         if (stringPropertyMetadata.is(REQUIRED)) {
-                            sqlConsumer.accept(sqlComment("*** Restore the requiredness constraint for the original String property."));
+                            sqlConsumer.accept(sqlComment("Restore the requiredness constraint for the original String property."));
                             sqlConsumer.accept(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), stringColumnName, stringColumnTypeName, NOT_NULL));
                             sqlConsumer.accept(batchDelimiter);
                         }
                     },
                     () -> {
                         // We don't have access to the definition of the String property, so we can't know if it was required or not.
-                        sqlConsumer.accept(sqlComment("*** Uncomment to restore the requiredness constraint for the original String property, if it had one."));
+                        sqlConsumer.accept(sqlComment("Uncomment to restore the requiredness constraint for the original String property, if it had one."));
                         sqlConsumer.accept(sqlComment(dbVersion.alterColumnNullabilitySql(tableDdl.getTableName(), stringColumnName, stringColumnTypeName, NOT_NULL)));
                         sqlConsumer.accept(sqlComment(batchDelimiter));
                     }
             );
 
             // 3. Optionally drop columns for the RichText property.
-            sqlConsumer.accept(sqlComment("*** If necessary, drop columns for the RichText property."));
-            sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("1. Core text"));
-            sqlConsumer.accept(sqlComment("Delete all dependent indices first."));
-            sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment(dropAllColumnIndicesMssql(tableDdl.getTableName(), coreTextColDef.name)));
-            sqlConsumer.accept(sqlComment(batchDelimiter));
-            sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("Now drop the column."));
-            sqlConsumer.accept(sqlComment(dbVersion.deleteColumnSql(tableDdl.getTableName(), coreTextColDef.name)));
-            sqlConsumer.accept(sqlComment(batchDelimiter));
-            sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("2. Formatted text"));
-            sqlConsumer.accept(sqlComment("Delete all dependent indices first."));
-            sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment(dropAllColumnIndicesMssql(tableDdl.getTableName(), formattedTextColDef.name)));
-            sqlConsumer.accept(sqlComment(batchDelimiter));
-            sqlConsumer.accept("\n");
-            sqlConsumer.accept(sqlComment("Now drop the column."));
-            sqlConsumer.accept(sqlComment(dbVersion.deleteColumnSql(tableDdl.getTableName(), formattedTextColDef.name)));
-            sqlConsumer.accept(sqlComment(batchDelimiter));
+            sqlConsumer.accept(sqlComment("If necessary, drop columns for the RichText property."));
+
+            List.of(coreTextColDef, formattedTextColDef, searchTextColDef)
+                    .forEach(colDef -> {
+                        sqlConsumer.accept("\n");
+                        sqlConsumer.accept(sqlComment("Drop %s.%s".formatted(tableDdl.getTableName(), colDef.name)));
+                        sqlConsumer.accept(sqlComment("Delete all dependent indices first."));
+                        sqlConsumer.accept("\n");
+                        sqlConsumer.accept(sqlComment(dropAllColumnIndicesMssql(tableDdl.getTableName(), colDef.name)));
+                        sqlConsumer.accept(sqlComment(batchDelimiter));
+                        sqlConsumer.accept("\n");
+                        sqlConsumer.accept(sqlComment(dbVersion.deleteColumnSql(tableDdl.getTableName(), colDef.name)));
+                        sqlConsumer.accept(sqlComment(batchDelimiter));
+                        sqlConsumer.accept("\n");
+                    });
         }
 
     }
@@ -583,8 +584,8 @@ public final class StringToRichTextMigration {
 
     private static String sqlComment(final CharSequence text) {
         if (StringUtils.contains(text, '\n')) {
-            return Pattern.compile(Pattern.quote("\n")).splitAsStream(text)
-                    .map(ln -> "-- " + ln)
+            return Arrays.stream(StringUtils.splitPreserveAllTokens(text.toString(), '\n'))
+                    .map(ln -> ln.isBlank() ? "" : "-- " + ln)
                     .collect(joining("\n"));
         }
         else {
@@ -594,40 +595,22 @@ public final class StringToRichTextMigration {
 
     /**
      * Generates an SQL statement that populates a column for the core text component.
-     * <p>
-     * The algorithm is based on the procedure that extracts core text from formatted text, and it goes thus:
-     * <ol>
-     *   <li> Replace all whitespace characters by the space character (standard ASCII space, 0x20).
-     *   <li> Replace all consecutive space characters by a single space character.
-     *   <li> Trim whitespace from both sides.
-     * </ol>
+     * All it does is trim whitespace from both sides.
      */
     private enum CoreTextSql {
         POSTGRESQL {
             @Override
             public String sql(final String table, final String sourceColumn, final String coreTextColumn) {
-                final String expr = "btrim(regexp_replace(%s, '%s+', ' ', 'g'), ' ')".formatted(sourceColumn, PSQL_WHITESPACE_CHAR_PATTERN);
+                final var expr = "btrim(%s, ' ')".formatted(sourceColumn);
                 return "UPDATE %s SET %s = %s".formatted(table, coreTextColumn, expr);
             }
         },
 
         MSSQL {
-            // Arguments to the TRANSLATE function
-            // https://learn.microsoft.com/en-us/sql/t-sql/functions/translate-transact-sql
-            private static final String CHARACTERS = MSSQL_WHITESPACE_CHARS_STRING;
-            private static final String TRANSLATIONS = "'%s'".formatted(" ".repeat(WHITESPACE_CODE_POINTS.length));
-
             @Override
             public String sql(final String table, final String sourceColumn, final String coreTextColumn) {
-                // Replace each whitespace character by a space character
-                final String s1 = "translate(%s, %s, %s)".formatted(sourceColumn, CHARACTERS, TRANSLATIONS);
-                // Squash consecutive spaces into a single space.
-                // This solution is based on https://stackoverflow.com/a/2455869, but instead of using '<>', char(5) and char(6) are used
-                // to avoid conflicts with characters in the original string.
-                final String s2 = "replace(replace(replace(%s, ' ', char(5) + char(6)), char(6) + char(5), ''), char(5) + char(6), ' ')"
-                        .formatted(s1);
                 // Trim spaces from both sides
-                final String expr = "trim(%s)".formatted(s2);
+                final var expr = "trim(%s)".formatted(sourceColumn);
                 return "UPDATE %s SET %s = %s".formatted(table, coreTextColumn, expr);
             }
         };
@@ -719,6 +702,67 @@ public final class StringToRichTextMigration {
         public abstract String sql(String table, String sourceColumn, String formattedTextColumn);
 
         public static FormattedTextSql get(DbVersion dbVersion) {
+            return switch (dbVersion) {
+                case POSTGRESQL -> POSTGRESQL;
+                case MSSQL -> MSSQL;
+                default -> throw new UnsupportedOperationException(dbVersion.toString());
+            };
+        }
+    }
+
+    /**
+     * Generates an SQL statement that populates a column for the search text component.
+     * <p>
+     * The algorithm is based on the procedure that extracts search text from formatted text, and it goes thus:
+     * <ol>
+     *   <li> Replace all whitespace characters by the space character (standard ASCII space, 0x20).
+     *   <li> Replace all consecutive space characters by a single space character.
+     *   <li> Trim whitespace from both sides.
+     * </ol>
+     *
+     * Differences from the standard procedure:
+     * <ul>
+     *   <li> No special processing is performed for links, as we are processing only plain text here.
+     * </ul>
+     */
+    private enum SearchTextSql {
+        POSTGRESQL {
+            @Override
+            public String sql(final String table, final String sourceColumn, final String searchTextColumn) {
+                final String expr = "btrim(regexp_replace(%s, '%s+', ' ', 'g'), ' ')".formatted(sourceColumn, PSQL_WHITESPACE_CHAR_PATTERN);
+                return "UPDATE %s SET %s = %s".formatted(table, searchTextColumn, expr);
+            }
+        },
+
+        MSSQL {
+            // Arguments to the TRANSLATE function
+            // https://learn.microsoft.com/en-us/sql/t-sql/functions/translate-transact-sql
+            private static final String CHARACTERS = MSSQL_WHITESPACE_CHARS_STRING;
+            private static final String TRANSLATIONS = "'%s'".formatted(" ".repeat(WHITESPACE_CODE_POINTS.length));
+
+            @Override
+            public String sql(final String table, final String sourceColumn, final String searchTextColumn) {
+                // Replace each whitespace character by a space character
+                final String s1 = "translate(%s, %s, %s)".formatted(sourceColumn, CHARACTERS, TRANSLATIONS);
+                // Squash consecutive spaces into a single space.
+                // This solution is based on https://stackoverflow.com/a/2455869, but instead of using '<>', char(5) and char(6) are used
+                // to avoid conflicts with characters in the original string.
+                final String s2 = "replace(replace(replace(%s, ' ', char(5) + char(6)), char(6) + char(5), ''), char(5) + char(6), ' ')"
+                        .formatted(s1);
+                // Trim spaces from both sides
+                final String expr = "trim(%s)".formatted(s2);
+                return "UPDATE %s SET %s = %s".formatted(table, searchTextColumn, expr);
+            }
+        };
+
+        /**
+         * @param table  name of the table for the entity type
+         * @param sourceColumn  name of the column for the original {@code String} property
+         * @param searchTextColumn  name of the new column for the core text component
+         */
+        public abstract String sql(String table, String sourceColumn, String searchTextColumn);
+
+        public static SearchTextSql get(DbVersion dbVersion) {
             return switch (dbVersion) {
                 case POSTGRESQL -> POSTGRESQL;
                 case MSSQL -> MSSQL;

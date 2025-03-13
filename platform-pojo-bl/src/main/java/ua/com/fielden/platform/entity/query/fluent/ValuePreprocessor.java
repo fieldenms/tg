@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.fluent;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.exceptions.EqlValidationException;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Stream;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
@@ -20,6 +22,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  * @author TG Team
  */
 public class ValuePreprocessor {
+
+    private static final String ERR_RICH_TEXT_CANNOT_BE_USED = format(
+            "[%s] cannot be used as value or parameter in EQL. Please specify one of its components instead.",
+            RichText.class.getSimpleName());
 
     /**
      * @return  either a list of converted values or a single converted value
@@ -60,7 +66,9 @@ public class ValuePreprocessor {
                         ? entity.getKey() : entity.getId();
             }
             case Money money -> money.getAmount();
-            case RichText richText -> richText.coreText();
+            case RichText $ -> {
+                throw new EqlValidationException(ERR_RICH_TEXT_CANNOT_BE_USED);
+            }
             case null, default -> value;
         };
     }

@@ -144,7 +144,7 @@ public class ColumnDefinitionExtractor {
                                            };
 
                                            final int sLength;
-                                           if (RichText.class.isAssignableFrom(propType) && RichText.CORE_TEXT.equals(sField.getName())) {
+                                           if (RichText.class.isAssignableFrom(propType) && RichText.SEARCH_TEXT.equals(sField.getName())) {
                                                sLength = isProperty.length();
                                            } else {
                                                sLength = sIsProperty.length();
@@ -170,7 +170,7 @@ public class ColumnDefinitionExtractor {
                                                    : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(sColumnNameSuggestion) ? sName.toUpperCase() : sColumnNameSuggestion));
 
                                            final boolean sRequiresIndex;
-                                           if (RichText.class.isAssignableFrom(propType) && RichText.CORE_TEXT.equals(sField.getName())) {
+                                           if (RichText.class.isAssignableFrom(propType) && RichText.SEARCH_TEXT.equals(sField.getName())) {
                                                sRequiresIndex = true;
                                            } else {
                                                sRequiresIndex = false;
