@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.sundries;
 
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Maps;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
@@ -76,6 +77,17 @@ public record Yields2 (SortedMap<String, Yield2> yieldsMap, boolean allGenerated
     
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return yieldsMap.isEmpty() ? emptySet() : yieldsMap.values().stream().map(el -> el.operand().collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+    }
+
+    public Yields2 removeYield(final String alias) {
+        if (!yieldsMap.containsKey(alias)) {
+            return this;
+        }
+        else {
+            // The new map is a live view of this map which must be immutable.
+            final var newYieldsMap = Maps.filterKeys(yieldsMap, k -> !k.equals(alias));
+            return new Yields2(unmodifiableSortedMap(newYieldsMap), allGenerated);
+        }
     }
 
     @Override

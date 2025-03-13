@@ -9,11 +9,10 @@ import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.RichText;
 
-import static java.lang.String.join;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.types.RichText.*;
 
 public class EqlRichTextTest extends AbstractDaoTestCase {
 
@@ -220,6 +219,31 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
         final var entity = co(EntityWithRichText.class).getEntity(from(query).model());
         assertNotNull(entity);
         assertEquals(richText, entity.getText());
+    }
+
+    @Test
+    public void searchText_can_be_yielded_explicitly() {
+        save(new_(EntityWithRichText.class, "1").setText(RichText.fromHtml("hello")));
+
+        {
+            final var query = select(EntityWithRichText.class)
+                    .where().prop(KEY).eq().val("1")
+                    .yield().prop("text.searchText").as("searchText")
+                    .modelAsAggregate();
+            final var agg = co(EntityAggregates.class).getEntity(from(query).model());
+            assertNotNull(agg.get("searchText"));
+        }
+
+        {
+            final var query = select(EntityWithRichText.class)
+                    .where().prop(KEY).eq().val("1")
+                    .yield().prop("text.formattedText").as("text.formattedText")
+                    .yield().prop("text.coreText").as("text.coreText")
+                    .yield().prop("text.searchText").as("text.searchText")
+                    .modelAsEntity(EntityWithRichText.class);
+            final var entity = co(EntityWithRichText.class).getEntity(from(query).model());
+            assertNotNull(entity.getText());
+        }
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
