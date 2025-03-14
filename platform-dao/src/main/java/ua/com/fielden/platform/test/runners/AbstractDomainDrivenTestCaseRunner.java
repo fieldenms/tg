@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test.runners;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.Logger;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -15,10 +16,7 @@ import ua.com.fielden.platform.test.WithDbVersion;
 import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Function;
 
 import static java.lang.String.format;
@@ -35,7 +33,8 @@ import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
  */
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
-    private static final String INFO_TEST_IGNORED_DUE_TO_DB_VERSION = "Test [%s] is ignored because it requires database [%s] while the current one is [%s].";
+    private static final String INFO_TEST_IGNORED_DUE_TO_DB_VERSION
+            = "Test [%s] is ignored because it requires one of databases %s while the current one is [%s].";
 
     public final Logger logger = getLogger(getClass());
     
@@ -201,9 +200,12 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         }
 
         final var atWithDbVersion = child.getAnnotation(WithDbVersion.class);
-        final var dbVersionMatches = atWithDbVersion == null || atWithDbVersion.value() == dbVersionProvider.dbVersion();
+        final var dbVersionMatches = atWithDbVersion == null || ArrayUtils.contains(atWithDbVersion.value(), dbVersionProvider.dbVersion());
         if (!dbVersionMatches) {
-            logger.info(INFO_TEST_IGNORED_DUE_TO_DB_VERSION.formatted(child.getName(), atWithDbVersion.value(), dbVersionProvider.dbVersion()));
+            logger.info(INFO_TEST_IGNORED_DUE_TO_DB_VERSION.formatted(
+                    "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
+                    Arrays.toString(atWithDbVersion.value()),
+                    dbVersionProvider.dbVersion()));
             return true;
         }
 

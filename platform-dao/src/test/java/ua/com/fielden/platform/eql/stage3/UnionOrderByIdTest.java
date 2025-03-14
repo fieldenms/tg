@@ -3,8 +3,6 @@ package ua.com.fielden.platform.eql.stage3;
 import org.junit.Before;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
@@ -26,7 +24,6 @@ import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
 
 public class UnionOrderByIdTest extends AbstractDaoTestCase {
 
-    private final DbVersion dbVersion = getInstance(IDbVersionProvider.class).dbVersion();
     private final EqlQueryTransformer eqlQueryTransformer = getInstance(EqlQueryTransformer.class);
 
     @Before
