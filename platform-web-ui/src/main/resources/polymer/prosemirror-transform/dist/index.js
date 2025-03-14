@@ -185,18 +185,14 @@ A mapping represents a pipeline of zero or more [step
 maps](https://prosemirror.net/docs/ref/#transform.StepMap). It has special provisions for losslessly
 handling mapping positions through a series of steps in which some
 steps are inverted versions of earlier steps. (This comes up when
-‘[rebasing](/docs/guide/#transform.rebasing)’ steps for
+‘[rebasing](https://prosemirror.net/docs/guide/#transform.rebasing)’ steps for
 collaboration or history management.)
 */
 class Mapping {
     /**
     Create a new mapping with the given position maps.
     */
-    constructor(
-    /**
-    The step maps in this mapping.
-    */
-    maps = [], 
+    constructor(maps, 
     /**
     @internal
     */
@@ -209,23 +205,22 @@ class Mapping {
     /**
     The end position in the `maps` array.
     */
-    to = maps.length) {
-        this.maps = maps;
+    to = maps ? maps.length : 0) {
         this.mirror = mirror;
         this.from = from;
         this.to = to;
+        this._maps = maps || [];
+        this.ownData = !(maps || mirror);
     }
+    /**
+    The step maps in this mapping.
+    */
+    get maps() { return this._maps; }
     /**
     Create a mapping that maps only through a part of this one.
     */
     slice(from = 0, to = this.maps.length) {
-        return new Mapping(this.maps, this.mirror, from, to);
-    }
-    /**
-    @internal
-    */
-    copy() {
-        return new Mapping(this.maps.slice(), this.mirror && this.mirror.slice(), this.from, this.to);
+        return new Mapping(this._maps, this.mirror, from, to);
     }
     /**
     Add a step map to the end of this mapping. If `mirrors` is
@@ -233,18 +228,23 @@ class Mapping {
     image of this one.
     */
     appendMap(map, mirrors) {
-        this.to = this.maps.push(map);
+        if (!this.ownData) {
+            this._maps = this._maps.slice();
+            this.mirror = this.mirror && this.mirror.slice();
+            this.ownData = true;
+        }
+        this.to = this._maps.push(map);
         if (mirrors != null)
-            this.setMirror(this.maps.length - 1, mirrors);
+            this.setMirror(this._maps.length - 1, mirrors);
     }
     /**
     Add all the step maps in a given mapping to this one (preserving
     mirroring information).
     */
     appendMapping(mapping) {
-        for (let i = 0, startSize = this.maps.length; i < mapping.maps.length; i++) {
+        for (let i = 0, startSize = this._maps.length; i < mapping._maps.length; i++) {
             let mirr = mapping.getMirror(i);
-            this.appendMap(mapping.maps[i], mirr != null && mirr < i ? startSize + mirr : undefined);
+            this.appendMap(mapping._maps[i], mirr != null && mirr < i ? startSize + mirr : undefined);
         }
     }
     /**
@@ -270,9 +270,9 @@ class Mapping {
     Append the inverse of the given mapping to this one.
     */
     appendMappingInverted(mapping) {
-        for (let i = mapping.maps.length - 1, totalSize = this.maps.length + mapping.maps.length; i >= 0; i--) {
+        for (let i = mapping.maps.length - 1, totalSize = this._maps.length + mapping._maps.length; i >= 0; i--) {
             let mirr = mapping.getMirror(i);
-            this.appendMap(mapping.maps[i].invert(), mirr != null && mirr > i ? totalSize - mirr - 1 : undefined);
+            this.appendMap(mapping._maps[i].invert(), mirr != null && mirr > i ? totalSize - mirr - 1 : undefined);
         }
     }
     /**
@@ -290,7 +290,7 @@ class Mapping {
         if (this.mirror)
             return this._map(pos, assoc, true);
         for (let i = this.from; i < this.to; i++)
-            pos = this.maps[i].map(pos, assoc);
+            pos = this._maps[i].map(pos, assoc);
         return pos;
     }
     /**
@@ -304,12 +304,12 @@ class Mapping {
     _map(pos, assoc, simple) {
         let delInfo = 0;
         for (let i = this.from; i < this.to; i++) {
-            let map = this.maps[i], result = map.mapResult(pos, assoc);
+            let map = this._maps[i], result = map.mapResult(pos, assoc);
             if (result.recover != null) {
                 let corr = this.getMirror(i);
                 if (corr != null && corr > i && corr < this.to) {
                     i = corr;
-                    pos = this.maps[corr].recover(result.recover);
+                    pos = this._maps[corr].recover(result.recover);
                     continue;
                 }
             }
@@ -2081,7 +2081,7 @@ class Transform {
     greater than one, any number of nodes above that. By default, the
     parts split off will inherit the node type of the original node.
     This can be changed by passing an array of types and attributes to
-    use after the split.
+    use after the split (with the outermost nodes coming first).
     */
     split(pos, depth = 1, typesAfter) {
         split(this, pos, depth, typesAfter);
