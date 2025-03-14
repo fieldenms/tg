@@ -152,20 +152,24 @@ public class TableDdl {
     private List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
         return cols
-                .filter(col -> col.requiresIndex)
-                .filter(col -> {
+                .map(col -> col.maybeIndex.map(index -> {
                     if (!col.indexApplicable) {
                         LOGGER.warn("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
-                                    .formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
-                        return false;
-                    } else {
-                        return true;
+                                            .formatted(col.sqlTypeName, dbVersion, col.name, entityType.getSimpleName()));
+                        return "";
                     }
-                })
-                .map(col -> {
-                    final String tableName = tableName(entityType);
-                    return "CREATE INDEX I_%1$s_%2$s ON %1$s(%2$s);".formatted(tableName, col.name);
-                })
+                    else {
+                        final String tableName = tableName(entityType);
+                        return "CREATE INDEX I_%1$s_%2$s ON %1$s(%2$s %3$s);".formatted(
+                                tableName,
+                                col.name,
+                                switch (index.order()) {
+                                    case ASC -> "ASC";
+                                    case DESC -> "DESC";
+                                });
+                    }
+                }).orElse(""))
+                .filter(s -> !s.isEmpty())
                 .collect(toList());
     }
 

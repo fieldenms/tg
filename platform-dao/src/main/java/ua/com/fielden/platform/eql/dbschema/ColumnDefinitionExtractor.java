@@ -34,6 +34,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
+import static ua.com.fielden.platform.eql.dbschema.ColumnIndex.Order.ASC;
+import static ua.com.fielden.platform.eql.dbschema.ColumnIndex.Order.DESC;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -99,7 +101,7 @@ public class ColumnDefinitionExtractor {
                                             sField.getType(), jdbcSqlTypeFor((Type) hibType),
                                             sIsProperty.length(), sIsProperty.scale(), sIsProperty.precision(),
                                             sMapTo.defaultValue(),
-                                            isIndexRequired(propUnionEntityType, sField.getType(), sField.getName()),
+                                            maybeIndexFor(propUnionEntityType, sField.getType(), sField.getName()),
                                             dialect);
             }).collect(toImmutableSet());
         } else {
@@ -108,14 +110,14 @@ public class ColumnDefinitionExtractor {
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
                                                             length, scale, precision, mapTo.defaultValue(),
-                                                            isIndexRequired(enclosingEntityType, propType, propName),
+                                                            maybeIndexFor(enclosingEntityType, propType, propName),
                                                             dialect));
             } else if (hibType instanceof UserType t) {
                 return ImmutableSet.of(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
                                                             length, scale, precision, mapTo.defaultValue(),
-                                                            isIndexRequired(enclosingEntityType, propType, propName),
+                                                            maybeIndexFor(enclosingEntityType, propType, propName),
                                                             dialect));
             } else if (hibType instanceof CompositeUserType compositeUserType) {
                 final List<Pair<String, Integer>> subProps = jdbcSqlTypeFor(compositeUserType);
@@ -163,17 +165,17 @@ public class ColumnDefinitionExtractor {
                     final String sColumnName = subProps.size() == 1 ? parentColumn
                             : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(sColumnNameSuggestion) ? sName.toUpperCase() : sColumnNameSuggestion));
 
-                    final boolean sRequiresIndex;
+                    final Optional<ColumnIndex> sMaybeIndex;
                     if (RichText.class.isAssignableFrom(propType) && RichText.CORE_TEXT.equals(sField.getName())) {
-                        sRequiresIndex = true;
+                        sMaybeIndex = Optional.of(new ColumnIndex(ASC));
                     } else {
-                        sRequiresIndex = isIndexRequired(sType, sField.getType(), sName);
+                        sMaybeIndex = maybeIndexFor(sType, sField.getType(), sName);
                     }
 
                     return new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                 sColumnName, sField.getType(), sSqlType,
                                                 sLength, sScale, sPrecision,
-                                                sMapTo.defaultValue(), sRequiresIndex, dialect);
+                                                sMapTo.defaultValue(), sMaybeIndex, dialect);
                 }).collect(toImmutableSet());
             } else {
                 throw new DbSchemaException(format("Unexpected Hibernate type [%s] for property [%s.%s].", hibType, propType.getTypeName(), propName));
@@ -181,15 +183,20 @@ public class ColumnDefinitionExtractor {
         }
     }
 
-    private boolean isIndexRequired(
+    private Optional<ColumnIndex> maybeIndexFor(
             final Class<?> enclosingType,
             final Class<?> propType,
             final String propName)
     {
-        return (isAuditEntityType(enclosingType)
-                && propName.equals(AbstractAuditEntity.AUDIT_DATE)
-                && propType == Date.class)
-               || isPersistentEntityType(propType);
+        if (isAuditEntityType(enclosingType) && propName.equals(AbstractAuditEntity.AUDIT_DATE) && propType == Date.class) {
+            return Optional.of(new ColumnIndex(DESC));
+        }
+        if (isPersistentEntityType(propType)) {
+            return Optional.of(new ColumnIndex(ASC));
+        }
+        else {
+            return empty();
+        }
     }
 
     private boolean isNullable(final Class<?> propType, final boolean required) {
