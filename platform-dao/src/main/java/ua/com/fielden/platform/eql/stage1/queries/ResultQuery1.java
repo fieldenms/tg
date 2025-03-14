@@ -177,8 +177,9 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
         //       This is an optimisation in line with the write-only nature of searchText to avoid its retrieval from a database.
         //       Please also refer to HibernateMappingsGenerator where searchText is mapped to be read as NULL when retrieval happens using Hibernate.
         //
-        //       This optimisation applies only to "result queries", which are top-level.
-        //       It can be applied to source queries, but that is more complex to implement.
+        //       This optimisation applies only to ResultQuery, which is top-level.
+        //       It is not applied to SourceQuery and SubQueryForExist, as this job is delegated to DB engines.
+        //       For SubQuery, this optimisation simply does not make sense.
         if (!SearchTextYieldFinder.containsSearchText(originalYields)) {
             return SearchTextYieldFinder.findSearchText(enhancedYields.yields)
                     .map(yield -> new EnhancedYields(enhancedYields.yields.removeYield(yield.alias())))
