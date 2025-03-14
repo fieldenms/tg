@@ -9,10 +9,13 @@ import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.RichText;
 
+import java.lang.reflect.Field;
+
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.dao.QueryExecutionModel.from;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.types.RichText.SEARCH_TEXT;
 
 public class EqlRichTextTest extends AbstractDaoTestCase {
 
@@ -222,28 +225,37 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void searchText_can_be_yielded_explicitly() {
+    public void searchText_can_be_yielded_explicitly_as_a_value_of_some_property() {
         save(new_(EntityWithRichText.class, "1").setText(RichText.fromHtml("hello")));
 
-        {
-            final var query = select(EntityWithRichText.class)
-                    .where().prop(KEY).eq().val("1")
-                    .yield().prop("text.searchText").as("searchText")
-                    .modelAsAggregate();
-            final var agg = co(EntityAggregates.class).getEntity(from(query).model());
-            assertNotNull(agg.get("searchText"));
-        }
+        final var someProperty = "searchText";
+        final var query = select(EntityWithRichText.class)
+                          .where().prop(KEY).eq().val("1")
+                          .yield().prop("text.searchText").as(someProperty)
+                          .modelAsAggregate();
+       final var agg = co(EntityAggregates.class).getEntity(from(query).model());
+       assertEquals("hello", agg.get(someProperty));
+    }
 
-        {
-            final var query = select(EntityWithRichText.class)
-                    .where().prop(KEY).eq().val("1")
-                    .yield().prop("text.formattedText").as("text.formattedText")
-                    .yield().prop("text.coreText").as("text.coreText")
-                    .yield().prop("text.searchText").as("text.searchText")
-                    .modelAsEntity(EntityWithRichText.class);
-            final var entity = co(EntityWithRichText.class).getEntity(from(query).model());
-            assertNotNull(entity.getText());
-        }
+    @Test
+    public void searchText_can_be_yielded_explicitly_as_a_RichText_component_but_this_is_meaningless() throws NoSuchFieldException, IllegalAccessException {
+        save(new_(EntityWithRichText.class, "1").setText(RichText.fromHtml("hello")));
+
+        // Yielding .prop("text.searchText").as("text.searchText") works.
+        // However, it is meaningless because it is impossible to either assign or access the searchText component for an instance of RichText.
+        final var query = select(EntityWithRichText.class)
+                          .where().prop(KEY).eq().val("1")
+                          .yield().prop("text.formattedText").as("text.formattedText")
+                          .yield().prop("text.coreText").as("text.coreText")
+                          .yield().prop("text.searchText").as("text.searchText")
+                          .modelAsEntity(EntityWithRichText.class);
+        final var entity = co(EntityWithRichText.class).getEntity(from(query).model());
+        final RichText text = entity.getText();
+        assertNotNull(text);
+        // Can only access text.searchText via field.
+        final Field fSearchText = RichText.class.getDeclaredField(SEARCH_TEXT);
+        fSearchText.trySetAccessible();
+        assertNull("Expected searchText to remain null even though it was yielded.", fSearchText.get(text));
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

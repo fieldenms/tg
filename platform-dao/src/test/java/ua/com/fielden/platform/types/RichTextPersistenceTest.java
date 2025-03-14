@@ -75,7 +75,7 @@ public class RichTextPersistenceTest extends AbstractDaoTestCase {
                         .model());
         final RichText text = entityB.getText();
         assertNotNull(text);
-        // Can only assert that text.searchText is null via field access, because invoking method searchText() initialises the value.
+        // Can only access text.searchText via field.
         final Field fSearchText = RichText.class.getDeclaredField(SEARCH_TEXT);
         fSearchText.trySetAccessible();
         assertNull("Expected searchText not to be fetched from the database.", fSearchText.get(text));
