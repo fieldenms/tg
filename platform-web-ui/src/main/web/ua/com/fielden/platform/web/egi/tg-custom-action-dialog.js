@@ -728,7 +728,10 @@ Polymer({
         return hasNextEntry && !isNavigationActionInProgress;
     },
     
-    _firstEntry: function () {
+    _firstEntry: function (e) {
+        if (e.detail && e.detail.keyboardEvent && e.detail.keyboardEvent.skipNavigation) {
+            return;
+        }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
             this._lastAction.firstEntry();
@@ -755,7 +758,10 @@ Polymer({
         }
     },
     
-    _lastEntry: function () {
+    _lastEntry: function (e) {
+        if (e.detail && e.detail.keyboardEvent && e.detail.keyboardEvent.skipNavigation) {
+            return;
+        }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
             this._lastAction.lastEntry();
