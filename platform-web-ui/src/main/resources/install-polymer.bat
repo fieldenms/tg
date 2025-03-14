@@ -9,7 +9,6 @@ for /d %%D in (build\node_modules\*) do (
     rmdir /S /Q "polymer\%%~nxD"
     move "%%D" polymer\
 )
-rmdir /S /Q polymer\dompurify & ^
 rmdir /S /Q _virtual & ^
 move build\_virtual .\ && ^
 for /r _virtual %%F in (*) do powershell -Command "(Get-Content %%F) -replace 'node_modules', 'polymer' | Set-Content %%F" && ^

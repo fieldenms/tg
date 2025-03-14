@@ -10,7 +10,6 @@ for dir in build/node_modules/*; do
     rm -rf "polymer/$name"
     mv "$dir" polymer/
 done
-rm -r -f polymer/dompurify
 rm -r -f _virtual
 mv build/_virtual ./
 find _virtual -type f -exec sed -i 's|node_modules|polymer|g' {} \;
