@@ -54,11 +54,11 @@ public class TableDdl {
     private static Set<ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         final Set<ColumnDefinition> columns = new LinkedHashSet<>();
 
-        columns.add(columnDefinitionExtractor.extractIdProperty());
+        columns.add(columnDefinitionExtractor.extractIdProperty(entityType));
 
         columnDefinitionExtractor.extractSimpleKeyProperty(entityType).map(key -> columns.add(key));
 
-        columns.add(columnDefinitionExtractor.extractVersionProperty());
+        columns.add(columnDefinitionExtractor.extractVersionProperty(entityType));
 
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {
             if (!shouldIgnore(propField, entityType)) {
@@ -68,7 +68,7 @@ public class TableDdl {
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
                 final boolean unique = propField.isAnnotationPresent(Unique.class);
                 final Optional<Integer> compositeKeyMemberOrder = Optional.ofNullable(propField.getAnnotation(CompositeKeyMember.class)).map(ann -> ann.value());
-                columns.addAll(columnDefinitionExtractor.extractFromProperty(propField.getName(), propField.getType(), isProperty, mapTo, persistedType, required, unique, compositeKeyMemberOrder));
+                columns.addAll(columnDefinitionExtractor.extractFromProperty(entityType, propField.getName(), propField.getType(), isProperty, mapTo, persistedType, required, unique, compositeKeyMemberOrder));
             }
         }
 
@@ -152,7 +152,7 @@ public class TableDdl {
     private List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
         return cols
-                .filter(col -> col.requiresIndex || isPersistentEntityType(col.javaType))
+                .filter(col -> col.requiresIndex)
                 .filter(col -> {
                     if (!col.indexApplicable) {
                         LOGGER.warn("Index for column type [%s] is not supported by [%s]. Skipping index creation for column [%s] in [%s]."
