@@ -73,7 +73,8 @@
   },
   "overrides": {
     "@toast-ui/editor": {
-      "dompurify": "^3.2.4"
+      "dompurify": "^3.2.4",
+      "@types/trusted-types": "0.0.0"
     },
     "wct-browser-legacy": {
       "@polymer/sinonjs": "../_EXCLUDED_",
