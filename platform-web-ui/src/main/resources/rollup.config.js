@@ -21,10 +21,6 @@ export default {
         'node_modules/lib/antlr-lib.js',
         'node_modules/lib/moment-lib.js',
         'node_modules/lib/toastui-editor-lib.js',
-        // Preserve dompurify main file explicitly.
-        // Because otherwise it is tree shaken due to being "unused" in '@toast-ui/editor/dist/esm/index.js'.
-        // They decided to insert dompurify 2.3.3 into the source.
-        'node_modules/dompurify/dist/purify.js',
 
         // Polymer import files, that we are using through function imports, are listed here.
         // They can not be added to 'build-polymer.js' because we would need to somehow use those functions there for them to be not tree-shaken.
