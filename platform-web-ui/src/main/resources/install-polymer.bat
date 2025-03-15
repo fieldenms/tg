@@ -1,6 +1,6 @@
 del "package-lock.json" && ^
 npm install --no-bin-links && ^
-del node_modules\stacky && ^
+node remove-symlinks.js node_modules && ^
 xcopy lib node_modules\ /E /I /Q && ^
 rollup --config && ^
 rmdir /S /Q polymer & ^
