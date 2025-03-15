@@ -15105,7 +15105,7 @@ var Renderer = /** @class */ (function () {
 //
 //  return DOMPurify;
 //}
-import purify from '/resources/polymer/dompurify/dist/purify.js';
+import purify from '/resources/polymer/dompurify/dist/purify.es.mjs.js';
 
 var CAN_BE_WHITE_TAG_LIST = ['iframe', 'embed'];
 var whiteTagList = [];
