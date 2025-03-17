@@ -220,12 +220,16 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
     private ImmutableBiMap<String, String> makeAuditedToAuditPropertyNames(final IDomainMetadata domainMetadata) {
         final var auditEntityMetadata = domainMetadata.forEntity(getEntityType());
         final var builder = ImmutableBiMap.<String, String> builderWithExpectedSize(auditEntityMetadata.properties().size() - 6);
-        for (final PropertyMetadata property : auditEntityMetadata.properties()) {
-            final var auditedPropName = AuditUtils.auditedPropertyName(property.name());
-            if (auditedPropName != null) {
-                builder.put(auditedPropName, property.name());
-            }
-        }
+        auditEntityMetadata.properties()
+                .stream()
+                // Skip inactive audit properties.
+                .filter(PropertyMetadata::isPersistent)
+                .forEach(property -> {
+                    final var auditedPropName = AuditUtils.auditedPropertyName(property.name());
+                    if (auditedPropName != null) {
+                        builder.put(auditedPropName, property.name());
+                    }
+                });
         return builder.buildOrThrow();
     }
 
