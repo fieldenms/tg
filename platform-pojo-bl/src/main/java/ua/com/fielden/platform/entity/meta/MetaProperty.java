@@ -1,14 +1,5 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static java.lang.String.format;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -22,6 +13,15 @@ import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import static java.lang.String.format;
 
 /**
  * A base class for a concept of meta-data about an entity property. Hence, meta-property.
@@ -386,6 +386,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public boolean isRequired() {
         throw new StrictProxyException(format("Invalid call [isRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
+    public boolean isRequiredByDefinition() {
+        throw new StrictProxyException(format("Invalid call [isRequiredByDefinition] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
     public MetaProperty<T> setRequired(final boolean required) {
