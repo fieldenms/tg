@@ -1,14 +1,17 @@
 package ua.com.fielden.platform.audit;
 
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import jakarta.inject.Inject;
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -21,15 +24,18 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
  * Base type for implementations of audit-entity companion objects.
@@ -50,6 +56,16 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
     private Class<AbstractAuditProp<AE>> auditPropType;
 
     private IDomainMetadata domainMetadata;
+    private IEntityReader<E> coAuditedEntity;
+
+    /**
+     * Names of properties of the audited entity that are required to create an audit record.
+     * These properties must not be proxied.
+     */
+    private Set<String> propertiesForAuditing;
+    
+    private fetch<E> fetchModelForAuditing;
+
     /**
      * A bidirectional mapping between names of audited and audit properties.
      * <p>
@@ -76,6 +92,33 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
     protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
         this.auditedToAuditPropertyNames = makeAuditedToAuditPropertyNames(domainMetadata);
+        this.propertiesForAuditing = collectPropertiesForAuditing(auditedToAuditPropertyNames.keySet());
+        this.fetchModelForAuditing = makeFetchModelForAuditing(AuditUtils.getAuditedType(getEntityType()), propertiesForAuditing, domainMetadata);
+    }
+
+    private static Set<String> collectPropertiesForAuditing(final Set<String> auditedProperties) {
+        return ImmutableSet.<String>builder()
+                .add(ID, VERSION)
+                .addAll(auditedProperties)
+                .build();
+    }
+
+    private static <E extends AbstractEntity<?>> fetch<E> makeFetchModelForAuditing(
+            final Class<E> auditedType,
+            final Set<String> propertiesForAuditing,
+            final IDomainMetadata domainMetadata)
+    {
+        final var auditedTypeMetadata = domainMetadata.forEntity(auditedType);
+        return foldLeft(propertiesForAuditing.stream(),
+                        fetchNone(auditedType),
+                        (fetch, prop) -> auditedTypeMetadata.property(prop).type().asEntity()
+                                .map(et -> fetch.with(prop, fetchIdOnly(et.javaType())))
+                                .orElseGet(() -> fetch.with(prop)));
+    }
+
+    @Inject
+    protected void initCoAuditedEntity(final ICompanionObjectFinder coFinder) {
+        this.coAuditedEntity = coFinder.find(AuditUtils.getAuditedType(getEntityType()));
     }
 
     /**
@@ -99,18 +142,21 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
         // NOTE save() is annotated with SessionRequired.
         //      To truly enforce the contract of this method described in IAuditEntityDao, a version of save() without
         //      SessionRequired would need to be used.
-        final AE auditEntity = save(newAudit(auditedEntity, transactionGuid));
+
+        // Audit-entity may need to be refetched for its ID (and nothing else) is required to persist audit-prop entities below.
+        final var refetchedAuditedEntity = refetchAuditedEntity(auditedEntity);
+        final AE auditEntity = save(newAudit(refetchedAuditedEntity, transactionGuid));
 
         if (!Iterables.isEmpty(dirtyProperties)) {
             // Audit information about changed properites
             final IAuditPropDao<AE, AbstractAuditProp<AE>> coAuditProp = co(auditPropType);
-            final boolean isNewAuditedEntity = auditedEntity.getVersion() == 0L;
+            final boolean isNewAuditedEntity = refetchedAuditedEntity.getVersion() == 0L;
             final var auditProps = Streams.stream(dirtyProperties)
                     .map(property -> {
                         final var auditProperty = getAuditPropertyName(property);
                         // Ignore properties that are not audited.
                         // Ignore nulls if this is the very first version of the audited entity, which means that there are no historical values for its properties.
-                        if (auditProperty != null && !(isNewAuditedEntity && auditedEntity.get(property.toString()) == null)) {
+                        if (auditProperty != null && !(isNewAuditedEntity && refetchedAuditedEntity.get(property.toString()) == null)) {
                             // We can use the fast method because its arguments are known to be valid at this point.
                             return coAuditProp.fastNewAuditProp(auditEntity, auditProperty);
                         }
@@ -153,6 +199,13 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
 
         audit.endInitialising();
         return audit;
+    }
+
+    private E refetchAuditedEntity(final E auditedEntity) {
+        final var proxiedPropertyNames = auditedEntity.proxiedPropertyNames();
+        return propertiesForAuditing.stream().anyMatch(proxiedPropertyNames::contains)
+                ? coAuditedEntity.findById(auditedEntity.getId(), fetchModelForAuditing)
+                : auditedEntity;
     }
 
     @Override
