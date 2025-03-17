@@ -50,50 +50,44 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
 
     private static final int AUDIT_PROP_BATCH_SIZE = 100;
 
-    /**
-     * This field is effectively final, but cannot be declared so due to late initialisation; see {@link #setAuditTypeFinder(IAuditTypeFinder)}.
-     */
-    private Class<AbstractAuditProp<AE>> auditPropType;
+    // All fields below are effectively final, but cannot be declared so due to late initialisation.
 
+    private Class<AbstractAuditProp<AE>> auditPropType;
     private IDomainMetadata domainMetadata;
     private IEntityReader<E> coAuditedEntity;
-
+    private fetch<E> fetchModelForAuditing;
+    private EntityBatchInsertOperation.Factory batchInsertFactory;
+    private IUserProvider userProvider;
     /**
      * Names of properties of the audited entity that are required to create an audit record.
      * These properties must not be proxied.
      */
     private Set<String> propertiesForAuditing;
-    
-    private fetch<E> fetchModelForAuditing;
-
     /**
      * A bidirectional mapping between names of audited and audit properties.
      * <p>
      * Standard direction: keys - audited properties, values - audit properties.
      * <p>
      * Inverse direction: keys - audit properties, values - audited properties.
-     * <p>
-     * This field is effectively final, but cannot be declared so due to late initialisation; it depends on {@link #domainMetadata}
-     * which is provided via method injection.
      */
     private ImmutableBiMap<String, String> auditedToAuditPropertyNames;
 
     @Inject
-    private EntityBatchInsertOperation.Factory batchInsertFactory;
-    @Inject
-    private IUserProvider userProvider;
-
-    @Inject
-    protected void setAuditTypeFinder(final IAuditTypeFinder a3tFinder) {
-        auditPropType = a3tFinder.getAuditPropTypeForAuditEntity(getEntityType());
-    }
-
-    @Inject
-    protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
+    protected void init(
+            final EntityBatchInsertOperation.Factory batchInsertFactory,
+            final IUserProvider userProvider,
+            final IAuditTypeFinder a3tFinder,
+            final IDomainMetadata domainMetadata,
+            final ICompanionObjectFinder coFinder)
+    {
+        this.batchInsertFactory = batchInsertFactory;
+        this.userProvider = userProvider;
         this.domainMetadata = domainMetadata;
-        this.auditedToAuditPropertyNames = makeAuditedToAuditPropertyNames(domainMetadata);
-        this.propertiesForAuditing = collectPropertiesForAuditing(auditedToAuditPropertyNames.keySet());
-        this.fetchModelForAuditing = makeFetchModelForAuditing(AuditUtils.getAuditedType(getEntityType()), propertiesForAuditing, domainMetadata);
+        auditPropType = a3tFinder.getAuditPropTypeForAuditEntity(getEntityType());
+        auditedToAuditPropertyNames = makeAuditedToAuditPropertyNames(domainMetadata);
+        propertiesForAuditing = collectPropertiesForAuditing(auditedToAuditPropertyNames.keySet());
+        fetchModelForAuditing = makeFetchModelForAuditing(AuditUtils.getAuditedType(getEntityType()), propertiesForAuditing, domainMetadata);
+        coAuditedEntity = coFinder.find(AuditUtils.getAuditedType(getEntityType()));
     }
 
     private static Set<String> collectPropertiesForAuditing(final Set<String> auditedProperties) {
@@ -114,11 +108,6 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
                         (fetch, prop) -> auditedTypeMetadata.property(prop).type().asEntity()
                                 .map(et -> fetch.with(prop, fetchIdOnly(et.javaType())))
                                 .orElseGet(() -> fetch.with(prop)));
-    }
-
-    @Inject
-    protected void initCoAuditedEntity(final ICompanionObjectFinder coFinder) {
-        this.coAuditedEntity = coFinder.find(AuditUtils.getAuditedType(getEntityType()));
     }
 
     /**
