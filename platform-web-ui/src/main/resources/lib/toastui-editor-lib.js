@@ -6,5 +6,10 @@ createStyleModule('toastui-editor-styles', toastuiEditorStyleStrings, prosemirro
 import { html } from '@polymer/polymer/lib/utils/html-tag.js';
 export const toastuiEditorStyles = html`<style include='toastui-editor-styles'></style>`; // can't use 'const ... = 'toastui-editor-styles'', because of html tag function stringent security
 
+// Preserve dompurify explicitly.
+// Because otherwise it is tree shaken due to being "unused" in '@toast-ui/editor/dist/esm/index.js'.
+// They decided to insert dompurify 2.3.3 into the source.
+export { default as purify } from 'dompurify';
+
 import Editor from '@toast-ui/editor';
 export default Editor;

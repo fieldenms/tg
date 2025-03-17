@@ -72,6 +72,10 @@
     "wct-browser-legacy": "1.0.2"
   },
   "overrides": {
+    "@toast-ui/editor": {
+      "dompurify": "^3.2.4",
+      "@types/trusted-types": "../_EXCLUDED_"
+    },
     "wct-browser-legacy": {
       "@polymer/sinonjs": "../_EXCLUDED_",
       "@polymer/test-fixture": "$@polymer/test-fixture",

@@ -539,6 +539,7 @@ document.
 function toggleMark(markType, attrs = null, options) {
     let removeWhenPresent = (options && options.removeWhenPresent) !== false;
     let enterAtoms = (options && options.enterInlineAtoms) !== false;
+    let dropSpace = !(options && options.includeWhitespace);
     return function (state, dispatch) {
         let { empty, $cursor, ranges } = state.selection;
         if ((empty && !$cursor) || !markApplies(state.doc, ranges, markType, enterAtoms))
@@ -576,8 +577,8 @@ function toggleMark(markType, attrs = null, options) {
                     }
                     else {
                         let from = $from.pos, to = $to.pos, start = $from.nodeAfter, end = $to.nodeBefore;
-                        let spaceStart = start && start.isText ? /^\s*/.exec(start.text)[0].length : 0;
-                        let spaceEnd = end && end.isText ? /\s*$/.exec(end.text)[0].length : 0;
+                        let spaceStart = dropSpace && start && start.isText ? /^\s*/.exec(start.text)[0].length : 0;
+                        let spaceEnd = dropSpace && end && end.isText ? /\s*$/.exec(end.text)[0].length : 0;
                         if (from + spaceStart < to) {
                             from += spaceStart;
                             to -= spaceEnd;

@@ -201,11 +201,13 @@ function clientRect(node) {
 function scrollRectIntoView(view, rect, startDOM) {
     let scrollThreshold = view.someProp("scrollThreshold") || 0, scrollMargin = view.someProp("scrollMargin") || 5;
     let doc = view.dom.ownerDocument;
-    for (let parent = startDOM || view.dom;; parent = parentNode(parent)) {
+    for (let parent = startDOM || view.dom;;) {
         if (!parent)
             break;
-        if (parent.nodeType != 1)
+        if (parent.nodeType != 1) {
+            parent = parentNode(parent);
             continue;
+        }
         let elt = parent;
         let atTop = elt == doc.body;
         let bounding = atTop ? windowRect(doc) : clientRect(elt);
@@ -234,8 +236,10 @@ function scrollRectIntoView(view, rect, startDOM) {
                 rect = { left: rect.left - dX, top: rect.top - dY, right: rect.right - dX, bottom: rect.bottom - dY };
             }
         }
-        if (atTop || /^(fixed|sticky)$/.test(getComputedStyle(parent).position))
+        let pos = atTop ? "fixed" : getComputedStyle(parent).position;
+        if (/^(fixed|sticky)$/.test(pos))
             break;
+        parent = pos == "absolute" ? parent.offsetParent : parentNode(parent);
     }
 }
 // Store the scroll position of the editor's parent nodes, along with
@@ -4705,6 +4709,7 @@ class DOMObserver {
             view.input.lastFocus = 0;
             selectionToDOM(view);
             this.currentSelection.set(sel);
+            view.scrollToSelection();
         }
         else if (from > -1 || newSel) {
             if (from > -1) {
