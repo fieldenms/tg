@@ -840,10 +840,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         };
     }
 
-    private SequencedSet<Annotation> collectValidationAnnotations(final Field propField, final Class<?> propType,
-                                                                  final boolean isCollectional,
-                                                                  final boolean isEntityPersistent,
-                                                                  final boolean shouldNotSkipKeyChangeValidation)
+    private SequencedSet<Annotation> collectValidationAnnotations(
+            final Field propField, final Class<?> propType,
+            final boolean isCollectional,
+            final boolean isEntityPersistent,
+            final boolean shouldNotSkipKeyChangeValidation)
     {
         // order matters
         final var annotations = new LinkedHashSet<Annotation>();
@@ -881,9 +882,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
     }
 
-    private Set<Annotation> collectValidationAnnotationsForKey(final Field propField,
-                                                               final boolean isEntityPersistent,
-                                                               final boolean shouldNotSkipKeyChangeValidation)
+    private Set<Annotation> collectValidationAnnotationsForKey(
+            final Field propField,
+            final boolean isEntityPersistent,
+            final boolean shouldNotSkipKeyChangeValidation)
     {
         if (isKeyOrKeyMember(propField)) {
             final var annotations = ImmutableSet.<Annotation>builder();

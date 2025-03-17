@@ -207,15 +207,24 @@ public class MaxLengthValidatorTest {
     }
 
     @Test
-    public void RichText_coreText_cannot_be_longer_than_limit() {
+    public void RichText_searchText_cannot_be_longer_than_limit() {
+        final int maxLength = 27;
         final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
         final var mpRichText = entity.getProperty("richText");
-        entity.setRichText(RichText.fromHtml("hello <b> world </b>"));
-        assertFalse(mpRichText.isValid());
-        assertEquals(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH.formatted(5), mpRichText.getFirstFailure().getMessage());
 
-        entity.setRichText(RichText.fromHtml("a"));
+        // Try to assign RichText where searchText's length is equal to the limit.
+        final RichText richText = RichText.fromHtml("<a href=\"https://www.domain.com\">link</a>");
+        assertEquals(maxLength, RichText.makeSearchText(richText).length());
+        entity.setRichText(richText);
         assertTrue(mpRichText.isValid());
+        assertTrue(entity.getRichText().coreText().length() > maxLength);
+
+        // Try to assign RichText that is longer than the limit.
+        final RichText longRichText = RichText.fromHtml("<a href=\"https://www.domain.com\">link+</a>");
+        assertEquals(maxLength + 1, RichText.makeSearchText(longRichText).length());
+        entity.setRichText(longRichText);
+        assertFalse(mpRichText.isValid());
+        assertEquals(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH.formatted(maxLength), mpRichText.getFirstFailure().getMessage());
     }
 
 }

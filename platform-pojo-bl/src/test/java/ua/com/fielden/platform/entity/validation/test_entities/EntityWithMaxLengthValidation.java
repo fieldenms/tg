@@ -44,7 +44,7 @@ public class EntityWithMaxLengthValidation extends AbstractEntity<String> {
     @BeforeChange(@Handler(MaxLengthValidator.class))
     private Hyperlink propHyperlink;
 
-    @IsProperty(length = 5)
+    @IsProperty(length = 27)
     @BeforeChange(@Handler(MaxLengthValidator.class))
     private RichText richText;
 

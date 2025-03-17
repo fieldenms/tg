@@ -83,12 +83,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface IsProperty {
-    public static final String DEFAULT_LINK_PROPERTY = "----dummy-property----";
-    public static final int DEFAULT_LENGTH = 0;
-    public static final int DEFAULT_PRECISION = -1;
-    public static final int DEFAULT_SCALE = -1;
-    public static final boolean DEFAULT_TRAILING_ZEROS = true;
-    public static final String DEFAULT_DISPLAY_AS = "";
+    String DEFAULT_LINK_PROPERTY = "----dummy-property----";
+    int DEFAULT_LENGTH = 0;
+    int MAX_LENGTH = Integer.MAX_VALUE;
+    int DEFAULT_PRECISION = -1;
+    int DEFAULT_SCALE = -1;
+    boolean DEFAULT_TRAILING_ZEROS = true;
+    String DEFAULT_DISPLAY_AS = "";
 
 
     /**
