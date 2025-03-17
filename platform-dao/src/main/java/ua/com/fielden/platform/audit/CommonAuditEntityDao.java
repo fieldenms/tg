@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -28,6 +29,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_VERSION;
@@ -35,6 +37,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
@@ -265,12 +268,10 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>, AE exten
         auditEntityMetadata.properties()
                 .stream()
                 // Skip inactive audit properties.
-                .filter(PropertyMetadata::isPersistent)
+                .filter(p -> p.get(AUDIT_PROPERTY).filter(KAuditProperty.Data::active).isPresent())
                 .forEach(property -> {
-                    final var auditedPropName = AuditUtils.auditedPropertyName(property.name());
-                    if (auditedPropName != null) {
-                        builder.put(auditedPropName, property.name());
-                    }
+                    final var auditedPropName = requireNonNull(AuditUtils.auditedPropertyName(property.name()));
+                    builder.put(auditedPropName, property.name());
                 });
         return builder.buildOrThrow();
     }

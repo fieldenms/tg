@@ -38,10 +38,10 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.*;
-import static ua.com.fielden.platform.audit.AuditUtils.isAuditProperty;
 import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
+import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions.CUSTOMISE_COLUMNS_ACTION;
@@ -93,7 +93,7 @@ final class AuditWebUiConfigFactoryImpl implements AuditWebUiConfigFactory {
         final var auditProperties = domainMetadata.forEntity(synAuditType)
                 .properties()
                 .stream()
-                .filter(prop -> isAuditProperty(prop.name()))
+                .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(toImmutableList());
 
         final var layout = LayoutComposer.mkGridForCentre(3 + auditProperties.size(), 1);
@@ -149,7 +149,7 @@ final class AuditWebUiConfigFactoryImpl implements AuditWebUiConfigFactory {
         final var auditProperties = domainMetadata.forEntity(synAuditType)
                 .properties()
                 .stream()
-                .filter(prop -> isAuditProperty(prop.name()))
+                .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(toImmutableList());
 
         final var layout = LayoutComposer.mkGridForCentre(4 + auditProperties.size(), 1);

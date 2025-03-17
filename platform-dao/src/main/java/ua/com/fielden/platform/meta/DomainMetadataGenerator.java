@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.audit.AuditUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.eql.retrieval.EntityContainerEnhancer;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
+import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -37,6 +39,8 @@ import static java.util.Objects.requireNonNullElseGet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
+import static ua.com.fielden.platform.audit.AuditUtils.isSynAuditEntityType;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
@@ -537,7 +541,8 @@ final class DomainMetadataGenerator {
         return builder
                 // Scan the property for any additional metadata
                 .map(bld -> bld.required(isRequiredByDefinition(field, enclosingEntityType)))
-                .map(bld -> getAnnotationOptionally(field, CompositeKeyMember.class).map(annot -> bld.with(KEY_MEMBER, annot)).orElse(bld));
+                .map(bld -> getAnnotationOptionally(field, CompositeKeyMember.class).map(annot -> bld.with(KEY_MEMBER, annot)).orElse(bld))
+                .map(builder1 -> enhanceWithAuditingData(builder1, entityBuilder));
     }
 
     private Optional<PropertyMetadataImpl.Builder<?, ?>> mkOne2OneProp(final Field field, final EntityMetadataBuilder<?, ?> entityBuilder) {
@@ -830,6 +835,24 @@ final class DomainMetadataGenerator {
         }
     }
 
+    /////////////////////////////
+    ////// Auditing ////////////
+    ////////////////////////////
+
+    private <N extends PropertyNature, D extends PropertyNature.Data<N>> PropertyMetadataImpl.Builder<N, D> enhanceWithAuditingData(
+            final PropertyMetadataImpl.Builder<N, D> propBuilder,
+            final EntityMetadataBuilder<?, ?> entityBuilder)
+    {
+        if (isAuditEntityType(entityBuilder.getJavaType()) || isSynAuditEntityType(entityBuilder.getJavaType())) {
+            // An audit property is active only if it is persistent.
+            return AuditUtils.isAuditProperty(propBuilder.name())
+                    ? propBuilder.with(PropertyMetadataKeys.AUDIT_PROPERTY, new KAuditProperty.Data(propBuilder.nature().isPersistent()))
+                    : propBuilder;
+        }
+        else {
+            return propBuilder;
+        }
+    }
 
     /////////////////////////////
     ////// Misc. utilities /////

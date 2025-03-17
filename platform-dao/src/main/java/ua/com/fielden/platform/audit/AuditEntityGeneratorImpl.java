@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -49,6 +50,7 @@ import static ua.com.fielden.platform.audit.AnnotationSpecs.*;
 import static ua.com.fielden.platform.audit.AuditUtils.*;
 import static ua.com.fielden.platform.audit.JavaPoet.topLevelClassName;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
+import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.nonBlankPropertyTitle;
@@ -210,8 +212,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final var activeAuditProperites = domainMetadata.forEntity(prevAuditEntityType)
                 .properties()
                 .stream()
-                .filter(PropertyMetadata::isPersistent)
-                .filter(pm1 -> isAuditProperty(pm1.name()))
+                .filter(p -> p.get(AUDIT_PROPERTY).filter(KAuditProperty.Data::active).isPresent())
                 .collect(toImmutableSet());
         final var prevAuditEntityMetadata = new AuditEntityMetadata(prevAuditEntityType, activeAuditProperites);
 
