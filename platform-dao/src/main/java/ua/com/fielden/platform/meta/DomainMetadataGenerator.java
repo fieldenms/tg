@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AuditUtils;
+import ua.com.fielden.platform.audit.InactiveAuditProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -843,11 +844,21 @@ final class DomainMetadataGenerator {
             final PropertyMetadataImpl.Builder<N, D> propBuilder,
             final EntityMetadataBuilder<?, ?> entityBuilder)
     {
-        if (isAuditEntityType(entityBuilder.getJavaType()) || isSynAuditEntityType(entityBuilder.getJavaType())) {
+        if (isAuditEntityType(entityBuilder.getJavaType())) {
             // An audit property is active only if it is persistent.
             return AuditUtils.isAuditProperty(propBuilder.name())
                     ? propBuilder.with(PropertyMetadataKeys.AUDIT_PROPERTY, new KAuditProperty.Data(propBuilder.nature().isPersistent()))
                     : propBuilder;
+        }
+        else if (isSynAuditEntityType(entityBuilder.getJavaType())) {
+            // Inactive audit properties are annotated.
+            if (AuditUtils.isAuditProperty(propBuilder.name())) {
+                final var active = getPropertyAnnotation(InactiveAuditProperty.class, entityBuilder.getJavaType(), propBuilder.name()) == null;
+                return propBuilder.with(PropertyMetadataKeys.AUDIT_PROPERTY, new KAuditProperty.Data(active));
+            }
+            else {
+                return propBuilder;
+            }
         }
         else {
             return propBuilder;

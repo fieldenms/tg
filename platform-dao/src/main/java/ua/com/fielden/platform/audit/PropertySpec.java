@@ -173,6 +173,10 @@ final class PropertySpec {
         return annotations.stream().anyMatch(annot -> className.equals(annot.type));
     }
 
+    public boolean hasAnnotation(final Class<? extends Annotation> type) {
+        return hasAnnotation(ClassName.get(type));
+    }
+
     public String name() {
         return name;
     }

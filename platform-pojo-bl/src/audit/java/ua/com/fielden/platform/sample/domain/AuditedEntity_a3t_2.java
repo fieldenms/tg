@@ -4,6 +4,7 @@ import java.lang.String;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.AuditFor;
+import ua.com.fielden.platform.audit.InactiveAuditProperty;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
@@ -40,6 +41,7 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   private String a3t_str2;
 
   @IsProperty
+  @InactiveAuditProperty
   @Title(
       value = "Str 1",
       desc = "Non-existing property."

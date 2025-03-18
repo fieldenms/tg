@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
+import ua.com.fielden.platform.audit.InactiveAuditProperty;
 import ua.com.fielden.platform.audit.SynAuditEntityUtils;
 import ua.com.fielden.platform.audit.SynAuditFor;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -91,6 +92,7 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
       value = "\"Str 1\"",
       desc = "[\"Str 1\"] at the time of the audited event."
   )
+  @InactiveAuditProperty
   @IsProperty
   private String a3t_str1;
 

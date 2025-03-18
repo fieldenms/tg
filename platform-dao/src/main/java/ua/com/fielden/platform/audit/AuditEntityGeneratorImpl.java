@@ -185,9 +185,9 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
      *   <li> Use the previous audit-entity type version as the superclass.
      *   <li> Declare audit-properties for new audited properties.
      *        An audited property is "new" if it is not audited by the latest audit-entity type.
-     *   <li> Declare hidden audit-properties for removed audited properties.
+     *   <li> Declare inactive audit-properties for removed audited properties.
      *        When an audited property is removed, we no longer want to inherit its audit-property, so we must hide it
-     *        by declaring it anew as a plain property.
+     *        by declaring it anew as a plain property annotated with {@link InactiveAuditProperty}.
      * </ul>
      *
      * @param type  audited type
@@ -228,7 +228,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .collect(toSet());
 
         // If an audited property was removed, then it must still be among the active audit-properties.
-        final var hiddenAuditProperties = prevAuditEntityMetadata.activeAuditProperties()
+        final var inactiveAuditProperties = prevAuditEntityMetadata.activeAuditProperties()
                 .stream()
                 .filter(pm -> auditedEntityMetadata.propertyOpt(auditedPropertyName(pm.name())).isEmpty())
                 .collect(toSet());
@@ -250,14 +250,15 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 })
                 .forEach(a3tBuilder::addProperty);
 
-        hiddenAuditProperties.stream()
+        inactiveAuditProperties.stream()
                 .map(pm -> {
                     final var propBuilder = propertyBuilder(pm.name(), pm.type().genericJavaType())
-                            .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, prevAuditEntityMetadata.type(), pm.name())));
+                            .addAnnotation(mkIsPropertyForAudit(requirePropertyAnnotation(IsProperty.class, prevAuditEntityMetadata.type(), pm.name())))
+                            .addAnnotation(InactiveAuditProperty.class);
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), prevAuditEntityMetadata.type());
                     if (!propTitle.isEmpty()) {
-                        propBuilder.addAnnotation(AnnotationSpecs.title(propTitle, "Non-existing property."));
+                        propBuilder.addAnnotation(title(propTitle, "Non-existing property."));
                     }
 
                     return propBuilder.build();
@@ -427,11 +428,11 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     }
 
     private static boolean isActiveAuditProperty(final PropertySpec propertySpec) {
-        return isAuditProperty(propertySpec.name()) && propertySpec.hasAnnotation(ClassName.get(MapTo.class));
+        return isAuditProperty(propertySpec.name()) && !propertySpec.hasAnnotation(ClassName.get(InactiveAuditProperty.class));
     }
 
-    private static boolean isHiddenAuditProperty(final PropertySpec propertySpec) {
-        return isAuditProperty(propertySpec.name()) && !propertySpec.hasAnnotation(ClassName.get(MapTo.class));
+    private static boolean isInactiveAuditProperty(final PropertySpec propertySpec) {
+        return isAuditProperty(propertySpec.name()) && propertySpec.hasAnnotation(ClassName.get(InactiveAuditProperty.class));
     }
 
     private AuditEntitySpec newAuditEntitySpec(final Class<? extends AbstractAuditEntity<?>> auditType) {
@@ -649,7 +650,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
      * <p>
      * The structure is as follows:
      * <ul>
-     *   <li> Declare all audit-properties, both active and hidden, from the latest audit-entity type.
+     *   <li> Declare all audit-properties, both active and inactive, from the latest audit-entity type.
      *   <li> Declare an EQL model for each audit-entity type version, ensuring a rectangular shape.
      * </ul>
      */
@@ -714,21 +715,24 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .stream()
                 .filter(AuditEntityGeneratorImpl::isActiveAuditProperty)
                 .toList();
-        final var hiddenAuditProperties = currAuditEntitySpec
+        final var inactiveAuditProperties = currAuditEntitySpec
                 .properties()
                 .stream()
-                .filter(AuditEntityGeneratorImpl::isHiddenAuditProperty)
+                .filter(AuditEntityGeneratorImpl::isInactiveAuditProperty)
                 .toList();
 
-        final var allAuditProperties = concatList(activeAuditProperties, hiddenAuditProperties);
+        final var allAuditProperties = concatList(activeAuditProperties, inactiveAuditProperties);
 
         // Declare all audit-properties
         allAuditProperties.stream()
                 .map(prop -> {
                     final var title = prop.title().orElse("");
-                    return propertyBuilder(prop.name(), prop.type())
-                            .addAnnotation(AnnotationSpecs.title(title, "[%s] at the time of the audited event.".formatted(title)))
-                            .build();
+                    final var propBuilder = propertyBuilder(prop.name(), prop.type());
+                    propBuilder.addAnnotation(title(title, "[%s] at the time of the audited event.".formatted(title)));
+                    if (prop.hasAnnotation(InactiveAuditProperty.class)) {
+                        propBuilder.addAnnotation(InactiveAuditProperty.class);
+                    }
+                    return propBuilder.build();
                 })
                 .forEach(prop -> addPropertyTo(prop, builder, synAuditEntityClassName));
 
@@ -749,8 +753,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                              codeSetOf(concatSet(activeAuditProperties.stream().map(PropertySpec::name).toList(),
                                                  Set.of(ID),
                                                  AbstractSynAuditEntity.BASE_PROPERTIES)),
-                             // Yield null into hidden audit-properties
-                             codeMapOf(mkNullYields(hiddenAuditProperties), "$S", "$L"))
+                             // Yield null into inactive audit-properties
+                             codeMapOf(mkNullYields(inactiveAuditProperties), "$S", "$L"))
                 .build();
 
         // Here we create an EQL model for each prior audit-entity type.
@@ -760,9 +764,9 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         // 2. Status of audit-property in E.
         // Status of an audit-property is one of:
         // * Active.
-        // * Hidden or absent.
+        // * Inactive or absent.
         // Active audit-properties are yielded as is.
-        // For hidden or absent ones, "nothing" is yielded (null for entity-typed properties, some default value for other types).
+        // For inactive or absent ones, "nothing" is yielded (null for entity-typed properties, some default value for other types).
         final Map<AuditEntitySpec, FieldSpec> priorModelFieldsMap =
                 priorAuditEntityTypeSpecs.stream()
                         .collect(toImmutableMap(

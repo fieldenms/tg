@@ -4,6 +4,8 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.AuditedEntity_a3t_1;
+import ua.com.fielden.platform.sample.domain.AuditedEntity_a3t_2;
+import ua.com.fielden.platform.sample.domain.ReAuditedEntity_a3t;
 
 import java.util.stream.Stream;
 
@@ -40,8 +42,8 @@ public class AuditingMetadataTest {
     }
 
     @Test
-    public void active_and_inactive_audit_properties() {
-        final var auditedEntity_a3t_1_metadata = generator.forEntity(AuditedEntity_a3t_1.class);
+    public void active_and_inactive_audit_properties_in_persistent_audit_entity() {
+        final var auditedEntity_a3t_1_metadata = generator.forEntity(AuditedEntity_a3t_2.class);
 
         final var activeAuditPropertyNames = Stream.of("key", "date1", "bool1", "str2")
                 .map("a3t_"::concat)
@@ -57,7 +59,28 @@ public class AuditingMetadataTest {
 
         assertThat(auditedEntity_a3t_1_metadata.properties())
                 .filteredOn(p -> inactiveAuditPropertyNames.contains(p.name()))
-                .noneSatisfy(p -> assertThat(p.get(AUDIT_PROPERTY)).hasValueSatisfying(data -> assertThat(data.active()).isFalse()));
+                .allSatisfy(p -> assertThat(p.get(AUDIT_PROPERTY)).hasValueSatisfying(data -> assertThat(data.active()).isFalse()));
+    }
+
+    @Test
+    public void active_and_inactive_audit_properties_in_synthetic_audit_entity() {
+        final var synAuditMetadata = generator.forEntity(ReAuditedEntity_a3t.class);
+
+        final var activeAuditPropertyNames = Stream.of("key", "date1", "bool1", "str2")
+                .map("a3t_"::concat)
+                .collect(toSet());
+
+        final var inactiveAuditPropertyNames = Stream.of("str1")
+                .map("a3t_"::concat)
+                .collect(toSet());
+
+        assertThat(synAuditMetadata.properties())
+                .filteredOn(p -> activeAuditPropertyNames.contains(p.name()))
+                .allSatisfy(p -> assertThat(p.get(AUDIT_PROPERTY)).hasValueSatisfying(data -> assertThat(data.active()).isTrue()));
+
+        assertThat(synAuditMetadata.properties())
+                .filteredOn(p -> inactiveAuditPropertyNames.contains(p.name()))
+                .allSatisfy(p -> assertThat(p.get(AUDIT_PROPERTY)).hasValueSatisfying(data -> assertThat(data.active()).isFalse()));
     }
 
 }
