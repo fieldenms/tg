@@ -8,28 +8,32 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.CHANGED_PROPS;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 
 public class AuditingTest extends AbstractDaoTestCase {
 
     private Class<AbstractSynAuditEntity<TgVehicle>> tgVehicleSynAuditType;
-    private ISynAuditEntityDao<TgVehicle> coTgVehicleSynAudit;
+    private ISynAuditEntityDao<TgVehicle> coTgVehicleAudit;
     private Class<AbstractSynAuditProp<TgVehicle>> tgVehicleSynAuditPropType;
 
     @Inject
     void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
         tgVehicleSynAuditType = auditTypeFinder.getSynAuditEntityType(TgVehicle.class);
-        coTgVehicleSynAudit = co(tgVehicleSynAuditType);
+        coTgVehicleAudit = co(tgVehicleSynAuditType);
         tgVehicleSynAuditPropType = auditTypeFinder.getSynAuditPropTypeForSynAuditEntity(tgVehicleSynAuditType);
     }
 
     @Test
     public void audit_record_is_created_when_new_TgVehicle_is_saved() {
         final var m1 = co(TgVehicleModel.class).findByKey(TgVehicleModels.m1.key);
-        final var vehicle = save(new_(TgVehicle.class, "CAR2").
+        final var car2 = save(new_(TgVehicle.class, "CAR2").
                                          setInitDate(date("2001-01-01 00:00:00")).
                                          setModel(m1).
                                          setPrice(Money.of("20")).
@@ -37,24 +41,24 @@ public class AuditingTest extends AbstractDaoTestCase {
                                          setActive(true).
                                          setLeased(false));
 
-        final var vehicleAudit = coTgVehicleSynAudit.getAuditOrThrow(vehicle, fetchAll(tgVehicleSynAuditType));
+        final var car2_a3t = coTgVehicleAudit.getAuditOrThrow(car2, fetchAll(tgVehicleSynAuditType));
 
-        assertEquals(vehicle, vehicleAudit.getAuditedEntity());
-        assertEquals(vehicle.getVersion(), vehicleAudit.getAuditedVersion());
-        assertEquals(vehicle.getKey(), vehicleAudit.getA3t("key"));
-        assertEquals(vehicle.getInitDate(), vehicleAudit.getA3t("initDate"));
-        assertEquals(vehicle.getReplacedBy(), vehicleAudit.getA3t("replacedBy"));
-        assertEquals(vehicle.getStation(), vehicleAudit.getA3t("station"));
-        assertEquals(vehicle.getModel(), vehicleAudit.getA3t("model"));
-        assertEquals(vehicle.getPrice(), vehicleAudit.getA3t("price"));
-        assertEquals(vehicle.getPurchasePrice(), vehicleAudit.getA3t("purchasePrice"));
-        assertEquals(vehicle.getActive(), vehicleAudit.getA3t("active"));
-        assertEquals(vehicle.getLeased(), vehicleAudit.getA3t("leased"));
-        assertEquals(vehicle.getLastMeterReading(), vehicleAudit.getA3t("lastMeterReading"));
+        assertEquals(car2, car2_a3t.getAuditedEntity());
+        assertEquals(car2.getVersion(), car2_a3t.getAuditedVersion());
+        assertEquals(car2.getKey(), car2_a3t.getA3t("key"));
+        assertEquals(car2.getInitDate(), car2_a3t.getA3t("initDate"));
+        assertEquals(car2.getReplacedBy(), car2_a3t.getA3t("replacedBy"));
+        assertEquals(car2.getStation(), car2_a3t.getA3t("station"));
+        assertEquals(car2.getModel(), car2_a3t.getA3t("model"));
+        assertEquals(car2.getPrice(), car2_a3t.getA3t("price"));
+        assertEquals(car2.getPurchasePrice(), car2_a3t.getA3t("purchasePrice"));
+        assertEquals(car2.getActive(), car2_a3t.getA3t("active"));
+        assertEquals(car2.getLeased(), car2_a3t.getA3t("leased"));
+        assertEquals(car2.getLastMeterReading(), car2_a3t.getA3t("lastMeterReading"));
 
-        assertNotNull(vehicleAudit.getAuditDate());
-        assertNotNull(vehicleAudit.getUser());
-        assertNotNull(vehicleAudit.getAuditedTransactionGuid());
+        assertNotNull(car2_a3t.getAuditDate());
+        assertNotNull(car2_a3t.getUser());
+        assertNotNull(car2_a3t.getAuditedTransactionGuid());
     }
 
     @Test
@@ -65,7 +69,7 @@ public class AuditingTest extends AbstractDaoTestCase {
                                    TgVehicles.CAR1.key);
         final var car1WithProxiesSaved = save(car1WithProxies.setPrice(car1WithProxies.getPrice().plus(Money.ONE)));
 
-        final var car1_a3t = coTgVehicleSynAudit.getAuditOrThrow(car1WithProxiesSaved, fetchAll(tgVehicleSynAuditType));
+        final var car1_a3t = coTgVehicleAudit.getAuditOrThrow(car1WithProxiesSaved, fetchAll(tgVehicleSynAuditType));
         final var car1 = co(TgVehicle.class).findByKeyAndFetch(fetchAll(TgVehicle.class), TgVehicles.CAR1.key);
 
         assertEquals(car1WithProxiesSaved.getPrice(), car1.getPrice());
@@ -91,36 +95,31 @@ public class AuditingTest extends AbstractDaoTestCase {
     @Test
     public void only_changed_properties_with_nonnull_values_are_audited_when_new_TgVehicle_is_saved() {
         final var m1 = co(TgVehicleModel.class).findByKey(TgVehicleModels.m1.key);
-        final var vehicle = save(new_(TgVehicle.class, "CAR2").
-                                         setInitDate(date("2001-01-01 00:00:00")).
-                                         setModel(m1).
-                                         setPrice(Money.of("20")).
-                                         setPurchasePrice(Money.of("10")).
-                                         setActive(true).
-                                         setLeased(false));
+        final var car2 = save(new_(TgVehicle.class, "CAR2").
+                                      setInitDate(date("2001-01-01 00:00:00")).
+                                      setReplacedBy(null).
+                                      setStation(null).
+                                      setModel(m1).
+                                      setPrice(Money.of("20")).
+                                      setPurchasePrice(Money.of("10")).
+                                      setActive(true).
+                                      setLeased(false));
 
-        // TODO Use the synthetic audit-entity
-        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(car2, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
-        //
-        // final var changedProps = vehicleAudit.getChangedProps();
-        // final var expectedChangedPropNames = Stream.of("key", "initDate", "model", "price", "purchasePrice", "active", "leased")
-        //         .map(AuditUtils::auditPropertyName)
-        //         .collect(toSet());
-        // assertEquals(expectedChangedPropNames,
-        //              changedProps.stream().map(AbstractAuditProp::getProperty).map(PropertyDescriptor::getPropertyName).collect(toSet()));
-        //
-        // for (final var changedProp : changedProps) {
-        //     assertEquals("Incorrect audit-entity referenced by changed property [%s].".formatted(changedProp),
-        //                  vehicleAudit, changedProp.getAuditEntity());
-        //     assertEquals("Incorrect entity type referenced by property descriptor of changed property [%s]".formatted(changedProp),
-        //                  tgVehicleSynAuditType, changedProp.getProperty().getEntityType());
-        // }
+        final var car2_a3t = coTgVehicleAudit.getAuditOrThrow(car2, fetchAll(coTgVehicleAudit.getEntityType())
+                .with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
+
+        final var changedProps = car2_a3t.getChangedProps();
+        final var expectedChangedPropNames = Stream.of("key", "initDate", "model", "price", "purchasePrice", "active", "leased")
+                .map(AuditUtils::auditPropertyName)
+                .collect(toSet());
+        assertEquals(expectedChangedPropNames,
+                     changedProps.stream().map(p -> p.getProperty().getPropertyName()).collect(toSet()));
     }
 
     @Test
     public void all_changed_properties_are_audited_when_persisted_TgVehicle_is_saved() {
         final var m1 = co(TgVehicleModel.class).findByKey(TgVehicleModels.m1.key);
-        final var vehicle = save(new_(TgVehicle.class, "CAR2").
+        final var car2 = save(new_(TgVehicle.class, "CAR2").
                                          setInitDate(date("2001-01-01 00:00:00")).
                                          setModel(m1).
                                          setPrice(Money.of("20")).
@@ -129,56 +128,55 @@ public class AuditingTest extends AbstractDaoTestCase {
                                          setLeased(false));
 
         final var m2 = co(TgVehicleModel.class).findByKey(TgVehicleModels.m2.key);
-        final var modVehicle = save(vehicle.setPrice(Money.of("100")).setLeased(true).setModel(m2).setInitDate(null));
+        final var car2Saved = save(car2.setPrice(Money.of("100")).setLeased(true).setModel(m2).setInitDate(null));
 
-        // TODO Use the synthetic audit-entity
-        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(modVehicle, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
-        // final var changedProps = vehicleAudit.getChangedProps();
-        // final var expectedChangedPropNames = Stream.of("price", "leased", "model", "initDate")
-        //         .map(AuditUtils::auditPropertyName)
-        //         .collect(toSet());
-        // assertEquals(expectedChangedPropNames,
-        //              changedProps.stream().map(AbstractAuditProp::getProperty).map(PropertyDescriptor::getPropertyName).collect(toSet()));
+        final var car2Saved_a3t = coTgVehicleAudit.getAuditOrThrow(car2Saved, fetchAll(coTgVehicleAudit.getEntityType())
+                .with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
+        final var expectedChangedPropNames = Stream.of("price", "leased", "model", "initDate")
+                .map(AuditUtils::auditPropertyName)
+                .collect(toSet());
+        assertEquals(expectedChangedPropNames,
+                     car2Saved_a3t.getChangedProps().stream().map(p -> p.getProperty().getPropertyName()).collect(toSet()));
     }
 
     @Test
     public void audit_prop_entities_reference_the_audit_entity_that_recorded_the_change() {
         final var m1 = co(TgVehicleModel.class).findByKey(TgVehicleModels.m1.key);
-        final var vehicle = save(new_(TgVehicle.class, "CAR2").
-                                         setInitDate(date("2001-01-01 00:00:00")).
-                                         setModel(m1).
-                                         setPrice(Money.of("20")).
-                                         setPurchasePrice(Money.of("10")).
-                                         setActive(true).
-                                         setLeased(false));
+        final var car2 = save(new_(TgVehicle.class, "CAR2").
+                                      setInitDate(date("2001-01-01 00:00:00")).
+                                      setModel(m1).
+                                      setPrice(Money.of("20")).
+                                      setPurchasePrice(Money.of("10")).
+                                      setActive(true).
+                                      setLeased(false));
 
-        // TODO Use the synthetic audit-entity
-        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(vehicle, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
-        //
-        // for (final var changedProp : vehicleAudit.getChangedProps()) {
-        //     assertEquals("Incorrect audit-entity referenced by changed property [%s].".formatted(changedProp),
-        //                  vehicleAudit, changedProp.getAuditEntity());
-        // }
+        final var car2_a3t = coTgVehicleAudit.getAuditOrThrow(car2, fetchAll(coTgVehicleAudit.getEntityType())
+                .with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
+
+        for (final var changedProp : car2_a3t.getChangedProps()) {
+            assertEquals("Incorrect audit-entity referenced by changed property [%s].".formatted(changedProp),
+                         car2_a3t, changedProp.getAuditEntity());
+        }
     }
 
     @Test
     public void property_descriptors_of_audit_prop_entities_reference_the_synthetic_audit_entity_type() {
         final var m1 = co(TgVehicleModel.class).findByKey(TgVehicleModels.m1.key);
-        final var vehicle = save(new_(TgVehicle.class, "CAR2").
-                                         setInitDate(date("2001-01-01 00:00:00")).
-                                         setModel(m1).
-                                         setPrice(Money.of("20")).
-                                         setPurchasePrice(Money.of("10")).
-                                         setActive(true).
-                                         setLeased(false));
+        final var car2 = save(new_(TgVehicle.class, "CAR2").
+                                      setInitDate(date("2001-01-01 00:00:00")).
+                                      setModel(m1).
+                                      setPrice(Money.of("20")).
+                                      setPurchasePrice(Money.of("10")).
+                                      setActive(true).
+                                      setLeased(false));
 
-        // TODO Use the synthetic audit-entity
-        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(vehicle, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
-        //
-        // for (final var changedProp : vehicleAudit.getChangedProps()) {
-        //     assertEquals("Incorrect entity type referenced by property descriptor of changed property [%s]".formatted(changedProp),
-        //                  tgVehicleSynAuditType, changedProp.getProperty().getEntityType());
-        // }
+        final var car2_a3t = coTgVehicleAudit.getAuditOrThrow(car2, fetchAll(coTgVehicleAudit.getEntityType())
+                .with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
+
+        for (final var changedProp : car2_a3t.getChangedProps()) {
+            assertEquals("Incorrect entity type referenced by property descriptor of changed property [%s]".formatted(changedProp),
+                         tgVehicleSynAuditType, changedProp.getProperty().getEntityType());
+        }
     }
 
     @Override
