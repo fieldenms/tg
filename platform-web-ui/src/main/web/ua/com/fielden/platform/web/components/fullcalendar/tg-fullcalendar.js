@@ -1,5 +1,5 @@
-import { fullcalendarStyles, FullCalendar } from '/resources/fullcalendar/fullcalendar-lib.js';
-import { momentTimezonePlugin } from '/resources/fullcalendar/moment-timezone/fullcalendar-with-timezones-lib.js';
+import { /*fullcalendarStyles,*/ FullCalendar } from '/resources/polymer/lib/fullcalendar-lib.js';
+//import { momentTimezonePlugin } from '/resources/fullcalendar/moment-timezone/fullcalendar-with-timezones-lib.js';
 import { now } from '/resources/reflection/tg-date-utils.js';
 import '/resources/components/tg-dropdown-switch.js';
 import '/resources/layout/tg-flex-layout.js';
@@ -18,8 +18,8 @@ import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
+//${fullcalendarStyles}
 const template = html`
-    ${fullcalendarStyles}
     <style include='iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning'>
         :host {
             width: 100%;
@@ -214,12 +214,12 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
             height: 'auto',
             firstDay: this._appConfig.firstDayOfWeek
         };
-        if (moment.defaultZone) {
-            config.plugins = [ momentTimezonePlugin ];
-            config.timeZone = moment.defaultZone.name;
-            config.now = () => now().toDate().toISOString(); // Return in ISO 8601 string format, as per default implementation
-        }
-        this._calendar = new FullCalendar.Calendar(this.$.calendarContainer, config);
+//        if (moment.defaultZone) {
+//            config.plugins = [ momentTimezonePlugin ];
+//            config.timeZone = moment.defaultZone.name;
+//            config.now = () => now().toDate().toISOString(); // Return in ISO 8601 string format, as per default implementation
+//        }
+        this._calendar = new FullCalendar(this.$.calendarContainer, config);
           this._calendar.render();
           this.currentView = 'dayGridMonth';
           //Initialising edit action
