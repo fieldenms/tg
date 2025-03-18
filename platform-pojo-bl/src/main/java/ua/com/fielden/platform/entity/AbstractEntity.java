@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -21,10 +21,7 @@ import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
-import ua.com.fielden.platform.entity.validation.DefaultValidatorForValueTypeWithValidation;
-import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-import ua.com.fielden.platform.entity.validation.ICustomValidator;
-import ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator;
+import ua.com.fielden.platform.entity.validation.*;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
@@ -37,7 +34,6 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.IWithValidation;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.ArrayUtils;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -808,9 +804,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
             return t2(ImmutableSet.copyOf(annotations.values()), validators);
         } catch (final Exception ex) {
-            logger.error(format("Exception during collection of validators for property [%s] in entity type [%s].",
-                                propField.getName(), getType().getSimpleName()),
-                         ex);
+            logger.error(() -> "Exception during collection of validators for property [%s] in entity type [%s].".formatted(propField.getName(), getType().getSimpleName()), ex);
             throw ex;
         }
     }
@@ -860,26 +854,45 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
         }
 
+        // Exclude handlers that should not be defined explicitly.
+        // This is necessary to ensure the correct order to default validators.
+        final List<Handler> bceHandlers = annotations.stream().filter(at -> at instanceof BeforeChange)
+                                          .map(at -> ((BeforeChange) at).value())
+                                          // filter out the default validators
+                                          .flatMap(handlers -> Stream.of(handlers)
+                                                  .filter(handler -> handler.value() != DefaultValidatorForValueTypeWithValidation.class)
+                                                  .filter(handler -> handler.value() != SanitiseHtmlValidator.class)
+                                                  )
+                                          .collect(toCollection(ArrayList::new));
+
+        // Should DefaultValidatorForValueTypeWithValidation be added?
         if (IWithValidation.class.isAssignableFrom(propType)) {
-            // Either BeforeChange already exists, and it may or may not have handler DefaultValidatorForValueTypeWithValidation,
-            // or BeforeChange does not exist at all.
-            // We need to make sure DefaultValidatorForValueTypeWithValidation is the first handler in BeforeChange.
-            // If it exists, we remove it in favour of a new one, placed at the beginning, so that it would execute before any other.
-            final var newBce = annotations.stream().filter(at -> at instanceof BeforeChange).findFirst()
-                               .map(at -> ((BeforeChange) at).value())
-                               .map(handlers -> ArrayUtils.prepend(new HandlerAnnotation(DefaultValidatorForValueTypeWithValidation.class).newInstance(),
-                                                                   Stream.of(handlers)
-                                                                           .filter(handler -> handler.value() != DefaultValidatorForValueTypeWithValidation.class)
-                                                                           .toArray(Handler[]::new)))
-                               .map(BeforeChangeAnnotation::newInstance)
-                               .orElseGet(() -> BeforeChangeAnnotation.newInstance(new HandlerAnnotation(DefaultValidatorForValueTypeWithValidation.class).newInstance()));
+            bceHandlers.addFirst(new HandlerAnnotation(DefaultValidatorForValueTypeWithValidation.class).newInstance());
+        }
+        // Should MaxLengthValidator be added?
+        if (MaxLengthValidator.SUPPORTED_TYPES.contains(propType) &&
+            !propField.isAnnotationPresent(Calculated.class) &&
+            propField.getAnnotation(IsProperty.class).length() > 0 &&
+            bceHandlers.stream().noneMatch(handler -> handler.value() == MaxLengthValidator.class))
+        {
+            bceHandlers.addFirst(new HandlerAnnotation(MaxLengthValidator.class).newInstance());
+        }
+        // Should SanitiseHtmlValidator be added?
+        if (propType == String.class && !propField.isAnnotationPresent(Calculated.class)) {
+            bceHandlers.addFirst(new HandlerAnnotation(SanitiseHtmlValidator.class).newInstance());
+        }
+
+        // If there are any BCE handlers, need to add/replace the BeforeChangeAnnotation instance.
+        if (!bceHandlers.isEmpty()) {
+            final var newBce = BeforeChangeAnnotation.newInstance(bceHandlers.toArray(new Handler[]{}));
             final var newAnnotations = Stream.concat(annotations.stream().filter(at -> !(at instanceof BeforeChange)), Stream.of(newBce))
-                    .collect(toCollection(LinkedHashSet::new));
-            return unmodifiableSequencedSet(newAnnotations);
+                                             .collect(toCollection(LinkedHashSet::new));
+            annotations.clear();
+            annotations.addAll(newAnnotations);
         }
-        else {
-            return unmodifiableSequencedSet(annotations);
-        }
+
+        return unmodifiableSequencedSet(annotations);
+
     }
 
     private Set<Annotation> collectValidationAnnotationsForKey(
