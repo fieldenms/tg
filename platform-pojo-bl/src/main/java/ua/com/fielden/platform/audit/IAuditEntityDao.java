@@ -64,6 +64,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     /**
      * Streams all audit records for the specified audited entity.
      *
+     * @param auditedEntity  audited entity, must have property {@code id}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
     default Stream<AE> streamAudits(final E auditedEntity, final @Nullable fetch<AE> fetchModel) {
@@ -72,6 +73,8 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
 
     /**
      * Streams all audit records for the specified audited entity using the default fetch model.
+     *
+     * @param auditedEntity  audited entity, must have property {@code id}
      */
     default Stream<AE> streamAudits(final E auditedEntity) {
         return streamAudits(auditedEntity, null);
@@ -99,6 +102,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     /**
      * Streams all audit records for the specified audited entity.
      *
+     * @param auditedEntity  audited entity, must have property {@code id}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      * @param fetchSize  batch size for data retrieval
      */
@@ -109,6 +113,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     /**
      * Streams all audit records for the specified audited entity using the default fetch model.
      *
+     * @param auditedEntity  audited entity, must have property {@code id}
      * @param fetchSize  batch size for data retrieval
      */
     default Stream<AE> streamAudits(final E auditedEntity, final int fetchSize) {
@@ -135,6 +140,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     /**
      * Retrieves all audit records for the specified entity.
      *
+     * @param auditedEntity  audited entity, must have property {@code id}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
     default List<AE> getAudits(final E auditedEntity, final @Nullable fetch<AE> fetchModel) {
@@ -143,13 +149,15 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
 
     /**
      * Retrieves all audit records for the specified entity using the default fetch model.
+     *
+     * @param auditedEntity  audited entity, must have property {@code id}
      */
     default List<AE> getAudits(final E auditedEntity) {
         return getAudits(auditedEntity, null);
     }
 
     /**
-     * Retrieves an audit record for an audit entity with the specified ID and version.
+     * Retrieves an audit record for an audited entity with the specified ID and version.
      * If an audit record doesn't exist, {@code null} is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
@@ -160,7 +168,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     @Nullable AE getAudit(Long auditedEntityId, Long version, @Nullable fetch<AE> fetchModel);
 
     /**
-     * Retrieves an audit record for an audit entity with the specified ID and version using the default fetch model.
+     * Retrieves an audit record for an audited entity with the specified ID and version using the default fetch model.
      * If an audit record doesn't exist, {@code null} is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
@@ -172,10 +180,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity with the specified version.
+     * Retrieves an audit record for the specified audited entity with the specified version.
      * If an audit record doesn't exist, {@code null} is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
+     * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity, which should be used instead of its current version
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
@@ -184,10 +193,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity with the specified version using the default fetch model.
+     * Retrieves an audit record for the specified audited entity with the specified version using the default fetch model.
      * If an audit record doesn't exist, {@code null} is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
+     * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity, which should be used instead of its current version
      */
     default @Nullable AE getAudit(final E auditedEntity, final Long version) {
@@ -195,10 +205,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity using its current version.
+     * Retrieves an audit record for the specified audited entity using its current version.
      * If an audit record doesn't exist, {@code null} is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
+     * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
     default @Nullable AE getAudit(final E auditedEntity, final @Nullable fetch<AE> fetchModel) {
@@ -206,16 +217,18 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity using its current version and the default fetch model.
+     * Retrieves an audit record for the specified audited entity using its current version and the default fetch model.
      * If an audit record doesn't exist, {@code null} is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
+     *
+     * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      */
     default @Nullable AE getAudit(final E auditedEntity) {
         return getAudit(auditedEntity, (fetch<AE>) null);
     }
 
     /**
-     * Retrieves an audit record for an audit entity with the specified ID and version.
+     * Retrieves an audit record for an audited entity with the specified ID and version.
      * If an audit record doesn't exist, an empty optional is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
@@ -228,7 +241,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for an audit entity with the specified ID and version using the default fetch model.
+     * Retrieves an audit record for an audited entity with the specified ID and version using the default fetch model.
      * If an audit record doesn't exist, an empty optional is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
@@ -240,10 +253,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity with the specified version.
+     * Retrieves an audit record for the specified audited entity with the specified version.
      * If an audit record doesn't exist, an empty optional is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
+     * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity, which should be used instead of its current version
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
@@ -252,10 +266,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity with the specified version using the default fetch model.
+     * Retrieves an audit record for the specified audited entity with the specified version using the default fetch model.
      * If an audit record doesn't exist, an empty optional is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
+     * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity, which should be used instead of its current version
      */
     default Optional<AE> getAuditOptional(final E auditedEntity, final Long version) {
@@ -263,10 +278,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity using its current version.
+     * Retrieves an audit record for the specified audited entity using its current version.
      * If an audit record doesn't exist, an empty optional is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
+     * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
     default Optional<AE> getAuditOptional(final E auditedEntity, final @Nullable fetch<AE> fetchModel) {
@@ -274,16 +290,18 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity using its current version and the default fetch model.
+     * Retrieves an audit record for the specified audited entity using its current version and the default fetch model.
      * If an audit record doesn't exist, an empty optional is returned.
      * (This can be the case if the specified version is greater than the last persisted version.)
+     *
+     * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      */
     default Optional<AE> getAuditOptional(final E auditedEntity) {
         return getAuditOptional(auditedEntity, (fetch<AE>) null);
     }
 
     /**
-     * Retrieves an audit record for an audit entity with the specified ID and version.
+     * Retrieves an audit record for an audited entity with the specified ID and version.
      * If an audit record doesn't exist, an exception is thrown.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
@@ -301,7 +319,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for an audit entity with the specified ID and version using the default fetch model.
+     * Retrieves an audit record for an audited entity with the specified ID and version using the default fetch model.
      * If an audit record doesn't exist, an exception is thrown.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
@@ -313,10 +331,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity with the specified version.
+     * Retrieves an audit record for the specified audited entity with the specified version.
      * If an audit record doesn't exist, an exception is thrown.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
+     * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity that is used instead of its current version
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
@@ -325,10 +344,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity with the specified version using the default fetch model.
+     * Retrieves an audit record for the specified audited entity with the specified version using the default fetch model.
      * If an audit record doesn't exist, an exception is thrown.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
+     * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity that is used instead of its current version
      */
     default AE getAuditOrThrow(final E auditedEntity, final Long version) {
@@ -336,10 +356,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity using its current version.
+     * Retrieves an audit record for the specified audited entity using its and current version.
      * If an audit record doesn't exist, an exception is thrown.
      * (This can be the case if the specified version is greater than the last persisted version.)
      *
+     * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
     default AE getAuditOrThrow(final E auditedEntity, final @Nullable fetch<AE> fetchModel) {
@@ -347,9 +368,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
     }
 
     /**
-     * Retrieves an audit record for the specified audit entity using its current version and the default fetch model.
+     * Retrieves an audit record for the specified audited entity using its current version and the default fetch model.
      * If an audit record doesn't exist, an exception is thrown.
      * (This can be the case if the specified version is greater than the last persisted version.)
+     *
+     * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      */
     default AE getAuditOrThrow(final E auditedEntity) {
         return getAuditOrThrow(auditedEntity, (fetch<AE>) null);
