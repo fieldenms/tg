@@ -11,6 +11,7 @@ import ua.com.fielden.platform.types.Money;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 
 public class AuditingTest extends AbstractDaoTestCase {
 
@@ -56,6 +57,37 @@ public class AuditingTest extends AbstractDaoTestCase {
         assertNotNull(vehicleAudit.getAuditDate());
         assertNotNull(vehicleAudit.getUser());
         assertNotNull(vehicleAudit.getAuditedTransactionGuid());
+    }
+
+    @Test
+    public void values_for_proxied_audited_properties_are_refetched_to_create_an_audit_record() {
+        // Fetch essential properties for saving and `price` to be modified.
+        final var car1WithProxies = co$(TgVehicle.class)
+                .findByKeyAndFetch(fetchNone(TgVehicle.class).with("id", "version", "key", "price"),
+                                   TgVehicles.CAR1.key);
+        final var car1WithProxiesSaved = save(car1WithProxies.setPrice(car1WithProxies.getPrice().plus(Money.ONE)));
+
+        final var car1_a3t = coTgVehicleAudit.getAuditOrThrow(car1WithProxiesSaved, fetchAll(tgVehicleAuditType));
+        final var car1 = co(TgVehicle.class).findByKeyAndFetch(fetchAll(TgVehicle.class), TgVehicles.CAR1.key);
+
+        assertEquals(car1WithProxiesSaved.getPrice(), car1.getPrice());
+
+        assertEquals(car1, car1_a3t.getAuditedEntity());
+        assertEquals(car1.getVersion(), car1_a3t.getAuditedVersion());
+        assertEquals(car1.getKey(), car1_a3t.getA3t("key"));
+        assertEquals(car1.getInitDate(), car1_a3t.getA3t("initDate"));
+        assertEquals(car1.getReplacedBy(), car1_a3t.getA3t("replacedBy"));
+        assertEquals(car1.getStation(), car1_a3t.getA3t("station"));
+        assertEquals(car1.getModel(), car1_a3t.getA3t("model"));
+        assertEquals(car1.getPrice(), car1_a3t.getA3t("price"));
+        assertEquals(car1.getPurchasePrice(), car1_a3t.getA3t("purchasePrice"));
+        assertEquals(car1.getActive(), car1_a3t.getA3t("active"));
+        assertEquals(car1.getLeased(), car1_a3t.getA3t("leased"));
+        assertEquals(car1.getLastMeterReading(), car1_a3t.getA3t("lastMeterReading"));
+
+        assertNotNull(car1_a3t.getAuditDate());
+        assertNotNull(car1_a3t.getUser());
+        assertNotNull(car1_a3t.getAuditedTransactionGuid());
     }
 
     @Test
