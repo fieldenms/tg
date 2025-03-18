@@ -49,6 +49,8 @@ public class MaxLengthValidator implements IBeforeChangeEventHandler<Object> {
     public static final String ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH = "Value should not be longer than %s characters.";
     public static final String ERR_UNSUPPORTED_PROPERTY_TYPE = "Validator [%s] is not applicable to properties of type [%s].";
 
+    public static final Set<Class<?>> SUPPORTED_TYPES = Set.of(String.class, Hyperlink.class, RichText.class);
+
     private Integer limit;
 
     protected MaxLengthValidator() { }
@@ -63,7 +65,7 @@ public class MaxLengthValidator implements IBeforeChangeEventHandler<Object> {
             return successful();
         }
 
-        if (!(newValue instanceof String) && !(newValue instanceof Hyperlink) && !(newValue instanceof RichText)) {
+        if (!SUPPORTED_TYPES.contains(newValue.getClass())) {
             throw new EntityDefinitionException(ERR_UNSUPPORTED_PROPERTY_TYPE.formatted(MaxLengthValidator.class.getSimpleName(), property.getType().getSimpleName()));
         }
 

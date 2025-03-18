@@ -1,14 +1,7 @@
 package ua.com.fielden.platform.entity.validation;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import org.junit.Test;
-
 import com.google.inject.Injector;
-
+import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithMaxLengthValidation;
@@ -17,6 +10,10 @@ import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory
 import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.RichText;
+
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.*;
 
 /**
  * A test case for validation with {@link MaxLengthValidator}.
@@ -225,6 +222,12 @@ public class MaxLengthValidatorTest {
         entity.setRichText(longRichText);
         assertFalse(mpRichText.isValid());
         assertEquals(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH.formatted(maxLength), mpRichText.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void error_is_thrown_if_MaxLengthValidator_is_used_for_property_of_unsupported_type() {
+        final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
+        assertThatThrownBy(() -> entity.setIntProp(42)).hasMessage("Validator [MaxLengthValidator] is not applicable to properties of type [Integer].");
     }
 
 }

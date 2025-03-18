@@ -48,6 +48,20 @@ public class EntityWithMaxLengthValidation extends AbstractEntity<String> {
     @BeforeChange(@Handler(MaxLengthValidator.class))
     private RichText richText;
 
+    @IsProperty
+    @BeforeChange(@Handler(MaxLengthValidator.class))
+    private Integer intProp;
+
+    public Integer getIntProp() {
+        return intProp;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setIntProp(final Integer intProp) {
+        this.intProp = intProp;
+        return this;
+    }
+
     public RichText getRichText() {
         return richText;
     }
