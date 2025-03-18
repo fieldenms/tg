@@ -97,7 +97,7 @@ public class MaxLengthValidator implements IBeforeChangeEventHandler<Object> {
         // alternatively, try to determine the limit from the property definition
         final IsProperty anProp = getPropertyAnnotation(IsProperty.class, property.getEntity().getClass(), property.getName());
         final Optional<Integer> maybeLength = ofNullable(anProp.length() > IsProperty.DEFAULT_LENGTH ? anProp.length() : null);
-        // get a minimum of limit and length if both or either are present, otherwise an empty result would be returned
+        // get a minimum of limit and length if both or either is present, otherwise an empty result would be returned
         return maybeLimit.map(limit -> maybeLength.map(length -> min(limit, length)).orElse(limit)).or(() -> maybeLength);
     }
 
