@@ -19,22 +19,20 @@ import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.
  * Base type for implementations of audit-prop entity companion objects.
  *
  * @param <E>  the audited entity type
- * @param <AE>  the audit-entity type
- * @param <AP>  the audit-prop entity type
  */
-public abstract class CommonAuditPropDao<E extends AbstractEntity<?>, AE extends AbstractAuditEntity<E>, AP extends AbstractAuditProp<AE>>
-        extends CommonEntityDao<AP>
-        implements IAuditPropDao<AE, AP>
+public abstract class CommonAuditPropDao<E extends AbstractEntity<?>>
+        extends CommonEntityDao<AbstractAuditProp<E>>
+        implements IAuditPropInstantiator<E>
 {
 
-    private final Class<AE> auditEntityType;
+    private final Class<AbstractAuditEntity<E>> auditEntityType;
     private Class<AbstractSynAuditEntity<E>> synAuditEntityType;
 
     private IDomainMetadata domainMetadata;
 
     protected CommonAuditPropDao() {
         super();
-        auditEntityType = getAuditTypeForAuditPropType(getEntityType());
+        auditEntityType = getAuditTypeForAuditPropType((Class<AbstractAuditProp<E>>) getEntityType());
     }
 
     @Inject
@@ -49,7 +47,7 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>, AE extends
     }
 
     @Override
-    public AP newAuditProp(final AE auditEntity, final CharSequence property) {
+    public AbstractAuditProp<E> newAuditProp(final AbstractAuditEntity<E> auditEntity, final CharSequence property) {
         if (!(auditEntity.isPersisted() && !auditEntity.isDirty())) {
             throw new InvalidArgumentException("Audit-entity must be persisted and non-dirty.");
         }
@@ -57,7 +55,7 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>, AE extends
             throw noSuchPropertyException(auditEntityType, property);
         }
 
-        final var auditProp = new_();
+        final AbstractAuditProp<E> auditProp = new_();
 
         auditProp.setAuditEntity(auditEntity);
         auditProp.setProperty(PropertyDescriptor.pd(synAuditEntityType, property.toString()));
@@ -66,8 +64,8 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>, AE extends
     }
 
     @Override
-    public AP fastNewAuditProp(final AE auditEntity, final CharSequence property) {
-        final var auditProp = new_();
+    public AbstractAuditProp<E> fastNewAuditProp(final AbstractAuditEntity<E> auditEntity, final CharSequence property) {
+        final AbstractAuditProp<E> auditProp = new_();
         auditProp.beginInitialising();
 
         auditProp.setAuditEntity(auditEntity);
@@ -79,7 +77,7 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>, AE extends
     }
 
     @Override
-    protected IFetchProvider<AP> createFetchProvider() {
+    protected IFetchProvider<AbstractAuditProp<E>> createFetchProvider() {
         return EntityUtils.fetch(getEntityType())
                 .with(domainMetadata.forEntity(getEntityType()).properties().stream()
                               .filter(PropertyMetadata::isPersistent)

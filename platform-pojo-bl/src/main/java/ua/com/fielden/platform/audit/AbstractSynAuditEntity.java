@@ -92,7 +92,7 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
     /**
      * Getter for property {@link #CHANGED_PROPS}.
      */
-    public abstract Set<? extends AbstractSynAuditProp<? extends AbstractSynAuditEntity<E>>> getChangedProps();
+    public abstract Set<? extends AbstractSynAuditProp<E>> getChangedProps();
 
     /**
      * Dynamic getter for accessing values of audited properties.

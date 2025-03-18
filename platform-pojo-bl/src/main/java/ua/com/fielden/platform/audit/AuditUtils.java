@@ -93,8 +93,8 @@ public final class AuditUtils {
      *
      * @see #getAuditPropTypeForAuditType(Class)
      */
-    public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
-    Optional<Class<AP>> findAuditPropTypeForAuditType(final Class<AE> auditType)
+    public static <E extends AbstractEntity<?>> Optional<Class<AbstractAuditProp<E>>> findAuditPropTypeForAuditType(
+            final Class<AbstractAuditEntity<E>> auditType)
     {
         try {
             return Optional.of(getAuditPropTypeForAuditTypeOrThrow(auditType));
@@ -110,8 +110,8 @@ public final class AuditUtils {
      *
      * @see #findAuditPropTypeForAuditType(Class)
      */
-    public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
-    Class<AP> getAuditPropTypeForAuditType(final Class<AE> auditType)
+    public static <E extends AbstractEntity<?>> Class<AbstractAuditProp<E>> getAuditPropTypeForAuditType(
+            final Class<AbstractAuditEntity<E>> auditType)
     {
         try {
             return getAuditPropTypeForAuditTypeOrThrow(auditType);
@@ -120,12 +120,12 @@ public final class AuditUtils {
         }
     }
 
-    private static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
-    Class<AP> getAuditPropTypeForAuditTypeOrThrow(final Class<AE> auditType)
+    private static <E extends AbstractEntity<?>> Class<AbstractAuditProp<E>> getAuditPropTypeForAuditTypeOrThrow(
+            final Class<AbstractAuditEntity<E>> auditType)
             throws ClassNotFoundException
     {
         final var auditPropTypeName = auditType.getName() + "_Prop";
-        return (Class<AP>) auditType.getClassLoader().loadClass(auditPropTypeName);
+        return (Class<AbstractAuditProp<E>>) auditType.getClassLoader().loadClass(auditPropTypeName);
     }
 
     /**
@@ -134,8 +134,8 @@ public final class AuditUtils {
      *
      * @see #getSynAuditPropTypeForSynAuditType(Class)
      */
-    public static <AE extends AbstractSynAuditEntity<?>, AP extends AbstractSynAuditProp<AE>>
-    Optional<Class<AP>> findSynAuditPropTypeForSynAuditType(final Class<AE> synAuditType)
+    public static <E extends AbstractEntity<?>> Optional<Class<AbstractSynAuditProp<E>>> findSynAuditPropTypeForSynAuditType(
+            final Class<AbstractSynAuditEntity<E>> synAuditType)
     {
         try {
             return Optional.of(getSynAuditPropTypeForSynAuditTypeOrThrow(synAuditType));
@@ -151,8 +151,8 @@ public final class AuditUtils {
      *
      * @see #findSynAuditPropTypeForSynAuditType(Class)
      */
-    public static <AE extends AbstractSynAuditEntity<?>, AP extends AbstractSynAuditProp<AE>>
-    Class<AP> getSynAuditPropTypeForSynAuditType(final Class<AE> synAuditType)
+    public static <E extends AbstractEntity<?>> Class<AbstractSynAuditProp<E>> getSynAuditPropTypeForSynAuditType(
+            final Class<AbstractSynAuditEntity<E>> synAuditType)
     {
         try {
             return getSynAuditPropTypeForSynAuditTypeOrThrow(synAuditType);
@@ -161,12 +161,12 @@ public final class AuditUtils {
         }
     }
 
-    private static <AE extends AbstractSynAuditEntity<?>, AP extends AbstractSynAuditProp<AE>>
-    Class<AP> getSynAuditPropTypeForSynAuditTypeOrThrow(final Class<AE> synAuditType)
+    private static <E extends AbstractEntity<?>> Class<AbstractSynAuditProp<E>> getSynAuditPropTypeForSynAuditTypeOrThrow(
+            final Class<AbstractSynAuditEntity<E>> synAuditType)
             throws ClassNotFoundException
     {
         final var auditPropTypeName = synAuditType.getName() + "_Prop";
-        return (Class<AP>) synAuditType.getClassLoader().loadClass(auditPropTypeName);
+        return (Class<AbstractSynAuditProp<E>>) synAuditType.getClassLoader().loadClass(auditPropTypeName);
     }
 
     public static boolean isAuditPropEntityType(final Class<?> type) {
@@ -179,10 +179,10 @@ public final class AuditUtils {
      * <p>
      * This method is the inverse of {@link #findAuditPropTypeForAuditType(Class)}.
      */
-    public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
-    Optional<Class<AE>> findAuditTypeForAuditPropType(final Class<AP> auditEntity)
+    public static <E extends AbstractEntity<?>> Optional<Class<AbstractAuditEntity<E>>> findAuditTypeForAuditPropType(
+            final Class<AbstractAuditProp<E>> auditPropType)
     {
-        return Optional.ofNullable(getAuditTypeForAuditPropTypeOrNull(auditEntity));
+        return Optional.ofNullable(getAuditTypeForAuditPropTypeOrNull(auditPropType));
     }
 
     /**
@@ -194,8 +194,8 @@ public final class AuditUtils {
      * <p>
      * The return type of this method deliberately doesn't contain wildcards, as that would greatly reduce the ergonomics around its usage.
      */
-    public static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
-    Class<AE> getAuditTypeForAuditPropType(final Class<AP> auditPropType)
+    public static <E extends AbstractEntity<?>> Class<AbstractAuditEntity<E>> getAuditTypeForAuditPropType(
+            final Class<AbstractAuditProp<E>> auditPropType)
     {
         final var auditType = getAuditTypeForAuditPropTypeOrNull(auditPropType);
         if (auditType == null) {
@@ -205,10 +205,10 @@ public final class AuditUtils {
         return auditType;
     }
 
-    private static <AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>>
-    @Nullable Class<AE> getAuditTypeForAuditPropTypeOrNull(final Class<AP> auditPropType)
+    private static <E extends AbstractEntity<?>> @Nullable Class<AbstractAuditEntity<E>> getAuditTypeForAuditPropTypeOrNull(
+            final Class<AbstractAuditProp<E>> auditPropType)
     {
-        return (Class<AE>) auditPropType.getAnnotation(AuditPropFor.class).value();
+        return (Class<AbstractAuditEntity<E>>) auditPropType.getAnnotation(AuditPropFor.class).value();
     }
 
     /**
@@ -218,9 +218,7 @@ public final class AuditUtils {
      *
      * @see #getAuditedTypeForAuditPropType(Class)
      */
-    public static <E extends AbstractEntity<?>, AE extends AbstractAuditEntity<E>>
-    Class<E> getAuditedType(final Class<AE> auditType)
-    {
+    public static <E extends AbstractEntity<?>> Class<E> getAuditedType(final Class<AbstractAuditEntity<E>> auditType) {
         final var atAuditFor = auditType.getAnnotation(AuditFor.class);
         if (atAuditFor == null) {
             throw new EntityDefinitionException(format("Audit-entity [%s] is missing required annotation @%s",
@@ -236,9 +234,7 @@ public final class AuditUtils {
      *
      * @see #getAuditedTypeForAuditPropType(Class)
      */
-    public static <E extends AbstractEntity<?>, AE extends AbstractSynAuditEntity<E>>
-    Class<E> getAuditedTypeForSyn(final Class<AE> synAuditType)
-    {
+    public static <E extends AbstractEntity<?>> Class<E> getAuditedTypeForSyn(final Class<AbstractSynAuditEntity<E>> synAuditType) {
         final var atAuditFor = synAuditType.getAnnotation(SynAuditFor.class);
         if (atAuditFor == null) {
             throw new EntityDefinitionException(format("Synthetic audit-entity [%s] is missing required annotation @%s",
@@ -254,9 +250,7 @@ public final class AuditUtils {
      *
      * @see #getAuditedType(Class)
      */
-    public static <E extends AbstractEntity<?>, AE extends AbstractAuditEntity<E>, AP extends AbstractAuditProp<AE>>
-    Class<E> getAuditedTypeForAuditPropType(final Class<AP> auditPropType)
-    {
+    public static <E extends AbstractEntity<?>> Class<E> getAuditedTypeForAuditPropType(final Class<AbstractAuditProp<E>> auditPropType) {
         return getAuditedType(getAuditTypeForAuditPropType(auditPropType));
     }
 

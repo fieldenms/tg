@@ -3,6 +3,7 @@ package ua.com.fielden.platform.sample.domain;
 import java.util.List;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
+import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AbstractSynAuditProp;
 import ua.com.fielden.platform.audit.SynAuditPropEntityUtils;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -25,7 +26,7 @@ import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 @KeyType(DynamicEntityKey.class)
 @EntityTitle("Audited Entity Audit Changed Property")
 @KeyTitle("Audited Entity Audit and Changed Property")
-public class ReAuditedEntity_a3t_Prop extends AbstractSynAuditProp<ReAuditedEntity_a3t> {
+public class ReAuditedEntity_a3t_Prop extends AbstractSynAuditProp<AuditedEntity> {
   private static final EntityResultQueryModel<ReAuditedEntity_a3t_Prop> model_a3t_1 = SynAuditPropEntityUtils.modelAuditProp(AuditedEntity_a3t_1_Prop.class, ReAuditedEntity_a3t_Prop.class, AuditedEntity_a3t_1.class, ReAuditedEntity_a3t.class);
 
   private static final EntityResultQueryModel<ReAuditedEntity_a3t_Prop> model_a3t_2 = SynAuditPropEntityUtils.modelAuditProp(AuditedEntity_a3t_2_Prop.class, ReAuditedEntity_a3t_Prop.class, AuditedEntity_a3t_2.class, ReAuditedEntity_a3t.class);
@@ -58,13 +59,17 @@ public class ReAuditedEntity_a3t_Prop extends AbstractSynAuditProp<ReAuditedEnti
     return this;
   }
 
-  public PropertyDescriptor<ReAuditedEntity_a3t> getProperty() {
-    return this.property;
+  public ReAuditedEntity_a3t_Prop setAuditEntity(
+      final AbstractSynAuditEntity<AuditedEntity> auditEntity) {
+    return setAuditEntity((ReAuditedEntity_a3t) auditEntity);
+  }
+
+  public PropertyDescriptor<AbstractSynAuditEntity<AuditedEntity>> getProperty() {
+    return (PropertyDescriptor) this.property;
   }
 
   @Observable
-  public ReAuditedEntity_a3t_Prop setProperty(
-      final PropertyDescriptor<ReAuditedEntity_a3t> property) {
+  public ReAuditedEntity_a3t_Prop setProperty(final PropertyDescriptor property) {
     this.property = property;
     return this;
   }

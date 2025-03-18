@@ -43,7 +43,7 @@ public interface IAuditTypeFinder {
      * <p>
      * It is an error if an audit-prop type for the specified audit-entity type doesn't exist.
      */
-    <AE extends AbstractAuditEntity<?>> Class<AbstractAuditProp<AE>> getAuditPropTypeForAuditEntity(Class<AE> auditEntityType);
+    <E extends AbstractEntity<?>> Class<AbstractAuditProp<E>> getAuditPropTypeForAuditEntity(Class<AbstractAuditEntity<E>> auditEntityType);
 
     /**
      * Returns a collection of all versions of an audit entity type for the specified entity type.
@@ -76,12 +76,12 @@ public interface IAuditTypeFinder {
      * <p>
      * It is an error if the requested synthetic audit-prop type doesn't exist.
      */
-    <E extends AbstractSynAuditEntity<?>> Class<AbstractSynAuditProp<E>> getSynAuditPropTypeForSynAuditEntity(Class<E> type);
+    <E extends AbstractEntity<?>> Class<AbstractSynAuditProp<E>> getSynAuditPropTypeForSynAuditEntity(Class<AbstractSynAuditEntity<E>> type);
 
     /**
      * Locates the synthetic audit-prop type for the specified synthetic audit-entity type and returns it if found.
      * Otherwise, returns an empty optional.
      */
-    <E extends AbstractSynAuditEntity<?>> Optional<Class<AbstractSynAuditProp<E>>> findSynAuditPropTypeForSynAuditEntity(Class<E> type);
+    <E extends AbstractEntity<?>> Optional<Class<AbstractSynAuditProp<E>>> findSynAuditPropTypeForSynAuditEntity(Class<AbstractSynAuditEntity<E>> type);
 
 }

@@ -2,13 +2,18 @@ package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.audit.AbstractAuditProp;
+import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AuditPropFor;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -24,7 +29,9 @@ import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 @SkipVerification
 @SkipEntityRegistration
 @WithoutMetaModel
-public class TgVehicle_a3t_1_Prop extends AbstractAuditProp<TgVehicle_a3t_1> {
+@DenyIntrospection
+@KeyType(DynamicEntityKey.class)
+public class TgVehicle_a3t_1_Prop extends AbstractAuditProp<TgVehicle> {
   @CompositeKeyMember(1)
   @MapTo
   @Title(
@@ -53,8 +60,12 @@ public class TgVehicle_a3t_1_Prop extends AbstractAuditProp<TgVehicle_a3t_1> {
     return this;
   }
 
-  public PropertyDescriptor<ReTgVehicle_a3t> getProperty() {
-    return this.property;
+  public TgVehicle_a3t_1_Prop setAuditEntity(final AbstractAuditEntity<TgVehicle> auditEntity) {
+    return setAuditEntity((TgVehicle_a3t_1) auditEntity);
+  }
+
+  public PropertyDescriptor<AbstractSynAuditEntity<TgVehicle>> getProperty() {
+    return (PropertyDescriptor) this.property;
   }
 
   @Observable

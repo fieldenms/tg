@@ -2,7 +2,9 @@ package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.audit.AbstractAuditProp;
+import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AuditPropFor;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
@@ -29,7 +31,7 @@ import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 @WithoutMetaModel
 @DenyIntrospection
 @KeyType(DynamicEntityKey.class)
-public class AuditedEntity_a3t_1_Prop extends AbstractAuditProp<AuditedEntity_a3t_1> {
+public class AuditedEntity_a3t_1_Prop extends AbstractAuditProp<AuditedEntity> {
   @CompositeKeyMember(1)
   @MapTo
   @Title(
@@ -58,8 +60,13 @@ public class AuditedEntity_a3t_1_Prop extends AbstractAuditProp<AuditedEntity_a3
     return this;
   }
 
-  public PropertyDescriptor<ReAuditedEntity_a3t> getProperty() {
-    return this.property;
+  @Override
+  public AuditedEntity_a3t_1_Prop setAuditEntity(final AbstractAuditEntity<AuditedEntity> entity) {
+    return setAuditEntity((AuditedEntity_a3t_1) entity);
+  }
+
+  public PropertyDescriptor<AbstractSynAuditEntity<AuditedEntity>> getProperty() {
+    return (PropertyDescriptor) this.property;
   }
 
   @Observable

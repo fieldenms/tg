@@ -7,8 +7,6 @@ public interface IAuditEntityCompanionGenerator {
 
     /**
      * Generates a companion object implementation for the specified audit-entity type.
-     * <p>
-     * The generated type will implement {@link IAuditEntityDao}.
      */
     Class<?> generateCompanion(Class<? extends AbstractAuditEntity> type);
 
@@ -19,6 +17,8 @@ public interface IAuditEntityCompanionGenerator {
 
     /**
      * Generates a companion object implementation for the specified synthetic audit-entity type.
+     * <p>
+     * The generated type will implement {@link ISynAuditEntityDao}.
      */
     Class<?> generateCompanionForSynAuditEntity(Class<? extends AbstractSynAuditEntity> type);
 

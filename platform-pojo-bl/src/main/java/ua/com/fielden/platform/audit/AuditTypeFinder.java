@@ -90,7 +90,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
     }
 
     @Override
-    public <AE extends AbstractAuditEntity<?>> Class<AbstractAuditProp<AE>> getAuditPropTypeForAuditEntity(final Class<AE> auditEntityType) {
+    public <E extends AbstractEntity<?>> Class<AbstractAuditProp<E>> getAuditPropTypeForAuditEntity(final Class<AbstractAuditEntity<E>> auditEntityType) {
         return AuditUtils.getAuditPropTypeForAuditType(auditEntityType);
     }
 
@@ -116,12 +116,12 @@ final class AuditTypeFinder implements IAuditTypeFinder {
     }
 
     @Override
-    public <E extends AbstractSynAuditEntity<?>> Class<AbstractSynAuditProp<E>> getSynAuditPropTypeForSynAuditEntity(final Class<E> synAuditType) {
+    public <E extends AbstractEntity<?>> Class<AbstractSynAuditProp<E>> getSynAuditPropTypeForSynAuditEntity(final Class<AbstractSynAuditEntity<E>> synAuditType) {
         return AuditUtils.getSynAuditPropTypeForSynAuditType(synAuditType);
     }
 
     @Override
-    public <E extends AbstractSynAuditEntity<?>> Optional<Class<AbstractSynAuditProp<E>>> findSynAuditPropTypeForSynAuditEntity(final Class<E> synAuditType)
+    public <E extends AbstractEntity<?>> Optional<Class<AbstractSynAuditProp<E>>> findSynAuditPropTypeForSynAuditEntity(final Class<AbstractSynAuditEntity<E>> synAuditType)
     {
         return AuditUtils.findSynAuditPropTypeForSynAuditType(synAuditType);
     }

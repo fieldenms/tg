@@ -28,7 +28,7 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
 
     private Class<AbstractAuditEntity<TgVehicle>> tgVehicleAuditType;
     private Class<AbstractSynAuditEntity<TgVehicle>> tgVehicleSynAuditType;
-    private Class<AbstractAuditProp<AbstractAuditEntity<TgVehicle>>> tgVehicleAuditPropType;
+    private Class<AbstractAuditProp<TgVehicle>> tgVehicleAuditPropType;
 
     @Inject
     void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {

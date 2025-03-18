@@ -1,12 +1,15 @@
 package ua.com.fielden.platform.audit;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+
 /**
  * A contract to instantiate audit-prop entities.
+ * <p>
+ * This interface belongs to internal API.
  *
- * @param <AE>  the audit-entity type
- * @param <AP>  the audit-prop entity type
+ * @param <E>  the audited entity type
  */
-public interface IAuditPropInstantiator<AE extends AbstractAuditEntity<?>, AP extends AbstractAuditProp<AE>> {
+interface IAuditPropInstantiator<E extends AbstractEntity<?>> {
 
     /**
      * Returns a new, initialised instance of this audit-prop entity type.
@@ -20,12 +23,12 @@ public interface IAuditPropInstantiator<AE extends AbstractAuditEntity<?>, AP ex
      *                  <p>
      *                  It is an error if the specified property doesn't exist in the type of the specified audit entity.
      */
-    AP newAuditProp(AE auditEntity, CharSequence property);
+    AbstractAuditProp<E> newAuditProp(AbstractAuditEntity<E> auditEntity, CharSequence property);
 
     /**
      * An alternative version of {@link #newAuditProp(AbstractAuditEntity, CharSequence)} that gives up validation for speed.
      * Should be used judiciously.
      */
-    AP fastNewAuditProp(AE auditEntity, CharSequence property);
+    AbstractAuditProp<E> fastNewAuditProp(AbstractAuditEntity<E> auditEntity, CharSequence property);
 
 }

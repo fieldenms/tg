@@ -3,13 +3,16 @@ package ua.com.fielden.platform.sample.domain;
 import java.util.List;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
+import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AbstractSynAuditProp;
 import ua.com.fielden.platform.audit.SynAuditPropEntityUtils;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -20,9 +23,10 @@ import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 @SkipEntityRegistration
 @CompanionIsGenerated
 @WithoutMetaModel
+@KeyType(DynamicEntityKey.class)
 @EntityTitle("Tg Vehicle Audit Changed Property")
 @KeyTitle("Tg Vehicle Audit and Changed Property")
-public class ReTgVehicle_a3t_Prop extends AbstractSynAuditProp<ReTgVehicle_a3t> {
+public class ReTgVehicle_a3t_Prop extends AbstractSynAuditProp<TgVehicle> {
   private static final EntityResultQueryModel<ReTgVehicle_a3t_Prop> model_a3t_1 = SynAuditPropEntityUtils.modelAuditProp(TgVehicle_a3t_1_Prop.class, ReTgVehicle_a3t_Prop.class, TgVehicle_a3t_1.class, ReTgVehicle_a3t.class);
 
   protected static final List<EntityResultQueryModel<ReTgVehicle_a3t_Prop>> models_ = List.of(model_a3t_1);
@@ -53,12 +57,16 @@ public class ReTgVehicle_a3t_Prop extends AbstractSynAuditProp<ReTgVehicle_a3t> 
     return this;
   }
 
-  public PropertyDescriptor<ReTgVehicle_a3t> getProperty() {
-    return this.property;
+  public ReTgVehicle_a3t_Prop setAuditEntity(final AbstractSynAuditEntity<TgVehicle> auditEntity) {
+    return setAuditEntity((ReTgVehicle_a3t) auditEntity);
+  }
+
+  public PropertyDescriptor<AbstractSynAuditEntity<TgVehicle>> getProperty() {
+    return (PropertyDescriptor) this.property;
   }
 
   @Observable
-  public ReTgVehicle_a3t_Prop setProperty(final PropertyDescriptor<ReTgVehicle_a3t> property) {
+  public ReTgVehicle_a3t_Prop setProperty(final PropertyDescriptor property) {
     this.property = property;
     return this;
   }

@@ -15,17 +15,15 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 
 public class AuditingTest extends AbstractDaoTestCase {
 
-    private Class<AbstractAuditEntity<TgVehicle>> tgVehicleAuditType;
     private Class<AbstractSynAuditEntity<TgVehicle>> tgVehicleSynAuditType;
-    private IAuditEntityDao<TgVehicle, AbstractAuditEntity<TgVehicle>> coTgVehicleAudit;
-    private Class<AbstractAuditProp<AbstractAuditEntity<TgVehicle>>> tgVehicleAuditPropType;
+    private ISynAuditEntityDao<TgVehicle> coTgVehicleSynAudit;
+    private Class<AbstractSynAuditProp<TgVehicle>> tgVehicleSynAuditPropType;
 
     @Inject
     void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
-        tgVehicleAuditType = auditTypeFinder.getAuditEntityType(TgVehicle.class);
         tgVehicleSynAuditType = auditTypeFinder.getSynAuditEntityType(TgVehicle.class);
-        coTgVehicleAudit = co(tgVehicleAuditType);
-        tgVehicleAuditPropType = auditTypeFinder.getAuditPropTypeForAuditEntity(tgVehicleAuditType);
+        coTgVehicleSynAudit = co(tgVehicleSynAuditType);
+        tgVehicleSynAuditPropType = auditTypeFinder.getSynAuditPropTypeForSynAuditEntity(tgVehicleSynAuditType);
     }
 
     @Test
@@ -39,7 +37,7 @@ public class AuditingTest extends AbstractDaoTestCase {
                                          setActive(true).
                                          setLeased(false));
 
-        final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(vehicle, fetchAll(tgVehicleAuditType));
+        final var vehicleAudit = coTgVehicleSynAudit.getAuditOrThrow(vehicle, fetchAll(tgVehicleSynAuditType));
 
         assertEquals(vehicle, vehicleAudit.getAuditedEntity());
         assertEquals(vehicle.getVersion(), vehicleAudit.getAuditedVersion());
@@ -67,7 +65,7 @@ public class AuditingTest extends AbstractDaoTestCase {
                                    TgVehicles.CAR1.key);
         final var car1WithProxiesSaved = save(car1WithProxies.setPrice(car1WithProxies.getPrice().plus(Money.ONE)));
 
-        final var car1_a3t = coTgVehicleAudit.getAuditOrThrow(car1WithProxiesSaved, fetchAll(tgVehicleAuditType));
+        final var car1_a3t = coTgVehicleSynAudit.getAuditOrThrow(car1WithProxiesSaved, fetchAll(tgVehicleSynAuditType));
         final var car1 = co(TgVehicle.class).findByKeyAndFetch(fetchAll(TgVehicle.class), TgVehicles.CAR1.key);
 
         assertEquals(car1WithProxiesSaved.getPrice(), car1.getPrice());
@@ -102,7 +100,7 @@ public class AuditingTest extends AbstractDaoTestCase {
                                          setLeased(false));
 
         // TODO Use the synthetic audit-entity
-        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(vehicle, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleAuditPropType)));
+        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(car2, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
         //
         // final var changedProps = vehicleAudit.getChangedProps();
         // final var expectedChangedPropNames = Stream.of("key", "initDate", "model", "price", "purchasePrice", "active", "leased")
@@ -134,7 +132,7 @@ public class AuditingTest extends AbstractDaoTestCase {
         final var modVehicle = save(vehicle.setPrice(Money.of("100")).setLeased(true).setModel(m2).setInitDate(null));
 
         // TODO Use the synthetic audit-entity
-        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(modVehicle, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleAuditPropType)));
+        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(modVehicle, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
         // final var changedProps = vehicleAudit.getChangedProps();
         // final var expectedChangedPropNames = Stream.of("price", "leased", "model", "initDate")
         //         .map(AuditUtils::auditPropertyName)
@@ -155,7 +153,7 @@ public class AuditingTest extends AbstractDaoTestCase {
                                          setLeased(false));
 
         // TODO Use the synthetic audit-entity
-        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(vehicle, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleAuditPropType)));
+        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(vehicle, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
         //
         // for (final var changedProp : vehicleAudit.getChangedProps()) {
         //     assertEquals("Incorrect audit-entity referenced by changed property [%s].".formatted(changedProp),
@@ -175,7 +173,7 @@ public class AuditingTest extends AbstractDaoTestCase {
                                          setLeased(false));
 
         // TODO Use the synthetic audit-entity
-        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(vehicle, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleAuditPropType)));
+        // final var vehicleAudit = coTgVehicleAudit.getAuditOrThrow(vehicle, fetchAll(tgVehicleAuditType).with(CHANGED_PROPS, fetchAll(tgVehicleSynAuditPropType)));
         //
         // for (final var changedProp : vehicleAudit.getChangedProps()) {
         //     assertEquals("Incorrect entity type referenced by property descriptor of changed property [%s]".formatted(changedProp),

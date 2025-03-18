@@ -5,10 +5,7 @@ import com.google.inject.Stage;
 import com.google.inject.name.Names;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.audit.AbstractAuditEntity;
-import ua.com.fielden.platform.audit.AbstractAuditProp;
-import ua.com.fielden.platform.audit.AuditingMode;
-import ua.com.fielden.platform.audit.IAuditTypeFinder;
+import ua.com.fielden.platform.audit.*;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -182,7 +179,8 @@ public class BasicWebServerIocModule extends CompanionIocModule {
                             });
                             final var synAuditType = auditTypeFinder.getSynAuditEntityType(type);
                             sink.accept(synAuditType);
-                            sink.accept(getSynAuditPropTypeForSynAuditType(synAuditType));
+                            // Typecast is needed because the compiler reports a type error.
+                            sink.accept(getSynAuditPropTypeForSynAuditType((Class) synAuditType));
                         }
                     }
                 })

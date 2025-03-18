@@ -7,9 +7,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
-import ua.com.fielden.platform.audit.AbstractAuditEntity;
-import ua.com.fielden.platform.audit.IAuditEntityDao;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
+import ua.com.fielden.platform.audit.ISynAuditEntityDao;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
@@ -262,8 +261,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // Auditing
         if (isAudited(entityType)) {
-            final IAuditEntityDao<T, AbstractAuditEntity<T>> coAudit = coFinder.find(a3tFinder.getAuditEntityType(entityType));
-            coAudit.audit(savedEntity, transactionGuid.get(), dirtyPropNames);
+            final ISynAuditEntityDao<T> coSynAudit = coFinder.find(a3tFinder.getSynAuditEntityType(entityType));
+            coSynAudit.audit(savedEntity, transactionGuid.get(), dirtyPropNames);
         }
 
         return savedEntityAndId;

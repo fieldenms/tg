@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.squareup.javapoet.*;
 import jakarta.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -33,6 +34,7 @@ import java.util.stream.Stream;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
@@ -551,7 +553,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final var builder = classBuilder(auditPropTypeClassName)
                 .addModifiers(PUBLIC)
-                .superclass(ParameterizedTypeName.get(javaPoet.getClassName(AbstractAuditProp.class), auditEntityClassName))
+                .superclass(ParameterizedTypeName.get(AbstractAuditProp.class, auditedType))
                 .addAnnotation(AnnotationSpecs.entityTitle("%s Audit Changed Property".formatted(auditedEntityTitle)))
                 .addAnnotation(AnnotationSpecs.keyTitle("%s Audit and Changed Property".formatted(auditedEntityTitle)))
                 .addAnnotation(javaPoet.getAnnotation(MapEntityTo.class))
@@ -564,6 +566,9 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(keyType(DynamicEntityKey.class));
 
         // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
+        // For the setter we need two methods: a regular setter and an override of the setter from the base type,
+        // which has a different signature.
+        // The override will delegate to the regular setter.
         final var auditEntityProp = propertyBuilder(AUDIT_ENTITY, auditEntityClassName)
                 .addAnnotation(compositeKeyMember(1))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
@@ -573,18 +578,44 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         PropertySpec.addProperty(environment, builder, auditPropTypeClassName, auditEntityProp);
 
-        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
+        // Overriden setter.
+        final var auditEntityPropSetter = auditEntityProp.getSetterSpec(environment, auditPropTypeClassName);
+        builder.addMethod(methodBuilder(auditEntityPropSetter.name)
+                                  .addModifiers(PUBLIC)
+                                  .returns(auditPropTypeClassName)
+                                  .addParameter(ParameterizedTypeName.get(AbstractAuditEntity.class, auditedType),
+                                                auditEntityProp.name(),
+                                                FINAL)
+                                  .addStatement("return $L(($T) $L)",
+                                                auditEntityPropSetter.name,
+                                                auditEntityClassName,
+                                                auditEntityProp.name())
+                                  .build());
+
+        // Setter and getter for `property` need to be crafted by hand.
         final var pdProp = propertyBuilder(PROPERTY, ParameterizedTypeName.get(javaPoet.getClassName(PropertyDescriptor.class), synAuditTypeName))
                 .addAnnotation(compositeKeyMember(2))
                 .addAnnotation(javaPoet.getAnnotation(MapTo.class))
                 .addAnnotation(AnnotationSpecs.title("Changed Property", "The property that was changed as part of the audit event."))
                 .build();
-        // This property has a custom setter so has to be added by hand
-        builder.addField(pdProp.toFieldSpec(environment));
-        builder.addMethod(pdProp.getAccessorSpec(environment));
-        // Ideally, PropertyDescriptor in the setter's parameter type would be parameterised with the synthetic audit-entity type
-        // to match the property type, but the setter cannot be overriden in such a way, so we use the raw type.
-        builder.addMethod(pdProp.getSetterSpecWithParamType(environment, auditPropTypeClassName, javaPoet.getClassName(PropertyDescriptor.class)));
+
+        // Avoid clashing with the getter in the base type:
+        // * The return type should be parameterised with an abstract type, making it slightly different from the property type.
+        // * The returned value must be cast so that it aligns with the return type.
+        final var pdGetter = methodBuilder("get" + StringUtils.capitalize(pdProp.name()))
+                .addModifiers(PUBLIC)
+                .returns(ParameterizedTypeName.get(javaPoet.getClassName(PropertyDescriptor.class),
+                                                   ParameterizedTypeName.get(javaPoet.getClassName(AbstractSynAuditEntity.class),
+                                                                             javaPoet.getClassName(auditedType))))
+                .addStatement("return ($T) this.$L", PropertyDescriptor.class, pdProp.name())
+                .build();
+
+        // Use raw PropertyDescriptor as parameter type to avoid clashing with the setter in the base type.
+        final var pdSetter = pdProp.getSetterSpecWithParamType(environment, auditPropTypeClassName, javaPoet.getClassName(PropertyDescriptor.class));
+
+        builder.addField(pdProp.toFieldSpec(environment))
+                .addMethod(pdGetter)
+                .addMethod(pdSetter);
 
         final var typeSpec = builder.build();
 
@@ -820,7 +851,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         final var builder = classBuilder(synAuditPropClassName)
                 .addModifiers(PUBLIC)
-                .superclass(ParameterizedTypeName.get(ClassName.get(AbstractSynAuditProp.class), synAuditClassName))
+                .superclass(ParameterizedTypeName.get(AbstractSynAuditProp.class, auditedType))
                 .addAnnotation(javaPoet.getAnnotation(SkipVerification.class))
                 .addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class))
                 .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class))
@@ -829,7 +860,10 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(entityTitle("%s Audit Changed Property".formatted(auditedEntityTitle)))
                 .addAnnotation(AnnotationSpecs.keyTitle("%s Audit and Changed Property".formatted(auditedEntityTitle)));
 
-        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
+        // By virtue of its name, this property's accessor implements the abstract method in the base type.
+        // For the setter we need two methods: a regular setter and an override of the setter from the base type,
+        // which has a different signature.
+        // The override will delegate to the regular setter.
         final var auditEntityProp = propertyBuilder(AbstractSynAuditProp.AUDIT_ENTITY, synAuditClassName)
                 .addAnnotation(compositeKeyMember(1))
                 .addAnnotation(AnnotationSpecs.title("%s Audit".formatted(auditedEntityTitle),
@@ -837,12 +871,43 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .build();
         PropertySpec.addProperty(environment, builder, synAuditPropClassName, auditEntityProp);
 
-        // By virtue of its name, this property's accessor and setter implement abstract methods in the base type
+        // Overriden setter.
+        final var auditEntityPropSetter = auditEntityProp.getSetterSpec(environment, synAuditPropClassName);
+        builder.addMethod(methodBuilder(auditEntityPropSetter.name)
+                                  .addModifiers(PUBLIC)
+                                  .returns(synAuditPropClassName)
+                                  .addParameter(ParameterizedTypeName.get(javaPoet.getClassName(AbstractSynAuditEntity.class), javaPoet.getClassName(auditedType)),
+                                                auditEntityProp.name(),
+                                                FINAL)
+                                  .addStatement("return $L(($T) $L)",
+                                                auditEntityPropSetter.name,
+                                                synAuditClassName,
+                                                auditEntityProp.name())
+                                  .build());
+
+        // Setter and getter for `property` need to be crafted by hand.
         final var pdProp = propertyBuilder(AbstractSynAuditProp.PROPERTY, ParameterizedTypeName.get(javaPoet.getClassName(PropertyDescriptor.class), synAuditClassName))
                 .addAnnotation(compositeKeyMember(2))
                 .addAnnotation(AnnotationSpecs.title("Changed Property", "The property that was changed as part of the audit event."))
                 .build();
-        PropertySpec.addProperty(environment, builder, synAuditPropClassName, pdProp);
+
+        // Avoid clashing with the getter in the base type:
+        // * The return type should be parameterised with an abstract type, making it slightly different from the property type.
+        // * The returned value must be cast so that it aligns with the return type.
+        final var pdGetter = methodBuilder("get" + StringUtils.capitalize(pdProp.name()))
+                .addModifiers(PUBLIC)
+                .returns(ParameterizedTypeName.get(javaPoet.getClassName(PropertyDescriptor.class),
+                                                   ParameterizedTypeName.get(javaPoet.getClassName(AbstractSynAuditEntity.class),
+                                                                             javaPoet.getClassName(auditedType))))
+                .addStatement("return ($T) this.$L", PropertyDescriptor.class, pdProp.name())
+                .build();
+
+        // Use raw PropertyDescriptor as parameter type to avoid clashing with the setter in the base type.
+        final var pdSetter = pdProp.getSetterSpecWithParamType(environment, synAuditPropClassName, javaPoet.getClassName(PropertyDescriptor.class));
+
+        builder.addField(pdProp.toFieldSpec(environment))
+                .addMethod(pdGetter)
+                .addMethod(pdSetter);
 
         // EQL models, one for each audit-prop version
         final var eqlModelTypeName = ParameterizedTypeName.get(ClassName.get(EntityResultQueryModel.class), synAuditPropClassName);

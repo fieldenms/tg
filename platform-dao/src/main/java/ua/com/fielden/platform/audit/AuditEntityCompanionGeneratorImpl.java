@@ -51,7 +51,7 @@ final class AuditEntityCompanionGeneratorImpl implements IAuditEntityCompanionGe
         final var baseType = PropertyTypeDeterminator.baseEntityType((Class<? extends AbstractEntity<?>>) type);
 
         return new ByteBuddy()
-                .subclass(CommonEntityDao.class)
+                .subclass(CommonSynAuditEntityDao.class)
                 .name(baseType.getCanonicalName() + "Dao")
                 .annotateType(AnnotationDescription.Builder.ofType(EntityType.class)
                                       .define("value", baseType)

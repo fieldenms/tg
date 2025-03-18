@@ -11,38 +11,19 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * A contract for all audit-entity companion objects to implement.
+ * A contract for all synthetic audit-entity companion objects to implement.
+ * <p>
+ * This is the primary interface for application developers to access audit data and perform manual auditing if necessary.
  *
  * @param <E>  the audited entity type
- * @param <AE>  the audit-entity type
+ * @see IEntityAuditor
  */
-public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends AbstractAuditEntity<E>>
-        extends IEntityDao<AE>, IAuditEntityInstantiator<E, AE>
+public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
+        extends IEntityDao<AbstractSynAuditEntity<E>>,
+                IEntityAuditor<E>
 {
 
     String ERR_AUDIT_RECORD_DOES_NOT_EXIST = "Audit record does not exist for entity [%s] with ID=%s, version=%s.";
-
-    /**
-     * Performs an audit of the specified audited entity instance, which results in:
-     * <ul>
-     *   <li> An audit record is created by instantiating and saving a corresponding audit-entity.
-     *   <li> For each <i>changed property</i>, an audit-prop record is created by instantiating and saving a corresponding
-     *        audit-prop entity.
-     *        <p>
-     *        If the specified audited entity instance is new (i.e., was persisted for the very first time), then properties with
-     *        {@code null} values are not considered changed.
-     * </ul>
-     * <p>
-     * This method requires a session but is deliberately not annotated with {@code @SessionRequired}, which must also be the case for its implementation.
-     * This enforces the contract that this method may only be used as a part of a save operation on an audited entity.
-     *
-     * @param auditedEntity  the audited entity that will be used to initialise the audit-entity instance.
-     *                       Must be persisted and non-dirty.
-     * @param transactionGuid  identifier of a transaction that was used to save the audited entity
-     * @param dirtyProperties  names of properties of the audited entity whose values changed.
-     *                         Only audited properties are considered, others are ignored.
-     */
-    AE audit(E auditedEntity, String transactionGuid, Iterable<? extends CharSequence> dirtyProperties);
 
     /**
      * Streams all audit records for an entity with the specified ID.
@@ -50,14 +31,14 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntityId  ID of an audited entity
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    Stream<AE> streamAudits(Long auditedEntityId, @Nullable fetch<AE> fetchModel);
+    Stream<AbstractSynAuditEntity<E>> streamAudits(Long auditedEntityId, @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel);
 
     /**
      * Streams all audit records for an entity with the specified ID using the default fetch model.
      *
      * @param auditedEntityId  ID of an audited entity
      */
-    default Stream<AE> streamAudits(final Long auditedEntityId) {
+    default Stream<AbstractSynAuditEntity<E>> streamAudits(final Long auditedEntityId) {
         return streamAudits(auditedEntityId, null);
     }
 
@@ -67,7 +48,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default Stream<AE> streamAudits(final E auditedEntity, final @Nullable fetch<AE> fetchModel) {
+    default Stream<AbstractSynAuditEntity<E>> streamAudits(final E auditedEntity, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         return streamAudits(auditedEntity.getId(), fetchModel);
     }
 
@@ -76,7 +57,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      */
-    default Stream<AE> streamAudits(final E auditedEntity) {
+    default Stream<AbstractSynAuditEntity<E>> streamAudits(final E auditedEntity) {
         return streamAudits(auditedEntity, null);
     }
 
@@ -87,7 +68,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param fetchSize  batch size for data retrieval
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    Stream<AE> streamAudits(Long auditedEntityId, int fetchSize, @Nullable fetch<AE> fetchModel);
+    Stream<AbstractSynAuditEntity<E>> streamAudits(Long auditedEntityId, int fetchSize, @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel);
 
     /**
      * Streams all audit records for an entity with the specified ID using the default fetch model.
@@ -95,7 +76,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntityId  ID of an audited entity
      * @param fetchSize  batch size for data retrieval
      */
-    default Stream<AE> streamAudits(final Long auditedEntityId, final int fetchSize) {
+    default Stream<AbstractSynAuditEntity<E>> streamAudits(final Long auditedEntityId, final int fetchSize) {
         return streamAudits(auditedEntityId, fetchSize, null);
     }
 
@@ -106,7 +87,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param fetchModel  optional fetch model to retrieve audit-entities
      * @param fetchSize  batch size for data retrieval
      */
-    default Stream<AE> streamAudits(final E auditedEntity, final int fetchSize, final @Nullable fetch<AE> fetchModel) {
+    default Stream<AbstractSynAuditEntity<E>> streamAudits(final E auditedEntity, final int fetchSize, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         return streamAudits(auditedEntity.getId(), fetchSize, fetchModel);
     }
 
@@ -116,7 +97,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param fetchSize  batch size for data retrieval
      */
-    default Stream<AE> streamAudits(final E auditedEntity, final int fetchSize) {
+    default Stream<AbstractSynAuditEntity<E>> streamAudits(final E auditedEntity, final int fetchSize) {
         return streamAudits(auditedEntity, fetchSize, null);
     }
 
@@ -126,14 +107,14 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntityId  ID of an audited entity
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    List<AE> getAudits(Long auditedEntityId, @Nullable fetch<AE> fetchModel);
+    List<AbstractSynAuditEntity<E>> getAudits(Long auditedEntityId, @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel);
 
     /**
      * Retrieves all audit records for an entity with the specified ID using the default fetch model.
      *
      * @param auditedEntityId  ID of an audited entity
      */
-    default List<AE> getAudits(final Long auditedEntityId) {
+    default List<AbstractSynAuditEntity<E>> getAudits(final Long auditedEntityId) {
         return getAudits(auditedEntityId, null);
     }
 
@@ -143,7 +124,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default List<AE> getAudits(final E auditedEntity, final @Nullable fetch<AE> fetchModel) {
+    default List<AbstractSynAuditEntity<E>> getAudits(final E auditedEntity, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         return getAudits(auditedEntity.getId(), fetchModel);
     }
 
@@ -152,7 +133,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      */
-    default List<AE> getAudits(final E auditedEntity) {
+    default List<AbstractSynAuditEntity<E>> getAudits(final E auditedEntity) {
         return getAudits(auditedEntity, null);
     }
 
@@ -165,7 +146,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param version  version of an audited entity
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    @Nullable AE getAudit(Long auditedEntityId, Long version, @Nullable fetch<AE> fetchModel);
+    @Nullable AbstractSynAuditEntity<E> getAudit(Long auditedEntityId, Long version, @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel);
 
     /**
      * Retrieves an audit record for an audited entity with the specified ID and version using the default fetch model.
@@ -175,7 +156,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntityId  ID of an audited entity
      * @param version  version of an audited entity
      */
-    default @Nullable AE getAudit(final Long auditedEntityId, final Long version) {
+    default @Nullable AbstractSynAuditEntity<E> getAudit(final Long auditedEntityId, final Long version) {
         return getAudit(auditedEntityId, version, null);
     }
 
@@ -188,7 +169,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param version  version of the specified audited entity, which should be used instead of its current version
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default @Nullable AE getAudit(final E auditedEntity, final Long version, final @Nullable fetch<AE> fetchModel) {
+    default @Nullable AbstractSynAuditEntity<E> getAudit(final E auditedEntity, final Long version, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         return getAudit(auditedEntity.getId(), version, fetchModel);
     }
 
@@ -200,7 +181,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity, which should be used instead of its current version
      */
-    default @Nullable AE getAudit(final E auditedEntity, final Long version) {
+    default @Nullable AbstractSynAuditEntity<E> getAudit(final E auditedEntity, final Long version) {
         return getAudit(auditedEntity, version, null);
     }
 
@@ -212,7 +193,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default @Nullable AE getAudit(final E auditedEntity, final @Nullable fetch<AE> fetchModel) {
+    default @Nullable AbstractSynAuditEntity<E> getAudit(final E auditedEntity, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         return getAudit(auditedEntity, auditedEntity.getVersion(), fetchModel);
     }
 
@@ -223,8 +204,8 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      *
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      */
-    default @Nullable AE getAudit(final E auditedEntity) {
-        return getAudit(auditedEntity, (fetch<AE>) null);
+    default @Nullable AbstractSynAuditEntity<E> getAudit(final E auditedEntity) {
+        return getAudit(auditedEntity, (fetch<AbstractSynAuditEntity<E>>) null);
     }
 
     /**
@@ -236,7 +217,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param version  version of an audited entity
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default Optional<AE> getAuditOptional(final Long auditedEntityId, final Long version, final @Nullable fetch<AE> fetchModel) {
+    default Optional<AbstractSynAuditEntity<E>> getAuditOptional(final Long auditedEntityId, final Long version, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         return Optional.ofNullable(getAudit(auditedEntityId, version, fetchModel));
     }
 
@@ -248,7 +229,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntityId  ID of an audited entity
      * @param version  version of an audited entity
      */
-    default Optional<AE> getAuditOptional(final Long auditedEntityId, final Long version) {
+    default Optional<AbstractSynAuditEntity<E>> getAuditOptional(final Long auditedEntityId, final Long version) {
         return getAuditOptional(auditedEntityId, version, null);
     }
 
@@ -261,7 +242,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param version  version of the specified audited entity, which should be used instead of its current version
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default Optional<AE> getAuditOptional(final E auditedEntity, final Long version, final @Nullable fetch<AE> fetchModel) {
+    default Optional<AbstractSynAuditEntity<E>> getAuditOptional(final E auditedEntity, final Long version, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         return getAuditOptional(auditedEntity.getId(), version, fetchModel);
     }
 
@@ -273,7 +254,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity, which should be used instead of its current version
      */
-    default Optional<AE> getAuditOptional(final E auditedEntity, final Long version) {
+    default Optional<AbstractSynAuditEntity<E>> getAuditOptional(final E auditedEntity, final Long version) {
         return getAuditOptional(auditedEntity, version, null);
     }
 
@@ -285,7 +266,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default Optional<AE> getAuditOptional(final E auditedEntity, final @Nullable fetch<AE> fetchModel) {
+    default Optional<AbstractSynAuditEntity<E>> getAuditOptional(final E auditedEntity, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         return getAuditOptional(auditedEntity, auditedEntity.getVersion(), fetchModel);
     }
 
@@ -296,8 +277,8 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      *
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      */
-    default Optional<AE> getAuditOptional(final E auditedEntity) {
-        return getAuditOptional(auditedEntity, (fetch<AE>) null);
+    default Optional<AbstractSynAuditEntity<E>> getAuditOptional(final E auditedEntity) {
+        return getAuditOptional(auditedEntity, (fetch<AbstractSynAuditEntity<E>>) null);
     }
 
     /**
@@ -309,11 +290,11 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param version  version of an audited entity
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default AE getAuditOrThrow(final Long auditedEntityId, final Long version, final @Nullable fetch<AE> fetchModel) {
+    default AbstractSynAuditEntity<E> getAuditOrThrow(final Long auditedEntityId, final Long version, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         final var audit = getAudit(auditedEntityId, version, fetchModel);
         if (audit == null) {
             throw new EntityCompanionException(ERR_AUDIT_RECORD_DOES_NOT_EXIST.formatted(
-                    AuditUtils.getAuditedType(getEntityType()).getSimpleName(), auditedEntityId, version));
+                    AuditUtils.getAuditedTypeForSyn(getEntityType()).getSimpleName(), auditedEntityId, version));
         }
         return audit;
     }
@@ -326,7 +307,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntityId  ID of an audited entity
      * @param version  version of an audited entity
      */
-    default AE getAuditOrThrow(final Long auditedEntityId, final Long version) {
+    default AbstractSynAuditEntity<E> getAuditOrThrow(final Long auditedEntityId, final Long version) {
         return getAuditOrThrow(auditedEntityId, version, null);
     }
 
@@ -339,7 +320,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param version  version of the specified audited entity that is used instead of its current version
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default AE getAuditOrThrow(final E auditedEntity, final Long version, final @Nullable fetch<AE> fetchModel) {
+    default AbstractSynAuditEntity<E> getAuditOrThrow(final E auditedEntity, final Long version, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         return getAuditOrThrow(auditedEntity.getId(), version, fetchModel);
     }
 
@@ -351,7 +332,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity that is used instead of its current version
      */
-    default AE getAuditOrThrow(final E auditedEntity, final Long version) {
+    default AbstractSynAuditEntity<E> getAuditOrThrow(final E auditedEntity, final Long version) {
         return getAuditOrThrow(auditedEntity, version, null);
     }
 
@@ -363,7 +344,7 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default AE getAuditOrThrow(final E auditedEntity, final @Nullable fetch<AE> fetchModel) {
+    default AbstractSynAuditEntity<E> getAuditOrThrow(final E auditedEntity, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
         return getAuditOrThrow(auditedEntity, auditedEntity.getVersion(), fetchModel);
     }
 
@@ -374,8 +355,8 @@ public interface IAuditEntityDao<E extends AbstractEntity<?>, AE extends Abstrac
      *
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      */
-    default AE getAuditOrThrow(final E auditedEntity) {
-        return getAuditOrThrow(auditedEntity, (fetch<AE>) null);
+    default AbstractSynAuditEntity<E> getAuditOrThrow(final E auditedEntity) {
+        return getAuditOrThrow(auditedEntity, (fetch<AbstractSynAuditEntity<E>>) null);
     }
 
 }

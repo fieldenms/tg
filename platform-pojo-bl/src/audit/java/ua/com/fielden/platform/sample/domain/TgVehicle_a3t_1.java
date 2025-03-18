@@ -3,15 +3,17 @@ package ua.com.fielden.platform.sample.domain;
 import java.lang.String;
 import java.math.BigDecimal;
 import java.util.Date;
-
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.audit.AuditFor;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -32,6 +34,8 @@ import ua.com.fielden.platform.types.Money;
 @SkipVerification
 @SkipEntityRegistration
 @WithoutMetaModel
+@KeyType(DynamicEntityKey.class)
+@DenyIntrospection
 public class TgVehicle_a3t_1 extends AbstractAuditEntity<TgVehicle> {
   @CompositeKeyMember(1)
   @MapTo

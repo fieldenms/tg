@@ -11,10 +11,10 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
  * Specific types derived from this one are expected to declare properties {@link #AUDIT_ENTITY} and {@link #PROPERTY}.
  * These properties cannot be declared in this base type due to a limitation on using type variables in property types.
  *
- * @param <AE>  type of the audit-entity
+ * @param <E>  type of the audited entity
  */
 @KeyType(DynamicEntityKey.class)
-public abstract class AbstractAuditProp<AE extends AbstractAuditEntity<?>> extends AbstractEntity<DynamicEntityKey> {
+public abstract class AbstractAuditProp<E extends AbstractEntity<?>> extends AbstractEntity<DynamicEntityKey> {
 
     /**
      * Name of the property that is declared by specific audit-prop types.
@@ -38,21 +38,21 @@ public abstract class AbstractAuditProp<AE extends AbstractAuditEntity<?>> exten
     /**
      * Getter for property {@link #AUDIT_ENTITY}.
      */
-    public abstract AE getAuditEntity();
+    public abstract AbstractAuditEntity<E> getAuditEntity();
 
     /**
      * Setter for property {@link #AUDIT_ENTITY}.
      */
-    public abstract AbstractAuditProp<AE> setAuditEntity(AE entity);
+    public abstract AbstractAuditProp<E> setAuditEntity(AbstractAuditEntity<E> entity);
 
     /**
      * Getter for property {@link #PROPERTY}.
      */
-    public abstract PropertyDescriptor<? extends AbstractSynAuditEntity<?>> getProperty();
+    public abstract PropertyDescriptor<AbstractSynAuditEntity<E>> getProperty();
 
     /**
      * Setter for property {@link #PROPERTY}.
      */
-    public abstract AbstractAuditProp<AE> setProperty(PropertyDescriptor<? extends AbstractSynAuditEntity<?>> property);
+    public abstract AbstractAuditProp<E> setProperty(PropertyDescriptor<AbstractSynAuditEntity<E>> property);
 
 }
