@@ -7,7 +7,6 @@ changing two dashes into an emdash, wrapping a paragraph starting
 with `"> "` into a blockquote, or something entirely different.
 */
 class InputRule {
-    // :: (RegExp, union<string, (state: EditorState, match: [string], start: number, end: number) → ?Transaction>)
     /**
     Create an input rule. The rule applies when the user typed
     something and the text directly in front of the cursor matches
@@ -34,6 +33,7 @@ class InputRule {
         this.handler = typeof handler == "string" ? stringHandler(handler) : handler;
         this.undoable = options.undoable !== false;
         this.inCode = options.inCode || false;
+        this.inCodeMark = options.inCodeMark !== false;
     }
 }
 function stringHandler(string) {
@@ -94,6 +94,8 @@ function run(view, from, to, text, rules, plugin) {
     let textBefore = $from.parent.textBetween(Math.max(0, $from.parentOffset - MAX_MATCH), $from.parentOffset, null, "\ufffc") + text;
     for (let i = 0; i < rules.length; i++) {
         let rule = rules[i];
+        if (!rule.inCodeMark && $from.marks().some(m => m.type.spec.code))
+            continue;
         if ($from.parent.type.spec.code) {
             if (!rule.inCode)
                 continue;
@@ -102,7 +104,8 @@ function run(view, from, to, text, rules, plugin) {
             continue;
         }
         let match = rule.match.exec(textBefore);
-        let tr = match && rule.handler(state, match, from - (match[0].length - text.length), to);
+        let tr = match && match[0].length >= text.length &&
+            rule.handler(state, match, from - (match[0].length - text.length), to);
         if (!tr)
             continue;
         if (rule.undoable)
@@ -143,26 +146,26 @@ const undoInputRule = (state, dispatch) => {
 /**
 Converts double dashes to an emdash.
 */
-new InputRule(/--$/, "—");
+new InputRule(/--$/, "—", { inCodeMark: false });
 /**
 Converts three dots to an ellipsis character.
 */
-new InputRule(/\.\.\.$/, "…");
+new InputRule(/\.\.\.$/, "…", { inCodeMark: false });
 /**
 “Smart” opening double quotes.
 */
-new InputRule(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(")$/, "“");
+new InputRule(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(")$/, "“", { inCodeMark: false });
 /**
 “Smart” closing double quotes.
 */
-new InputRule(/"$/, "”");
+new InputRule(/"$/, "”", { inCodeMark: false });
 /**
 “Smart” opening single quotes.
 */
-new InputRule(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(')$/, "‘");
+new InputRule(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(')$/, "‘", { inCodeMark: false });
 /**
 “Smart” closing single quotes.
 */
-new InputRule(/'$/, "’");
+new InputRule(/'$/, "’", { inCodeMark: false });
 
 export { InputRule, inputRules, undoInputRule };
