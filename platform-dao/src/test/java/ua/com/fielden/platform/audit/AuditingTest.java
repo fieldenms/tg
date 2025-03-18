@@ -22,6 +22,7 @@ public class AuditingTest extends AbstractDaoTestCase {
     private Class<AbstractSynAuditEntity<TgVehicle>> tgVehicleSynAuditType;
     private ISynAuditEntityDao<TgVehicle> coTgVehicleAudit;
     private Class<AbstractSynAuditProp<TgVehicle>> tgVehicleSynAuditPropType;
+    private final AuditAssertions a3t_assertions = getInstance(AuditAssertions.class);
 
     @Inject
     void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
@@ -43,18 +44,7 @@ public class AuditingTest extends AbstractDaoTestCase {
 
         final var car2_a3t = coTgVehicleAudit.getAuditOrThrow(car2, fetchAll(tgVehicleSynAuditType));
 
-        assertEquals(car2, car2_a3t.getAuditedEntity());
-        assertEquals(car2.getVersion(), car2_a3t.getAuditedVersion());
-        assertEquals(car2.getKey(), car2_a3t.getA3t("key"));
-        assertEquals(car2.getInitDate(), car2_a3t.getA3t("initDate"));
-        assertEquals(car2.getReplacedBy(), car2_a3t.getA3t("replacedBy"));
-        assertEquals(car2.getStation(), car2_a3t.getA3t("station"));
-        assertEquals(car2.getModel(), car2_a3t.getA3t("model"));
-        assertEquals(car2.getPrice(), car2_a3t.getA3t("price"));
-        assertEquals(car2.getPurchasePrice(), car2_a3t.getA3t("purchasePrice"));
-        assertEquals(car2.getActive(), car2_a3t.getA3t("active"));
-        assertEquals(car2.getLeased(), car2_a3t.getA3t("leased"));
-        assertEquals(car2.getLastMeterReading(), car2_a3t.getA3t("lastMeterReading"));
+        a3t_assertions.assertThat(car2_a3t).isAuditFor(car2);
 
         assertNotNull(car2_a3t.getAuditDate());
         assertNotNull(car2_a3t.getUser());
@@ -74,18 +64,7 @@ public class AuditingTest extends AbstractDaoTestCase {
 
         assertEquals(car1WithProxiesSaved.getPrice(), car1.getPrice());
 
-        assertEquals(car1, car1_a3t.getAuditedEntity());
-        assertEquals(car1.getVersion(), car1_a3t.getAuditedVersion());
-        assertEquals(car1.getKey(), car1_a3t.getA3t("key"));
-        assertEquals(car1.getInitDate(), car1_a3t.getA3t("initDate"));
-        assertEquals(car1.getReplacedBy(), car1_a3t.getA3t("replacedBy"));
-        assertEquals(car1.getStation(), car1_a3t.getA3t("station"));
-        assertEquals(car1.getModel(), car1_a3t.getA3t("model"));
-        assertEquals(car1.getPrice(), car1_a3t.getA3t("price"));
-        assertEquals(car1.getPurchasePrice(), car1_a3t.getA3t("purchasePrice"));
-        assertEquals(car1.getActive(), car1_a3t.getA3t("active"));
-        assertEquals(car1.getLeased(), car1_a3t.getA3t("leased"));
-        assertEquals(car1.getLastMeterReading(), car1_a3t.getA3t("lastMeterReading"));
+        a3t_assertions.assertThat(car1_a3t).isAuditFor(car1);
 
         assertNotNull(car1_a3t.getAuditDate());
         assertNotNull(car1_a3t.getUser());
