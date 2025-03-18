@@ -1,0 +1,178 @@
+package ua.com.fielden.platform.sample.domain;
+
+import java.lang.String;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
+import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
+import ua.com.fielden.platform.audit.SynAuditEntityUtils;
+import ua.com.fielden.platform.audit.SynAuditFor;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
+import ua.com.fielden.platform.utils.CollectionUtil;
+
+@SynAuditFor(AuditedEntity.class)
+@EntityTitle("Audited Entity Audit")
+@SkipVerification
+@SkipEntityRegistration
+@CompanionIsGenerated
+@KeyType(DynamicEntityKey.class)
+public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
+  private static final EntityResultQueryModel<ReAuditedEntity_a3t> model_a3t_2 = SynAuditEntityUtils.mkModelCurrent(ua.com.fielden.platform.sample.domain.ReAuditedEntity_a3t.class, AuditedEntity_a3t_2.class, Set.of("a3t_str2", "a3t_key", "a3t_date1", "a3t_bool1", "id", "auditedEntity", "auditedVersion", "auditDate", "user", "auditedTransactionGuid"), CollectionUtil.mapOf(ua.com.fielden.platform.types.tuples.T2.t2("a3t_str1", null)));
+
+  private static final EntityResultQueryModel<ReAuditedEntity_a3t> model_a3t_1 = SynAuditEntityUtils.mkModelPrior(ua.com.fielden.platform.sample.domain.ReAuditedEntity_a3t.class, AuditedEntity_a3t_1.class, CollectionUtil.mapOf(ua.com.fielden.platform.types.tuples.T2.t2("a3t_str2", null)), Set.of("a3t_key", "a3t_date1", "a3t_bool1", "a3t_str1", "id", "auditedEntity", "auditedVersion", "auditDate", "user", "auditedTransactionGuid"));
+
+  protected static final EntityResultQueryModel<ReAuditedEntity_a3t> model_ = SynAuditEntityUtils.combineModels(ReAuditedEntity_a3t_Prop.class, model_a3t_2, model_a3t_1);
+
+  @CompositeKeyMember(1)
+  @Title(
+      value = "Audited Entity",
+      desc = "The audited Audited Entity."
+  )
+  @IsProperty
+  private AuditedEntity auditedEntity;
+
+  @Title(
+      value = "Changed Properties",
+      desc = "Properties changed as part of the audit event."
+  )
+  @IsProperty(ReAuditedEntity_a3t_Prop.class)
+  private final Set<ReAuditedEntity_a3t_Prop> changedProps = new HashSet<>();
+
+  @Title(
+      value = "Changed Properties",
+      desc = "Properties changed as part of the audit event."
+  )
+  @CritOnly(CritOnly.Type.MULTI)
+  @IsProperty(ReAuditedEntity_a3t.class)
+  private PropertyDescriptor<ReAuditedEntity_a3t> changedPropsCrit;
+
+  @Title(
+      value = "\"Str 2\"",
+      desc = "[\"Str 2\"] at the time of the audited event."
+  )
+  @IsProperty
+  private String a3t_str2;
+
+  @Title(
+      value = "\"Key\"",
+      desc = "[\"Key\"] at the time of the audited event."
+  )
+  @IsProperty
+  private String a3t_key;
+
+  @Title(
+      value = "\"Date 1\"",
+      desc = "[\"Date 1\"] at the time of the audited event."
+  )
+  @IsProperty
+  private Date a3t_date1;
+
+  @Title(
+      value = "\"Bool 1\"",
+      desc = "[\"Bool 1\"] at the time of the audited event."
+  )
+  @IsProperty
+  private boolean a3t_bool1;
+
+  @Title(
+      value = "\"Str 1\"",
+      desc = "[\"Str 1\"] at the time of the audited event."
+  )
+  @IsProperty
+  private String a3t_str1;
+
+  public AuditedEntity getAuditedEntity() {
+    return this.auditedEntity;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setAuditedEntity(final AuditedEntity auditedEntity) {
+    this.auditedEntity = auditedEntity;
+    return this;
+  }
+
+  public Set<ReAuditedEntity_a3t_Prop> getChangedProps() {
+    return Collections.unmodifiableSet(this.changedProps);
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setChangedProps(final Set<ReAuditedEntity_a3t_Prop> changedProps) {
+    this.changedProps.clear();
+    this.changedProps.addAll(changedProps);
+    return this;
+  }
+
+  public PropertyDescriptor<ReAuditedEntity_a3t> getChangedPropsCrit() {
+    return this.changedPropsCrit;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setChangedPropsCrit(
+      final PropertyDescriptor<ReAuditedEntity_a3t> changedPropsCrit) {
+    this.changedPropsCrit = changedPropsCrit;
+    return this;
+  }
+
+  public String getA3t_str2() {
+    return this.a3t_str2;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_str2(final String a3t_str2) {
+    this.a3t_str2 = a3t_str2;
+    return this;
+  }
+
+  public String getA3t_key() {
+    return this.a3t_key;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_key(final String a3t_key) {
+    this.a3t_key = a3t_key;
+    return this;
+  }
+
+  public Date getA3t_date1() {
+    return this.a3t_date1;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_date1(final Date a3t_date1) {
+    this.a3t_date1 = a3t_date1;
+    return this;
+  }
+
+  public boolean isA3t_bool1() {
+    return this.a3t_bool1;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_bool1(final boolean a3t_bool1) {
+    this.a3t_bool1 = a3t_bool1;
+    return this;
+  }
+
+  public String getA3t_str1() {
+    return this.a3t_str1;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_str1(final String a3t_str1) {
+    this.a3t_str1 = a3t_str1;
+    return this;
+  }
+}
