@@ -1,3 +1,7 @@
+import '../iron-icon/iron-icon.js';
+import '../iron-iconset-svg/iron-iconset-svg.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -8,9 +12,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../iron-icon/iron-icon.js";
-import "../iron-iconset-svg/iron-iconset-svg.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
+
 const template = html`<iron-iconset-svg name="editor" size="24">
 <svg><defs>
 <g id="attach-file"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"></path></g>
@@ -83,4 +85,5 @@ const template = html`<iron-iconset-svg name="editor" size="24">
 <g id="wrap-text"><path d="M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3 3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"></path></g>
 </defs></svg>
 </iron-iconset-svg>`;
+
 document.head.appendChild(template.content);

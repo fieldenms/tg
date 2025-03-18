@@ -1,3 +1,5 @@
+import '../polymer/polymer-legacy.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,7 +10,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../polymer/polymer-legacy.js";
+
 /**
   IronFormElementBehavior adds a `name`, `value` and `required` properties to
   a custom element. It mostly exists for backcompatibility with Polymer 1.x, and
@@ -17,24 +19,19 @@ import "../polymer/polymer-legacy.js";
   @demo demo/index.html
   @polymerBehavior
  */
+const IronFormElementBehavior = {
 
-export const IronFormElementBehavior = {
   properties: {
     /**
      * The name of this element.
      */
-    name: {
-      type: String
-    },
+    name: {type: String},
 
     /**
      * The value for this element.
      * @type {*}
      */
-    value: {
-      notify: true,
-      type: String
-    },
+    value: {notify: true, type: String},
 
     /**
      * Set to true to mark the input as required. If used in a form, a
@@ -44,12 +41,12 @@ export const IronFormElementBehavior = {
      * It's also strongly recommended to provide a visual style for the element
      * when its value is invalid.
      */
-    required: {
-      type: Boolean,
-      value: false
-    }
+    required: {type: Boolean, value: false},
   },
+
   // Empty implementations for backcompatibility.
-  attached: function () {},
-  detached: function () {}
+  attached: function() {},
+  detached: function() {}
 };
+
+export { IronFormElementBehavior };

@@ -30,7 +30,7 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.io.FileUtils.*;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.cypher.Checksum.sha1;
+import static ua.com.fielden.platform.cypher.Checksum.sha256;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
@@ -210,7 +210,7 @@ public class VulcanizingUtility {
     }
 
     /**
-     * Generates SHA1 checksums for specified <code>paths</code>.
+     * Generates SHA256 checksums for specified <code>paths</code>.
      *
      * @param paths
      * @return
@@ -220,7 +220,7 @@ public class VulcanizingUtility {
         for (final String path: asList(paths)) {
             try {
                 final FileInputStream fileInputStream = new FileInputStream("vulcan" + path);
-                final String sha = sha1(fileInputStream).getKey();
+                final String sha = sha256(fileInputStream).getKey();
                 checksums.put(path, sha);
             } catch (final Exception ex) {
                 final String msg = format("Could not generate checksum for resource [%s].", path);

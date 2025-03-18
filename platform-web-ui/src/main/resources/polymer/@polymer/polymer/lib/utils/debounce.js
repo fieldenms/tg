@@ -1,3 +1,6 @@
+import './boot.js';
+import './async.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,14 +10,11 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import './boot.js';
-import './mixin.js';
-import './async.js';
+
 /**
  * @summary Collapse multiple callbacks into one invocation after a timer.
  */
-
-export class Debouncer {
+class Debouncer {
   constructor() {
     this._asyncModule = null;
     this._callback = null;
@@ -29,15 +29,12 @@ export class Debouncer {
    * @param {function()} callback Callback to run.
    * @return {void}
    */
-
-
   setConfig(asyncModule, callback) {
     this._asyncModule = asyncModule;
     this._callback = callback;
     this._timer = this._asyncModule.run(() => {
       this._timer = null;
       debouncerQueue.delete(this);
-
       this._callback();
     });
   }
@@ -46,16 +43,13 @@ export class Debouncer {
    *
    * @return {void}
    */
-
-
   cancel() {
     if (this.isActive()) {
-      this._cancelAsync(); // Canceling a debouncer removes its spot from the flush queue,
+      this._cancelAsync();
+      // Canceling a debouncer removes its spot from the flush queue,
       // so if a debouncer is manually canceled and re-debounced, it
       // will reset its flush order (this is a very minor difference from 1.x)
       // Re-debouncing via the `debounce` API retains the 1.x FIFO flush order
-
-
       debouncerQueue.delete(this);
     }
   }
@@ -64,14 +58,9 @@ export class Debouncer {
    *
    * @return {void}
    */
-
-
   _cancelAsync() {
     if (this.isActive()) {
-      this._asyncModule.cancel(
-      /** @type {number} */
-      this._timer);
-
+      this._asyncModule.cancel(/** @type {number} */(this._timer));
       this._timer = null;
     }
   }
@@ -80,12 +69,9 @@ export class Debouncer {
    *
    * @return {void}
    */
-
-
   flush() {
     if (this.isActive()) {
       this.cancel();
-
       this._callback();
     }
   }
@@ -94,8 +80,6 @@ export class Debouncer {
    *
    * @return {boolean} True if active.
    */
-
-
   isActive() {
     return this._timer != null;
   }
@@ -133,8 +117,6 @@ export class Debouncer {
    * @param {function()} callback Callback to run.
    * @return {!Debouncer} Returns a debouncer object.
    */
-
-
   static debounce(debouncer, asyncModule, callback) {
     if (debouncer instanceof Debouncer) {
       // Cancel the async callback, but leave in debouncerQueue if it was
@@ -143,37 +125,36 @@ export class Debouncer {
     } else {
       debouncer = new Debouncer();
     }
-
     debouncer.setConfig(asyncModule, callback);
     return debouncer;
   }
-
 }
+
 let debouncerQueue = new Set();
+
 /**
  * Adds a `Debouncer` to a list of globally flushable tasks.
  *
  * @param {!Debouncer} debouncer Debouncer to enqueue
  * @return {void}
  */
-
-export const enqueueDebouncer = function (debouncer) {
+const enqueueDebouncer = function(debouncer) {
   debouncerQueue.add(debouncer);
 };
+
 /**
  * Flushes any enqueued debouncers
  *
  * @return {boolean} Returns whether any debouncers were flushed
  */
-
-export const flushDebouncers = function () {
-  const didFlush = Boolean(debouncerQueue.size); // If new debouncers are added while flushing, Set.forEach will ensure
+const flushDebouncers = function() {
+  const didFlush = Boolean(debouncerQueue.size);
+  // If new debouncers are added while flushing, Set.forEach will ensure
   // newly added ones are also flushed
-
   debouncerQueue.forEach(debouncer => {
     try {
       debouncer.flush();
-    } catch (e) {
+    } catch(e) {
       setTimeout(() => {
         throw e;
       });
@@ -181,3 +162,5 @@ export const flushDebouncers = function () {
   });
   return didFlush;
 };
+
+export { Debouncer, enqueueDebouncer, flushDebouncers };

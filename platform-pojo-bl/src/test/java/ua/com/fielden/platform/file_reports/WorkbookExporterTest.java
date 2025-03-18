@@ -11,12 +11,14 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity.EnumType;
 import ua.com.fielden.platform.domaintree.testing.ShortSlaveEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
@@ -24,8 +26,11 @@ import static java.util.Optional.of;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 public class WorkbookExporterTest {
+
+    private static final List<List<DynamicColumnForExport>> EMPTY_DYNAMIC_PROPERTIES = List.of();
 
     @Test
     public void date_property_can_be_exported() {
@@ -440,6 +445,34 @@ public class WorkbookExporterTest {
         final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Short collection property of the exported row is incorrect", "master key1 1, master key1 2", exportedRow.getCell(0).getStringCellValue());
+    }
+
+    @Test
+    public void multiple_sheets_can_be_exported() {
+        final var entityToExport1 = new MasterEntity();
+        final var date1 = new DateTime(2000, 1, 1, 0, 0).toDate();
+        entityToExport1.setDateProp(date1);
+
+        final var entityToExport2 = new MasterEntity();
+        final var date2 = new DateTime(2004, 1, 1, 0, 0).toDate();
+        entityToExport2.setDateProp(date2);
+
+        final String[] propertyNames = { "dateProp" };
+        final String[] propertyTitles = { "Date property" };
+        final var sheets = WorkbookExporter.export(List.of(Stream.of(entityToExport1), Stream.of(entityToExport2)),
+                                                   List.of(pair(propertyNames, propertyTitles), pair(propertyNames, propertyTitles)),
+                                                   List.of(EMPTY_DYNAMIC_PROPERTIES, EMPTY_DYNAMIC_PROPERTIES),
+                                                   List.of("Sheet 1", "Sheet 2"),
+                                                   $ -> of("http://tgdev.com"));
+        assertEquals(2, sheets.getNumberOfSheets());
+
+        final var sheet1 = sheets.getSheetAt(0);
+        assertEquals("Sheet 1", sheet1.getSheetName());
+        assertEquals(date1, sheet1.getRow(1).getCell(0).getDateCellValue());
+
+        final var sheet2 = sheets.getSheetAt(1);
+        assertEquals("Sheet 2", sheet2.getSheetName());
+        assertEquals(date2, sheet2.getRow(1).getCell(0).getDateCellValue());
     }
 
 }

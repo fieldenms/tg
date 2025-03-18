@@ -8,10 +8,9 @@ Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
 
-'use strict';
-
 /**
  * @const {!Object<string, !HTMLTemplateElement>}
  */
 const templateMap = {};
-export default templateMap;
+
+export { templateMap as default };

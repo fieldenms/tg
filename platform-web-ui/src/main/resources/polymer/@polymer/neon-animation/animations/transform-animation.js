@@ -1,3 +1,7 @@
+import '../../polymer/polymer-legacy.js';
+import { Polymer } from '../../polymer/lib/legacy/polymer-fn.js';
+import { NeonAnimationBehavior } from '../neon-animation-behavior.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,9 +12,6 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../../polymer/polymer-legacy.js";
-import { Polymer } from "../../polymer/lib/legacy/polymer-fn.js";
-import { NeonAnimationBehavior } from '../neon-animation-behavior.js';
 /*
 `<transform-animation>` animates a custom transform on an element. Use this to
 animate multiple transform properties, or to apply a custom transform value.
@@ -27,9 +28,9 @@ Configuration:
 }
 ```
 */
-
 Polymer({
   is: 'transform-animation',
+
   behaviors: [NeonAnimationBehavior],
 
   /**
@@ -41,15 +42,15 @@ Polymer({
    *   timing: (Object|undefined)
    * }} config
    */
-  configure: function (config) {
+  configure: function(config) {
     var node = config.node;
     var transformFrom = config.transformFrom || 'none';
     var transformTo = config.transformTo || 'none';
-    this._effect = new KeyframeEffect(node, [{
-      'transform': transformFrom
-    }, {
-      'transform': transformTo
-    }], this.timingFromConfig(config));
+
+    this._effect = new KeyframeEffect(
+        node,
+        [{'transform': transformFrom}, {'transform': transformTo}],
+        this.timingFromConfig(config));
 
     if (config.transformOrigin) {
       this.setPrefixedProperty(node, 'transformOrigin', config.transformOrigin);
@@ -57,4 +58,5 @@ Polymer({
 
     return this._effect;
   }
+
 });

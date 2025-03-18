@@ -459,8 +459,10 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     _selectionHandler (e) {
-        this.$.input.toggleSelectionForItem(e.model.item);
-        tearDownEvent(e);
+        if (this._isSelectionEnabled(this._forReview)) {
+            this.$.input.toggleSelectionForItem(e.model.item);
+            tearDownEvent(e);
+        }
     }
 
     _preventSelection(e) {

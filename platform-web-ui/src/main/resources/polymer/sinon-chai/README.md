@@ -6,7 +6,7 @@
 Instead of using Sinon.JS's assertions:
 
 ```javascript
-sinon.assertCalledWith(mySpy, "foo");
+sinon.assert.calledWith(mySpy, "foo");
 ```
 
 or awkwardly trying to use Chai's `should` or `expect` interfaces on spy properties:
@@ -28,116 +28,43 @@ expect(mySpy).to.have.been.calledWith("foo");
 All of your favorite Sinon.JS assertions made their way into Sinon–Chai. We show the `should` syntax here; the `expect`
 equivalent is also available.
 
-<table>
-    <thead>
-        <tr>
-            <th>Sinon.JS property/method</th>
-            <th>Sinon–Chai assertion</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>called</td>
-            <td>spy.should.have.been.called</td>
-        </tr>
-        <tr>
-            <td>callCount</td>
-            <td>spy.should.have.callCount(n)</td>
-        </tr>
-        <tr>
-            <td>calledOnce</td>
-            <td>spy.should.have.been.calledOnce</td>
-        </tr>
-        <tr>
-            <td>calledTwice</td>
-            <td>spy.should.have.been.calledTwice</td>
-        </tr>
-        <tr>
-            <td>calledThrice</td>
-            <td>spy.should.have.been.calledThrice</td>
-        </tr>
-        <tr>
-            <td>calledBefore</td>
-            <td>spy1.should.have.been.calledBefore(spy2)</td>
-        </tr>
-        <tr>
-            <td>calledAfter</td>
-            <td>spy1.should.have.been.calledAfter(spy2)</td>
-        </tr>
-        <tr>
-            <td>calledImmediatelyBefore</td>
-            <td>spy.should.have.been.calledImmediatelyBefore(spy2)</td>
-        </tr>
-        <tr>
-            <td>calledImmediatelyAfter</td>
-            <td>spy.should.have.been.calledImmediatelyAfter(spy2)</td>
-        </tr>
-        <tr>
-            <td>calledWithNew</td>
-            <td>spy.should.have.been.calledWithNew</td>
-        </tr>
-        <tr>
-            <td>alwaysCalledWithNew</td>
-            <td>spy.should.always.have.been.calledWithNew</td>
-        </tr>
-        <tr>
-            <td>calledOn</td>
-            <td>spy.should.have.been.calledOn(context)</td>
-        </tr>
-        <tr>
-            <td>alwaysCalledOn</td>
-            <td>spy.should.always.have.been.calledOn(context)</td>
-        </tr>
-        <tr>
-            <td>calledWith</td>
-            <td>spy.should.have.been.calledWith(...args)</td>
-        </tr>
-        <tr>
-            <td>alwaysCalledWith</td>
-            <td>spy.should.always.have.been.calledWith(...args)</td>
-        </tr>
-        <tr>
-            <td>calledWithExactly</td>
-            <td>spy.should.have.been.calledWithExactly(...args)</td>
-        </tr>
-        <tr>
-            <td>alwaysCalledWithExactly</td>
-            <td>spy.should.always.have.been.calledWithExactly(...args)</td>
-        </tr>
-        <tr>
-            <td>calledWithMatch</td>
-            <td>spy.should.have.been.calledWithMatch(...args)</td>
-        </tr>
-        <tr>
-            <td>alwaysCalledWithMatch</td>
-            <td>spy.should.always.have.been.calledWithMatch(...args)</td>
-        </tr>
-        <tr>
-            <td>returned</td>
-            <td>spy.should.have.returned(returnVal)</td>
-        </tr>
-        <tr>
-            <td>alwaysReturned</td>
-            <td>spy.should.have.always.returned(returnVal)</td>
-        </tr>
-        <tr>
-            <td>threw</td>
-            <td>spy.should.have.thrown(errorObjOrErrorTypeStringOrNothing)</td>
-        </tr>
-        <tr>
-            <td>alwaysThrew</td>
-            <td>spy.should.have.always.thrown(errorObjOrErrorTypeStringOrNothing)</td>
-        </tr>
-    </tbody>
-</table>
+| Sinon.JS property/method | Sinon–Chai assertion                                              |
+|--------------------------|-------------------------------------------------------------------|
+| called                   | spy.should.have.been.called                                       |
+| callCount                | spy.should.have.callCount(n)                                      |
+| calledOnce               | spy.should.have.been.calledOnce                                   |
+| calledTwice              | spy.should.have.been.calledTwice                                  |
+| calledThrice             | spy.should.have.been.calledThrice                                 |
+| calledBefore             | spy1.should.have.been.calledBefore(spy2)                          |
+| calledAfter              | spy1.should.have.been.calledAfter(spy2)                           |
+| calledImmediatelyBefore  | spy.should.have.been.calledImmediatelyBefore(spy2)                |
+| calledImmediatelyAfter   | spy.should.have.been.calledImmediatelyAfter(spy2)                 |
+| calledWithNew            | spy.should.have.been.calledWithNew                                |
+| alwaysCalledWithNew      | spy.should.always.have.been.calledWithNew                         |
+| calledOn                 | spy.should.have.been.calledOn(context)                            |
+| alwaysCalledOn           | spy.should.always.have.been.calledOn(context)                     |
+| calledWith               | spy.should.have.been.calledWith(...args)                          |
+| alwaysCalledWith         | spy.should.always.have.been.calledWith(...args)                   |
+| calledOnceWith           | spy.should.always.have.been.calledOnceWith(...args)               |
+| calledWithExactly        | spy.should.have.been.calledWithExactly(...args)                   |
+| alwaysCalledWithExactly  | spy.should.always.have.been.calledWithExactly(...args)            |
+| calledOnceWithExactly    | spy.should.always.have.been.calledOnceWithExactly(...args)        |
+| calledWithMatch          | spy.should.have.been.calledWithMatch(...args)                     |
+| alwaysCalledWithMatch    | spy.should.always.have.been.calledWithMatch(...args)              |
+| returned                 | spy.should.have.returned(returnVal)                               |
+| alwaysReturned           | spy.should.have.always.returned(returnVal)                        |
+| threw                    | spy.should.have.thrown(errorObjOrErrorTypeStringOrNothing)        |
+| alwaysThrew              | spy.should.have.always.thrown(errorObjOrErrorTypeStringOrNothing) |
 
 For more information on the behavior of each assertion, see
 [the documentation for the corresponding spy methods][spymethods]. These of course work on not only spies, but
 individual spy calls, stubs, and mocks as well.
 
-Note that you can negate any assertion with Chai's `.not`. E. g. for `notCalled` use `spy.should.have.not.been.called`.
+Note that you can negate any assertion with Chai's `.not`. E. g. for `notCalled` use `spy.should.have.not.been.called`. Similarly, note that the `always` methods are accessed with Chai's `.always` prefix; `should.have.been.alwaysCalledWith` will not work - instead, use `should.always.have.been.calledWith`.
 
-For `assert` interface there is no need for this library. You can install [Sinon.JS assertions][sinonassertions] right into Chai's `assert` object with `expose`:
+For simplicity, this library intentionally only implements Sinon's spy methods, and does not add an interface for `Sinon.assert.match`. Sinon's matchers are implemented by the `samsam` library, so if you want a should/expect interface to `assert.match` you may be interested in [chai-samsam](https://www.chaijs.com/plugins/chai-samsam/), which adds a `.deep.match` verb that will work with Sinon matchers.
+
+For `assert` interface there is no need for `sinon-chai` or `chai-samsam`. You can install [Sinon.JS assertions][sinonassertions] right into Chai's `assert` object with `expose`:
 
 ```javascript
 var chai = require("chai");
@@ -202,7 +129,7 @@ describe("hello", function () {
 
 ### Node
 
-Do an `npm install sinon-chai` to get up and running. Then:
+Do an `npm install --save-dev sinon-chai` to get up and running. Then:
 
 ```javascript
 var chai = require("chai");

@@ -18,7 +18,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import static java.lang.Math.max;
 import static java.util.stream.Collectors.*;
@@ -48,6 +47,10 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     public static final String INFO_DEPENDENCY = "<tt>%s%s\u00A0%s</tt>";
     public static final String ERR_INACTIVE_REFERENCES = "Property [%s] in %s [%s] references inactive %s [%s].";
 
+    public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_ENTITY_TYPE = EntityUtils::isActivatableEntityType;
+    public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE = PREDICATE_ACTIVATABLE_ENTITY_TYPE.and(EntityUtils::isPersistentEntityType);
+
+
     private final IApplicationDomainProvider applicationDomainProvider;
 
     @Inject
@@ -63,16 +66,8 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             // Consider only activatable persistent entities as dependencies.
             // Hypothetically speaking, every activatable entity is also persistent.
             // However, this may change in the future, which is why the type's persistence should also be tested.
-            final Predicate<Class<? extends AbstractEntity<?>>> activatableEntityType = EntityUtils::isActivatableEntityType;
-            final var domainDependencies = entityDependencyMap(applicationDomainProvider.entityTypes(), activatableEntityType.and(EntityUtils::isPersistentEntityType));
-            final var domainEntityDependencies = domainDependencies.get(entity.getType());
-            // Direct dependencies.
-            final var directActivatableDependenciesForEntity = domainEntityDependencies.getActivatableDependencies();
-            // Deactivatable dependencies, which are calculated by recursively traversing all deactivatable dependencies for the current entity, all deactivatable dependencies for them, and so on.
-            final var deactivatableActivatableDependenciesForEntity = domainEntityDependencies.getAllDeactivatableDependencies(domainDependencies);
-            // Merge direct and deactivatable dependencies for processing.
-            final var dependencies = Stream.concat(directActivatableDependenciesForEntity.stream(), deactivatableActivatableDependenciesForEntity).collect(toSet());
-
+            final var domainDependencies = entityDependencyMap(applicationDomainProvider.entityTypes(), PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE);
+            final var dependencies = domainDependencies.get(entity.getType()).getAllDependenciesThatCanPreventDeactivation(domainDependencies).collect(toSet());
             if (dependencies.isEmpty()) {
                 return successful();
             } else {

@@ -1,3 +1,11 @@
+import '../utils/boot.js';
+import { PropertyEffects } from '../mixins/property-effects.js';
+import { OptionalMutableData } from '../mixins/mutable-data.js';
+import { GestureEventListeners } from '../mixins/gesture-event-listeners.js';
+import { strictTemplatePolicy } from '../utils/settings.js';
+import { wrap } from '../utils/wrap.js';
+import { hideElementsGlobally } from '../utils/hide-template-controls.js';
+
 /**
 @license
 Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
@@ -7,12 +15,7 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 */
-import '../utils/boot.js';
-import { PropertyEffects } from '../mixins/property-effects.js';
-import { OptionalMutableData } from '../mixins/mutable-data.js';
-import { GestureEventListeners } from '../mixins/gesture-event-listeners.js';
-import { strictTemplatePolicy } from '../utils/settings.js';
-import { wrap } from '../utils/wrap.js';
+
 /**
  * @constructor
  * @extends {HTMLElement}
@@ -21,8 +24,11 @@ import { wrap } from '../utils/wrap.js';
  * @implements {Polymer_GestureEventListeners}
  * @private
  */
+const domBindBase =
+  GestureEventListeners(
+    OptionalMutableData(
+      PropertyEffects(HTMLElement)));
 
-const domBindBase = GestureEventListeners(OptionalMutableData(PropertyEffects(HTMLElement)));
 /**
  * Custom element to allow using Polymer's template features (data binding,
  * declarative event listeners, etc.) in the main document without defining
@@ -42,49 +48,49 @@ const domBindBase = GestureEventListeners(OptionalMutableData(PropertyEffects(HT
  * @summary Custom element to allow using Polymer's template features (data
  *   binding, declarative event listeners, etc.) in the main document.
  */
+class DomBind extends domBindBase {
 
-export class DomBind extends domBindBase {
-  static get observedAttributes() {
-    return ['mutable-data'];
-  }
+  static get observedAttributes() { return ['mutable-data']; }
 
   constructor() {
     super();
-
     if (strictTemplatePolicy) {
       throw new Error(`strictTemplatePolicy: dom-bind not allowed`);
     }
-
     this.root = null;
     this.$ = null;
     this.__children = null;
   }
+
+  /* eslint-disable no-unused-vars */
   /**
    * @override
+   * @param {string} name Name of attribute that changed
+   * @param {?string} old Old attribute value
+   * @param {?string} value New attribute value
+   * @param {?string} namespace Attribute namespace.
    * @return {void}
    */
-
-
-  attributeChangedCallback() {
+  attributeChangedCallback(name, old, value, namespace) {
     // assumes only one observed attribute
     this.mutableData = true;
   }
+
   /**
    * @override
    * @return {void}
    */
-
-
   connectedCallback() {
-    this.style.display = 'none';
+    if (!hideElementsGlobally()) {
+      this.style.display = 'none';
+    }
     this.render();
   }
+
   /**
    * @override
    * @return {void}
    */
-
-
   disconnectedCallback() {
     this.__removeChildren();
   }
@@ -95,33 +101,25 @@ export class DomBind extends domBindBase {
 
   __removeChildren() {
     if (this.__children) {
-      for (let i = 0; i < this.__children.length; i++) {
+      for (let i=0; i<this.__children.length; i++) {
         this.root.appendChild(this.__children[i]);
       }
     }
   }
+
   /**
    * Forces the element to render its content. This is typically only
    * necessary to call if HTMLImports with the async attribute are used.
    * @return {void}
    */
-
-
   render() {
     let template;
-
     if (!this.__children) {
-      template =
-      /** @type {HTMLTemplateElement} */
-      template || this.querySelector('template');
-
+      template = /** @type {?HTMLTemplateElement} */(template || this.querySelector('template'));
       if (!template) {
         // Wait until childList changes and template should be there by then
         let observer = new MutationObserver(() => {
-          template =
-          /** @type {HTMLTemplateElement} */
-          this.querySelector('template');
-
+          template = /** @type {HTMLTemplateElement} */(this.querySelector('template'));
           if (template) {
             observer.disconnect();
             this.render();
@@ -129,27 +127,19 @@ export class DomBind extends domBindBase {
             throw new Error('dom-bind requires a <template> child');
           }
         });
-        observer.observe(this, {
-          childList: true
-        });
+        observer.observe(this, {childList: true});
         return;
       }
-
       this.root = this._stampTemplate(
-      /** @type {!HTMLTemplateElement} */
-      template);
+        /** @type {!HTMLTemplateElement} */(template));
       this.$ = this.root.$;
       this.__children = [];
-
-      for (let n = this.root.firstChild; n; n = n.nextSibling) {
+      for (let n=this.root.firstChild; n; n=n.nextSibling) {
         this.__children[this.__children.length] = n;
       }
-
       this._enableProperties();
     }
-
     this.__insertChildren();
-
     this.dispatchEvent(new CustomEvent('dom-change', {
       bubbles: true,
       composed: true
@@ -157,4 +147,7 @@ export class DomBind extends domBindBase {
   }
 
 }
+
 customElements.define('dom-bind', DomBind);
+
+export { DomBind };
