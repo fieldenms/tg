@@ -57,7 +57,7 @@
     "@webcomponents/shadycss": "^1.11.2",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "antlr4": "^4.13.2",
-    "fullcalendar": "5.6.0",
+    "fullcalendar": "^6.1.15",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.47",
     "web-animations-js": "^2.3.2"
