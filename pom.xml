@@ -4,7 +4,7 @@
     <groupId>fielden</groupId>
     <artifactId>platform-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.8.3-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <name>Trident Genesis Platform Parent</name>
     <description>
         Trident Genesis is a software application platform designed for development of EAM/ERP type applications.
@@ -20,8 +20,11 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>4.13.2</junit.version>
-        <posgresql.version>42.7.3</posgresql.version>
+        <assertj.version>3.27.3</assertj.version>
+        <posgresql.version>42.7.4</posgresql.version>
         <mssql.version>12.6.2.jre11</mssql.version>
+        <javapoet.version>1.13.0</javapoet.version>
+        <antlr.version>4.13.2</antlr.version>
     </properties>
 
     <modules>
@@ -33,6 +36,7 @@
         <module>platform-pojo-bl</module>
         <module>platform-web-ui</module>
         <module>platform-benchmark</module>
+        <module>platform-eql-grammar</module>
     </modules>
 
     <dependencies>
@@ -50,7 +54,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.11.0</version>
+                    <version>3.13.0</version>
                     <configuration>
                         <release>21</release>
                         <encoding>UTF-8</encoding>

@@ -1,18 +1,11 @@
 package ua.com.fielden.platform.test;
 
-import java.util.Properties;
-
 import com.google.inject.Injector;
-
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.query.DefaultFilter;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
-import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
-import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
+import ua.com.fielden.platform.test.ioc.PlatformTestServerIocModule;
+
+import java.util.Properties;
 
 /**
  * Provides Platform specific implementation of {@link IDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
@@ -21,20 +14,19 @@ import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
  * 
  */
 public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
-    private final EntityFactory entityFactory;
     private final Injector injector;
-    private final PlatformTestServerModule hibernateModule;
 
-    public PlatformDomainDrivenTestCaseConfiguration(final Properties hbc) {
-        // instantiate all the factories and Hibernate utility
+    public PlatformDomainDrivenTestCaseConfiguration(final Properties properties) {
         try {
-            final Properties props = getProperties(hbc);
-            final PlatformTestDomainTypes domainProvider = new PlatformTestDomainTypes();
+            final var appDomainProvider = new PlatformTestDomainTypes();
+            injector = new ApplicationInjectorFactory()
+                    .add(new PlatformTestServerIocModule(
+                            appDomainProvider,
+                            appDomainProvider.entityTypes(),
+                            getProperties(properties)))
+                    .add(new NewUserEmailNotifierTestIocModule())
+                    .getInjector();
 
-            hibernateModule = new PlatformTestServerModule(PlatformTestHibernateSetup.getHibernateTypes(), domainProvider, DefaultSerialisationClassProvider.class, DefaultFilter.class, SecurityTokenProvider.class, props);
-            injector = new ApplicationInjectorFactory().add(hibernateModule).add(new NewUserNotifierMockBindingModule()).getInjector();
-
-            entityFactory = injector.getInstance(EntityFactory.class);
         } catch (final Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -58,12 +50,13 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         // Custom Hibernate configuration properties
         props.setProperty("hibernate.show_sql", "false");
         props.setProperty("hibernate.format_sql", "true");
+        // Cache configuration for the dynamic property access
+        props.setProperty("dynamicPropertyAccess.caching", "enabled");
+        props.setProperty("dynamicPropertyAccess.typeCache.concurrencyLevel", "100");
+        props.setProperty("dynamicPropertyAccess.typeCache.expireAfterAccess", "12h");
+        props.setProperty("dynamicPropertyAccess.tempTypeCache.maxSize", "2048");
+        props.setProperty("dynamicPropertyAccess.tempTypeCache.expireAfterWrite", "10m");
         return props;
-    }
-
-    @Override
-    public EntityFactory getEntityFactory() {
-        return entityFactory;
     }
 
     @Override
@@ -71,13 +64,4 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         return injector.getInstance(type);
     }
 
-    @Override
-    public DomainMetadata getDomainMetadata() {
-        return hibernateModule.getDomainMetadata();
-    }
-    
-    @Override
-    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
-        return hibernateModule.getIdOnlyProxiedEntityTypeCache();
-    }
 }

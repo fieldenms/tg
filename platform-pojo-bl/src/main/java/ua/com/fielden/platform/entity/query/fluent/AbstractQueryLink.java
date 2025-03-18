@@ -1,47 +1,40 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.utils.EntityUtils;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
 
 abstract class AbstractQueryLink {
 
-	private final Tokens tokens;
-	
-    protected AbstractQueryLink(final Tokens tokens) {
-        if (tokens == null) {
-            throw new EqlException("Invalid argument -- tokens should not be null.");
-        }
+    public final EqlSentenceBuilder builder;
 
-        this.tokens = tokens;
+    protected AbstractQueryLink(final EqlSentenceBuilder builder) {
+        requireNotNullArgument(builder, "builder");
+        this.builder = builder;
     }
 
-	public Tokens getTokens() {
-		return tokens;
-	}
+    @Override
+    public String toString() {
+        return builder.toString();
+    }
 
-	@Override
-	public String toString() {
-		return getTokens().toString();
-	}
+    @Override
+    public int hashCode() {
+        return 31 * builder.hashCode();
+    }
 
-	@Override
-	public int hashCode() {
-		return 31 * tokens.hashCode();
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		
-		if (obj == null || getClass() != obj.getClass()) {
-			return false;
-		}
-		
-		final AbstractQueryLink that = (AbstractQueryLink) obj;
-		return equalsEx(this.tokens, that.tokens);
-	}
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        final AbstractQueryLink that = (AbstractQueryLink) obj;
+        return Objects.equals(this.builder, that.builder);
+    }
+
 }

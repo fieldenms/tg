@@ -1,5 +1,41 @@
 package ua.com.fielden.platform.entity_centre.review;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.*;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeSelectorEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
+import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+
+import java.lang.reflect.Field;
+import java.util.*;
+
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
@@ -15,73 +51,14 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils.dateOfRangeThatIncludes;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
-import static ua.com.fielden.platform.reflection.Finder.getFields;
-import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
-import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
+import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isDate;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
-import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
-import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionComparisonOperator;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionCompoundCondition;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionOperand;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
-import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
-import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeSelectorEnum;
-import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
-import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.IQueryEnhancer;
-
 /**
- * A utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
+ * A utility class that is responsible for building query implementation of {@link EntityQueryCriteria}.
  *
  * @author TG Team
  *
@@ -142,22 +119,9 @@ public class DynamicQueryBuilder {
 
         /**
          * Creates parameter name for {@link QueryProperty} instance (should be used to expand mnemonics value into conditions from EQL critCondition operator).
-         *
-         * @param propertyName
-         * @return
          */
-        public static String queryPropertyParamName(final String propertyName) {
+        public static String queryPropertyParamName(final CharSequence propertyName) {
             return QP_PREFIX + propertyName;
-        }
-
-        /**
-         * Creates parameter name for {@link QueryProperty} instance (should be used to expand mnemonics value into conditions from EQL critCondition operator).
-         *
-         * @param propertyPath
-         * @return
-         */
-        public static String queryPropertyParamName(final IConvertableToPath propertyPath) {
-            return QP_PREFIX + propertyPath.toPath();
         }
 
         public QueryProperty(final Class<?> entityClass, final String propertyName) {
@@ -217,8 +181,8 @@ public class DynamicQueryBuilder {
             }
 
             final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
-            final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : null;
-            this.aECritOnlyChild = !isEntityItself && PropertyTypeDeterminator.isDotNotation(propertyName) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, this.entityClass, penultPropertyName);
+            final String penultPropertyName = PropertyTypeDeterminator.isDotExpression(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : null;
+            this.aECritOnlyChild = !isEntityItself && PropertyTypeDeterminator.isDotExpression(propertyName) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, this.entityClass, penultPropertyName);
             this.single = isCritOnly() && Type.SINGLE.equals(critAnnotation.value());
         }
 
@@ -337,14 +301,14 @@ public class DynamicQueryBuilder {
          * @return
          */
         protected boolean hasEmptyValue() {
-            if (EntityUtils.isBoolean(type)) {
+            if (isBoolean(type)) {
                 if (single) { // boolean single cannot have an empty value, therefore return false
                     return false;
                 }
                 final boolean is = (Boolean) value;
                 final boolean isNot = (Boolean) value2;
                 return is && isNot || !is && !isNot; // both true and both false will be indicated as default
-            } else if (EntityUtils.isRangeType(type)) { // both values should be "empty" to be indicated as default
+            } else if (isRangeType(type)) { // both values should be "empty" to be indicated as default
                 return valueEqualsToEmpty(value, type, single) && valueEqualsToEmpty(value2, type, single);
             } else {
                 return valueEqualsToEmpty(value, type, single);
@@ -354,7 +318,7 @@ public class DynamicQueryBuilder {
         private static boolean valueEqualsToEmpty(final Object value, final Class<?> type, final boolean single) {
             // due to Web UI changes were empty value for String is always null, need to treat string nulls as empty
             // for Swing UI this was different, whereby value "" was treated at an empty string while null was NOT treated as an empty value
-            return (String.class == type && value == null) || EntityUtils.equalsEx(value, getEmptyValue(type, single));
+            return ((String.class == type || RichText.class == type) && value == null) || equalsEx(value, getEmptyValue(type, single));
         }
 
         /**
@@ -806,17 +770,17 @@ public class DynamicQueryBuilder {
      * @return
      */
     public static Object getEmptyValue(final Class<?> type, final boolean single) {
-        if (EntityUtils.isEntityType(type)) {
+        if (isEntityType(type)) {
             if (single) {
                 return null;
             } else {
                 return new ArrayList<String>();
             }
-        } else if (EntityUtils.isString(type)) {
+        } else if (isString(type) || isRichText(type)) {
             return "";
-        } else if (EntityUtils.isBoolean(type)) {
+        } else if (isBoolean(type)) {
             return true;
-        } else if (EntityUtils.isRangeType(type)) {
+        } else if (isRangeType(type)) {
             return null;
         } else {
             throw new UnsupportedTypeException(type);
@@ -898,7 +862,7 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static boolean isSupported(final Class<?> type) {
-        return EntityUtils.isEntityType(type) || EntityUtils.isString(type) || EntityUtils.isBoolean(type) || EntityUtils.isRangeType(type) || EntityUtils.isDynamicEntityKey(type);
+        return isEntityType(type) || isString(type) || isRichText(type) || isBoolean(type) || isRangeType(type) || isDynamicEntityKey(type);
     }
 
     /**
@@ -1064,7 +1028,7 @@ public class DynamicQueryBuilder {
     @SuppressWarnings("unchecked")
     private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName, final IDates dates) {
         if (property.isSingle()) {
-            if (isString(property.getType())) {
+            if (isString(property.getType()) || isRichText(property.getType())) {
                 return cond().prop(propertyName).iLike().val(prepCritValuesForSingleStringTypedProp(property)).model();
             }
             return propertyEquals(propertyName, property.getValue()); // this covers the PropertyDescriptor case too
@@ -1090,7 +1054,7 @@ public class DynamicQueryBuilder {
             final boolean is = (Boolean) property.getValue();
             final boolean isNot = (Boolean) property.getValue2();
             return is && !isNot ? cond().prop(propertyName).eq().val(true).model() : !is && isNot ? cond().prop(propertyName).eq().val(false).model() : null;
-        } else if (isString(property.getType())) {
+        } else if (isString(property.getType()) || isRichText(property.getType())) {
             return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepCritValuesForStringTypedProp((String) property.getValue())).model();
         } else if (isEntityType(property.getType())) {
             return isPropertyDescriptor(property.getType())
@@ -1212,7 +1176,7 @@ public class DynamicQueryBuilder {
      * <b>IMPORTANT:</b> At this stage there no way to differentiate between property meta-models coming from aliased and non-aliased instance of entity meta-models.
      * It is important to use with method only in application to properties from non-aliased meta-models. Otherwise, a runtime error would occur at the EQL/SQL level due to incorrect aliases.
      *
-     * @param property – a property meta-model coming from a non-aliased instance of an entity meta-model.
+     * @param property a property meta-model coming from a non-aliased instance of an entity meta-model.
      * @return
      */
     public static String createConditionProperty(final IConvertableToPath property) {

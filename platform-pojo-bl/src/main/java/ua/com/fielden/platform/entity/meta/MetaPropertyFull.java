@@ -1,36 +1,7 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
-import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -45,7 +16,26 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import javax.annotation.Nullable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.*;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * Implements the concept of a meta-property for full, not proxied, properties of instrumented entity instances.
@@ -255,19 +245,24 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     /**
-     * A helper method that identify whether {@code newValue} is {@code null}, blank (if string) or {@code false} (if boolean).
-     *
-     * @param newValue
-     * @return
+     * This predicate is true for values that represent the absence of a value.
+     * First and foremost, it is true for {@code null}.
+     * If {@code newValue} is not null, then the result depends on its type.
+     * <ul>
+     *   <li> String - true if the value is blank (empty or all whitespace).
+     *   <li> Boolean - true if the value is {@code false} or can be parsed as {@code false} with {@link Boolean#parseBoolean(String)}.
+     *   <li> RichText - true if the core text is valid and blank.
+     * </ul>
      */
     private boolean isNullOrEmptyOrFalse(final T newValue /*, final T oldValue */) {
-        // IMPORTANT : need to check NotNullValidator usage on existing logic. There is the case, when
-        // should not to pass the validation : setRotable(null) in AdvicePosition when getRotable() == null!!!
-        // that is why - - "&& (oldValue != null)" - - was removed!!!!!
-        // The current condition is essential for UI binding logic.
+        // IMPORTANT: It is necessary to check NotNullValidator usage on existing logic.
+        //            There is a case where it should not to pass the validation : setRotable(null) in AdvicePosition while getRotable() == null!!!
+        //            That is why - - "&& (oldValue != null)" - - was removed!!!!!
+        //            The current condition is essential for UI binding logic.
         return (newValue == null) || /* && (oldValue != null) */
                (isString(type) && StringUtils.isBlank(newValue.toString())) ||
-               (isBoolean(type) && !Boolean.parseBoolean(newValue.toString()));
+               (isBoolean(type) && !Boolean.parseBoolean(newValue.toString())) ||
+               (isRichText(type) && !(newValue instanceof RichText.Invalid) && StringUtils.isBlank(((RichText) newValue).coreText()));
     }
 
     /**
@@ -426,19 +421,38 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         annotationHandlers.put(handler, validationResult);
     }
 
-    /**
-     * Returns the last result of the first validator associated with {@link ValidationAnnotation} value in a synchronised manner if all validators for this annotation succeeded,
-     * or the last result of the first failed validator. Most validation annotations are associated with a single validator. But some, such as
-     * {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
-     *
-     * @param va
-     *            -- validation annotation.
-     * @return
-     */
     @Override
-    public final Result getValidationResult(final ValidationAnnotation va) {
+    public Optional<Result> findValidationResult(final ValidationAnnotation va) {
         final Result failure = getFirstFailureFor(va);
-        return failure != null ? failure : validators.get(va).values().iterator().next();
+        if (failure != null) {
+            return Optional.of(failure);
+        }
+        else if (!validators.containsKey(va)) {
+            return Optional.empty();
+        }
+        else {
+            return Optional.ofNullable(validators.get(va).values().iterator().next());
+        }
+    }
+
+    @Override
+    public Result getValidationResult(final ValidationAnnotation va) {
+        final Result failure = getFirstFailureFor(va);
+        if (failure != null) {
+            return failure;
+        }
+        else if (!validators.containsKey(va)) {
+            throw new IllegalStateException("There are no validation results associated with annotation [%s] in [%s]".formatted(va, this));
+        }
+        else {
+            final var result = validators.get(va).values().iterator().next();
+            if (result == null) {
+                throw new IllegalStateException("There are no validation results associated with annotation [%s] in [%s]".formatted(va, this));
+            }
+            else {
+                return result;
+            }
+        }
     }
 
     /**
@@ -588,13 +602,10 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     /**
-     * Returns the first failure associated with <code>annotation</code> value.
-     *
-     * @param annotation
-     * @return
+     * Returns the first failure associated with the annotation, or {@code null} if there is none.
      */
-    private final Result getFirstFailureFor(final ValidationAnnotation annotation) {
-        final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(annotation);
+    private @Nullable Result getFirstFailureFor(final ValidationAnnotation annotation) {
+        final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.getOrDefault(annotation, Map.of());
         for (final Result result : annotationHandlers.values()) {
             if (result != null && !result.isSuccessful()) {
                 return result;
@@ -887,7 +898,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 // a special case if the boolean properties where current values cannot be null by definition
                 // in this case we only need to rely on the last attempted value -- if it null then there was no attempt to assign any boolean value
                 if ((((getValue() == null || isBoolean(type)) && getLastAttemptedValue() == null)) ||
-                    ofNullable(getValidationResult(ValidationAnnotation.REQUIRED)).map(res -> res.isSuccessful()).orElse(true)) {
+                    findValidationResult(ValidationAnnotation.REQUIRED).map(Result::isSuccessful).orElse(true)) {
                     setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
                 } else { // otherwise, it is necessary to enforce reassignment of the last attempted value to trigger revalidation
                     setEnforceMutator(true);

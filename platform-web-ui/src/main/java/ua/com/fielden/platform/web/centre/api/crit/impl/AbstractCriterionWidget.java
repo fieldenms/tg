@@ -232,7 +232,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.debug = debug;
     }
 
-    public static Pair<String, String> generateNames(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public static Pair<String, String> generateNames(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
         final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, propertyName);
 
@@ -285,7 +285,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         return pair(firstTitleDesc, secondTitleDesc);
     }
 
-    public static String generateSingleName(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public static String generateSingleName(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
         return generateNames(root, managedType, propertyName).getKey();
     }
 

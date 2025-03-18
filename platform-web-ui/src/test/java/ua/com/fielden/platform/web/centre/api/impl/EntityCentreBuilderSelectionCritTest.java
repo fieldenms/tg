@@ -277,7 +277,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for a text component as it is not of type String (%s).", "vehicle", TgWorkOrder.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for a text component as it is not of type String or RichText (%s).", "vehicle", TgWorkOrder.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -390,7 +390,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .addProp("desc").build();
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Property '%s'@'%s' cannot be used for a text component as it is not of type String (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
+            assertEquals(String.format("Property '%s'@'%s' cannot be used for a text component as it is not of type String or RichText (%s).", "intSingle", TgWorkOrder.class.getSimpleName(), Integer.class.getSimpleName()), ex.getMessage());
         }
     }
 

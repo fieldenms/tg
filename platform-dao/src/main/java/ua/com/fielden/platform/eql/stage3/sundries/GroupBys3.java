@@ -1,43 +1,33 @@
 package ua.com.fielden.platform.eql.stage3.sundries;
 
-import static java.util.stream.Collectors.joining;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
-import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import static java.util.stream.Collectors.joining;
 
-public class GroupBys3 {
-    private final List<GroupBy3> groups;
+public record GroupBys3 (List<GroupBy3> groups) implements ToString.IFormattable {
 
-    public GroupBys3(final List<GroupBy3> groups) {
-        this.groups = groups;
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return groups.stream().map(g -> g.sql(metadata, dbVersion)).collect(joining(", "));
     }
 
-    public String sql(final DbVersion dbVersion) {
-        return groups.stream().map(y -> y.sql(dbVersion)).collect(joining(", "));    
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + groups.hashCode();
-        return result;
+    public boolean isEmpty() {
+        return groups.isEmpty();
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof GroupBys3)) {
-            return false;
-        }
-
-        final GroupBys3 other = (GroupBys3) obj;
-        
-        return Objects.equals(groups, other.groups);
+    public String toString() {
+        return toString(ToString.separateLines);
     }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("groups", groups)
+                .$();
+    }
+
 }

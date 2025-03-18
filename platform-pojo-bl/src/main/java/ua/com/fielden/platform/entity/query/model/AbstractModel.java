@@ -1,64 +1,39 @@
 package ua.com.fielden.platform.entity.query.model;
 
-import static java.lang.String.*;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
+import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
 
-import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.entity.query.exceptions.EqlException.requireNotNullArgument;
 
 public abstract class AbstractModel {
-    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<>();
+    protected final ListTokenSource tokenSource;
 
-    protected AbstractModel() {
+    public AbstractModel(final ListTokenSource tokenSource) {
+        requireNotNullArgument(tokenSource, "tokenSource");
+        this.tokenSource = tokenSource;
     }
 
-    public AbstractModel(final List<Pair<TokenCategory, Object>> tokens) {
-        this.tokens.addAll(tokens);
-    }
-
-    public List<Pair<TokenCategory, Object>> getTokens() {
-        return tokens;
+    public final ListTokenSource getTokenSource() {
+        return tokenSource.restart();
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((tokens == null) ? 0 : tokens.hashCode());
-        return result;
+        return 31 * tokenSource.tokens().hashCode();
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof AbstractModel)) {
-            return false;
-        }
-        final AbstractModel other = (AbstractModel) obj;
-        if (tokens == null) {
-            if (other.tokens != null) {
-                return false;
-            }
-        } else if (!tokens.equals(other.tokens)) {
-            return false;
-        }
-        return true;
+        return this == obj || obj instanceof AbstractModel other && tokenSource.equalTokens(other.tokenSource);
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        for (final Pair<TokenCategory, Object> pair : tokens) {
-            sb.append(format("\n\t%s%s", StringUtils.rightPad(pair.getKey().toString(), 32, '.'), pair.getValue()));
+        for (final var token : tokenSource.tokens()) {
+            sb.append("\n\t%s".formatted(StringUtils.rightPad(token.getText(), 32, '.')));
         }
         return sb.toString();
     }
+
 }

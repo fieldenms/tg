@@ -17,6 +17,10 @@ export const TgEgiDataRetrievalBehavior = {
         return column.type === 'Boolean' && ['false', 'true'].includes(this.getBindedValue(entity, column)); // getBindedValue always returns 'true' or 'false' even if actual boolean value is null; this situation is possible for properties like 'lastUpdatedBy.base' where 'lastUpdatedBy' is null itself
     },
 
+    isRichTextProp: function (entity, column) {
+        return column.type === 'RichText' && this.getValueFromEntity(entity, column) !== null;
+    },
+
     isNotBooleanOrHyperlinkProp: function (entity, column) {
         return !(this.isBooleanProp(entity, column) || this.isHyperlinkProp(entity, column));
     },

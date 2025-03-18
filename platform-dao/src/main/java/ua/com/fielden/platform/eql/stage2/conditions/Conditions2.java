@@ -1,35 +1,54 @@
 package ua.com.fielden.platform.eql.stage2.conditions;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
+import ua.com.fielden.platform.utils.ToString;
 
-public class Conditions2 implements ICondition2<Conditions3> {
-    public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, emptyList());
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
-    private final List<List<? extends ICondition2<?>>> allConditionsAsDnf = new ArrayList<>();
-    private final boolean negated;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toSet;
 
-    public Conditions2(final boolean negated, final List<List<? extends ICondition2<?>>> allConditions) {
-        this.allConditionsAsDnf.addAll(allConditions);
+public record Conditions2 (boolean negated, List<List<? extends ICondition2<?>>> dnf)
+        implements ICondition2<Conditions3>, ToString.IFormattable
+{
+    public static final Conditions2 EMPTY_CONDITIONS = new Conditions2(false, ImmutableList.of());
+
+    public static Conditions2 conditions(final boolean negated, final List<List<? extends ICondition2<?>>> dnf) {
+        if (dnf.isEmpty()) {
+            return EMPTY_CONDITIONS;
+        }
+        // (OR (AND <Conditions2>)) == <Conditions2>
+        else if (dnf.size() == 1 && dnf.getFirst().size() == 1 && dnf.getFirst().getFirst() instanceof Conditions2 conds) {
+            // NOT cancels NOT
+            return conds.withNegated(conds.negated != negated);
+        }
+        return new Conditions2(negated, dnf);
+    }
+
+    public Conditions2(final boolean negated, final List<List<? extends ICondition2<?>>> dnf) {
+        this.dnf = ImmutableList.copyOf(dnf);
         this.negated = negated;
+    }
+
+    private Conditions2 withNegated(final boolean negated) {
+        return negated == this.negated ? this : new Conditions2(negated, dnf);
+    }
+
+    public boolean isEmpty() {
+        return dnf.isEmpty();
     }
 
     @Override
     public boolean ignore() {
-        return allConditionsAsDnf.isEmpty();
+        return dnf.isEmpty();
     }
 
     @Override
@@ -41,7 +60,7 @@ public class Conditions2 implements ICondition2<Conditions3> {
         final List<List<? extends ICondition3>> result = new ArrayList<>();
         TransformationContextFromStage2To3 currentContext = context;
 
-        for (final List<? extends ICondition2<?>> andGroup : allConditionsAsDnf) {
+        for (final List<? extends ICondition2<?>> andGroup : dnf) {
             final List<ICondition3> transformedAndGroup = new ArrayList<>();
             for (final ICondition2<? extends ICondition3> andGroupCondition : andGroup) {
                 final TransformationResultFromStage2To3<? extends ICondition3> andGroupConditionTr = andGroupCondition.transform(currentContext);
@@ -56,13 +75,10 @@ public class Conditions2 implements ICondition2<Conditions3> {
 
     @Override
     public Set<Prop2> collectProps() {
-        final Set<Prop2> result = new HashSet<>();
-        for (final List<? extends ICondition2<?>> list : allConditionsAsDnf) {
-            for (final ICondition2<?> cond : list) {
-                result.addAll(cond.collectProps());
-            }
-        }
-        return result;
+        return dnf.stream()
+                .flatMap(List::stream)
+                .flatMap(cond -> cond.collectProps().stream())
+                .collect(toSet());
     }
 
     @Override
@@ -70,56 +86,37 @@ public class Conditions2 implements ICondition2<Conditions3> {
         if (ignore()) {
             return emptySet();
         } else {
-            final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
-            for (final List<? extends ICondition2<?>> conditions : allConditionsAsDnf) {
-                for (final ICondition2<?> condition : conditions) {
-                    result.addAll(condition.collectEntityTypes());
-                }
-            }
-            return result;
+            return dnf.stream().flatMap(conds -> conds.stream().flatMap(c -> c.collectEntityTypes().stream())).collect(toSet());
         }
     }
 
     public boolean conditionIsSatisfied(final ICondition2<?> condition) {
-        for (final List<? extends ICondition2<?>> conditions : allConditionsAsDnf) {
+        for (final List<? extends ICondition2<?>> conditions : dnf) {
             if (!conditionMatchesAnyOf(conditions, condition)) {
                 return false;
             }
         }
 
-        return allConditionsAsDnf.isEmpty() || negated ? false : true;
+        return !dnf.isEmpty() && !negated;
     }
 
-    private boolean conditionMatchesAnyOf(final List<? extends ICondition2<?>> conditions, final ICondition2<?> conditionToMatch) {
-        for (final ICondition2<?> condition : conditions) {
-            if (condition.equals(conditionToMatch) || (condition instanceof Conditions2 && ((Conditions2) condition).conditionIsSatisfied(conditionToMatch))) {
-                return true;
-            }
-        }
-        return false;
+    private static boolean conditionMatchesAnyOf(final List<? extends ICondition2<?>> conditions, final ICondition2<?> conditionToMatch) {
+        return conditions.stream()
+                .anyMatch(cond -> cond.equals(conditionToMatch)
+                        || (cond instanceof Conditions2 conds && conds.conditionIsSatisfied(conditionToMatch)));
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + allConditionsAsDnf.hashCode();
-        result = prime * result + (negated ? 1231 : 1237);
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Conditions2)) {
-            return false;
-        }
-
-        final Conditions2 other = (Conditions2) obj;
-
-        return Objects.equals(allConditionsAsDnf, other.allConditionsAsDnf) && (negated == other.negated);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("negated", negated)
+                .add("dnf", dnf)
+                .$();
     }
+
 }

@@ -5,14 +5,22 @@ import java.util.Objects;
 import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
-public class QuerySourceItemForPrimType<T> extends AbstractQuerySourceItem<T> {
-    private final Class<T> itemType;
+import javax.annotation.Nullable;
 
-    public QuerySourceItemForPrimType(final String name, final Class<T> itemType, final Object hibType) {
+public class QuerySourceItemForPrimType<T> extends AbstractQuerySourceItem<T> {
+    /** The type of this item or {@code null}. */
+    private final @Nullable Class<T> itemType;
+
+    public QuerySourceItemForPrimType(final String name, final @Nullable Class<T> itemType, final @Nullable Object hibType) {
         this(name, itemType, hibType, null);
     }
 
-    public QuerySourceItemForPrimType(final String name, final Class<T> itemType, final Object hibType, final CalcPropInfo expression) {
+    public QuerySourceItemForPrimType(
+            final String name,
+            final @Nullable Class<T> itemType,
+            final @Nullable Object hibType,
+            final @Nullable CalcPropInfo expression)
+    {
         super(name, hibType, expression);
         this.itemType = itemType;
     }
@@ -34,7 +42,7 @@ public class QuerySourceItemForPrimType<T> extends AbstractQuerySourceItem<T> {
 
     @Override
     public String toString() {
-        return String.format("%20s %20s", name, itemType.getSimpleName());
+        return String.format("%20s %20s", name, itemType == null ? "null" : itemType.getSimpleName());
 
     }
 
@@ -42,7 +50,7 @@ public class QuerySourceItemForPrimType<T> extends AbstractQuerySourceItem<T> {
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + itemType.hashCode();
+        result = prime * result + Objects.hashCode(itemType);
         return result;
     }
 

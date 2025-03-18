@@ -55,7 +55,7 @@ public class SecondLevelEntity extends FirstLevelEntity {
     }
 
     @Observable
-    public void setListProperty(final Reference<SecondLevelEntity> dummyReferenceProperty) {
+    public void setDummyReferenceProperty(final Reference<SecondLevelEntity> dummyReferenceProperty) {
         this.dummyReferenceProperty = dummyReferenceProperty;
     }
 

@@ -216,7 +216,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
                 // the property is not excluded 1) by contract 2) was not excluded manually
                 // this is a new property. "includedProperties" should be updated (the new property added).
                 logger.debug("The property to be added: root == " + root + ", property == " + newProperty);
-                final String parent = PropertyTypeDeterminator.isDotNotation(newProperty) ? PropertyTypeDeterminator.penultAndLast(newProperty).getKey() : "";
+                final String parent = PropertyTypeDeterminator.isDotExpression(newProperty) ? PropertyTypeDeterminator.penultAndLast(newProperty).getKey() : "";
                 // ! important ! the parent should be warmed up before adding anything to it!
                 dtr.warmUp(root, parent);
 

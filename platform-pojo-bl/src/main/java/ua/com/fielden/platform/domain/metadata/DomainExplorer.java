@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 /**
- * Entity that is used as base entity for domain explorer centre.
+ * Entity that is used as base entity for a domain explorer centre.
  *
  * @author TG Team
  *

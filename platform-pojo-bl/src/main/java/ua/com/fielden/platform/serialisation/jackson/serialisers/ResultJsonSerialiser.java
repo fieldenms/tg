@@ -1,6 +1,23 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
-import static java.util.Arrays.asList;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
+import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.centre.AbstractCentreConfigAction;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification.MASTER_ENTITY_PROPERTY_NAME;
@@ -9,31 +26,6 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoad
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.CUSTOM_OBJECT_PROPERTY_NAME;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
-import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
-import ua.com.fielden.platform.serialisation.jackson.EntityType;
-import ua.com.fielden.platform.utils.CollectionUtil;
-import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.web.centre.AbstractCentreConfigAction;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 
 /**
  * Serialiser for {@link Result} type.
@@ -57,7 +49,7 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
 
         generator.writeFieldName("@resultType");
         generator.writeObject(result.getClass().getName());
-        generator.writeFieldName("message");
+        generator.writeFieldName(Result.MESSAGE);
         generator.writeObject(result.getMessage());
 
         if (result.getInstance() != null) {
@@ -119,12 +111,12 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                 }
             }
 
-            generator.writeFieldName("instance");
+            generator.writeFieldName(Result.INSTANCE);
             generator.writeObject(result.getInstance());
         }
 
         if (result.getEx() != null) {
-            generator.writeFieldName("ex");
+            generator.writeFieldName(Result.EX);
             generator.writeObject(result.getEx());
         }
 

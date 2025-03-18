@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.retrieval;
 import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_DATETIME;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.H_UTCDATETIME;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_DATETIME;
+import static ua.com.fielden.platform.persistence.HibernateConstants.H_UTCDATETIME;
 
 import java.util.List;
 

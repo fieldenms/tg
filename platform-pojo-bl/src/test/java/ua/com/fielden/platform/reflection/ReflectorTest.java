@@ -40,7 +40,7 @@ import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -50,7 +50,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class ReflectorTest {
-    final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+    final Injector injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).getInjector();
     final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     @Test

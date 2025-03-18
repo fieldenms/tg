@@ -1,18 +1,16 @@
 package ua.com.fielden.platform.web.centre;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toSet;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -97,14 +95,13 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         if (selectedEntities != null) {
             for (final AbstractEntity<?> el: selectedEntities) {
                 final Class<? extends AbstractEntity<?>> originalType = el.getDerivedFromType();
-                final List<String> originalTypeProperties = Finder.streamRealProperties(originalType)
+                final Set<String> originalTypeProperties = Finder.streamRealProperties(originalType)
                     .map(Field::getName)
-                    .collect(Collectors.toList());
-                final String[] propsToBeProxied = Finder.streamRealProperties((Class<? extends AbstractEntity<?>>) el.getClass())
+                    .collect(toImmutableSet());
+                final Set<String> propsToBeProxied = Finder.streamRealProperties((Class<? extends AbstractEntity<?>>) el.getClass())
                     .map(Field::getName)
                     .filter(name -> Reflector.isPropertyProxied(el, name) && originalTypeProperties.contains(name))
-                    .collect(Collectors.toList())
-                    .toArray(new String[] {});
+                    .collect(toImmutableSet());
 
                 // let's be smart about types and try to handle the situation with generated types
                 this.selectedEntities.add((T) el.copy(EntityProxyContainer.proxy(originalType, propsToBeProxied)));

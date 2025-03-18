@@ -30,7 +30,7 @@ This section should be completed with reference to section [Preparing PR](https:
 
 - [ ] Established security practices have been followed, including the existence and attribution of security tokens.
 
-- [ ] If there are database schema changes (e.g., domain metadata entities changed their structure), an SQL script has been written and tested to update the database schema in a non-destructive way (to allow for blue/green deployments).
+- [ ] If there are database schema changes (e.g., domain entities changed their structure), an SQL script has been written and tested to update the database schema in a non-destructive way (to allow for blue/green deployments).
 
 - [ ] If there are destructive schema changes (e.g., removal of an entity or property), a second SQL script has been written to be applied to the database in the future once the release has been fully accepted.
 

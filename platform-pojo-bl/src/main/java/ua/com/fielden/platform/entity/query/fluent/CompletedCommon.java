@@ -6,20 +6,21 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
 class CompletedCommon<ET extends AbstractEntity<?>> //
-		extends AbstractQueryLink //
-		implements ICompletedCommon<ET> {
+        extends AbstractQueryLink //
+        implements ICompletedCommon<ET> {
 
-    protected CompletedCommon(final Tokens tokens) {
-        super(tokens);
+    protected CompletedCommon(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	@Override
-	public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
-		return new EntityResultQueryModel<T>(getTokens().getValues(), resultType, getTokens().isYieldAll());
-	}
 
-	@Override
-	public AggregatedResultQueryModel modelAsAggregate() {
-		return new AggregatedResultQueryModel(getTokens().getValues(), getTokens().isYieldAll());
-	}
+    @Override
+    public <T extends AbstractEntity<?>> EntityResultQueryModel<T> modelAsEntity(final Class<T> resultType) {
+        return new EntityResultQueryModel<T>(builder.modelAsEntity(resultType).getTokenSource(), resultType, builder.isYieldAll());
+    }
+
+    @Override
+    public AggregatedResultQueryModel modelAsAggregate() {
+        return new AggregatedResultQueryModel(builder.modelAsAggregate().getTokenSource(), builder.isYieldAll());
+    }
+
 }

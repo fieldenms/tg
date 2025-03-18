@@ -1,13 +1,9 @@
 package ua.com.fielden.platform.entity.factory;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-
-import org.apache.logging.log4j.Logger;
-
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-
+import jakarta.inject.Singleton;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.companion.ICanReadUninstrumented;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -15,16 +11,20 @@ import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 /**
  * Default implementation for {@link ICompanionObjectFinder}, which utilises injector (thread-safe) for creating Companion Object (CO) instances.
  * 
  * @author TG Team
- * 
  */
-public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
+@Singleton
+final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
 
     private static final Logger LOGGER = getLogger(DefaultCompanionObjectFinderImpl.class);
-    
+    public static final String ERR_CO_IS_MISSING = "Could not locate companion for entity of type [%s].";
+    public static final String ERR_UNINSTRUMENTED_NOT_SUPPORTED_BY_CO = "Cannot produce uninstrumented companion of type [%s].";
+
     private final Injector injector;
     
     @Inject
@@ -48,13 +48,13 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
             try {
                 final Class<T> coType = (Class<T>) type.getAnnotation(CompanionObject.class).value();
                 final T co = injector.getInstance(coType);
-                return decideUninstrumentation(uninstrumented, coType, co);
-            } catch (final EntityCompanionException e) {
-                throw e;
-            } catch (final Exception e) {
-                LOGGER.warn(format("Could not locate companion for type [%s].", type.getName()), e);
-                // if controller could not be instantiated for whatever reason it can be considered non-existent
-                // thus, returning null
+                return decideUninstrumentation(uninstrumented, co);
+            } catch (final EntityCompanionException ex) {
+                throw ex;
+            } catch (final Exception ex) {
+                LOGGER.warn(() -> ERR_CO_IS_MISSING.formatted(type.getName()), ex);
+                // If a companion could not be instantiated for whatever reason, it can be considered as non-existing.
+                // Thus, returning null.
                 return null;
             }
         }
@@ -65,16 +65,15 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
      * A helper method to decide whether the instantiated companion should read instrumented or uninstrumented entities.
      *  
      * @param uninstrumented
-     * @param coType
      * @param co
      * @return
      */
-    private <T extends IEntityDao<E>, E extends AbstractEntity<?>> T decideUninstrumentation(final boolean uninstrumented, final Class<T> coType, final T co) {
+    private <T extends IEntityDao<E>, E extends AbstractEntity<?>> T decideUninstrumentation(final boolean uninstrumented, final T co) {
         if (uninstrumented) {
             if (co instanceof ICanReadUninstrumented) {
                 ((ICanReadUninstrumented) co).readUninstrumented();
             } else {
-                throw new EntityCompanionException(format("Cannot produce uninstrumented companion of type [%s].", coType.getName()));
+                throw new EntityCompanionException(ERR_UNINSTRUMENTED_NOT_SUPPORTED_BY_CO.formatted(co.getClass().getSimpleName()));
             }
         }
         

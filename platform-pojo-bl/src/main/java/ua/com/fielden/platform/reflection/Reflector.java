@@ -18,13 +18,8 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.lang.reflect.*;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -32,6 +27,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
@@ -55,10 +51,8 @@ public final class Reflector {
         return METHOD_CACHE.size();
     }
 
-    /** A symbol that represents a separator between properties in property path expressions. */
-    public static final String DOT_SPLITTER = "\\.";
-    /** A regex pattern for matching DOT_SPLITTER. */
-    public static final Pattern DOT_SPLITTER_PATTERN = Pattern.compile(DOT_SPLITTER);
+    /** Regex pattern that represents a separator between properties in property path expressions. */
+    public static final Pattern DOT_SPLITTER_PATTERN = Pattern.compile("\\.");
     /**
      * A symbol used as the property name substitution in property path expressions representing the next level up in the context of nested properties. Should occur only at the
      * beginning of the expression. There can be several sequentially linked ← separated by dot splitter.
@@ -119,7 +113,7 @@ public final class Reflector {
      * @return
      * @throws NoSuchMethodException
      */
-    protected static Method getMethodForClass(final Class<?> startWithClass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
+    public static Method getMethodForClass(final Class<?> startWithClass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         Class<?> klass = startWithClass;
         while (klass != Object.class) { // need to iterated thought hierarchy in
             // order to retrieve fields from above
@@ -231,7 +225,7 @@ public final class Reflector {
      * @return
      * @throws Exception
      */
-    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) {
+    public static Method obtainPropertyAccessor(final Class<?> entityClass, final CharSequence propertyName) {
         try {
             return Reflector.getMethod(entityClass, Accessor.GET.getName(propertyName));
         } catch (final Exception e1) {
@@ -244,7 +238,7 @@ public final class Reflector {
     }
 
     /**
-     * Tries to obtain property setter for property, specified using dot-notation.
+     * Tries to find a property setter for property, specified using dot-expression.
      *
      * @param entityClass
      * @param dotNotationExp
@@ -252,8 +246,8 @@ public final class Reflector {
      * @throws NoSuchMethodException
      * @throws Exception
      */
-    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) {
-        if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.contains("()")) {
+    public static Method obtainPropertySetter(final Class<?> entityClass, final CharSequence dotNotationExp) {
+        if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.toString().contains("()")) {
             throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
@@ -294,7 +288,7 @@ public final class Reflector {
     public static Pair<Integer, Integer> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
         final Field field = Finder.findFieldByName(entity.getType(), propertyName);
         Integer min = null, max = null;
-        final Set<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
+        final Set<Annotation> propertyValidationAnotations = entity.findValidationAnnotationsForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName));
         for (final Annotation annotation : propertyValidationAnotations) {
             if (annotation instanceof GreaterOrEqual) {
                 min = ((GreaterOrEqual) annotation).value();
@@ -340,9 +334,9 @@ public final class Reflector {
      * Converts a relative property path to an absolute path with respect to the provided context.
      *
      * @param context
-     *            -- the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+     *            a dot-expression for a property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param relativePropertyPath
-     *            -- relative property path, which may contain ← and dots for separating individual properties.
+     *            relative property path, which may contain ← and dots for separating individual properties.
      * @return
      */
     public static String fromRelative2AbsotulePath(final String context, final String relativePropertyPath) {
@@ -396,9 +390,9 @@ public final class Reflector {
      * Converts an absolute property path to a relative one in respect to the provided context.
      *
      * @param context
-     *            the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+     *            a dot-expression for a property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param absolutePropertyPath
-     *            -- an absolute property path, which needs to be converted to a relative path with respect to the specified context.
+     *            an absolute property path, which needs to be converted to a relative path with respect to the specified context.
      * @return
      */
     public static String fromAbsotule2RelativePath(final String context, final String absolutePropertyPath) {
@@ -410,8 +404,8 @@ public final class Reflector {
         }
 
         // calculate the matching path depth from the beginning
-        final String[] contextElements = context.split(DOT_SPLITTER);
-        final String[] propertyElements = absolutePropertyPath.split(DOT_SPLITTER);
+        final String[] contextElements = laxSplitPropPathToArray(context);
+        final String[] propertyElements = laxSplitPropPathToArray(absolutePropertyPath);
         final int length = Math.min(contextElements.length, propertyElements.length);
         int longestPathUp = propertyDepth(context);
         for (int index = 0; index < length; index++) {
@@ -447,7 +441,7 @@ public final class Reflector {
         if (StringUtils.isEmpty(propertyPath)) {
             return 0;
         }
-        return propertyPath.split(DOT_SPLITTER).length;
+        return laxSplitPropPathToArray(propertyPath).length;
     }
 
     /**
@@ -469,7 +463,7 @@ public final class Reflector {
 
         String currProp = contextProperty;
 
-        final String[] path = dotNotaionalExp.split(DOT_SPLITTER);
+        final String[] path = laxSplitPropPathToArray(dotNotaionalExp);
         int index = 0;
         while ("←".equals(path[index])) {
             // find link property and add it to the absolute path
@@ -506,16 +500,83 @@ public final class Reflector {
     }
     
     /**
-     * Returns <code>true</code> if the specified property is proxied for a given entity instance.
-     *  
+     * A predicate that evaluates to {@code true} only if none of the properties in a dot-expression is proxied for a given entity and none of the intermediate values is {@code null}.
+     * <p>
+     * For example, {@code isPropertyProxied(entity, "prop.subProp.subSubProp")} would be {@code false} in the following cases:
+     * <ol>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is not proxied,
+     *          <li> {@code entity.get("prop")} is {@code null},
+     *      </ul>
+     *      </li>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is not proxied,
+     *          <li> {@code entity.get("prop")} is not {@code null},
+     *          <li> {@code "prop.subProp"} is not proxied,
+     *          <li> {@code entity.get("prop").get("subProp")} is {@code null},
+     *      </ul>
+     *      </li>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is not proxied,
+     *          <li> {@code entity.get("prop")} is not {@code null},
+     *          <li> {@code "prop.subProp"} is not proxied,
+     *          <li> {@code entity.get("prop").get("subProp")} is not {@code null},
+     *          <li> {@code "prop.subProp.subSubProp"} is not proxied.
+     *      </ul>
+     *      </li>
+     * </ol>
+     * And the same would be {@code true} in the following cases:
+     * <ol>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is proxied
+     *      </ul>
+     *      </li>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is not proxied,
+     *          <li> {@code entity.get("prop")} is not {@code null},
+     *          <li> {@code "prop.subProp"} is proxied
+     *      </ul>
+     *      </li>
+     *      <li>
+     *      <ul>
+     *          <li> {@code prop} is not proxied,
+     *          <li> {@code entity.get("prop")} is not {@code null},
+     *          <li> {@code "prop.subProp"} is not proxied,
+     *          <li> {@code entity.get("prop").get("subProp")} is not {@code null},
+     *          <li> {@code "prop.subProp.subSubProp"} is proxied.
+     *      </ul>
+     *      </li>
+     * </ol>
+     *
      * @param entity
-     * @param propName
+     * @param propPath
      * @return
      */
-    public static boolean isPropertyProxied(final AbstractEntity<?> entity, final String propName) {
-        return entity.proxiedPropertyNames().contains(propName);
+    public static boolean isPropertyProxied(final AbstractEntity<?> entity, final CharSequence propPath) {
+        final var props = splitPropPath(propPath).iterator();
+        return isPropertyProxied_(entity, props.next(), props);
     }
-    
+    // a helper function to implement recursive processing of propPath
+    private static boolean isPropertyProxied_(final AbstractEntity<?> entity, final String propName, final Iterator<String> tail) {
+        if (entity.proxiedPropertyNames().contains(propName)) {
+            return true;
+        }
+        if (tail.hasNext()) {
+            final AbstractEntity<?> nextEntity = entity.get(propName);
+            // if the next entity is null then there is nothing to violate the proxy condition -- consider its sub-properties to be not proxied
+            if (nextEntity == null) {
+                return false;
+            }
+            return isPropertyProxied_(nextEntity, tail.next(), tail);
+        }
+        return false;
+    }
+
     /**
      * Identifies whether the specified field represents a retrievable property.
      * The notion of <code>retrievable</code> is different to <code>persistent</code> as it also includes calculated properties, which do get retrieved from a database. 
@@ -565,6 +626,54 @@ public final class Reflector {
         } catch (final Exception ex) {
             throw new ReflectionException("Could not assign value to a static field.", ex);
         }
+    }
+
+    public static ParameterizedType newParameterizedType(final Class<?> rawType, final Type... typeArguments) {
+        final Type owner = rawType.getDeclaringClass();
+
+        return new ParameterizedType() {
+            @Override public Class<?> getRawType() { return rawType; }
+            @Override public Type getOwnerType() { return owner; }
+            @Override public Type[] getActualTypeArguments() { return typeArguments; }
+            @Override
+            public String toString() {
+                final StringBuilder sb = new StringBuilder();
+                if (owner != null) {
+                    sb.append(owner.getTypeName());
+                    sb.append('$');
+                    sb.append(rawType.getSimpleName());
+                }
+                else {
+                    sb.append(rawType.getName());
+                }
+
+                final StringJoiner sj = new StringJoiner(", ", "<", ">").setEmptyValue("");
+                for (final Type arg : typeArguments) {
+                    sj.add(arg.getTypeName());
+                }
+
+                return sb.append(sj.toString()).toString();
+            }
+
+            @Override
+            public boolean equals(final Object obj) {
+                return this == obj
+                       || obj instanceof ParameterizedType that
+                          && Objects.equals(rawType, that.getRawType())
+                          && Objects.equals(owner, that.getOwnerType())
+                          && Arrays.equals(typeArguments, that.getActualTypeArguments());
+            }
+
+            @Override
+            public int hashCode() {
+                final int prime = 31;
+                int result = 1;
+                result = prime * result + Objects.hashCode(rawType);
+                result = prime * result + Objects.hashCode(owner);
+                result = prime * result + Arrays.hashCode(typeArguments);
+                return result;
+            }
+        };
     }
 
 }

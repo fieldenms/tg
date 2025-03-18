@@ -13,9 +13,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithMaxLengthValidation;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.RichText;
 
 /**
  * A test case for validation with {@link MaxLengthValidator}.
@@ -25,7 +26,7 @@ import ua.com.fielden.platform.types.Hyperlink;
  */
 public class MaxLengthValidatorTest {
 
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
@@ -203,6 +204,18 @@ public class MaxLengthValidatorTest {
         final String uri = "https://www.google.com";
         entity.setPropHyperlink(new Hyperlink(uri));
         assertTrue(mpPropHyperlink.isValid());
+    }
+
+    @Test
+    public void RichText_coreText_cannot_be_longer_than_limit() {
+        final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
+        final var mpRichText = entity.getProperty("richText");
+        entity.setRichText(RichText.fromHtml("hello <b> world </b>"));
+        assertFalse(mpRichText.isValid());
+        assertEquals(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH.formatted(5), mpRichText.getFirstFailure().getMessage());
+
+        entity.setRichText(RichText.fromHtml("a"));
+        assertTrue(mpRichText.isValid());
     }
 
 }

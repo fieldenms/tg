@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.validators;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.EntityWithWarnings;
+import ua.com.fielden.platform.test_entities.EntityWithWarnings;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;

@@ -194,7 +194,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
                     assertTrue("Property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
                 }
             }
-        }, "doubleProp", "bigDecimalProp", "moneyProp", "dateProp");
+        }, "bigDecimalProp", "moneyProp", "dateProp");
     }
 
     @Test
@@ -263,7 +263,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
                     assertTrue("Property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
                 }
             }
-        }, "integerProp", "doubleProp", "bigDecimalProp", "moneyProp", "stringProp", "simpleEntityProp", "entityPropWithAEKeyType", "entityWithCompositeKeyProp", "dateProp", "booleanProp");
+        }, "integerProp", "bigDecimalProp", "moneyProp", "stringProp", "simpleEntityProp", "entityPropWithAEKeyType", "entityWithCompositeKeyProp", "dateProp", "booleanProp");
     }
 
     protected void checkSecTickEnablementForAGGR_EXPRessions(final String originationProperty, final int i, final String contextPath) {

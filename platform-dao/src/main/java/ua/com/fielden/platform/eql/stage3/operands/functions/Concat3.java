@@ -1,14 +1,17 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.joining;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.meta.PropType;
-import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.eql.stage3.utils.OperandToSqlAsString.operandToSqlAsString;
 
 public class Concat3 extends AbstractFunction3 {
 
@@ -20,15 +23,15 @@ public class Concat3 extends AbstractFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         switch (dbVersion) {
         case H2:
         case MSSQL:
-            return format(" (%s)", operands.stream().map(so -> getConvertToStringSql(dbVersion, so)).collect(joining(" + ")));
+            return " (%s)".formatted(operands.stream().map(so -> operandToSqlAsString(metadata, dbVersion, so)).collect(joining(" + ")));
         case POSTGRESQL:
-            return format(" (%s)", operands.stream().map(so -> getConvertToStringSql(dbVersion, so)).collect(joining(" || ")));
+            return " (%s)".formatted(operands.stream().map(so -> operandToSqlAsString(metadata, dbVersion, so)).collect(joining(" || ")));
         default:
-            return super.sql(dbVersion);
+            return super.sql(metadata, dbVersion);
         }
     }
     
@@ -42,16 +45,14 @@ public class Concat3 extends AbstractFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-    
-        if (!(obj instanceof Concat3)) {
-            return false;
-        }
-        
-        final Concat3 other = (Concat3) obj;
-        
-        return Objects.equals(operands, other.operands);
+        return this == obj
+               || obj instanceof Concat3 that
+                  && Objects.equals(this.operands, that.operands);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("operands", operands);
+    }
+
 }

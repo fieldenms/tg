@@ -3,14 +3,19 @@ package ua.com.fielden.platform.utils;
 import org.junit.Test;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
+import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
@@ -175,7 +180,23 @@ public class StreamUtilsTest {
         assertEquals(List.of(pair("one", 1), pair("two", 2)), 
                 StreamUtils.distinct(elements.stream(), Pair::getKey).toList());
     }
-    
+
+    @Test
+    public void distinct_returns_a_stream_whose_spliterator_provides_distinct_elements() {
+        final var splitr = StreamUtils.distinct(Stream.of("fun", "proc", "function", "routine"), s -> s.charAt(0)).spliterator();
+        final var distinct = new ArrayList<String>();
+        splitr.forEachRemaining(distinct::add);
+        assertEquals(List.of("fun", "proc", "routine"), distinct);
+    }
+
+    @Test
+    public void distinct_returns_a_stream_whose_iterator_provides_distinct_elements() {
+        final var iter = StreamUtils.distinct(Stream.of("fun", "proc", "function", "routine"), s -> s.charAt(0)).iterator();
+        final var distinct = new ArrayList<String>();
+        iter.forEachRemaining(distinct::add);
+        assertEquals(List.of("fun", "proc", "routine"), distinct);
+    }
+
     @Test
     public void can_zip_streams_of_different_size() {
         assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).toList());
@@ -225,20 +246,9 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void windowing_a_stream_with_a_non_positive_window_size_results_in_parts_with_a_single_element_each() {
-        final Stream<List<Integer>> negWindowed = StreamUtils.windowed(Stream.of(0, 1, 2), -1);
-        final List<List<Integer>> negWindowedAsList = negWindowed.collect(toList());
-        assertEquals(3, negWindowedAsList.size());
-        assertEquals(listOf(0), negWindowedAsList.get(0));
-        assertEquals(listOf(1), negWindowedAsList.get(1));
-        assertEquals(listOf(2), negWindowedAsList.get(2));
-
-        final Stream<List<Integer>> zeroWindowed = StreamUtils.windowed(Stream.of(0, 1, 2), 0);
-        final List<List<Integer>> zeroWindowedAsList = zeroWindowed.collect(toList());
-        assertEquals(3, zeroWindowedAsList.size());
-        assertEquals(listOf(0), zeroWindowedAsList.get(0));
-        assertEquals(listOf(1), zeroWindowedAsList.get(1));
-        assertEquals(listOf(2), zeroWindowedAsList.get(2));
+    public void windowing_a_stream_with_a_non_positive_window_size_is_an_error() {
+        assertThrows(IllegalArgumentException.class, () -> StreamUtils.windowed(Stream.of(0, 1, 2), -1));
+        assertThrows(IllegalArgumentException.class, () -> StreamUtils.windowed(Stream.of(0, 1, 2), 0));
     }
 
     @Test
@@ -258,6 +268,32 @@ public class StreamUtilsTest {
     }
 
     @Test
+    public void reduceLeft_returns_empty_optional_for_empty_stream() {
+        assertEmpty(reduceLeft(IntStream.of(), Integer::sum));
+    }
+
+    @Test
+    public void reduceLeft_returns_optional_with_first_element_for_stream_with_one_element() {
+        assertOptEquals("one", reduceLeft(Stream.of("one"), String::concat));
+    }
+
+    @Test
+    public void reduceLeft_processes_stream_elements_sequentially_from_left_to_right() {
+        assertOptEquals(1, reduceLeft(IntStream.of(1), Integer::sum));
+        assertOptEquals("one-two", reduceLeft(Stream.of("one-", "two"), String::concat));
+    }
+
+    @Test
+    public void foldLeft_returns_optional_with_initial_element_for_empty_stream() {
+        assertEquals("zero", foldLeft(Stream.of(), "zero", String::concat));
+    }
+
+    @Test
+    public void foldLeft_processes_stream_elements_sequentially_from_left_to_right() {
+        assertEquals("one-two-three", foldLeft(Stream.of("two-", "three"), "one-", String::concat));
+    }
+
+    @Test
     public void supplyIfEmpty_returns_equivalent_stream_if_original_is_not_empty() {
         final var xs = CollectionUtil.listOf(1, 2);
         final var xsEquivalent = StreamUtils.supplyIfEmpty(xs.stream(), () -> 0).toList();
@@ -268,6 +304,158 @@ public class StreamUtilsTest {
     public void supplyIfEmpty_returns_alternative_stream_if_original_is_empty() {
         final var xsAlternative = StreamUtils.supplyIfEmpty(Stream.empty(), () -> 0).limit(3).toList();
         assertEquals(CollectionUtil.listOf(0, 0, 0), xsAlternative);
+    }
+
+    @Test
+    public void removeAll_returns_a_stream_with_specified_elements_removed() {
+        assertEquals(IntStream.rangeClosed(6, 10).boxed().toList(),
+                     StreamUtils.removeAll(IntStream.rangeClosed(1, 10).boxed(),
+                                           IntStream.rangeClosed(1, 5).boxed().toList())
+                             .toList());
+
+        assertEquals(List.of("b"),
+                     StreamUtils.removeAll(Stream.of("a", "b", "c"), List.of("A", ".", "C"), String::equalsIgnoreCase)
+                             .toList());
+    }
+
+    @Test
+    public void removeAll_doesnt_remove_anything_if_items_to_remove_are_empty() {
+        assertEquals(List.of("a", "b"),
+                     StreamUtils.removeAll(Stream.of("a", "b"), List.of()).toList());
+
+        assertEquals(List.of("a", "b"),
+                     StreamUtils.removeAll(Stream.of("a", "b"), List.of(), String::equalsIgnoreCase)
+                             .toList());
+    }
+
+    @Test
+    public void removeAll_returns_an_empty_stream_given_an_empty_stream() {
+        assertEquals(List.of(),
+                     StreamUtils.removeAll(Stream.of(), List.of("a")).toList());
+
+        assertEquals(List.of(),
+                     StreamUtils.removeAll(Stream.of(), List.of("a"), String::equalsIgnoreCase).toList());
+    }
+
+    @Test
+    public void removeAll_with_default_predicate_allows_nulls_and_treats_them_like_other_objects() {
+        assertEquals(List.of("a"),
+                     StreamUtils.removeAll(Stream.of("a", null, null, "b"), listOf("b", null)).toList());
+    }
+
+    @Test
+    public void collectToImmutableMap_terminates_upon_reaching_the_shorter_stream() {
+        assertEquals(Map.of("a", 1), collectToImmutableMap(Stream.of("a", "b"), Stream.of(1)));
+        assertEquals(Map.of(), collectToImmutableMap(Stream.of(), Stream.of(1)));
+    }
+
+    @Test
+    public void collectToImmutableMap_applies_given_functions_to_produce_keys_and_values() {
+        assertEquals(Map.of("", 0, "cdecde", 6),
+                     collectToImmutableMap(Stream.of("ab", "cde"), Stream.of(0, 2),
+                                           (s, i) -> s.repeat(i), (s, i) -> i * s.length()));
+    }
+
+    @Test
+    public void enumerate_pairs_each_stream_element_with_its_sequential_number_starting_from_0_by_default() {
+        assertEquals(List.of("0:a", "1:b"),
+                     enumerate(Stream.of("a", "b"), (x, i) -> "%s:%s".formatted(i, x)).toList());
+    }
+
+    @Test
+    public void enumerate_pairs_each_stream_element_with_its_sequential_number_starting_from_the_given_one() {
+        assertEquals(List.of("4:a", "5:b"),
+                     enumerate(Stream.of("a", "b"), 4, (x, i) -> "%s:%s".formatted(i, x)).toList());
+    }
+
+    public void transpose_returns_MxN_matrix_given_NxM_matrix() {
+        final var matrix = List.of(List.of(1, 2), List.of(3, 4), List.of(5, 6));
+        assertEquals(
+                List.of(List.of(1, 3, 5), List.of(2, 4, 6)),
+                transpose(matrix).toList());
+    }
+
+    @Test
+    public void tranpose_returns_as_many_lists_as_the_length_of_shortest_input_collection() {
+        final var matrix = List.of(List.of(1, 2, 3), List.of(4, 5), List.of(6, 7, 8));
+        assertEquals(
+                List.of(List.of(1, 4, 6), List.of(2, 5, 7)),
+                transpose(matrix).toList());
+
+        assertEquals(List.of(), transpose(List.of()).toList());
+    }
+
+    @Test
+    public void isSingleElementStream_returns_true_for_streams_with_one_element() {
+        assertTrue(isSingleElementStream(Stream.of("x")));
+        assertTrue(isSingleElementStream(IntStream.of(5)));
+    }
+
+    @Test
+    public void isSingleElementStream_returns_false_for_an_empty_stream() {
+        assertFalse(isSingleElementStream(Stream.of()));
+    }
+
+    @Test
+    public void isSingleElementStream_returns_false_for_a_stream_with_multiple_elements() {
+        assertFalse(isSingleElementStream(Stream.of("a", "b")));
+        assertFalse(isSingleElementStream(Stream.of("a", "b").parallel()));
+    }
+
+    @Test
+    public void isMultiElementStream_returns_false_for_streams_with_one_element() {
+        assertFalse(isMultiElementStream(Stream.of("x")));
+        assertFalse(isMultiElementStream(IntStream.of(5)));
+    }
+
+    @Test
+    public void isMultiElementStream_returns_false_for_an_empty_stream() {
+        assertFalse(isMultiElementStream(Stream.of()));
+    }
+
+    @Test
+    public void isMultiElementStream_returns_true_for_a_stream_with_multiple_elements() {
+        assertTrue(isMultiElementStream(Stream.of("a", "b")));
+        assertTrue(isMultiElementStream(Stream.of("a", "b").parallel()));
+    }
+
+    @Test
+    public void areAllEqual_returns_an_empty_optional_for_an_empty_stream() {
+        assertTrue(areAllEqual(IntStream.of()).isEmpty());
+    }
+
+    @Test
+    public void areAllEqual_returns_true_for_a_stream_of_the_same_integer() {
+        final int n = 764932;
+        assertOptEquals(true, areAllEqual(IntStream.of(n)));
+        assertOptEquals(true, areAllEqual(IntStream.of(n, n)));
+        assertOptEquals(true, areAllEqual(IntStream.of(n, n, n)));
+    }
+
+    @Test
+    public void areAllEqual_returns_false_for_a_stream_of_different_integers() {
+        final int n = 764932;
+        final int m = 43279;
+        assertOptEquals(false, areAllEqual(IntStream.of(n, m)));
+        assertOptEquals(false, areAllEqual(IntStream.of(m, n, m + 1)));
+        assertOptEquals(false, areAllEqual(IntStream.of(m, m, n)));
+    }
+
+    @Test
+    public void enumerated_constructs_a_stream_that_starts_from_the_given_number() {
+        List<String> result = enumerated(Stream.of("a", "b"), 97, (i, value) -> i + ":" + value).toList();
+        assertEquals(List.of("97:a", "98:b"), result);
+    }
+
+    @Test
+    public void enumerated_constructs_a_stream_that_starts_from_0_by_default() {
+        List<String> result = enumerated(Stream.of("a", "b"), (i, value) -> i + ":" + value).toList();
+        assertEquals(List.of("0:a", "1:b"), result);
+    }
+
+    @Test
+    public void enumerated_constructs_an_empty_stream_given_an_empty_stream() {
+        assertTrue(enumerated(Stream.of(), (i, v) -> "").toList().isEmpty());
     }
 
 }

@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+
+import static java.lang.String.format;
 
 public class SecondOf3 extends SingleOperandFunction3 {
 
@@ -13,17 +14,13 @@ public class SecondOf3 extends SingleOperandFunction3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        switch (dbVersion) {
-        case H2:
-            return format("SECOND(%s)", operand.sql(dbVersion));
-        case MSSQL:
-            return format("DATEPART(ss, %s)", operand.sql(dbVersion));
-        case POSTGRESQL:
-            return format("CAST(EXTRACT(SECOND FROM %s \\:\\:timestamp) AS INT)", operand.sql(dbVersion));
-        default:
-            return super.sql(dbVersion);
-        }
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return switch (dbVersion) {
+            case H2 -> format("SECOND(%s)", operand.sql(metadata, dbVersion));
+            case MSSQL -> format("DATEPART(ss, %s)", operand.sql(metadata, dbVersion));
+            case POSTGRESQL -> format("CAST(EXTRACT(SECOND FROM %s \\:\\:timestamp) AS INT)", operand.sql(metadata, dbVersion));
+            default -> super.sql(metadata, dbVersion);
+        };
     }
 
     @Override

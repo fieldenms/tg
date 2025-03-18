@@ -184,7 +184,7 @@ public class EntityCentreContextSelectorTest {
        final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation = (entity, context) -> entity.getType();
        final Either<Exception, CentreContextConfig> either = Try(() -> context().withSelectedEntities().withMasterEntity().withSelectionCrit().withComputation(computation).build());
        assertTrue(either instanceof Right);
-       final CentreContextConfig config = ((Right<Exception, CentreContextConfig>) either).value;
+       final CentreContextConfig config = ((Right<Exception, CentreContextConfig>) either).value();
        assertEquals(new CentreContextConfig(false, true, true, true, computation, empty(), empty()), config);
        assertTrue(config.computation.isPresent());
        assertEquals(computation, config.computation.get());

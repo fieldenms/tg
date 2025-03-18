@@ -1,25 +1,6 @@
 package ua.com.fielden.platform.companion;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptyMap;
-import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.pagination.IPage.pageCount;
-import static ua.com.fielden.platform.pagination.IPage.realPageCount;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import org.hibernate.Session;
-
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
@@ -29,22 +10,34 @@ import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityFetcher;
-import ua.com.fielden.platform.entity.query.QueryExecutionContext;
+import ua.com.fielden.platform.entity.query.IEntityFetcher;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.IFillModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
+import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.pagination.IPage.pageCount;
+import static ua.com.fielden.platform.pagination.IPage.realPageCount;
 
 /**
  * This is a base class that implements contract {@link IEntityReader}. 
  * It is designed to be sub-typed in order to implement abstract methods, which are introduced here and are more of an infrastructural nature.
  * <p>
  * The main purpose to have this class extended, is to enable correct DB session association with instances of {@link IPage} that are produced by various pagination API methods.
- * These pages have the ability to move between next or previous pages, thus, requiring a DB session. 
- * However, by themselves neither page instances nor this class are session-enabled.
+ * These pages can move between next or previous pages, thus, requiring a DB session.
+ * However, by themselves, neither page instances nor this class are session-enabled.
  * So, this class should be sub-typed with a type that implements {@link ISessionEnabled}.     
  * 
  * @author TG Team
@@ -55,7 +48,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     public static final String ERR_MISSING_ID_VALUE = "Argument [id] must have a value to find an instance of [%s].";
 
     ///////////////////////////////////////////////////////////
-    ////////////// infrastructural methods ////////////////////
+    ////////////// Infrastructural methods ////////////////////
     ///////////////////////////////////////////////////////////
 
     protected abstract Session getSession();
@@ -64,13 +57,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     protected abstract boolean instrumented();
 
-    /**
-     * A factory method to create new instances of {@link QueryExecutionContext}, which is required for implementing various reader methods.
-     * This method is abstract in order to reduce dependencies of this reader implementation on types that are required for instantiating {@link QueryExecutionContext}.
-     *   
-     * @return
-     */
-    protected abstract QueryExecutionContext newQueryExecutionContext();
+    protected abstract IEntityFetcher entityFetcher();
 
     ///////////////////////////////////////////////////////////
     /////////////// Entity reader API methods /////////////////
@@ -94,8 +81,8 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
-    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel) {
-        return fetchOneEntityInstance(filtered, id, fetchModel);
+    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel<T> fillModel) {
+        return fetchOneEntityInstance(filtered, id, fetchModel, fillModel);
     }
     
     @Override
@@ -108,7 +95,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         } catch (final EntityCompanionException e) {
             throw e;
         } catch (final Exception e) {
-            throw new EntityCompanionException(format("Could not find and fetch by key an entity of type [%s].", getEntityType().getName()), e);
+            throw new EntityCompanionException("Could not find and fetch by key an entity of type [%s].".formatted(getEntityType().getName()), e);
         }
     }
 
@@ -171,7 +158,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     public boolean exists(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel existsQuery = select().yield().caseWhen().exists(model).then().val(1).otherwise().val(0).endAsInt().as("exists").modelAsAggregate();
         final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(existsQuery).with(paramValues).with(fetchAggregates().with("exists")).lightweight().model();
-        final int result = new EntityFetcher(newQueryExecutionContext()).getEntities(countModel).get(0).get("exists");
+        final int result = entityFetcher().getEntities(getSession(), countModel).get(0).get("exists");
         return result == 1;
     }
 
@@ -196,7 +183,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     @SessionRequired
     public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
-        return new EntityFetcher(newQueryExecutionContext()).streamEntities(qem, Optional.of(fetchSize));
+        return entityFetcher().streamEntities(getSession(), qem, Optional.of(fetchSize));
     }
     
     /**
@@ -260,7 +247,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
-        return new EntityFetcher(newQueryExecutionContext()).getEntitiesOnPage(qem, pageNumber, pageCapacity);
+        return entityFetcher().getEntitiesOnPage(getSession(), qem, pageNumber, pageCapacity);
     }
 
     @Override
@@ -275,7 +262,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     }
 
     /**
-     * Calculates the number of pages of the given size required to fit the whole result set.
+     * Calculates the number of pages with a given size, needed to fit all records in a result set.
      *
      *
      * @param model
@@ -288,7 +275,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
                 : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
         final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetchAggregates().with("count")).lightweight().model();
 
-        final List<EntityAggregates> counts = new EntityFetcher(newQueryExecutionContext()).getEntities(countModel);
+        final List<EntityAggregates> counts = entityFetcher().getEntities(getSession(), countModel);
 
         final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
@@ -299,25 +286,26 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     /**
      * A private helper method.
-     * 
-     * @param filtered -- <code>true</code> to turn filtering on.
-     * @param id
-     * @param fetchModel
-     * @return
+     *
+     * @param filtered controls whether user-filtering is on
      */
-    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel) {
+    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel, final IFillModel<T> fillModel) {
         if (id == null) {
-            throw new EntityCompanionException(format(ERR_MISSING_ID_VALUE, getEntityType().getName()));
+            throw new EntityCompanionException(ERR_MISSING_ID_VALUE.formatted(getEntityType().getName()));
         }
+
+        final var query = select(getEntityType()).where().prop(ID).eq().val(id).model().setFilterable(filtered);
+        final var qem = from(query).with(fetchModel).with(fillModel).lightweight(!instrumented()).model();
         try {
-            final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID).eq().val(id).model();
-            query.setFilterable(filtered);
-            return getEntity(instrumented() ? from(query).with(fetchModel).model(): from(query).with(fetchModel).lightweight().model());
+            return getEntity(qem);
         } catch (final Exception e) {
-            throw new EntityCompanionException(format("Could not fetch one entity of type [%s].", getEntityType().getName()), e);
+            throw new EntityCompanionException("""
+                    Could not fetch one entity of type [%s].
+                    Query: %s\
+                    """.formatted(getEntityType().getName(), qem), e);
         }
     }
-    
+
     /**
      * Implements pagination based on the provided query.
      *

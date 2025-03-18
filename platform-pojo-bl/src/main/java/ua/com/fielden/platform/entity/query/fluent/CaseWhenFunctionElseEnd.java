@@ -5,26 +5,27 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionLastArgument;
 
 abstract class CaseWhenFunctionElseEnd<T, ET extends AbstractEntity<?>> //
-		extends CaseWhenFunctionEnd<T> //
-		implements ICaseWhenFunctionElseEnd<T, ET> {
+        extends CaseWhenFunctionEnd<T> //
+        implements ICaseWhenFunctionElseEnd<T, ET> {
 
-    protected CaseWhenFunctionElseEnd(final Tokens tokens) {
-        super(tokens);
+    protected CaseWhenFunctionElseEnd(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	@Override
-	public ICaseWhenFunctionLastArgument<T, ET> otherwise() {
-		return createCaseWhenFunctionLastArgument(getTokens());
-	}
 
-	private CaseWhenFunctionLastArgument<T, ET> createCaseWhenFunctionLastArgument(final Tokens tokens) {
-		return new CaseWhenFunctionLastArgument<T, ET>(tokens) {
+    @Override
+    public ICaseWhenFunctionLastArgument<T, ET> otherwise() {
+        return createCaseWhenFunctionLastArgument(builder.otherwise());
+    }
 
-			@Override
-			protected T nextForCaseWhenFunctionLastArgument(final Tokens tokens) {
-				return CaseWhenFunctionElseEnd.this.nextForCaseWhenFunctionEnd(tokens);
-			}
+    private CaseWhenFunctionLastArgument<T, ET> createCaseWhenFunctionLastArgument(final EqlSentenceBuilder builder) {
+        return new CaseWhenFunctionLastArgument<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForCaseWhenFunctionLastArgument(final EqlSentenceBuilder builder) {
+                return CaseWhenFunctionElseEnd.this.nextForCaseWhenFunctionEnd(builder);
+            }
+
+        };
+    }
+
 }

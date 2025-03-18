@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.annotation.factory;
 
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.SequencedCollection;
 import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -38,19 +40,30 @@ public class BeforeChangeAnnotation {
      * @param annotations {@link BeforeChange} instances to be merged
      * @return merged instance of the {@link BeforeChange} annotation
      */
-    public static BeforeChange merge(final BeforeChange... annotations) {
-        if (annotations == null || annotations.length == 0) {
+    public static BeforeChange merge(final SequencedCollection<BeforeChange> annotations) {
+        if (annotations.isEmpty()) {
             throw new InvalidArgumentException("There are no BeforeChange annotations to merge.");
         }
-        if (Stream.of(annotations).anyMatch(Objects::isNull)) {
+        if (annotations.stream().anyMatch(Objects::isNull)) {
             throw new InvalidArgumentException("No annotation can be null.");
         }
 
-        if (annotations.length == 1) {
-            return annotations[0];
+        if (annotations.size() == 1) {
+            return annotations.getFirst();
         }
-        final Handler[] mergedHandlers = Stream.of(annotations).flatMap(bch -> Stream.of(bch.value())).toArray(Handler[]::new);
+        final Handler[] mergedHandlers = annotations.stream().flatMap(bch -> Stream.of(bch.value())).toArray(Handler[]::new);
         return new BeforeChangeAnnotation(mergedHandlers).newInstance();
+    }
+
+    /**
+     * @see #merge(SequencedCollection)
+     */
+    public static BeforeChange merge(final BeforeChange... annotations) {
+        return merge(Arrays.asList(annotations));
+    }
+
+    public static boolean hasHandler(final BeforeChange atBeforeChange, final Class<?> handlerType) {
+        return Arrays.stream(atBeforeChange.value()).anyMatch(atHandler -> atHandler.value() == handlerType);
     }
 
     /**

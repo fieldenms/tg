@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.ioc;
 
 import com.google.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,6 +46,7 @@ import static ua.com.fielden.platform.web.resources.webui.FileResource.generateF
  * @author TG Team
  *
  */
+@Singleton
 public class WebResourceLoader implements IWebResourceLoader {
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;

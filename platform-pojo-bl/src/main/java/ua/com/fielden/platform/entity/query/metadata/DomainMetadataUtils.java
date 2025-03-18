@@ -90,7 +90,7 @@ public class DomainMetadataUtils {
         }
         return result;
     }
-    
+
     private static <PT extends AbstractEntity<?>> ISubsequentCompletedAndYielded<PT> generateModelForUnionEntityProperty(final List<Field> unionProps, final Field currProp) {
         final IFromAlias<PT> startWith = select((Class<PT>) currProp.getType());
         final Field firstUnionProp = unionProps.get(0);
