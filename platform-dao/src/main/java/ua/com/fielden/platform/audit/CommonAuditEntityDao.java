@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -30,8 +32,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
@@ -132,7 +133,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
 
         // Audit-entity may need to be refetched for its ID (and nothing else) is required to persist audit-prop entities below.
         final var refetchedAuditedEntity = refetchAuditedEntity(auditedEntity);
-        final AbstractAuditEntity<E> auditEntity = save(newAudit(refetchedAuditedEntity, transactionGuid));
+        final AbstractAuditEntity<E> auditEntity = save(newAudit(refetchedAuditedEntity, transactionGuid), Optional.of(fetchNone(getEntityType()).with(ID))).asRight().value();
 
         if (!Iterables.isEmpty(dirtyProperties)) {
             // Audit information about changed properites

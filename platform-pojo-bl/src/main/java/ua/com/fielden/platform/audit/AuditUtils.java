@@ -24,7 +24,7 @@ public final class AuditUtils {
      * This includes canonical entity types annotated with {@link Audited} and generated entity types based on them.
      */
     public static boolean isAudited(final Class<? extends AbstractEntity<?>> type) {
-        return PropertyTypeDeterminator.baseEntityType(type).getDeclaredAnnotation(Audited.class) != null;
+        return PropertyTypeDeterminator.baseEntityType(type).isAnnotationPresent(Audited.class);
     }
 
     /**

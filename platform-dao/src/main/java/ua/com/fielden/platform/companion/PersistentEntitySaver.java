@@ -232,7 +232,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }).collect(toSet());
 
         // Auditing requires an audited entity to be refetched so that audit records can be created.
-        final boolean reallySkipRefetching = !isAudited(entityType) && skipRefetching;
+        final boolean reallySkipRefetching = skipRefetching && !isAudited(entityType);
 
         final T2<Long, T> savedEntityAndId;
         // let's try to save entity
