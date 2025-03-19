@@ -134,7 +134,7 @@ public class RichTextValidatorTest {
     public void RichText_does_not_permit_safe_HTML_that_becomes_unsafe_after_conversion_for_coreText() {
         final var entity = factory.newEntity(EntityWithRichText.class);
 
-        final var html = "<code>&lt;/div\\\"'&gt;&lt;img src=pentest onerror=alert(003)&gt;{{7+7}}&lt;/img&gt;</code>";
+        final var html = "<code>&lt;img onerror=alert(1) /&gt;</code>";
         final var res = RichTextSanitiser.sanitiseHtml(html);
         assertTrue(res.isSuccessful());
 
