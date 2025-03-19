@@ -19,31 +19,28 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 
 /**
  * This validator implements a check for the length of values for properties of type {@link String}, {@link Hyperlink}, and {@link RichText}.
- * Every non-calculated property of type `String`, defined with `length > 0`, attains this validator by default.
+ * Every non-calculated property of type `String`, defined with `length > 0`, attains this validator by default, which will use the defined length.
  * <p>
  * If the attempted value exceeds the limit, then it is rejected.
  * Empty values are accepted with success.
  * <p>
+ * This validator can also be specified explicitly.
  * The limit parameter for max length can be specified as part of a property definition.
- * 
- * <pre>
- *  &#64;IsProperty
- *  &#64;BeforeChange(&#64;Handler(value = MaxLengthValidator.class, integer = &#64;IntParam(name = "limit", value = 5)))
- *  private String name;
- * </pre>
- * <p>
+ * {@snippet :
+   @IsProperty
+   @BeforeChange(@Handler(value = MaxLengthValidator.class, integer = @IntParam(name = "limit", value = 5)))
+   private String name;
+ * }
  * However, a better approach is to align the limit with the length in the property definition, which happens automagically if {@code length} for {@code @IsProperty}
  * is specified and {@code limit} is omitted completely for {@code @Handler(MaxLengthValidator.class)}.
- * <pre>
- *  &#64;IsProperty(length = 5)
- *  &#64;BeforeChange(&#64;Handler(MaxLengthValidator.class))
- *  private String name;
- * </pre>
- * <p>
+ * {@snippet :
+   @IsProperty(length = 5)
+   @BeforeChange(@Handler(MaxLengthValidator.class))
+   private String name;
+ * }
  * In case of neither {@code limit} nor {@code length} defined, validation always returns a failure.
  *
- * @author TG Air
- *
+ * @author TG Team
  */
 public class MaxLengthValidator implements IBeforeChangeEventHandler<Object> {
     public static final String ERR_MISSING_MAX_LENGTH = "No max length was specified.";
