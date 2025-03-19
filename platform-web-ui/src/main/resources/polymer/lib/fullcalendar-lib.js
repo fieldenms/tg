@@ -1,7 +1,6 @@
 import '../fullcalendar/index.js';
-import { Calendar } from '../@fullcalendar/core/index.js';
-
-//import fullcalendarStyleStrings from 'fullcalendar/main.css';
-const FullCalendar = Calendar;
-
-export { FullCalendar };
+import '../../_virtual/moment.js';
+import '../../_virtual/locales.js';
+import '../../_virtual/index.js';
+export { default as momentTimezonePlugin } from '../@fullcalendar/moment-timezone/index.js';
+export { Calendar as FullCalendar } from '../@fullcalendar/core/index.js';
