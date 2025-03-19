@@ -300,6 +300,18 @@ public class MaxLengthValidatorTest {
     }
 
     @Test
+    public void explicitly_defined_MaxLengthValidator_goes_before_SanitiseHtmlValidator() {
+        final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
+        final MetaProperty<String> mp = entity.getProperty("propWithLength");
+
+        // Assert the presence of default validators and their order.
+        final var validators = mp.getValidators().get(ValidationAnnotation.BEFORE_CHANGE).keySet().stream().toList();
+        assertThat(validators).hasSize(2);
+        assertThat(validators.getFirst()).isInstanceOf(MaxLengthValidator.class);
+        assertThat(validators.getLast()).isInstanceOf(SanitiseHtmlValidator.class);
+    }
+
+    @Test
     public void error_is_thrown_if_MaxLengthValidator_is_used_for_property_of_unsupported_type() {
         final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
         assertThatThrownBy(() -> entity.setIntProp(42)).hasMessage("Validator [MaxLengthValidator] is not applicable to properties of type [Integer].");

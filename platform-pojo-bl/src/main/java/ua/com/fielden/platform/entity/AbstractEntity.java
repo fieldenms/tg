@@ -877,10 +877,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         // Should MaxLengthValidator be added?
         if (MaxLengthValidator.SUPPORTED_TYPES.contains(propType) &&
             !propField.isAnnotationPresent(Calculated.class) &&
-            propField.getAnnotation(IsProperty.class).length() > 0 &&
-            bceHandlers.stream().noneMatch(handler -> handler.value() == MaxLengthValidator.class))
+            propField.getAnnotation(IsProperty.class).length() > 0)
         {
-            bceHandlers.addFirst(new HandlerAnnotation(MaxLengthValidator.class).newInstance());
+            final var maybeMaxLengthValidator = bceHandlers.stream().filter(handler -> handler.value() == MaxLengthValidator.class).findFirst();
+            // If MaxLengthValidator is defined explicitly, we need to ensure that it the first validator.
+            if (maybeMaxLengthValidator.isPresent()) {
+                final var handler = maybeMaxLengthValidator.get();
+                bceHandlers.remove(handler);
+                bceHandlers.addFirst(handler);
+            }
+            // Otherwise, register a new instance.
+            else {
+                bceHandlers.addFirst(new HandlerAnnotation(MaxLengthValidator.class).newInstance());
+            }
         }
         // Should DefaultValidatorForValueTypeWithValidation be added?
         if (IWithValidation.class.isAssignableFrom(propType)) {
