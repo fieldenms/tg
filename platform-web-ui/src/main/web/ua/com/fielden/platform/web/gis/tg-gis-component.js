@@ -2,7 +2,7 @@ import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
 import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
-import { _featureType } from '/resources/gis/tg-gis-utils.js';
+import { _featureType, appendStylesTo } from '/resources/gis/tg-gis-utils.js';
 import { BaseLayers } from '/resources/gis/tg-base-layers.js';
 import { EntityStyling } from '/resources/gis/tg-entity-styling.js';
 import { MarkerFactory, tgIconFactoryStylesName } from '/resources/gis/tg-marker-factory.js';
@@ -14,7 +14,7 @@ import '/resources/gis/leaflet/subgroup/leaflet-subgroup-lib.js';
 import { TgReflector, _isEntity } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
-import { createStyleModule, appendStylesTo } from '/resources/reflection/tg-style-utils.js';
+import { createStyleModule } from '/resources/polymer/lib/tg-style-utils.js';
 
 const tgGisComponentStyles = `
     .leaflet-container {

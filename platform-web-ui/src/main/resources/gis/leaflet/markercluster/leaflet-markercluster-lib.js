@@ -2,7 +2,7 @@ import '/resources/gis/leaflet/leaflet-lib.js';
 
 import leafletMarkerClusterStyles from '/resources/gis/leaflet/markercluster/MarkerCluster.Default.css.js';
 import additionalLeafletMarkerClusterStyles from '/resources/gis/leaflet/markercluster/MarkerCluster.css.js';
-import { createStyleModule } from '/resources/reflection/tg-style-utils.js';
+import { createStyleModule } from '/resources/polymer/lib/tg-style-utils.js';
 export const leafletMarkerClusterStylesName = 'leaflet-markercluster-styles';
 createStyleModule(leafletMarkerClusterStylesName, leafletMarkerClusterStyles, additionalLeafletMarkerClusterStyles);
 

@@ -1,3 +1,5 @@
+import '/resources/polymer/@polymer/polymer/lib/elements/custom-style.js';
+
 export {
     /**
      * @deprecated since version 1.7.0 -- use 'tg-style-utils.createStyleModule' instead
@@ -8,7 +10,7 @@ export {
      * @param styleStrings -- a couple of style strings to be concatenated into the style module
      */
     createStyleModule
-} from '/resources/reflection/tg-style-utils.js';
+} from '/resources/polymer/lib/tg-style-utils.js';
 
 /**
  * There are feautures of two types: 
@@ -34,3 +36,17 @@ export const fitToBounds = function (map, markerClusterGroup) {
         }
     }, 1);
 }
+
+/**
+ * Dynamically append style modules to element's Shadow DOM (do it in 'ready' callback or later).
+ *
+ * @param element -- web component with already initialised Shadow DOM, where styles will be inserted
+ * @param styleModuleNames -- name[s] of style module[s] to be inserted to the 'element'; need[s] to be imported prior to the usage
+ */
+export const appendStylesTo = function (element, ...styleModuleNames) {
+    const styleWrapper = document.createElement('custom-style');
+    const style = document.createElement('style');
+    style.setAttribute('include', styleModuleNames.join(' '));
+    styleWrapper.appendChild(style);
+    element.shadowRoot.appendChild(styleWrapper);
+};
