@@ -136,7 +136,10 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
         final var validationResult = RichTextSanitiser.sanitiseHtml(input);
         if (validationResult.isSuccessful()) {
             final var coreText = RichTextAsHtmlCoreTextExtractor.toCoreText(Jsoup.parse(input), $.coreTextExtractorExtension);
-            return new RichText(input, coreText, validationResult);
+            final var coreTextValidation = RichTextSanitiser.sanitiseHtml(coreText);
+            return coreTextValidation.isSuccessful()
+                   ? new RichText(input, coreText, validationResult)
+                   : fromUnsuccessfulValidationResult(coreTextValidation);
         }
         else {
             return fromUnsuccessfulValidationResult(validationResult);

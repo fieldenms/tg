@@ -16,6 +16,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.validation.UnhappyValidator.ERR_UNHAPPY_VALIDATOR;
 import static ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText.Property.richText;
+import static ua.com.fielden.platform.types.RichTextSanitiser.ERR_UNSAFE;
 
 /**
  * A test case for validation with {@link DefaultValidatorForValueTypeWithValidation}.
@@ -128,5 +129,22 @@ public class RichTextValidatorTest {
         assertThat(entity.getProperty(Property.unhappyRichText).getFirstFailure().getMessage())
                 .isEqualTo(ERR_UNHAPPY_VALIDATOR);
     }
+
+    @Test
+    public void RichText_does_not_permit_safe_HTML_that_becomes_unsafe_after_conversion_for_coreText() {
+        final var entity = factory.newEntity(EntityWithRichText.class);
+
+        final var html = "<code>&lt;/div\\\"'&gt;&lt;img src=pentest onerror=alert(003)&gt;{{7+7}}&lt;/img&gt;</code>";
+        final var res = RichTextSanitiser.sanitiseHtml(html);
+        assertTrue(res.isSuccessful());
+
+        final var invalidRichText = RichText.fromHtml(html);
+        assertThat(invalidRichText).isInstanceOf(RichText.Invalid.class);
+        assertThat(invalidRichText.isValid().getMessage()).isEqualTo("""
+                %s<extended/>Input contains unsafe HTML:
+                1. Tag [img] has violating attributes: onerror\
+                """.formatted(ERR_UNSAFE));
+    }
+
 
 }

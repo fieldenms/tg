@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.validation.SanitiseHtmlValidator.ERR_UNSAFE;
+import static ua.com.fielden.platform.types.RichTextSanitiser.ERR_UNSAFE;
 
 public class StringHtmlSanitisationTest {
 
