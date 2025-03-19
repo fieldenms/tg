@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -66,6 +66,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripI
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 /**
  * <h3>General Info</h3>
@@ -855,18 +856,18 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
 
         // Exclude handlers that should not be defined explicitly.
-        // This is necessary to ensure the correct order to default validators.
-        // The order in which validators are added below is important.
-        // SanitiseHtmlValidator goes after MaxLengthValidator (hence added first).
-        // DefaultValidatorForValueTypeWithValidation should be before MaxLengthValidator, which requires instantiation of RichText (hence added last).
+        // This is necessary to ensure the correct order of default validators.
+        // Default validators are placed before explicit ones, and the order of default validators is important.
+        // SanitiseHtmlValidator goes after MaxLengthValidator.
+        // DefaultValidatorForValueTypeWithValidation should be before MaxLengthValidator, which requires instantiation of RichText.searchText.
+        // Note that the code below prepends validators via addFirst, so the execution order is the reverse of the logical order.
 
-        final List<Handler> bceHandlers = annotations.stream().filter(at -> at instanceof BeforeChange)
-                                          .map(at -> ((BeforeChange) at).value())
+        final List<Handler> bceHandlers = annotations.stream()
+                                          .mapMulti(typeFilter(BeforeChange.class))
                                           // filter out the default validators that could have been assigned explicitly by mistake
-                                          .flatMap(handlers -> Stream.of(handlers)
+                                          .flatMap(bce -> Stream.of(bce.value())
                                                   .filter(handler -> handler.value() != DefaultValidatorForValueTypeWithValidation.class)
-                                                  .filter(handler -> handler.value() != SanitiseHtmlValidator.class)
-                                                  )
+                                                  .filter(handler -> handler.value() != SanitiseHtmlValidator.class))
                                           .collect(toCollection(ArrayList::new));
 
         // Should SanitiseHtmlValidator be added?
@@ -889,14 +890,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         // If there are any BCE handlers, need to add/replace the BeforeChangeAnnotation instance.
         if (!bceHandlers.isEmpty()) {
             final var newBce = BeforeChangeAnnotation.newInstance(bceHandlers.toArray(new Handler[]{}));
-            final var newAnnotations = Stream.concat(annotations.stream().filter(at -> !(at instanceof BeforeChange)), Stream.of(newBce))
-                                             .collect(toCollection(LinkedHashSet::new));
-            annotations.clear();
-            annotations.addAll(newAnnotations);
+            annotations.removeIf(at -> at instanceof BeforeChange);
+            annotations.add(newBce);
         }
 
         return unmodifiableSequencedSet(annotations);
-
     }
 
     private Set<Annotation> collectValidationAnnotationsForKey(

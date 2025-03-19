@@ -30,9 +30,8 @@ public class StringHtmlSanitisationTest {
 
         // Assert the presence of default validators and their order.
         var validators = mp.getValidators().get(ValidationAnnotation.BEFORE_CHANGE).keySet().stream().toList();
-        assertThat(validators).hasSize(2);
-        assertThat(validators.getFirst()).isInstanceOf(MaxLengthValidator.class);
-        assertThat(validators.getLast()).isInstanceOf(SanitiseHtmlValidator.class);
+        assertThat(validators)
+                .hasExactlyElementsOfTypes(MaxLengthValidator.class, SanitiseHtmlValidator.class);
 
         // Try to assign vulnerable HTML of the unacceptable length.
         final String longVulnerableHtml = "</div\"'><img src=pentest onerror=alert(003)>{{7+7}}</img>";
@@ -53,22 +52,21 @@ public class StringHtmlSanitisationTest {
     @Test
     public void vulnerable_HTML_cannot_be_assigned_to_String_keys() {
         final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
-        final MetaProperty<String> mp = entity.getProperty(KEY);
+        final MetaProperty<String> mpKey = entity.getProperty(KEY);
 
         // Assert the presence of default validators and their order.
-        final var validators = mp.getValidators().get(ValidationAnnotation.BEFORE_CHANGE).keySet().stream().toList();
-        assertThat(validators).hasSize(4);
-        final var iter = validators.iterator();
-        assertThat(iter.next()).isInstanceOf(SanitiseHtmlValidator.class);
-        assertThat(iter.next()).isInstanceOf(RestrictNonPrintableCharactersValidator.class);
-        assertThat(iter.next()).isInstanceOf(RestrictExtraWhitespaceValidator.class);
-        assertThat(iter.next()).isInstanceOf(RestrictCommasValidator.class);
+        final var validators = mpKey.getValidators().get(ValidationAnnotation.BEFORE_CHANGE).keySet().stream().toList();
+        assertThat(validators)
+                .hasExactlyElementsOfTypes(SanitiseHtmlValidator.class,
+                                           RestrictNonPrintableCharactersValidator.class,
+                                           RestrictExtraWhitespaceValidator.class,
+                                           RestrictCommasValidator.class);
 
         // Try to assign vulnerable HTML.
         final String vulnerableHtml = "</div\"'><img src=pentest onerror=alert(003)>{{7+7}}";
         entity.setKey(vulnerableHtml);
-        assertFalse(mp.isValid());
-        assertThat(mp.getFirstFailure().getMessage()).isEqualTo("""
+        assertFalse(mpKey.isValid());
+        assertThat(mpKey.getFirstFailure().getMessage()).isEqualTo("""
                 %s<extended/>Input contains unsafe HTML:
                 1. Tag [img] has violating attributes: onerror\
                 """.formatted(ERR_UNSAFE));

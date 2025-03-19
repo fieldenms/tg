@@ -234,9 +234,7 @@ public class MaxLengthValidatorTest {
 
         // Assert the presence of default validators and their order.
         final var validators = mp.getValidators().get(ValidationAnnotation.BEFORE_CHANGE).keySet().stream().toList();
-        assertThat(validators).hasSize(2);
-        assertThat(validators.getFirst()).isInstanceOf(DefaultValidatorForValueTypeWithValidation.class);
-        assertThat(validators.getLast()).isInstanceOf(MaxLengthValidator.class);
+        assertThat(validators).hasExactlyElementsOfTypes(DefaultValidatorForValueTypeWithValidation.class, MaxLengthValidator.class);
 
         // Try to assign RichText where searchText's length is equal to the limit.
         final var richText = RichText.fromHtml("<a href=\"https://www.domain.com\">link</a>");
@@ -261,9 +259,7 @@ public class MaxLengthValidatorTest {
 
         // Assert the presence of default validators and their order.
         final var validators = mp.getValidators().get(ValidationAnnotation.BEFORE_CHANGE).keySet().stream().toList();
-        assertThat(validators).hasSize(2);
-        assertThat(validators.getFirst()).isInstanceOf(MaxLengthValidator.class);
-        assertThat(validators.getLast()).isInstanceOf(SanitiseHtmlValidator.class);
+        assertThat(validators).hasExactlyElementsOfTypes(MaxLengthValidator.class, SanitiseHtmlValidator.class);
 
         // Try to assign text with length equal to the limit.
         final var text = "a".repeat(maxLength);
@@ -287,8 +283,7 @@ public class MaxLengthValidatorTest {
 
         // Assert the presence of default validators and their order.
         final var validators = mp.getValidators().get(ValidationAnnotation.BEFORE_CHANGE).keySet().stream().toList();
-        assertThat(validators).hasSize(1);
-        assertThat(validators.getFirst()).isInstanceOf(MaxLengthValidator.class);
+        assertThat(validators).hasExactlyElementsOfTypes(MaxLengthValidator.class);
 
         // Try to assign hyperlink with length equal to the limit.
         final var hyperlink = new Hyperlink("https://www.domain.com/res1");
