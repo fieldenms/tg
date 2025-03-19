@@ -1203,14 +1203,14 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     }
 
     /**
-     * Overide this to provide custom formatting for entered text.
+     * Override this to provide custom formatting for entered text.
      */
     _formatText (value) {
         return value;
     }
     
-        /**
-     * Overide this to provide custom formatting for tooltip text.
+    /**
+     * Override this to provide custom formatting for tooltip text.
      */
     _formatTooltipText (value) {
         const formatedText = this._formatText(value);
