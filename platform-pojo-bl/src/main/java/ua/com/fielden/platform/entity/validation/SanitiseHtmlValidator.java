@@ -7,6 +7,7 @@ import ua.com.fielden.platform.types.RichTextSanitiser;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
+import static ua.com.fielden.platform.error.Result.failureEx;
 import static ua.com.fielden.platform.error.Result.successful;
 
 /**
@@ -15,13 +16,19 @@ import static ua.com.fielden.platform.error.Result.successful;
  */
 public class SanitiseHtmlValidator implements IBeforeChangeEventHandler<String> {
 
+    public static final String ERR_UNSAFE = "Input contains unsafe HTML.";
+
     @Override
     public Result handle(final MetaProperty<String> mp, final String newValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue == null) {
             return successful();
         }
 
-        return RichTextSanitiser.sanitiseHtml(newValue);
+        final var result = RichTextSanitiser.sanitiseHtml(newValue);
+        if (!result.isSuccessful()) {
+            return failureEx(ERR_UNSAFE,  result.getMessage());
+        }
+        return successful();
     }
 
 }
