@@ -860,7 +860,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         // SanitiseHtmlValidator goes after MaxLengthValidator (hence added first).
         // DefaultValidatorForValueTypeWithValidation should be before MaxLengthValidator, which requires instantiation of RichText (hence added last).
 
-        
         final List<Handler> bceHandlers = annotations.stream().filter(at -> at instanceof BeforeChange)
                                           .map(at -> ((BeforeChange) at).value())
                                           // filter out the default validators that could have been assigned explicitly by mistake

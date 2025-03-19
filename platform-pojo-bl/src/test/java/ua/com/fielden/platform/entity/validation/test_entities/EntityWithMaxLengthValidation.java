@@ -48,7 +48,7 @@ public class EntityWithMaxLengthValidation extends AbstractEntity<String> {
     @BeforeChange(@Handler(MaxLengthValidator.class))
     private RichText richText;
 
-    @IsProperty(length = 27)
+    @IsProperty(length = 52)
     private String stringPropWithoutExplicitMaxLengthValidator;
 
     @IsProperty(length = 27)
