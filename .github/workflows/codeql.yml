@@ -13,9 +13,9 @@ name: "CodeQL Advanced"
 
 on:
   push:
-    branches: [ "Issue-#185-without-rich-text-master", "develop", "master" ]
+    branches: [ "2.0.0-SNAPSHOT", "develop", "master" ]
   pull_request:
-    branches: [ "Issue-#185-without-rich-text-master", "develop", "master" ]
+    branches: [ "2.0.0-SNAPSHOT", "develop", "master" ]
   schedule:
     - cron: '29 22 * * 0'
 
