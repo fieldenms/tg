@@ -856,18 +856,23 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
         // Exclude handlers that should not be defined explicitly.
         // This is necessary to ensure the correct order to default validators.
+        // The order in which validators are added below is important.
+        // SanitiseHtmlValidator goes after MaxLengthValidator (hence added first).
+        // DefaultValidatorForValueTypeWithValidation should be before MaxLengthValidator, which requires instantiation of RichText (hence added last).
+
+        
         final List<Handler> bceHandlers = annotations.stream().filter(at -> at instanceof BeforeChange)
                                           .map(at -> ((BeforeChange) at).value())
-                                          // filter out the default validators
+                                          // filter out the default validators that could have been assigned explicitly by mistake
                                           .flatMap(handlers -> Stream.of(handlers)
                                                   .filter(handler -> handler.value() != DefaultValidatorForValueTypeWithValidation.class)
                                                   .filter(handler -> handler.value() != SanitiseHtmlValidator.class)
                                                   )
                                           .collect(toCollection(ArrayList::new));
 
-        // Should DefaultValidatorForValueTypeWithValidation be added?
-        if (IWithValidation.class.isAssignableFrom(propType)) {
-            bceHandlers.addFirst(new HandlerAnnotation(DefaultValidatorForValueTypeWithValidation.class).newInstance());
+        // Should SanitiseHtmlValidator be added?
+        if (propType == String.class && !propField.isAnnotationPresent(Calculated.class)) {
+            bceHandlers.addFirst(new HandlerAnnotation(SanitiseHtmlValidator.class).newInstance());
         }
         // Should MaxLengthValidator be added?
         if (MaxLengthValidator.SUPPORTED_TYPES.contains(propType) &&
@@ -877,9 +882,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         {
             bceHandlers.addFirst(new HandlerAnnotation(MaxLengthValidator.class).newInstance());
         }
-        // Should SanitiseHtmlValidator be added?
-        if (propType == String.class && !propField.isAnnotationPresent(Calculated.class)) {
-            bceHandlers.addFirst(new HandlerAnnotation(SanitiseHtmlValidator.class).newInstance());
+        // Should DefaultValidatorForValueTypeWithValidation be added?
+        if (IWithValidation.class.isAssignableFrom(propType)) {
+            bceHandlers.addFirst(new HandlerAnnotation(DefaultValidatorForValueTypeWithValidation.class).newInstance());
         }
 
         // If there are any BCE handlers, need to add/replace the BeforeChangeAnnotation instance.

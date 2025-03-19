@@ -19,6 +19,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 
 /**
  * This validator implements a check for the length of values for properties of type {@link String}, {@link Hyperlink}, and {@link RichText}.
+ * Every non-calculated property of type `String`, defined with `length > 0`, attains this validator by default.
  * <p>
  * If the attempted value exceeds the limit, then it is rejected.
  * Empty values are accepted with success.

@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.entity.validation;
 
 import com.google.inject.Injector;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithMaxLengthValidation;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
@@ -13,6 +15,7 @@ import ua.com.fielden.platform.types.RichText;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 /**
@@ -222,6 +225,84 @@ public class MaxLengthValidatorTest {
         entity.setRichText(longRichText);
         assertFalse(mpRichText.isValid());
         assertEquals(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH.formatted(maxLength), mpRichText.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void RichText_properties_attain_MaxLengthValidator_by_default() {
+        final int maxLength = 27;
+        final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
+        final MetaProperty<RichText> mp = entity.getProperty("richTextPropWithoutExplicitMaxLengthValidator");
+
+        // assert the presence of default validators and their order
+        var validators = mp.getValidators().get(ValidationAnnotation.BEFORE_CHANGE).keySet().stream().toList();
+        assertThat(validators).hasSize(2);
+        assertThat(validators.getFirst()).isInstanceOf(DefaultValidatorForValueTypeWithValidation.class);
+        assertThat(validators.getLast()).isInstanceOf(MaxLengthValidator.class);
+
+        // Try to assign RichText where searchText's length is equal to the limit.
+        final RichText richText = RichText.fromHtml("<a href=\"https://www.domain.com\">link</a>");
+        assertEquals(maxLength, RichText.makeSearchText(richText).length());
+        mp.setValue(richText);
+        assertTrue(mp.isValid());
+        assertTrue(mp.getValue().coreText().length() > maxLength);
+
+        // Try to assign RichText that is longer than the limit.
+        final RichText longRichText = RichText.fromHtml("<a href=\"https://www.domain.com\">link+</a>");
+        assertEquals(maxLength + 1, RichText.makeSearchText(longRichText).length());
+        mp.setValue(longRichText);
+        assertFalse(mp.isValid());
+        assertEquals(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH.formatted(maxLength), mp.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void string_properties_attain_MaxLengthValidator_by_default() {
+        final int maxLength = 27;
+        final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
+        final MetaProperty<String> mp = entity.getProperty("stringPropWithoutExplicitMaxLengthValidator");
+
+        // assert the presence of default validators and their order
+        var validators = mp.getValidators().get(ValidationAnnotation.BEFORE_CHANGE).keySet().stream().toList();
+        assertThat(validators).hasSize(2);
+        assertThat(validators.getFirst()).isInstanceOf(MaxLengthValidator.class);
+        assertThat(validators.getLast()).isInstanceOf(SanitiseHtmlValidator.class);
+
+        // Try to assign text with length equal to the limit.
+        final String text = "a".repeat(maxLength);
+        assertEquals(maxLength, text.length());
+        entity.setStringPropWithoutExplicitMaxLengthValidator(text);
+        assertTrue(mp.isValid());
+
+        // Try to assign text that is longer than the limit.
+        final String longText = "a".repeat(maxLength + 1);
+        assertEquals(maxLength + 1, longText.length());
+        entity.setStringPropWithoutExplicitMaxLengthValidator(longText);
+        assertFalse(mp.isValid());
+        assertEquals(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH.formatted(maxLength), mp.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void hyperlink_properties_attain_MaxLengthValidator_by_default() {
+        final int maxLength = 27;
+        final var entity = factory.newEntity(EntityWithMaxLengthValidation.class);
+        final MetaProperty<Hyperlink> mp = entity.getProperty("hyperlinkPropWithoutExplicitMaxLengthValidator");
+
+        // assert the presence of default validators and their order
+        var validators = mp.getValidators().get(ValidationAnnotation.BEFORE_CHANGE).keySet().stream().toList();
+        assertThat(validators).hasSize(1);
+        assertThat(validators.getFirst()).isInstanceOf(MaxLengthValidator.class);
+
+        // Try to assign hyperlink with length equal to the limit.
+        final Hyperlink hyperlink = new Hyperlink("https://www.domain.com/res1");
+        assertEquals(maxLength, hyperlink.value.length());
+        entity.setHyperlinkPropWithoutExplicitMaxLengthValidator(hyperlink);
+        assertTrue(mp.isValid());
+
+        // Try to assign hyperlink that is longer than the limit.
+        final Hyperlink longHyperlink = new Hyperlink("https://www.domain.com/res21");
+        assertEquals(maxLength + 1, longHyperlink.value.length());
+        entity.setHyperlinkPropWithoutExplicitMaxLengthValidator(longHyperlink);
+        assertFalse(mp.isValid());
+        assertEquals(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH.formatted(maxLength), mp.getFirstFailure().getMessage());
     }
 
     @Test
