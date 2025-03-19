@@ -30,7 +30,8 @@ public class TransformationContextFromStage2To3 {
     private final int paramId; //incremented after each new param name generation
 
     public TransformationContextFromStage2To3(
-            final TreeResultBySources treeResultBySources, final EqlTables eqlTables,
+            final TreeResultBySources treeResultBySources,
+            final EqlTables eqlTables,
             final DbVersion dbVersion)
     {
         this(treeResultBySources, eqlTables, dbVersion, emptyMap(), emptyMap(), emptyMap(), 0, 1);
@@ -43,7 +44,8 @@ public class TransformationContextFromStage2To3 {
             final Map<Integer, ISource3> sourcesByIds,
             final Map<String, Object> sqlParamValuesByNames,
             final Map<Object, String> sqlParamNamesByValues,
-            final int sqlId, final int paramId)
+            final int sqlId,
+            final int paramId)
     {
         this.treeResultBySources = treeResultBySources;
         this.eqlTables = eqlTables;
@@ -55,12 +57,12 @@ public class TransformationContextFromStage2To3 {
         this.paramId = paramId;
     }
 
-    public EqlTable getTable(final Class<? extends AbstractEntity<?>> sourceType) {
-        return eqlTables.getTableForEntityType(sourceType);
-    }
-
     public DbVersion dbVersion() {
         return dbVersion;
+    }
+
+    public EqlTable getTable(final Class<? extends AbstractEntity<?>> sourceType) {
+        return eqlTables.getTableForEntityType(sourceType);
     }
 
     public Map<String, Object> getSqlParamValues() {

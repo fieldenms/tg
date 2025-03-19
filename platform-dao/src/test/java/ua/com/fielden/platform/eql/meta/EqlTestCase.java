@@ -10,6 +10,7 @@ import ua.com.fielden.platform.eql.retrieval.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.QueryModelToStage1Transformer;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.*;
@@ -74,8 +75,9 @@ public abstract class EqlTestCase {
                                                     PlatformTestDomainTypes.entityTypes,
                                                     dbVersionProvider)
                 .build();
-        QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA);
-        EQL_TABLES = new EqlTables(DOMAIN_METADATA);
+        final var domainMetadataUtils = new DomainMetadataUtils(new PlatformTestDomainTypes(), DOMAIN_METADATA);
+        QUERY_SOURCE_INFO_PROVIDER = new QuerySourceInfoProvider(DOMAIN_METADATA, domainMetadataUtils);
+        EQL_TABLES = new EqlTables(DOMAIN_METADATA, domainMetadataUtils);
         EQL_QUERY_TRANSFORMER = new EqlQueryTransformer(filter, dates, EQL_TABLES, QUERY_SOURCE_INFO_PROVIDER, DOMAIN_METADATA, dbVersionProvider);
     }
     

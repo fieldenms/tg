@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.dbschema;
 import com.google.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
@@ -38,6 +37,7 @@ public class HibernateMappingsGenerator {
     private static final Set<String> SPECIAL_PROPS = Set.of(ID, KEY, VERSION);
 
     private final IDomainMetadata domainMetadata;
+    private final IDomainMetadataUtils domainMetadataUtils;
     private final EqlTables eqlTables;
     private final IDbVersionProvider dbVersionProvider;
     private final PropertyMetadataUtils pmUtils;
@@ -45,25 +45,28 @@ public class HibernateMappingsGenerator {
 
     @Inject
     public HibernateMappingsGenerator(final IDomainMetadata domainMetadata,
+                                      final IDomainMetadataUtils domainMetadataUtils,
                                       final IDbVersionProvider dbVersionProvider,
                                       final EqlTables eqlTables,
                                       final PropertyInliner propertyInliner) {
         this.eqlTables = eqlTables;
         this.domainMetadata = domainMetadata;
+        this.domainMetadataUtils = domainMetadataUtils;
         this.pmUtils = domainMetadata.propertyMetadataUtils();
         this.dbVersionProvider = dbVersionProvider;
         this.propertyInliner = propertyInliner;
     }
 
     public String generateMappings() {
-        final var sb = new StringBuffer();
+        final var sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");
         sb.append("\"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n");
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        domainMetadata.allTypes(EntityMetadata.class).distinct()
+        domainMetadataUtils.registeredEntities()
+                .distinct()
                 .filter(EntityMetadata::isPersistent)
                 .sorted(comparing(em -> em.javaType().getSimpleName())) // sort for testing purposes
                 .forEach(em -> {
@@ -83,14 +86,14 @@ public class HibernateMappingsGenerator {
 
     private static String generateEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
         final var sb = new StringBuilder();
-        sb.append("\t<id name=\"" + name + "\" column=\"" + columnName + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
+        sb.append("\t<id name=\"").append(name).append("\" column=\"").append(columnName).append("\" type=\"").append(hibTypeName).append("\" access=\"property\">\n");
         sb.append("\t</id>\n");
         return sb.toString();
     }
 
     private static String generateOneToOneEntityIdMapping(final String name, final String columnName, final String hibTypeName) {
-        final var sb = new StringBuffer();
-        sb.append("\t<id name=\"" + name + "\" column=\"" + columnName + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
+        final var sb = new StringBuilder();
+        sb.append("\t<id name=\"").append(name).append("\" column=\"").append(columnName).append("\" type=\"").append(hibTypeName).append("\" access=\"property\">\n");
         sb.append("\t\t<generator class=\"foreign\">\n");
         sb.append("\t\t\t<param name=\"property\">key</param>\n");
         sb.append("\t\t</generator>\n");
@@ -100,29 +103,29 @@ public class HibernateMappingsGenerator {
     }
 
     private static String generateEntityVersionMapping(final String name, final String columnName, final String hibTypeName) {
-        final var sb = new StringBuffer();
-        sb.append("\t<version name=\"" + name + "\" type=\"" + hibTypeName + "\" access=\"field\" insert=\"false\">\n");
-        sb.append("\t\t<column name=\"" + columnName + "\" default=\"0\" />\n");
+        final var sb = new StringBuilder();
+        sb.append("\t<version name=\"").append(name).append("\" type=\"").append(hibTypeName).append("\" access=\"field\" insert=\"false\">\n");
+        sb.append("\t\t<column name=\"").append(columnName).append("\" default=\"0\" />\n");
         sb.append("\t</version>\n");
         return sb.toString();
     }
 
-    private static String generateManyToOnePropertyMapping(final String propName, final String columnName, final Class entityType) {
-        final var sb = new StringBuffer();
-        sb.append("\t<many-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" column=\"" + columnName + "\"");
+    private static String generateManyToOnePropertyMapping(final String propName, final String columnName, final Class<?> entityType) {
+        final var sb = new StringBuilder();
+        sb.append("\t<many-to-one name=\"").append(propName).append("\" class=\"").append(entityType.getName()).append("\" column=\"").append(columnName).append("\"");
         sb.append("/>\n");
         return sb.toString();
     }
 
-    private static String generateOneToOnePropertyMapping(final String propName, final Class entityType) {
+    private static String generateOneToOnePropertyMapping(final String propName, final Class<?> entityType) {
         return "\t<one-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" constrained=\"true\"/>\n";
     }
 
     private static String generateUnionEntityPropertyMapping(final PropertyMetadata pm, final PropertyMetadataUtils pmUtils) {
         final var entityType = (Class<?>) pm.type().javaType();
 
-        final var sb = new StringBuffer();
-        sb.append("\t<component name=\"" + pm.name() + "\" class=\"" + entityType.getName() + "\">\n");
+        final var sb = new StringBuilder();
+        sb.append("\t<component name=\"").append(pm.name()).append("\" class=\"").append(entityType.getName()).append("\">\n");
 
         pmUtils.subProperties(pm).stream()
                 .flatMap(spm -> spm.asPersistent().stream())
@@ -156,10 +159,19 @@ public class HibernateMappingsGenerator {
                     return propNameClause + columnClause + typeClause + lengthClause + precisionClause + scaleClause + endClause;
                 },
                 multipleColumns -> {
-                    final var sb = new StringBuffer();
-                    sb.append(propNameClause + typeClause + ">\n");
+                    final var sb = new StringBuilder();
+                    sb.append(propNameClause).append(typeClause).append(">\n");
                     for (final String name : multipleColumns) {
-                        sb.append("\t\t<column name=\"" + name + "\"" + endClause);
+                        // TODO: The following condition is responsible for identifying and mapping RichText.searchText as a write-only component.
+                        //       Ultimately, condition `name.endsWith("_SEARCHTEXT")` should be changed in favor of explicit support for write-only components/properties more generically.
+                        //       The write-only aspect is implemented by specifying attribute `read="NULL"`, which results in returning NULL for searchText instead of the actual value upon data retrieval.
+                        //       The Hibernate Mapping DTD (https://hibernate.org/dtd/hibernate-mapping-3.0.dtd) defaults attribute `read` to a column name, but it can be any valid SQL expression.
+                        //       Assigning this attribute to `NULL` results in `NULL` being retrieved from a database, saving some valuable bandwidth.
+                        sb.append("\t\t<column name=\"").append(name).append("\"");
+                        if (name.endsWith("_SEARCHTEXT")) {
+                            sb.append(" read=\"NULL\"");
+                        }
+                        sb.append(endClause);
                     }
                     sb.append("\t</property>\n");
                     return sb.toString();
@@ -176,8 +188,8 @@ public class HibernateMappingsGenerator {
             final DbVersion dbVersion)
     {
         final Class<? extends AbstractEntity<?>> entityType= em.javaType();
-        final var sb = new StringBuffer();
-        sb.append("<class name=\"" + entityType.getName() + "\" table=\"" + tableName + "\">\n");
+        final var sb = new StringBuilder();
+        sb.append("<class name=\"").append(entityType.getName()).append("\" table=\"").append(tableName).append("\">\n");
 
         sb.append(em.propertyOpt(ID).flatMap(PropertyMetadata::asPersistent).map(pm -> {
             if (isOneToOne(entityType)) {

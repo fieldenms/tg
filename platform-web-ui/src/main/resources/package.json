@@ -53,11 +53,12 @@
     "@polymer/paper-toast": "^3.0.1",
     "@polymer/paper-toolbar": "^3.0.1",
     "@polymer/polymer": "^3.5.2",
+    "@toast-ui/editor": "^3.2.2",
     "@webcomponents/shadycss": "^1.11.2",
     "@webcomponents/webcomponentsjs": "^2.8.0",
     "antlr4": "^4.13.2",
     "moment": "^2.30.1",
-    "moment-timezone": "^0.5.46",
+    "moment-timezone": "^0.5.47",
     "web-animations-js": "^2.3.2"
   },
   "devDependencies": {
@@ -71,6 +72,10 @@
     "wct-browser-legacy": "1.0.2"
   },
   "overrides": {
+    "@toast-ui/editor": {
+      "dompurify": "^3.2.4",
+      "@types/trusted-types": "../_EXCLUDED_"
+    },
     "wct-browser-legacy": {
       "@polymer/sinonjs": "../_EXCLUDED_",
       "@polymer/test-fixture": "$@polymer/test-fixture",

@@ -40,10 +40,12 @@ import static java.util.Collections.unmodifiableList;
  *      An important part of this stage is the resolution of dot-notated properties.
  * <li> <b>Stage 2</b>.
  *      <ul>
- *        <li> Processing of dot-expessions: Builds up implicit table joins that result from dot-expressions,
- *        substitutes calculated property names used in dot-expressions with their respective expressions.
+ *        <li> Processing of dot-expressions: builds up implicit table joins that result from dot-expressions,
+ *             substitutes calculated property names used in dot-expressions with their respective expressions.
+ *        <li> Substitution of literal values with parameters (crucial for strings as to prevent SQL injection).
  *        <li> Optimisation of union queries with an ordering.
  *      </ul>
+ *
  * <li> <b>Stage 3: SQL generation</b>.
  *      This stage also gathers the information, needed to instantiate entities from the SQL query result.
  * </ol>

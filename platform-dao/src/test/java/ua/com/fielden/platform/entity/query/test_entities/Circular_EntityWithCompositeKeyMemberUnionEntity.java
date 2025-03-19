@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.query.test_entities;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
-import ua.com.fielden.platform.sample.domain.UnionEntity;
 
 @MapEntityTo
 @KeyType(DynamicEntityKey.class)
@@ -20,7 +19,7 @@ public class Circular_EntityWithCompositeKeyMemberUnionEntity extends AbstractEn
         return this;
     }
 
-    public Circular_UnionEntity get() {
+    public Circular_UnionEntity getUnion() {
         return union;
     }
 
