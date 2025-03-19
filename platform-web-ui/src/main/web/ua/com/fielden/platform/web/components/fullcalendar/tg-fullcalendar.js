@@ -268,12 +268,14 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
     _prev() {
         if (this._calendar) {
             this._calendar.prev();
+            this.notifyResize();;
         }
     }
 
     _next() {
         if (this._calendar) {
             this._calendar.next();
+            this.notifyResize();;
         }
     }
 
