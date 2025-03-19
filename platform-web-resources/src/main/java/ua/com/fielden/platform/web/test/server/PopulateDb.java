@@ -14,7 +14,6 @@ import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.composite.TgMinorComponent;
@@ -40,6 +39,7 @@ import java.util.*;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.types.RichText.fromHtml;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -319,6 +319,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             save(ent2.setCompProp(rsMinorComp));
         }
 
+        save(new_(TgNote.class, "01").setText("hello"));
+        save(new_(TgNote.class, "02").setText("hello world"));
+        save(new_(TgNote.class, "03").setText("hello\nworld"));
+        save(new_(TgNote.class, "04").setText(" \tone  \n\u00a0\n  two  \n\n\n three\n"));
+        save(new_(TgNote.class, "05").setText("one & two\n1 < 2 && 4 > 0"));
+        save(new_(TgNote.class, "06").setText(">>> <<< &&& &> &< >< <abc> <&>"));
+
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
         save(new_composite(UserAndRoleAssociation.class, demo2, admin));
@@ -340,6 +347,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
+
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY1").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY1</p>")).setDesc("rich text desc 1"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY2").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY2</p>")).setDesc("rich text desc 2"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY3").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY3</p>")).setDesc("rich text desc 3"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY4").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY4</p>")).setDesc("rich text desc 4"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY5</p>")).setDesc("rich text desc 5"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY6").setRichTextProp(fromHtml("hello world")).setDesc("rich text desc 6")); // deliberate value without paragraph tags to induce Toast UI transformation; used to test SAVE disablement
     }
 
     private void populateGraphQlData() {

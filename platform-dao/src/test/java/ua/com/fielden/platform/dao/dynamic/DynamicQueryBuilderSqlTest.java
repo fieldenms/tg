@@ -6,6 +6,7 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 import org.junit.Before;
 import org.junit.Test;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
@@ -28,7 +29,9 @@ import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadataUtils;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.TgBogie;
@@ -108,14 +111,18 @@ public class DynamicQueryBuilderSqlTest {
         domainTypes.add(MasterEntity.class);
         domainTypes.add(SlaveEntity.class);
         domainTypes.add(EvenSlaverEntity.class);
+        final IApplicationDomainProvider appDomain = () -> domainTypes;
 
         final IDbVersionProvider dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
                 new PlatformHibernateTypeMappings.Provider(dbVersionProvider).get(), domainTypes, dbVersionProvider)
                 .build();
+        final IDomainMetadataUtils domainMetadataUtils = new DomainMetadataUtils(appDomain, domainMetadata);
         try {
             hibConf.addInputStream(new ByteArrayInputStream(
-                    new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata),
+                    new HibernateMappingsGenerator(domainMetadata, domainMetadataUtils,
+                                                   dbVersionProvider,
+                                                   new EqlTables(domainMetadata, domainMetadataUtils),
                                                    new PropertyInlinerImpl(domainMetadata))
                             .generateMappings().getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {

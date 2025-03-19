@@ -59,7 +59,7 @@ public final class HibernateHelpers {
     public static DbVersion getDbVersion(final Class<? extends Dialect> dialect) {
         if (H2Dialect.class.isAssignableFrom(dialect)) {
             return DbVersion.H2;
-        } else if (PostgreSQLDialect.class.isAssignableFrom(dialect)) {
+        } else if (PostgreSQL81Dialect.class.isAssignableFrom(dialect)) {
             return DbVersion.POSTGRESQL;
         } else if (SQLServerDialect.class.isAssignableFrom(dialect)) {
             return DbVersion.MSSQL;

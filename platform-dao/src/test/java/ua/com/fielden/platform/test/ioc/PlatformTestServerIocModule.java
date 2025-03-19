@@ -111,6 +111,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgVehicleTechDetailsCo.class).to(TgVehicleTechDetailsDao.class);
         bind(ITeVehicleFinDetails.class).to(TeVehicleFinDetailsDao.class);
         bind(ITgPersonName.class).to(TgPersonNameDao.class);
+        bind(TgPatternCo.class).to(TgPatternDao.class);
         bind(ITgAuthor.class).to(TgAuthorDao.class);
         bind(ITgFuelUsage.class).to(TgFuelUsageDao.class);
         bind(ITeVehicleFuelUsage.class).to(TeVehicleFuelUsageDao.class);
@@ -172,6 +173,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgUnionCommonTypeCo.class).to(TgUnionCommonTypeDao.class);
         bind(ITgPersistentEntityWithProperties.class).to(TgPersistentEntityWithPropertiesDao.class);
         bind(ITgReVehicleModel.class).to(TgReVehicleModelDao.class);
+        bind(TgNoteCo.class).to(TgNoteDao.class);
 
         bind(TgInventoryPartCo.class).to(TgInventoryPartDao.class);
         bind(TgInventoryCo.class).to(TgInventoryDao.class);

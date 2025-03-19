@@ -1414,7 +1414,7 @@ public class CentreUpdater {
                 final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
                 final Class<?> propertyType = isEntityItself ? managedType(root, centre) : determinePropertyType(managedType(root, centre), property);
 
-                if (isString(propertyType)) {
+                if (isString(propertyType) || isRichText(propertyType)) {
                     centre.getRepresentation().getFirstTick().setValueByDefault(root, includedProperty, null);
                 }
             }

@@ -2,17 +2,19 @@ package ua.com.fielden.platform.basic.autocompleter;
 
 import com.google.inject.Injector;
 import org.junit.Test;
+import ua.com.fielden.platform.basic.ValueMatcherException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test_entities.Entity;
-
-import ua.com.fielden.platform.test_entities.Entity;
+import ua.com.fielden.platform.types.RichText;
 
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher.matchByAnyPropPredicate;
 
 public class PojoValueMatcherTest {
@@ -150,6 +152,16 @@ public class PojoValueMatcherTest {
         assertEquals(entities.get(2), result.get(0));
         assertEquals(entities.get(3), result.get(1));
         assertEquals(entities.get(4), result.get(2));
+    }
+
+    @Test
+    public void search_by_RichText_property_is_unsupported() {
+        final var entities = List.of(
+                factory.newByKey(EntityWithRichText.class, "1").setRichText(RichText.fromHtml("The <b>blue</b> sky")));
+
+        final var matcher = new PojoValueMatcher<>(entities, EntityWithRichText.Property.richText.toPath(), entities.size());
+
+        assertThrows(ValueMatcherException.class, () -> matcher.findMatches("%blue sky%"));
     }
 
 }

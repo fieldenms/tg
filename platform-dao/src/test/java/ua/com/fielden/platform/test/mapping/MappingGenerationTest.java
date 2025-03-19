@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.test.mapping;
 
 import org.junit.Test;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -10,6 +11,7 @@ import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 import ua.com.fielden.platform.meta.DomainMetadataBuilder;
+import ua.com.fielden.platform.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
@@ -41,12 +43,16 @@ public class MappingGenerationTest {
                 EntityWithMoney.class,
                 TgUnionHolder.class,
                 EntityWithRichText.class);
+        final IApplicationDomainProvider appDomain = () -> domainTypes;
         final var dbVersionProvider = constantDbVersion(DbVersion.H2);
         final IDomainMetadata domainMetadata = new DomainMetadataBuilder(
                 hibernateTypeMappings, domainTypes, dbVersionProvider)
                 .build();
 
-        final String actualMappings = new HibernateMappingsGenerator(domainMetadata, dbVersionProvider, new EqlTables(domainMetadata),
+        final var domainMetadataUtils = new DomainMetadataUtils(appDomain, domainMetadata);
+        final String actualMappings = new HibernateMappingsGenerator(domainMetadata, domainMetadataUtils,
+                                                                     dbVersionProvider,
+                                                                     new EqlTables(domainMetadata, domainMetadataUtils),
                                                                      new PropertyInlinerImpl(domainMetadata))
                 .generateMappings();
         final String expectedMappings = """
@@ -120,6 +126,7 @@ public class MappingGenerationTest {
 \t<property name="text" type="ua.com.fielden.platform.types.RichTextType">
 \t\t<column name="TEXT_FORMATTEDTEXT"/>
 \t\t<column name="TEXT_CORETEXT"/>
+\t\t<column name="TEXT_SEARCHTEXT" read="NULL"/>
 \t</property>
 </class>
 

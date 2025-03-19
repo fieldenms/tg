@@ -23,7 +23,13 @@ import { enhanceStateRestoration } from '/resources/components/tg-global-error-h
 const findFirstInputToFocus = (preferredOnly, editors) => {
     const selectEnabledEditor = editor => {
         const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
-        return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
+        if (selectedElement && selectedElement.shadowRoot) {
+            const textArea = selectedElement.shadowRoot.querySelector('textarea');
+            if (textArea && textArea.offsetParent !== null) {
+                return textArea;
+            }
+        }
+        return selectedElement;
     };
     
     let firstInput, firstPreferredInput, firstInvalidInput;
@@ -845,6 +851,8 @@ const TgEntityMasterBehaviorImpl = {
         self.addEventListener('binding-entity-appeared', function (event) {
             const target = event.composedPath()[0];
             if (target === this) {
+                //Need to reset scrolltop for entitity master's scrolling panel to prevent initial scrolling on macOS and iOS
+                this.$.masterDom.$.scrollableContainer.$.scrollablePanel.scrollTop = 0;
                 this.focusView();
                 if (!this._hasEmbededView()) {
                     this.async(function () {

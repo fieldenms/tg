@@ -24,7 +24,7 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingServi
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isDate;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -236,7 +236,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     private static NewProperty generateSingleCriteriaProperty(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation, final List<Annotation> additionalAnnotations) {
         final boolean isEntity = EntityUtils.isEntityType(propertyType);
         final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
-        final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType);
+        final Class<?> newPropertyType = determineSingleCriterionType(propertyType, isEntity, isSingle);
 
         final List<Annotation> annotations = new ArrayList<>();
         if (isEntity && isSingle) {
@@ -257,6 +257,30 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     /**
+     * Determines the type of criterion based on original property type and information whether it is entity type and whether it is single or not.
+     *
+     * @param propertyType - original property type
+     * @param isEntity - is it entity type?
+     * @param isSingle - is it critOnly single?
+     * @return
+     */
+    private static Class<?> determineSingleCriterionType( Class<?> propertyType, boolean isEntity, boolean isSingle) {
+        if (isEntity) {
+            if (isSingle) {
+               return propertyType;
+            } else {
+                return List.class;
+            }
+        } else if (isBoolean(propertyType)){
+            return boolean.class;
+        } else if (isRichText(propertyType)) {
+            return String.class;
+        } else {
+            return propertyType;
+        }
+    }
+
+    /**
      * Generates two criteria properties for range properties (i. e. number, money, date or boolean properties).
      *
      * @param root
@@ -268,9 +292,9 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @return
      */
     private static List<NewProperty> generateRangeCriteriaProperties(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation, final List<Annotation> additionalAnnotations) {
-        final String firstPropertyName = CriteriaReflector.critName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
-        final String secondPropertyName = CriteriaReflector.critName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
-        final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType;
+        final String firstPropertyName = CriteriaReflector.critName(root, isBoolean(propertyType) ? is(propertyName) : from(propertyName));
+        final String secondPropertyName = CriteriaReflector.critName(root, isBoolean(propertyType) ? not(propertyName) : to(propertyName));
+        final Class<?> newPropertyType = isBoolean(propertyType) ? boolean.class : propertyType;
         
         final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(true, managedType, secondPropertyName, propertyName, isPropertyAnnotation, additionalAnnotations));
         final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(false, managedType, firstPropertyName, propertyName, isPropertyAnnotation, additionalAnnotations));
