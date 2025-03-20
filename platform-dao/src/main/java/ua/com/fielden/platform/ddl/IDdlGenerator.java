@@ -32,6 +32,6 @@ public interface IDdlGenerator {
     /**
      * Generates DDL statements for creating tables, primary keys, indices, and foreign keys for the given entity types.
      */
-    List<String> generateDatabaseDdl(Dialect dialect, Collection<Class<? extends AbstractEntity<?>>> types);
+    List<String> generateDatabaseDdl(Dialect dialect, Collection<? extends Class<? extends AbstractEntity<?>>> types);
 
 }
