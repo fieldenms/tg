@@ -27,6 +27,8 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
 
     /**
      * Streams all audit records for an entity with the specified ID.
+     * <p>
+     * The returned stream must be closed to ensure that the underlying resultset is closed.
      *
      * @param auditedEntityId  ID of an audited entity
      * @param fetchModel  optional fetch model to retrieve audit-entities
@@ -35,6 +37,8 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
 
     /**
      * Streams all audit records for an entity with the specified ID using the default fetch model.
+     * <p>
+     * The returned stream must be closed to ensure that the underlying resultset is closed.
      *
      * @param auditedEntityId  ID of an audited entity
      */
@@ -44,6 +48,8 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
 
     /**
      * Streams all audit records for the specified audited entity.
+     * <p>
+     * The returned stream must be closed to ensure that the underlying resultset is closed.
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param fetchModel  optional fetch model to retrieve audit-entities
@@ -54,6 +60,8 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
 
     /**
      * Streams all audit records for the specified audited entity using the default fetch model.
+     * <p>
+     * The returned stream must be closed to ensure that the underlying resultset is closed.
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      */
@@ -63,6 +71,8 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
 
     /**
      * Streams all audit records for an entity with the specified ID.
+     * <p>
+     * The returned stream must be closed to ensure that the underlying resultset is closed.
      *
      * @param auditedEntityId  ID of an audited entity
      * @param fetchSize  batch size for data retrieval
@@ -72,6 +82,8 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
 
     /**
      * Streams all audit records for an entity with the specified ID using the default fetch model.
+     * <p>
+     * The returned stream must be closed to ensure that the underlying resultset is closed.
      *
      * @param auditedEntityId  ID of an audited entity
      * @param fetchSize  batch size for data retrieval
@@ -82,6 +94,8 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
 
     /**
      * Streams all audit records for the specified audited entity.
+     * <p>
+     * The returned stream must be closed to ensure that the underlying resultset is closed.
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param fetchModel  optional fetch model to retrieve audit-entities
@@ -93,6 +107,8 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
 
     /**
      * Streams all audit records for the specified audited entity using the default fetch model.
+     * <p>
+     * The returned stream must be closed to ensure that the underlying resultset is closed.
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param fetchSize  batch size for data retrieval
@@ -140,7 +156,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for an audited entity with the specified ID and version.
      * If an audit record doesn't exist, {@code null} is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntityId  ID of an audited entity
      * @param version  version of an audited entity
@@ -151,7 +167,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for an audited entity with the specified ID and version using the default fetch model.
      * If an audit record doesn't exist, {@code null} is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntityId  ID of an audited entity
      * @param version  version of an audited entity
@@ -163,7 +179,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity with the specified version.
      * If an audit record doesn't exist, {@code null} is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity, which should be used instead of its current version
@@ -176,7 +192,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity with the specified version using the default fetch model.
      * If an audit record doesn't exist, {@code null} is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity, which should be used instead of its current version
@@ -188,7 +204,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity using its current version.
      * If an audit record doesn't exist, {@code null} is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      * @param fetchModel  optional fetch model to retrieve audit-entities
@@ -200,7 +216,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity using its current version and the default fetch model.
      * If an audit record doesn't exist, {@code null} is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      */
@@ -211,7 +227,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for an audited entity with the specified ID and version.
      * If an audit record doesn't exist, an empty optional is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntityId  ID of an audited entity
      * @param version  version of an audited entity
@@ -224,7 +240,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for an audited entity with the specified ID and version using the default fetch model.
      * If an audit record doesn't exist, an empty optional is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntityId  ID of an audited entity
      * @param version  version of an audited entity
@@ -236,7 +252,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity with the specified version.
      * If an audit record doesn't exist, an empty optional is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity, which should be used instead of its current version
@@ -249,7 +265,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity with the specified version using the default fetch model.
      * If an audit record doesn't exist, an empty optional is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity, which should be used instead of its current version
@@ -261,7 +277,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity using its current version.
      * If an audit record doesn't exist, an empty optional is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      * @param fetchModel  optional fetch model to retrieve audit-entities
@@ -273,7 +289,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity using its current version and the default fetch model.
      * If an audit record doesn't exist, an empty optional is returned.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      */
@@ -284,7 +300,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for an audited entity with the specified ID and version.
      * If an audit record doesn't exist, an exception is thrown.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntityId  ID of an audited entity
      * @param version  version of an audited entity
@@ -302,7 +318,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for an audited entity with the specified ID and version using the default fetch model.
      * If an audit record doesn't exist, an exception is thrown.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntityId  ID of an audited entity
      * @param version  version of an audited entity
@@ -314,7 +330,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity with the specified version.
      * If an audit record doesn't exist, an exception is thrown.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity that is used instead of its current version
@@ -327,7 +343,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity with the specified version using the default fetch model.
      * If an audit record doesn't exist, an exception is thrown.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have property {@code id}
      * @param version  version of the specified audited entity that is used instead of its current version
@@ -339,7 +355,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity using its and current version.
      * If an audit record doesn't exist, an exception is thrown.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      * @param fetchModel  optional fetch model to retrieve audit-entities
@@ -351,7 +367,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
     /**
      * Retrieves an audit record for the specified audited entity using its current version and the default fetch model.
      * If an audit record doesn't exist, an exception is thrown.
-     * (This can be the case if the specified version is greater than the last persisted version.)
+     * (This can be the case if the specified version is greater than the last audited version.)
      *
      * @param auditedEntity  audited entity, must have properties {@code id} and {@code version}
      */

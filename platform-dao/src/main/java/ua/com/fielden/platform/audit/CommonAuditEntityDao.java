@@ -165,7 +165,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
      * Returns a new, initialised instance of this audit-entity type.
      *
      * @param auditedEntity  the audited entity that will be used to initialise the audit-entity instance.
-     *                       Must be persisted and non-dirty.
+     *                       Must be persisted, non-dirty and contain all properties that are necessary for auditing.
      * @param transactionGuid  identifier of a transaction that was used to save the audited entity
      */
     private AbstractAuditEntity<E> newAudit(final E auditedEntity, final String transactionGuid) {

@@ -25,6 +25,7 @@ public interface IEntityAuditor<E extends AbstractEntity<?>> {
      *
      * @param auditedEntity  the audited entity that will be used to initialise the audit-entity instance.
      *                       Must be persisted and non-dirty.
+     *                       If any of the audited properties are proxied, the entity will be refetched.
      * @param transactionGuid  identifier of a transaction that was used to save the audited entity
      * @param dirtyProperties  names of properties of the audited entity whose values changed.
      *                         Only audited properties are considered, others are ignored.
