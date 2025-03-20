@@ -109,6 +109,11 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
                                 .orElseGet(() -> fetch.with(prop)));
     }
 
+    @Override
+    public fetch<E> fetchModelForAuditing() {
+        return fetchModelForAuditing;
+    }
+
     /**
      * Returns the name of a property of this audit-entity type that audits the specified property of the audited entity type,
      * if the specified property is indeed audited; otherwise, returns {@code null}.

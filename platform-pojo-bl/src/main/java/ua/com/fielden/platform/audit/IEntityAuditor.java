@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.audit;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 
 /**
  * A contract to perform auditing of entities.
@@ -31,5 +32,10 @@ public interface IEntityAuditor<E extends AbstractEntity<?>> {
      *                         Only audited properties are considered, others are ignored.
      */
     void audit(E auditedEntity, String transactionGuid, Iterable<? extends CharSequence> dirtyProperties);
+
+    /**
+     * Returns a fetch model for the audited entity type that includes all properties that are necessary to perform auditing.
+     */
+    fetch<E> fetchModelForAuditing();
 
 }

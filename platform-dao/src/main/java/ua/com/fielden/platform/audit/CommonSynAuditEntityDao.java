@@ -101,4 +101,9 @@ public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
                               .collect(toSet()));
     }
 
+    @Override
+    public fetch<E> fetchModelForAuditing() {
+        return coAuditEntity.fetchModelForAuditing();
+    }
+
 }
