@@ -55,7 +55,7 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
                 return append(originalPath, first(lastComponent.getSubitems().values()).orElseThrow());
             }
             else if (lastComponent.javaType() == RichText.class) {
-                return append(originalPath, lastComponent.getSubitems().get(RichText.CORE_TEXT));
+                return append(originalPath, lastComponent.getSubitems().get(RichText.SEARCH_TEXT));
             }
         }
         return originalPath;

@@ -89,6 +89,9 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             .label-title {
                 margin-right: 4px;
             }
+            #decorator[focused] .label-title {
+                font-weight: 700;
+            }
             .label-action {
                 width: 18px;
                 height: 18px;
@@ -191,7 +194,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             <div clss="editor-prefix" slot="prefix">
                 ${customPrefixAttribute}
             </div>
-            <div class="main-container" slot="input">
+            <div id="mainContainer" class="main-container" slot="input">
                 ${customInput}
                 ${inputLayer}
             </div>
@@ -418,7 +421,8 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
              */
             _refreshCycleStarted: {
                 type: Boolean, 
-                value: false
+                value: false,
+                observer: '_refreshCycleStartedChanged'
             },
             
             /**
@@ -566,13 +570,12 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                         if (event.keyCode === 13) { // 'Enter' has been pressed
                             this._checkBuiltInValidation();
                             this.commitIfChanged();
-                        } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
-                            this.commitIfChanged();
-                            this._copyTap();
                         } else if ((event.keyCode === 38 || event.keyCode === 40) 
                                     && (event.altKey || event.ctlKey || event.metaKey || event.shiftKey)) {
                             tearDownEvent(event);
                         }
+                        this._handleCopy(event);
+
                     }).bind(this);
                 }
             },
@@ -655,6 +658,13 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     decorator () {
         return this.$.decorator;
     }
+
+    _handleCopy (event) {
+        if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
+            this.commitIfChanged();
+            this._copyTap();
+        }
+    }
     
     _isMultilineText (editorKind) {
         return 'MULTILINE_TEXT' === editorKind;
@@ -717,7 +727,7 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
                     newEditedProps[prop] = prevEditedProps[prop];
                 }
             }
-            if (!this.reflector().equalsEx(this._editingValue, _originalEditingValue)) {
+            if (!this._equalToOriginalValue(this._editingValue, _originalEditingValue)) {
                 newEditedProps[this.propertyName] = true;
             } else {
                 delete newEditedProps[this.propertyName];
@@ -726,7 +736,22 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
             // if ('some_name' === this.propertyName) { console.error('_identifyModification: prop [', this.propertyName, '] originalEditingValue = [', _originalEditingValue, '] editingValue = [', _editingValue, '] newEditedProps [', newEditedProps, ']'); }
         }
     }
-    
+
+    /**
+     * Returns 'true' in case if '_editingValue' is equal to original during typing (no validation request phase).
+     *   This method may be overridden in case if some fine tuning for SAVE disablement logic is needed.
+     *   E.g. some third party component (Toast UI in Rich Text editor) may provide some transformations to _editingValue ('hello world' => '<p>hello world</p>'), which we consider insignificant and don't want to show to the user.
+     */
+    _equalToOriginalValue (_editingValue, _originalEditingValue) {
+        return this.reflector().equalsEx(_editingValue, _originalEditingValue);
+    }
+
+    /**
+     * Observer for 'refresh cycle' stage changes.
+     *   This method may be overridden in case if some fine tuning is required to be performed when 'refresh cycle' started / completed.
+     */
+    _refreshCycleStartedChanged (newValue, oldValue) {}
+
     /**
      * Extracts 'original' version of editing value taking into account the erroneous properties.
      *
@@ -1178,14 +1203,14 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     }
 
     /**
-     * Overide this to provide custom formatting for entered text.
+     * Override this to provide custom formatting for entered text.
      */
     _formatText (value) {
         return value;
     }
     
-        /**
-     * Overide this to provide custom formatting for tooltip text.
+    /**
+     * Override this to provide custom formatting for tooltip text.
      */
     _formatTooltipText (value) {
         const formatedText = this._formatText(value);

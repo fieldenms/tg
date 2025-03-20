@@ -16,6 +16,7 @@ import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.utils.ToString;
 
@@ -77,10 +78,11 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
      */
     @Override
     protected EnhancedYields enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
-        return first(yields.getYields())
-                .filter($ -> !yieldAll)
-                .map(fstYield -> enhanceNonEmptyAndNotYieldAll(fstYield, yields, mainSource))
-                .orElseGet(() -> enhanceAll(mainSource));
+        return finaliseYields(yields,
+                              first(yields.getYields())
+                                      .filter($ -> !yieldAll)
+                                      .map(fstYield -> enhanceNonEmptyAndNotYieldAll(fstYield, yields, mainSource))
+                                      .orElseGet(() -> enhanceAll(mainSource)));
     }
 
     private EnhancedYields enhanceNonEmptyAndNotYieldAll(final Yield2 fstYield, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
@@ -166,6 +168,52 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
     protected ToString addToString(final ToString toString) {
         return super.addToString(toString)
                 .addIfNotNull("retrieval", retrievalModel);
+    }
+
+    private static EnhancedYields finaliseYields(final Yields2 originalYields, final EnhancedYields enhancedYields) {
+        // TODO: Need to enhance this implementation if a more generic support for write-only components/properties is to be developed.
+        //       At this stage only RichText.searchText is handled by removing it from yields, if it was added implicitly.
+        //       RichText.searchText shod not be removed if it is yielded explicitly.
+        //       This is an optimisation in line with the write-only nature of searchText to avoid its retrieval from a database.
+        //       Please also refer to HibernateMappingsGenerator where searchText is mapped to be read as NULL when retrieval happens using Hibernate.
+        //
+        //       This optimisation applies only to ResultQuery, which is top-level.
+        //       It is not applied to SourceQuery and SubQueryForExist, as this job is delegated to DB engines.
+        //       For SubQuery, this optimisation simply does not make sense.
+        if (!SearchTextYieldFinder.containsSearchText(originalYields)) {
+            return SearchTextYieldFinder.findSearchText(enhancedYields.yields)
+                    .map(yield -> new EnhancedYields(enhancedYields.yields.removeYield(yield.alias())))
+                    .orElse(enhancedYields);
+        }
+        else {
+            return enhancedYields;
+        }
+    }
+
+    /** Utilities for finding yields that correspond to property `searchText` of {@link RichText}. */
+    private static final class SearchTextYieldFinder {
+
+        static Optional<Yield2> findSearchText(final Yields2 yields) {
+            return yields.getYields().stream()
+                    .filter(SearchTextYieldFinder::isSearchText)
+                    .findAny();
+        }
+
+        static boolean containsSearchText(final Yields2 yields) {
+            return yields.getYields().stream()
+                    .anyMatch(SearchTextYieldFinder::isSearchText);
+        }
+
+        static boolean isSearchText(final Yield2 yield) {
+            return yield.operand() instanceof Prop2 prop && isPathToSearchText(prop.getPath());
+        }
+
+        static boolean isPathToSearchText(final List<AbstractQuerySourceItem<?>> path) {
+            return path.size() >= 2
+                   && path.get(path.size() - 2).javaType() == RichText.class
+                   && path.getLast().name.equals(RichText.SEARCH_TEXT);
+        }
+
     }
 
 }

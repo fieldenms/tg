@@ -21,9 +21,7 @@ import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
-import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
-import ua.com.fielden.platform.entity.validation.ICustomValidator;
-import ua.com.fielden.platform.entity.validation.KeyMemberChangeValidator;
+import ua.com.fielden.platform.entity.validation.*;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
@@ -33,6 +31,7 @@ import ua.com.fielden.platform.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.types.IWithValidation;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
@@ -67,6 +66,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripI
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 /**
  * <h3>General Info</h3>
@@ -805,9 +805,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
             return t2(ImmutableSet.copyOf(annotations.values()), validators);
         } catch (final Exception ex) {
-            logger.error(format("Exception during collection of validators for property [%s] in entity type [%s].",
-                                propField.getName(), getType().getSimpleName()),
-                         ex);
+            logger.error(() -> "Exception during collection of validators for property [%s] in entity type [%s].".formatted(propField.getName(), getType().getSimpleName()), ex);
             throw ex;
         }
     }
@@ -837,10 +835,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         };
     }
 
-    private SequencedSet<Annotation> collectValidationAnnotations(final Field propField, final Class<?> propType,
-                                                                  final boolean isCollectional,
-                                                                  final boolean isEntityPersistent,
-                                                                  final boolean shouldNotSkipKeyChangeValidation)
+    private SequencedSet<Annotation> collectValidationAnnotations(
+            final Field propField, final Class<?> propType,
+            final boolean isCollectional,
+            final boolean isEntityPersistent,
+            final boolean shouldNotSkipKeyChangeValidation)
     {
         // order matters
         final var annotations = new LinkedHashSet<Annotation>();
@@ -856,12 +855,61 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
         }
 
+        // Exclude handlers that should not be defined explicitly.
+        // This is necessary to ensure the correct order of default validators.
+        // Default validators are placed before explicit ones, and the order of default validators is important.
+        // SanitiseHtmlValidator goes after MaxLengthValidator.
+        // DefaultValidatorForValueTypeWithValidation should be before MaxLengthValidator, which requires instantiation of RichText.searchText.
+        // Note that the code below prepends validators via addFirst, so the execution order is the reverse of the logical order.
+
+        final List<Handler> bceHandlers = annotations.stream()
+                                          .mapMulti(typeFilter(BeforeChange.class))
+                                          // filter out the default validators that could have been assigned explicitly by mistake
+                                          .flatMap(bce -> Stream.of(bce.value())
+                                                  .filter(handler -> handler.value() != DefaultValidatorForValueTypeWithValidation.class)
+                                                  .filter(handler -> handler.value() != SanitiseHtmlValidator.class))
+                                          .collect(toCollection(ArrayList::new));
+
+        // Should SanitiseHtmlValidator be added?
+        if (propType == String.class && !propField.isAnnotationPresent(Calculated.class)) {
+            bceHandlers.addFirst(new HandlerAnnotation(SanitiseHtmlValidator.class).newInstance());
+        }
+        // Should MaxLengthValidator be added?
+        if (MaxLengthValidator.SUPPORTED_TYPES.contains(propType) &&
+            !propField.isAnnotationPresent(Calculated.class) &&
+            propField.getAnnotation(IsProperty.class).length() > 0)
+        {
+            final var maybeMaxLengthValidator = bceHandlers.stream().filter(handler -> handler.value() == MaxLengthValidator.class).findFirst();
+            // If MaxLengthValidator is defined explicitly, we need to ensure that it the first validator.
+            if (maybeMaxLengthValidator.isPresent()) {
+                final var handler = maybeMaxLengthValidator.get();
+                bceHandlers.remove(handler);
+                bceHandlers.addFirst(handler);
+            }
+            // Otherwise, register a new instance.
+            else {
+                bceHandlers.addFirst(new HandlerAnnotation(MaxLengthValidator.class).newInstance());
+            }
+        }
+        // Should DefaultValidatorForValueTypeWithValidation be added?
+        if (IWithValidation.class.isAssignableFrom(propType)) {
+            bceHandlers.addFirst(new HandlerAnnotation(DefaultValidatorForValueTypeWithValidation.class).newInstance());
+        }
+
+        // If there are any BCE handlers, need to add/replace the BeforeChangeAnnotation instance.
+        if (!bceHandlers.isEmpty()) {
+            final var newBce = BeforeChangeAnnotation.newInstance(bceHandlers.toArray(new Handler[]{}));
+            annotations.removeIf(at -> at instanceof BeforeChange);
+            annotations.add(newBce);
+        }
+
         return unmodifiableSequencedSet(annotations);
     }
 
-    private Set<Annotation> collectValidationAnnotationsForKey(final Field propField,
-                                                               final boolean isEntityPersistent,
-                                                               final boolean shouldNotSkipKeyChangeValidation)
+    private Set<Annotation> collectValidationAnnotationsForKey(
+            final Field propField,
+            final boolean isEntityPersistent,
+            final boolean shouldNotSkipKeyChangeValidation)
     {
         if (isKeyOrKeyMember(propField)) {
             final var annotations = ImmutableSet.<Annotation>builder();

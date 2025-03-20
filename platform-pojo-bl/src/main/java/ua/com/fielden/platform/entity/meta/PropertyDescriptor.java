@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.*;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
 
 import java.lang.reflect.Field;
 import java.util.Optional;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /**
@@ -46,7 +48,11 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 @KeyTitle(value = "Property", desc = "Property title")
 @DescTitle(value = "Description", desc = "Property description")
 public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEntity<String> {
+
     private static final Logger LOGGER = getLogger(PropertyDescriptor.class);
+
+    private static final String ERR_INTROSPECTION_DENIED = "Introspection is denied for [%s.%s].";
+    public static final String ERR_COULD_NOT_BE_CREATED = "PropertyDescriptor could not be created from value [%s].";
 
     private Class<T> entityType;
     private String propertyName;
@@ -71,22 +77,30 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
      * @param propertyName
      *            -- name of the property that directly belongs to the specified entity (i.e. support for dot notation does not make any sense in this case)
      */
-    public PropertyDescriptor(final Class<T> entityType, final String propertyName) {
+    public PropertyDescriptor(final Class<T> entityType, final CharSequence propertyName) {
+        validateArguments(entityType, propertyName);
+
         setKey(nonBlankPropertyTitle(propertyName, entityType));
         setDesc(getTitleAndDesc(propertyName, entityType).getValue());
         this.entityType = entityType;
-        this.propertyName = propertyName;
+        this.propertyName = propertyName.toString();
+    }
+
+    public PropertyDescriptor(final Class<T> entityType, final String propertyName) {
+        this(entityType, (CharSequence) propertyName);
     }
 
     /**
-     * A convenience factory method.
-     *
-     * @param <T>
-     * @param entityType
-     * @param propName
-     * @return
+     * A convenient factory method.
      */
     public static <T extends AbstractEntity<?>> PropertyDescriptor<T> pd(final Class<T> entityType, final String propName) {
+        return new PropertyDescriptor<>(entityType, propName);
+    }
+
+    /**
+     * A convenient factory method.
+     */
+    public static <T extends AbstractEntity<?>> PropertyDescriptor<T> pd(final Class<T> entityType, final CharSequence propName) {
         return new PropertyDescriptor<>(entityType, propName);
     }
 
@@ -157,6 +171,8 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
             final String propertyName = parts[1];
 
+            validateArguments(entityType, propertyName);
+
             // If a property title is explicitly set to a blank string, the value of PropertyDescriptor.key will be null,
             // which will cause an error during retrieval with EQL. To prevent this, let's always use a non-blank title.
             final String propTitle = nonBlankPropertyTitle(propertyName, entityType);
@@ -168,9 +184,20 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             inst.propertyName = propertyName;
             return inst;
         } catch (final Exception ex) {
-            final String msg = format("PropertyDescriptor could not be created from value [%s].", toStringRepresentation);
+            final String msg = format(ERR_COULD_NOT_BE_CREATED, toStringRepresentation);
             LOGGER.error(msg, ex);
             throw EntityException.wrapIfNecessary(msg, ex);
         }
     }
+
+    /**
+     * Validates the property being modelled by a property desctiptor.
+     * This method must always be called during initialisation.
+     */
+    private static void validateArguments(final Class<? extends AbstractEntity<?>> entityType, final CharSequence property) {
+        if (isIntrospectionDenied(entityType, property)) {
+            throw new InvalidArgumentException(ERR_INTROSPECTION_DENIED.formatted(entityType.getSimpleName(), property));
+        }
+    }
+
 }

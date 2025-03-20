@@ -255,11 +255,19 @@
             <version>1.18.1</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.google.testing.compile/compile-testing -->
+      <!-- https://mvnrepository.com/artifact/com.google.testing.compile/compile-testing -->
+      <dependency>
+        <groupId>com.google.testing.compile</groupId>
+        <artifactId>compile-testing</artifactId>
+        <version>0.19</version>
+        <scope>test</scope>
+      </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.assertj/assertj-core -->
         <dependency>
-            <groupId>com.google.testing.compile</groupId>
-            <artifactId>compile-testing</artifactId>
-            <version>0.19</version>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
 

@@ -14,8 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-import static ua.com.fielden.platform.types.RichText.CORE_TEXT;
-import static ua.com.fielden.platform.types.RichText.FORMATTED_TEXT;
+import static ua.com.fielden.platform.types.RichText.*;
 
 /**
  * Hibernate type mapping for component type {@link RichText}.
@@ -31,19 +30,21 @@ import static ua.com.fielden.platform.types.RichText.FORMATTED_TEXT;
  * <p>
  * <b>Implementation remark:</b>
  * <i>
- *  The platform guarantees that all RichText values are sanitised prior to being persisted.
+ *  The platform guarantees that all `RichText` values are sanitised prior to being persisted.
  *  Therefore, we avoid sanitisation when instantiating RichText from persisted values.
  *  Note that this is not simply a performance optimisation, but also a way to preserve the integrity of persisted values.
- *  It is not know what might happen if we sanitise an already sanitised text and perform extraction of core text again,
- *  which would preserve data integrity only if both the sanitiser and core text extractor are idempotent
- *  (we use 3rd party dependencies for both, so there is no guarantee they are and would stay idempotent).
+ *  It is not know what might happen if we sanitise an already sanitised text and perform extraction of the core text again,
+ *  which would preserve data integrity only if both the sanitiser and core text extractor are idempotent.
+ *  A 3rd party library is used for both, and there is no guarantee they are and would stay idempotent.
  *  In any case, {@link RichText} is designed to prohibit instantiation without sanitisation.
- *  The only way to persist a dangerous {@link RichText} value is to write to the DB directly, which would indicate a compromise of a much greater scale.
+ *  The only way to persist a dangerous {@link RichText} value is to write it to the DB directly, which would indicate a compromise of a much greater scale.
  *  </i>
  */
 public sealed class RichTextType extends AbstractCompositeUserType implements IRichTextType
         permits RichTextPostgresqlType
 {
+
+    public static final String ERR_TEXT_IS_NULL = "%s text is null when formatted text is present. Formatted text:%n%s";
 
     private static final RichTextType INSTANCE = new RichTextType();
 
@@ -128,7 +129,11 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
         }
         final String coreText = getText(resultSet, names[1]);
         if (resultSet.wasNull()) {
-            throw new UserTypeException("Core text is null when formatted text is present. Formatted text:\n%s".formatted(formattedText));
+            throw new UserTypeException(ERR_TEXT_IS_NULL.formatted("Core", formattedText));
+        }
+        final String searchText = getText(resultSet, names[2]);
+        if (!resultSet.wasNull()) {
+            throw new UserTypeException("Search text should never be retrieved.");
         }
         return new RichText.Persisted(formattedText, coreText);
     }
@@ -152,31 +157,33 @@ public sealed class RichTextType extends AbstractCompositeUserType implements IR
         if (value == null) {
             statement.setNull(index, StringType.INSTANCE.sqlType());
             statement.setNull(index + 1, StringType.INSTANCE.sqlType());
+            statement.setNull(index + 2, StringType.INSTANCE.sqlType());
         } else {
             final var richText = (RichText) value;
             setText(statement, index, richText.formattedText());
             setText(statement,index + 1, richText.coreText());
+            setText(statement,index + 2, RichText.makeSearchText(richText));
         }
     }
 
     @Override
     public String[] getPropertyNames() {
-        return new String[] { FORMATTED_TEXT, CORE_TEXT };
+        return new String[] { FORMATTED_TEXT, CORE_TEXT, SEARCH_TEXT };
     }
 
     @Override
     public Type[] getPropertyTypes() {
-        return new Type[] { textType, textType };
+        return new Type[] { textType, textType, textType };
     }
 
     @Override
     public Object getPropertyValue(final Object component, final int property) {
         final var richText = (RichText) component;
-        if (property == 0) {
-            return richText.formattedText();
-        } else {
-            return richText.coreText();
-        }
+        return switch (property) {
+            case 0 -> richText.formattedText();
+            case 1 -> richText.coreText();
+            default -> null;
+        };
     }
 
 }

@@ -1,32 +1,27 @@
 package ua.com.fielden.platform.entity.before_change_event_handling;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory.ERR_INVALID_PROPERTY_NAME_FOR_PROP_PARAM;
-
-import java.util.Iterator;
-import java.util.Map;
-
+import com.google.inject.Injector;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Test;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
+import ua.com.fielden.platform.entity.validation.SanitiseHtmlValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.StringConverter;
+
+import java.util.Map;
+
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory.ERR_INVALID_PROPERTY_NAME_FOR_PROP_PARAM;
+import static ua.com.fielden.platform.utils.StreamUtils.typeFilter;
 
 /**
  * A test case to ensure correct construction and invocation of {@link BeforeChange} declarations.
@@ -45,10 +40,8 @@ public class BeforeChangeTest {
         assertNotNull("Should have been created", entity);
 
         final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
-        assertEquals("Incorrect number of handlers.", 2, handlers.size());
-        final Iterator<IBeforeChangeEventHandler<String>> iter = handlers.keySet().iterator();
-        assertEquals("Incorrect order of handlers", BeforeChangeEventHandler.class, iter.next().getClass());
-        assertEquals("Incorrect order of handlers", InvalidBeforeChangeEventHandler.class, iter.next().getClass());
+        assertThat(handlers.keySet())
+                .hasExactlyElementsOfTypes(SanitiseHtmlValidator.class, BeforeChangeEventHandler.class, InvalidBeforeChangeEventHandler.class);
     }
 
     @Test
@@ -56,8 +49,7 @@ public class BeforeChangeTest {
         final Entity entity = factory.newByKey(Entity.class, "key");
 
         final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
-        final Iterator<IBeforeChangeEventHandler<String>> iter = handlers.keySet().iterator();
-        final BeforeChangeEventHandler handler = (BeforeChangeEventHandler) iter.next();
+        final var handler = handlers.keySet().stream().mapMulti(typeFilter(BeforeChangeEventHandler.class)).findFirst().orElseThrow();
         assertNotNull("Controller parameter should not be null.", handler.getControllerParam());
         assertEquals("Incorrect parameter value.", 1, handler.getIntParam1());
         assertEquals("Incorrect parameter value.", 12, handler.getIntParam2());
@@ -103,10 +95,9 @@ public class BeforeChangeTest {
         assertEquals("Incorrect validation error message.", "Property cannot be null.", result.getMessage());
         // test that other validators have not been even invoked.
         final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
-        final Iterator<IBeforeChangeEventHandler<String>> iter = handlers.keySet().iterator();
-        final BeforeChangeEventHandler bceHandler = (BeforeChangeEventHandler) iter.next();
+        final var bceHandler = handlers.keySet().stream().mapMulti(typeFilter(BeforeChangeEventHandler.class)).findFirst().orElseThrow();
         assertFalse("Should not have been invoked.", bceHandler.isInvoked());
-        final InvalidBeforeChangeEventHandler ibceHandler = (InvalidBeforeChangeEventHandler) iter.next(); // get the second BCE event handler
+        final InvalidBeforeChangeEventHandler ibceHandler = handlers.keySet().stream().mapMulti(typeFilter(InvalidBeforeChangeEventHandler.class)).findFirst().orElseThrow();
         assertFalse("Should not have been invoked.", ibceHandler.isInvoked());
     }
 
@@ -120,11 +111,11 @@ public class BeforeChangeTest {
         assertNull("There should be no validation error.", result);
         // test invocation of validators
         final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
-        final Iterator<IBeforeChangeEventHandler<String>> iter = handlers.keySet().iterator();
-        final BeforeChangeEventHandler bceHandler = (BeforeChangeEventHandler) iter.next();
+        final BeforeChangeEventHandler bceHandler = handlers.keySet().stream().mapMulti(typeFilter(BeforeChangeEventHandler.class)).findFirst().orElseThrow();
+
         assertTrue("Should have been invoked.", bceHandler.isInvoked());
         assertTrue("Should have been invoked.", bceHandler.getControllerParam().isInvoked());
-        final InvalidBeforeChangeEventHandler ibceHandler = (InvalidBeforeChangeEventHandler) iter.next(); // get the second BCE event handler
+        final InvalidBeforeChangeEventHandler ibceHandler = handlers.keySet().stream().mapMulti(typeFilter(InvalidBeforeChangeEventHandler.class)).findFirst().orElseThrow();
         assertTrue("Should have been invoked.", ibceHandler.isInvoked());
     }
 

@@ -44,9 +44,62 @@ public class EntityWithMaxLengthValidation extends AbstractEntity<String> {
     @BeforeChange(@Handler(MaxLengthValidator.class))
     private Hyperlink propHyperlink;
 
-    @IsProperty(length = 5)
+    @IsProperty(length = 27)
     @BeforeChange(@Handler(MaxLengthValidator.class))
     private RichText richText;
+
+    @IsProperty(length = 52)
+    private String stringPropWithoutExplicitMaxLengthValidator;
+
+    @IsProperty(length = 27)
+    private RichText richTextPropWithoutExplicitMaxLengthValidator;
+
+    @IsProperty(length = 27)
+    private Hyperlink hyperlinkPropWithoutExplicitMaxLengthValidator;
+
+    public Hyperlink getHyperlinkPropWithoutExplicitMaxLengthValidator() {
+        return hyperlinkPropWithoutExplicitMaxLengthValidator;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setHyperlinkPropWithoutExplicitMaxLengthValidator(final Hyperlink hyperlinkPropWithoutExplicitMaxLengthValidator) {
+        this.hyperlinkPropWithoutExplicitMaxLengthValidator = hyperlinkPropWithoutExplicitMaxLengthValidator;
+        return this;
+    }
+
+    @IsProperty
+    @BeforeChange(@Handler(MaxLengthValidator.class))
+    private Integer intProp;
+
+    public RichText getRichTextPropWithoutExplicitMaxLengthValidator() {
+        return richTextPropWithoutExplicitMaxLengthValidator;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setRichTextPropWithoutExplicitMaxLengthValidator(final RichText richTextPropWithoutExplicitMaxLengthValidator) {
+        this.richTextPropWithoutExplicitMaxLengthValidator = richTextPropWithoutExplicitMaxLengthValidator;
+        return this;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setStringPropWithoutExplicitMaxLengthValidator(final String stringPropWithoutExplicitMaxLengthValidator) {
+        this.stringPropWithoutExplicitMaxLengthValidator = stringPropWithoutExplicitMaxLengthValidator;
+        return this;
+    }
+
+    public String getStringPropWithoutExplicitMaxLengthValidator() {
+        return stringPropWithoutExplicitMaxLengthValidator;
+    }
+
+    public Integer getIntProp() {
+        return intProp;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setIntProp(final Integer intProp) {
+        this.intProp = intProp;
+        return this;
+    }
 
     public RichText getRichText() {
         return richText;

@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.types.either.Either;
 
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * Service that provides domain metadata specific to a TG application.
@@ -15,16 +14,6 @@ public interface IDomainMetadata {
     PropertyMetadataUtils propertyMetadataUtils();
 
     EntityMetadataUtils entityMetadataUtils();
-
-    /**
-     * Returns all existing type metadata instances.
-     */
-    Stream<TypeMetadata> allTypes();
-
-    /**
-     * Returns all existing type metadata instances that are of the given metadata type.
-     */
-    <T extends TypeMetadata> Stream<T> allTypes(Class<T> metadataType);
 
     Optional<? extends TypeMetadata> forType(Class<?> javaType);
 

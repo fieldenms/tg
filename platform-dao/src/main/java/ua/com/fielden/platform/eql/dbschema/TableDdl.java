@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.dbschema;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
@@ -17,7 +18,8 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -44,21 +46,25 @@ public class TableDdl {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public final Class<? extends AbstractEntity<?>> entityType;
-    private final Set<ColumnDefinition> columns;
+    /** Maps a property path to its column definition. */
+    private final Map<String, ColumnDefinition> columns;
+    private final String tableName;
 
     public TableDdl(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         this.entityType = entityType;
         this.columns = populateColumns(columnDefinitionExtractor, entityType);
+        this.tableName = tableName(entityType);
     }
 
-    private static Set<ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
-        final Set<ColumnDefinition> columns = new LinkedHashSet<>();
+    private static Map<String, ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
+        final var columns = ImmutableMap.<String, ColumnDefinition> builder();
 
-        columns.add(columnDefinitionExtractor.extractIdProperty(entityType));
+        columns.put(ID, columnDefinitionExtractor.extractIdProperty(entityType
+        ));
 
-        columnDefinitionExtractor.extractSimpleKeyProperty(entityType).map(key -> columns.add(key));
+        columnDefinitionExtractor.extractSimpleKeyProperty(entityType).ifPresent(colDef -> columns.put(KEY, colDef));
 
-        columns.add(columnDefinitionExtractor.extractVersionProperty(entityType));
+        columns.put(VERSION, columnDefinitionExtractor.extractVersionProperty(entityType));
 
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {
             if (!shouldIgnore(propField, entityType)) {
@@ -68,15 +74,23 @@ public class TableDdl {
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
                 final boolean unique = propField.isAnnotationPresent(Unique.class);
                 final Optional<Integer> compositeKeyMemberOrder = Optional.ofNullable(propField.getAnnotation(CompositeKeyMember.class)).map(ann -> ann.value());
-                columns.addAll(columnDefinitionExtractor.extractFromProperty(entityType, propField.getName(), propField.getType(), isProperty, mapTo, persistedType, required, unique, compositeKeyMemberOrder));
+                columns.putAll(columnDefinitionExtractor.extractFromProperty(entityType, propField.getName(), propField.getType(), isProperty, mapTo, persistedType, required, unique, compositeKeyMemberOrder));
             }
         }
 
-        return columns;
+        return columns.buildOrThrow();
     }
 
     private static boolean shouldIgnore(final Field propField, final Class<? extends AbstractEntity<?>> entityType) {
         return KEY.equals(propField.getName());
+    }
+
+    public String getTableName() {
+        return this.tableName;
+    }
+
+    private Collection<ColumnDefinition> columnDefinitions() {
+        return columns.values();
     }
 
     /**
@@ -87,10 +101,40 @@ public class TableDdl {
      */
     public String createTableSchema(final Dialect dialect) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("CREATE TABLE %s ( ".formatted(tableName(entityType)));
-        sb.append(columns.stream().map(col -> col.schemaString(dialect)).collect(Collectors.joining(", ")));
+        sb.append("CREATE TABLE %s ( ".formatted(this.tableName));
+        sb.append(columnDefinitions().stream().map(col -> col.schemaString(dialect)).collect(Collectors.joining(", ")));
         sb.append(" );");
         return sb.toString();
+    }
+
+    /**
+     * Returns a column definition for the specified property.
+     * <p>
+     * It is an error if the specified property is not contained in this table.
+     *
+     * @param property  a property path.
+     *                  <ul>
+     *                    <li> If a property is component-typed, the path must be a full path to the component
+     *                         (e.g., {@code note.coreText} for property {@code note : RichText}).
+     *                    <li> If a property is union-typed, the path must be a full path to a union member
+     *                         (e.g., {@code location.workshop} for union-typed property {@code location : Location}, where union members are {@code workshop, station}).
+     *                    <li> Otherwise, the path must be a simple property name.
+     *                  </ul>
+     */
+    public ColumnDefinition getColumnDefinition(final String property) {
+        if (columns.containsKey(property)) {
+            return columns.get(property);
+        }
+        else {
+            throw noSuchPropertyException(entityType, property);
+        }
+    }
+
+    /**
+     * An alternative to {@link #getColumnDefinition(String)} that returns an empty optional if the specified property is not contained in this table.
+     */
+    public Optional<ColumnDefinition> getColumnDefinitionOpt(final String property) {
+        return Optional.ofNullable(columns.get(property));
     }
 
     /**
@@ -100,10 +144,10 @@ public class TableDdl {
      * @return
      */
     public List<String> createIndicesSchema(final Dialect dialect) {
-        final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columns.stream().collect(Collectors.partitioningBy(col -> col.unique));
+        final Map<Boolean, List<ColumnDefinition>> uniqueAndNot = columnDefinitions().stream().collect(Collectors.partitioningBy(col -> col.unique));
         final List<String> result = new LinkedList<>();
         if (isCompositeEntity(entityType)) {
-            result.add(createUniqueCompositeIndicesSchema(columns.stream(), dialect));
+            result.add(createUniqueCompositeIndicesSchema(columnDefinitions().stream(), dialect));
         }
         result.addAll(createUniqueIndicesSchema(uniqueAndNot.get(true).stream(), dialect));
         result.addAll(createNonUniqueIndicesSchema(uniqueAndNot.get(false).stream(), dialect));
@@ -117,7 +161,7 @@ public class TableDdl {
                 .sorted(Comparator.comparingInt(col -> col.compositeKeyMemberOrder.get()))
                 .map(col -> col.name)
                 .collect(Collectors.joining(", "));
-        return "CREATE UNIQUE INDEX KUI_%1$s ON %1$s(%2$s);".formatted(tableName, keyMembersStr);
+        return "CREATE UNIQUE INDEX KUI_%1$s ON %1$s(%2$s);".formatted(this.tableName, keyMembersStr);
     }
 
     private List<String> createUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
@@ -136,10 +180,9 @@ public class TableDdl {
                 })
                 .map(col -> {
                     // otherwise, let's create unique index with the nullable clause if required
-                    final String tableName = tableName(entityType);
-                    final String indexName = "KEY_".equals(col.name) ? "KUI_%s".formatted(tableName) : "UI_%s_%s".formatted(tableName, col.name);
+                    final String indexName = "KEY_".equals(col.name) ? "KUI_%s".formatted(this.tableName) : "UI_%s_%s".formatted(this.tableName, col.name);
                     final StringBuilder sb = new StringBuilder();
-                    sb.append("CREATE UNIQUE INDEX %s ON %s(%s)".formatted(indexName, tableName, col.name));
+                    sb.append("CREATE UNIQUE INDEX %s ON %s(%s)".formatted(indexName, this.tableName, col.name));
                     if (col.nullable) {
                         sb.append(" WHERE (%s IS NOT NULL)".formatted(col.name));
                     }
@@ -149,7 +192,7 @@ public class TableDdl {
                 .collect(toList());
     }
 
-    private List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
+    public List<String> createNonUniqueIndicesSchema(final Stream<ColumnDefinition> cols, final Dialect dialect) {
         final DbVersion dbVersion = HibernateHelpers.getDbVersion(dialect);
         return cols
                 .map(col -> col.maybeIndex.map(index -> {
@@ -159,9 +202,9 @@ public class TableDdl {
                         return "";
                     }
                     else {
-                        final String tableName = tableName(entityType);
-                        return "CREATE INDEX I_%1$s_%2$s ON %1$s(%2$s %3$s);".formatted(
-                                tableName,
+                        return "CREATE INDEX %s ON %s(%s %s)".formatted(
+                                indexName(this.tableName, col.name),
+                                this.tableName,
                                 col.name,
                                 switch (index.order()) {
                                     case ASC -> "ASC";
@@ -174,6 +217,37 @@ public class TableDdl {
     }
 
     /**
+     * Returns the name of an index for the specified column.
+     * <p>
+     * It is <b>not</b> required for the specified column to be present in this table.
+     */
+    public String getIndexName(final ColumnDefinition column) {
+        return indexName(this.tableName, column.name);
+    }
+
+    /**
+     * Returns the name of an index for the specified property.
+     * <p>
+     * It is an error if the specified property is not contained in this table.
+     *
+     * @param property  a property path.
+     *                  <ul>
+     *                    <li> If a property is component-typed, the path must be a full path to the component
+     *                         (e.g., {@code note.coreText} for property {@code note : RichText}).
+     *                    <li> If a property is union-typed, the path must be a full path to a union member
+     *                         (e.g., {@code location.workshop} for union-typed property {@code location : Location}, where union members are {@code workshop, station}).
+     *                    <li> Otherwise, the path must be a simple property name.
+     *                  </ul>
+     */
+    public String getIndexName(final CharSequence property) {
+        return getIndexName(getColumnDefinition(property.toString()));
+    }
+
+    private static String indexName(final CharSequence tableName, final CharSequence columnName) {
+        return "I_%s_%s".formatted(tableName, columnName);
+    }
+
+    /**
      * Generates a DDL statement to add a primary key constraint on column <code>_ID</code>.
      * 
      * @param dialect
@@ -181,8 +255,7 @@ public class TableDdl {
      */
     public String createPkSchema(final Dialect dialect) {
         // This statement should be suitable for the majority of SQL dialects
-        final String tableName = tableName(entityType);
-        return "ALTER TABLE %1$s ADD CONSTRAINT PK_%1$s_ID PRIMARY KEY (_ID);".formatted(tableName);
+        return "ALTER TABLE %1$s ADD CONSTRAINT PK_%1$s_ID PRIMARY KEY (_ID);".formatted(this.tableName);
     }
 
     /**
@@ -193,18 +266,17 @@ public class TableDdl {
      */
     public List<String> createFkSchema(final Dialect dialect) {
         // This statement should be suitable for the majority of SQL dialects
-        final String thisTableName = tableName(entityType);
-        final List<String> ddl = columns.stream()
+        final List<String> ddl = columnDefinitions().stream()
                 .filter(cd -> isPersistentEntityType(cd.javaType))
                 .map(cd -> {
                     final String thatTableName = tableName((Class<? extends AbstractEntity<?>>) cd.javaType);
-                    return fkConstraint(dialect, thisTableName, cd.name, thatTableName);
+                    return fkConstraint(dialect, this.tableName, cd.name, thatTableName);
                 }).collect(toList());
 
         // let's handle a situation where the entity type is a one-2-one entity.
         if (isOneToOne(entityType)) {
             final var thatTableName = tableName((Class<? extends AbstractEntity<?>>) getKeyType(entityType));
-            final var fk = fkConstraint(dialect, thisTableName, "_ID", thatTableName);
+            final var fk = fkConstraint(dialect, this.tableName, "_ID", thatTableName);
             ddl.add(fk);
         }
 
@@ -229,4 +301,5 @@ public class TableDdl {
             return mapEntityTo.value();
         }
     }
+
 }

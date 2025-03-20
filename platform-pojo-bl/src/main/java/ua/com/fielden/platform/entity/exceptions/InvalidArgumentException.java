@@ -29,6 +29,12 @@ public class InvalidArgumentException extends AbstractPlatformRuntimeException {
         return argument;
     }
 
+    public static void requireNull(final Object argument, final String name) {
+        if (argument != null) {
+            throw new InvalidArgumentException("Argument [%s] must be null.".formatted(name));
+        }
+    }
+
     public InvalidArgumentException(final String msg) {
         super(msg);
     }

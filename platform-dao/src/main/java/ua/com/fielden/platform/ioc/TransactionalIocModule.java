@@ -2,6 +2,7 @@ package ua.com.fielden.platform.ioc;
 
 import com.google.inject.Key;
 import com.google.inject.Provides;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import jakarta.inject.Singleton;
@@ -12,6 +13,8 @@ import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
+import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
@@ -64,6 +67,8 @@ public abstract class TransactionalIocModule extends EntityIocModule {
                                                                    Names.named(SESSION_FACTORY_FOR_SESSION_INTERCEPTOR)))));
 
         bind(IDbVersionProvider.class).toInstance(constantDbVersion(HibernateConfigurationFactory.determineDbVersion(props)));
+
+        install(new FactoryModuleBuilder().build(EntityBatchDeleteByQueryModelOperation.Factory.class));
     }
 
     @Provides

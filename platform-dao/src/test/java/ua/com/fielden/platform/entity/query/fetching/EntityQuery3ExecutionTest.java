@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -1173,10 +1172,32 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void like_is_applicable_to_null_values() {
-        final var sourceQuery = select().yield().val(null).as("myNull").modelAsAggregate();
+    public void like_produces_false_if_either_operand_is_null() {
+        final var sourceQuery = select().yield().val("hello").as("s").modelAsAggregate();
+
         assertFalse(co(EntityAggregates.class).exists(
-                select(sourceQuery).where().prop("myNull").like().val("abc").or().val(null).like().val("abc").model()));
+                select(sourceQuery)
+                        .where()
+                        .val("one").like().val(null)
+                        .model()));
+
+        assertFalse(co(EntityAggregates.class).exists(
+                select(sourceQuery)
+                        .where()
+                        .val(null).like().val("%")
+                        .model()));
+
+        assertFalse(co(EntityAggregates.class).exists(
+                select(sourceQuery)
+                        .where()
+                        .val(null).like().val(null)
+                        .model()));
+
+        assertFalse(co(EntityAggregates.class).exists(
+                select(sourceQuery)
+                        .where()
+                        .val("one").like().caseWhen().val(1).gt().val(0).then().val(null).otherwise().val("ok").end()
+                        .model()));
     }
 
     @Test

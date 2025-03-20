@@ -59,7 +59,8 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.*;
 import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
-import static ua.com.fielden.platform.utils.StreamUtils.*;
+import static ua.com.fielden.platform.utils.StreamUtils.distinct;
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
  * <h3> Property Metadata </h3>
@@ -146,23 +147,6 @@ final class DomainMetadataGenerator {
                 .concurrencyLevel(50)
                 .maximumSize(128)
                 .build();
-    }
-
-    Stream<TypeMetadata> allTypes() {
-        return Stream.concat(entityMetadataCache.asMap().values().stream(), componentTypeMetadataCache.asMap().values().stream());
-    }
-
-    <T extends TypeMetadata> Stream<T> allTypes(final Class<T> metadataType) {
-        if (metadataType == EntityMetadata.class) {
-            return (Stream<T>) entityMetadataCache.asMap().values().stream();
-        }
-        else if (metadataType == TypeMetadata.Component.class) {
-            return (Stream<T>) componentTypeMetadataCache.asMap().values().stream();
-        }
-        else {
-            return entityMetadataCache.asMap().values().stream()
-                    .mapMulti(typeFilter(metadataType));
-        }
     }
 
     ////////////////////////////////////

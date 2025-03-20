@@ -17,6 +17,7 @@ import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory
 
 import java.util.Date;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.serialisation.api.impl.Serialiser.createSerialiserWithJackson;
 
@@ -58,9 +59,9 @@ public class RichTextSerialisationWithJacksonTest {
 
         assertNotNull(restoredEntity);
         assertNotSame(entity, restoredEntity);
-        assertTrue(entity.getText().equalsByText(restoredEntity.getText()));
-        assertFalse(restoredEntity.getProperty("text").isChangedFromOriginal());
-        assertFalse(restoredEntity.getProperty("text").isDirty());
+        assertEquals(entity.getRichText(), restoredEntity.getRichText());
+        assertFalse(restoredEntity.getProperty(EntityWithRichText.Property.richText).isChangedFromOriginal());
+        assertFalse(restoredEntity.getProperty(EntityWithRichText.Property.richText).isDirty());
     }
 
     @Test
@@ -71,9 +72,37 @@ public class RichTextSerialisationWithJacksonTest {
 
         assertNotNull(restoredEntity);
         assertNotSame(entity, restoredEntity);
-        assertTrue(entity.getText().equalsByText(restoredEntity.getText()));
-        assertFalse(restoredEntity.getProperty("text").isChangedFromOriginal());
-        assertFalse(restoredEntity.getProperty("text").isDirty());
+        assertEquals(entity.getRichText(), restoredEntity.getRichText());
+        assertFalse(restoredEntity.getProperty(EntityWithRichText.Property.richText).isChangedFromOriginal());
+        assertFalse(restoredEntity.getProperty(EntityWithRichText.Property.richText).isDirty());
+    }
+
+    /**
+     * Serialising and then deserialising an entity with an invalid value for a RichText property should result in the property value being {@code null}.
+     */
+    @Test
+    public void serialisation_of_invalid_RichText() {
+        final var richText = RichText.fromHtml("<script> alert(1) </script>");
+        final var entity = factory.createEntityWithRichText(null);
+        entity.setRichText(richText);
+        assertNull(entity.getRichText());
+        final var restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithRichText.class);
+
+        assertNotNull(restoredEntity);
+        assertNotSame(entity, restoredEntity);
+        assertNull(restoredEntity.getRichText());
+        final var property = restoredEntity.getProperty(EntityWithRichText.Property.richText);
+        assertFalse(property.isChangedFromOriginal());
+        assertFalse(property.isDirty());
+
+        assertNotNull(property.getLastAttemptedValue());
+        assertThat(property.getLastAttemptedValue()).isInstanceOf(RichText.Invalid.class);
+        assertNotSame(richText, property.getLastAttemptedValue());
+        assertNotEquals(richText, property.getLastAttemptedValue()); // because RichText.Invalid is only equal by reference
+        final var lastAttemptedValue = (RichText) property.getLastAttemptedValue();
+        assertEquals(richText.isValid(), lastAttemptedValue.isValid());
+        assertThrows(IllegalStateException.class, lastAttemptedValue::formattedText);
+        assertThrows(IllegalStateException.class, lastAttemptedValue::coreText);
     }
 
 }

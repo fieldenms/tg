@@ -24,12 +24,14 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -581,6 +583,15 @@ public class EntityUtils {
     }
 
     /**
+     * Indicates whether type represents {@link RichText} values.
+     *
+     * @return
+     */
+    public static boolean isRichText(final Class<?> type) {
+        return RichText.class.isAssignableFrom(type);
+    }
+
+    /**
      * Indicates whether type represents {@link Hyperlink} values.
      *
      * @return
@@ -818,25 +829,41 @@ public class EntityUtils {
     }
 
     /**
-     * Determines whether {@code type} has domain introspection denied.
-     * If denied then no information about this type should be exposed outside the internal application logic (i.e. no GraphQL or UI should be able to introspect such entities).
+     * Returns {@code true} if domain introspection is denied for the specified element.
      *
-     * @param type
-     * @return
+     * @see DenyIntrospection
      */
-    public static boolean isIntrospectionDenied(final Class<? extends AbstractEntity<?>> type) {
-        return isAnnotationPresent(type, DenyIntrospection.class);
+    public static boolean isIntrospectionDenied(final AnnotatedElement element) {
+        return isAnnotationPresent(element, DenyIntrospection.class);
     }
 
     /**
-     * A predicate that expresses the most essential rules for checking if an entity type should permit introspection.
-     * For example, GraphQL and Domain Explorer functionality rely on this predicate to filter out entities that should not be supported for querying and review.
+     * Returns {@code true} if domain introspection is denied for the specified property.
      *
-     * @param type
-     * @return
+     * @see DenyIntrospection
      */
-    public static boolean isIntrospectionAllowed(final Class<? extends AbstractEntity<?>> type) {
-        return !isIntrospectionDenied(type) && (isSyntheticEntityType(type) || isPersistentEntityType(type));
+    public static boolean isIntrospectionDenied(final Class<? extends AbstractEntity<?>> type, final CharSequence propertyPath) {
+        return isIntrospectionDenied(Finder.findFieldByName(type, propertyPath));
+    }
+
+    /**
+     * Returns {@code true} if introspection is allowed for the specified element.
+     * For example, GraphQL and Domain Explorer functionality rely on this predicate to filter out entities that should not be supported for querying and review.
+     */
+    public static boolean isIntrospectionAllowed(final AnnotatedElement element) {
+        if (element instanceof Class<?> type) {
+            return !isIntrospectionDenied(type) && (isSyntheticEntityType(type) || isPersistentEntityType(type));
+        }
+        else {
+            return !isIntrospectionDenied(element);
+        }
+    }
+
+    /**
+     * Returns {@code true} if introspection is allowed for the specified property.
+     */
+    public static boolean isIntrospectionAllowed(final Class<? extends AbstractEntity<?>> type, final CharSequence propertyPath) {
+        return isIntrospectionAllowed(Finder.findFieldByName(type, propertyPath));
     }
 
     /**

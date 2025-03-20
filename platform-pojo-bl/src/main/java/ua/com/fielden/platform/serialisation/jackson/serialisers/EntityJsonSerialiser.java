@@ -1,41 +1,10 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.reflection.Reflector.extractValidationLimits;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEditableDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isLastInvalidValueDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMaxDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMinDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isPrevValueDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isRequiredDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValidationResultDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValueChangeCountDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
-import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
-import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.newSerialisationId;
-import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
-import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
-import static ua.com.fielden.platform.utils.EntityUtils.isString;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_TO_STRING;
-
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-
-import org.apache.logging.log4j.Logger;
-import org.apache.commons.lang3.StringUtils;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -53,6 +22,23 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.reflection.Reflector.extractValidationLimits;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
+import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
+import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.newSerialisationId;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.PROPERTY_DESCRIPTOR_TO_STRING;
+
 /**
  * Standard Jackson serialiser for TG entities.
  * 
@@ -65,6 +51,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
     public static final String ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE = "Type [%s] containst property [%s] that is not permitted for serialisation.";
     private static final String ERR_FULL_TYPE_NAME_NOT_DEFINED = "Full name of the type [%s] should be populated to be ready for serialisation.";
+    public static final String VALIDATION_RESULT = "_validationResult";
 
     private final Class<T> type;
     private static final Logger LOGGER = getLogger(EntityJsonSerialiser.class);
@@ -213,7 +200,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                 existingMetaProps.put("_visible", metaProperty.isVisible());
                             }
                             if (!isValidationResultDefault(metaProperty)) {
-                                existingMetaProps.put("_validationResult", getValidationResult(metaProperty));
+                                existingMetaProps.put(VALIDATION_RESULT, getValidationResult(metaProperty));
                             }
                             final Integer min;
                             final Integer max;
