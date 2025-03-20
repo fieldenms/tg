@@ -22,8 +22,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 import static org.owasp.html.Sanitizers.BLOCKS;
 import static org.owasp.html.Sanitizers.IMAGES;
-import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.error.Result.*;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 // NOTE: Consider replacing the OWASP sanitiser by jsoup sanitiser (https://jsoup.org/cookbook/cleaning-html/safelist-sanitiser).
@@ -115,23 +114,12 @@ public final class RichTextSanitiser {
      *
      * @return  a result of {@link String} that contains the given HTML if it's safe, otherwise a failure
      */
+    public static final String ERR_UNSAFE = "Input contains unsafe HTML.";
     public static Result sanitiseHtml(final String input, final ErrorFormatter errorFormatter) {
         final var violations = findViolations(input);
         return violations.isEmpty()
                 ? successful()
-                : failure(input, errorFormatter.apply(violations));
-    }
-
-    /**
-     * Sanitises the {@link RichText#formattedText()} as described in {@link #sanitiseHtml(String, ErrorFormatter)}.
-     *
-     * @return  a result that contains the specified {@link RichText} if it's safe, otherwise a failure
-     */
-    public static Result sanitiseHtml(final RichText richText, final ErrorFormatter errorFormatter) {
-        final var violations = findViolations(richText.formattedText());
-        return violations.isEmpty()
-                ? successful(richText)
-                : failure(richText, errorFormatter.apply(violations));
+                : failureEx(input, ERR_UNSAFE, errorFormatter.apply(violations));
     }
 
     @FunctionalInterface

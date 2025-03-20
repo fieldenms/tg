@@ -3,8 +3,8 @@ package ua.com.fielden.platform.types;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.types.RichTextSanitiser.ERR_UNSAFE;
 
 public class RichTextHtmlTest {
 
@@ -711,6 +711,20 @@ After quote.
     }
 
     @Test
+    public void safe_HTML_that_becomes_unsafe_after_conversion_to_coreText_is_disallowed() {
+        final var html = "<code>&lt;img onerror=alert(1) /&gt;</code>";
+        final var htmlResult = RichTextSanitiser.sanitiseHtml(html);
+        assertTrue(htmlResult.isSuccessful());
+
+        final var invalidRichText = RichText.fromHtml(html);
+        assertThat(invalidRichText).isInstanceOf(RichText.Invalid.class);
+        assertThat(invalidRichText.isValid().getMessage()).isEqualTo("""
+                %s<extended/>Input contains unsafe HTML:
+                1. Tag [img] has violating attributes: onerror\
+                """.formatted(ERR_UNSAFE));
+    }
+
+    @Test
     public void html_entities_are_escaped_in_RichText_from_plain_text() {
         assertPlainText("bob & alice")
                 .formattedTextEquals("bob &amp; alice")
@@ -721,9 +735,16 @@ After quote.
         assertPlainText("<b> one </b>")
                 .formattedTextEquals("&lt;b&gt; one &lt;/b&gt;")
                 .coreTextEquals("<b> one </b>");
-        assertPlainText("<script> alert(1) </script>")
-                .formattedTextEquals("&lt;script&gt; alert(1) &lt;/script&gt;")
-                .coreTextEquals("<script> alert(1) </script>");
+    }
+
+    @Test
+    public void unsafe_html_for_RichText_from_plain_text_is_not_permitted() {
+        final var richText = RichText.fromPlainText("<script> alert(1) </script>");
+        assertThat(richText).isInstanceOf(RichText.Invalid.class);
+        assertThat(richText.isValid().getMessage()).isEqualTo("""
+                %s<extended/>Input contains unsafe HTML:
+                1. Violating tag: script\
+                """.formatted(ERR_UNSAFE));
     }
 
     private static void assertCoreText(final String expected, final String input) {

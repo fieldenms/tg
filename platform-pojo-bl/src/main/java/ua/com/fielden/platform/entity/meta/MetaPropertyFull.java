@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -118,7 +119,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private boolean visible = true;
     private boolean required = false;
     private String customErrorMsgForRequiredness;
-    public final boolean isRequiredByDefinition;
+    private final boolean requiredByDefinition;
     private final boolean calculated;
     private final boolean upperCase;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +184,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             this.atFinal_persistedOnly = of(finalAnnotation.persistedOnly());
             this.atFinal_nullIsValueForPersisted = of(finalAnnotation.nullIsValueForPersisted());
         }
-        this.isRequiredByDefinition = isRequiredByDefinition(field, entity.getType());
+        this.requiredByDefinition = PropertyTypeDeterminator.isRequiredByDefinition(field, entity.getType());
     }
 
     /**
@@ -873,6 +874,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         return required;
     }
 
+    @Override
+    public boolean isRequiredByDefinition() {
+        return requiredByDefinition;
+    }
+
     /**
      * This setter change the 'required' state for metaProperty. Also it puts RequiredValidator to the list of validators if it does not exist. And if 'required' became false -> it
      * clears REQUIRED validation result by successful result.
@@ -938,7 +944,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getSimpleName()));
         }
 
-        if (!required && isRequiredByDefinition && !isCritOnly() && !shouldAssignBeforeSave() && !requirednessExceptionRule()) {
+        if (!required && requiredByDefinition && !isCritOnly() && !shouldAssignBeforeSave() && !requirednessExceptionRule()) {
             throw new EntityDefinitionException(format("Property [%s] in entity [%s] is declared as required and cannot have this constraint relaxed.", name, getEntity().getType().getSimpleName()));
         }
     }

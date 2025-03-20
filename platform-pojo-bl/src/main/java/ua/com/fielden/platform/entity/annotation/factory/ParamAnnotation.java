@@ -79,7 +79,7 @@ public class ParamAnnotation {
         };
     }
 
-    public static DblParam dateParam(final String name, final double value) {
+    public static DblParam dblParam(final String name, final double value) {
         return new DblParam() {
 
             @Override
@@ -99,7 +99,7 @@ public class ParamAnnotation {
         };
     }
 
-    public static IntParam dateParam(final String name, final int value) {
+    public static IntParam intParam(final String name, final int value) {
         return new IntParam() {
 
             @Override
