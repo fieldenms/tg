@@ -2,7 +2,7 @@ import '/resources/polymer/@polymer/polymer/lib/elements/custom-style.js';
 
 export {
     /**
-     * @deprecated since version 1.7.0 -- use 'tg-style-utils.createStyleModule' instead
+     * @deprecated since version 2.0.0 -- use 'tg-style-utils.createStyleModule' instead
      *
      * Creates style module with concrete 'moduleId' that can later be included using <style include='module-id'></style> into shadow DOM of some target element.
      * 
