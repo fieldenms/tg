@@ -12,6 +12,7 @@ import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -164,6 +165,12 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
             final var batchInsert = batchInsertFactory.create(() -> new TransactionalExecution(userProvider, this::getSession));
             batchInsert.batchInsert(auditProps, AUDIT_PROP_BATCH_SIZE);
         }
+    }
+
+    @Override
+    public void audit(final E auditedEntity, final String transactionGuid) {
+        final var dirtyProperties = auditedEntity.getDirtyProperties().stream().map(MetaProperty::getName).toList();
+        audit(auditedEntity, transactionGuid, dirtyProperties);
     }
 
     /**

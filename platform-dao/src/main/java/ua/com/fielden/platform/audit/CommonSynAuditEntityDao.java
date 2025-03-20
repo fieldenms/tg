@@ -52,6 +52,11 @@ public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
     }
 
     @Override
+    public void audit(final E auditedEntity, final String transactionGuid) {
+        coAuditEntity.audit(auditedEntity, transactionGuid);
+    }
+
+    @Override
     @SessionRequired
     public Stream<AbstractSynAuditEntity<E>> streamAudits(final Long auditedEntityId, @Nullable final fetch<AbstractSynAuditEntity<E>> fetchModel) {
         final var query = select(getEntityType())
