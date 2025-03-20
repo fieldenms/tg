@@ -1,16 +1,10 @@
 package ua.com.fielden.platform.security.provider;
 
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableCollection;
-import static java.util.Optional.ofNullable;
-
-import java.util.*;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-
 import ua.com.fielden.platform.audit.AuditUtils;
+import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -19,42 +13,23 @@ import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.tokens.ISecurityTokenGenerator;
 import ua.com.fielden.platform.security.tokens.Template;
-import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.attachment.*;
 import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.*;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.ReUser_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.ReUser_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRolesUpdater_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.user.*;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
 import ua.com.fielden.platform.utils.CollectionUtil;
+
+import java.util.*;
+
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableCollection;
+import static java.util.Optional.ofNullable;
 
 /**
  * Searches for all available security tokens in the application based on the provided path and package name.
@@ -153,7 +128,22 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         }
     }
 
+    /**
+     * Additional initialisation after the constructor.
+     * Called by the IoC framework.
+     */
     @Inject
+    protected void init(
+            final AuditingMode auditingMode,
+            final IApplicationDomainProvider appDomain,
+            final IAuditTypeFinder auditTypeFinder,
+            final ISecurityTokenGenerator generator)
+    {
+        if (auditingMode == AuditingMode.ENABLED) {
+            registerAuditTokens(appDomain, auditTypeFinder, generator);
+        }
+    }
+
     private void registerAuditTokens(
             final IApplicationDomainProvider appDomain,
             final IAuditTypeFinder auditTypeFinder,
