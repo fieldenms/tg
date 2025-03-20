@@ -2,15 +2,24 @@ package ua.com.fielden.platform.audit;
 
 import com.google.inject.Inject;
 import org.assertj.core.api.AbstractAssert;
+import org.assertj.core.api.Assertions;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Lazy;
+
+import java.util.stream.Stream;
 
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.AUDITED_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.AUDITED_VERSION;
 import static ua.com.fielden.platform.audit.AuditUtils.auditedPropertyName;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 
 /**
  * Extension for AssertJ that provides assertions for audit-entities.
@@ -18,10 +27,12 @@ import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 final class AuditAssertions {
 
     private final IDomainMetadata domainMetadata;
+    private final ICompanionObjectFinder coFinder;
 
     @Inject
-    AuditAssertions(final IDomainMetadata domainMetadata) {
+    AuditAssertions(final IDomainMetadata domainMetadata, final ICompanionObjectFinder coFinder) {
         this.domainMetadata = domainMetadata;
+        this.coFinder = coFinder;
     }
 
     public <E extends AbstractEntity<?>> SynAuditEntityAssert<E> assertThat(AbstractSynAuditEntity<E> a3t) {
@@ -30,9 +41,18 @@ final class AuditAssertions {
 
     final class SynAuditEntityAssert<E extends AbstractEntity<?>> extends AbstractAssert<SynAuditEntityAssert<E>, AbstractSynAuditEntity<E>> {
 
+        private final Lazy<ISynAuditEntityDao<E>> lazyCoAudit;
+        /**
+         * Either the same audit-entity as received in the constructor or a refetched instance.
+         * Refetching is needed if the audit-entity lack properties (i.e. they are proxied) that are necessary for comparison with an audited entity.
+         */
+        private final Lazy<AbstractSynAuditEntity<E>> lazyRefetchedAudit;
+
         SynAuditEntityAssert(final AbstractSynAuditEntity<E> a3t) {
             super(a3t, SynAuditEntityAssert.class);
             isNotNull();
+            lazyCoAudit = lazySupplier(() -> coFinder.find((Class<AbstractSynAuditEntity<E>>) a3t.getType()));
+            lazyRefetchedAudit = lazySupplier(() -> refetchAudit(a3t));
         }
 
         /**
@@ -40,14 +60,38 @@ final class AuditAssertions {
          * Each active audit-property's value must be equal to that of a corresponding audited property.
          */
         public SynAuditEntityAssert<E> isAuditFor(final E entity) {
-            assertPropertyEquals(actual, AUDITED_ENTITY, entity);
-            assertPropertyEquals(actual, AUDITED_VERSION, entity.getVersion());
+            Assertions.assertThat(entity).isNotNull();
 
-            domainMetadata.forEntity(actual.getType())
+            final var refetchedEntity = refetchAuditedEntity(entity);
+
+            assertPropertyEquals(lazyRefetchedAudit.get(), AUDITED_ENTITY, refetchedEntity);
+            assertPropertyEquals(lazyRefetchedAudit.get(), AUDITED_VERSION, refetchedEntity.getVersion());
+
+            domainMetadata.forEntity(lazyRefetchedAudit.get().getType())
                     .properties()
                     .stream()
                     .filter(p -> p.get(AUDIT_PROPERTY).filter(KAuditProperty.Data::active).isPresent())
-                    .forEach(p -> isAuditPropertyFor(entity, auditedPropertyName(p.name())));
+                    .forEach(p -> isAuditPropertyFor(refetchedEntity, auditedPropertyName(p.name())));
+
+            return this;
+        }
+
+        /**
+         * Asserts that the audit-entity under test <b>is not</b> an audit record for the specified audited entity.
+         * This assertion is true if the specified entity's ID or version is different from that of the audited one.
+         * It is assumed that if ID and version are the same, then the rest of the properties are equal.
+         */
+        public SynAuditEntityAssert<E> isNotAuditFor(final E entity) {
+            Assertions.assertThat(entity).isNotNull();
+
+            final var refetchedEntity = refetchAuditedEntity(entity);
+
+            if (lazyRefetchedAudit.get().getAuditedVersion().equals(refetchedEntity.getVersion())
+                && lazyRefetchedAudit.get().getAuditedEntity().getId().equals(refetchedEntity.getId()))
+            {
+                failWithMessage("Did not expect audit-entity [%s] to be an audit for [%s] (Version %s)",
+                                lazyRefetchedAudit.get(), refetchedEntity, refetchedEntity.getVersion());
+            }
 
             return this;
         }
@@ -56,8 +100,37 @@ final class AuditAssertions {
          * Asserts that the audited entity's property has a value that is equal to that of a corresdponding audit-property in the audit-entity under test.
          */
         public SynAuditEntityAssert<E> isAuditPropertyFor(final E entity, final CharSequence auditedProperty) {
-            assertAuditPropertyEqualsToAudited(actual, entity, auditedProperty);
+            assertAuditPropertyEqualsToAudited(lazyRefetchedAudit.get(), entity, auditedProperty);
             return this;
+        }
+
+        private <E extends AbstractEntity<?>> AbstractSynAuditEntity<E> refetchAudit(final AbstractSynAuditEntity<E> a3t) {
+            final var proxiedNames = a3t.proxiedPropertyNames();
+
+            final var anyProxied = Stream.concat(
+                            Stream.of(AUDITED_ENTITY, AUDITED_VERSION),
+                            domainMetadata.forEntity(a3t.getType())
+                                    .properties()
+                                    .stream()
+                                    .filter(p -> p.get(AUDIT_PROPERTY).filter(KAuditProperty.Data::active).isPresent())
+                                    .map(PropertyMetadata::name))
+                    .anyMatch(proxiedNames::contains);
+
+            // fetchAll is used for simplicity, and is a good approximation.
+            return anyProxied ? lazyCoAudit.get().findById(a3t.getId(), (fetch) fetchAll(a3t.getType())) : a3t;
+        }
+
+        private E refetchAuditedEntity(final E auditedEntity) {
+            final var proxiedNames = auditedEntity.proxiedPropertyNames();
+
+            final var fetchModelForAuditing = lazyCoAudit.get().fetchModelForAuditing();
+            final var anyProxied = Stream.concat(fetchModelForAuditing.getIncludedProps().stream(),
+                                                 fetchModelForAuditing.getIncludedPropsWithModels().keySet().stream())
+                    .anyMatch(proxiedNames::contains);
+
+            return anyProxied
+                    ? coFinder.find((Class<E>) auditedEntity.getType()).findById(auditedEntity.getId(), fetchModelForAuditing)
+                    : auditedEntity;
         }
 
         private void assertPropertyEquals(final AbstractEntity<?> entity, final CharSequence property, final Object expected) {
