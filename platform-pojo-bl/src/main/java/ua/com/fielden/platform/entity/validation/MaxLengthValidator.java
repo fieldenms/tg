@@ -63,8 +63,8 @@ public class MaxLengthValidator implements IBeforeChangeEventHandler<Object> {
             return successful();
         }
 
-        if (!SUPPORTED_TYPES.contains(newValue.getClass())) {
-            throw new EntityDefinitionException(ERR_UNSUPPORTED_PROPERTY_TYPE.formatted(MaxLengthValidator.class.getSimpleName(), property.getType().getSimpleName()));
+        if (SUPPORTED_TYPES.stream().noneMatch(type -> type.isAssignableFrom(newValue.getClass()))) {
+            throw new EntityDefinitionException(ERR_UNSUPPORTED_PROPERTY_TYPE.formatted(MaxLengthValidator.class.getSimpleName(), newValue.getClass().getSimpleName()));
         }
 
         final var maybeLimit = determineMaxLength(property);
