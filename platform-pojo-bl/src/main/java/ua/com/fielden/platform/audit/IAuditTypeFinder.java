@@ -50,13 +50,13 @@ public interface IAuditTypeFinder {
      * <p>
      * It is an error if an audit entity type for the specified entity type doesn't exist.
      */
-    <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> getAllAuditEntityTypesFor(Class<? extends AbstractEntity<?>> entityType);
+    <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> getAllAuditEntityTypesFor(Class<E> entityType);
 
     /**
      * If the specified entity type is audited, returns a collection of all versions of its audit entity type.
      * Otherwise, returns an empty collection.
      */
-    <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> findAllAuditEntityTypesFor(Class<? extends AbstractEntity<?>> entityType);
+    <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> findAllAuditEntityTypesFor(Class<E> entityType);
 
     /**
      * Locates and returns the synthetic audit-entity type for the specified entity type.

@@ -96,7 +96,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> findAllAuditEntityTypesFor(final Class<? extends AbstractEntity<?>> entityType) {
+    public <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> findAllAuditEntityTypesFor(final Class<E> entityType) {
         return (Collection) auditEntityTypesMap.getOrDefault(entityType, ImmutableList.of());
     }
 
@@ -128,7 +128,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> getAllAuditEntityTypesFor(final Class<? extends AbstractEntity<?>> entityType) {
+    public <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> getAllAuditEntityTypesFor(final Class<E> entityType) {
         return (Collection) requireAllAuditEntityTypesFor(entityType);
     }
 
