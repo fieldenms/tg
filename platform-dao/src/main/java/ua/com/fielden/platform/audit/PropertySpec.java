@@ -190,23 +190,30 @@ final class PropertySpec {
     }
 
     public Optional<String> title() {
-        // FIXME Resulting string is enclosed in double-quotes
         return annotations.stream()
                 .filter(a -> a.type.equals(TYPE_NAME_TITLE))
                 .findFirst()
                 .flatMap(as -> annotationMember(as, "value"))
                 .map(CodeBlock::toString)
-                .filter(s -> !s.equals("\"\""));
+                // This string comes from a CodeBlock, so it will always be enclosed in double-quotes.
+                .map(PropertySpec::unquote)
+                .filter(s -> !s.isEmpty());
+    }
+
+    private static String unquote(final String s) {
+        // We can assume that the input string will always be enclosed in double-quotes.
+        return s.substring(1, s.length() - 1);
     }
 
     public Optional<String> desc() {
-        // FIXME Resulting string is enclosed in double-quotes
         return annotations.stream()
                 .filter(a -> a.type.equals(TYPE_NAME_TITLE))
                 .findFirst()
                 .flatMap(as -> annotationMember(as, "desc"))
                 .map(CodeBlock::toString)
-                .filter(s -> !s.equals("\"\""));
+                // This string comes from a CodeBlock, so it will always be enclosed in double-quotes.
+                .map(PropertySpec::unquote)
+                .filter(s -> !s.isEmpty());
     }
 
     @Override
