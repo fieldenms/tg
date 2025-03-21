@@ -26,6 +26,8 @@ import ua.com.fielden.platform.utils.StreamUtils;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.nio.file.Path;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Optional;
 import java.util.*;
 import java.util.function.Function;
@@ -157,7 +159,10 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             throw new RuntimeException("Failed to generate audit-entity (version: %s) for [%s]".formatted(newAuditTypeVersion, type.getTypeName()), e);
         }
 
-        return new LocalResult(List.of(auditEntityJavaFile, auditProp, synAuditEntity, synAuditPropEntity),
+        final var genDate = new Date();
+        return new LocalResult(Stream.of(auditEntityJavaFile, auditProp, synAuditEntity, synAuditPropEntity)
+                                       .map(jf -> embedGenerationDate(jf, genDate))
+                                       .toList(),
                                newAuditTypeVersion);
     }
 
@@ -995,6 +1000,20 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                                                                T2.class, entry.getKey(), entry.getValue()))
                                     .map(CodeBlock::toString)
                                     .collect(joining(", ")));
+    }
+
+    private static String formatDate(final Date date) {
+        class $ {
+            static final DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+        }
+
+        return $.format.format(date);
+    }
+
+    private static JavaFile embedGenerationDate(final JavaFile javaFile, final Date date) {
+        return javaFile.toBuilder()
+                .addFileComment("Generation timestamp: %s".formatted(formatDate(date)))
+                .build();
     }
 
 }
