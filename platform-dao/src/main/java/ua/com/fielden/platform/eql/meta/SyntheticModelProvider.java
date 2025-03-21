@@ -3,16 +3,21 @@ package ua.com.fielden.platform.eql.meta;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import ua.com.fielden.platform.audit.ISynAuditModelGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static java.util.Objects.requireNonNull;
+import static ua.com.fielden.platform.audit.AuditUtils.isSynAuditEntityType;
+import static ua.com.fielden.platform.audit.AuditUtils.isSynAuditPropEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.findSyntheticModelFieldFor;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 
@@ -23,9 +28,20 @@ final class SyntheticModelProvider implements ISyntheticModelProvider {
     private static final String ERR_NON_SYNTHETIC_ENTITY_TYPE = "Cannot provide a synthetic model for non-synthetic entity type [%s].";
     private static final String ERR_MISSING_MODEL_FIELD =
             "Invalid synthetic entity [%s] definition: neither static field [model_] nor [models_] could be found.";
+    private static final String ERR_GENERATOR_NOT_CONFIGURED =
+            "Synthetic models for audit types cannot be provided because the generator is not configured. The expected cause is EqlTestCase.";
 
     private final Cache<Class<? extends AbstractEntity<?>>, List<? extends EntityResultQueryModel<?>>> cache =
             CacheBuilder.newBuilder().weakKeys().build();
+
+    // Nullable because of EqlTestCase that needs to be refactored to use IoC.
+    // Meanwhile, EqlTestCase will not be able to use synthetic models for audit types (it does not currently use them).
+    private final @Nullable ISynAuditModelGenerator synAuditModelGenerator;
+
+    @Inject
+    SyntheticModelProvider(final ISynAuditModelGenerator synAuditModelGenerator) {
+        this.synAuditModelGenerator = synAuditModelGenerator;
+    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -39,8 +55,13 @@ final class SyntheticModelProvider implements ISyntheticModelProvider {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private <E extends AbstractEntity<?>> List<EntityResultQueryModel<E>> createModels(final Class<E> entityType) {
-        if (isSyntheticEntityType(entityType)) {
+        if (isSynAuditEntityType(entityType) || isSynAuditPropEntityType(entityType)) {
+            requireNonNull(synAuditModelGenerator, ERR_GENERATOR_NOT_CONFIGURED);
+            return synAuditModelGenerator.generate((Class) entityType);
+        }
+        else if (isSyntheticEntityType(entityType)) {
             return modelsFromField(entityType);
         }
         else {

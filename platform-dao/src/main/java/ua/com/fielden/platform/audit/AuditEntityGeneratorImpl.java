@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.audit;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.squareup.javapoet.*;
 import jakarta.inject.Inject;
@@ -20,7 +19,6 @@ import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.io.IOException;
@@ -30,16 +28,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Optional;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.squareup.javapoet.MethodSpec.methodBuilder;
 import static com.squareup.javapoet.TypeSpec.classBuilder;
 import static java.lang.String.format;
-import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
@@ -710,8 +705,6 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                               .build(),
                       builder, synAuditEntityClassName);
 
-        final var priorAuditEntityTypeSpecs = dropRight(auditEntitySpecs, 1);
-
         // Sorted by version, from highest to lowest.
         final var sortedAuditEntitySpecs = auditEntitySpecs.stream()
                 .sorted(comparing(AuditEntitySpec::version).reversed())
@@ -744,111 +737,14 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 })
                 .forEach(prop -> addPropertyTo(prop, builder, synAuditEntityClassName));
 
-        // EQL models
-
-        final var eqlQueryType = ParameterizedTypeName.get(javaPoet.getClassName(EntityResultQueryModel.class), synAuditEntityClassName);
-
-        final var currentModelField = FieldSpec.builder(eqlQueryType,
-                                                        "model_a3t_%s".formatted(currAuditEntitySpec.version()),
-                                                        PRIVATE, STATIC, FINAL)
-                .initializer("$T.$L($L.class, $T.class, $L, $L)",
-                             SynAuditEntityUtils.class,
-                             "mkModelCurrent",
-                             synAuditEntityClassName,
-                             currAuditEntitySpec.className(),
-                             // Workaround: explicitly yield all audit and service properties, because yieldAll must not
-                             // be used when there is only one audit-entity version (EQL will not compile).
-                             codeSetOf(concatSet(activeAuditProperties.stream().map(PropertySpec::name).toList(),
-                                                 Set.of(ID),
-                                                 AbstractSynAuditEntity.BASE_PROPERTIES)),
-                             // Yield null into inactive audit-properties
-                             codeMapOf(mkNullYields(inactiveAuditProperties), "$S", "$L"))
+        final var modelsField = FieldSpec.builder(ParameterizedTypeName.get(javaPoet.getClassName(List.class),
+                                                                            ParameterizedTypeName.get(javaPoet.getClassName(EntityResultQueryModel.class),
+                                                                                                      synAuditEntityClassName)),
+                                                  "models_",
+                                                  PROTECTED, STATIC)
                 .build();
 
-        // Here we create an EQL model for each prior audit-entity type.
-        // We have to yield into all audit-properties of the synthetic model.
-        // For some prior-audit entity E, each yield is determined by:
-        // 1. Status of audit-property in the current audit-entity type.
-        // 2. Status of audit-property in E.
-        // Status of an audit-property is one of:
-        // * Active.
-        // * Inactive or absent.
-        // Active audit-properties are yielded as is.
-        // For inactive or absent ones, "nothing" is yielded (null for entity-typed properties, some default value for other types).
-        final Map<AuditEntitySpec, FieldSpec> priorModelFieldsMap =
-                priorAuditEntityTypeSpecs.stream()
-                        .collect(toImmutableMap(
-                                Function.identity(),
-                                priorAuditEntityType -> {
-                                    // Key: audit-property in the current audit-entity.
-                                    // Value: yielded value -- property name or nothing
-                                    final Map<PropertySpec, Optional<String>> yields = allAuditProperties.stream()
-                                            .collect(toImmutableMap(
-                                                    Function.identity(),
-                                                    currAuditProp -> {
-                                                        final var propName = currAuditProp.name();
-                                                        final var priorAuditProp = priorAuditEntityType.findProperty(propName);
-                                                        final var priorAuditPropActive = priorAuditProp.filter(AuditEntityGeneratorImpl::isActiveAuditProperty).isPresent();
-                                                        final var currAuditPropActive = isActiveAuditProperty(currAuditProp);
-                                                        if (currAuditPropActive && priorAuditPropActive) {
-                                                            return Optional.of(propName);
-                                                        }
-                                                        else if (currAuditPropActive && !priorAuditPropActive) {
-                                                            return Optional.empty();
-                                                        }
-                                                        else if (!currAuditPropActive && priorAuditPropActive) {
-                                                            return Optional.of(propName);
-                                                        }
-                                                        else /* if (!currAuditPropActive && !priorAuditPropActive) */ {
-                                                            return Optional.empty();
-                                                        }
-                                                    }
-                                            ));
-
-                                    final var nullYieldsArg = codeMapOf(
-                                            mkNullYields(Maps.filterValues(yields, Optional::isEmpty).keySet()),
-                                            "$S", "$L");
-
-                                    final var otherYieldsArg = codeSetOf(
-                                            concatSet(Maps.filterValues(yields, Optional::isPresent).keySet()
-                                                              .stream().map(PropertySpec::name).toList(),
-                                                      Set.of(AbstractEntity.ID),
-                                                      AbstractSynAuditEntity.BASE_PROPERTIES));
-
-                                    return FieldSpec.builder(eqlQueryType,
-                                                             "model_a3t_%s".formatted(priorAuditEntityType.version()),
-                                                             PRIVATE, STATIC, FINAL)
-                                            .initializer("$T.$L($L.class, $T.class, $L, $L)",
-                                                         SynAuditEntityUtils.class,
-                                                         "mkModelPrior",
-                                                         synAuditEntityClassName,
-                                                         priorAuditEntityType.className(),
-                                                         nullYieldsArg,
-                                                         otherYieldsArg)
-                                            .build();
-                                }));
-
-        // From highest version to lowest
-        final var sortedPriorModelFields = priorModelFieldsMap.entrySet()
-                .stream()
-                .sorted(comparing(Map.Entry::getKey, comparing(AuditEntitySpec::version).reversed()))
-                .map(Map.Entry::getValue)
-                .toList();
-        final var modelField = FieldSpec.builder(eqlQueryType, "model_", PROTECTED, STATIC, FINAL)
-                .initializer(CodeBlock.of("$T.$L($T.class, $L)",
-                                          SynAuditEntityUtils.class,
-                                          "combineModels",
-                                          synAuditPropClassName,
-                                          concatList(List.of(currentModelField), sortedPriorModelFields)
-                                                  .stream()
-                                                  .map(field -> CodeBlock.of("$L", field.name))
-                                                  .map(CodeBlock::toString)
-                                                  .collect(joining(", "))))
-                .build();
-
-        builder.addField(currentModelField);
-        builder.addFields(sortedPriorModelFields);
-        builder.addField(modelField);
+        builder.addField(modelsField);
 
         return JavaFile.builder(synAuditEntityClassName.packageName(), builder.build()).build();
     }
@@ -922,89 +818,18 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addMethod(pdGetter)
                 .addMethod(pdSetter);
 
-        // EQL models, one for each audit-prop version
-        final var eqlModelTypeName = ParameterizedTypeName.get(ClassName.get(EntityResultQueryModel.class), synAuditPropClassName);
-        final var eqlModelFieldSpecs = rangeClosed(1, lastAuditVersion)
-                .mapToObj(i -> {
-                    final var auditClassName = topLevelClassName(getAuditTypeName(auditedType, i));
-                    final var auditPropClassName = topLevelClassName(getAuditTypeName(auditedType, i) + "_Prop");
-                    return FieldSpec.builder(eqlModelTypeName, "model_a3t_%s".formatted(i), PRIVATE, STATIC, FINAL)
-                            .initializer(CodeBlock.of("$T.$L($T.class, $T.class, $T.class, $T.class)",
-                                                      SynAuditPropEntityUtils.class,
-                                                      "modelAuditProp",
-                                                      auditPropClassName,
-                                                      synAuditPropClassName,
-                                                      auditClassName,
-                                                      synAuditClassName))
-                            .build();
-                })
-                .toList();
-
-        builder.addFields(eqlModelFieldSpecs);
-
         // Field "models_"
-        final var modelsFieldSpec = FieldSpec.builder(ParameterizedTypeName.get(ClassName.get(List.class), eqlModelTypeName), "models_", PROTECTED, STATIC, FINAL)
-                .initializer("$T.of($L)", List.class, eqlModelFieldSpecs.stream().map(f -> f.name).collect(joining(", ")))
+        final var eqlModelTypeName = ParameterizedTypeName.get(ClassName.get(EntityResultQueryModel.class), synAuditPropClassName);
+        final var modelsField = FieldSpec.builder(ParameterizedTypeName.get(ClassName.get(List.class), eqlModelTypeName),
+                                                  "models_",
+                                                  PROTECTED, STATIC)
                 .build();
 
-        builder.addField(modelsFieldSpec);
+        builder.addField(modelsField);
 
         return JavaFile.builder(synAuditPropClassName.packageName(), builder.build()).build();
     }
 
-
-    /**
-     * Creates a map of yields ({@code {alias : value}}), where {@code value} is always {@code null}, and where {@code null}
-     * is not applicable, some default value is used.
-     * <p>
-     * The definition of <i>default value</i> may be refined in the future.
-     *
-     * @param properties  properties for which null-yields are to be created;
-     */
-    private static Map<String, Object> mkNullYields(final Collection<PropertySpec> properties) {
-        final var map = new HashMap<String, Object>(properties.size());
-
-        properties.forEach(prop -> {
-            final Object value;
-            if (prop.type().equals(TypeName.BOOLEAN)) {
-                value = false;
-            }
-            else {
-                value = null;
-            }
-            map.put(prop.name(), value);
-        });
-
-        return unmodifiableMap(map);
-    }
-
-    /**
-     * Generates code that calls {@link Set#of(Object[])} with the specified strings as arguments.
-     */
-    private CodeBlock codeSetOf(final Iterable<String> strings) {
-        return CodeBlock.of("$T.of($L)",
-                            Set.class,
-                            Streams.stream(strings)
-                                    .map(s -> CodeBlock.of("$S", s))
-                                    .map(CodeBlock::toString)
-                                    .collect(joining(", ")));
-    }
-
-    /**
-     * Generates code that calls {@link CollectionUtil#mapOf(T2[])} with arguments from the specified map (each entry becomes a pair).
-     *
-     * @param keyFormat  format specifier for keys (see {@link CodeBlock})
-     * @param valueFormat  format specifier for values (see {@link CodeBlock})
-     */
-    private CodeBlock codeMapOf(final Map<?, ?> map, final String keyFormat, final String valueFormat) {
-        return CodeBlock.of("$T.mapOf($L)",
-                            CollectionUtil.class,
-                            map.entrySet().stream()
-                                    .map(entry -> CodeBlock.of("$T.t2(%s, %s)".formatted(keyFormat, valueFormat),
-                                                               T2.class, entry.getKey(), entry.getValue()))
-                                    .map(CodeBlock::toString)
-                                    .collect(joining(", ")));
-    }
 
     private static String formatDate(final Date date) {
         class $ {
