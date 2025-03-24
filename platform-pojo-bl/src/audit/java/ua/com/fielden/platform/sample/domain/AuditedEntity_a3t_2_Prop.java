@@ -1,3 +1,4 @@
+// Generation timestamp: 2025-03-24 16:40:20 EET
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
@@ -5,7 +6,7 @@ import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.AbstractAuditEntity;
 import ua.com.fielden.platform.audit.AbstractAuditProp;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
-import ua.com.fielden.platform.audit.AuditPropFor;
+import ua.com.fielden.platform.audit.AuditFor;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -24,7 +25,10 @@ import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 @EntityTitle("Audited Entity Audit Changed Property")
 @KeyTitle("Audited Entity Audit and Changed Property")
 @MapEntityTo
-@AuditPropFor(AuditedEntity_a3t_2.class)
+@AuditFor(
+    value = AuditedEntity.class,
+    version = 2
+)
 @CompanionIsGenerated
 @SkipVerification
 @SkipEntityRegistration

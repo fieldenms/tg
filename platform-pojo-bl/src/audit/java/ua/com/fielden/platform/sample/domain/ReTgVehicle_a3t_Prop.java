@@ -1,3 +1,4 @@
+// Generation timestamp: 2025-03-24 16:40:20 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.util.List;
@@ -5,6 +6,7 @@ import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AbstractSynAuditProp;
+import ua.com.fielden.platform.audit.AuditFor;
 import ua.com.fielden.platform.audit.SynAuditPropEntityUtils;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
@@ -19,6 +21,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 
+@AuditFor(TgVehicle.class)
 @SkipVerification
 @SkipEntityRegistration
 @CompanionIsGenerated

@@ -1,3 +1,4 @@
+// Generation timestamp: 2025-03-24 16:40:20 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -8,8 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
+import ua.com.fielden.platform.audit.AuditFor;
 import ua.com.fielden.platform.audit.SynAuditEntityUtils;
-import ua.com.fielden.platform.audit.SynAuditFor;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -25,7 +26,7 @@ import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
-@SynAuditFor(TgVehicle.class)
+@AuditFor(TgVehicle.class)
 @EntityTitle("Tg Vehicle Audit")
 @SkipVerification
 @SkipEntityRegistration
@@ -60,78 +61,78 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
   private PropertyDescriptor<ReTgVehicle_a3t> changedPropsCrit;
 
   @Title(
-      value = "\"Key\"",
-      desc = "[\"Key\"] at the time of the audited event."
+      value = "Key",
+      desc = "[Key] at the time of the audited event."
   )
   @IsProperty
   private String a3t_key;
 
   @Title(
-      value = "\"Init Date\"",
-      desc = "[\"Init Date\"] at the time of the audited event."
+      value = "Init Date",
+      desc = "[Init Date] at the time of the audited event."
   )
   @IsProperty
   private Date a3t_initDate;
 
   @Title(
-      value = "\"Tg Vehicle\"",
-      desc = "[\"Tg Vehicle\"] at the time of the audited event."
+      value = "Tg Vehicle",
+      desc = "[Tg Vehicle] at the time of the audited event."
   )
   @IsProperty
   private TgVehicle a3t_replacedBy;
 
   @Title(
-      value = "\"Tg Org Unit5\"",
-      desc = "[\"Tg Org Unit5\"] at the time of the audited event."
+      value = "Tg Org Unit5",
+      desc = "[Tg Org Unit5] at the time of the audited event."
   )
   @IsProperty
   private TgOrgUnit5 a3t_station;
 
   @Title(
-      value = "\"Model\"",
-      desc = "[\"Model\"] at the time of the audited event."
+      value = "Model",
+      desc = "[Model] at the time of the audited event."
   )
   @IsProperty
   private TgVehicleModel a3t_model;
 
   @Title(
-      value = "\"Price\"",
-      desc = "[\"Price\"] at the time of the audited event."
+      value = "Price",
+      desc = "[Price] at the time of the audited event."
   )
   @IsProperty
   private Money a3t_price;
 
   @Title(
-      value = "\"Purchase Price\"",
-      desc = "[\"Purchase Price\"] at the time of the audited event."
+      value = "Purchase Price",
+      desc = "[Purchase Price] at the time of the audited event."
   )
   @IsProperty
   private Money a3t_purchasePrice;
 
   @Title(
-      value = "\"Active\"",
-      desc = "[\"Active\"] at the time of the audited event."
+      value = "Active",
+      desc = "[Active] at the time of the audited event."
   )
   @IsProperty
   private boolean a3t_active;
 
   @Title(
-      value = "\"Leased?\"",
-      desc = "[\"Leased?\"] at the time of the audited event."
+      value = "Leased?",
+      desc = "[Leased?] at the time of the audited event."
   )
   @IsProperty
   private boolean a3t_leased;
 
   @Title(
-      value = "\"Last meter reading\"",
-      desc = "[\"Last meter reading\"] at the time of the audited event."
+      value = "Last meter reading",
+      desc = "[Last meter reading] at the time of the audited event."
   )
   @IsProperty
   private BigDecimal a3t_lastMeterReading;
 
   @Title(
-      value = "\"Description\"",
-      desc = "[\"Description\"] at the time of the audited event."
+      value = "Description",
+      desc = "[Description] at the time of the audited event."
   )
   @IsProperty
   private String a3t_desc;
