@@ -5,7 +5,10 @@ import com.google.inject.Stage;
 import com.google.inject.name.Names;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.audit.*;
+import ua.com.fielden.platform.audit.AbstractAuditEntity;
+import ua.com.fielden.platform.audit.AbstractAuditProp;
+import ua.com.fielden.platform.audit.AuditingMode;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -34,7 +37,8 @@ import java.util.Properties;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.audit.AuditUtils.*;
+import static ua.com.fielden.platform.audit.AuditUtils.getAuditTypeVersion;
+import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
@@ -163,24 +167,24 @@ public class BasicWebServerIocModule extends CompanionIocModule {
                     sink.accept(type);
                     // For audited types, register their audit types, which must exist, unless we are running in the audit generation mode.
                     if (isAudited(type)) {
+                        final var navigator = auditTypeFinder.navigate(type);
                         if (auditingMode == AuditingMode.GENERATION) {
-                            auditTypeFinder.findAllAuditEntityTypesFor(type).forEach(a3tType -> {
+                            navigator.allAuditEntityTypes().forEach(a3tType -> {
                                 sink.accept(a3tType);
-                                findAuditPropTypeForAuditType(a3tType).ifPresent(sink);
+                                navigator.findAuditPropType(getAuditTypeVersion(a3tType)).ifPresent(sink);
                             });
-                            auditTypeFinder.findSynAuditEntityType(type).ifPresent(synAuditType -> {
+                            navigator.findSynAuditEntityType().ifPresent(synAuditType -> {
                                 sink.accept(synAuditType);
-                                findSynAuditPropTypeForSynAuditType(synAuditType).ifPresent(sink);
+                                navigator.findSynAuditPropType().ifPresent(sink);
                             });
                         } else {
-                            auditTypeFinder.getAllAuditEntityTypesFor(type).forEach(a3tType -> {
+                            navigator.allAuditEntityTypes().forEach(a3tType -> {
                                 sink.accept(a3tType);
-                                sink.accept(getAuditPropTypeForAuditType(a3tType));
+                                sink.accept(navigator.auditPropType(getAuditTypeVersion(a3tType)));
                             });
-                            final var synAuditType = auditTypeFinder.getSynAuditEntityType(type);
+                            final var synAuditType = navigator.synAuditEntityType();
                             sink.accept(synAuditType);
-                            // Typecast is needed because the compiler reports a type error.
-                            sink.accept(getSynAuditPropTypeForSynAuditType((Class) synAuditType));
+                            sink.accept(navigator.synAuditPropType());
                         }
                     }
                 })

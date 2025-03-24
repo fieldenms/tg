@@ -14,7 +14,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -33,7 +32,8 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
@@ -83,11 +83,11 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         this.batchInsertFactory = batchInsertFactory;
         this.userProvider = userProvider;
         this.domainMetadata = domainMetadata;
-        auditPropType = a3tFinder.getAuditPropTypeForAuditEntity(getEntityType());
+        auditPropType = a3tFinder.navigateAudit(getEntityType()).auditPropType();
         auditedToAuditPropertyNames = makeAuditedToAuditPropertyNames(domainMetadata);
         propertiesForAuditing = collectPropertiesForAuditing(auditedToAuditPropertyNames.keySet());
-        fetchModelForAuditing = makeFetchModelForAuditing(AuditUtils.getAuditedType(getEntityType()), propertiesForAuditing, domainMetadata);
-        coAuditedEntity = coFinder.find(AuditUtils.getAuditedType(getEntityType()));
+        fetchModelForAuditing = makeFetchModelForAuditing(a3tFinder.navigateAudit(getEntityType()).auditedType(), propertiesForAuditing, domainMetadata);
+        coAuditedEntity = coFinder.find(a3tFinder.navigateAudit(getEntityType()).auditedType());
     }
 
     private static Set<String> collectPropertiesForAuditing(final Set<String> auditedProperties) {

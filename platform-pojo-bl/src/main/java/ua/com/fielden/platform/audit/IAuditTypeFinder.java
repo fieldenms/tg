@@ -8,80 +8,145 @@ import java.util.Optional;
 
 /**
  * Locates audit types.
+ * <p>
+ * {@code navigate} methods accept either an audited type or an audit type, and the resulting {@link Navigator} can be used
+ * to "navigate" to some other type in the context.
+ * For each audited type {@code E}, there is a context represented by the set of {@code E}'s audit types and {@code E} itself.
  */
 @ImplementedBy(AuditTypeFinder.class)
 public interface IAuditTypeFinder {
 
     /**
-     * Locates and returns the most recent audit-entity type for the specified entity type.
-     * <p>
-     * It is an error if an audit-entity type for the specified entity type doesn't exist.
+     * Navigates to the specified entity type, which must be audited.
+     *
+     * @see Navigator
      */
-    <E extends AbstractEntity<?>> Class<AbstractAuditEntity<E>> getAuditEntityType(Class<E> entityType);
+    <E extends AbstractEntity<?>> Navigator<E> navigate(Class<E> type);
 
     /**
-     * Locates the most recent audit-entity type for the specified entity type and returns it if found.
-     * Otherwise, returns an empty optional.
+     * Navigates to the specified persistent audit-entity type.
+     *
+     * @see Navigator
      */
-    <E extends AbstractEntity<?>> Optional<Class<AbstractAuditEntity<E>>> findAuditEntityType(Class<E> entityType);
+    <E extends AbstractEntity<?>> Navigator<E> navigateAudit(Class<AbstractAuditEntity<E>> type);
 
     /**
-     * Locates and returns the an audit-entity type with the specified version for the specified entity type.
-     * <p>
-     * It is an error if an audit-entity type with the specified version doesn't exist.
+     * Navigates to the specified persistent audit-prop type.
+     *
+     * @see Navigator
      */
-    <E extends AbstractEntity<?>> Class<AbstractAuditEntity<E>> getAuditEntityType(Class<E> entityType, int version);
+    <E extends AbstractEntity<?>> Navigator<E> navigateAuditProp(Class<AbstractAuditProp<E>> type);
 
     /**
-     * Locates an audit-entity type with the specified version for the specified entity type and returns it if found.
-     * Otherwise, returns an empty optional.
+     * Navigates to the specified synthetic audit-entity type.
+     *
+     * @see Navigator
      */
-    <E extends AbstractEntity<?>> Optional<Class<AbstractAuditEntity<E>>> findAuditEntityType(Class<E> entityType, int version);
+    <E extends AbstractEntity<?>> Navigator<E> navigateSynAudit(Class<AbstractSynAuditEntity<E>> type);
 
     /**
-     * Locates and returns an audit-prop type for the specified audit-entity type.
-     * <p>
-     * It is an error if an audit-prop type for the specified audit-entity type doesn't exist.
+     * Navigates to the specified synthetic audit-prop type.
+     *
+     * @see Navigator
      */
-    <E extends AbstractEntity<?>> Class<AbstractAuditProp<E>> getAuditPropTypeForAuditEntity(Class<AbstractAuditEntity<E>> auditEntityType);
+    <E extends AbstractEntity<?>> Navigator<E> navigateSynAuditProp(Class<AbstractSynAuditProp<E>> type);
 
     /**
-     * Returns a collection of all versions of an audit entity type for the specified entity type.
-     * <p>
-     * It is an error if an audit entity type for the specified entity type doesn't exist.
+     * Provides access to audited type {@code E} and its audit types.
+     * Handling of exceptional situations depends on the {@linkplain AuditingMode auditing mode} in use.
+     * In general, if the auditing mode is {@link AuditingMode#ENABLED}, all expected audit types must exist.
+     * If the auditing mode is {@link AuditingMode#GENERATION}, all or some audit types may not exist.
+     *
+     * @param <E>  the audited type
      */
-    <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> getAllAuditEntityTypesFor(Class<E> entityType);
+    interface Navigator<E extends AbstractEntity<?>> {
 
-    /**
-     * If the specified entity type is audited, returns a collection of all versions of its audit entity type.
-     * Otherwise, returns an empty collection.
-     */
-    <E extends AbstractEntity<?>> Collection<Class<AbstractAuditEntity<E>>> findAllAuditEntityTypesFor(Class<E> entityType);
+        /**
+         * Returns the audited type.
+         */
+        Class<E> auditedType();
 
-    /**
-     * Locates and returns the synthetic audit-entity type for the specified entity type.
-     * <p>
-     * It is an error if an audit-entity type for the specified entity type doesn't exist.
-     */
-    <E extends AbstractEntity<?>> Class<AbstractSynAuditEntity<E>> getSynAuditEntityType(Class<E> entityType);
+        /**
+         * Returns the synthetic audit-entity type, which must exist.
+         */
+        Class<AbstractSynAuditEntity<E>> synAuditEntityType();
 
-    /**
-     * Locates the synthetic audit-entity type for the specified entity type and returns it if found.
-     * Otherwise, returns an empty optional.
-     */
-    <E extends AbstractEntity<?>> Optional<Class<AbstractSynAuditEntity<E>>> findSynAuditEntityType(Class<E> entityType);
+        /**
+         * Returns the synthetic audit-entity type, which may not exist.
+         */
+        Optional<Class<AbstractSynAuditEntity<E>>> findSynAuditEntityType();
 
-    /**
-     * Locates and returns the synthetic audit-prop type for the specified synthetic audit-entity type.
-     * <p>
-     * It is an error if the requested synthetic audit-prop type doesn't exist.
-     */
-    <E extends AbstractEntity<?>> Class<AbstractSynAuditProp<E>> getSynAuditPropTypeForSynAuditEntity(Class<AbstractSynAuditEntity<E>> type);
+        /**
+         * Returns the synthetic audit-prop type, which must exist.
+         */
+        Class<AbstractSynAuditProp<E>> synAuditPropType();
 
-    /**
-     * Locates the synthetic audit-prop type for the specified synthetic audit-entity type and returns it if found.
-     * Otherwise, returns an empty optional.
-     */
-    <E extends AbstractEntity<?>> Optional<Class<AbstractSynAuditProp<E>>> findSynAuditPropTypeForSynAuditEntity(Class<AbstractSynAuditEntity<E>> type);
+        /**
+         * Returns the synthetic audit-prop type, which may not exist.
+         */
+        Optional<Class<AbstractSynAuditProp<E>>> findSynAuditPropType();
+
+        /**
+         * Returns all persistent audit-entity types.
+         * If the auditing mode is {@link AuditingMode#ENABLED}, the returned collection is never empty.
+         * If the auditing mode is {@link AuditingMode#GENERATION}, the returned collection may be empty.
+         */
+        Collection<Class<AbstractAuditEntity<E>>> allAuditEntityTypes();
+
+        /**
+         * Returns the latest persistent audit-entity type (i.e., the one with the greatest version), which must exist.
+         */
+        Class<AbstractAuditEntity<E>> auditEntityType();
+
+        /**
+         * Returns the latest persistent audit-entity type (i.e., the one with the greatest version), which may not exist.
+         */
+        Optional<Class<AbstractAuditEntity<E>>> findAuditEntityType();
+
+        /**
+         * Returns an audit-entity type with the specified version, which must exist.
+         *
+         * @see AuditUtils#getAuditTypeVersion(Class)
+         */
+        Class<AbstractAuditEntity<E>> auditEntityType(int version);
+
+        /**
+         * Returns an audit-entity type with the specified version, which may not exist.
+         *
+         * @see AuditUtils#getAuditTypeVersion(Class)
+         */
+        Optional<Class<AbstractAuditEntity<E>>> findAuditEntityType(int version);
+
+        /**
+         * If the auditing mode is {@link AuditingMode#ENABLED}, the returned collection is never empty.
+         * If the auditing mode is {@link AuditingMode#GENERATION}, the returned collection may be empty.
+         */
+        Collection<Class<AbstractAuditProp<E>>> allAuditPropTypes();
+
+        /**
+         * Returns the latest persistent audit-prop type (i.e., the one with the greatest version), which must exist.
+         */
+        Class<AbstractAuditProp<E>> auditPropType();
+
+        /**
+         * Returns the latest persistent audit-prop type (i.e., the one with the greatest version), which may not exist.
+         */
+        Optional<Class<AbstractAuditProp<E>>> findAuditPropType();
+
+        /**
+         * Returns an audit-prop type with the specified version, which must exist.
+         * 
+         * @see AuditUtils#getAuditTypeVersion(Class)
+         */
+        Class<AbstractAuditProp<E>> auditPropType(int version);
+
+        /**
+         * Returns an audit-prop type with the specified version, which may not exist.
+         *
+         * @see AuditUtils#getAuditTypeVersion(Class)
+         */
+        Optional<Class<AbstractAuditProp<E>>> findAuditPropType(int version);
+
+    }
 
 }

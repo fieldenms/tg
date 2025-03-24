@@ -26,9 +26,9 @@ public class AuditingTest extends AbstractDaoTestCase {
 
     @Inject
     void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
-        tgVehicleSynAuditType = auditTypeFinder.getSynAuditEntityType(TgVehicle.class);
+        tgVehicleSynAuditType = auditTypeFinder.navigate(TgVehicle.class).synAuditEntityType();
         coTgVehicleAudit = co(tgVehicleSynAuditType);
-        tgVehicleSynAuditPropType = auditTypeFinder.getSynAuditPropTypeForSynAuditEntity(tgVehicleSynAuditType);
+        tgVehicleSynAuditPropType = auditTypeFinder.navigate(TgVehicle.class).synAuditPropType();
     }
 
     @Test

@@ -152,7 +152,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         appDomain.entityTypes().stream()
                 .filter(AuditUtils::isAudited)
                 .flatMap(ty -> {
-                    final var synAuditEntityType = auditTypeFinder.getSynAuditEntityType(ty);
+                    final var synAuditEntityType = auditTypeFinder.navigate(ty).synAuditEntityType();
                     return templatesForAuditedType(ty).stream().map(template -> generator.generateToken(synAuditEntityType, template));
                 })
                 .forEach(tok -> {

@@ -133,7 +133,9 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final Class<? extends AbstractEntity<?>> type,
             final VersionStrategy versionStrategy)
     {
-        final var lastAuditTypeVersion = auditTypeFinder.findAuditEntityType(type).map(AuditUtils::getAuditEntityTypeVersion);
+        final var lastAuditTypeVersion = auditTypeFinder.navigate(type)
+                .findAuditEntityType()
+                .map(AuditUtils::getAuditTypeVersion);
         final var newAuditTypeVersion = switch (versionStrategy) {
             case NEW -> lastAuditTypeVersion.map(v -> v + 1).orElse(1);
             case OVERWRITE_LAST -> lastAuditTypeVersion.orElse(1);
@@ -152,7 +154,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final var auditEntitySpec_javaFile = generateAuditEntity(type, auditTypePkg, auditTypeName, newAuditTypeVersion);
             auditEntitySpec = auditEntitySpec_javaFile._1;
             auditEntityJavaFile = auditEntitySpec_javaFile._2;
-            auditProp = generateAuditPropEntity(type, auditEntitySpec.className(), auditTypePkg, auditPropTypeName);
+            auditProp = generateAuditPropEntity(type, auditEntitySpec.className(), auditTypePkg, auditPropTypeName, newAuditTypeVersion);
             synAuditEntity = generateSynAuditEntity(type, auditEntitySpec);
             synAuditPropEntity = generateSynAuditPropEntity(type, newAuditTypeVersion);
         } catch (final Exception e) {
@@ -203,7 +205,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final String auditTypeName,
             final int auditTypeVersion)
     {
-        final var prevAuditEntityType = auditTypeFinder.getAuditEntityType(type, auditTypeVersion - 1);
+        final var prevAuditEntityType = auditTypeFinder.navigate(type).auditEntityType(auditTypeVersion - 1);
 
         final var auditTypeClassName = ClassName.get(auditTypePkg, auditTypeName);
 
@@ -447,7 +449,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                         // Initializer is not available and also not needed
                         .build())
                 .toList();
-        return new AuditEntitySpec(ClassName.get(auditType), properties, getAuditEntityTypeVersion(auditType));
+        return new AuditEntitySpec(ClassName.get(auditType), properties, getAuditTypeVersion(auditType));
     }
 
     class AuditEntitySpecBuilder {
@@ -492,7 +494,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
             final var allProperties = auditVersion == 1
                     ? properties
-                    : auditTypeFinder.findAuditEntityType(auditedType, auditVersion - 1)
+                    : auditTypeFinder.navigate(auditedType).findAuditEntityType(auditVersion - 1)
                             .map(prevAuditType -> mergeProperties(properties, newAuditEntitySpec(prevAuditType).properties()))
                             .orElse(properties);
 
@@ -551,7 +553,8 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final Class<? extends AbstractEntity<?>> auditedType,
             final ClassName auditEntityClassName,
             final String auditPropTypePkg,
-            final String auditPropTypeName)
+            final String auditPropTypeName,
+            final int version)
     {
         final var auditedEntityTitle = getEntityTitle(auditedType);
         final var auditPropTypeClassName = ClassName.get(auditPropTypePkg, auditPropTypeName);
@@ -563,7 +566,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
                 .addAnnotation(AnnotationSpecs.entityTitle("%s Audit Changed Property".formatted(auditedEntityTitle)))
                 .addAnnotation(AnnotationSpecs.keyTitle("%s Audit and Changed Property".formatted(auditedEntityTitle)))
                 .addAnnotation(javaPoet.getAnnotation(MapEntityTo.class))
-                .addAnnotation(AnnotationSpecs.auditPropFor(auditEntityClassName))
+                .addAnnotation(AnnotationSpecs.auditFor(auditedType, version))
                 .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class))
                 .addAnnotation(javaPoet.getAnnotation(SkipVerification.class))
                 .addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class))
@@ -638,9 +641,9 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     {
         validateAuditedType(auditedType);
 
-        final var priorAuditEntitySpecs = auditTypeFinder.findAllAuditEntityTypesFor(auditedType)
+        final var priorAuditEntitySpecs = auditTypeFinder.navigate(auditedType).allAuditEntityTypes()
                 .stream()
-                .filter(ty -> getAuditEntityTypeVersion(ty) != auditEntitySpec.version())
+                .filter(ty -> getAuditTypeVersion(ty) != auditEntitySpec.version())
                 .map(this::newAuditEntitySpec)
                 .sorted(comparing(AuditEntitySpec::version))
                 .toList();
@@ -676,7 +679,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
         builder.superclass(ParameterizedTypeName.get(AbstractSynAuditEntity.class, auditedType));
 
-        builder.addAnnotation(synAuditFor(auditedType));
+        builder.addAnnotation(auditFor(auditedType));
         builder.addAnnotation(AnnotationSpecs.entityTitle("%s Audit".formatted(getEntityTitle(auditedType))));
         builder.addAnnotation(javaPoet.getAnnotation(SkipVerification.class));
         builder.addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class));
@@ -861,6 +864,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
         final var builder = classBuilder(synAuditPropClassName)
                 .addModifiers(PUBLIC)
                 .superclass(ParameterizedTypeName.get(AbstractSynAuditProp.class, auditedType))
+                .addAnnotation(auditFor(auditedType))
                 .addAnnotation(javaPoet.getAnnotation(SkipVerification.class))
                 .addAnnotation(javaPoet.getAnnotation(SkipEntityRegistration.class))
                 .addAnnotation(javaPoet.getAnnotation(CompanionIsGenerated.class))

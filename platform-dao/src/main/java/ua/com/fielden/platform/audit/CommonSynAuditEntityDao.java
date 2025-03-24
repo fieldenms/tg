@@ -3,6 +3,7 @@ package ua.com.fielden.platform.audit;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -31,10 +32,14 @@ public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
         implements ISynAuditEntityDao<E>
 {
 
+    private static final String ERR_AUDIT_RECORD_DOES_NOT_EXIST = "Audit record does not exist for entity [%s] with ID=%s, version=%s.";
+
+
     // All fields below are effectively final, but cannot be declared so due to late initialisation.
 
     private IDomainMetadata domainMetadata;
     private IEntityAuditor<E> coAuditEntity;
+    private Class<E> auditedType;
 
     @Inject
     protected void init(
@@ -43,7 +48,9 @@ public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
             final IDomainMetadata domainMetadata)
     {
         this.domainMetadata = domainMetadata;
-        coAuditEntity = coFinder.find(a3tFinder.getAuditEntityType(AuditUtils.getAuditedTypeForSyn(getEntityType())));
+        final var navigator = a3tFinder.navigateSynAudit(getEntityType());
+        coAuditEntity = coFinder.find(navigator.auditEntityType());
+        auditedType = navigator.auditedType();
     }
 
     @Override
@@ -96,6 +103,19 @@ public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
                     .prop(AUDITED_VERSION).eq().val(version)
                 .model();
         return getEntity(from(query).with(fetchModel).model());
+    }
+
+    @Override
+    public AbstractSynAuditEntity<E> getAuditOrThrow(
+            final Long auditedEntityId,
+            final Long version,
+            @Nullable final fetch<AbstractSynAuditEntity<E>> fetchModel)
+    {
+        final var audit = getAudit(auditedEntityId, version, fetchModel);
+        if (audit == null) {
+            throw new EntityCompanionException(ERR_AUDIT_RECORD_DOES_NOT_EXIST.formatted(auditedType.getSimpleName(), auditedEntityId, version));
+        }
+        return audit;
     }
 
     @Override

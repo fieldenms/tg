@@ -5,9 +5,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import java.lang.annotation.*;
 
 /**
- * This annotation is applied to audit-entity types to indicate their corresponding audited entities.
- * <p>
- * When applied to audit-entity {@code A} with value {@code E}, it reads as "A is an audit type for E".
+ * This annotation is applied to audit types to indicate their corresponding audited entities.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
@@ -15,13 +13,15 @@ import java.lang.annotation.*;
 public @interface AuditFor {
 
     /**
-     * The entity type audited by the annotated audit-entity type.
+     * The audited entity type.
      */
     Class<? extends AbstractEntity<?>> value();
 
     /**
-     * The version of this audit-entity type.
+     * The version of this persistent audit type, {@link #NO_VERSION} otherwise.
      */
-    int version();
+    int version() default NO_VERSION;
+
+    int NO_VERSION = 0;
 
 }

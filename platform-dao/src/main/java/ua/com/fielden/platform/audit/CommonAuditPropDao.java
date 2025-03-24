@@ -11,8 +11,6 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.audit.AuditUtils.getAuditTypeForAuditPropType;
-import static ua.com.fielden.platform.audit.AuditUtils.getAuditedType;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 
 /**
@@ -25,14 +23,13 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>>
         implements IAuditPropInstantiator<E>
 {
 
-    private final Class<AbstractAuditEntity<E>> auditEntityType;
+    private Class<AbstractAuditEntity<E>> auditEntityType;
     private Class<AbstractSynAuditEntity<E>> synAuditEntityType;
 
     private IDomainMetadata domainMetadata;
 
     protected CommonAuditPropDao() {
         super();
-        auditEntityType = getAuditTypeForAuditPropType((Class<AbstractAuditProp<E>>) getEntityType());
     }
 
     @Inject
@@ -42,8 +39,9 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>>
 
     @Inject
     protected void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
-        final var auditedType = getAuditedType(auditEntityType);
-        synAuditEntityType = auditTypeFinder.getSynAuditEntityType(auditedType);
+        final var navigator = auditTypeFinder.navigateAuditProp(getEntityType());
+        auditEntityType = navigator.auditEntityType();
+        synAuditEntityType = navigator.synAuditEntityType();
     }
 
     @Override

@@ -69,7 +69,7 @@ final class AuditWebUiConfigFactoryImpl implements AuditWebUiConfigFactory {
     @Override
     public AuditWebUiConfig create(final Class<? extends AbstractEntity<?>> auditedType, final IWebUiBuilder builder) {
         // Must exist
-        final var synAuditType = auditTypeFinder.getSynAuditEntityType(auditedType);
+        final var synAuditType = auditTypeFinder.navigate(auditedType).synAuditEntityType();
         final var miType = miTypeGenerator.generate(synAuditType);
 
         final var centre = createCentre(auditedType, synAuditType, miType);
@@ -84,7 +84,7 @@ final class AuditWebUiConfigFactoryImpl implements AuditWebUiConfigFactory {
         final var baseAuditedType = baseEntityType(auditedType);
 
         // Must exist
-        final var synAuditType = auditTypeFinder.getSynAuditEntityType(baseAuditedType);
+        final var synAuditType = auditTypeFinder.navigate(baseAuditedType).synAuditEntityType();
 
         final var masterMiType = miTypeGenerator.generate(
                 "Mi%sMaster_%s".formatted(baseAuditedType.getSimpleName(), synAuditType.getSimpleName()),

@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.audit;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 
@@ -22,8 +21,6 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
         extends IEntityDao<AbstractSynAuditEntity<E>>,
                 IEntityAuditor<E>
 {
-
-    String ERR_AUDIT_RECORD_DOES_NOT_EXIST = "Audit record does not exist for entity [%s] with ID=%s, version=%s.";
 
     /**
      * Streams all audit records for an entity with the specified ID.
@@ -306,14 +303,7 @@ public interface ISynAuditEntityDao<E extends AbstractEntity<?>>
      * @param version  version of an audited entity
      * @param fetchModel  optional fetch model to retrieve audit-entities
      */
-    default AbstractSynAuditEntity<E> getAuditOrThrow(final Long auditedEntityId, final Long version, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel) {
-        final var audit = getAudit(auditedEntityId, version, fetchModel);
-        if (audit == null) {
-            throw new EntityCompanionException(ERR_AUDIT_RECORD_DOES_NOT_EXIST.formatted(
-                    AuditUtils.getAuditedTypeForSyn(getEntityType()).getSimpleName(), auditedEntityId, version));
-        }
-        return audit;
-    }
+    AbstractSynAuditEntity<E> getAuditOrThrow(final Long auditedEntityId, final Long version, final @Nullable fetch<AbstractSynAuditEntity<E>> fetchModel);
 
     /**
      * Retrieves an audit record for an audited entity with the specified ID and version using the default fetch model.

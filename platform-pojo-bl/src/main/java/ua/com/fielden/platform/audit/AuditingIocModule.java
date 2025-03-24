@@ -62,14 +62,14 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
 
     @Provides
     @Singleton
-    IAuditTypeFinder provideAuditTypeFinder(final @Named(AUDIT_PATH) String auditPath) {
+    IAuditTypeFinder provideAuditTypeFinder(final @Named(AUDIT_PATH) String auditPath, final AuditingMode auditingMode) {
         final List<Class<?>> types;
         try {
             types = ClassesRetriever.getAllClassesInPackage(auditPath, "");
         } catch (final Exception ex) {
             throw new ReflectionException("Error while retrieving all classes from JAR or directory at [%s]".formatted(auditPath), ex);
         }
-        return new AuditTypeFinder(types);
+        return new AuditTypeFinder(types, auditingMode);
     }
 
 

@@ -19,9 +19,9 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
 import static ua.com.fielden.platform.audit.AuditEntityGenerator.NON_AUDITED_PROPERTIES;
-import static ua.com.fielden.platform.audit.AuditUtils.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
-import static ua.com.fielden.platform.meta.PropertyNature.*;
+import static ua.com.fielden.platform.meta.PropertyNature.CALCULATED;
+import static ua.com.fielden.platform.meta.PropertyNature.PERSISTENT;
 import static ua.com.fielden.platform.reflection.Reflector.newParameterizedType;
 
 public class AuditEntityStructureTest extends AbstractDaoTestCase {
@@ -29,22 +29,24 @@ public class AuditEntityStructureTest extends AbstractDaoTestCase {
     private Class<AbstractAuditEntity<TgVehicle>> tgVehicleAuditType;
     private Class<AbstractSynAuditEntity<TgVehicle>> tgVehicleSynAuditType;
     private Class<AbstractAuditProp<TgVehicle>> tgVehicleAuditPropType;
+    private IAuditTypeFinder auditTypeFinder;
 
     @Inject
     void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
-        tgVehicleAuditType = auditTypeFinder.getAuditEntityType(TgVehicle.class);
-        tgVehicleSynAuditType = auditTypeFinder.getSynAuditEntityType(TgVehicle.class);
-        tgVehicleAuditPropType = auditTypeFinder.getAuditPropTypeForAuditEntity(tgVehicleAuditType);
+        tgVehicleAuditType = auditTypeFinder.navigate(TgVehicle.class).auditEntityType();
+        tgVehicleSynAuditType = auditTypeFinder.navigate(TgVehicle.class).synAuditEntityType();
+        tgVehicleAuditPropType = auditTypeFinder.navigate(TgVehicle.class).auditPropType();
+        this.auditTypeFinder = auditTypeFinder;
     }
 
     @Test
     public void audit_entity_and_audit_prop_types_are_generated_for_TgVehicle() {
         assertTrue(AbstractAuditEntity.class.isAssignableFrom(tgVehicleAuditType));
-        assertEquals(TgVehicle.class, getAuditedType(tgVehicleAuditType));
+        assertEquals(TgVehicle.class, auditTypeFinder.navigateAudit(tgVehicleAuditType).auditedType());
 
         assertNotNull(tgVehicleAuditPropType);
         assertTrue(AbstractAuditProp.class.isAssignableFrom(tgVehicleAuditPropType));
-        assertEquals(TgVehicle.class, getAuditedTypeForAuditPropType(tgVehicleAuditPropType));
+        assertEquals(TgVehicle.class, auditTypeFinder.navigateAuditProp(tgVehicleAuditPropType).auditedType());
     }
 
     /**

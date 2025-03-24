@@ -261,7 +261,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // Auditing
         if (isAudited(entityType)) {
-            final ISynAuditEntityDao<T> coSynAudit = coFinder.find(a3tFinder.getSynAuditEntityType(entityType));
+            final ISynAuditEntityDao<T> coSynAudit = coFinder.find(a3tFinder.navigate(entityType).synAuditEntityType());
             coSynAudit.audit(savedEntity, transactionGuid.get(), dirtyPropNames);
         }
 
