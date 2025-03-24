@@ -206,17 +206,17 @@ public class CentreToolbar implements IToolbarConfig {
      *
      * @return
      */
-    public static IToolbarConfig withTopActionsViewSwitchPeginationAndRefresh() {
-        return withTopActionsViewSwitchPeginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    public static IToolbarConfig withTopActionsViewSwitchPaginationAndRefresh() {
+        return withTopActionsViewSwitchPaginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
     }
 
     /**
-     * The same as {link {@link #withTopActionsViewSwitchPeginationAndRefreshAction()}, but accepts a desired width for the alternative view switching button.
+     * The same as {link {@link #withTopActionsViewSwitchPaginationAndRefresh()}, but accepts a desired width for the alternative view switching button.
      *
      * @param switchViewButtonWidth
      * @return
      */
-    public static IToolbarConfig withTopActionsViewSwitchPeginationAndRefresh(final int switchViewButtonWidth) {
+    public static IToolbarConfig withTopActionsViewSwitchPaginationAndRefresh(final int switchViewButtonWidth) {
         return new CentreToolbar(switchViewButtonWidth) {
             @Override
             protected DomElement createToolbarElement() {
