@@ -324,7 +324,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgNote.class, "03").setText("hello\nworld"));
         save(new_(TgNote.class, "04").setText(" \tone  \n\u00a0\n  two  \n\n\n three\n"));
         save(new_(TgNote.class, "05").setText("one & two\n1 < 2 && 4 > 0"));
-        save(new_(TgNote.class, "06").setText(">>> <<< &&& &> &< >< <abc> <&>"));
+        save(new_(TgNote.class, "06").setText(">>> <<< &&& &> &< >< <div> <&>"));
 
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
