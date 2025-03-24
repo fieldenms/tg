@@ -22,6 +22,7 @@ public interface AttachmentUploaderCo extends IEntityDao<AttachmentUploader> {
             "application/x-sh",          // Bash scripts
             "application/x-perl",        // Perl scripts
             "application/x-python",      // Python scripts
+            "application/x-python-code",
             "application/x-msdos-program",
             "application/x-bat",
             "application/x-cmd",
