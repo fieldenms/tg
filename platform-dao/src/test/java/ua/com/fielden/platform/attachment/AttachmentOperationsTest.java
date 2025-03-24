@@ -1,29 +1,25 @@
 package ua.com.fielden.platform.attachment;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static org.assertj.core.api.Assertions.assertThat;
+import com.google.inject.name.Named;
+import jakarta.inject.Inject;
+import org.dataloader.impl.Assertions;
+import org.junit.After;
+import org.junit.Ignore;
+import org.junit.Test;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.junit.Test;
-
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 /**
  * A test case validating basic operations of attachments such as uploading and deletion.
@@ -33,27 +29,85 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
  */
 public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
+    @Inject @Named("attachments.location")
+    private String attachmentsLocation;
+    @Inject @Named("attachments.allowlist")
+    private String attachmentsAllowlist;
+
+    private final String plainTextFileName = "!readme.txt";
+    private final String phpTextFileName = "exploit.php";
+    private final String docsFileName = "document.docx";
+    private final String pdfFileName = "document.pdf";
+
+    @After
+    public void tearDown() {
+        final Path fileToUpload = Paths.get(attachmentsLocation + File.separator + plainTextFileName);
+    }
+
     @Test
-    public void attachment_instance_is_created_as_the_result_of_successful_file_upload() throws IOException {
+    public void allowlist_is_formed_correctly_from_application_properties() {
+        final AttachmentUploaderDao co = co(AttachmentUploader.class);
+
+        assertThat(co.attachmentsAllowlist)
+                .hasSize(3)
+                .contains("text/plain", "application/pdf", "application/x-tika-ooxml");
+    }
+
+    @Test
+    public void attachment_instance_is_created_as_the_result_of_successful_upload_of_word_document() throws IOException {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
-        
-        final String fileNameToUpload = "!readme.txt"; 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + fileNameToUpload);
+
+        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + docsFileName);
         assertTrue(fileToUpload.toFile().exists());
         assertTrue(fileToUpload.toFile().canRead());
 
-        final Attachment attachment = upload(coAttachmentUploader, fileToUpload, "readme.txt");
- 
+        final Attachment attachment = upload(coAttachmentUploader, fileToUpload, docsFileName);
+
         assertNotNull(attachment);
         assertTrue(attachment.isPersisted());
         assertNotNull(attachment.getSha1());
-        
+
         final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
         assertTrue(uploadedFile.toFile().exists());
         assertTrue(uploadedFile.toFile().canRead());
 
-        // let's do clean up by deleting just uploaded file
+        // clean up by deleting the just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
+    }
+
+    @Test
+    public void attachment_instance_is_created_as_the_result_of_successful_upload_of_pdf_document() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + pdfFileName);
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        final Attachment attachment = upload(coAttachmentUploader, fileToUpload, pdfFileName);
+
+        assertNotNull(attachment);
+        assertTrue(attachment.isPersisted());
+        assertNotNull(attachment.getSha1());
+
+        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
+        assertTrue(uploadedFile.toFile().exists());
+        assertTrue(uploadedFile.toFile().canRead());
+
+        // clean up by deleting the just uploaded file
+        assertTrue(Files.deleteIfExists(uploadedFile));
+    }
+
+    @Test
+    public void php_files_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpTextFileName);
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpTextFileName))
+                .isInstanceOf(Result.class)
+                .hasMessage("Files of type [text/x-php] are not supported.");
     }
 
     @Test
@@ -62,7 +116,6 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
         final Attachment attachment = coAttachmentUploader.save((AttachmentUploader) new_(AttachmentUploader.class)
                 .setOrigFileName("readme.txt")
-                .setMime("text/plain")
                 .setInputStream(new ByteArrayInputStream("some data".getBytes()))).getKey();
 
         assertNotNull(attachment);
@@ -85,19 +138,16 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
             final AttachmentUploader newUpload1 = (AttachmentUploader) new_(AttachmentUploader.class)
                     .setOrigFileName("readme.txt")
-                    .setMime("text/plain")
                     .setInputStream(new ByteArrayInputStream("some data".getBytes()));
             final Attachment attachment1 = coAttachmentUploader.save(newUpload1).getKey();
 
             final AttachmentUploader newUpload2 = (AttachmentUploader) new_(AttachmentUploader.class)
                     .setOrigFileName("readme.txt")
-                    .setMime("text/plain")
                     .setInputStream(new ByteArrayInputStream("some data".getBytes()));
             final Attachment attachment2 = coAttachmentUploader.save(newUpload2).getKey();
 
             final AttachmentUploader newUpload3 = (AttachmentUploader) new_(AttachmentUploader.class)
                     .setOrigFileName("readme.txt")
-                    .setMime("text/plain")
                     .setInputStream(new ByteArrayInputStream("some data".getBytes()));
             final Attachment attachment3 = coAttachmentUploader.save(newUpload3).getKey();
 
@@ -131,7 +181,6 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
             final AttachmentUploader newUpload1 = (AttachmentUploader) new_(AttachmentUploader.class)
                     .setOrigFileName("readme.txt")
-                    .setMime("text/plain")
                     .setInputStream(new ByteArrayInputStream("some data".getBytes()));
             attachment1 = coAttachmentUploader.save(newUpload1).getKey();
             uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
@@ -140,7 +189,6 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
             final AttachmentUploader newUpload2 = (AttachmentUploader) new_(AttachmentUploader.class)
                     .setOrigFileName("readme.txt")
-                    .setMime("text/plain")
                     .setInputStream(new ByteArrayInputStream("some data".getBytes()));
             coAttachmentUploader.save(newUpload2).getKey();
             fail("Attempts to save a duplicate attachment in the same transaction should have failed due to the transaction rollback.");
@@ -153,16 +201,6 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
             }
         }
         assertFalse("Attachment should have been rolled back.", co(Attachment.class).entityExists(attachment1));
-    }
-
-    @Override
-    public boolean saveDataPopulationScriptToFile() {
-        return false;
-    }
-
-    @Override
-    public boolean useSavedDataPopulationScript() {
-        return false;
     }
 
     @Test
@@ -318,10 +356,20 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     private Attachment upload(final AttachmentUploaderDao coAttachmentUploader, final Path fileToUpload, final String origFileName) throws IOException {
         try (final InputStream is = new FileInputStream(fileToUpload.toAbsolutePath().toString())) {
             final AttachmentUploader uploader = new_(AttachmentUploader.class);
-            uploader.setOrigFileName(origFileName).setMime("text/plain").setInputStream(is);
+            uploader.setOrigFileName(origFileName).setInputStream(is);
 
             return coAttachmentUploader.save(uploader).getKey();
         }
+    }
+
+    @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
     }
 
 }

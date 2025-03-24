@@ -1,9 +1,20 @@
 package ua.com.fielden.platform.attachment;
 
-import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.error.Result.*;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import org.apache.logging.log4j.Logger;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.parser.AutoDetectParser;
+import ua.com.fielden.platform.cypher.HexString;
+import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
+import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.rx.AbstractSubjectKind;
+import ua.com.fielden.platform.security.user.User;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -14,27 +25,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.Random;
-import java.util.stream.Stream;
+import java.util.Set;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.tika.detect.Detector;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.mime.MediaType;
-import org.apache.tika.parser.AutoDetectParser;
-
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
-import ua.com.fielden.platform.cypher.HexString;
-import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
-import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.rx.AbstractSubjectKind;
-import ua.com.fielden.platform.security.user.User;
+import static java.lang.String.format;
+import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toUnmodifiableSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.error.Result.*;
 
 /**
  * DAO implementation for companion object {@link AttachmentUploaderCo}.
@@ -55,13 +55,21 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     private static final Random RND = new Random(100);
 
     private static final Logger LOGGER = getLogger(AttachmentUploaderDao.class);
+    public static final String WARN_RESTRICTED_MIME = "An attempt to load file [%s] with a restricted mime type identified as [%s] (provided a [%s]) by user [%s].";
+    public static final String ERR_RESTRICTED_MIME = "Files of type [%s] are not supported.";
 
     public final String attachmentsLocation;
+    public final Set<String> attachmentsAllowlist;
 
     @Inject
-    public AttachmentUploaderDao(final @Named("attachments.location") String attachmentsLocation, final IFilter filter) {
-        super(filter);
+    public AttachmentUploaderDao(
+            final @Named("attachments.location") String attachmentsLocation,
+            final @Named("attachments.allowlist") String attachmentsAllowlist)
+    {
         this.attachmentsLocation = attachmentsLocation;
+        this.attachmentsAllowlist = isBlank(attachmentsAllowlist)
+                                    ? Set.of()
+                                    : Arrays.stream(attachmentsAllowlist.split(",")).map(String::trim).collect(toUnmodifiableSet());
     }
 
     @Override
@@ -69,7 +77,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     public AttachmentUploader save(final AttachmentUploader uploader) {
         uploader.getEventSourceSubject().ifPresent(ess -> ess.publish(5));
         if (uploader.getInputStream() == null) {
-            LOGGER.fatal(format("Input stream is missing when attempting to upload [%s].", uploader.getOrigFileName()));
+            LOGGER.fatal(() -> "Input stream is missing when attempting to upload [%s].".formatted(uploader.getOrigFileName()));
             throw failure("Input stream was not provided.");
         }
 
@@ -79,7 +87,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             final MessageDigest md = MessageDigest.getInstance("SHA1");
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 10));
 
-            LOGGER.debug(format("Saving uploaded [%s] to tmp file [%s].", uploader.getOrigFileName(), tmpPath));
+            LOGGER.debug(() -> "Saving uploaded [%s] to tmp file [%s].".formatted(uploader.getOrigFileName(), tmpPath));
             try (final InputStream is = uploader.getInputStream();
                  final DigestInputStream dis = new DigestInputStream(is, md) /* digest decorator to compute SHA1 checksum while reading a stream */ ) {
 
@@ -111,20 +119,20 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             }
 
         } catch (final Exception ex) {
-            LOGGER.fatal(format("Failed to upload [%s].", uploader.getOrigFileName()), ex);
+            LOGGER.fatal(() -> "Failed to upload [%s].".formatted(uploader.getOrigFileName()), ex);
             throw Result.failure(ex);
         } finally {
             // remove tmp file, and simply log an error if it could not be removed
             try {
                 Files.deleteIfExists(tmpPath);
             } catch (final IOException ex) {
-                LOGGER.error(format("Could not remove tmp file [%s].", tmpPath), ex);
+                LOGGER.error(() -> "Could not remove tmp file [%s].".formatted(tmpPath), ex);
             }
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 85));
         }
 
         // now we can create/retrieve a corresponding Attachment instance
-        LOGGER.debug(format("Creating an attachment for uploaded [%s].", uploader.getOrigFileName()));
+        LOGGER.debug(()-> "Creating an attachment for uploaded [%s].".formatted(uploader.getOrigFileName()));
         final Attachment attachment = co$(Attachment.class).new_()
                 .setSha1(sha1)
                 .setOrigFileName(uploader.getOrigFileName())
@@ -133,14 +141,14 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         try {
             final Attachment savedAttachment = co$(Attachment.class).save(attachment);
             uploader.setKey(savedAttachment);
-            LOGGER.debug(format("New attachment [%s] is created successfully.", attachment));
+            LOGGER.debug(() -> "New attachment [%s] is created successfully.".formatted(attachment));
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 95));
         } catch (final EntityAlreadyExists ex) {
             uploader.getEventSourceSubject().ifPresent(ess -> ess.publish(90));
-            LOGGER.debug(format("Attachment [%s] already exists. Reusing existing.", attachment));
+            LOGGER.debug(() -> "Attachment [%s] already exists. Reusing existing.".formatted(attachment));
             final Attachment existingAttachment = co(Attachment.class).findByEntityAndFetch(co(Attachment.class).getFetchProvider().fetchModel(), attachment);
             if (existingAttachment == null) {
-                final String errAttachmentNotFound = format("Attachment [%s] could not be located.", attachment);
+                final String errAttachmentNotFound = "Attachment [%s] could not be located.".formatted(attachment);
                 LOGGER.error(errAttachmentNotFound);
                 throw failure(errAttachmentNotFound);
             }
@@ -148,15 +156,16 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         }
 
         // make sure we report 100% completion
-        LOGGER.debug(format("Completed attachment uploading of [%s] successfully.", uploader.getOrigFileName()));
+        LOGGER.debug(() -> "Completed attachment uploading of [%s] successfully.".formatted(uploader.getOrigFileName()));
         uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 100));
 
         return uploader;
     }
 
-    private static Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException {
+    private Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException {
         try (final InputStream is = Files.newInputStream(tmpPath);
-             final BufferedInputStream bis = new BufferedInputStream(is)) {
+             final BufferedInputStream bis = new BufferedInputStream(is))
+        {
             final AutoDetectParser parser = new AutoDetectParser();
             final Detector detector = parser.getDetector();
             final Metadata meta = new Metadata();
@@ -166,10 +175,16 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             // application/x-tika-msoffice  application/vnd.ms-excel
             // application/x-tika-msoffice  application/msword
 
-            LOGGER.debug(format("Mime type for uploaded file [%s] identified as [%s], the provided is [%s].", uploader.getOrigFileName(), mediaType, uploader.getMime()));
-            if (Stream.of(RESTRICTED_FILE_TYPES).anyMatch(rft -> mediaType.toString().contains(rft))) {
-                LOGGER.warn(format("An attempt to load file [%s] with a restricted mime type identified as [%s] (provided a [%s]) by user [%s].", uploader.getOrigFileName(), mediaType, uploader.getMime(), user));
-                return failuref("Files of type [%s] are not supported.", mediaType);
+            LOGGER.debug(() -> "Mime type for uploaded file [%s] identified as [%s], the provided is [%s].".formatted(uploader.getOrigFileName(), mediaType, uploader.getMime()));
+            if (attachmentsAllowlist.isEmpty()) {
+                if (ATTACHMENTS_DENYLIST.contains(mediaType.toString())) {
+                    LOGGER.warn(() -> format(WARN_RESTRICTED_MIME, uploader.getOrigFileName(), mediaType, uploader.getMime(), user));
+                    return failuref(ERR_RESTRICTED_MIME, mediaType);
+                }
+            }
+            else if (!attachmentsAllowlist.contains(mediaType.toString())) {
+                LOGGER.warn(() -> format(WARN_RESTRICTED_MIME, uploader.getOrigFileName(), mediaType, uploader.getMime(), user));
+                return failuref(ERR_RESTRICTED_MIME, mediaType);
             }
             // It is possible that MIME for the uploader is already specified.
             // Nevertheless, let's use Tika's MIME to ensure that the validated MIME is associated with the uploader.
