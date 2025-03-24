@@ -5,6 +5,7 @@ import com.google.inject.name.Named;
 import org.apache.logging.log4j.Logger;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AutoDetectParser;
 import ua.com.fielden.platform.cypher.HexString;
@@ -57,6 +58,8 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     private static final Logger LOGGER = getLogger(AttachmentUploaderDao.class);
     public static final String WARN_RESTRICTED_MIME = "An attempt to load file [%s] with a restricted mime type identified as [%s] (provided a [%s]) by user [%s].";
     public static final String ERR_RESTRICTED_MIME = "Files of type [%s] are not supported.";
+    public static final String ERR_MISSING_INPUT_STREAM = "Input stream was not provided.";
+    public static final String ERR_ATTACHMENT_NOT_FOUND = "Attachment [%s] could not be located.";
 
     public final String attachmentsLocation;
     public final Set<String> attachmentsAllowlist;
@@ -78,7 +81,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         uploader.getEventSourceSubject().ifPresent(ess -> ess.publish(5));
         if (uploader.getInputStream() == null) {
             LOGGER.fatal(() -> "Input stream is missing when attempting to upload [%s].".formatted(uploader.getOrigFileName()));
-            throw failure("Input stream was not provided.");
+            throw failure(ERR_MISSING_INPUT_STREAM);
         }
 
         final Path tmpPath = Paths.get(new File(tmpFileName()).toURI());
@@ -120,7 +123,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
 
         } catch (final Exception ex) {
             LOGGER.fatal(() -> "Failed to upload [%s].".formatted(uploader.getOrigFileName()), ex);
-            throw Result.failure(ex);
+            throw failure(ex);
         } finally {
             // remove tmp file, and simply log an error if it could not be removed
             try {
@@ -148,7 +151,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             LOGGER.debug(() -> "Attachment [%s] already exists. Reusing existing.".formatted(attachment));
             final Attachment existingAttachment = co(Attachment.class).findByEntityAndFetch(co(Attachment.class).getFetchProvider().fetchModel(), attachment);
             if (existingAttachment == null) {
-                final String errAttachmentNotFound = "Attachment [%s] could not be located.".formatted(attachment);
+                final String errAttachmentNotFound = ERR_ATTACHMENT_NOT_FOUND.formatted(attachment);
                 LOGGER.error(errAttachmentNotFound);
                 throw failure(errAttachmentNotFound);
             }
@@ -169,6 +172,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             final AutoDetectParser parser = new AutoDetectParser();
             final Detector detector = parser.getDetector();
             final Metadata meta = new Metadata();
+            meta.set(TikaCoreProperties.RESOURCE_NAME_KEY, uploader.getOrigFileName());
             final MediaType mediaType = detector.detect(bis, meta);
             // application/x-tika-ooxml     application/vnd.openxmlformats-officedocument.wordprocessingml.document
             // application/x-tika-ooxml     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
