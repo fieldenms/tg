@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-03-24 16:40:20 EET
+// Generation timestamp: 2025-03-25 16:16:54 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.util.List;
@@ -7,7 +7,6 @@ import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AbstractSynAuditProp;
 import ua.com.fielden.platform.audit.AuditFor;
-import ua.com.fielden.platform.audit.SynAuditPropEntityUtils;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -30,11 +29,7 @@ import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 @EntityTitle("Audited Entity Audit Changed Property")
 @KeyTitle("Audited Entity Audit and Changed Property")
 public class ReAuditedEntity_a3t_Prop extends AbstractSynAuditProp<AuditedEntity> {
-  private static final EntityResultQueryModel<ReAuditedEntity_a3t_Prop> model_a3t_1 = SynAuditPropEntityUtils.modelAuditProp(AuditedEntity_a3t_1_Prop.class, ReAuditedEntity_a3t_Prop.class, AuditedEntity_a3t_1.class, ReAuditedEntity_a3t.class);
-
-  private static final EntityResultQueryModel<ReAuditedEntity_a3t_Prop> model_a3t_2 = SynAuditPropEntityUtils.modelAuditProp(AuditedEntity_a3t_2_Prop.class, ReAuditedEntity_a3t_Prop.class, AuditedEntity_a3t_2.class, ReAuditedEntity_a3t.class);
-
-  protected static final List<EntityResultQueryModel<ReAuditedEntity_a3t_Prop>> models_ = List.of(model_a3t_1, model_a3t_2);
+  protected static List<EntityResultQueryModel<ReAuditedEntity_a3t_Prop>> models_;
 
   @CompositeKeyMember(1)
   @Title(

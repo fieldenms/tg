@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-03-24 16:40:20 EET
+// Generation timestamp: 2025-03-25 16:16:54 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.util.List;
@@ -7,7 +7,6 @@ import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AbstractSynAuditProp;
 import ua.com.fielden.platform.audit.AuditFor;
-import ua.com.fielden.platform.audit.SynAuditPropEntityUtils;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -30,9 +29,7 @@ import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 @EntityTitle("Tg Vehicle Audit Changed Property")
 @KeyTitle("Tg Vehicle Audit and Changed Property")
 public class ReTgVehicle_a3t_Prop extends AbstractSynAuditProp<TgVehicle> {
-  private static final EntityResultQueryModel<ReTgVehicle_a3t_Prop> model_a3t_1 = SynAuditPropEntityUtils.modelAuditProp(TgVehicle_a3t_1_Prop.class, ReTgVehicle_a3t_Prop.class, TgVehicle_a3t_1.class, ReTgVehicle_a3t.class);
-
-  protected static final List<EntityResultQueryModel<ReTgVehicle_a3t_Prop>> models_ = List.of(model_a3t_1);
+  protected static List<EntityResultQueryModel<ReTgVehicle_a3t_Prop>> models_;
 
   @CompositeKeyMember(1)
   @Title(

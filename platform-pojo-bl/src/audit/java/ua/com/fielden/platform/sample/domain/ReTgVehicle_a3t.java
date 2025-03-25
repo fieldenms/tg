@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-03-24 16:40:20 EET
+// Generation timestamp: 2025-03-25 16:16:54 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -6,11 +6,11 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AuditFor;
-import ua.com.fielden.platform.audit.SynAuditEntityUtils;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -24,7 +24,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 @AuditFor(TgVehicle.class)
 @EntityTitle("Tg Vehicle Audit")
@@ -33,9 +32,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 @CompanionIsGenerated
 @KeyType(DynamicEntityKey.class)
 public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
-  private static final EntityResultQueryModel<ReTgVehicle_a3t> model_a3t_1 = SynAuditEntityUtils.mkModelCurrent(ua.com.fielden.platform.sample.domain.ReTgVehicle_a3t.class, TgVehicle_a3t_1.class, Set.of("a3t_key", "a3t_initDate", "a3t_replacedBy", "a3t_station", "a3t_model", "a3t_price", "a3t_purchasePrice", "a3t_active", "a3t_leased", "a3t_lastMeterReading", "a3t_desc", "id", "auditedEntity", "auditedVersion", "auditDate", "user", "auditedTransactionGuid"), CollectionUtil.mapOf());
-
-  protected static final EntityResultQueryModel<ReTgVehicle_a3t> model_ = SynAuditEntityUtils.combineModels(ReTgVehicle_a3t_Prop.class, model_a3t_1);
+  protected static List<EntityResultQueryModel<ReTgVehicle_a3t>> models_;
 
   @CompositeKeyMember(1)
   @Title(

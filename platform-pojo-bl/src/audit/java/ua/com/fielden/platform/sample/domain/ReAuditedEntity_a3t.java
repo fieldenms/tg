@@ -1,16 +1,16 @@
-// Generation timestamp: 2025-03-24 16:40:20 EET
+// Generation timestamp: 2025-03-25 16:16:54 EET
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.AuditFor;
 import ua.com.fielden.platform.audit.InactiveAuditProperty;
-import ua.com.fielden.platform.audit.SynAuditEntityUtils;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -23,7 +23,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 @AuditFor(AuditedEntity.class)
 @EntityTitle("Audited Entity Audit")
@@ -32,11 +31,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 @CompanionIsGenerated
 @KeyType(DynamicEntityKey.class)
 public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
-  private static final EntityResultQueryModel<ReAuditedEntity_a3t> model_a3t_2 = SynAuditEntityUtils.mkModelCurrent(ua.com.fielden.platform.sample.domain.ReAuditedEntity_a3t.class, AuditedEntity_a3t_2.class, Set.of("a3t_str2", "a3t_key", "a3t_date1", "a3t_bool1", "id", "auditedEntity", "auditedVersion", "auditDate", "user", "auditedTransactionGuid"), CollectionUtil.mapOf(ua.com.fielden.platform.types.tuples.T2.t2("a3t_str1", null)));
-
-  private static final EntityResultQueryModel<ReAuditedEntity_a3t> model_a3t_1 = SynAuditEntityUtils.mkModelPrior(ua.com.fielden.platform.sample.domain.ReAuditedEntity_a3t.class, AuditedEntity_a3t_1.class, CollectionUtil.mapOf(ua.com.fielden.platform.types.tuples.T2.t2("a3t_str2", null)), Set.of("a3t_key", "a3t_date1", "a3t_bool1", "a3t_str1", "id", "auditedEntity", "auditedVersion", "auditDate", "user", "auditedTransactionGuid"));
-
-  protected static final EntityResultQueryModel<ReAuditedEntity_a3t> model_ = SynAuditEntityUtils.combineModels(ReAuditedEntity_a3t_Prop.class, model_a3t_2, model_a3t_1);
+  protected static List<EntityResultQueryModel<ReAuditedEntity_a3t>> models_;
 
   @CompositeKeyMember(1)
   @Title(

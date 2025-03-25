@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-03-24 16:40:20 EET
+// Generation timestamp: 2025-03-25 16:16:54 EET
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
