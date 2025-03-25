@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.exception.TikaException;
@@ -47,6 +46,7 @@ import static java.util.Optional.of;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.error.Result.*;
 
@@ -121,15 +121,15 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 }
             }
 
-            // convert digest to string for target file creation
+            // Convert digest to string for target file creation
             final byte[] digest = md.digest();
             sha1 = HexString.bufferToHex(digest, 0, digest.length);
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 65));
 
-            // let's validate the file nature by analysing its magic number
+            // Validate the file nature
             canAcceptFile(uploader, tmpPath, getUser()).ifFailure(Result::throwRuntime);
 
-            // if the target file already exist then need to create it by copying tmp file
+            // If the target file already exists, overwrite its contents
             final File targetFile = new File(targetFileName(sha1));
             if (!targetFile.exists()) {
                 final Path targetPath = Paths.get(targetFile.toURI());
@@ -141,7 +141,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             LOGGER.fatal(() -> "Failed to upload [%s].".formatted(uploader.getOrigFileName()), ex);
             throw failure(ex);
         } finally {
-            // remove tmp file, and simply log an error if it could not be removed
+            // Remove tmp file, and simply log an error if it could not be removed
             try {
                 Files.deleteIfExists(tmpPath);
             } catch (final IOException ex) {
@@ -150,7 +150,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 85));
         }
 
-        // now we can create/retrieve a corresponding Attachment instance
+        // Now we can create/retrieve a corresponding Attachment instance
         LOGGER.debug(()-> "Creating an attachment for uploaded [%s].".formatted(uploader.getOrigFileName()));
         final Attachment attachment = co$(Attachment.class).new_()
                 .setSha1(sha1)
@@ -174,14 +174,14 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             uploader.setKey(existingAttachment);
         }
 
-        // make sure we report 100% completion
+        // Make sure we report 100% completion
         LOGGER.debug(() -> "Completed attachment uploading of [%s] successfully.".formatted(uploader.getOrigFileName()));
         uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 100));
 
         return uploader;
     }
 
-    private Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException, TikaException {
+    private Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException {
         try (final InputStream is = Files.newInputStream(tmpPath);
              final BufferedInputStream bis = new BufferedInputStream(is))
         {
@@ -195,7 +195,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             // application/x-tika-msoffice  application/vnd.ms-excel
             // application/x-tika-msoffice  application/msword
 
-            LOGGER.debug(() -> "Mime type for uploaded file [%s] identified as [%s], the provided is [%s].".formatted(uploader.getOrigFileName(), mediaType, uploader.getMime()));
+            LOGGER.debug(() -> "Mime type for uploaded file [%s] identified as [%s], and provided as [%s].".formatted(uploader.getOrigFileName(), mediaType, uploader.getMime()));
             // MediaType may contain other parameters in its toString, such as charset, which are not relevant for our purpose.
             // This is why we need to extract MIME as type/subtype.
             final var mime = mediaType.getType() + "/" + mediaType.getSubtype();
@@ -295,6 +295,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 return inspectGzipTarArchive(uploader, tmpPath, user);
             }
             else {
+                // Gzip archive is just a single compressed file, as opposed to Zip, which may contain multiple files.
                 final Result check = checkMimeType(uploader, of("N/A"), mime, user, WARN_RESTRICTED_MIME_IN_ARCHIVE, ERR_RESTRICTED_MIME_IN_ARCHIVE);
                 if (!check.isSuccessful()) {
                     return check;
@@ -352,15 +353,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     }
 
     private static String extractMimeType(final String contentType) {
-        final String mime;
-        if (StringUtils.isBlank(contentType)) {
-            mime = "";
-        }
-        else {
-            final var parts = contentType.split(";");
-            mime = parts[0].trim();
-        }
-        return mime;
+        return isBlank(contentType) ? "" : substringBefore(contentType, ';').trim();
     }
 
     /**
