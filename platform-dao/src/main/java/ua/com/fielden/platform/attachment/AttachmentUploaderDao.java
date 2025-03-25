@@ -48,6 +48,7 @@ import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.attachment.FileTypes.TAR;
 import static ua.com.fielden.platform.error.Result.*;
 
 /**
@@ -209,17 +210,12 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         }
 
         // In the case of some archive files, we can inspect their contents.
-        if("application/zip".equals(uploader.getMime()) || "application/x-zip-compressed".equals(uploader.getMime())) {
-            return inspectZipArchive(uploader, tmpPath, user);
-        }
-        if("application/x-tar".equals(uploader.getMime()) || "application/x-gtar".equals(uploader.getMime())) {
-            return inspectTarArchive(uploader, tmpPath, user);
-        }
-        if("application/gzip".equals(uploader.getMime())) { // also handles .tar.gz.
-            return inspectGzipArchive(uploader, tmpPath, user);
-        }
-
-        return successful();
+        return switch (FileTypes.fromMime(uploader.getMime())) {
+            case ZIP -> inspectZipArchive(uploader, tmpPath, user);
+            case TAR -> inspectTarArchive(uploader, tmpPath, user);
+            case GZIP -> inspectGzipArchive(uploader, tmpPath, user);
+            case null -> successful();
+        };
     }
 
     private Result inspectZipArchive(final AttachmentUploader uploader, final Path tmpPath, final User user) {
@@ -291,7 +287,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             final String mime = extractMimeType(metadata.get(Metadata.CONTENT_TYPE));
 
             // If .gzip is actual a .tar.gz then we need to inspect the tar file.
-            if ("application/x-tar".equals(mime)) {
+            if (FileTypes.fromMime(mime) == TAR) {
                 return inspectGzipTarArchive(uploader, tmpPath, user);
             }
             else {
