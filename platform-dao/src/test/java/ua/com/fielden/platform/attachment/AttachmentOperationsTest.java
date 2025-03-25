@@ -2,16 +2,17 @@ package ua.com.fielden.platform.attachment;
 
 import com.google.inject.name.Named;
 import jakarta.inject.Inject;
-import org.junit.After;
 import org.junit.Test;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,7 +24,6 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
  * A test case validating basic operations of attachments such as uploading and deletion.
  * 
  * @author TG Team
- * 
  */
 public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
@@ -51,33 +51,26 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     private final String pdfFileName = "document.pdf";
     private final String zipArchiveFileName = "archive.zip";
 
-    @After
-    public void tearDown() {
-        final Path fileToUpload = Paths.get(attachmentsLocation + File.separator + plainTextFileName);
-    }
-
     @Test
     public void allowlist_is_formed_correctly_from_application_properties() {
         final AttachmentUploaderDao co = co(AttachmentUploader.class);
 
         assertThat(co.attachmentsAllowlist)
-                .hasSize(7)
-                .contains("text/plain",
-                          "application/pdf",
-                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                          "application/zip",
-                          "application/x-zip-compressed",
-                          "application/gzip",
-                          "application/x-tar");
+                .containsExactlyInAnyOrder("text/plain",
+                                           "application/pdf",
+                                           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                           "application/zip",
+                                           "application/x-zip-compressed",
+                                           "application/gzip",
+                                           "application/x-tar");
     }
 
     @Test
     public void attachment_instance_is_created_as_the_result_of_successful_upload_of_word_document() throws IOException {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + docsFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(docsFileName);
+        assertThat(fileToUpload).isReadable();
 
         final Attachment attachment = upload(coAttachmentUploader, fileToUpload, docsFileName);
 
@@ -85,9 +78,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertTrue(attachment.isPersisted());
         assertNotNull(attachment.getSha1());
 
-        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        assertThat(uploadedFile).isReadable();
 
         // clean up by deleting the just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
@@ -97,9 +89,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     public void attachment_instance_is_created_as_the_result_of_successful_upload_of_pdf_document() throws IOException {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + pdfFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(pdfFileName);
+        assertThat(fileToUpload).isReadable();
 
         final Attachment attachment = upload(coAttachmentUploader, fileToUpload, pdfFileName);
 
@@ -107,9 +98,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertTrue(attachment.isPersisted());
         assertNotNull(attachment.getSha1());
 
-        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        assertThat(uploadedFile).isReadable();
 
         // clean up by deleting the just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
@@ -119,9 +109,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     public void attachment_instance_is_created_as_the_result_of_successful_upload_of_zip_archive_with_permitted_files_inside() throws IOException {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + zipArchiveFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(zipArchiveFileName);
+        assertThat(fileToUpload).isReadable();
 
         final Attachment attachment = upload(coAttachmentUploader, fileToUpload, zipArchiveFileName);
 
@@ -129,21 +118,19 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertTrue(attachment.isPersisted());
         assertNotNull(attachment.getSha1());
 
-        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        assertThat(uploadedFile).isReadable();
 
         // clean up by deleting the just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
     }
 
     @Test
-    public void php_files_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
+    public void php_files_are_not_recognised_as_plain_text_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(phpTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpTextFileName))
                 .isInstanceOf(Result.class)
@@ -151,12 +138,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void zipped_php_exploit_is_detected_and_cannot_be_attached() throws IOException {
+    public void zipped_php_exploit_is_detected_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpZipTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(phpZipTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpZipTextFileName))
                 .isInstanceOf(Result.class)
@@ -164,12 +150,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void password_protected_zip_archives_are_not_supported() throws IOException {
+    public void password_protected_zip_archives_are_not_supported() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpZipProtectedTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(phpZipProtectedTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpZipProtectedTextFileName))
                 .isInstanceOf(Result.class)
@@ -177,12 +162,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void tarred_php_exploit_is_detected_and_cannot_be_attached() throws IOException {
+    public void tarred_php_exploit_is_detected_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpTarTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(phpTarTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpTarTextFileName))
                 .isInstanceOf(Result.class)
@@ -190,12 +174,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void gzipped_php_exploit_is_detected_and_cannot_be_attached() throws IOException {
+    public void gzipped_php_exploit_is_detected_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpGZipTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(phpGZipTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpGZipTextFileName))
                 .isInstanceOf(Result.class)
@@ -203,12 +186,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void gzipped_tar_php_exploit_is_detected_and_cannot_be_attached() throws IOException {
+    public void gzipped_tar_php_exploit_is_detected_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpGZipTarTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(phpGZipTarTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpGZipTarTextFileName))
                 .isInstanceOf(Result.class)
@@ -216,24 +198,22 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void php_files_with_wrong_ext_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
+    public void php_files_with_wrong_ext_are_not_recognised_as_plain_text_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpWrongExtTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(phpWrongExtTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpWrongExtTextFileName))
                 .isInstanceOf(Result.class)
                 .hasMessage("Files of type [text/x-php] are not supported.");
     }
     @Test
-    public void php_files_with_dbl_extension_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
+    public void php_files_with_dbl_extension_are_not_recognised_as_plain_text_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpDblExtTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(phpDblExtTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpDblExtTextFileName))
                 .isInstanceOf(Result.class)
@@ -241,12 +221,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void python_files_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
+    public void python_files_are_not_recognised_as_plain_text_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + pythonTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(pythonTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, pythonTextFileName))
                 .isInstanceOf(Result.class)
@@ -254,12 +233,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void ruby_files_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
+    public void ruby_files_are_not_recognised_as_plain_text_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + rubyTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(rubyTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, rubyTextFileName))
                 .isInstanceOf(Result.class)
@@ -267,12 +245,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void bash_files_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
+    public void bash_files_are_not_recognised_as_plain_text_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + bashTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(bashTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, bashTextFileName))
                 .isInstanceOf(Result.class)
@@ -280,12 +257,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void bash_files_with_dbl_extension_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
+    public void bash_files_with_dbl_extension_are_not_recognised_as_plain_text_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + bashDblExtTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(bashDblExtTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, bashDblExtTextFileName))
                 .isInstanceOf(Result.class)
@@ -293,12 +269,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void perl_files_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
+    public void perl_files_are_not_recognised_as_plain_text_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + perlTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(perlTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, perlTextFileName))
                 .isInstanceOf(Result.class)
@@ -306,12 +281,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void perl_files_with_dbl_extension_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
+    public void perl_files_with_dbl_extension_are_not_recognised_as_plain_text_and_cannot_be_attached() {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + perlDblExtTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
+        final Path fileToUpload = attachmentPath(perlDblExtTextFileName);
+        assertThat(fileToUpload).isReadable();
 
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, perlDblExtTextFileName))
                 .isInstanceOf(Result.class)
@@ -330,9 +304,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertTrue(attachment.isPersisted());
         assertNotNull(attachment.getSha1());
 
-        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        assertThat(uploadedFile).isReadable();
 
         // clean up by deleting the just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
@@ -368,9 +341,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
             assertEquals(attachment1.getId(), attachment2.getId());
             assertEquals(attachment2.getId(), attachment3.getId());
 
-            uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
-            assertTrue(uploadedFile.toFile().exists());
-            assertTrue(uploadedFile.toFile().canRead());
+            uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
+            assertThat(uploadedFile).isReadable();
         } finally {
             // clean up by deleting the just uploaded file
             if (uploadedFile != null) {
@@ -391,9 +363,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
                     .setOrigFileName("readme.txt")
                     .setInputStream(new ByteArrayInputStream("some data".getBytes()));
             attachment1 = coAttachmentUploader.save(newUpload1).getKey();
-            uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
-            assertTrue(uploadedFile.toFile().exists());
-            assertTrue(uploadedFile.toFile().canRead());
+            uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
+            assertThat(uploadedFile).isReadable();
 
             final AttachmentUploader newUpload2 = (AttachmentUploader) new_(AttachmentUploader.class)
                     .setOrigFileName("readme.txt")
@@ -415,10 +386,9 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     public void uploading_of_the_same_file_with_different_names_results_in_several_attachments_but_only_one_file_associated_with_them() throws IOException {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + plainTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-        
+        final Path fileToUpload = attachmentPath(plainTextFileName);
+        assertThat(fileToUpload).isReadable();
+
         final Attachment attachment1 = upload(coAttachmentUploader, fileToUpload, "readme1.txt");
         final Attachment attachment2 = upload(coAttachmentUploader, fileToUpload, "readme2.txt");
         
@@ -429,9 +399,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertNotEquals(attachment1, attachment2);
         assertEquals(attachment1.getSha1(), attachment2.getSha1());
         
-        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
+        assertThat(uploadedFile).isReadable();
 
         // let's do clean up by deleting just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
@@ -441,15 +410,13 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     public void deleting_attachment_deletes_associated_file_if_there_are_no_other_associations_with_that_file() throws IOException {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + plainTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-        
+        final Path fileToUpload = attachmentPath(plainTextFileName);
+        assertThat(fileToUpload).isReadable();
+
         final Attachment attachment = upload(coAttachmentUploader, fileToUpload, plainTextFileName);
 
-        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        assertThat(uploadedFile).isReadable();
 
         co(Attachment.class).delete(attachment);
         assertFalse(co(Attachment.class).entityExists(attachment));
@@ -460,19 +427,17 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     public void deleting_attachment_that_is_associated_with_a_file_which_is_associated_with_another_attachment_does_not_delete_that_file() throws IOException {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + plainTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-        
+        final Path fileToUpload = attachmentPath(plainTextFileName);
+        assertThat(fileToUpload).isReadable();
+
         final Attachment attachment1 = upload(coAttachmentUploader, fileToUpload, "readme1.txt");
         final Attachment attachment2 = upload(coAttachmentUploader, fileToUpload, "readme2.txt");
 
         co(Attachment.class).delete(attachment1);
         assertFalse(co(Attachment.class).entityExists(attachment1));
         
-        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
+        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
+        assertThat(uploadedFile).isReadable();
 
         co(Attachment.class).delete(attachment2);
         assertFalse(co(Attachment.class).entityExists(attachment2));
@@ -483,15 +448,13 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     public void deleting_attachment_with_missing_file_is_supported() throws IOException {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + plainTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-        
+        final Path fileToUpload = attachmentPath(plainTextFileName);
+        assertThat(fileToUpload).isReadable();
+
         final Attachment attachment = upload(coAttachmentUploader, fileToUpload, "readme.txt");
-        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
-        assertTrue(uploadedFile.toFile().exists());
-        assertTrue(uploadedFile.toFile().canRead());
-        
+        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        assertThat(uploadedFile).isReadable();
+
         // let's delete the file to make attachment an orphan
         assertTrue(Files.deleteIfExists(uploadedFile));
         assertFalse(uploadedFile.toFile().exists());
@@ -504,10 +467,9 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     public void batch_deletion_of_attachments_by_IDs_is_supported() throws IOException {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
-        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + plainTextFileName);
-        assertTrue(fileToUpload.toFile().exists());
-        assertTrue(fileToUpload.toFile().canRead());
-        
+        final Path fileToUpload = attachmentPath(plainTextFileName);
+        assertThat(fileToUpload).isReadable();
+
         final Attachment attachment1 = upload(coAttachmentUploader, fileToUpload, "readme1.txt");
         final Attachment attachment2 = upload(coAttachmentUploader, fileToUpload, "readme2.txt");
         
@@ -516,7 +478,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertFalse(co(Attachment.class).entityExists(attachment1));
         assertFalse(co(Attachment.class).entityExists(attachment2));
         
-        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
+        final Path uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment1.getSha1());
         assertFalse(uploadedFile.toFile().exists());
     }
 
@@ -549,12 +511,6 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
     /**
      * This is just a helper method for performing file uploading.
-     * 
-     * @param coAttachmentUploader
-     * @param fileToUpload
-     * @param origFileName
-     * @return
-     * @throws IOException
      */
     private Attachment upload(final AttachmentUploaderDao coAttachmentUploader, final Path fileToUpload, final String origFileName) throws IOException {
         try (final InputStream is = new FileInputStream(fileToUpload.toAbsolutePath().toString())) {
@@ -573,6 +529,10 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     @Override
     public boolean useSavedDataPopulationScript() {
         return false;
+    }
+
+    private Path attachmentPath(final String fileName) {
+        return Path.of(attachmentsLocation, fileName);
     }
 
 }
