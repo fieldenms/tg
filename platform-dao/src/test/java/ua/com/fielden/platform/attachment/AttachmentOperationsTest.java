@@ -50,6 +50,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     private final String docsFileName = "document.docx";
     private final String pdfFileName = "document.pdf";
     private final String zipArchiveFileName = "archive.zip";
+    private final String tarWithPlainAndPhpFileName = "plain+php.tar";
+    private final String tarWithPlainAndPdfFileName = "plain+pdf.tar";
 
     @Test
     public void allowlist_is_formed_correctly_from_application_properties() {
@@ -172,6 +174,38 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpTarTextFileName))
                 .isInstanceOf(Result.class)
                 .hasMessage("Archives with files of type [text/x-php] are not supported.");
+    }
+
+    @Test
+    public void tar_with_plaintext_and_php_files_cannot_be_attached() {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = attachmentPath(tarWithPlainAndPhpFileName);
+        assertThat(fileToUpload).isReadable();
+
+        assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, tarWithPlainAndPhpFileName))
+                .isInstanceOf(Result.class)
+                .hasMessage("Archives with files of type [text/x-php] are not supported.");
+    }
+
+    @Test
+    public void tar_with_plaintext_and_pdf_files_can_be_attached() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final var fileToUpload = attachmentPath(tarWithPlainAndPdfFileName);
+        assertThat(fileToUpload).isReadable();
+
+        final var attachment = upload(coAttachmentUploader, fileToUpload, tarWithPlainAndPdfFileName);
+
+        assertNotNull(attachment);
+        assertTrue(attachment.isPersisted());
+        assertNotNull(attachment.getSha1());
+
+        final var uploadedFile = Path.of(coAttachmentUploader.attachmentsLocation, attachment.getSha1());
+        assertThat(uploadedFile).isReadable();
+
+        // clean up by deleting the just uploaded file
+        assertTrue(Files.deleteIfExists(uploadedFile));
     }
 
     @Test
