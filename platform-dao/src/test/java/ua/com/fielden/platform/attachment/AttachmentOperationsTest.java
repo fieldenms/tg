@@ -34,6 +34,11 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
     private final String plainTextFileName = "!readme.txt";
     private final String phpTextFileName = "exploit.php";
+    private final String phpZipTextFileName = phpTextFileName + ".zip";
+    private final String phpZipProtectedTextFileName = phpTextFileName + ".protected.zip";
+    private final String phpGZipTextFileName = phpTextFileName + ".gz";
+    private final String phpTarTextFileName = phpTextFileName + ".tar";
+    private final String phpGZipTarTextFileName = phpTextFileName + ".tar.gz";
     private final String phpDblExtTextFileName = phpTextFileName + ".txt";
     private final String phpWrongExtTextFileName = "exploit.php5";
     private final String pythonTextFileName = "script.py";
@@ -44,6 +49,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     private final String bashDblExtTextFileName = bashTextFileName + ".txt";
     private final String docsFileName = "document.docx";
     private final String pdfFileName = "document.pdf";
+    private final String zipArchiveFileName = "archive.zip";
 
     @After
     public void tearDown() {
@@ -55,10 +61,14 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         final AttachmentUploaderDao co = co(AttachmentUploader.class);
 
         assertThat(co.attachmentsAllowlist)
-                .hasSize(3)
+                .hasSize(7)
                 .contains("text/plain",
                           "application/pdf",
-                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                          "application/zip",
+                          "application/x-zip-compressed",
+                          "application/gzip",
+                          "application/x-tar");
     }
 
     @Test
@@ -106,6 +116,28 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void attachment_instance_is_created_as_the_result_of_successful_upload_of_zip_archive_with_permitted_files_inside() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + zipArchiveFileName);
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        final Attachment attachment = upload(coAttachmentUploader, fileToUpload, zipArchiveFileName);
+
+        assertNotNull(attachment);
+        assertTrue(attachment.isPersisted());
+        assertNotNull(attachment.getSha1());
+
+        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
+        assertTrue(uploadedFile.toFile().exists());
+        assertTrue(uploadedFile.toFile().canRead());
+
+        // clean up by deleting the just uploaded file
+        assertTrue(Files.deleteIfExists(uploadedFile));
+    }
+
+    @Test
     public void php_files_are_not_recognised_as_pain_text_and_cannot_be_attached() throws IOException {
         final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
 
@@ -116,6 +148,71 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpTextFileName))
                 .isInstanceOf(Result.class)
                 .hasMessage("Files of type [text/x-php] are not supported.");
+    }
+
+    @Test
+    public void zipped_php_exploit_is_detected_and_cannot_be_attached() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpZipTextFileName);
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpZipTextFileName))
+                .isInstanceOf(Result.class)
+                .hasMessage("Archives with files of type [text/x-php] are not supported.");
+    }
+
+    @Test
+    public void password_protected_zip_archives_are_not_supported() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpZipProtectedTextFileName);
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpZipProtectedTextFileName))
+                .isInstanceOf(Result.class)
+                .hasMessage("Encrypted ZIP files are not supported.");
+    }
+
+    @Test
+    public void tarred_php_exploit_is_detected_and_cannot_be_attached() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpTarTextFileName);
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpTarTextFileName))
+                .isInstanceOf(Result.class)
+                .hasMessage("Archives with files of type [text/x-php] are not supported.");
+    }
+
+    @Test
+    public void gzipped_php_exploit_is_detected_and_cannot_be_attached() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpGZipTextFileName);
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpGZipTextFileName))
+                .isInstanceOf(Result.class)
+                .hasMessage("Archives with files of type [text/x-php] are not supported.");
+    }
+
+    @Test
+    public void gzipped_tar_php_exploit_is_detected_and_cannot_be_attached() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Path fileToUpload = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + phpGZipTarTextFileName);
+        assertTrue(fileToUpload.toFile().exists());
+        assertTrue(fileToUpload.toFile().canRead());
+
+        assertThatThrownBy(() -> upload(coAttachmentUploader, fileToUpload, phpGZipTarTextFileName))
+                .isInstanceOf(Result.class)
+                .hasMessage("Archives with files of type [text/x-php] are not supported.");
     }
 
     @Test

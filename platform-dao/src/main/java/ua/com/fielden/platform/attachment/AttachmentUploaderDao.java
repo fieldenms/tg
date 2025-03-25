@@ -2,12 +2,19 @@ package ua.com.fielden.platform.attachment;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.tika.detect.Detector;
+import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.sax.BodyContentHandler;
+import org.xml.sax.SAXException;
 import ua.com.fielden.platform.cypher.HexString;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -27,10 +34,16 @@ import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipInputStream;
 
-import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -56,10 +69,13 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     private static final Random RND = new Random(100);
 
     private static final Logger LOGGER = getLogger(AttachmentUploaderDao.class);
-    public static final String WARN_RESTRICTED_MIME = "An attempt to load file [%s] with a restricted mime type identified as [%s] (provided a [%s]) by user [%s].";
+    public static final String WARN_RESTRICTED_MIME = "An attempt to load file [%s] with a restricted mime type [%s] by user [%s].";
+    public static final String WARN_RESTRICTED_MIME_IN_ARCHIVE = "An attempt to load archive [%s] with entry [%s] of a restricted mime type [%s] by user [%s].";
     public static final String ERR_RESTRICTED_MIME = "Files of type [%s] are not supported.";
+    public static final String ERR_RESTRICTED_MIME_IN_ARCHIVE = "Archives with files of type [%s] are not supported.";
     public static final String ERR_MISSING_INPUT_STREAM = "Input stream was not provided.";
     public static final String ERR_ATTACHMENT_NOT_FOUND = "Attachment [%s] could not be located.";
+    public static final String ERR_ENCRYPTED_ZIP = "Encrypted ZIP files are not supported.";
 
     public final String attachmentsLocation;
     public final Set<String> attachmentsAllowlist;
@@ -165,7 +181,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         return uploader;
     }
 
-    private Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException {
+    private Result canAcceptFile(final AttachmentUploader uploader, final Path tmpPath, final User user) throws IOException, TikaException {
         try (final InputStream is = Files.newInputStream(tmpPath);
              final BufferedInputStream bis = new BufferedInputStream(is))
         {
@@ -180,19 +196,200 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             // application/x-tika-msoffice  application/msword
 
             LOGGER.debug(() -> "Mime type for uploaded file [%s] identified as [%s], the provided is [%s].".formatted(uploader.getOrigFileName(), mediaType, uploader.getMime()));
-            if (attachmentsAllowlist.isEmpty()) {
-                if (ATTACHMENTS_DENYLIST.contains(mediaType.toString())) {
-                    LOGGER.warn(() -> format(WARN_RESTRICTED_MIME, uploader.getOrigFileName(), mediaType, uploader.getMime(), user));
-                    return failuref(ERR_RESTRICTED_MIME, mediaType);
-                }
-            }
-            else if (!attachmentsAllowlist.contains(mediaType.toString())) {
-                LOGGER.warn(() -> format(WARN_RESTRICTED_MIME, uploader.getOrigFileName(), mediaType, uploader.getMime(), user));
-                return failuref(ERR_RESTRICTED_MIME, mediaType);
+            // MediaType may contain other parameters in its toString, such as charset, which are not relevant for our purpose.
+            // This is why we need to extract MIME as type/subtype.
+            final var mime = mediaType.getType() + "/" + mediaType.getSubtype();
+            final var check = checkMimeType(uploader, empty(), mime, user, WARN_RESTRICTED_MIME, ERR_RESTRICTED_MIME);
+            if (!check.isSuccessful()) {
+                return check;
             }
             // It is possible that MIME for the uploader is already specified.
-            // Nevertheless, let's use Tika's MIME to ensure that the validated MIME is associated with the uploader.
-            uploader.setMime(mediaType.toString());
+            // Nevertheless, use Tika's MIME to ensure that the validated MIME is associated with the uploader.
+            uploader.setMime(mime);
+        }
+
+        // In the case of some archive files, we can inspect their contents.
+        if("application/zip".equals(uploader.getMime()) || "application/x-zip-compressed".equals(uploader.getMime())) {
+            return inspectZipArchive(uploader, tmpPath, user);
+        }
+        if("application/x-tar".equals(uploader.getMime())) {
+            return inspectTarArchive(uploader, tmpPath, user);
+        }
+        if("application/gzip".equals(uploader.getMime())) { // also handles .tar.gz.
+            return inspectGzipArchive(uploader, tmpPath, user);
+        }
+
+        return successful();
+    }
+
+    private Result inspectZipArchive(final AttachmentUploader uploader, final Path tmpPath, final User user) {
+        try (final InputStream input = Files.newInputStream(tmpPath);
+             final ZipInputStream archiveStream = new ZipInputStream(input))
+        {
+
+            final AutoDetectParser parser = new AutoDetectParser();
+            final ParseContext context = new ParseContext();
+
+            ZipEntry entry;
+            while ((entry = archiveStream.getNextEntry()) != null) {
+                final var entryName =  entry.getName();
+                final Metadata metadata = new Metadata();
+                metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, entryName);
+
+                final BodyContentHandler handler = new BodyContentHandler();
+                parser.parse(archiveStream, handler, metadata, context);
+
+                final String mime = extractMimeType(metadata.get(Metadata.CONTENT_TYPE));
+
+                final Result check = checkMimeType(uploader, of(entryName), mime, user, WARN_RESTRICTED_MIME_IN_ARCHIVE, ERR_RESTRICTED_MIME_IN_ARCHIVE);
+                if (!check.isSuccessful()) {
+                    return check;
+                }
+            }
+        } catch (final Exception ex) {
+            if (ex instanceof ZipException && "encrypted ZIP entry not supported".equals(ex.getMessage())) {
+                LOGGER.error(() -> "Could not extract zip archive [%s] uploaded by [%s]. Aborting the file upload.".formatted(uploader.getOrigFileName(), user), ex);
+                return failure(ERR_ENCRYPTED_ZIP);
+            }
+            else {
+                LOGGER.warn(() -> "Error while analysing archive [%s] uploaded by [%s]. Aborting the analysis.".formatted(uploader.getOrigFileName(), user), ex);
+            }
+        }
+        return successful();
+    }
+
+    private Result inspectTarArchive(final AttachmentUploader uploader, final Path tmpPath, final User user) {
+        try (final InputStream input = Files.newInputStream(tmpPath);
+             final TarArchiveInputStream archiveStream = new TarArchiveInputStream(input))
+        {
+            final AutoDetectParser parser = new AutoDetectParser();
+            final ParseContext context = new ParseContext();
+
+            final var check = inspectTarEntries(uploader, user, archiveStream, parser, context);
+            if (!check.isSuccessful()) {
+                return check;
+            }
+        } catch (final Exception ex) {
+            LOGGER.warn(() -> "Error while analysing archive [%s] uploaded by [%s]. Aborting the analysis.".formatted(uploader.getOrigFileName(), user), ex);
+        }
+        return successful();
+    }
+
+    private Result inspectGzipArchive(final AttachmentUploader uploader, final Path tmpPath, final User user) {
+        try (final InputStream input = Files.newInputStream(tmpPath);
+             final GZIPInputStream archiveStream = new GZIPInputStream(input))
+        {
+            final AutoDetectParser parser = new AutoDetectParser();
+            final ParseContext context = new ParseContext();
+
+            final Metadata metadata = new Metadata();
+            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, uploader.getOrigFileName());
+
+            final BodyContentHandler handler = new BodyContentHandler();
+            parser.parse(archiveStream, handler, metadata, context);
+
+            final String mime = extractMimeType(metadata.get(Metadata.CONTENT_TYPE));
+
+            // If .gzip is actual a .tar.gz then we need to inspect the tar file.
+            if ("application/x-tar".equals(mime)) {
+                return inspectGzipTarArchive(uploader, tmpPath, user);
+            }
+            else {
+                final Result check = checkMimeType(uploader, of("N/A"), mime, user, WARN_RESTRICTED_MIME_IN_ARCHIVE, ERR_RESTRICTED_MIME_IN_ARCHIVE);
+                if (!check.isSuccessful()) {
+                    return check;
+                }
+            }
+        } catch (final Exception ex) {
+            LOGGER.warn(() -> "Error while analysing archive [%s] uploaded by [%s]. Aborting the analysis.".formatted(uploader.getOrigFileName(), user), ex);
+        }
+        return successful();
+    }
+
+    private Result inspectGzipTarArchive(final AttachmentUploader uploader, final Path tmpPath, final User user) {
+        try (final InputStream input = Files.newInputStream(tmpPath);
+             final GZIPInputStream gzipStream = new GZIPInputStream(input);
+             final TarArchiveInputStream archiveStream = new TarArchiveInputStream(gzipStream))
+        {
+            final AutoDetectParser parser = new AutoDetectParser();
+            final ParseContext context = new ParseContext();
+
+            final var check = inspectTarEntries(uploader, user, archiveStream, parser, context);
+            if (!check.isSuccessful()) {
+                return check;
+            }
+        } catch (final Exception ex) {
+            LOGGER.warn(() -> "Error while analysing archive [%s] uploaded by [%s]. Aborting the analysis.".formatted(uploader.getOrigFileName(), user), ex);
+        }
+        return successful();
+    }
+
+    private Result inspectTarEntries(
+            final AttachmentUploader uploader,
+            final User user,
+            final TarArchiveInputStream archiveStream,
+            final AutoDetectParser parser,
+            final ParseContext context)
+            throws IOException, SAXException, TikaException
+    {
+        TarArchiveEntry entry;
+        while ((entry = archiveStream.getNextEntry()) != null) {
+            final var entryName =  entry.getName();
+            final Metadata metadata = new Metadata();
+            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, entryName);
+
+            final BodyContentHandler handler = new BodyContentHandler();
+            parser.parse(archiveStream, handler, metadata, context);
+
+            final String mime = extractMimeType(metadata.get(Metadata.CONTENT_TYPE));
+
+            final Result check = checkMimeType(uploader, of(entryName), mime, user, WARN_RESTRICTED_MIME_IN_ARCHIVE, ERR_RESTRICTED_MIME_IN_ARCHIVE);
+            if (!check.isSuccessful()) {
+                return check;
+            }
+        }
+        return successful();
+    }
+
+    private static String extractMimeType(final String contentType) {
+        final String mime;
+        if (StringUtils.isBlank(contentType)) {
+            mime = "";
+        }
+        else {
+            final var parts = contentType.split(";");
+            mime = parts[0].trim();
+        }
+        return mime;
+    }
+
+    /**
+     * Checks `mime` against allowlist or denylist, if allowlist is empty.
+     * <p>
+     * If `mime` pertains to an archive entry, `maybeArchiveEntryName` should not be empty and should include the entry name.
+     * <p>
+     * If `mime` pertains to the whole file, `maybeArchiveEntryName` should be empty.
+     *
+     * @return  A successful result if `mime` is allowed.
+     */
+    private Result checkMimeType(
+            final AttachmentUploader uploader,
+            final Optional<String> maybeArchiveEntryName,
+            final String mime,
+            final User user,
+            final String logWarningTemplate,
+            final String errorTemplate) {
+        if (attachmentsAllowlist.isEmpty()) {
+            if (ATTACHMENTS_DENYLIST.contains(mime)) {
+                LOGGER.warn(() -> maybeArchiveEntryName.map(entryName -> logWarningTemplate.formatted(uploader.getOrigFileName(), entryName, mime, user))
+                                                       .orElseGet(() -> logWarningTemplate.formatted(uploader.getOrigFileName(), mime, user)));
+                return failuref(errorTemplate, mime);
+            }
+        }
+        else if (!attachmentsAllowlist.contains(mime)) {
+            LOGGER.warn(() -> maybeArchiveEntryName.map(entryName -> logWarningTemplate.formatted(uploader.getOrigFileName(), entryName, mime, user))
+                                                   .orElseGet(() -> logWarningTemplate.formatted(uploader.getOrigFileName(), mime, user)));
+            return failuref(errorTemplate, mime);
         }
         return successful();
     }
