@@ -36,6 +36,7 @@ public interface AttachmentUploaderCo extends IEntityDao<AttachmentUploader> {
             "application/x-7z-compressed",
             "application/gzip",
             "application/x-tar",
+            "application/x-gtar",
             "application/x-bzip2",
             "application/x-iso9660-image",
             "text/x-php",                // Another PHP variant

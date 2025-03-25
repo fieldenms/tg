@@ -62,7 +62,8 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
                                            "application/zip",
                                            "application/x-zip-compressed",
                                            "application/gzip",
-                                           "application/x-tar");
+                                           "application/x-tar",
+                                           "application/x-gtar");
     }
 
     @Test

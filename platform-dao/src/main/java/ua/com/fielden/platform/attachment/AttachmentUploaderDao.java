@@ -212,7 +212,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         if("application/zip".equals(uploader.getMime()) || "application/x-zip-compressed".equals(uploader.getMime())) {
             return inspectZipArchive(uploader, tmpPath, user);
         }
-        if("application/x-tar".equals(uploader.getMime())) {
+        if("application/x-tar".equals(uploader.getMime()) || "application/x-gtar".equals(uploader.getMime())) {
             return inspectTarArchive(uploader, tmpPath, user);
         }
         if("application/gzip".equals(uploader.getMime())) { // also handles .tar.gz.
