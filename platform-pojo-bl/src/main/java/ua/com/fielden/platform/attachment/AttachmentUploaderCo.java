@@ -17,6 +17,8 @@ public interface AttachmentUploaderCo extends IEntityDao<AttachmentUploader> {
             "application/x-msdownload",
             "application/octet-stream",
             "application/vnd.microsoft.portable-executable",
+            "application/x-ms-installer",
+            "application/x-elf",
             "application/x-executable",  // Generic executables
             "application/x-php",         // PHP scripts
             "application/x-sh",          // Bash scripts
