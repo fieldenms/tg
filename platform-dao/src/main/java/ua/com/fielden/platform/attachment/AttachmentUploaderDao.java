@@ -244,7 +244,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             }
         } catch (final Exception ex) {
             if (ex instanceof ZipException && "encrypted ZIP entry not supported".equals(ex.getMessage())) {
-                LOGGER.error(() -> "Could not extract zip archive [%s] uploaded by [%s]. Aborting the file upload.".formatted(uploader.getOrigFileName(), user), ex);
+                LOGGER.error(() -> "Could not extract encrypted zip archive [%s] uploaded by [%s]. Aborting the file upload.".formatted(uploader.getOrigFileName(), user), ex);
                 return failure(ERR_ENCRYPTED_ZIP);
             }
             else {
