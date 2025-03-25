@@ -19,6 +19,7 @@ export default {
 
         // Our other libraries.
         'node_modules/lib/antlr-lib.js',
+        'node_modules/lib/fullcalendar-lib.js',
         'node_modules/lib/moment-lib.js',
         'node_modules/lib/toastui-editor-lib.js',
 

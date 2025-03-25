@@ -154,6 +154,14 @@ export class TgMultilineTextEditor extends TgEditor {
     convertFromString (strValue) {
         return strValue === '' ? null : strValue;
     }
+
+    /**
+     * Overridden to avoid displaying the value, which may potentially contain unsafe HTML.
+     */
+    _formatTooltipText (value) {
+        return "";
+    }
+
 }
 
 customElements.define('tg-multiline-text-editor', TgMultilineTextEditor);

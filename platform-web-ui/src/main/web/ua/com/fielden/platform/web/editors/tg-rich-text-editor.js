@@ -26,6 +26,11 @@ const additionalTemplate = html`
             @apply --layout-vertical;
             flex: 1 0 auto;    
         }
+        paper-input-container[disabled] {
+            --paper-input-container-label-focus: {
+                color: var(--paper-input-container-color, var(--secondary-text-color));
+            }
+        }
         :host([auto-resize]) .main-container {
             @apply --layout-flex;
         }

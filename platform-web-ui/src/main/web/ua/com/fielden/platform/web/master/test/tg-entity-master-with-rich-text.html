@@ -171,7 +171,7 @@
 
                     // value validationresult?
                     assert.ok(validatedEntity.prop('richTextProp').validationResult(), 'Instance meta-prop should have non-empty (unsuccessful) validation result.');
-                    assert.strictEqual(validatedEntity.prop('richTextProp').validationResult().message, 'Input contains unsafe HTML:\n1. Tag [img] has violating attributes: src', 'Property has incorrect validation result message.');
+                    assert.strictEqual(validatedEntity.prop('richTextProp').validationResult().message, 'Input contains unsafe HTML.<extended/>Input contains unsafe HTML:\n1. Tag [img] has violating attributes: src', 'Property has incorrect validation result message.');
 
                     // binding value ok?
                     assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');
@@ -339,7 +339,7 @@
 
                     // value validationresult?
                     assert.ok(potentiallySavedOrNewEntity.prop('richTextProp').validationResult(), 'Instance meta-prop should have non-empty (unsuccessful) validation result.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').validationResult().message, 'Input contains unsafe HTML:\n1. Tag [img] has violating attributes: src', 'Property has incorrect validation result message.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop('richTextProp').validationResult().message, 'Input contains unsafe HTML.<extended/>Input contains unsafe HTML:\n1. Tag [img] has violating attributes: src', 'Property has incorrect validation result message.');
 
                     // binding value ok?
                     assert.ok(bindingEntity.get('richTextProp'), 'Binding property should be initialised.');

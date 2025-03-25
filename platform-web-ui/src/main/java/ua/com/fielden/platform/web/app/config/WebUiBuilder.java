@@ -1,7 +1,15 @@
 package ua.com.fielden.platform.web.app.config;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
+import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -10,18 +18,9 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.apache.logging.log4j.Logger;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
-import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
-import ua.com.fielden.platform.web.view.master.EntityMaster;
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 
 /**
  * Implementation of the {@link IWebUiBuilder}.
@@ -214,7 +213,7 @@ public class WebUiBuilder implements IWebUiBuilder {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/config/tg-app-config.js").
+        return getText("ua/com/fielden/platform/web/app/config/tg-app-config.js").
                 replace("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
                 replace("@minTabletWidth", Integer.toString(this.minTabletWidth)).
                 replace("@locale", "\"" + this.locale + "\"").
@@ -226,7 +225,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
 
     public String getAppIndex(final IDates dates) {
-        return ResourceLoader.getText("ua/com/fielden/platform/web/index.html")
+        return getText("ua/com/fielden/platform/web/index.html")
                 .replace("@panelColor", panelColor.map(val -> "--tg-main-pannel-color: " + val + ";").orElse(""))
                 .replace("@watermark", "'" + watermark.orElse("") + "'")
                 .replace("@cssStyle", watermarkStyle.orElse("") )

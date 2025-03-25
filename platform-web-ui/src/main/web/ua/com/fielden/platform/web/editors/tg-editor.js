@@ -89,7 +89,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             .label-title {
                 margin-right: 4px;
             }
-            #decorator[focused] .label-title {
+            #decorator[focused]:not([disabled]) .label-title {
                 font-weight: 700;
             }
             .label-action {
@@ -1203,14 +1203,14 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     }
 
     /**
-     * Overide this to provide custom formatting for entered text.
+     * Override this to provide custom formatting for entered text.
      */
     _formatText (value) {
         return value;
     }
     
-        /**
-     * Overide this to provide custom formatting for tooltip text.
+    /**
+     * Override this to provide custom formatting for tooltip text.
      */
     _formatTooltipText (value) {
         const formatedText = this._formatText(value);

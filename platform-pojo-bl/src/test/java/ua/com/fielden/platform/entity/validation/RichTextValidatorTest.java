@@ -15,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.validation.UnhappyValidator.ERR_UNHAPPY_VALIDATOR;
-import static ua.com.fielden.platform.serialisation.jackson.entities.EntityWithRichText.Property.richText;
 
 /**
  * A test case for validation with {@link DefaultValidatorForValueTypeWithValidation}.
