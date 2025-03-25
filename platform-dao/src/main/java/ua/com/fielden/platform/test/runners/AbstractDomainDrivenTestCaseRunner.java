@@ -33,8 +33,8 @@ import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
  */
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
 
-    private static final String INFO_TEST_IGNORED_DUE_TO_DB_VERSION
-            = "Test [%s] is ignored because it requires one of databases %s while the current one is [%s].";
+    private static final String INFO_TEST_IGNORED_DUE_TO_DB_VERSION =
+            "Test [%s] is ignored because it requires one of databases %s while the current one is [%s].";
 
     public final Logger logger = getLogger(getClass());
     
