@@ -68,11 +68,11 @@ final class UnionOrderById {
         }
     }
 
-    private static boolean isPropId(final ISingleOperand2 operand) {
+    private static boolean isPropId(final ISingleOperand2<?> operand) {
         return operand instanceof Prop2 prop && prop.propPath.equals(AbstractEntity.ID) && prop.type().equals(LONG_PROP_TYPE);
     }
 
-    private static ISingleOperand2 orderByOperand(final OrderBy2 orderBy, final Yields2 yields) {
+    private static ISingleOperand2<?> orderByOperand(final OrderBy2 orderBy, final Yields2 yields) {
         return orderBy.operand() != null
                 ? orderBy.operand()
                 : yields.yieldsMap().get(orderBy.yieldName()).operand();

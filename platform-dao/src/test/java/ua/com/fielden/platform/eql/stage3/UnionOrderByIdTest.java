@@ -15,6 +15,9 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import java.util.Optional;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Optional.empty;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -35,25 +38,25 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
     @WithDbVersion(MSSQL)
     public void MSSQL_id_is_implicitly_ordered_by_in_union_query_with_explicit_ordering_and_yielded_id() {
         final var queryModel = select(select(TeVehicle.class)
-                                              .yield().prop("key").as("key")
-                                              .yield().prop("id").as("id")
+                                              .yield().prop(KEY).as(KEY)
+                                              .yield().prop(ID).as(ID)
                                               .modelAsEntity(TeVehicle.class))
-                .orderBy().yield("key").asc()
-                .yield().prop("key").as("key")
-                .yield().prop("id").as("id")
+                .orderBy().yield(KEY).asc()
+                .yield().prop(KEY).as(KEY)
+                .yield().prop(ID).as(ID)
                 .modelAsEntity(TeVehicle.class);
 
         final var actualQuery = transform(queryModel);
 
         final var vehicleSource = source(TeVehicle.class, 1);
-        final var sourceQueryYields = yields(yieldProp("id", vehicleSource, "id", LONG_PROP_TYPE),
-                                             yieldProp("key", vehicleSource, "key", STRING_PROP_TYPE));
+        final var sourceQueryYields = yields(yieldProp(ID, vehicleSource, ID, LONG_PROP_TYPE),
+                                             yieldProp(KEY, vehicleSource, KEY, STRING_PROP_TYPE));
 
         final var querySource = source(2, srcqry(sources(vehicleSource), sourceQueryYields, TeVehicle.class));
-        final var queryYields = yields(yieldProp("id", querySource, "id", LONG_PROP_TYPE),
-                                       yieldProp("key", querySource, "key", STRING_PROP_TYPE));
-        final var queryOrdering = orders(new OrderBy3(queryYields.yieldsMap().get("key"), false),
-                                         new OrderBy3(queryYields.yieldsMap().get("id"), false));
+        final var queryYields = yields(yieldProp(ID, querySource, ID, LONG_PROP_TYPE),
+                                       yieldProp(KEY, querySource, KEY, STRING_PROP_TYPE));
+        final var queryOrdering = orders(new OrderBy3(queryYields.yieldsMap().get(KEY), false),
+                                         new OrderBy3(queryYields.yieldsMap().get(ID), false));
 
         final var expectedQry = qry(sources(querySource),
                                     queryYields,
@@ -67,24 +70,24 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
     @WithDbVersion(POSTGRESQL)
     public void POSTGRESQL_id_is_NOT_implicitly_ordered_by_in_union_query_with_explicit_ordering_and_yielded_id() {
         final var queryModel = select(select(TeVehicle.class)
-                                              .yield().prop("key").as("key")
-                                              .yield().prop("id").as("id")
+                                              .yield().prop(KEY).as(KEY)
+                                              .yield().prop(ID).as(ID)
                                               .modelAsEntity(TeVehicle.class))
-                .orderBy().yield("key").asc()
-                .yield().prop("key").as("key")
-                .yield().prop("id").as("id")
+                .orderBy().yield(KEY).asc()
+                .yield().prop(KEY).as(KEY)
+                .yield().prop(ID).as(ID)
                 .modelAsEntity(TeVehicle.class);
 
         final var actualQuery = transform(queryModel);
 
         final var vehicleSource = source(TeVehicle.class, 1);
-        final var sourceQueryYields = yields(yieldProp("id", vehicleSource, "id", LONG_PROP_TYPE),
-                                             yieldProp("key", vehicleSource, "key", STRING_PROP_TYPE));
+        final var sourceQueryYields = yields(yieldProp(ID, vehicleSource, ID, LONG_PROP_TYPE),
+                                             yieldProp(KEY, vehicleSource, KEY, STRING_PROP_TYPE));
 
         final var querySource = source(2, srcqry(sources(vehicleSource), sourceQueryYields, TeVehicle.class));
-        final var queryYields = yields(yieldProp("id", querySource, "id", LONG_PROP_TYPE),
-                                       yieldProp("key", querySource, "key", STRING_PROP_TYPE));
-        final var queryOrdering = orders(new OrderBy3(queryYields.yieldsMap().get("key"), false));
+        final var queryYields = yields(yieldProp(ID, querySource, ID, LONG_PROP_TYPE),
+                                       yieldProp(KEY, querySource, KEY, STRING_PROP_TYPE));
+        final var queryOrdering = orders(new OrderBy3(queryYields.yieldsMap().get(KEY), false));
 
         final var expectedQry = qry(sources(querySource),
                                     queryYields,
@@ -97,22 +100,22 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
     @Test
     public void id_is_NOT_implicitly_ordered_by_in_union_query_without_explicit_ordering() {
         final var queryModel = select(select(TeVehicle.class)
-                                              .yield().prop("key").as("key")
-                                              .yield().prop("id").as("id")
+                                              .yield().prop(KEY).as(KEY)
+                                              .yield().prop(ID).as(ID)
                                               .modelAsEntity(TeVehicle.class))
-                .yield().prop("key").as("key")
-                .yield().prop("id").as("id")
+                .yield().prop(KEY).as(KEY)
+                .yield().prop(ID).as(ID)
                 .modelAsEntity(TeVehicle.class);
 
         final var actualQuery = transform(queryModel);
 
         final var vehicleSource = source(TeVehicle.class, 1);
-        final var sourceQueryYields = yields(yieldProp("id", vehicleSource, "id", LONG_PROP_TYPE),
-                                             yieldProp("key", vehicleSource, "key", STRING_PROP_TYPE));
+        final var sourceQueryYields = yields(yieldProp(ID, vehicleSource, ID, LONG_PROP_TYPE),
+                                             yieldProp(KEY, vehicleSource, KEY, STRING_PROP_TYPE));
 
         final var querySource = source(2, srcqry(sources(vehicleSource), sourceQueryYields, TeVehicle.class));
-        final var queryYields = yields(yieldProp("id", querySource, "id", LONG_PROP_TYPE),
-                                       yieldProp("key", querySource, "key", STRING_PROP_TYPE));
+        final var queryYields = yields(yieldProp(ID, querySource, ID, LONG_PROP_TYPE),
+                                       yieldProp(KEY, querySource, KEY, STRING_PROP_TYPE));
 
         final var expectedQry = qry(sources(querySource),
                                     queryYields,
@@ -125,22 +128,22 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
     @Test
     public void id_is_NOT_implicitly_ordered_by_in_union_query_if_id_is_not_yielded() {
         final var queryModel = select(select(TeVehicle.class)
-                                              .yield().prop("key").as("key")
-                                              .yield().prop("id").as("id")
+                                              .yield().prop(KEY).as(KEY)
+                                              .yield().prop(ID).as(ID)
                                               .modelAsEntity(TeVehicle.class))
-                .orderBy().yield("key").asc()
-                .yield().prop("key").as("key")
+                .orderBy().yield(KEY).asc()
+                .yield().prop(KEY).as(KEY)
                 .modelAsEntity(TeVehicle.class);
 
         final var actualQuery = transform(queryModel);
 
         final var vehicleSource = source(TeVehicle.class, 1);
-        final var sourceQueryYields = yields(yieldProp("id", vehicleSource, "id", LONG_PROP_TYPE),
-                                             yieldProp("key", vehicleSource, "key", STRING_PROP_TYPE));
+        final var sourceQueryYields = yields(yieldProp(ID, vehicleSource, ID, LONG_PROP_TYPE),
+                                             yieldProp(KEY, vehicleSource, KEY, STRING_PROP_TYPE));
 
         final var querySource = source(2, srcqry(sources(vehicleSource), sourceQueryYields, TeVehicle.class));
-        final var queryYields = yields(yieldProp("key", querySource, "key", STRING_PROP_TYPE));
-        final var queryOrdering = orders(new OrderBy3(queryYields.yieldsMap().get("key"), false));
+        final var queryYields = yields(yieldProp(KEY, querySource, KEY, STRING_PROP_TYPE));
+        final var queryOrdering = orders(new OrderBy3(queryYields.yieldsMap().get(KEY), false));
 
         final var expectedQry = qry(sources(querySource),
                                     queryYields,
@@ -153,25 +156,25 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
     @Test
     public void id_is_NOT_implicitly_ordered_by_in_union_query_if_yield_id_is_ordered_by_explicitly() {
         final var queryModel = select(select(TeVehicle.class)
-                                              .yield().prop("key").as("key")
-                                              .yield().prop("id").as("id")
+                                              .yield().prop(KEY).as(KEY)
+                                              .yield().prop(ID).as(ID)
                                               .modelAsEntity(TeVehicle.class))
-                .orderBy().yield("id").asc().yield("key").desc()
-                .yield().prop("key").as("key")
-                .yield().prop("id").as("id")
+                .orderBy().yield(ID).asc().yield(KEY).desc()
+                .yield().prop(KEY).as(KEY)
+                .yield().prop(ID).as(ID)
                 .modelAsEntity(TeVehicle.class);
 
         final var actualQuery = transform(queryModel);
 
         final var vehicleSource = source(TeVehicle.class, 1);
-        final var sourceQueryYields = yields(yieldProp("id", vehicleSource, "id", LONG_PROP_TYPE),
-                                             yieldProp("key", vehicleSource, "key", STRING_PROP_TYPE));
+        final var sourceQueryYields = yields(yieldProp(ID, vehicleSource, ID, LONG_PROP_TYPE),
+                                             yieldProp(KEY, vehicleSource, KEY, STRING_PROP_TYPE));
 
         final var querySource = source(2, srcqry(sources(vehicleSource), sourceQueryYields, TeVehicle.class));
-        final var queryYields = yields(yieldProp("id", querySource, "id", LONG_PROP_TYPE),
-                                       yieldProp("key", querySource, "key", STRING_PROP_TYPE));
-        final var queryOrdering = orders(new OrderBy3(queryYields.yieldsMap().get("id"), false),
-                                         new OrderBy3(queryYields.yieldsMap().get("key"), true));
+        final var queryYields = yields(yieldProp(ID, querySource, ID, LONG_PROP_TYPE),
+                                       yieldProp(KEY, querySource, KEY, STRING_PROP_TYPE));
+        final var queryOrdering = orders(new OrderBy3(queryYields.yieldsMap().get(ID), false),
+                                         new OrderBy3(queryYields.yieldsMap().get(KEY), true));
 
         final var expectedQry = qry(sources(querySource),
                                     queryYields,
@@ -184,25 +187,25 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
     @Test
     public void id_is_NOT_implicitly_ordered_by_in_union_query_if_prop_id_is_ordered_by_explicitly() {
         final var queryModel = select(select(TeVehicle.class)
-                                              .yield().prop("key").as("key")
-                                              .yield().prop("id").as("id")
+                                              .yield().prop(KEY).as(KEY)
+                                              .yield().prop(ID).as(ID)
                                               .modelAsEntity(TeVehicle.class))
-                .orderBy().prop("id").asc().yield("key").desc()
-                .yield().prop("key").as("key")
-                .yield().prop("id").as("id")
+                .orderBy().prop(ID).asc().yield(KEY).desc()
+                .yield().prop(KEY).as(KEY)
+                .yield().prop(ID).as(ID)
                 .modelAsEntity(TeVehicle.class);
 
         final var actualQuery = transform(queryModel);
 
         final var vehicleSource = source(TeVehicle.class, 1);
-        final var sourceQueryYields = yields(yieldProp("id", vehicleSource, "id", LONG_PROP_TYPE),
-                                             yieldProp("key", vehicleSource, "key", STRING_PROP_TYPE));
+        final var sourceQueryYields = yields(yieldProp(ID, vehicleSource, ID, LONG_PROP_TYPE),
+                                             yieldProp(KEY, vehicleSource, KEY, STRING_PROP_TYPE));
 
         final var querySource = source(2, srcqry(sources(vehicleSource), sourceQueryYields, TeVehicle.class));
-        final var queryYields = yields(yieldProp("id", querySource, "id", LONG_PROP_TYPE),
-                                       yieldProp("key", querySource, "key", STRING_PROP_TYPE));
-        final var queryOrdering = orders(new OrderBy3(prop("id", querySource, LONG_PROP_TYPE), false),
-                                         new OrderBy3(queryYields.yieldsMap().get("key"), true));
+        final var queryYields = yields(yieldProp(ID, querySource, ID, LONG_PROP_TYPE),
+                                       yieldProp(KEY, querySource, KEY, STRING_PROP_TYPE));
+        final var queryOrdering = orders(new OrderBy3(prop(ID, querySource, LONG_PROP_TYPE), false),
+                                         new OrderBy3(queryYields.yieldsMap().get(KEY), true));
 
         final var expectedQry = qry(sources(querySource),
                                     queryYields,
@@ -216,9 +219,9 @@ public class UnionOrderByIdTest extends AbstractDaoTestCase {
     protected void populateDomain() {}
 
     private <T extends AbstractEntity<?>> ResultQuery3 transform(final EntityResultQueryModel<T> qry) {
-        return eqlQueryTransformer.transform(new QueryProcessingModel<>(qry, null, null, emptyMap(), true),
-                                             Optional.empty())
-                .item;
+        return eqlQueryTransformer
+               .transform(new QueryProcessingModel<>(qry, null, null, emptyMap(), true), empty())
+               .item;
     }
 
 }
