@@ -94,14 +94,20 @@ public class SeparateLinesWithLabelsFormatTest {
     }
 
     @Test
-    public void non_formattable_circular_objects_cannot_be_represented() {
-        final var loop = new PlainCircular("Loop");
+    public void non_formattable_directly_circular_object_is_fully_represented_only_once() {
+        final var loop = new PlainDirectlyCircular("Loop");
+        assertThat(loop.toString()).containsOnlyOnce(loop.id);
+    }
+
+    @Test
+    public void non_formattable_indirectly_circular_object_cannot_be_represented() {
+        final var loop = new PlainIndirectlyCircular1();
         assertThatThrownBy(loop::toString)
                 .isInstanceOf(StackOverflowError.class);
     }
 
     @Test
-    public void formattable_circular_object_is_fully_represented_twice_when_it_is_the_root_of_formatting() {
+    public void formattable_circular_object_is_fully_represented_only_once_when_it_is_the_root_of_formatting() {
         final var loop = new Circular("Loop");
         assertThat(loop.toString(separateLines()))
                 .satisfies(s -> assertEquals(2, countMatches(s, loop.id)));
@@ -224,18 +230,11 @@ public class SeparateLinesWithLabelsFormatTest {
 
     }
 
-    /**
-     * This class demonstrates why the circularity of non-formattable objects cannot be detected.
-     * Here method {@link #toString()} always creates a new format, as opposed to {@link ToString.IFormattable#toString(IFormat)}
-     * that uses the supplied format.
-     * Therefore, when {@link #toString()} is called on {@link #self}, the enclosing format that called it cannot be used,
-     * and the process begins anew.
-     */
-    private static final class PlainCircular {
+    private static final class PlainDirectlyCircular {
         final String id;
-        PlainCircular self = this;
+        PlainDirectlyCircular self = this;
 
-        private PlainCircular(final String id) {
+        private PlainDirectlyCircular(final String id) {
             this.id = id;
         }
 
@@ -248,5 +247,43 @@ public class SeparateLinesWithLabelsFormatTest {
         }
 
     }
+
+    /**
+     * This class demonstrates why the circularity of non-formattable objects cannot be detected.
+     * Here method {@link #toString()} always creates a new format, as opposed to {@link ToString.IFormattable#toString(IFormat)}
+     * that uses the supplied format.
+     * Therefore, when {@link #toString()} is called on {@link #self}, the enclosing format that called it cannot be used,
+     * and the process begins anew.
+     */
+    private static final class PlainIndirectlyCircular1 {
+
+        PlainIndirectlyCircular2 that = new PlainIndirectlyCircular2(this);
+
+        @Override
+        public String toString() {
+            return separateLines().toString(this)
+                    .add("that", that)
+                    .$();
+        }
+
+    }
+
+    private static final class PlainIndirectlyCircular2 {
+
+        PlainIndirectlyCircular1 that;
+
+        public PlainIndirectlyCircular2(final PlainIndirectlyCircular1 that) {
+            this.that = that;
+        }
+
+        @Override
+        public String toString() {
+            return separateLines().toString(this)
+                    .add("that", that)
+                    .$();
+        }
+
+    }
+
 
 }

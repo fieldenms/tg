@@ -451,6 +451,16 @@ public final class ToString {
         }
 
         @Override
+        public ToString toString(final Object object) {
+            requireNonNull(object, "object");
+
+            final var label = makeLabel(object);
+            labels.put(object, label);
+
+            return super.toString(formatFirstOccurence(label, object.getClass().getSimpleName()));
+        }
+
+        @Override
         public String formatValue(final Object value) {
             if (value == null) {
                 return super.formatValue(value);
