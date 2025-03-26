@@ -399,12 +399,12 @@ export const openLink = function (url, target, windowFeatures) {
     const newWindow = window.open(url, target, windowFeatures);
     if (newWindow) {
         // Always prevent tabnapping.
-        // I.e. prevent ability by a new tab / window to rewrite 'location' of original through 'opener' property.
+        // I.e. prevent ability by new tab / window to rewrite 'location' of original tab / window through 'opener' property.
         newWindow.opener = null;
 
         if (newWindow.focus) {
             // Create an asynchronous request to bring to view a newly opened window / tab.
-            // In most cases this will work with 'focus()' call.
+            // In most cases this will work without 'focus()' call.
             // However, tapping on original tab / window may prevent this behaviour.
             newWindow.focus();
         }
