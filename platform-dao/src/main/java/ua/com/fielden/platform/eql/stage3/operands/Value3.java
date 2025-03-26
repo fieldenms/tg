@@ -44,7 +44,7 @@ public record Value3 (Object value, String paramName, PropType type)
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

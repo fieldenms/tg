@@ -10,7 +10,7 @@ public record CompoundCondition1(LogicalOperator logicalOperator, ICondition1<? 
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

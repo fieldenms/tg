@@ -34,7 +34,7 @@ public record Expression1 (ISingleOperand1<? extends ISingleOperand2<?>> first,
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

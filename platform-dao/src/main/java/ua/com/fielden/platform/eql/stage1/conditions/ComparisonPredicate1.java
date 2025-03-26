@@ -36,7 +36,7 @@ public record ComparisonPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

@@ -68,7 +68,7 @@ public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

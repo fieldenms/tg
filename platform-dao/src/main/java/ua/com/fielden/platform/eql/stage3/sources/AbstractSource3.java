@@ -91,7 +91,7 @@ public abstract class AbstractSource3 implements ISource3, ToString.IFormattable
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

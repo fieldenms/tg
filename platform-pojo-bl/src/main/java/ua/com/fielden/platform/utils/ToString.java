@@ -80,9 +80,11 @@ public final class ToString {
     public static final IFormat standard = new StandardFormat();
 
     /**
-     * @see SeparateLinesFormat
+     * @see SeparateLinesWithLabelsFormat
      */
-    public static final SeparateLinesFormat separateLines = new SeparateLinesFormat();
+    public static SeparateLinesWithLabelsFormat separateLines() {
+        return new SeparateLinesWithLabelsFormat();
+    }
 
     private final IFormat format;
     private final StringJoiner stringJoiner;

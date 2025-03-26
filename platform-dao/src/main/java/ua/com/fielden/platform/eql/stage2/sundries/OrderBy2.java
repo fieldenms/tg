@@ -33,7 +33,7 @@ public record OrderBy2 (ISingleOperand2<? extends ISingleOperand3> operand,
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override
