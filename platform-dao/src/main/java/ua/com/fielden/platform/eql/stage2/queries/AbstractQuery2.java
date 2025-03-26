@@ -34,13 +34,34 @@ public abstract class AbstractQuery2 implements ToString.IFormattable {
     public final Class<?> resultType;
 
     public AbstractQuery2(final QueryComponents2 queryComponents, final Class<?> resultType) {
-        this.maybeJoinRoot = queryComponents.maybeJoinRoot();
-        this.whereConditions = queryComponents.whereConditions();
-        this.yields = queryComponents.yields();
-        this.groups = queryComponents.groups();
-        this.orderings = queryComponents.orderings();
+        this(queryComponents.maybeJoinRoot(),
+             queryComponents.whereConditions(),
+             queryComponents.yields(),
+             queryComponents.groups(),
+             queryComponents.orderings(),
+             resultType);
+    }
+
+    public AbstractQuery2(
+            final Optional<IJoinNode2<? extends IJoinNode3>> maybeJoinRoot,
+            final Conditions2 whereConditions,
+            final Yields2 yields,
+            final GroupBys2 groups,
+            final OrderBys2 orderings,
+            final Class<?> resultType)
+    {
+        this.maybeJoinRoot = maybeJoinRoot;
+        this.whereConditions = whereConditions;
+        this.yields = yields;
+        this.groups = groups;
+        this.orderings = orderings;
         this.resultType = resultType;
     }
+
+    /**
+     * Returns a new query of this type where orderings are replaced by the specified ones.
+     */
+    public abstract AbstractQuery2 setOrderings(final OrderBys2 orderings);
 
     /**
      * Transforms all query components to stage 3.
@@ -49,6 +70,15 @@ public abstract class AbstractQuery2 implements ToString.IFormattable {
      * @return
      */
     protected TransformationResultFromStage2To3<QueryComponents3> transformQueryComponents(final TransformationContextFromStage2To3 context) {
+        final AbstractQuery2 this_ = switch (context.dbVersion()) {
+            case MSSQL ->  UnionOrderById.INSTANCE.apply(this);
+            default -> this;
+        };
+
+        return this_.transformQueryComponents_(context);
+    }
+
+    private TransformationResultFromStage2To3<QueryComponents3> transformQueryComponents_(final TransformationContextFromStage2To3 context) {
         final var joinRootTr = maybeJoinRoot.map(joinRoot -> joinRoot.transform(context))
                 .orElseGet(() -> new TransformationResultFromStage2To3<>(null, context));
         final TransformationResultFromStage2To3<Conditions3> whereConditionsTr = whereConditions.transform(joinRootTr.updatedContext);

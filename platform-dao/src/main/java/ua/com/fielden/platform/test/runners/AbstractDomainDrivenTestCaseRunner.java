@@ -1,21 +1,22 @@
 package ua.com.fielden.platform.test.runners;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.Logger;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.test.WithDbVersion;
 import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Function;
 
 import static java.lang.String.format;
@@ -31,6 +32,9 @@ import static ua.com.fielden.platform.test.DbCreator.ddlScriptFileName;
  *
  */
 public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4ClassRunner  {
+
+    private static final String INFO_TEST_IGNORED_DUE_TO_DB_VERSION =
+            "Test [%s] is ignored because it requires one of databases %s while the current one is [%s].";
 
     public final Logger logger = getLogger(getClass());
     
@@ -53,8 +57,8 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
     private final DbCreator dbCreator;
     private static ICompanionObjectFinder coFinder;
     private static EntityFactory factory;
+    private static IDbVersionProvider dbVersionProvider;
 
-    
     public AbstractDomainDrivenTestCaseRunner(
             final Class<?> klass, 
             final Class<? extends DbCreator> dbCreatorType, 
@@ -111,6 +115,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             config = testConfig.orElseGet(() -> createConfig(dbProps));
             coFinder = config.getInstance(ICompanionObjectFinder.class);
             factory = config.getInstance(EntityFactory.class);
+            dbVersionProvider = config.getInstance(IDbVersionProvider.class);
             final Function<Class<?>, Object> instFun = type -> config.getInstance(type);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), instFun);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("coFinder"), coFinder);
@@ -187,7 +192,26 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             };
         };
     }
-    
+
+    @Override
+    protected boolean isIgnored(final FrameworkMethod child) {
+        if (super.isIgnored(child)) {
+            return true;
+        }
+
+        final var atWithDbVersion = child.getAnnotation(WithDbVersion.class);
+        final var dbVersionMatches = atWithDbVersion == null || ArrayUtils.contains(atWithDbVersion.value(), dbVersionProvider.dbVersion());
+        if (!dbVersionMatches) {
+            logger.info(INFO_TEST_IGNORED_DUE_TO_DB_VERSION.formatted(
+                    "%s.%s".formatted(child.getDeclaringClass().getSimpleName(), child.getName()),
+                    Arrays.toString(atWithDbVersion.value()),
+                    dbVersionProvider.dbVersion()));
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * A helper function to instantiate test case configuration as specified in {@code props}, property {@code "config.domain"}.
      * 

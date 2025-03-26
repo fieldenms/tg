@@ -104,4 +104,8 @@ public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) impl
                 .$();
     }
 
+    public OrderBys2 setModels(final List<OrderBy2> models) {
+        return orderBys2(models, limit, offset);
+    }
+
 }
