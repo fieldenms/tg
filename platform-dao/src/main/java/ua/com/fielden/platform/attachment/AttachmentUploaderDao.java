@@ -66,10 +66,10 @@ import static ua.com.fielden.platform.error.Result.*;
 @EntityType(AttachmentUploader.class)
 public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> implements AttachmentUploaderCo {
 
-    private static final int DEBUG_DELAY_PROCESSING_TIME_MILLIS = 0;
-    private static final Random RND = new Random(100);
-
     private static final Logger LOGGER = getLogger(AttachmentUploaderDao.class);
+    private static final Random RND = new Random(100);
+    private static final int DEBUG_DELAY_PROCESSING_TIME_MILLIS = 0;
+
     public static final String WARN_RESTRICTED_MIME = "An attempt to load file [%s] with a restricted mime type [%s] by user [%s].";
     public static final String WARN_RESTRICTED_MIME_IN_ARCHIVE = "An attempt to load archive [%s] with entry [%s] of a restricted mime type [%s] by user [%s].";
     public static final String ERR_RESTRICTED_MIME = "Files of type [%s] are not supported.";
@@ -290,8 +290,8 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             if (FileTypes.fromMime(mime) == TAR) {
                 return inspectGzipTarArchive(uploader, tmpPath, user);
             }
+            // Gzip archive is just a single compressed file, as opposed to Zip, which may contain multiple files.
             else {
-                // Gzip archive is just a single compressed file, as opposed to Zip, which may contain multiple files.
                 final Result check = checkMimeType(uploader, of("N/A"), mime, user, WARN_RESTRICTED_MIME_IN_ARCHIVE, ERR_RESTRICTED_MIME_IN_ARCHIVE);
                 if (!check.isSuccessful()) {
                     return check;
