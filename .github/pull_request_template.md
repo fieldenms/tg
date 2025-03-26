@@ -101,7 +101,7 @@ This section should be completed with reference to section [Performing PR review
 - [ ] Ensure that changes are documented for the end-user (a software engineer in the case of TG, or an application user in the case of TG-based applications).
 
 - [ ] If there are significant changes (described above), special attention has been paid to them.
-      Marked the task items in section "Significant changes" as completed to indicated that corresponding changes have been reviewed, improved if necessary, and approved.
+      Marked the task items in section "Significant changes" as completed to indicate that corresponding changes have been reviewed, improved if necessary, and approved.
 
 - [ ] The issue or issues addressed by the pull request are associated with the relevant release milestone.
 
@@ -113,5 +113,5 @@ This section should be completed with reference to section [Performing PR review
 
 - [ ] The `In progress` label has been removed from the pull request.
 
-- [ ] The `Pull request` label has been removed from the pull request.
+- [ ] The `Pull request` label has been removed from the issue.
 

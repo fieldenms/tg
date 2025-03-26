@@ -44,6 +44,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
         props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
         props.setProperty("attachments.location", "src/test/resources/attachments");
+        props.setProperty("attachments.allowlist", "text/plain,application/pdf,application/zip,application/x-zip-compressed,application/gzip,application/x-tar,application/x-gtar,application/vnd.openxmlformats-officedocument.wordprocessingml.document");
         props.setProperty("email.smtp", "non-existing-server");
         props.setProperty("email.fromAddress", "platform@fielden.com.au");
         props.setProperty("web.api", "true");
