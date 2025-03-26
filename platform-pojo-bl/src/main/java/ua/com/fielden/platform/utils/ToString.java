@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -7,9 +8,11 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 /**
  * A utility that assists with implementation of the {@link Object#toString()} method.
@@ -86,6 +89,19 @@ public final class ToString {
         return new SeparateLinesWithLabelsFormat();
     }
 
+    private static final Logger LOGGER = getLogger();
+
+    /**
+     * The maximum length of a string that can be built.
+     */
+    private static final int MAX_SAFE_LENGTH = 1024 * 1024 * 100;
+
+    private static final String WARN_MAX_LENGTH_REACHED =
+            """
+            Maximum length %s of the underlying buffer reached. The resulting string will be truncated. \
+            This is a safety measure to prevent out-of-memory errors."""
+            .formatted(MAX_SAFE_LENGTH);
+
     private final IFormat format;
     private final StringJoiner stringJoiner;
 
@@ -96,21 +112,21 @@ public final class ToString {
 
     public ToString add(final String name, final Object value) {
         if (!format.isIgnored(value)) {
-            stringJoiner.add(format.formatField(name, value));
+            _add(() -> format.formatField(name, value));
         }
         return this;
     }
 
     public <X> ToString addIf(final String name, final X value, final Predicate<? super X> test) {
         if (!format.isIgnored(value) && test.test(value)) {
-            stringJoiner.add(format.formatField(name, value));
+            _add(() -> format.formatField(name, value));
         }
         return this;
     }
 
     public <X> ToString addIfNot(final String name, final X value, final Predicate<? super X> test) {
         if (!format.isIgnored(value) && !test.test(value)) {
-            stringJoiner.add(format.formatField(name, value));
+            _add(() -> format.formatField(name, value));
         }
         return this;
     }
@@ -143,6 +159,21 @@ public final class ToString {
      */
     public String $() {
         return stringJoiner.toString();
+    }
+
+    private void _add(final Supplier<String> stringSupplier) {
+        // We may be off by the length of the field delimiter, which is unlikely to be significant
+        final int remains = MAX_SAFE_LENGTH - stringJoiner.length();
+        if (remains <= 0) {
+            LOGGER.warn(WARN_MAX_LENGTH_REACHED);
+        }
+        else {
+            final var string = stringSupplier.get();
+            if (remains < string.length()) {
+                LOGGER.warn(WARN_MAX_LENGTH_REACHED);
+            }
+            stringJoiner.add(string.substring(0, Integer.min(remains, string.length())));
+        }
     }
 
     /**
@@ -406,6 +437,8 @@ public final class ToString {
      */
     public static class SeparateLinesWithLabelsFormat extends SeparateLinesFormat {
 
+        private static final int MAX_UNLABELED_VALUE_LENGTH = 300;
+
         private final Map<Object, String> labels;
 
         protected SeparateLinesWithLabelsFormat() {
@@ -431,12 +464,23 @@ public final class ToString {
                     // Creating a label before formatting the value ensures that if the value is circular, the label will be used accordingly
                     final var newLabel = makeLabel(value);
                     labels.put(value, newLabel);
-                    return newLabel + "=" + super.formatValue(value);
+                    return formatFirstOccurence(newLabel, super.formatValue(value));
                 }
             }
             else {
-                return super.formatValue(value);
+                final var valueString = super.formatValue(value);
+                // Let's also use labels for values represented by large strings, as a defense against unexpected situations
+                if (valueString.length() > MAX_UNLABELED_VALUE_LENGTH) {
+                    final var newLabel = makeLabel(value);
+                    labels.put(value, newLabel);
+                    return formatFirstOccurence(newLabel, valueString);
+                }
+                return valueString;
             }
+        }
+
+        private String formatFirstOccurence(final String label, final String valueString) {
+            return label + "=" + valueString;
         }
 
         protected boolean requiresLabel(final Object object) {
