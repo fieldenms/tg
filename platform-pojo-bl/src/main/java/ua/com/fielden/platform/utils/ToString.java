@@ -439,13 +439,13 @@ public final class ToString {
 
         private static final int MAX_UNLABELED_VALUE_LENGTH = 300;
 
-        private final Map<Object, String> labels;
+        private final IdentityHashMap<Object, String> labels;
 
         protected SeparateLinesWithLabelsFormat() {
-            this.labels = new HashMap<>();
+            this.labels = new IdentityHashMap<>();
         }
 
-        protected SeparateLinesWithLabelsFormat(final int depth, final Map<Object, String> labels) {
+        protected SeparateLinesWithLabelsFormat(final int depth, final IdentityHashMap<Object, String> labels) {
             super(depth);
             this.labels = labels;
         }
