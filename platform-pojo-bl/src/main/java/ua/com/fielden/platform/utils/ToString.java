@@ -455,17 +455,16 @@ public final class ToString {
             if (value == null) {
                 return super.formatValue(value);
             }
+
+            final var label = labels.get(value);
+            if (label != null) {
+                return label + " (" + value.getClass().getTypeName() + ")";
+            }
             else if (requiresLabel(value)) {
-                final var label = labels.get(value);
-                if (label != null) {
-                    return label + " (" + value.getClass().getTypeName() + ")";
-                }
-                else {
-                    // Creating a label before formatting the value ensures that if the value is circular, the label will be used accordingly
-                    final var newLabel = makeLabel(value);
-                    labels.put(value, newLabel);
-                    return formatFirstOccurence(newLabel, super.formatValue(value));
-                }
+                // Creating a label before formatting the value ensures that if the value is circular, the label will be used accordingly
+                final var newLabel = makeLabel(value);
+                labels.put(value, newLabel);
+                return formatFirstOccurence(newLabel, super.formatValue(value));
             }
             else {
                 final var valueString = super.formatValue(value);
