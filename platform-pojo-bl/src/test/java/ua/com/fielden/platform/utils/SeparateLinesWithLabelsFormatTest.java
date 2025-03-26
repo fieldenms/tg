@@ -110,7 +110,7 @@ public class SeparateLinesWithLabelsFormatTest {
     public void formattable_circular_object_is_fully_represented_only_once_when_it_is_the_root_of_formatting() {
         final var loop = new Circular("Loop");
         assertThat(loop.toString(separateLines()))
-                .satisfies(s -> assertEquals(2, countMatches(s, loop.id)));
+                .containsOnlyOnce(loop.id);
     }
 
     @Test
