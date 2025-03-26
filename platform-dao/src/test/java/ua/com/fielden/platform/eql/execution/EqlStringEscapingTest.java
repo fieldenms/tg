@@ -29,8 +29,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
     // : Escaping of underscores
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    @WithDbVersion({DbVersion.POSTGRESQL, DbVersion.MSSQL})
     @Test
+    @WithDbVersion({DbVersion.POSTGRESQL, DbVersion.MSSQL})
     public void underscore_is_escaped_when_LIKE_pattern_is_string() {
         assertEqualsByKey(List.of("_"),
                           findAllByKeyLikeValue("_"));
@@ -44,8 +44,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
                           findAllByKeyLikeValue("%_%"));
     }
 
-    @WithDbVersion({DbVersion.POSTGRESQL, DbVersion.MSSQL})
     @Test
+    @WithDbVersion({DbVersion.POSTGRESQL, DbVersion.MSSQL})
     public void underscore_is_escaped_when_LIKE_pattern_is_property() {
         assertEqualsByKey(List.of("_"),
                           findAllByKeyLikeProp("_"));
@@ -57,8 +57,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
                           findAllByKeyLikeProp("%_%"));
     }
 
-    @WithDbVersion({DbVersion.POSTGRESQL, DbVersion.MSSQL})
     @Test
+    @WithDbVersion({DbVersion.POSTGRESQL, DbVersion.MSSQL})
     public void underscore_is_escaped_when_LIKE_pattern_is_parameter() {
         assertEqualsByKey(List.of("_"),
                           findAllByKeyLikeParam("_"));
@@ -70,8 +70,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
                           findAllByKeyLikeParam("%_%"));
     }
 
-    @WithDbVersion({DbVersion.POSTGRESQL, DbVersion.MSSQL})
     @Test
+    @WithDbVersion({DbVersion.POSTGRESQL, DbVersion.MSSQL})
     public void underscore_is_escaped_when_LIKE_pattern_is_expression() {
         assertEqualsByKey(List.of("_"),
                           findAllByKeyLikeModel("_"));
@@ -92,8 +92,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
     // : Escaping of square brackets
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    @WithDbVersion(DbVersion.MSSQL)
     @Test
+    @WithDbVersion(DbVersion.MSSQL)
     public void opening_square_bracket_is_escaped_when_LIKE_pattern_is_string() {
         assertEqualsByKey(List.of("[cb]at"),
                           findAllByKeyLikeValue("[cb]at"));
@@ -105,8 +105,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
                           findAllByKeyLikeValue("[[]c]at"));
     }
 
-    @WithDbVersion(DbVersion.MSSQL)
     @Test
+    @WithDbVersion(DbVersion.MSSQL)
     public void opening_square_bracket_is_escaped_when_LIKE_pattern_is_property() {
         assertEqualsByKey(List.of("[cb]at"),
                           findAllByKeyLikeProp("[cb]at"));
@@ -118,8 +118,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
                           findAllByKeyLikeProp("[[]c]at"));
     }
 
-    @WithDbVersion(DbVersion.MSSQL)
     @Test
+    @WithDbVersion(DbVersion.MSSQL)
     public void opening_square_bracket_is_escaped_when_LIKE_pattern_is_parameter() {
         assertEqualsByKey(List.of("[cb]at"),
                           findAllByKeyLikeParam("[cb]at"));
@@ -131,8 +131,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
                           findAllByKeyLikeParam("[[]c]at"));
     }
 
-    @WithDbVersion(DbVersion.MSSQL)
     @Test
+    @WithDbVersion(DbVersion.MSSQL)
     public void opening_square_bracket_is_escaped_when_LIKE_pattern_is_expression() {
         assertEqualsByKey(List.of("[cb]at"),
                           findAllByKeyLikeModel("[cb]at"));
@@ -148,8 +148,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
     // : Escaping of backslash
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    @WithDbVersion(DbVersion.POSTGRESQL)
     @Test
+    @WithDbVersion(DbVersion.POSTGRESQL)
     public void backslash_is_not_special_when_LIKE_pattern_is_string() {
         assertEqualsByKey(List.of("\\"),
                           findAllByKeyLikeValue("\\"));
@@ -169,8 +169,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
                           findAllByKeyLikeValue("[\\\\]"));
     }
 
-    @WithDbVersion(DbVersion.POSTGRESQL)
     @Test
+    @WithDbVersion(DbVersion.POSTGRESQL)
     public void backslash_is_not_special_when_LIKE_pattern_is_parameter() {
         assertEqualsByKey(List.of("\\"),
                           findAllByKeyLikeParam("\\"));
@@ -190,8 +190,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
                           findAllByKeyLikeParam("[\\\\]"));
     }
 
-    @WithDbVersion(DbVersion.POSTGRESQL)
     @Test
+    @WithDbVersion(DbVersion.POSTGRESQL)
     public void backslash_is_not_special_when_LIKE_pattern_is_property() {
         assertEqualsByKey(List.of("\\"),
                           findAllByKeyLikeProp("\\"));
@@ -211,8 +211,8 @@ public class EqlStringEscapingTest extends AbstractDaoTestCase {
                           findAllByKeyLikeProp("[\\\\]"));
     }
 
-    @WithDbVersion(DbVersion.POSTGRESQL)
     @Test
+    @WithDbVersion(DbVersion.POSTGRESQL)
     public void backslash_is_not_special_when_LIKE_pattern_is_expression() {
         assertEqualsByKey(List.of("one\\two"),
                           select(TgPersonName.class).where()
