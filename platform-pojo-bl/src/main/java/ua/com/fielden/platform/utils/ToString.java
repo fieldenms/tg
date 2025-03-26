@@ -437,7 +437,7 @@ public final class ToString {
      */
     public static class SeparateLinesWithLabelsFormat extends SeparateLinesFormat {
 
-        private static final int MAX_UNLABELED_VALUE_LENGTH = 300;
+        static final int MAX_UNLABELED_VALUE_LENGTH = 300;
 
         private final IdentityHashMap<Object, String> labels;
 
