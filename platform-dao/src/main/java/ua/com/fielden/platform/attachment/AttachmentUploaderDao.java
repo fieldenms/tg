@@ -214,7 +214,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             case ZIP -> inspectZipArchive(uploader, tmpPath, user);
             case TAR -> inspectTarArchive(uploader, tmpPath, user);
             case GZIP -> inspectGzipArchive(uploader, tmpPath, user);
-            case null -> successful();
+            case OTHER -> successful();
         };
     }
 
