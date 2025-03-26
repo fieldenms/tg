@@ -54,14 +54,14 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.13.0</version>
+                    <version>3.14.0</version>
                     <configuration>
                         <release>21</release>
                         <encoding>UTF-8</encoding>
                         <compilerArgs>
                             <arg>-J-Xss10M</arg>
-                            <arg>-J-Xms128m</arg>
-                            <arg>-J-Xmx2048m</arg>
+                            <arg>-J-Xms256m</arg>
+                            <arg>-J-Xmx4096m</arg>
                         </compilerArgs>
                     </configuration>
                 </plugin>
