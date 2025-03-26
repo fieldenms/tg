@@ -204,6 +204,11 @@ public final class ToString {
          */
         String formatField(String name, @Nullable Object value);
 
+        /**
+         * Formats a value.
+         */
+        String formatValue(@Nullable Object value);
+
     }
 
     private static final class StandardFormat implements IFormat {
@@ -233,6 +238,11 @@ public final class ToString {
             return '[' + name + ": " + value + ']';
         }
 
+        @Override
+        public String formatValue(@Nullable final Object value) {
+            return Objects.toString(value);
+        }
+
     }
 
     /**
@@ -245,7 +255,7 @@ public final class ToString {
      * <p>
      * It is highly recommended to implement {@link IFormattable}, which will enable control over levels of indentation.
      */
-    public static final class SeparateLinesFormat implements IFormat {
+    public static class SeparateLinesFormat implements IFormat {
 
         private final CharSequence beforeFields;
         private final CharSequence afterFields;
@@ -257,7 +267,7 @@ public final class ToString {
             this(0);
         }
 
-        private SeparateLinesFormat(final int depth) {
+        protected SeparateLinesFormat(final int depth) {
             if (depth < 0) {
                 throw new InvalidArgumentException("Depth must be a non-negative integer, but was: %s".formatted(depth));
             }
@@ -319,7 +329,8 @@ public final class ToString {
             return name + ": " + formatValue(value);
         }
 
-        private String formatValue(final Object value) {
+        @Override
+        public String formatValue(final Object value) {
             // IMPORTANT: update `isFormattable` by testing against all types used in the switch
             return switch (value) {
                 case IFormattable it -> it.toString(setDepth(depth + 1));
@@ -379,6 +390,70 @@ public final class ToString {
             } else {
                 return '(' + formatValue(pair._1) + ", " + formatValue(pair._2) + ')';
             }
+        }
+
+    }
+
+    /**
+     * Extends {@link SeparateLinesFormat} with the ability to use labels for objects that occur more than once in a structure (shared objects).
+     * Circular structures are supported as well, but only for types that implement {@link IFormattable} and a few standard container types.
+     * <p>
+     * Labels are used as follows.
+     * For each object `O`, the first occurence of `O` is represented in its entirety.
+     * If `O` {@linkplain #requiresLabel(Object) requires a label}, then all subsequent occurences are represented by a generated label.
+     */
+    public static class SeparateLinesWithLabelsFormat extends SeparateLinesFormat {
+
+        private final Map<Object, String> labels;
+
+        protected SeparateLinesWithLabelsFormat() {
+            this.labels = new HashMap<>();
+        }
+
+        protected SeparateLinesWithLabelsFormat(final int depth, final Map<Object, String> labels) {
+            super(depth);
+            this.labels = labels;
+        }
+
+        @Override
+        public String formatValue(final Object value) {
+            if (value == null) {
+                return super.formatValue(value);
+            }
+            else if (requiresLabel(value)) {
+                final var label = labels.get(value);
+                if (label != null) {
+                    return label + " (" + value.getClass().getTypeName() + ")";
+                }
+                else {
+                    // Creating a label before formatting the value ensures that if the value is circular, the label will be used accordingly
+                    final var newLabel = makeLabel(value);
+                    labels.put(value, newLabel);
+                    return newLabel + "=" + super.formatValue(value);
+                }
+            }
+            else {
+                return super.formatValue(value);
+            }
+        }
+
+        protected boolean requiresLabel(final Object object) {
+            return object instanceof IFormattable
+                   || object instanceof Map<?, ?>
+                   || object instanceof Collection<?>
+                   || object instanceof T2<?, ?>;
+        }
+
+        /**
+         * This method is overriden so that this format will be used for nested objects as well.
+         */
+        @Override
+        public SeparateLinesWithLabelsFormat setDepth(final int newDepth) {
+            return new SeparateLinesWithLabelsFormat(newDepth, labels);
+        }
+
+        protected String makeLabel(final Object value) {
+            return "#" + System.identityHashCode(value);
         }
 
     }
