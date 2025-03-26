@@ -5,7 +5,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -15,8 +14,8 @@ import static java.util.stream.Collectors.joining;
 /**
  * A utility that assists with implementation of the {@link Object#toString()} method.
  * <p>
- * To use this utility, one should choose a {@linkplain Format format}, either a pre-defined one or create one's own via {@link #formatBuilder()}.
- * Then, one of {@link Format#toString(Object)} methods should be used, which serve as entries to the fluent API provided by {@link ToString}.
+ * To use this utility, one should choose a {@linkplain IFormat format}, either a pre-defined one or implement one's own.
+ * Then, one of {@link IFormat#toString(Object)} methods should be used, which serve as entries to the fluent API provided by {@link ToString}.
  * Finally, {@link ToString#$()} or {@link ToString#toString()} should be used to get the result.
  * <p>
  * {@link ToString} instances contain a mutable container which accumulates the string being built.
@@ -70,19 +69,15 @@ class Super implements IFormattable {
 }
  *}
  *
- * @see Format
+ * @see IFormat
+ * @see IFormattable
  */
 public final class ToString {
 
     /**
      * Standard format with all fields on a single line.
      */
-    public static final IFormat standard = formatBuilder()
-            .beforeFields("(")
-            .afterFields(")")
-            .fieldDelimiter(" ")
-            .fieldFormatter((name, value) -> '[' + name + ": " + value + ']')
-            .build();
+    public static final IFormat standard = new StandardFormat();
 
     /**
      * @see SeparateLinesFormat
@@ -98,22 +93,22 @@ public final class ToString {
     }
 
     public ToString add(final String name, final Object value) {
-        if (applyValueFilter(value)) {
-            stringJoiner.add(format.fieldFormatter().apply(name, value));
+        if (!format.isIgnored(value)) {
+            stringJoiner.add(format.formatField(name, value));
         }
         return this;
     }
 
     public <X> ToString addIf(final String name, final X value, final Predicate<? super X> test) {
-        if (applyValueFilter(value) && test.test(value)) {
-            stringJoiner.add(format.fieldFormatter().apply(name, value));
+        if (!format.isIgnored(value) && test.test(value)) {
+            stringJoiner.add(format.formatField(name, value));
         }
         return this;
     }
 
     public <X> ToString addIfNot(final String name, final X value, final Predicate<? super X> test) {
-        if (applyValueFilter(value) && !test.test(value)) {
-            stringJoiner.add(format.fieldFormatter().apply(name, value));
+        if (!format.isIgnored(value) && !test.test(value)) {
+            stringJoiner.add(format.formatField(name, value));
         }
         return this;
     }
@@ -146,14 +141,6 @@ public final class ToString {
      */
     public String $() {
         return stringJoiner.toString();
-    }
-
-    public static Format.Builder formatBuilder() {
-        return new Format.Builder();
-    }
-
-    private boolean applyValueFilter(final Object value) {
-        return format.valueFilter() == null || format.valueFilter().test(value);
     }
 
     /**
@@ -210,109 +197,42 @@ public final class ToString {
          * A predicate that determines whether a field will be formatted.
          * It is applied to a field's value, which may be null.
          */
-        Predicate<Object> valueFilter();
+        boolean isIgnored(@Nullable Object value);
 
         /**
-         * A function that formats a field.
-         * It is applied to a field's name and its value, which may be null.
+         * Formats a field.
          */
-        BiFunction<String, Object, String> fieldFormatter();
+        String formatField(String name, @Nullable Object value);
 
     }
 
-    /**
-     * The most general format implementation that can be used to create arbitrary simple formats.
-     */
-    public record Format (CharSequence beforeFields,
-                          CharSequence afterFields,
-                          CharSequence fieldDelimiter,
-                          @Nullable Predicate<Object> valueFilter,
-                          BiFunction<String, Object, String> fieldFormatter)
-            implements IFormat
-    {
-        public Format {
-            requireNonNull(beforeFields, "beforeFields");
-            requireNonNull(afterFields, "afterFields");
-            requireNonNull(fieldDelimiter, "fieldDelimiter");
-            requireNonNull(fieldFormatter, "fieldFormatter");
+    private static final class StandardFormat implements IFormat {
+
+        @Override
+        public CharSequence beforeFields() {
+            return "(";
         }
 
-        public Builder toBuilder() {
-            return new Builder(beforeFields, afterFields, fieldDelimiter, valueFilter, fieldFormatter);
+        @Override
+        public CharSequence afterFields() {
+            return ")";
         }
 
-        public static final class Builder {
-
-            private CharSequence beforeFields;
-            private CharSequence afterFields;
-            private CharSequence fieldDelimiter;
-            private @Nullable Predicate<Object> valueFilter;
-            private BiFunction<String, Object, String> fieldFormatter;
-
-            private Builder() {}
-
-            private Builder(final CharSequence beforeFields,
-                            final CharSequence afterFields,
-                            final CharSequence fieldDelimiter,
-                            final Predicate<Object> valueFilter,
-                            final BiFunction<String, Object, String> fieldFormatter) {
-                this.beforeFields = beforeFields;
-                this.afterFields = afterFields;
-                this.fieldDelimiter = fieldDelimiter;
-                this.valueFilter = valueFilter;
-                this.fieldFormatter = fieldFormatter;
-            }
-
-            public IFormat build() {
-                return new Format(beforeFields, afterFields, fieldDelimiter, valueFilter, fieldFormatter);
-            }
-
-            public CharSequence getBeforeFields() {
-                return beforeFields;
-            }
-
-            public Builder beforeFields(final CharSequence beforeFields) {
-                this.beforeFields = beforeFields;
-                return this;
-            }
-
-            public CharSequence getAfterFields() {
-                return afterFields;
-            }
-
-            public Builder afterFields(final CharSequence afterFields) {
-                this.afterFields = afterFields;
-                return this;
-            }
-
-            public CharSequence getFieldDelimiter() {
-                return fieldDelimiter;
-            }
-
-            public Builder fieldDelimiter(final CharSequence fieldDelimiter) {
-                this.fieldDelimiter = fieldDelimiter;
-                return this;
-            }
-
-            @Nullable
-            public Predicate<Object> getValueFilter() {
-                return valueFilter;
-            }
-
-            public Builder valueFilter(@Nullable final Predicate<Object> valueFilter) {
-                this.valueFilter = valueFilter;
-                return this;
-            }
-
-            public BiFunction<String, Object, String> getFieldFormatter() {
-                return fieldFormatter;
-            }
-
-            public Builder fieldFormatter(final BiFunction<String, Object, String> fieldFormatter) {
-                this.fieldFormatter = fieldFormatter;
-                return this;
-            }
+        @Override
+        public CharSequence fieldDelimiter() {
+            return " ";
         }
+
+        @Override
+        public boolean isIgnored(@Nullable final Object value) {
+            return false;
+        }
+
+        @Override
+        public String formatField(final String name, @Nullable final Object value) {
+            return '[' + name + ": " + value + ']';
+        }
+
     }
 
     /**
@@ -330,19 +250,14 @@ public final class ToString {
         private final CharSequence beforeFields;
         private final CharSequence afterFields;
         private final CharSequence fieldDelimiter;
-        private final @Nullable Predicate<Object> valueFilter;
         /** Track the current depth to determine the indentation correctly. Starts from 0. */
         private final int depth;
 
-        public SeparateLinesFormat(final @Nullable Predicate<Object> valueFilter) {
-            this(0, valueFilter);
-        }
-
         public SeparateLinesFormat() {
-            this(0, null);
+            this(0);
         }
 
-        private SeparateLinesFormat(final int depth, final @Nullable Predicate<Object> valueFilter) {
+        private SeparateLinesFormat(final int depth) {
             if (depth < 0) {
                 throw new InvalidArgumentException("Depth must be a non-negative integer, but was: %s".formatted(depth));
             }
@@ -350,7 +265,6 @@ public final class ToString {
             this.beforeFields = " {\n" + indentString;
             this.afterFields = '\n' + indent(depth - 1) + '}';
             this.fieldDelimiter = "\n" + indentString;
-            this.valueFilter = valueFilter;
             this.depth = depth;
         }
 
@@ -362,7 +276,7 @@ public final class ToString {
          * Returns a new instance with the specified depth.
          */
         public SeparateLinesFormat setDepth(final int newDepth) {
-            return new SeparateLinesFormat(newDepth, valueFilter);
+            return new SeparateLinesFormat(newDepth);
         }
 
         @Override
@@ -396,13 +310,13 @@ public final class ToString {
         }
 
         @Override
-        public Predicate<Object> valueFilter() {
-            return valueFilter;
+        public boolean isIgnored(@Nullable final Object value) {
+            return false;
         }
 
         @Override
-        public BiFunction<String, Object, String> fieldFormatter() {
-            return (name, value) -> name + ": " + formatValue(value);
+        public String formatField(final String name, @Nullable final Object value) {
+            return name + ": " + formatValue(value);
         }
 
         private String formatValue(final Object value) {
