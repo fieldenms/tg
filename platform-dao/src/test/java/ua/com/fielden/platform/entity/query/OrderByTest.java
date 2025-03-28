@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.query.fluent.Limit;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
 import ua.com.fielden.platform.eql.stage0.OrderingModelConflictException;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -171,7 +172,7 @@ public class OrderByTest extends AbstractDaoTestCase {
                 .with(orderBy().prop("id").asc().model())
                 .model();
 
-        assertThrows(OrderingModelConflictException.class,
+        assertThrows(EntityRetrievalException.class,
                      () -> co(TgPersonName.class).getAllEntities(qem));
     }
 
