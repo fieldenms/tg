@@ -99,7 +99,6 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
 
     private QueryExecutionModel(final Builder<T, Q> builder) {
         this(builder.queryModel, builder.orderModel, builder.fetchModel, builder.fillModel, preprocessParamValues(builder.parameters()), builder.lightweight);
-        logger.debug(this);
     }
 
     private static Map<String, Object> preprocessParamValues(final Map<String, Object> paramValues) {
