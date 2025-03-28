@@ -401,7 +401,7 @@ public final class ToString {
                 // use the same name for all maps to keep it simple
                 final var toString = this.toString("Map");
                 map.forEach((key, value) -> toString.add(key instanceof CharSequence csq ? quote(csq.toString()) : Objects.toString(key),
-                                                         formatValue(value)));
+                                                         value));
                 return toString.$();
             }
         }
@@ -466,10 +466,17 @@ public final class ToString {
         public ToString toString(final Object object) {
             requireNonNull(object, "object");
 
-            final var label = makeLabel(object);
-            labels.put(object, label);
-
-            return super.toString(formatFirstOccurence(label, object.getClass().getSimpleName()));
+            // Always label the root object, unless it is inside some other structure being formatted,
+            // in which case there will already be a label for it.
+            final var label = labels.get(object);
+            if (label == null) {
+                final var newLabel = makeLabel(object);
+                labels.put(object, newLabel);
+                return super.toString(formatFirstOccurence(newLabel, object.getClass().getSimpleName()));
+            }
+            else {
+                return super.toString(object);
+            }
         }
 
         @Override
