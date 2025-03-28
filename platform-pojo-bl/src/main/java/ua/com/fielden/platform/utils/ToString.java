@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.Reflector.isBoxedType;
 
 /**
  * A utility that assists with implementation of the {@link Object#toString()} method.
@@ -303,6 +304,13 @@ public final class ToString {
      */
     public static class SeparateLinesFormat implements IFormat {
 
+        /**
+         * Enables compact representation of map keys.
+         * Exists for debugging purposes.
+         * Deliberately non-final so that the value can be changed in debug mode.
+         */
+        private static boolean COMPACT_MAP_KEYS = true;
+
         private final CharSequence beforeFields;
         private final CharSequence afterFields;
         private final CharSequence fieldDelimiter;
@@ -405,9 +413,26 @@ public final class ToString {
             } else {
                 // use the same name for all maps to keep it simple
                 final var toString = this.toString("Map");
-                map.forEach((key, value) -> toString.add(key instanceof String s ? formatString(s) : Objects.toString(key),
-                                                         value));
+                map.forEach((key, value) -> toString.add(formatMapKey(key), value));
                 return toString.$();
+            }
+        }
+
+        private String formatMapKey(final Object key) {
+            if (key == null) {
+                return formatValue(key);
+            }
+            else if (COMPACT_MAP_KEYS) {
+                return switch (key) {
+                    case Enum<?> e -> e.name();
+                    case String $ -> formatValue(key);
+                    case Type $ -> formatValue(key);
+                    case Object x when x.getClass().isPrimitive() || isBoxedType(x.getClass()) -> Objects.toString(x);
+                    default -> Objects.toIdentityString(key);
+                };
+            }
+            else {
+                return formatValue(key);
             }
         }
 
