@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.companion;
 
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -24,6 +25,7 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -46,6 +48,8 @@ import static ua.com.fielden.platform.pagination.IPage.realPageCount;
  */
 public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implements IEntityReader<T> {
     public static final String ERR_MISSING_ID_VALUE = "Argument [id] must have a value to find an instance of [%s].";
+
+    private static final Logger LOGGER = getLogger();
 
     ///////////////////////////////////////////////////////////
     ////////////// Infrastructural methods ////////////////////
@@ -298,11 +302,10 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         final var qem = from(query).with(fetchModel).with(fillModel).lightweight(!instrumented()).model();
         try {
             return getEntity(qem);
-        } catch (final Exception e) {
-            throw new EntityCompanionException("""
-                    Could not fetch one entity of type [%s].
-                    Query: %s\
-                    """.formatted(getEntityType().getName(), qem), e);
+        } catch (final Exception ex) {
+            final var exception = new EntityCompanionException(format("Could not fetch one entity of type [%s].", getEntityType().getSimpleName()), ex);
+            LOGGER.error(() -> "%s\nQuery: %s".formatted(exception.getMessage(), qem), ex);
+            throw exception;
         }
     }
 

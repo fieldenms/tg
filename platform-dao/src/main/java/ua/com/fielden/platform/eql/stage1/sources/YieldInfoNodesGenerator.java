@@ -122,7 +122,7 @@ public class YieldInfoNodesGenerator {
             final var exception = new InvalidYieldMatrixException(
                     ERR_INVALID_YIELDS_MATRIX.formatted(invalidYields.stream().map(t2 -> t2.map("\"%s\" (occurs %s times)"::formatted)).collect(joining(", ")),
                                                         models.size()));
-            LOGGER.error("Source queries:\n%s".formatted(enumerated(models.stream(), "%s. %s"::formatted)), exception);
+            LOGGER.error(() -> "%s\nSource queries:\n%s".formatted(exception.getMessage(),enumerated(models.stream(), "%s. %s"::formatted)), exception);
             throw exception;
         }
     }
