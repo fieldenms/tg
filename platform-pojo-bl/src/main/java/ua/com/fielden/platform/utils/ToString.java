@@ -117,6 +117,14 @@ public final class ToString {
         return this;
     }
 
+    /**
+     * Appends the string without applying formatting.
+     */
+    public ToString addLiteral(final String string) {
+        _add(() -> string);
+        return this;
+    }
+
     public <X> ToString addIf(final String name, final X value, final Predicate<? super X> test) {
         if (!format.isIgnored(value) && test.test(value)) {
             _add(() -> format.formatField(name, value));
