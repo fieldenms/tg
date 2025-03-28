@@ -382,6 +382,7 @@ public final class ToString {
                 case Map<?, ?> it -> setDepth(depth + 1).formatMap(it);
                 case Collection<?> it -> setDepth(depth + 1).formatCollection(it);
                 case T2<?, ?> it -> setDepth(depth + 1).formatPair(it);
+                case String s -> formatString(s);
                 case null, default -> Objects.toString(value);
             };
         }
@@ -391,7 +392,8 @@ public final class ToString {
             return object instanceof IFormattable
                     || object instanceof Map<?, ?>
                     || object instanceof Collection<?>
-                    || object instanceof T2<?, ?>;
+                    || object instanceof T2<?, ?>
+                    || object instanceof String;
         }
 
         private String formatMap(final Map<?, ?> map) {
@@ -400,15 +402,15 @@ public final class ToString {
             } else {
                 // use the same name for all maps to keep it simple
                 final var toString = this.toString("Map");
-                map.forEach((key, value) -> toString.add(key instanceof CharSequence csq ? quote(csq.toString()) : Objects.toString(key),
+                map.forEach((key, value) -> toString.add(key instanceof String s ? formatString(s) : Objects.toString(key),
                                                          value));
                 return toString.$();
             }
         }
 
-        private static String quote(final String string) {
-            // enclose in double-quotes and escape double-quotes inside
-            return '"' + string.replace("\"", "\\\"") + '"';
+        private static String formatString(final String s) {
+            // Enclose in double-quotes and escape double-quotes inside
+            return '"' + s.replace("\"", "\\\"") + '"';
         }
 
         private String formatCollection(final Collection<?> collection) {
