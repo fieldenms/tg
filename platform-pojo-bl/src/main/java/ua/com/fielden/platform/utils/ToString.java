@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -383,6 +384,7 @@ public final class ToString {
                 case Collection<?> it -> setDepth(depth + 1).formatCollection(it);
                 case T2<?, ?> it -> setDepth(depth + 1).formatPair(it);
                 case String s -> formatString(s);
+                case Type type -> formatType(type);
                 case null, default -> Objects.toString(value);
             };
         }
@@ -393,7 +395,8 @@ public final class ToString {
                     || object instanceof Map<?, ?>
                     || object instanceof Collection<?>
                     || object instanceof T2<?, ?>
-                    || object instanceof String;
+                    || object instanceof String
+                    || object instanceof Class<?>;
         }
 
         private String formatMap(final Map<?, ?> map) {
@@ -411,6 +414,10 @@ public final class ToString {
         private static String formatString(final String s) {
             // Enclose in double-quotes and escape double-quotes inside
             return '"' + s.replace("\"", "\\\"") + '"';
+        }
+
+        private static String formatType(final Type type) {
+            return type instanceof Class<?> cls ? cls.getCanonicalName() : type.getTypeName();
         }
 
         private String formatCollection(final Collection<?> collection) {
