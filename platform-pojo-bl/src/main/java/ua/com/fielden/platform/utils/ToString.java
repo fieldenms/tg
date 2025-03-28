@@ -19,6 +19,9 @@ import static ua.com.fielden.platform.reflection.Reflector.isBoxedType;
 /**
  * A utility that assists with implementation of the {@link Object#toString()} method.
  * <p>
+ * If {@link ToString} is used to implement method {@link Object#toString()} of some type T, then T should implement {@link IFormattable}.
+ * This invariant should be honoured to guarantee soundness.
+ * <p>
  * To use this utility, one should choose a {@linkplain IFormat format}, either a pre-defined one or implement one's own.
  * Then, one of {@link IFormat#toString(Object)} methods should be used, which serve as entries to the fluent API provided by {@link ToString}.
  * Finally, {@link ToString#$()} or {@link ToString#toString()} should be used to get the result.
@@ -474,12 +477,25 @@ public final class ToString {
     }
 
     /**
-     * Extends {@link SeparateLinesFormat} with the ability to use labels for objects that occur more than once in a structure (shared objects).
-     * Circular structures are supported as well, but only for types that implement {@link IFormattable} and a few standard container types.
+     * Extends {@link SeparateLinesFormat} with the ability to use labels for objects that occur more than once in a structure (shared objects)
+     * and for circular structures.
      * <p>
      * Labels are used as follows.
      * For each object `O`, the first occurence of `O` is represented in its entirety.
      * If `O` {@linkplain #requiresLabel(Object) requires a label}, then all subsequent occurences are represented by a generated label.
+     *
+     * <h3>Circular structures</h3>
+     * Circular structures are supported, but not in the general case.
+     * <p>
+     * Circular structure in types that implement {@link IFormattable} and a few standard container types are supported.
+     * <p>
+     * Circular structure in types that neither implement {@link IFormattable} nor use {@link ToString} cannot be supported,
+     * as their {@link Object#toString()} is essentially a black box.
+     * <p>
+     * Circular structure in types that do not implement {@link IFormattable} but use {@link ToString} is supported only
+     * in the case of immediate circularity (when an object directly references itself through one of its fields).
+     * Transitive circularity for such structures is not supported.
+     * This is why the invariant stated in the documentation of {@link ToString} should be honoured.
      */
     public static class SeparateLinesWithLabelsFormat extends SeparateLinesFormat {
 
