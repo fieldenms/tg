@@ -108,9 +108,6 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
         class $ {
             /**
              * This predicate identifies cases where only ID is yielded, and a query needs to be extended to a query for retrieving an entity with that ID instead of just an ID value as a number.
-             *
-             * @param queryModelResult
-             * @return
              */
             static boolean isIdOnlyQuery(final QueryModelResult<?> queryModelResult) {
                 return isPersistentEntityType(queryModelResult.resultType())
@@ -145,10 +142,8 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final Integer pageCapacity)
     {
         final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
-
-        final Query query = produceQueryWithPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity, dbVersionProvider.dbVersion());
-
-        final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(entityFactory);
+        final var query = produceQueryWithPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity, dbVersionProvider.dbVersion());
+        final var entityRawResultConverter = new EntityRawResultConverter<E>(entityFactory);
 
         // Uncomment to time the duration
         // final DateTime st = new DateTime();
@@ -166,11 +161,11 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
     {
         final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
         final int batchSize = fetchSize.orElse(100);
-        final Query query = produceQueryWithoutPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), dbVersionProvider.dbVersion())
-                            .setFetchSize(batchSize);
+        final var query = produceQueryWithoutPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), dbVersionProvider.dbVersion())
+                .setFetchSize(batchSize);
         final Stream<Object[]> stream = ScrollableResultStream.streamOf(query.scroll(ScrollMode.FORWARD_ONLY));
 
-        final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(entityFactory);
+        final var entityRawResultConverter = new EntityRawResultConverter<E>(entityFactory);
 
         return StreamUtils.windowed(stream, batchSize)
                 .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
