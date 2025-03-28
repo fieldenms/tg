@@ -143,6 +143,10 @@ public final class ToString {
         return addIfNot(name, value, Collection::isEmpty);
     }
 
+    public ToString addIfNotEmpty(final String name, final Map<?, ?> value) {
+        return addIfNot(name, value, Map::isEmpty);
+    }
+
     public ToString pipe(final Function<? super ToString, ToString> fn) {
         return fn.apply(this);
     }
