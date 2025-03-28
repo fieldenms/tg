@@ -6,8 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
@@ -152,10 +150,10 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(entityFactory);
 
-        // let's execute the query and time the duration
-        final DateTime st = new DateTime();
+        // Uncomment to time the duration
+        // final DateTime st = new DateTime();
         final List<?> res = query.list();
-        final Period pd = new Period(st, new DateTime());
+        // final Period pd = new Period(st, new DateTime());
         // logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType().getSimpleName()));
 
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
