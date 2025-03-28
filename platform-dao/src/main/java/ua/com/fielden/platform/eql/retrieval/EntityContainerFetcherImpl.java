@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -39,7 +40,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 @Singleton
 final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
-    private final Logger logger = getLogger(this.getClass());
+    private static final Logger LOGGER = getLogger();
 
     private final IDomainMetadata domainMetadata;
     private final IDbVersionProvider dbVersionProvider;
@@ -75,11 +76,16 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final Integer pageNumber,
             final Integer pageCapacity)
     {
-        final var modelResult = getModelResult(queryModel);
-        final List<EntityContainer<E>> result = listContainersAsIs(session, modelResult, pageNumber, pageCapacity);
-        // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
-        return new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache)
-                .enhance(session, result, modelResult.fetchModel(), queryModel.getParamValues());
+        try {
+            final var modelResult = getModelResult(queryModel);
+            final List<EntityContainer<E>> result = listContainersAsIs(session, modelResult, pageNumber, pageCapacity);
+            return new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache)
+                    .enhance(session, result, modelResult.fetchModel(), queryModel.getParamValues());
+        } catch (final Exception ex) {
+            final var exception = ex instanceof EntityRetrievalException it ? it : new EntityRetrievalException("Error during entity retrieval.", ex);
+            LOGGER.error(() -> "%s\nQuery: %s".formatted(exception.getMessage(), queryModel), exception);
+            throw exception;
+        }
     }
 
     @Override
@@ -88,13 +94,16 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final QueryProcessingModel<E, ?> queryModel,
             final Optional<Integer> fetchSize)
     {
-        final var modelResult = getModelResult(queryModel);
-        final Stream<List<EntityContainer<E>>> stream = streamContainersAsIs(session, modelResult, fetchSize);
-        // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
-
-        final EntityContainerEnhancer entityContainerEnhancer = new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache);
-
-        return stream.map(container -> entityContainerEnhancer.enhance(session, container, modelResult.fetchModel(), queryModel.getParamValues()));
+        try {
+            final var modelResult = getModelResult(queryModel);
+            final Stream<List<EntityContainer<E>>> stream = streamContainersAsIs(session, modelResult, fetchSize);
+            final var entityContainerEnhancer = new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache);
+            return stream.map(container -> entityContainerEnhancer.enhance(session, container, modelResult.fetchModel(), queryModel.getParamValues()));
+        } catch (final Exception ex) {
+            final var exception = ex instanceof EntityRetrievalException it ? it : new EntityRetrievalException("Error during entity retrieval.", ex);
+            LOGGER.error(() -> "%s\nQuery: %s".formatted(exception.getMessage(), queryModel), exception);
+            throw exception;
+        }
     }
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qpm) {
