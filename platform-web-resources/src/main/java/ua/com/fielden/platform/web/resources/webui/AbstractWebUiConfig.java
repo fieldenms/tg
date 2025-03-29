@@ -17,7 +17,6 @@ import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -33,6 +32,7 @@ import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.sse.EventSourceDispatchingEmitter;
@@ -47,6 +47,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -56,6 +57,7 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -268,9 +270,31 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return webUiBuilder.genWebUiPrefComponent();
     }
 
+    private static Collection<JsImport> convertActionImportsToAliasedForm(final MainMenuBuilder mainMenuConfig) {
+        return mainMenuConfig.mainMenuActionImports().stream().map(JsImport::convertToAliasedForm).toList();
+    }
+
+    private SortedSet<JsImport> mainMenuActionImports() {
+        final var combinedImports = new TreeSet<JsImport>(convertActionImportsToAliasedForm(desktopMainMenuConfig));
+        combinedImports.addAll(convertActionImportsToAliasedForm(mobileMainMenuConfig));
+        if (combinedImports.stream().map(JsImport::alias).distinct().toList().size() < combinedImports.size()) {
+            throw new InvalidUiConfigException("Action import names are in conflict.\n%s".formatted(combinedImports));
+        }
+        return combinedImports;
+    }
+
     @Override
     public final String genMainWebUIComponent() {
-        final String mainWebUiComponent = ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js");
+        final var mainMenuActionImports = mainMenuActionImports();
+        final String mainWebUiComponent = Objects.requireNonNull(getText("ua/com/fielden/platform/web/app/tg-app-template.js"))
+            .replace("@mainMenuActionImports",
+                mainMenuActionImports.isEmpty() ? ""
+                : "\n" + join("\n", mainMenuActionImports.stream().map(jsImport -> "import { %s as %s } from '/resources/%s.js';".formatted(jsImport.name(), jsImport.alias().get(), jsImport.path())).toList())
+                + "\n" + "const mainMenuActionImports = {%s};".formatted(
+                        join(",", mainMenuActionImports.stream().map(jsImport -> jsImport.alias().get()).map(alias -> "%s: %s".formatted(alias, alias)).toList())
+                    )
+            );
+
         if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
             return mainWebUiComponent.replace("//@use-empty-console.log", "console.log = () => {};\n");
         } else {
