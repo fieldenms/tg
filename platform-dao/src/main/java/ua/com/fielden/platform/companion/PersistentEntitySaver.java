@@ -473,7 +473,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
             final String name = prop.getName();
             final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, entity.getType(), name);
-            if (!mapTo.autoConflictResolution()) {
+            if (mapTo != null && !mapTo.autoConflictResolution()) {
                 return false;
             }
             final Object oldValue = prop.getOriginalValue();

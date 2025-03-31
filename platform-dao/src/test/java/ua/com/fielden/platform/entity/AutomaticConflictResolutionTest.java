@@ -113,7 +113,9 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
 
             save(thisCat1.setAggregate(42));
             try {
-                save(thatCat1.setAggregate(42));
+                // Property `dummy` is not persistent (i.e. it has no `@MapTo`).
+                // Making `dummy` dirty could cause NPE in method PersistentEntitySaver.canResolveConflict, if its implementation is not defensive enough.
+                save(thatCat1.setDummy(21).setAggregate(42));
                 fail();
             } catch (final EntityCompanionException ex) {
                 assertEquals("%s Tg Category [Cat1] could not be saved.".formatted(ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES), ex.getMessage());
