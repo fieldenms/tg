@@ -45,7 +45,10 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
-import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.*;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.ICentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
@@ -71,6 +74,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
@@ -110,6 +114,7 @@ import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.RunAutom
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectView;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+import static ua.com.fielden.platform.web.minijs.JsImport.*;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
@@ -863,7 +868,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (dslDefaultConfig.getResultSetRenderingCustomiserType().isPresent()) {
             return Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
         } else {
-            return Optional.empty();
+            return empty();
         }
     }
 
@@ -946,6 +951,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private IRenderable createRenderableRepresentation(final ICentreDomainTreeManagerAndEnhancer centre) {
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
+        final SortedSet<JsImport> actionImports = new TreeSet<>();
         importPaths.add("master/tg-entity-master");
 
         logger.debug("Initiating layout...");
@@ -1024,6 +1030,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
             column.getActions().forEach(action -> {
                 importPaths.add(action.importPath());
+                extendAndValidateCombinedImports(actionImports, action.actionImports());
                 propActionsObject.append(prefix + createActionObject(action));
             });
             egiColumns.add(column.render());
@@ -1057,6 +1064,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             final DomElement groupElement = createActionGroupDom(i);
             for (final FunctionalActionElement el : actionGroups.get(i)) {
                 importPaths.add(el.importPath());
+                extendAndValidateCombinedImports(actionImports, el.actionImports());
                 groupElement.add(el.render());
                 functionalActionsObjects.append(prefix + createActionObject(el));
             }
@@ -1087,6 +1095,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         for (int actionIndex = 0; actionIndex < frontActions.size(); actionIndex++) {
             final FunctionalActionElement actionElement = new FunctionalActionElement(frontActions.get(actionIndex), actionIndex, FunctionalActionKind.FRONT);
             importPaths.add(actionElement.importPath());
+            extendAndValidateCombinedImports(actionImports, actionElement.actionImports());
             frontActionsDom.add(actionElement.render());
             frontActionsObjects.append(prefix + createActionObject(actionElement));
         }
@@ -1101,6 +1110,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         for (int actionIndex = 0; actionIndex < shareActions.size(); actionIndex++) {
             final FunctionalActionElement actionElement = new FunctionalActionElement(shareActions.get(actionIndex), actionIndex, FunctionalActionKind.SHARE);
             importPaths.add(actionElement.importPath());
+            extendAndValidateCombinedImports(actionImports, actionElement.actionImports());
             shareActionsDom.add(actionElement.render());
             shareActionsObjects.append(prefix + createActionObject(actionElement));
         }
@@ -1168,7 +1178,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 bottomInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
                 final Optional<DomElement> switchButtons = switchViewButtons(insertionPointActionsElements, Optional.of(el));
-                final Optional<DomElement> topActions = alternativeViewActions(el, importPaths, functionalActionsObjects, alternativeViewActionOrder);
+                final Optional<DomElement> topActions = alternativeViewActions(el, importPaths, actionImports, functionalActionsObjects, alternativeViewActionOrder);
                 alternativeViewsDom.add(insertionPoint.toString()
                         .replace(SWITCH_VIEW_ACTION_DOM, switchButtons.map(domElem -> domElem.toString()).orElse(""))
                         .replace(EGI_FUNCTIONAL_ACTION_DOM, topActions.map(domElem -> domElem.toString()).orElse("")));
@@ -1177,7 +1187,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
 
-        final Optional<DomElement> egiSwitchViewButtons = switchViewButtons(insertionPointActionsElements, Optional.empty());
+        final Optional<DomElement> egiSwitchViewButtons = switchViewButtons(insertionPointActionsElements, empty());
 
         //Generating shortcuts for EGI
         final StringBuilder shortcuts = new StringBuilder();
@@ -1211,7 +1221,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.js");
         logger.debug("Replacing some parts...");
         final String entityCentreStr = text.
-                replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse("")).
+                replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse("") + extractImportStatements(actionImports, empty())).
                 replace(EGI_LAYOUT, gridLayoutConfig.getKey()).
                 replace(FULL_ENTITY_TYPE, entityType.getName()).
                 replace(MI_TYPE, flattenedNameOf(miType)).
@@ -1294,12 +1304,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param alternativeViewActionOrder
      * @return
      */
-    private Optional<DomElement> alternativeViewActions(final InsertionPointBuilder el, final LinkedHashSet<String> importPaths, final StringBuilder functionalActionsObjects, final AtomicInteger alternativeViewActionOrder) {
+    private Optional<DomElement> alternativeViewActions(final InsertionPointBuilder el, final LinkedHashSet<String> importPaths, final SortedSet<JsImport> actionImports, final StringBuilder functionalActionsObjects, final AtomicInteger alternativeViewActionOrder) {
         if (!el.getActions().isEmpty()) {
             final DomElement domContainer = new DomContainer();
             for (final EntityActionConfig actionConfig: el.getActions()) {
                 final FunctionalActionElement funcAction = new FunctionalActionElement(actionConfig, alternativeViewActionOrder.getAndIncrement(), FunctionalActionKind.TOP_LEVEL);
                 importPaths.add(funcAction.importPath());
+                extendAndValidateCombinedImports(actionImports, funcAction.actionImports());
                 domContainer.add(funcAction.render());
                 functionalActionsObjects.append(",\n" + createActionObject(funcAction));
             }
@@ -1613,7 +1624,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     tooltipProps.add(property.tooltipProp.get());
                 }
             }));
-        return tooltipProps.isEmpty() ? Optional.empty() : Optional.of(EntityUtils.fetchNotInstrumented(entityType).with(tooltipProps));
+        return tooltipProps.isEmpty() ? empty() : Optional.of(EntityUtils.fetchNotInstrumented(entityType).with(tooltipProps));
     }
 
     public Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {
@@ -1622,7 +1633,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             final Class<? extends IQueryEnhancer<T>> queryEnhancerType = queryEnhancerConfig.get().getKey();
             return Optional.of(new Pair<>(injector.getInstance(queryEnhancerType), queryEnhancerConfig.get().getValue()));
         } else {
-            return Optional.empty();
+            return empty();
         }
     }
 

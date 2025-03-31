@@ -47,8 +47,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
-import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
@@ -62,6 +62,8 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
+import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
+import static ua.com.fielden.platform.web.minijs.JsImport.extractImportStatements;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 import static ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions.ALL_OFF;
@@ -270,31 +272,17 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return webUiBuilder.genWebUiPrefComponent();
     }
 
-    private static Collection<JsImport> convertActionImportsToAliasedForm(final MainMenuBuilder mainMenuConfig) {
-        return mainMenuConfig.mainMenuActionImports().stream().map(JsImport::convertToAliasedForm).toList();
-    }
-
     private SortedSet<JsImport> mainMenuActionImports() {
-        final var combinedImports = new TreeSet<JsImport>(convertActionImportsToAliasedForm(desktopMainMenuConfig));
-        combinedImports.addAll(convertActionImportsToAliasedForm(mobileMainMenuConfig));
-        if (combinedImports.stream().map(JsImport::alias).distinct().toList().size() < combinedImports.size()) {
-            throw new InvalidUiConfigException("Action import names are in conflict.\n%s".formatted(combinedImports));
-        }
+        final var combinedImports = new TreeSet<JsImport>();
+        extendAndValidateCombinedImports(combinedImports, desktopMainMenuConfig.mainMenuActionImports());
+        extendAndValidateCombinedImports(combinedImports, mobileMainMenuConfig.mainMenuActionImports());
         return combinedImports;
     }
 
     @Override
     public final String genMainWebUIComponent() {
-        final var mainMenuActionImports = mainMenuActionImports();
-        final String mainWebUiComponent = Objects.requireNonNull(getText("ua/com/fielden/platform/web/app/tg-app-template.js"))
-            .replace("@mainMenuActionImports",
-                mainMenuActionImports.isEmpty() ? ""
-                : "\n" + join("\n", mainMenuActionImports.stream().map(jsImport -> "import { %s as %s } from '/resources/%s.js';".formatted(jsImport.name(), jsImport.alias().get(), jsImport.path())).toList())
-                + "\n" + "const mainMenuActionImports = {%s};".formatted(
-                        join(",", mainMenuActionImports.stream().map(jsImport -> jsImport.alias().get()).map(alias -> "%s: %s".formatted(alias, alias)).toList())
-                    )
-            );
-
+        final String mainWebUiComponent = requireNonNull(getText("ua/com/fielden/platform/web/app/tg-app-template.js"))
+            .replace("@mainMenuActionImports", extractImportStatements(mainMenuActionImports(), of("mainMenuActionImports")));
         if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
             return mainWebUiComponent.replace("//@use-empty-console.log", "console.log = () => {};\n");
         } else {
