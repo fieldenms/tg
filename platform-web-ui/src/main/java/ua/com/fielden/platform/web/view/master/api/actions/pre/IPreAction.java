@@ -1,6 +1,12 @@
 package ua.com.fielden.platform.web.view.master.api.actions.pre;
 
+import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.actions.IAction;
+
+import java.util.Set;
+
+import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 
 /**
  * A contract that should be implemented by all concrete implementations of pre-action behaviour for Entity Master actions.
@@ -11,4 +17,19 @@ import ua.com.fielden.platform.web.view.master.api.actions.IAction;
  *
  */
 public interface IPreAction extends IAction {
+
+    default IPreAction andThen(final JsCode code) {
+        return new IPreAction() {
+            @Override
+            public Set<JsImport> importStatements() {
+                return IPreAction.this.importStatements();
+            }
+
+            @Override
+            public JsCode build() {
+                return jsCode(IPreAction.this.build() + code.toString());
+            }
+        };
+    }
+
 }
