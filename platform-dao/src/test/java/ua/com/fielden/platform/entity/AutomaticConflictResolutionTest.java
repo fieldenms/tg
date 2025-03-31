@@ -1,20 +1,18 @@
 package ua.com.fielden.platform.entity;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.companion.PersistentEntitySaver.ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-
+import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Test;
-
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+
+import static java.lang.String.format;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.companion.PersistentEntitySaver.ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
 
@@ -67,7 +65,7 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void concurrent_modification_of_refCount_due_to_new_activatable_dependencies_does_not_lead_to_conflict_resolution_errors_for_entities_with_not_auto_conflict_resolution() {
+    public void concurrent_modification_of_refCount_due_to_new_activatable_dependencies_does_not_lead_to_conflict_resolution_errors_for_entities_with_no_auto_conflict_resolution() {
         final TgBogieClass bc = co(TgBogieClass.class).findByKey("BC1");
         assertEquals(Integer.valueOf(0), bc.getRefCount());
 
@@ -77,7 +75,7 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void identical_concurrent_changes_of_entity_without_auto_conflict_resolutions_results_in_a_conflict_error() {
+    public void identical_concurrent_changes_of_entity_without_auto_conflict_resolutions_results_in_conflict() {
         final TgBogie bogie1_v1 = co$(TgBogie.class).findByKeyAndFetch(fetchAll(TgBogie.class), "Bogie1");
         final TgBogie bogie2_v1 = co$(TgBogie.class).findByKeyAndFetch(fetchAll(TgBogie.class), "Bogie1");
 
@@ -93,6 +91,33 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
             fail("Saving should have failed");
         } catch (final EntityCompanionException ex) {
             assertEquals(format("%s Tg Bogie [Bogie1] could not be saved.", ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void identical_concurrent_changes_of_a_property_without_auto_conflict_resolution_resuts_in_conflict() {
+        // First, assert that conflict resolution is supported for TgCategory, if property other than `aggregate` is modified concurrently.
+        {
+            final TgCategory thisCat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+            final TgCategory thatCat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+
+            final var newDesc = new RandomStringGenerator.Builder().withinRange('a', 'z').build().generate(30);
+            save(thisCat1.setDesc(newDesc));
+            save(thatCat1.setDesc(newDesc));
+        }
+
+        // Now, assert that conflict resolution is not permitted for TgCategory, if property `aggregate` is modified concurrently.
+        {
+            final TgCategory thisCat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+            final TgCategory thatCat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+
+            save(thisCat1.setAggregate(42));
+            try {
+                save(thatCat1.setAggregate(42));
+                fail();
+            } catch (final EntityCompanionException ex) {
+                assertEquals("%s Tg Category [Cat1] could not be saved.".formatted(ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES), ex.getMessage());
+            }
         }
     }
 

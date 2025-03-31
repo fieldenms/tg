@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
@@ -471,6 +472,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // comparison of property values is most likely to trigger lazy loading
         for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
             final String name = prop.getName();
+            final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, entity.getType(), name);
+            if (!mapTo.autoConflictResolution()) {
+                return false;
+            }
             final Object oldValue = prop.getOriginalValue();
             final Object newValue = prop.getValue();
             final Object persistedValue = persistedEntity.get(name);
