@@ -1,25 +1,5 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
-import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -38,6 +18,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -46,17 +27,28 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfigWithoutNew;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
-import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
-import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
-import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfig;
-import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDimensionsAndDone;
-import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
-import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
+import ua.com.fielden.platform.web.view.master.api.helpers.*;
 import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
+import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
+import static ua.com.fielden.platform.web.minijs.JsImport.extractImportStatements;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
 
@@ -222,6 +214,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IMaster<T> done() {
+        final SortedSet<JsImport> actionImports = new TreeSet<>();
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         // importPaths.add("polymer/polymer/polymer"); // FIXME check and delete if all good -- this is not really needed due to tg-entity-master-template-behavior dependencies
 
@@ -248,6 +241,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                         shortcuts.append(actionConfig.shortcut.get() + " ");
                     }
                     importPaths.add(el.importPath());
+                    extendAndValidateCombinedImports(actionImports, el.actionImports());
                     widgetElement.add(el.render().attr("slot", "property-action").clazz("property-action-icon"));
                     primaryActionObjects.append(prefix + el.createActionObject());
                 });
@@ -278,6 +272,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                     shortcuts.append(config.shortcut.get() + " ");
                 }
                 importPaths.add(el.importPath());
+                extendAndValidateCombinedImports(actionImports, el.actionImports());
                 actionContainer.add(el.render().clazz("primary-action"));
                 primaryActionObjects.append(prefix + el.createActionObject());
             }
@@ -297,7 +292,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final String dimensionsString = prefDimBuilder.toString();
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse(""))
+                .replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse("") + extractImportStatements(actionImports, empty()))
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString()) // TODO should contain prop actions
                 .replace("//@ready-callback",
