@@ -204,7 +204,7 @@ Polymer({
                     // loading error
                     this._setLoadedWithError();
                     this.fire('after-load-error', error);
-                    throw new Error(`Could not load element <tt>${elementName}</tt> due to [<i>${error}</i>].`);
+                    throw new Error(`Could not load element <span style='font-family:monospace'>${elementName}</span> due to [<i>${error}</i>].`);
                 });
             } else {
                 return new Promise((resolve, reject) => {
