@@ -4,7 +4,6 @@ import '/resources/actions/tg-ui-action.js';
 
 import { TgEntityMasterTemplateBehavior, Polymer, html } from '/resources/master/tg-entity-master-template-behavior.js';
 import { TgReflector } from '/app/tg-reflector.js';
-import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js'; // required by BindSavedPropertyPostActionSuccess/Error handlers
 
 // <!-- TODO this import should be generated <link rel="import" href="/resources/master/actions/tg-action.html"> -->
 

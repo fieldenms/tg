@@ -1,10 +1,15 @@
 package ua.com.fielden.platform.web.action.post;
 
-import static java.lang.String.format;
-
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder2;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
+
+import java.util.Set;
+
+import static java.lang.String.format;
+import static java.util.Set.of;
+import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 
 /**
  * In case if functional entity saves its master entity, it is necessary to bind saved instance to its respective entity master.
@@ -28,6 +33,11 @@ public class BindSavedPropertyPostActionSuccess implements IPostAction {
     @Override
     public JsCode build() {
         return createPostAction(false, propertyName);
+    }
+
+    @Override
+    public Set<JsImport> importStatements() {
+        return of(namedImport("getParentAnd", "reflection/tg-polymer-utils"));
     }
 
     /**
