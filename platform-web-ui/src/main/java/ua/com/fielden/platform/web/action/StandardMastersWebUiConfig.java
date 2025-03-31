@@ -8,9 +8,7 @@ import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
 
 import java.util.Optional;
 
@@ -20,14 +18,7 @@ import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.attachment.producers.AttachmentPreviewEntityActionProducer;
 import ua.com.fielden.platform.attachment.producers.AttachmentsUploadActionProducer;
-import ua.com.fielden.platform.entity.EntityEditAction;
-import ua.com.fielden.platform.entity.EntityEditActionProducer;
-import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.EntityExportActionProducer;
-import ua.com.fielden.platform.entity.EntityNewAction;
-import ua.com.fielden.platform.entity.EntityNewActionProducer;
-import ua.com.fielden.platform.entity.UserDefinableHelp;
-import ua.com.fielden.platform.entity.UserDefinableHelpProducer;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -141,6 +132,30 @@ public class StandardMastersWebUiConfig {
             final String... moreMimeTypes) {
         final IMaster<AttachmentsUploadAction> masterConfig = new AttachmentsUploadActionMaster(dims, fileSizeLimitKb, mimeType, moreMimeTypes);
         return new EntityMaster<>(AttachmentsUploadAction.class, AttachmentsUploadActionProducer.class, masterConfig, injector);
+    }
+
+    public static EntityMaster<PersistentEntityInfo> createPersistentEntityInfoMaster(final Injector injector) {
+        final String layout = cell(cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).repeat(3),layout().withStyle("padding", MARGIN_PIX).end()).toString();
+
+        final IMaster<PersistentEntityInfo> masterConfig = new SimpleMasterBuilder<PersistentEntityInfo>()
+                .forEntity(PersistentEntityInfo.class)
+                .addProp("entityId").asInteger().also()
+                .addProp("entityVersion").asInteger().also()
+                .addProp("createdBy").asAutocompleter().also()
+                .addProp("createdDate").asDateTimePicker().also()
+                .addProp("lastUpdatedBy").asAutocompleter().also()
+                .addProp("lastUpdatedDate").asAutocompleter()
+                .also()
+                .addAction(MasterActions.SAVE)
+                /*      */.shortDesc("OK").longDesc("Close this dialog.")
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster())
+                .setLayoutFor(DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(TABLET, Optional.empty(), layout)
+                .setLayoutFor(MOBILE, Optional.empty(), layout)
+                .withDimensions(mkDim(640, 180, Unit.PX))
+                .done();
+
+        return new EntityMaster<>(PersistentEntityInfo.class, PersistentEntityInfoProducer.class, masterConfig, injector);
     }
 
     // TODO once it will be necessary, uncomment this code to implement generic EDIT / NEW actions with 'no parent centre refresh' capability:
