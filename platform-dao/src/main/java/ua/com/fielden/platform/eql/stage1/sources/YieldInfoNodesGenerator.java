@@ -13,10 +13,8 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.*;
-import java.util.Map.Entry;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPath;
@@ -122,7 +120,7 @@ public class YieldInfoNodesGenerator {
             final var exception = new InvalidYieldMatrixException(
                     ERR_INVALID_YIELDS_MATRIX.formatted(invalidYields.stream().map(t2 -> t2.map("\"%s\" (occurs %s times)"::formatted)).collect(joining(", ")),
                                                         models.size()));
-            LOGGER.error(() -> "%s\nSource queries:\n%s".formatted(exception.getMessage(),enumerated(models.stream(), "%s. %s"::formatted)), exception);
+            LOGGER.error(() -> "%s%nSource queries:%n%s".formatted(exception.getMessage(), enumerated(models.stream(), "%s. %s"::formatted)), exception);
             throw exception;
         }
     }

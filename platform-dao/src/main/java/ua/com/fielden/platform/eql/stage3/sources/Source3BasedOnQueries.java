@@ -47,7 +47,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
         final Boolean isValidNumberOfYields = StreamUtils.areAllEqual(models.stream().mapToInt(m -> m.yields.size())).orElse(true);
         if (!isValidNumberOfYields) {
             final var exception = new EqlStage3ProcessingException(ERR_SOURCE_QUERIES_NUMBER_OF_YIELDS);
-            LOGGER.error(() -> "%s\nQueries:\n%s".formatted(exception.getMessage(),
+            LOGGER.error(() -> "%s\nQueries:%n%s".formatted(exception.getMessage(),
                                                             enumerated(models.stream(), 1, "%s. %s"::formatted).collect(joining("\n"))));
             throw exception;
         }
