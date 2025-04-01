@@ -94,7 +94,7 @@ public record JsImport(String name, String path, Optional<String> alias) impleme
 
     public static String extractImportStatements(final SortedSet<JsImport> combinedImports, final Optional<String> importObjectNameOpt) {
         return combinedImports.isEmpty() ? ""
-            : "\n" + join("\n", combinedImports.stream().map(jsImport -> "import { %s as %s } from '/resources/%s.js';".formatted(jsImport.name(), jsImport.alias().get(), jsImport.path())).toList())
+            : "\n" + join("\n", combinedImports.stream().map(jsImport -> "import { %s as %s } from '%s.js';".formatted(jsImport.name(), jsImport.alias().get(), (jsImport.path().startsWith("/") ? "" : "/resources/") + jsImport.path())).toList())
             + importObjectNameOpt.map(importObjectName ->
                 "\n" + "const %s = {%s};".formatted(importObjectName, join(",", combinedImports.stream().map(jsImport -> jsImport.alias().get()).map(alias -> "%s: %s".formatted(alias, alias)).toList()))
             ).orElse("");
