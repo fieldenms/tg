@@ -55,13 +55,13 @@ public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final List<PropType> expectedTypes) {
         if (expectedTypes.size() != yieldsMap.size()) {
-            LOGGER.error(() -> separateLines().toString(
-                                         new EqlStage3ProcessingException(ERR_YIELDS_MISMATCH.formatted(yieldsMap.size(), expectedTypes.size())).getMessage())
-                                 .add("expectedTypes", expectedTypes)
-                                 .add("yields", yieldsMap)
-                                 .$(),
-                         new EqlStage3ProcessingException(ERR_YIELDS_MISMATCH.formatted(yieldsMap.size(), expectedTypes.size())));
-            throw new EqlStage3ProcessingException(ERR_YIELDS_MISMATCH.formatted(yieldsMap.size(), expectedTypes.size()));
+            final var ex = new EqlStage3ProcessingException(ERR_YIELDS_MISMATCH.formatted(yieldsMap.size(), expectedTypes.size()));
+            LOGGER.error(() -> separateLines().toString(ex.getMessage())
+                               .add("expectedTypes", expectedTypes)
+                               .add("yields", yieldsMap)
+                               .$(),
+                          ex);
+            throw ex;
         }
 
         return "SELECT\n" +
