@@ -44,7 +44,7 @@ abstract class TwoOperandsFunction1<T extends ISingleOperand2<?>> implements IFu
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     protected ToString addToString(final ToString toString) {

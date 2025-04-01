@@ -34,7 +34,7 @@ public abstract class AbstractSingleOperand3 implements ISingleOperand3, ToStrin
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

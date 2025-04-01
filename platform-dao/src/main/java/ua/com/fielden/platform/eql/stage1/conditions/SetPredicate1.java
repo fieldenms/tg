@@ -37,7 +37,7 @@ public record SetPredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> leftO
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

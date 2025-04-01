@@ -20,7 +20,7 @@ public record GroupBys3 (List<GroupBy3> groups) implements ToString.IFormattable
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

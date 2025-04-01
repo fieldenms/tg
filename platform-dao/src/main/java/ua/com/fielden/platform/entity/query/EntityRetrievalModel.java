@@ -12,7 +12,8 @@ import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.meta.*;
-import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.ToString;
+import ua.com.fielden.platform.utils.ToString.IFormat;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -20,7 +21,6 @@ import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
-import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
@@ -33,6 +33,7 @@ import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BET
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.ToString.separateLines;
 
 
 /**
@@ -100,7 +101,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
  * method {@link PropertyTypeMetadata.Wrapper#unwrap(PropertyTypeMetadata)} is used because of the way fetch models are constructed -- heuristically.
  * One case where unwrapping is needed is collectional properties: fetch models know only about the collectional element type.
  */
-public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
+public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T>, ToString.IFormattable {
 
     public static final String ERR_UNKNOWN_FETCH_CATEGORY = "Unknown fetch category [%s].";
     public static final String ERR_UNEXPECTED_PROPERTY_IN_RETRIEVAL_MODEL = "No property [%s] in retrieval model:%n%s";
@@ -243,32 +244,17 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + " " + toString(1, "  ");
+        return toString(separateLines());
     }
 
-    String toString(final int level, final String indentElt) {
-        final var indent = indentElt.repeat(level);
-        final var sb = new StringBuilder();
-
-        sb.append("{\n");
-        sb.append(indent).append(format("original: %s\n", originalFetch.toString(level + 1, indentElt)));
-        if (!primProps.isEmpty()) {
-            sb.append(indent).append(format("primitives: [%s]\n", CollectionUtil.toString(primProps, ",")));
-        }
-        if (!proxiedProps.isEmpty()) {
-            sb.append(indent).append(format("proxied: [%s]\n", CollectionUtil.toString(proxiedProps, ",")));
-        }
-        if (!entityProps.isEmpty()) {
-            sb.append(indent).append("entities: {\n");
-            final var entitiesIndent = indentElt.repeat(level + 1);
-            entityProps.forEach((name, model) -> sb
-                    .append(entitiesIndent)
-                    .append(format("\"%s\": %s\n", name, model.toString(level + 2, indentElt))));
-            sb.append(indent).append("}\n");
-        }
-        sb.append(indentElt.repeat(level - 1)).append("}");
-
-        return sb.toString();
+    @Override
+    public String toString(final IFormat format) {
+        return format.toString(this)
+                .add("category", originalFetch.getFetchCategory())
+                .addIfNotEmpty("primitives", primProps)
+                .addIfNotEmpty("proxied", proxiedProps)
+                .addIfNotEmpty("subModels", entityProps)
+                .$();
     }
 
     /**

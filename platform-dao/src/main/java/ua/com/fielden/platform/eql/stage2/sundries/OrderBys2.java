@@ -92,7 +92,7 @@ public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) impl
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

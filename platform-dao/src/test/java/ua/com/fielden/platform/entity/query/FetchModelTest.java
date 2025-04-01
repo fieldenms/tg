@@ -56,26 +56,26 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     private static <T extends AbstractEntity<?>> void assertPropsAreFetched(final IRetrievalModel<T> fetchModel, final Iterable<String> props) {
         for (final String propName : props) {
-            assertTrue(format("Property [%s] should be contained within fetch model:\n%s", propName, fetchModel), fetchModel.containsProp(propName));
+            assertTrue(format("Property [%s] should be contained within fetch model:%n%s", propName, fetchModel), fetchModel.containsProp(propName));
         }
     }
 
     private static <T extends AbstractEntity<?>> void assertPropsAreNotFetched(final IRetrievalModel<T> fetchModel, final Iterable<String> props) {
         for (final String prop : props) {
-            assertFalse(format("Property [%s] should not be contained within fetch model:\n%s", prop, fetchModel),
+            assertFalse(format("Property [%s] should not be contained within fetch model:%n%s", prop, fetchModel),
                         fetchModel.containsProp(prop));
         }
     }
 
     private static <T extends AbstractEntity<?>> void assertPropsAreProxied(final IRetrievalModel<T> fetchModel, final Iterable<String> proxiedProps) {
         for (final String propName : proxiedProps) {
-            assertTrue(format("Property [%s] should be proxied within fetch model:\n%s", propName, fetchModel), fetchModel.containsProxy(propName));
+            assertTrue(format("Property [%s] should be proxied within fetch model:%n%s", propName, fetchModel), fetchModel.containsProxy(propName));
         }
     }
 
     private static <T extends AbstractEntity<?>> void assertPropsAreNotProxied(final IRetrievalModel<T> fetchModel, final Iterable<String> props) {
         for (final String prop : props) {
-            assertFalse(format("Property [%s] should not be proxied within fetch model:\n%s", prop, fetchModel),
+            assertFalse(format("Property [%s] should not be proxied within fetch model:%n%s", prop, fetchModel),
                         fetchModel.containsProxy(prop));
         }
     }

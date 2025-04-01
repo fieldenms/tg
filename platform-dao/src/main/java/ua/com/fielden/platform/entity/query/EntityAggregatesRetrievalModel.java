@@ -8,6 +8,8 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString.IFormat;
+import ua.com.fielden.platform.utils.ToString.IFormattable;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -18,6 +20,7 @@ import java.util.Set;
 import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.NONE;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
+import static ua.com.fielden.platform.utils.ToString.separateLines;
 
 /**
  * Represents a retrieval model specialised for {@link EntityAggregates}.
@@ -33,7 +36,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
  *   <li> The set of proxied properties is always empty.
  * </ul>
  */
-public final class EntityAggregatesRetrievalModel implements IRetrievalModel<EntityAggregates> {
+public final class EntityAggregatesRetrievalModel implements IRetrievalModel<EntityAggregates>, IFormattable {
 
     public static final String ERR_UNEXPECTED_PROPERTY_IN_RETRIEVAL_MODEL = "No property [%s] in retrieval model:%n%s";
     public static final String ERR_ONLY_FETCH_CATEGORY_NONE_IS_SUPPORTED = """
@@ -138,19 +141,16 @@ public final class EntityAggregatesRetrievalModel implements IRetrievalModel<Ent
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("Fetch model:\n------------------------------------------------\n");
-        sb.append("\t original:\n").append(originalFetch).append("\n\n");
-        sb.append(primProps);
-        if (!entityProps.isEmpty()) {
-            sb.append("\n------------------------------------------------");
-            for (final Map.Entry<String, EntityRetrievalModel<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
-                sb.append("\n").append(fetchEntry.getKey()).append(" <<< ").append(fetchEntry.getValue());
-                sb.append("\n------------------------------------------------");
-            }
-        }
+        return toString(separateLines());
+    }
 
-        return sb.toString();
+    @Override
+    public String toString(final IFormat format) {
+        return format.toString(this)
+                .add("category", originalFetch.getFetchCategory())
+                .addIfNotEmpty("primitives", primProps)
+                .addIfNotEmpty("subModels", entityProps)
+                .$();
     }
 
     private static Map<String, EntityRetrievalModel<?>> buildEntityModels(

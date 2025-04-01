@@ -18,7 +18,7 @@ public record JoinLeafNode3 (ISource3 source) implements IJoinNode3, ToString.IF
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

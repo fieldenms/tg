@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.operands;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
@@ -14,10 +16,12 @@ import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.ToString;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.append;
@@ -27,8 +31,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 public record Prop1(String propPath, boolean external) implements ISingleOperand1<Prop2>, ToString.IFormattable {
 
     public static final String ERR_CANNOT_RESOLVE_PROPERTY = "Cannot resolve property [%s].";
-    public static final String ERR_AMBIGUITY_WHILE_RESOLVING_PROPERTY_1 = "Ambiguity while resolving property [%s] against [%s]. Both [%s] and [%s] are resolvable.";
+    public static final String ERR_AMBIGUITY_WHILE_RESOLVING_PROPERTY_1 = "Ambiguity while resolving property [%s]. Both [%s] and [%s] are resolvable.";
     public static final String ERR_AMBIGUITY_WHILE_RESOLVING_PROPERTY_2 = "Ambiguity while resolving property [%s].";
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @Override
     public Prop2 transform(final TransformationContextFromStage1To2 context) {
@@ -70,7 +76,10 @@ public record Prop1(String propPath, boolean external) implements ISingleOperand
                 if (!asIsResolution.isSuccessful()) {
                     return new PropResolution(source, aliaslessResolution.getResolved());
                 } else {
-                    throw new EqlStage1ProcessingException(ERR_AMBIGUITY_WHILE_RESOLVING_PROPERTY_1.formatted(prop.propPath, source, prop.propPath, aliaslessPropName));
+                    final var exception = new EqlStage1ProcessingException(
+                            ERR_AMBIGUITY_WHILE_RESOLVING_PROPERTY_1.formatted(prop.propPath, prop.propPath, aliaslessPropName));
+                    LOGGER.error(() -> "%s\nSource: %s".formatted(exception.getMessage(), source));
+                    throw exception;
                 }
             }
         }

@@ -66,7 +66,7 @@ public record OrderBys1 (List<OrderBy1> models, Limit limit, long offset) implem
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override
