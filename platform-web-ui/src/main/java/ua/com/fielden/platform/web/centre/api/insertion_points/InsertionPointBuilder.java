@@ -1,15 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.insertion_points;
 
-import static org.apache.commons.lang3.StringUtils.join;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
-
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
@@ -17,6 +7,13 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
+
+import java.util.*;
+
+import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
 
 /**
  * The Insertion point builder class that allows one to render insertion point and generate action object.
@@ -82,6 +79,10 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
      */
     public DomElement renderInsertionPointAction() {
         return insertionPointActionElement.render().clazz("insertion-point-action").attr("hidden", null);
+    }
+
+    public Set<JsImport> actionImports() {
+        return insertionPointActionElement.actionImports();
     }
 
     /**

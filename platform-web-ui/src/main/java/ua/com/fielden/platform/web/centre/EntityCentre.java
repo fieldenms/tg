@@ -1145,6 +1145,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final StringBuilder insertionPointActionsObjects = new StringBuilder();
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
             importPaths.addAll(el.importPaths());
+            extendAndValidateCombinedImports(actionImports, el.actionImports());
             insertionPointActionsDom.add(el.renderInsertionPointAction());
             insertionPointActionsObjects.append(prefix + el.code());
         }
