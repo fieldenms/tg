@@ -1082,7 +1082,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
             importPaths.add(el.importPath());
             primaryActionDom.add(el.render().attr("slot", "primary-action").attr("hidden", null));
-            primaryActionObject.append(prefix + el.createActionObject(importPaths));
+            primaryActionObject.append(prefix + el.createActionObject(importPaths, actionImports));
         }
         ////////////////////Primary result-set action [END] //////////////
 
@@ -1127,7 +1127,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final FunctionalMultiActionElement el = new FunctionalMultiActionElement(multiActionConfig, numberOfAction, FunctionalActionKind.SECONDARY_RESULT_SET);
                 importPaths.add(el.importPath());
                 secondaryActionsDom.add(el.render().attr("slot", "secondary-action"));
-                secondaryActionsObjects.append(prefix + el.createActionObject(importPaths));
+                secondaryActionsObjects.append(prefix + el.createActionObject(importPaths, actionImports));
                 numberOfAction += multiActionConfig.actions().size();
             }
         }
