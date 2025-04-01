@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.retrieval;
 import com.google.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -39,6 +38,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
     private static final Logger LOGGER = getLogger();
+
+    public static final String ERR_DURING_ENTITY_RETRIEVAL = "Error during entity retrieval.";
 
     private final IDomainMetadata domainMetadata;
     private final IDbVersionProvider dbVersionProvider;
@@ -80,7 +81,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             return new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache)
                     .enhance(session, result, modelResult.fetchModel(), queryModel.getParamValues());
         } catch (final Exception ex) {
-            final var exception = ex instanceof EntityRetrievalException it ? it : new EntityRetrievalException("Error during entity retrieval.", ex);
+            final var exception = ex instanceof EntityRetrievalException it ? it : new EntityRetrievalException(ERR_DURING_ENTITY_RETRIEVAL, ex);
             LOGGER.error(() -> "%s\nQuery: %s".formatted(exception.getMessage(), queryModel), exception);
             throw exception;
         }
@@ -98,7 +99,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final var entityContainerEnhancer = new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache);
             return stream.map(container -> entityContainerEnhancer.enhance(session, container, modelResult.fetchModel(), queryModel.getParamValues()));
         } catch (final Exception ex) {
-            final var exception = ex instanceof EntityRetrievalException it ? it : new EntityRetrievalException("Error during entity retrieval.", ex);
+            final var exception = ex instanceof EntityRetrievalException it ? it : new EntityRetrievalException(ERR_DURING_ENTITY_RETRIEVAL, ex);
             LOGGER.error(() -> "%s\nQuery: %s".formatted(exception.getMessage(), queryModel), exception);
             throw exception;
         }
@@ -145,7 +146,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
         final var query = produceQueryWithPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity, dbVersionProvider.dbVersion());
         final var entityRawResultConverter = new EntityRawResultConverter<E>(entityFactory);
 
-        // Uncomment to time the duration
+        // Uncomment to time the duration.
         // final DateTime st = new DateTime();
         final List<?> res = query.list();
         // final Period pd = new Period(st, new DateTime());
@@ -162,7 +163,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
         final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
         final int batchSize = fetchSize.orElse(100);
         final var query = produceQueryWithoutPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), dbVersionProvider.dbVersion())
-                .setFetchSize(batchSize);
+                          .setFetchSize(batchSize);
         final Stream<Object[]> stream = ScrollableResultStream.streamOf(query.scroll(ScrollMode.FORWARD_ONLY));
 
         final var entityRawResultConverter = new EntityRawResultConverter<E>(entityFactory);

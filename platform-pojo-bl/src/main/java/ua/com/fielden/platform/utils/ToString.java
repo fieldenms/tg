@@ -516,8 +516,8 @@ public final class ToString {
         public ToString toString(final Object object) {
             requireNonNull(object, "object");
 
-            // Always label the root object, unless it is inside some other structure being formatted,
-            // in which case there will already be a label for it.
+            // Always label the root object, unless it is inside some other structure being formatted.
+            // In that case, there should already be a label for it.
             final var label = labels.get(object);
             if (label == null) {
                 final var newLabel = makeLabel(object);
