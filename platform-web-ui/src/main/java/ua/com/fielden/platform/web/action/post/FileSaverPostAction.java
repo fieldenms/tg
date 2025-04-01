@@ -17,9 +17,7 @@ import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
  * <li>fileName -- a file name including file extension where the data should be saved
  * <li>data -- base64 string representing a binary array
  * </ul>
- * 
- * See also an alternative implementation {@link FileDownloadPostAction}.
- * 
+ *
  * @author TG Team
  *
  */
