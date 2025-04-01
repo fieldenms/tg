@@ -216,7 +216,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     public IMaster<T> done() {
         final SortedSet<JsImport> actionImports = new TreeSet<>();
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        // importPaths.add("polymer/polymer/polymer"); // FIXME check and delete if all good -- this is not really needed due to tg-entity-master-template-behavior dependencies
 
         final AtomicInteger funcActionSeq = new AtomicInteger(0); // used for both entity and property level functional actions
         final String prefix = ",\n";
