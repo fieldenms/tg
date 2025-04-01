@@ -149,7 +149,6 @@ public class VulcanizingUtility {
                 "/resources/startup-resources-vulcanized.js",
                 "/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js",
                 "/resources/polymer/web-animations-js/web-animations-next-lite.min.js",
-                "/resources/filesaver/FileSaver.min.js",
                 "/resources/manifest.webmanifest",
                 "/resources/icons/tg-icon192x192.png",
                 "/resources/icons/tg-icon144x144.png",
