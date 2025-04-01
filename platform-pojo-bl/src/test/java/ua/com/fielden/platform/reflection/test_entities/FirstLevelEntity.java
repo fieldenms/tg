@@ -19,9 +19,12 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @KeyType(DynamicEntityKey.class)
-@KeyTitle("Leveled Entity No")
-@DescTitle(value = "Description")
+@KeyTitle(FirstLevelEntity.KEY_TITLE)
+@DescTitle(FirstLevelEntity.DESC_TITLE)
 public class FirstLevelEntity extends AbstractEntity<DynamicEntityKey> implements ISomeInterface {
+
+    public static final String KEY_TITLE = "Leveled Entity No";
+    public static final String DESC_TITLE = "Description";
 
     @IsProperty
     @CompositeKeyMember(2)
