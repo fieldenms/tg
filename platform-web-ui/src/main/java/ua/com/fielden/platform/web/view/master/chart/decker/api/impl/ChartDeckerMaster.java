@@ -1,24 +1,6 @@
 package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
-import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.join;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
-import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
-import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
-import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
-
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -32,8 +14,26 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerConfig;
+
+import java.util.*;
+import java.util.function.Function;
+
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
+import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
+import static ua.com.fielden.platform.web.minijs.JsImport.extractImportStatements;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T> {
 
@@ -41,16 +41,18 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
     private final List<EntityActionConfig> actions = new ArrayList<>();
 
     public ChartDeckerMaster(final IChartDeckerConfig<T> deckerConfig) {
-
+        final SortedSet<JsImport> actionImports = new TreeSet<>();
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("components/tg-bar-chart/tg-bar-chart");
 
         final DomElement decks = createDeckElements(deckerConfig);
-        final Pair<String, DomElement> actions = generateActions(deckerConfig, importPaths);
+        final Pair<String, DomElement> actions = generateActions(deckerConfig, importPaths, actionImports);
         decks.add(actions.getValue());
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/components/chart-decker/tg-chart-decker-template.js")
-                .replace(IMPORTS, createImports(importPaths))
+                .replace(IMPORTS, createImports(importPaths)
+                    + extractImportStatements(actionImports, empty())
+                )
                 .replace(ENTITY_TYPE, flattenedNameOf(deckerConfig.getEntityType()))
                 .replace("<!--@tg-entity-master-content-->", decks.toString())
                 .replace("//generatedPrimaryActions", actions.getKey())
@@ -66,7 +68,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         };
     }
 
-    private Pair<String, DomElement> generateActions(final IChartDeckerConfig<T> deckerConfig, final LinkedHashSet<String> importPaths) {
+    private Pair<String, DomElement> generateActions(final IChartDeckerConfig<T> deckerConfig, final LinkedHashSet<String> importPaths, final SortedSet<JsImport> actionImports) {
         final DomElement container = new DomContainer();
         final List<String> primaryActionObjects = new ArrayList<>();
         final List<ChartDeck<T>> decs = deckerConfig.getDecs();
@@ -79,6 +81,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                 if (config != null) {
                     final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(config, deckIndex, s.getPropertyName());
                     importPaths.add(el.importPath());
+                    extendAndValidateCombinedImports(actionImports, el.actionImports());
                     container.add(el.render().clazz("chart-action").attr("hidden", true).attr("action-index", seriesIndex).attr("deck-index", deckIndex));
                     primaryActionObjects.add(el.createActionObject());
                 }
