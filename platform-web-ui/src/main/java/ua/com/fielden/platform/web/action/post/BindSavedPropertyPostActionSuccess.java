@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.action.post;
 
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder2;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.minijs.JsImport;
@@ -8,6 +9,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import java.util.Set;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Set.of;
 import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 
@@ -19,20 +21,20 @@ import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
  *
  */
 public class BindSavedPropertyPostActionSuccess implements IPostAction {
-    private final String propertyName;
+    private final IConvertableToPath property;
 
     /**
-     * Creates {@link BindSavedPropertyPostActionSuccess} with {@code propertyName} indicating where master entity resides.
+     * Creates {@link BindSavedPropertyPostActionSuccess} with {@code property} indicating where master entity resides.
      * 
-     * @param propertyName
+     * @param property
      */
-    public BindSavedPropertyPostActionSuccess(final String propertyName) {
-        this.propertyName = propertyName;
+    public BindSavedPropertyPostActionSuccess(final IConvertableToPath property) {
+        this.property = requireNonNull(property);
     }
 
     @Override
     public JsCode build() {
-        return createPostAction(false, propertyName);
+        return createPostAction(false, property);
     }
 
     @Override
@@ -46,7 +48,7 @@ public class BindSavedPropertyPostActionSuccess implements IPostAction {
      * @param erroneous
      * @return
      */
-    static JsCode createPostAction(final boolean erroneous, final String propertyName) {
+    static JsCode createPostAction(final boolean erroneous, final IConvertableToPath property) {
         return new JsCode(format(""
             + "const parentMasterName = `tg-${functionalEntity.type().prop('%s').type()._simpleClassName()}-master`;\n"
             + "const parentMaster = getParentAnd(self, parent => parent.matches(parentMasterName));\n"
@@ -59,7 +61,7 @@ public class BindSavedPropertyPostActionSuccess implements IPostAction {
             // in unsuccessful case it is even more important to leave propertyActionIndices as previously (not to clear them or something);
             //  this is because parentMaster update will not be performed and, in case of clearing, all actions on parentMaster will disappear (at this stage even non-multi action should have zero index)
             + "parentMaster._postSavedDefault([masterEntity, { propertyActionIndices: parentMaster._propertyActionIndices }]);\n",
-            propertyName, propertyName
+            property.toPath(), property.toPath()
         ));
     }
 

@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.web.action.post;
 
-import static ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionSuccess.createPostAction;
-
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder2;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
+
+import static ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionSuccess.createPostAction;
 
 /**
  * In case if functional entity saves its master entity, it is necessary to bind saved instance to its respective entity master.
@@ -14,20 +15,20 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
  *
  */
 public class BindSavedPropertyPostActionError implements IPostAction {
-    private final String propertyName;
+    private final IConvertableToPath property;
 
     /**
-     * Creates {@link BindSavedPropertyPostActionError} with {@code propertyName} indicating where master entity resides.
+     * Creates {@link BindSavedPropertyPostActionError} with {@code property} indicating where master entity resides.
      * 
-     * @param propertyName
+     * @param property
      */
-    public BindSavedPropertyPostActionError(final String propertyName) {
-        this.propertyName = propertyName;
+    public BindSavedPropertyPostActionError(final IConvertableToPath property) {
+        this.property = property;
     }
 
     @Override
     public JsCode build() {
-        return createPostAction(true, propertyName);
+        return createPostAction(true, property);
     }
 
 }

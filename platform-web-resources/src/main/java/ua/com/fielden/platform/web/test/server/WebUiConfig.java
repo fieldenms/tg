@@ -89,6 +89,7 @@ import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction.Property.masterEntity;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
@@ -651,8 +652,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(action(MakeCompletedAction.class)
                         .withContext(context().withMasterEntity().build())
                         // .postActionSuccess(() -> new JsCode(new BindSavedPropertyPostActionSuccess("masterEntity").build().toString() + "self.publishCloseForcibly();")) // use this for additional manual testing of forced closing
-                        .postActionSuccess(new BindSavedPropertyPostActionSuccess("masterEntity"))
-                        .postActionError(new BindSavedPropertyPostActionError("masterEntity"))
+                        .postActionSuccess(new BindSavedPropertyPostActionSuccess(masterEntity))
+                        .postActionError(new BindSavedPropertyPostActionError(masterEntity))
                         .shortDesc("Complete")
                         .longDesc("Complete this entity.")
                         .build()
