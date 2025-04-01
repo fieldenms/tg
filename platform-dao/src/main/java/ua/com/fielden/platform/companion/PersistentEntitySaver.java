@@ -45,6 +45,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.Lazy;
 
 import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Field;
@@ -76,6 +77,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
 /**
@@ -100,14 +102,13 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final IEntityFetcher entityFetcher;
     private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
-    private final IAuditTypeFinder a3tFinder;
-    private final AuditingMode auditingMode;
 
     private final BiConsumer<T, Set<String>> processAfterSaveEvent;
     private final Consumer<MetaProperty<?>> assignBeforeSave;
 
     private final FindEntityById<T> findById;
     private final Function<EntityResultQueryModel<T>, Boolean> entityExists;
+    private final Lazy<Auditor<T>> lazyAuditor;
 
     private Boolean targetEntityTypeHasValidateOverridden;
     
@@ -148,8 +149,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.now = universalConstants::now;
         this.coFinder = coFinder;
         this.domainMetadata = domainMetadata;
-        this.a3tFinder = a3tFinder;
-        this.auditingMode = auditingMode;
+        this.lazyAuditor = lazySupplier(() -> makeAuditor(entityType, auditingMode, a3tFinder, coFinder));
     }
 
     @ImplementedBy(FactoryImpl.class)
@@ -264,12 +264,38 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
         // Auditing
-        if (auditingMode == AuditingMode.ENABLED && isAudited(entityType)) {
-            final ISynAuditEntityDao<T> coSynAudit = coFinder.find(a3tFinder.navigate(entityType).synAuditEntityType());
-            coSynAudit.audit(savedEntity, transactionGuid.get(), dirtyPropNames);
-        }
+        lazyAuditor.get().audit(savedEntity, transactionGuid.get(), dirtyPropNames);
 
         return savedEntityAndId;
+    }
+
+    /**
+     * Performs the auditing function if auditing is enabled and the entity type is audited.
+     * Otherwise, has no effect.
+     * <p>
+     * The benefit of this abstraction over plain code statements is performance: the initialisation phase will occur only once.
+     */
+    @FunctionalInterface
+    private interface Auditor<E extends AbstractEntity<?>> {
+
+        void audit(final E entity, final String transactionGuid, Iterable<? extends CharSequence> dirtyProperties);
+
+    }
+
+    private static <E extends AbstractEntity<?>> Auditor<E> makeAuditor(
+            final Class<E> entityType,
+            final AuditingMode auditingMode,
+            final IAuditTypeFinder a3tFinder,
+            final ICompanionObjectFinder coFinder)
+    {
+        if (auditingMode == AuditingMode.ENABLED && isAudited(entityType)) {
+            // Performance benefit: the companion is created only once.
+            final ISynAuditEntityDao<E> coSynAudit = coFinder.find(a3tFinder.navigate(entityType).synAuditEntityType());
+            return coSynAudit::audit;
+        }
+        else {
+            return (entity, transactionGuid, dirtyProperties) -> {};
+        }
     }
 
     /**
