@@ -61,7 +61,7 @@ public record GroupBys2 (List<GroupBy2> groups) implements ToString.IFormattable
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

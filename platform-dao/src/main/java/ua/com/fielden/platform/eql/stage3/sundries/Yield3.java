@@ -90,7 +90,7 @@ public record Yield3 (ISingleOperand3 operand, String alias, String column, Prop
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

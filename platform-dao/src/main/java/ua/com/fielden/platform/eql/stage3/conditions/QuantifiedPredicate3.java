@@ -21,7 +21,7 @@ public record QuantifiedPredicate3(ISingleOperand3 leftOperand, ComparisonOperat
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

@@ -40,7 +40,7 @@ public record JoinInnerNode3 (IJoinNode3 leftNode,
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

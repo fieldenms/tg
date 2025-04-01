@@ -7,14 +7,14 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.ImmutableMapUtils;
+import ua.com.fielden.platform.utils.ToString;
+import ua.com.fielden.platform.utils.ToString.IFormat;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
@@ -22,6 +22,7 @@ import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.ImmutableSetUtils.insert;
 import static ua.com.fielden.platform.utils.ImmutableSetUtils.union;
+import static ua.com.fielden.platform.utils.ToString.separateLines;
 
 /**
  * Represents an entity graph that describes the shape of an entity to be fetched.
@@ -37,7 +38,7 @@ import static ua.com.fielden.platform.utils.ImmutableSetUtils.union;
  * @see FetchCategory
  * @see ua.com.fielden.platform.entity.query.IRetrievalModel
  */
-public class fetch<T extends AbstractEntity<?>> {
+public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable {
     public static final String ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s].";
     public static final String ERR_PROPERTY_IS_ALREADY_PRESENT = "Property [%s] is already present within fetch model.";
     public static final String ERR_INVALID_PROPERTY_FOR_ENTITY = "Property [%s] is not present within [%s] entity.";
@@ -383,32 +384,19 @@ public class fetch<T extends AbstractEntity<?>> {
 
     @Override
     public String toString() {
-        return toString(1, "  ");
+        return toString(separateLines());
     }
 
-    public String toString(final int level, final String indentElt) {
-        final var sb = new StringBuilder();
-
-        sb.append("fetch {\n");
-        final var indent = indentElt.repeat(level);
-        sb.append(indent).append("entity: ").append(entityType.getSimpleName()).append("\n");
-        sb.append(indent).append("category: ").append(fetchCategory).append("\n");
-        sb.append(indent).append("instrumented: ").append(instrumented).append("\n");
-        if (!includedProps.isEmpty()) {
-            sb.append(indent).append(format("included: [%s]", CollectionUtil.toString(includedProps, ","))).append('\n');
-        }
-        if (!excludedProps.isEmpty()) {
-            sb.append(indent).append(format("excluded: [%s]", CollectionUtil.toString(excludedProps, ","))).append('\n');
-        }
-        if (!includedPropsWithModels.isEmpty()) {
-            sb.append(indent).append("entities: {/n");
-            final var entitiesIndent = " ".repeat(level + 1);
-            includedPropsWithModels.forEach((name, model) -> sb.append(entitiesIndent).append("\"%s\": %s".formatted(name, model.toString(level + 2, indentElt))));
-            sb.append('\n').append(indentElt).append("}\n");
-        }
-        sb.append(indentElt.repeat(level - 1)).append('}');
-
-        return sb.toString();
+    @Override
+    public String toString(final IFormat format) {
+        return format.toString(this)
+                .add("entityType", entityType)
+                .add("category", fetchCategory)
+                .add("instrumented", instrumented)
+                .addIfNotEmpty("included", includedProps)
+                .addIfNotEmpty("excluded", excludedProps)
+                .addIfNotEmpty("subModels", includedPropsWithModels)
+                .$();
     }
 
     private FetchCategory getMergedFetchCategory(final fetch<?> second) {

@@ -34,7 +34,7 @@ public record Conditions3 (boolean negated, List<List<? extends ICondition3>> al
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

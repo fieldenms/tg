@@ -138,7 +138,7 @@ public abstract class AbstractQuery2 implements ToString.IFormattable {
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

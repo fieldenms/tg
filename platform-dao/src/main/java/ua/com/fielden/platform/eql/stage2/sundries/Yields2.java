@@ -92,7 +92,7 @@ public record Yields2 (SortedMap<String, Yield2> yieldsMap, boolean allGenerated
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

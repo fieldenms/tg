@@ -1,21 +1,18 @@
 package ua.com.fielden.platform.sample.domain;
 
-import org.junit.Ignore;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 
 @KeyType(String.class)
+@KeyTitle(TgVehicleMake.KEY_TITLE)
 @MapEntityTo
-@DescTitle("Description")
+@DescTitle(TgVehicleMake.DESC_TITLE)
 @CompanionObject(ITgVehicleMake.class)
 public class TgVehicleMake extends AbstractEntity<String> {
+
+    public static final String KEY_TITLE = "Make";
+    public static final String DESC_TITLE = "Description";
+
     @IsProperty
     @Title(value = "Non-persisted prop", desc = "Desc")
     private String npProp;

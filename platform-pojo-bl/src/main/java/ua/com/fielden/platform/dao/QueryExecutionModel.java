@@ -7,6 +7,8 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.ValuePreprocessor;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.*;
+import ua.com.fielden.platform.utils.ToString.IFormat;
+import ua.com.fielden.platform.utils.ToString.IFormattable;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -16,6 +18,7 @@ import java.util.Objects;
 import static java.util.Collections.unmodifiableMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.model.IFillModel.emptyFillModel;
+import static ua.com.fielden.platform.utils.ToString.separateLines;
 
 /**
  * <b>QEM</b> (Query Execution Model) represents a query with additional data required for query execution by the EQL engine.
@@ -38,7 +41,7 @@ import static ua.com.fielden.platform.entity.query.model.IFillModel.emptyFillMod
  * @param <T>  the type of entities produced by the underlying query
  * @param <Q>  the type of the underlying query
  */
-public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends QueryModel<T>> {
+public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends QueryModel<T>> implements IFormattable {
     private final Q queryModel;
     private final @Nullable OrderingModel orderModel;
     private final @Nullable fetch<T> fetchModel;
@@ -96,21 +99,6 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
 
     private QueryExecutionModel(final Builder<T, Q> builder) {
         this(builder.queryModel, builder.orderModel, builder.fetchModel, builder.fillModel, preprocessParamValues(builder.parameters()), builder.lightweight);
-        logger.debug(this);
-    }
-
-    @Override
-    public String toString() {
-        final var sb = new StringBuilder(64);
-        sb.append("QEM {\n");
-        if (fetchModel != null) { sb.append("  fetch: "); sb.append(fetchModel); sb.append('\n'); }
-        if (fillModel != null && !fillModel.isEmpty()) { sb.append("  fill: "); sb.append(fillModel); sb.append('\n'); }
-        if (queryModel != null) { sb.append("  query: "); sb.append(queryModel); sb.append('\n'); }
-        if (orderModel != null) { sb.append("  order: "); sb.append(orderModel); sb.append('\n'); }
-        if (paramValues != null && !paramValues.isEmpty()) { sb.append("  params: "); sb.append(paramValues); sb.append('\n'); }
-        sb.append("  light: "); sb.append(lightweight);
-        sb.append("\n}");
-        return sb.toString();
     }
 
     private static Map<String, Object> preprocessParamValues(final Map<String, Object> paramValues) {
@@ -272,6 +260,24 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
                && Objects.equals(fetchModel, that.fetchModel)
                && Objects.equals(fillModel, that.fillModel)
                && Objects.equals(paramValues, that.paramValues);
+    }
+
+
+    @Override
+    public String toString() {
+        return toString(separateLines());
+    }
+
+    @Override
+    public String toString(final IFormat format) {
+        return format.toString(this)
+                .add("light", lightweight)
+                .addIfNotNull("query", queryModel)
+                .addIfNotNull("orderModel", orderModel)
+                .addIf("parameters", paramValues, it -> it != null && !it.isEmpty())
+                .addIfNotNull("fetch", fetchModel)
+                .addIf("fillModel", fillModel, it -> it != null && !it.isEmpty())
+                .$();
     }
 
 }

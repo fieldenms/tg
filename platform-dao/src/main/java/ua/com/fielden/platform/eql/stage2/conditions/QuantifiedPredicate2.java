@@ -57,7 +57,7 @@ public record QuantifiedPredicate2 (ISingleOperand2<? extends ISingleOperand3> l
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

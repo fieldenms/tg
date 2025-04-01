@@ -2,13 +2,16 @@ package ua.com.fielden.platform.entity.query.model;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.antlr.tokens.util.ListTokenSource;
+import ua.com.fielden.platform.utils.ToString;
+import ua.com.fielden.platform.utils.ToString.IFormat;
+import ua.com.fielden.platform.utils.ToString.IFormattable;
 
 import java.util.Objects;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
-public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractModel {
+public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractModel implements IFormattable {
     private final Class<T> resultType;
     private boolean filterable = false;
     private final boolean yieldAll;
@@ -50,6 +53,17 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
     @Override
     public String toString() {
         return super.toString() + format("%n\t%s%s", rightPad("is filterable", 32, '.'), filterable);
+    }
+
+    @Override
+    public String toString(final IFormat format) {
+        return format.toString(this)
+                .add("resultType", resultType)
+                .add("filterable", filterable)
+                .add("yieldAll", yieldAll)
+                .add("shouldMaterialiseCalcPropsAsColumnsInSqlQuery", shouldMaterialiseCalcPropsAsColumnsInSqlQuery)
+                .addLiteral(super.toString())
+                .$();
     }
 
     @Override

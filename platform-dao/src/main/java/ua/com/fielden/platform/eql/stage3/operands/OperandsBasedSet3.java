@@ -18,7 +18,7 @@ public record OperandsBasedSet3 (List<ISingleOperand3> operands) implements ISet
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

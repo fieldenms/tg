@@ -36,7 +36,7 @@ public abstract class SingleOperandFunction1<T extends ISingleOperand2<?>> imple
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     protected ToString addToString(final ToString toString) {

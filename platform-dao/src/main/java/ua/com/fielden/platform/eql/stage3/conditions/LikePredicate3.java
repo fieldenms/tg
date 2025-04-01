@@ -32,7 +32,7 @@ public record LikePredicate3(ISingleOperand3 matchOperand, ISingleOperand3 patte
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

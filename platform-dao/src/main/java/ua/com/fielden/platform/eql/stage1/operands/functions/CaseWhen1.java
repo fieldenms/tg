@@ -66,7 +66,7 @@ public record CaseWhen1 (List<T2<ICondition1<? extends ICondition2<?>>, ISingleO
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override
