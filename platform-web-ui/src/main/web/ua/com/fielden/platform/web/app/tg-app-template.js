@@ -596,7 +596,8 @@ Polymer({
         this.entityType = "ua.com.fielden.platform.menu.Menu";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
-            const createFunctionFromString = prePostActionStr => new Function(...Object.keys(mainMenuActionImports || {}), "const self = this; return " + prePostActionStr).bind(this, ...Object.values(mainMenuActionImports || {}))();
+            const mainMenuActionImportsIfPresent = () => typeof mainMenuActionImports !== "undefined" ? mainMenuActionImports : {};
+            const createFunctionFromString = prePostActionStr => new Function(...Object.keys(mainMenuActionImportsIfPresent()), "const self = this; return " + prePostActionStr).bind(this, ...Object.values(mainMenuActionImportsIfPresent()))();
             entity.menu.forEach(menuItem => {
                 menuItem.actions.forEach(action => {
                     action._showDialog = this._showDialog;
