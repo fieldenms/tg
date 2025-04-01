@@ -21,7 +21,7 @@ import static ua.com.fielden.platform.utils.ToString.separateLines;
 
 public record Yields3 (SortedMap<String, Yield3> yieldsMap) implements ToString.IFormattable {
 
-    public static final String ERR_YIELDS_MISMATCH = "Mismatch between number of yields and their expected types: %s yield(s), but %s type(s).";
+    public static final String ERR_YIELDS_MISMATCH = "Mismatch between the number of yields and their expected types: %s yield(s), but %s type(s).";
 
     private static final Logger LOGGER = getLogger();
 
