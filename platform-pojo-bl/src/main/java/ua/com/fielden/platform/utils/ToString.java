@@ -307,6 +307,8 @@ public final class ToString {
      */
     public static class SeparateLinesFormat implements IFormat {
 
+        public static final String ERR_NEGATIVE_DEPTH = "Depth must be a non-negative integer, but was [%s].";
+
         /**
          * Enables compact representation of map keys.
          * Exists for debugging purposes.
@@ -326,12 +328,12 @@ public final class ToString {
 
         protected SeparateLinesFormat(final int depth) {
             if (depth < 0) {
-                throw new InvalidArgumentException("Depth must be a non-negative integer, but was: %s".formatted(depth));
+                throw new InvalidArgumentException(ERR_NEGATIVE_DEPTH.formatted(depth));
             }
             final String indentString = indent(depth);
             this.beforeFields = " {\n" + indentString;
             this.afterFields = '\n' + indent(depth - 1) + '}';
-            this.fieldDelimiter = "\n" + indentString;
+            this.fieldDelimiter = '\n' + indentString;
             this.depth = depth;
         }
 
@@ -463,7 +465,7 @@ public final class ToString {
 
         private String formatPair(final T2<?, ?> pair) {
             if (isFormattable(pair._1) || isFormattable(pair._2)) {
-                return "("
+                return '('
                        + formatValue(pair._1)
                        + ",\n"
                        + indent(depth)

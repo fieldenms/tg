@@ -31,7 +31,7 @@ public abstract class AbstractModel {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         for (final var token : tokenSource.tokens()) {
-            sb.append("\n    %s".formatted(StringUtils.rightPad(token.getText(), 32, '.')));
+            sb.append("%n    %s".formatted(StringUtils.rightPad(token.getText(), 32, '.')));
         }
         return sb.toString();
     }
