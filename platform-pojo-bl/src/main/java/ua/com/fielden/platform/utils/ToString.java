@@ -165,14 +165,14 @@ public final class ToString {
     }
 
     /**
-     * Builds the string and returns it.
+     * Builds a string and returns it.
      */
     public String toString() {
         return $();
     }
 
     /**
-     * Builds the string and returns it.
+     * Builds a string and returns it.
      */
     public String $() {
         return stringJoiner.toString();
@@ -481,8 +481,8 @@ public final class ToString {
      * and for circular structures.
      * <p>
      * Labels are used as follows.
-     * For each object `O`, the first occurence of `O` is represented in its entirety.
-     * If `O` {@linkplain #requiresLabel(Object) requires a label}, then all subsequent occurences are represented by a generated label.
+     * For each object `O`, the first occurrence of `O` is represented in its entirety.
+     * If `O` {@linkplain #requiresLabel(Object) requires a label}, then all subsequent occurrences are represented by a generated label.
      *
      * <h3>Circular structures</h3>
      * Circular structures are supported, but not in the general case.
@@ -493,7 +493,7 @@ public final class ToString {
      * as their {@link Object#toString()} is essentially a black box.
      * <p>
      * Circular structure in types that do not implement {@link IFormattable} but use {@link ToString} is supported only
-     * in the case of immediate circularity (when an object directly references itself through one of its fields).
+     * in the case of immediate circularity, where an object directly references itself through one of its fields.
      * Transitive circularity for such structures is not supported.
      * This is why the invariant stated in the documentation of {@link ToString} should be honoured.
      */
@@ -522,7 +522,7 @@ public final class ToString {
             if (label == null) {
                 final var newLabel = makeLabel(object);
                 labels.put(object, newLabel);
-                return super.toString(formatFirstOccurence(newLabel, object.getClass().getSimpleName()));
+                return super.toString(formatFirstOccurrence(newLabel, object.getClass().getSimpleName()));
             }
             else {
                 return super.toString(object);
@@ -540,24 +540,24 @@ public final class ToString {
                 return label + " (" + value.getClass().getTypeName() + ")";
             }
             else if (requiresLabel(value)) {
-                // Creating a label before formatting the value ensures that if the value is circular, the label will be used accordingly
+                // Creating a label before formatting the value ensures that if the value is circular, the label will be used accordingly.
                 final var newLabel = makeLabel(value);
                 labels.put(value, newLabel);
-                return formatFirstOccurence(newLabel, super.formatValue(value));
+                return formatFirstOccurrence(newLabel, super.formatValue(value));
             }
             else {
                 final var valueString = super.formatValue(value);
-                // Let's also use labels for values represented by large strings, as a defense against unexpected situations
+                // Let's also use labels for values represented by large strings, as a defence against unexpected situations.
                 if (valueString.length() > MAX_UNLABELED_VALUE_LENGTH) {
                     final var newLabel = makeLabel(value);
                     labels.put(value, newLabel);
-                    return formatFirstOccurence(newLabel, valueString);
+                    return formatFirstOccurrence(newLabel, valueString);
                 }
                 return valueString;
             }
         }
 
-        private String formatFirstOccurence(final String label, final String valueString) {
+        private String formatFirstOccurrence(final String label, final String valueString) {
             return label + "=" + valueString;
         }
 
@@ -569,7 +569,7 @@ public final class ToString {
         }
 
         /**
-         * This method is overriden so that this format will be used for nested objects as well.
+         * This method is overridden so that this format will be used for nested objects as well.
          */
         @Override
         public SeparateLinesWithLabelsFormat setDepth(final int newDepth) {
