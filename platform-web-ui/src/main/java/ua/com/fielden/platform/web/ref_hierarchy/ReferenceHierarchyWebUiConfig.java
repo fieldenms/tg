@@ -6,15 +6,20 @@ import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.hierarchy.ReferenceHierarchyMaster;
 
+import java.util.Set;
+
+import static java.util.Set.of;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
+import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 
 /**
  * Web UI configuration for reference hierarchy master and action needed to call reference hierarchy.
@@ -119,27 +124,34 @@ public class ReferenceHierarchyWebUiConfig {
      * @author TG Team
      */
     private record ReferenceHierarchyPreAction(boolean useMasterEntity) implements IPreAction {
+
+        @Override
+        public Set<JsImport> importStatements() {
+            return of(namedImport("TgReflector", "/app/tg-reflector"));
+        }
+
         @Override
         public JsCode build() {
             return jsCode("""
-                          const reflector = new TgReflector();
-                          let entity = null;
-                          if (action.requireSelectedEntities === 'ONE') {
-                              entity = action.currentEntity();
-                          } else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {
-                              entity = self.$.egi.getSelectedEntities()[0];
-                          } else if (action.requireMasterEntity === "true") {
-                              if(%s) {
-                                  entity = action.parentElement.entity['@@origin'];
-                              } else {
-                                  const value = reflector.tg_getFullValue(action.parentElement.entity, action.parentElement.propertyName);
-                                  entity = reflector.isEntity(value) ? value : action.parentElement.entity['@@origin'];
-                              }
-                          }
-                          if (entity) {
-                              action.shortDesc = reflector.getType(entity.constructor.prototype.type.call(entity).notEnhancedFullClassName()).entityTitle();
-                          }
-                          """.formatted(this.useMasterEntity));
+                const reflector = new TgReflector();
+                let entity = null;
+                if (action.requireSelectedEntities === 'ONE') {
+                    entity = action.currentEntity();
+                } else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {
+                    entity = self.$.egi.getSelectedEntities()[0];
+                } else if (action.requireMasterEntity === "true") {
+                    if(%s) {
+                        entity = action.parentElement.entity['@@origin'];
+                    } else {
+                        const value = reflector.tg_getFullValue(action.parentElement.entity, action.parentElement.propertyName);
+                        entity = reflector.isEntity(value) ? value : action.parentElement.entity['@@origin'];
+                    }
+                }
+                if (entity) {
+                    action.shortDesc = reflector.getType(entity.constructor.prototype.type.call(entity).notEnhancedFullClassName()).entityTitle();
+                }
+                """.formatted(this.useMasterEntity));
+
         }
     }
 
