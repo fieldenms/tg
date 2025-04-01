@@ -44,6 +44,8 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import javax.annotation.Nullable;
+
 /**
  * This is a helper class to provide methods related to {@link Annotation}s determination and related entity/property/method analysis based on them.
  *
@@ -307,39 +309,27 @@ public final class AnnotationReflector {
     // //////////////////////////////////PROPERTY RELATED ////////////////////////////////////////
 
     /**
+     * Searches for an annotation on a property.
+     * Returns {@code null} if either the property or the requested annotation is not found.
      *
-     * Searches for a property annotation of the specified entity type. Returns <code>null</code> if property or annotation is not found. Support don-notation for property name
-     * except the <code>key</code> and <code>desc</code> properties, which is not really a limitation.
-     * <p>
-     * For example, <code>vehicle.eqClass</code> for WorkOrder will be recognised correctly, however <code>vehicle.eqClass.key</code> would not.
-     *
-     *
-     * @param <T>
-     * @param annotationType
-     * @param forType
-     * @param dotNotationExp
-     * @return
+     * @param forType  the root type for the search
+     * @param propertyPath  property path that begins at {@code forType}
      */
-    public static <T extends Annotation> T getPropertyAnnotation(final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
-        if (dotNotationExp.endsWith(AbstractEntity.KEY) && KeyType.class.equals(annotationType) ||
-            dotNotationExp.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) ||
-            dotNotationExp.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
-            return getAnnotationForClass(annotationType, transform(forType, dotNotationExp).getKey());
+    public static <A extends Annotation> @Nullable A getPropertyAnnotation(final Class<A> annotationType, final Class<?> forType, final String propertyPath) {
+        if (propertyPath.endsWith(AbstractEntity.KEY) && KeyType.class.equals(annotationType) ||
+            propertyPath.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) ||
+            propertyPath.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
+            return getAnnotationForClass(annotationType, transform(forType, propertyPath).getKey());
         } else {
-            return findFieldByNameOptionally(forType, dotNotationExp).map(field -> getAnnotation(field, annotationType)).orElse(null);
+            return findFieldByNameOptionally(forType, propertyPath).map(field -> getAnnotation(field, annotationType)).orElse(null);
         }
     }
 
     /**
-     * The same as {@link #getPropertyAnnotation(Class, Class, String)}, but with an {@link Optional} result;
-     *
-     * @param annotationType
-     * @param forType
-     * @param dotNotationExp
-     * @return
+     * The same as {@link #getPropertyAnnotation(Class, Class, String)}, but with an {@link Optional} result.
      */
-    public static <T extends Annotation> Optional<T> getPropertyAnnotationOptionally(final Class<T> annotationType, final Class<?> forType, final String dotNotationExp) {
-        return Optional.ofNullable(getPropertyAnnotation(annotationType, forType, dotNotationExp));
+    public static <A extends Annotation> Optional<A> getPropertyAnnotationOptionally(final Class<A> annotationType, final Class<?> forType, final String propertyPath) {
+        return Optional.ofNullable(getPropertyAnnotation(annotationType, forType, propertyPath));
     }
 
     /**

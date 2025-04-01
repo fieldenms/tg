@@ -458,18 +458,19 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     }
 
     /**
-     * Determines whether automatic conflict resolves between the two entity instance is possible. The ability to resolve conflict automatically is based strictly on dirty
-     * properties -- if dirty properties in <code>entity</code> are equals to the same properties in <code>persistedEntity</code> then the conflict can be resolved.
+     * Determines whether automatic conflict resolution between two entities of the same type is possible.
+     * This predicate is true if and only if all dirty properties of {@code entity} support automatic conflict resolution
+     * and the value of each dirty property of {@code entity} is {@linkplain EntityUtils#isConflicting(Object, Object, Object) non-conflicting}
+     * with the value of the same property in {@code persistedEntity}.
      *
-     * @param entity
-     * @param persistedEntity
-     * @return
+     * @see MapEntityTo#autoConflictResolution()
+     * @see MapTo#autoConflictResolution()
      */
     private boolean canResolveConflict(final T entity, final T persistedEntity) {
         if (!AnnotationReflector.getAnnotation(entity.getClass(), MapEntityTo.class).autoConflictResolution()) {
             return false;
         }
-        // comparison of property values is most likely to trigger lazy loading
+        // Comparison of property values is most likely to trigger lazy loading if `persistedEntity` is a Hibernate proxy
         for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
             final String name = prop.getName();
             final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, entity.getType(), name);
