@@ -4,6 +4,8 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
@@ -316,9 +318,9 @@ public final class AnnotationReflector {
      * @param propertyPath  property path that begins at {@code forType}
      */
     public static <A extends Annotation> @Nullable A getPropertyAnnotation(final Class<A> annotationType, final Class<?> forType, final String propertyPath) {
-        if (propertyPath.endsWith(AbstractEntity.KEY) && KeyType.class.equals(annotationType) ||
-            propertyPath.endsWith(AbstractEntity.KEY) && KeyTitle.class.equals(annotationType) ||
-            propertyPath.endsWith(AbstractEntity.DESC) && DescTitle.class.equals(annotationType)) {
+        if ((propertyPath.equals(KEY) || propertyPath.endsWith('.' + KEY)) && KeyType.class.equals(annotationType) ||
+            (propertyPath.equals(KEY) || propertyPath.endsWith('.' + KEY)) && KeyTitle.class.equals(annotationType) ||
+            (propertyPath.equals(DESC) || propertyPath.endsWith('.' + DESC)) && DescTitle.class.equals(annotationType)) {
             return getAnnotationForClass(annotationType, transform(forType, propertyPath).getKey());
         } else {
             return findFieldByNameOptionally(forType, propertyPath).map(field -> getAnnotation(field, annotationType)).orElse(null);
