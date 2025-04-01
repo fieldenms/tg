@@ -6,6 +6,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * A contract to instantiate audit-prop entities.
  * <p>
  * This interface belongs to internal API.
+ * <p>
+ * Cannot be used if auditing is disabled.
  *
  * @param <E>  the audited entity type
  */

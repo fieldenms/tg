@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import jakarta.inject.Inject;
+import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -40,6 +41,8 @@ import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
  * Base type for implementations of audit-entity companion objects.
+ * <p>
+ * Cannot be used if auditing is disabled. Will throw {@link AuditingModeException} upon construction.
  *
  * @param <E>  the audited entity type
  */
@@ -74,12 +77,17 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
 
     @Inject
     protected void init(
+            final AuditingMode auditingMode,
             final EntityBatchInsertOperation.Factory batchInsertFactory,
             final IUserProvider userProvider,
             final IAuditTypeFinder a3tFinder,
             final IDomainMetadata domainMetadata,
             final ICompanionObjectFinder coFinder)
     {
+        if (auditingMode == AuditingMode.DISABLED) {
+            throw AuditingModeException.cannotBeUsed(this.getClass(), auditingMode);
+        }
+
         this.batchInsertFactory = batchInsertFactory;
         this.userProvider = userProvider;
         this.domainMetadata = domainMetadata;

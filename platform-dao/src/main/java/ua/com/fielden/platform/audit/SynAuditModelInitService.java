@@ -23,6 +23,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.findSyntheticModelFieldF
  * Such code accesses synthetic models through static fields of corresponding entity types.
  * <p>
  * Launched by the IoC framework upon creating an {@link Injector}.
+ * <p>
+ * Effectful only if auditing is enabled.
  */
 public final class SynAuditModelInitService {
 
@@ -35,28 +37,30 @@ public final class SynAuditModelInitService {
             final ISyntheticModelProvider synModelProvider,
             final AuditingMode auditingMode)
     {
-        // If generation is occuring, definitions of audit types may be malformed, so we do nothing.
-        // Synthetic models should not be used in this mode anyway.
-        if (auditingMode == AuditingMode.GENERATION) {
-            return;
+        switch (auditingMode) {
+            // If generation is occuring, definitions of audit types may be malformed, so we do nothing.
+            // Synthetic models should not be used in this mode anyway.
+            case GENERATION -> {}
+            case DISABLED -> {}
+            case ENABLED -> {
+                domainMetadataUtils.registeredEntities()
+                        .filter(em -> isSynAuditEntityType(em.javaType()) || isSynAuditPropEntityType(em.javaType()))
+                        .forEach(em -> {
+                            final var entityType = em.javaType();
+                            final var field = findSyntheticModelFieldFor(entityType);
+                            final var hasModelsField = field != null
+                                                       && field.getName().equals("models_")
+                                                       && List.class.isAssignableFrom(field.getType())
+                                                       && !isFinal(field.getModifiers());
+                            if (hasModelsField) {
+                                Reflector.assignStatic(field, synModelProvider.getModels(entityType));
+                            }
+                            else {
+                                throw new EntityDefinitionException(format(ERR_MISSING_MODELS_FIELD, entityType.getSimpleName()));
+                            }
+                        });
+            }
         }
-
-        domainMetadataUtils.registeredEntities()
-                .filter(em -> isSynAuditEntityType(em.javaType()) || isSynAuditPropEntityType(em.javaType()))
-                .forEach(em -> {
-                    final var entityType = em.javaType();
-                    final var field = findSyntheticModelFieldFor(entityType);
-                    final var hasModelsField = field != null
-                                               && field.getName().equals("models_")
-                                               && List.class.isAssignableFrom(field.getType())
-                                               && !isFinal(field.getModifiers());
-                    if (hasModelsField) {
-                        Reflector.assignStatic(field, synModelProvider.getModels(entityType));
-                    }
-                    else {
-                        throw new EntityDefinitionException(format(ERR_MISSING_MODELS_FIELD, entityType.getSimpleName()));
-                    }
-                });
     }
 
     private SynAuditModelInitService() {}

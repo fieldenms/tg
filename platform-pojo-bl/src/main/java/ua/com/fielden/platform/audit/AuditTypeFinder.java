@@ -3,6 +3,7 @@ package ua.com.fielden.platform.audit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
+import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -17,6 +18,7 @@ import static java.util.stream.Collectors.joining;
 
 final class AuditTypeFinder implements IAuditTypeFinder {
 
+    private final AuditingMode auditingMode;
     /**
      * Key: audited type or audit type.
      * Value: context.
@@ -24,23 +26,35 @@ final class AuditTypeFinder implements IAuditTypeFinder {
     private final Map<Class<?>, Context<?>> contextMap;
 
     AuditTypeFinder(final Iterable<Class<?>> types, final AuditingMode auditingMode) {
-        // { auditedType : [auditType] }
-        final var auditedToAuditTypesMap = Streams.stream(types)
-                .filter(ty -> ty.isAnnotationPresent(AuditFor.class))
-                .collect(groupingBy(ty -> ty.getAnnotation(AuditFor.class).value()));
+        this.auditingMode = auditingMode;
 
-        final var contextMapBuilder = ImmutableMap.<Class<?>, Context<?>>builderWithExpectedSize(auditedToAuditTypesMap.size() * 4);
+        if (auditingMode == AuditingMode.DISABLED) {
+            contextMap = ImmutableMap.of();
+        }
+        else {
+            // { auditedType : [auditType] }
+            final var auditedToAuditTypesMap = Streams.stream(types)
+                    .filter(ty -> ty.isAnnotationPresent(AuditFor.class))
+                    .collect(groupingBy(ty -> ty.getAnnotation(AuditFor.class).value()));
 
-        auditedToAuditTypesMap.forEach((auditedType, auditTypes) -> {
-            final var context = makeContext(auditedType, auditTypes, auditingMode);
-            contextMapBuilder.put(auditedType, context);
-            auditTypes.forEach(auditType -> contextMapBuilder.put(auditType, context));
-        });
+            final var contextMapBuilder = ImmutableMap.<Class<?>, Context<?>>builderWithExpectedSize(
+                    auditedToAuditTypesMap.size() * 4);
 
-        this.contextMap = contextMapBuilder.buildOrThrow();
+            auditedToAuditTypesMap.forEach((auditedType, auditTypes) -> {
+                final var context = makeContext(auditedType, auditTypes, auditingMode);
+                contextMapBuilder.put(auditedType, context);
+                auditTypes.forEach(auditType -> contextMapBuilder.put(auditType, context));
+            });
+
+            this.contextMap = contextMapBuilder.buildOrThrow();
+        }
     }
 
     private Navigator<?> _navigate(final Class<? extends AbstractEntity<?>> type) {
+        if (auditingMode == AuditingMode.DISABLED) {
+            throw AuditingModeException.cannotBeUsed(IAuditTypeFinder.class, auditingMode);
+        }
+
         final var baseType = PropertyTypeDeterminator.baseEntityType(type);
 
         final var context = contextMap.get(baseType);

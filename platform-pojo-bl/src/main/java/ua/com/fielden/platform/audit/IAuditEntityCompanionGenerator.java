@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.audit;
 
+import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
+
 /**
  * This interface defines the generator of audit-entity companion object types.
+ * <p>
+ * Cannot be used if auditing is disabled, all methods will throw {@link AuditingModeException}.
  */
 public interface IAuditEntityCompanionGenerator {
 

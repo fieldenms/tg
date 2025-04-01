@@ -167,24 +167,29 @@ public class BasicWebServerIocModule extends CompanionIocModule {
                     sink.accept(type);
                     // For audited types, register their audit types, which must exist, unless we are running in the audit generation mode.
                     if (isAudited(type)) {
-                        final var navigator = auditTypeFinder.navigate(type);
-                        if (auditingMode == AuditingMode.GENERATION) {
-                            navigator.allAuditEntityTypes().forEach(a3tType -> {
-                                sink.accept(a3tType);
-                                navigator.findAuditPropType(getAuditTypeVersion(a3tType)).ifPresent(sink);
-                            });
-                            navigator.findSynAuditEntityType().ifPresent(synAuditType -> {
+                        switch (auditingMode) {
+                            case GENERATION -> {
+                                final var navigator = auditTypeFinder.navigate(type);
+                                navigator.allAuditEntityTypes().forEach(a3tType -> {
+                                    sink.accept(a3tType);
+                                    navigator.findAuditPropType(getAuditTypeVersion(a3tType)).ifPresent(sink);
+                                });
+                                navigator.findSynAuditEntityType().ifPresent(synAuditType -> {
+                                    sink.accept(synAuditType);
+                                    navigator.findSynAuditPropType().ifPresent(sink);
+                                });
+                            }
+                            case ENABLED -> {
+                                final var navigator = auditTypeFinder.navigate(type);
+                                navigator.allAuditEntityTypes().forEach(a3tType -> {
+                                    sink.accept(a3tType);
+                                    sink.accept(navigator.auditPropType(getAuditTypeVersion(a3tType)));
+                                });
+                                final var synAuditType = navigator.synAuditEntityType();
                                 sink.accept(synAuditType);
-                                navigator.findSynAuditPropType().ifPresent(sink);
-                            });
-                        } else {
-                            navigator.allAuditEntityTypes().forEach(a3tType -> {
-                                sink.accept(a3tType);
-                                sink.accept(navigator.auditPropType(getAuditTypeVersion(a3tType)));
-                            });
-                            final var synAuditType = navigator.synAuditEntityType();
-                            sink.accept(synAuditType);
-                            sink.accept(navigator.synAuditPropType());
+                                sink.accept(navigator.synAuditPropType());
+                            }
+                            case DISABLED -> {}
                         }
                     }
                 })

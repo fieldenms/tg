@@ -142,6 +142,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         if (auditingMode == AuditingMode.ENABLED) {
             registerAuditTokens(appDomain, auditTypeFinder, generator);
         }
+
+        topLevelSecurityTokenNodes = buildTokenNodes(tokenClassesByName.values());
     }
 
     private void registerAuditTokens(
@@ -163,8 +165,6 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
             throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
         }
-
-        topLevelSecurityTokenNodes = buildTokenNodes(tokenClassesByName.values());
     }
 
     /**

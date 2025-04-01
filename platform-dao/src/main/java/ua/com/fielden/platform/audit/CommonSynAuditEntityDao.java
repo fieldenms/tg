@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.audit;
 
 import jakarta.inject.Inject;
+import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -14,6 +15,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
@@ -24,6 +26,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 /**
  * Base type for implementations of synthetic audit-entity companion objects.
+ * <p>
+ * Cannot be used if auditing is disabled. Will throw {@link AuditingModeException} upon construction.
  *
  * @param <E>  the audited entity type
  */
@@ -43,10 +47,15 @@ public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
 
     @Inject
     protected void init(
+            final AuditingMode auditingMode,
             final IAuditTypeFinder a3tFinder,
             final ICompanionObjectFinder coFinder,
             final IDomainMetadata domainMetadata)
     {
+        if (auditingMode == AuditingMode.DISABLED) {
+            throw AuditingModeException.cannotBeUsed(this.getClass(), auditingMode);
+        }
+
         this.domainMetadata = domainMetadata;
         final var navigator = a3tFinder.navigateSynAudit(getEntityType());
         coAuditEntity = coFinder.find(navigator.auditEntityType());

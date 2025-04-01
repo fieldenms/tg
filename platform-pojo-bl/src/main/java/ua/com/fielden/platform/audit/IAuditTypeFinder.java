@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.audit;
 
 import com.google.inject.ImplementedBy;
+import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.Collection;
@@ -12,6 +13,8 @@ import java.util.Optional;
  * {@code navigate} methods accept either an audited type or an audit type, and the resulting {@link Navigator} can be used
  * to "navigate" to some other type in the context.
  * For each audited type {@code E}, there is a context represented by the set of {@code E}'s audit types and {@code E} itself.
+ * <p>
+ * Cannot be used if auditing is disabled, all methods will throw {@link AuditingModeException}.
  */
 @ImplementedBy(AuditTypeFinder.class)
 public interface IAuditTypeFinder {

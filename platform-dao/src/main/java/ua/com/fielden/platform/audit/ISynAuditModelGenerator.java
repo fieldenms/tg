@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.audit;
 
 import com.google.inject.ImplementedBy;
+import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
@@ -8,6 +9,8 @@ import java.util.List;
 
 /**
  * Generator of synthetic models for audit types.
+ * <p>
+ * Cannot be used if auditing is disabled, all methods will throw {@link AuditingModeException}.
  */
 @ImplementedBy(SynAuditModelGenerator.class)
 public interface ISynAuditModelGenerator {

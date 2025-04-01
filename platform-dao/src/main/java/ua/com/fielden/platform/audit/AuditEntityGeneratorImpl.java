@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
 import ua.com.fielden.platform.annotations.metamodel.WithoutMetaModel;
+import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
@@ -58,13 +59,19 @@ import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
 final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
 
+    private final AuditingMode auditingMode;
     private final IDomainMetadata domainMetadata;
     private final GeneratorEnvironment environment;
     private final JavaPoet javaPoet;
     private final IAuditTypeFinder auditTypeFinder;
 
     @Inject
-    AuditEntityGeneratorImpl(final IDomainMetadata domainMetadata, final IAuditTypeFinder auditTypeFinder) {
+    AuditEntityGeneratorImpl(
+            final AuditingMode auditingMode,
+            final IDomainMetadata domainMetadata,
+            final IAuditTypeFinder auditTypeFinder)
+    {
+        this.auditingMode = auditingMode;
         this.domainMetadata = domainMetadata;
         this.auditTypeFinder = auditTypeFinder;
         environment = new GeneratorEnvironment();
@@ -77,6 +84,10 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final Path sourceRoot,
             final VersionStrategy versionStrategy)
     {
+        if (auditingMode == AuditingMode.DISABLED) {
+            throw AuditingModeException.cannotBeUsed(AuditEntityGenerator.class, auditingMode);
+        }
+
         entityTypes.forEach(AuditEntityGeneratorImpl::validateAuditedType);
         return Streams.stream(entityTypes)
                 .parallel()
@@ -100,6 +111,10 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final Iterable<? extends Class<? extends AbstractEntity<?>>> entityTypes,
             final VersionStrategy versionStrategy)
     {
+        if (auditingMode == AuditingMode.DISABLED) {
+            throw AuditingModeException.cannotBeUsed(AuditEntityGenerator.class, auditingMode);
+        }
+
         class $ {
             static SourceInfo makeSourceInfo(final JavaFile javaFile) {
                 final var className = javaFile.packageName.isEmpty() ? javaFile.typeSpec.name : javaFile.packageName + '.' + javaFile.typeSpec.name;

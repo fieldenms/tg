@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.audit.ISynAuditEntityDao;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -100,6 +101,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
     private final IAuditTypeFinder a3tFinder;
+    private final AuditingMode auditingMode;
 
     private final BiConsumer<T, Set<String>> processAfterSaveEvent;
     private final Consumer<MetaProperty<?>> assignBeforeSave;
@@ -128,7 +130,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final IUniversalConstants universalConstants,
             final ICompanionObjectFinder coFinder,
             final IDomainMetadata domainMetadata,
-            final IAuditTypeFinder a3tFinder)
+            final IAuditTypeFinder a3tFinder,
+            final AuditingMode auditingMode)
     {
         this.session = session;
         this.transactionGuid = transactionGuid;
@@ -146,6 +149,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.coFinder = coFinder;
         this.domainMetadata = domainMetadata;
         this.a3tFinder = a3tFinder;
+        this.auditingMode = auditingMode;
     }
 
     @ImplementedBy(FactoryImpl.class)
@@ -260,7 +264,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
         // Auditing
-        if (isAudited(entityType)) {
+        if (auditingMode == AuditingMode.ENABLED && isAudited(entityType)) {
             final ISynAuditEntityDao<T> coSynAudit = coFinder.find(a3tFinder.navigate(entityType).synAuditEntityType());
             coSynAudit.audit(savedEntity, transactionGuid.get(), dirtyPropNames);
         }
@@ -792,6 +796,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         private final ICompanionObjectFinder coFinder;
         private final IDomainMetadata domainMetadata;
         private final IAuditTypeFinder a3tFinder;
+        private final AuditingMode auditingMode;
 
         @Inject
         FactoryImpl(final IDbVersionProvider dbVersionProvider,
@@ -800,7 +805,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     final IUniversalConstants universalConstants,
                     final ICompanionObjectFinder coFinder,
                     final IDomainMetadata domainMetadata,
-                    final IAuditTypeFinder a3tFinder)
+                    final IAuditTypeFinder a3tFinder,
+                    final AuditingMode auditingMode)
         {
             this.dbVersionProvider = dbVersionProvider;
             this.entityFetcher = entityFetcher;
@@ -809,6 +815,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             this.coFinder = coFinder;
             this.domainMetadata = domainMetadata;
             this.a3tFinder = a3tFinder;
+            this.auditingMode = auditingMode;
         }
 
         public <E extends AbstractEntity<?>> PersistentEntitySaver<E> create(
@@ -825,7 +832,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return new PersistentEntitySaver<>(session, transactionGuid, entityType, keyType, processAfterSaveEvent,
                                                assignBeforeSave, findById, entityExists, logger,
                                                dbVersionProvider, entityFetcher, userProvider, universalConstants,
-                                               coFinder, domainMetadata, a3tFinder);
+                                               coFinder, domainMetadata, a3tFinder, auditingMode);
         }
     }
 

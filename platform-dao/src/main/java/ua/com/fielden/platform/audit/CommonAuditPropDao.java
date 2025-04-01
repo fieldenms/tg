@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.audit;
 
 import jakarta.inject.Inject;
+import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
@@ -10,11 +11,15 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import java.util.Objects;
+
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 
 /**
  * Base type for implementations of audit-prop entity companion objects.
+ * <p>
+ * Cannot be used if auditing is disabled. Will throw {@link AuditingModeException} upon construction.
  *
  * @param <E>  the audited entity type
  */
@@ -33,15 +38,20 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>>
     }
 
     @Inject
-    protected void setDomainMetadata(final IDomainMetadata domainMetadata) {
-        this.domainMetadata = domainMetadata;
-    }
+    protected void init(
+            final AuditingMode auditingMode,
+            final IDomainMetadata domainMetadata,
+            final IAuditTypeFinder auditTypeFinder)
+    {
+        if (auditingMode == AuditingMode.DISABLED) {
+            throw AuditingModeException.cannotBeUsed(this.getClass(), auditingMode);
+        }
 
-    @Inject
-    protected void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
+        this.domainMetadata = domainMetadata;
         final var navigator = auditTypeFinder.navigateAuditProp(getEntityType());
         auditEntityType = navigator.auditEntityType();
         synAuditEntityType = navigator.synAuditEntityType();
+
     }
 
     @Override

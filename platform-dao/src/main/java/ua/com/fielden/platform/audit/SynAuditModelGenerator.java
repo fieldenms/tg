@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import jakarta.inject.Singleton;
+import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
@@ -29,17 +30,27 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 @Singleton
 final class SynAuditModelGenerator implements ISynAuditModelGenerator {
 
+    private final AuditingMode auditingMode;
     private final IAuditTypeFinder auditTypeFinder;
     private final IDomainMetadata domainMetadata;
 
     @Inject
-    SynAuditModelGenerator(final IAuditTypeFinder auditTypeFinder, final IDomainMetadata domainMetadata) {
+    SynAuditModelGenerator(
+            final AuditingMode auditingMode,
+            final IAuditTypeFinder auditTypeFinder,
+            final IDomainMetadata domainMetadata)
+    {
+        this.auditingMode = auditingMode;
         this.auditTypeFinder = auditTypeFinder;
         this.domainMetadata = domainMetadata;
     }
 
     @Override
     public <E extends AbstractEntity<?>> List<EntityResultQueryModel<E>> generate(final Class<E> synAuditEntityType) {
+        if (auditingMode == AuditingMode.DISABLED) {
+            throw AuditingModeException.cannotBeUsed(ISynAuditModelGenerator.class, auditingMode);
+        }
+
         if (isSynAuditEntityType(synAuditEntityType)) {
             return generateSynAuditEntityModel((Class) synAuditEntityType);
         }
