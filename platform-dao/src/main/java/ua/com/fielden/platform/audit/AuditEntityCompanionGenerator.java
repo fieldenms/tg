@@ -15,12 +15,12 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
  * its original type should be used.
  */
 @Singleton
-final class AuditEntityCompanionGeneratorImpl implements IAuditEntityCompanionGenerator {
+final class AuditEntityCompanionGenerator implements IAuditEntityCompanionGenerator {
 
     private final AuditingMode auditingMode;
 
     @Inject
-    AuditEntityCompanionGeneratorImpl(final AuditingMode auditingMode) {
+    AuditEntityCompanionGenerator(final AuditingMode auditingMode) {
         this.auditingMode = auditingMode;
     }
 

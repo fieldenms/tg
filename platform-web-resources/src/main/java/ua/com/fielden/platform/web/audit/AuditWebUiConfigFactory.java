@@ -50,7 +50,7 @@ import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.ce
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EXPORT_EMBEDDED_CENTRE_ACTION;
 
-final class AuditWebUiConfigFactoryImpl implements IAuditWebUiConfigFactory {
+final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
 
     private final IAuditTypeFinder auditTypeFinder;
     private final MiTypeGenerator miTypeGenerator;
@@ -58,8 +58,8 @@ final class AuditWebUiConfigFactoryImpl implements IAuditWebUiConfigFactory {
     private final IDomainMetadata domainMetadata;
 
     @Inject
-    AuditWebUiConfigFactoryImpl(final IAuditTypeFinder auditTypeFinder, final MiTypeGenerator miTypeGenerator,
-                                final Injector injector, final IDomainMetadata domainMetadata) {
+    AuditWebUiConfigFactory(final IAuditTypeFinder auditTypeFinder, final MiTypeGenerator miTypeGenerator,
+                            final Injector injector, final IDomainMetadata domainMetadata) {
         this.auditTypeFinder = auditTypeFinder;
         this.miTypeGenerator = miTypeGenerator;
         this.injector = injector;

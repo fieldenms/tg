@@ -11,7 +11,7 @@ public final class AuditEntityCompanionGenerationIocModule extends AbstractPlatf
 
     @Override
     protected void configure() {
-        bind(IAuditEntityCompanionGenerator.class).to(AuditEntityCompanionGeneratorImpl.class);
+        bind(IAuditEntityCompanionGenerator.class).to(AuditEntityCompanionGenerator.class);
     }
 
 }

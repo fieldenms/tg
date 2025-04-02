@@ -13,7 +13,7 @@ import java.util.Set;
 /**
  * Cannot be used if auditing is disabled, all methods will throw {@link AuditingModeException}.
  */
-@ImplementedBy(AuditEntityGeneratorImpl.class)
+@ImplementedBy(AuditEntityGenerator.class)
 public interface IAuditEntityGenerator {
 
     /**

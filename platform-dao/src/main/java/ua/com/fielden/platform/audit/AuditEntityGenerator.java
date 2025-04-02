@@ -55,7 +55,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.nonBlankPrope
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
-final class AuditEntityGeneratorImpl implements IAuditEntityGenerator {
+final class AuditEntityGenerator implements IAuditEntityGenerator {
 
     private final AuditingMode auditingMode;
     private final IDomainMetadata domainMetadata;
@@ -64,7 +64,7 @@ final class AuditEntityGeneratorImpl implements IAuditEntityGenerator {
     private final IAuditTypeFinder auditTypeFinder;
 
     @Inject
-    AuditEntityGeneratorImpl(
+    AuditEntityGenerator(
             final AuditingMode auditingMode,
             final IDomainMetadata domainMetadata,
             final IAuditTypeFinder auditTypeFinder)
@@ -86,7 +86,7 @@ final class AuditEntityGeneratorImpl implements IAuditEntityGenerator {
             throw AuditingModeException.cannotBeUsed(IAuditEntityGenerator.class, auditingMode);
         }
 
-        entityTypes.forEach(AuditEntityGeneratorImpl::validateAuditedType);
+        entityTypes.forEach(AuditEntityGenerator::validateAuditedType);
         return Streams.stream(entityTypes)
                 .parallel()
                 .flatMap(type -> {
@@ -120,7 +120,7 @@ final class AuditEntityGeneratorImpl implements IAuditEntityGenerator {
             }
         }
 
-        entityTypes.forEach(AuditEntityGeneratorImpl::validateAuditedType);
+        entityTypes.forEach(AuditEntityGenerator::validateAuditedType);
         return Streams.stream(entityTypes)
                 .parallel()
                 .flatMap(type -> {
@@ -238,7 +238,7 @@ final class AuditEntityGeneratorImpl implements IAuditEntityGenerator {
         final var newAuditedProperties = auditedEntityMetadata.properties()
                 .stream()
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
-                .filter(AuditEntityGeneratorImpl::isAudited)
+                .filter(AuditEntityGenerator::isAudited)
                 .filter(not(prevAuditEntityMetadata::containsAuditPropertyFor))
                 .collect(toSet());
 
@@ -327,7 +327,7 @@ final class AuditEntityGeneratorImpl implements IAuditEntityGenerator {
         final var auditedEntityMetadata = domainMetadata.forEntity(type);
         auditedEntityMetadata.properties().stream()
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
-                .filter(AuditEntityGeneratorImpl::isAudited)
+                .filter(AuditEntityGenerator::isAudited)
                 .map(pm -> {
                     final var propBuilder = propertyBuilder(auditPropertyName(pm.name()),
                                                             pm.type().genericJavaType())
@@ -727,12 +727,12 @@ final class AuditEntityGeneratorImpl implements IAuditEntityGenerator {
         final var activeAuditProperties = currAuditEntitySpec
                 .properties()
                 .stream()
-                .filter(AuditEntityGeneratorImpl::isActiveAuditProperty)
+                .filter(AuditEntityGenerator::isActiveAuditProperty)
                 .toList();
         final var inactiveAuditProperties = currAuditEntitySpec
                 .properties()
                 .stream()
-                .filter(AuditEntityGeneratorImpl::isInactiveAuditProperty)
+                .filter(AuditEntityGenerator::isInactiveAuditProperty)
                 .toList();
 
         final var allAuditProperties = concatList(activeAuditProperties, inactiveAuditProperties);
