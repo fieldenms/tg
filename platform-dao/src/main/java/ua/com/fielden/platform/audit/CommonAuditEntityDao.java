@@ -55,7 +55,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
 
     // All fields below are effectively final, but cannot be declared so due to late initialisation.
 
-    private Class<AbstractAuditProp<E>> auditPropType;
+    private IAuditPropInstantiator<E> auditPropInstantiator;
     private IDomainMetadata domainMetadata;
     private IEntityReader<E> coAuditedEntity;
     private fetch<E> fetchModelForAuditing;
@@ -91,11 +91,12 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         this.batchInsertFactory = batchInsertFactory;
         this.userProvider = userProvider;
         this.domainMetadata = domainMetadata;
-        auditPropType = a3tFinder.navigateAudit(getEntityType()).auditPropType();
         auditedToAuditPropertyNames = makeAuditedToAuditPropertyNames(domainMetadata);
         propertiesForAuditing = collectPropertiesForAuditing(auditedToAuditPropertyNames.keySet());
         fetchModelForAuditing = makeFetchModelForAuditing(a3tFinder.navigateAudit(getEntityType()).auditedType(), propertiesForAuditing, domainMetadata);
         coAuditedEntity = coFinder.find(a3tFinder.navigateAudit(getEntityType()).auditedType());
+        final var auditPropType = a3tFinder.navigateAudit(getEntityType()).auditPropType();
+        auditPropInstantiator = co(auditPropType);
     }
 
     private static Set<String> collectPropertiesForAuditing(final Set<String> auditedProperties) {
@@ -151,7 +152,6 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
 
         if (!Iterables.isEmpty(dirtyProperties)) {
             // Audit information about changed properites
-            final IAuditPropInstantiator<E> coAuditProp = co(auditPropType);
             final boolean isNewAuditedEntity = refetchedAuditedEntity.getVersion() == 0L;
             final var auditProps = Streams.stream(dirtyProperties)
                     .map(property -> {
@@ -160,7 +160,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
                         // Ignore nulls if this is the very first version of the audited entity, which means that there are no historical values for its properties.
                         if (auditProperty != null && !(isNewAuditedEntity && refetchedAuditedEntity.get(property.toString()) == null)) {
                             // We can use the fast method because its arguments are known to be valid at this point.
-                            return coAuditProp.fastNewAuditProp(auditEntity, auditProperty);
+                            return auditPropInstantiator.fastNewAuditProp(auditEntity, auditProperty);
                         }
                         else {
                             return null;
