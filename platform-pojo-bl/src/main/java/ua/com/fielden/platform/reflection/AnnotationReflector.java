@@ -1,54 +1,38 @@
 package ua.com.fielden.platform.reflection;
 
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotExpression;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
-import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-
-import com.google.common.collect.ImmutableSet;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Secrete;
-import ua.com.fielden.platform.entity.annotation.TransactionEntity;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
 
 import javax.annotation.Nullable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
+import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
 
 /**
  * This is a helper class to provide methods related to {@link Annotation}s determination and related entity/property/method analysis based on them.
@@ -323,10 +307,12 @@ public final class AnnotationReflector {
      * @return  the annotation, if found, otherwise {@code null}
      */
     public static <A extends Annotation> @Nullable A getPropertyAnnotation(final Class<A> annotationType, final Class<?> forType, final String dotNotationExp) {
+
         final var lastProp = splitPropPath(dotNotationExp).getLast();
         if (lastProp.equals(AbstractEntity.KEY) && KeyType.class == annotationType ||
             lastProp.equals(AbstractEntity.KEY) && KeyTitle.class == annotationType ||
-            lastProp.equals(AbstractEntity.DESC) && DescTitle.class == annotationType) {
+            lastProp.equals(AbstractEntity.DESC) && DescTitle.class == annotationType)
+        {
             return getAnnotationForClass(annotationType, transform(forType, dotNotationExp).getKey());
         }
         else {

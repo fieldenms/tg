@@ -30,7 +30,7 @@ public record QueryBasedSet2 (SubQuery2 model) implements ISetOperand2<QueryBase
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

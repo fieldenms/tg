@@ -172,7 +172,7 @@ public record Conditions1 (boolean negated,
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

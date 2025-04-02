@@ -14,7 +14,7 @@ public record QueryBasedSet3 (SubQuery3 model) implements ISetOperand3, ToString
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

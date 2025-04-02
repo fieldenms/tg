@@ -19,7 +19,7 @@ public class BnfToText {
         final int prefixLen = rule.lhs().name().length();
         return rule.rhs().options().stream()
                 .map(this::toString)
-                .collect(joining("\n%s | ".formatted(" ".repeat(prefixLen)), "%s = ".formatted(rule.lhs().name()), ";"));
+                .collect(joining("%n%s | ".formatted(" ".repeat(prefixLen)), "%s = ".formatted(rule.lhs().name()), ";"));
     }
 
     protected String toString(final Sequence body) {

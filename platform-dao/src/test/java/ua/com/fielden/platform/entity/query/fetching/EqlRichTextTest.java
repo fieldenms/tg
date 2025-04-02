@@ -4,7 +4,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EntityContainerInstantiationException;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.RichText;
@@ -153,7 +153,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
                 yield().val("hello").as("text.coreText").
                 modelAsEntity(EntityWithRichText.class);
         final var query = select(sourceQuery).modelAsEntity(EntityWithRichText.class);
-        assertThrows(EqlException.class,
+        assertThrows(EntityRetrievalException.class,
                      () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
     }
 
@@ -166,7 +166,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
                 modelAsEntity(EntityWithRichText.class);
         final var query = select(sourceQuery)
                 .modelAsEntity(EntityWithRichText.class);
-        assertThrows(EqlException.class,
+        assertThrows(EntityRetrievalException.class,
                      () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
     }
 
@@ -179,7 +179,7 @@ public class EqlRichTextTest extends AbstractDaoTestCase {
                 modelAsEntity(EntityWithRichText.class);
         final var query = select(sourceQuery)
                 .modelAsEntity(EntityWithRichText.class);
-        assertThrows(EqlException.class,
+        assertThrows(EntityRetrievalException.class,
                      () -> co(EntityWithRichText.class).getAllEntities(from(query).model()));
     }
 

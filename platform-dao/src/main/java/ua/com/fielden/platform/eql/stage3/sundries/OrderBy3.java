@@ -21,7 +21,7 @@ public record OrderBy3 (ISingleOperand3 operand, Yield3 yield, boolean isDesc) i
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

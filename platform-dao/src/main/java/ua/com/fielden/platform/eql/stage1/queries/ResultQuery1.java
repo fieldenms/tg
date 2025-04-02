@@ -122,7 +122,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableFromSt
 
         return new EnhancedYields(new Yields2(enhancedYields)) {
            @Override protected String formatErrorEmptyYields() {
-               return ToString.separateLines
+               return ToString.separateLines()
                        .toString(ERR_NO_YIELDS)
                        .addIfNotNull("Retrieval model", retrievalModel)
                        .add("Source", mainSource.toStringCompact())

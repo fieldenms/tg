@@ -46,7 +46,7 @@ public record ComparisonPredicate3 (ISingleOperand3 leftOperand,
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

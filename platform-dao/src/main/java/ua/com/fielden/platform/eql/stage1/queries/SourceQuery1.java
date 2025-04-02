@@ -111,7 +111,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableFromSt
             // if necessary additional separate cache can be created for such cases (allGeneratedButWithCalcPropsMaterialised)
             return new EnhancedYields(new Yields2(enhancedYields, allGenerated)) {
                 @Override protected String formatErrorEmptyYields() {
-                    return ToString.separateLines
+                    return ToString.separateLines()
                             .toString(ERR_NO_YIELDS)
                             .add("Calculated properties materialised", shouldMaterialiseCalcPropsAsColumnsInSqlQuery)
                             .add("Source", mainSource.toStringCompact())

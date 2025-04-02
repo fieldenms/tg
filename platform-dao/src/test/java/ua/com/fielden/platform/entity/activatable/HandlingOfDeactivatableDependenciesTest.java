@@ -145,9 +145,9 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase
         assertEquals("""
                         Inventory Part [Part1] has 3 active dependencies.<extended/>Inventory Part [Part1] has 3 active dependencies:
                         
-                        <br><br><tt>Entity              Qty Property       </tt><hr>
-                        <br><tt>Tg Inventory Issue    2 Inventory Bin  </tt>
-                        <br><tt>Tg Inventory Issue    1 Tg Inventory   </tt>""",
+                        <br><br><span style='font-family:monospace'>Entity              Qty Property       </span><hr>
+                        <br><span style='font-family:monospace'>Tg Inventory Issue    2 Inventory Bin  </span>
+                        <br><span style='font-family:monospace'>Tg Inventory Issue    1 Tg Inventory   </span>""",
                         mpActive.validationResult().getMessage().replace("\r", ""));
         // let's now deactivate the culprits and try deactivating the part again
         final var issue1Part1 = co$(TgInventoryIssue.class).findByKey("Part1 01/12/2024 13:30");

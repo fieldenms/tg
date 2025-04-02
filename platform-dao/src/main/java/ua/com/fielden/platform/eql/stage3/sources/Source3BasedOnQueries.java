@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.PropType;
@@ -27,6 +29,10 @@ import static ua.com.fielden.platform.utils.StreamUtils.transpose;
  */
 public class Source3BasedOnQueries extends AbstractSource3 {
 
+    private static final String ERR_SOURCE_QUERIES_NUMBER_OF_YIELDS = "Source queries that form a union must have the same number of yields.";
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final List<SourceQuery3> models;
     
     public Source3BasedOnQueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
@@ -40,10 +46,10 @@ public class Source3BasedOnQueries extends AbstractSource3 {
         // number of yields is valid only if either there are no yields or all models have the same number of yields
         final Boolean isValidNumberOfYields = StreamUtils.areAllEqual(models.stream().mapToInt(m -> m.yields.size())).orElse(true);
         if (!isValidNumberOfYields) {
-            throw new EqlStage3ProcessingException("""
-                    Queries whose results are concatenated must have the same number of yields. Queries:
-                    %s""".formatted(
-                    enumerated(models.stream(), 1, (i, model) -> "%s. %s".formatted(i, model)).collect(joining("\n"))));
+            final var exception = new EqlStage3ProcessingException(ERR_SOURCE_QUERIES_NUMBER_OF_YIELDS);
+            LOGGER.error(() -> "%s\nQueries:%n%s".formatted(exception.getMessage(),
+                                                            enumerated(models.stream(), 1, "%s. %s"::formatted).collect(joining("\n"))));
+            throw exception;
         }
 
         return models;

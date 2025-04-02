@@ -16,7 +16,7 @@ public record GroupBy2 (ISingleOperand2<? extends ISingleOperand3> operand) impl
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

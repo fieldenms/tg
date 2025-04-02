@@ -300,7 +300,7 @@ public sealed class RichText implements IWithValidation permits RichText.Persist
 
     @Override
     public String toString() {
-        return formattedText;
+        return coreText;
     }
 
 }

@@ -17,7 +17,7 @@ public record SetPredicate3(ISingleOperand3 leftOperand, boolean negated, ISetOp
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

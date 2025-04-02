@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableBiMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -27,7 +28,8 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
+import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
@@ -674,6 +676,32 @@ public final class Reflector {
                 return result;
             }
         };
+    }
+
+    private static final ImmutableBiMap<Class<?>, Class<?>> BOXED_TO_UNBOXED_TYPE_MAP = ImmutableBiMap.of(
+            Boolean.class, boolean.class,
+            Byte.class, byte.class,
+            Character.class, char.class,
+            Float.class, float.class,
+            Integer.class, int.class,
+            Long.class, long.class,
+            Short.class, short.class,
+            Double.class, double.class);
+
+    public static boolean isBoxedType(final Type type) {
+        return type instanceof Class<?> cls && BOXED_TO_UNBOXED_TYPE_MAP.containsKey(cls);
+    }
+
+    public static Optional<Class<?>> getUnboxedType(final Type type) {
+        return type instanceof Class<?> cls
+                ? Optional.ofNullable(BOXED_TO_UNBOXED_TYPE_MAP.get(cls))
+                : Optional.empty();
+    }
+
+    public static Optional<Class<?>> getBoxedType(final Type type) {
+        return type instanceof Class<?> cls
+                ? Optional.ofNullable(BOXED_TO_UNBOXED_TYPE_MAP.inverse().get(cls))
+                : Optional.empty();
     }
 
 }
