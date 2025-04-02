@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.companion;
 
+import ua.com.fielden.platform.audit.AuditEntityCompanionGenerationIocModule;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 
 /**
@@ -12,6 +13,7 @@ public final class EntityCompanionGenerationIocModule extends AbstractPlatformIo
     @Override
     protected void configure() {
         bind(IEntityCompanionGenerator.class).to(EntityCompanionGeneratorImpl.class);
+        install(new AuditEntityCompanionGenerationIocModule());
     }
 
 }

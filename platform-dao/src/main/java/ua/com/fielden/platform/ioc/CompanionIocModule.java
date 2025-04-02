@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.ioc;
 
-import ua.com.fielden.platform.audit.AuditEntityCompanionGenerationIocModule;
 import ua.com.fielden.platform.companion.EntityCompanionGenerationIocModule;
 import ua.com.fielden.platform.dao.CommonEntityAggregatesDao;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
@@ -21,7 +20,6 @@ import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionDao;
 
 import java.util.List;
 import java.util.Properties;
-import java.util.function.Predicate;
 
 import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
 
@@ -54,7 +52,6 @@ public class CompanionIocModule extends CommonFactoryIocModule {
         bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
         bind(UserMenuInvisibilityAssociationBatchActionCo.class).to(UserMenuInvisibilityAssociationBatchActionDao.class);
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
-        install(new AuditEntityCompanionGenerationIocModule());
         install(new EntityCompanionGenerationIocModule());
     }
 
