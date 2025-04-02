@@ -41,14 +41,12 @@ import static java.util.Objects.requireNonNull;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
-import static java.util.stream.IntStream.rangeClosed;
 import static javax.lang.model.element.Modifier.*;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.*;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.AUDIT_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditProp.PROPERTY;
 import static ua.com.fielden.platform.audit.AnnotationSpecs.*;
 import static ua.com.fielden.platform.audit.AuditUtils.*;
-import static ua.com.fielden.platform.audit.JavaPoet.topLevelClassName;
 import static ua.com.fielden.platform.audit.PropertySpec.propertyBuilder;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
@@ -57,7 +55,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.nonBlankPrope
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.*;
 
-final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
+final class AuditEntityGeneratorImpl implements IAuditEntityGenerator {
 
     private final AuditingMode auditingMode;
     private final IDomainMetadata domainMetadata;
@@ -85,7 +83,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final VersionStrategy versionStrategy)
     {
         if (auditingMode == AuditingMode.DISABLED) {
-            throw AuditingModeException.cannotBeUsed(AuditEntityGenerator.class, auditingMode);
+            throw AuditingModeException.cannotBeUsed(IAuditEntityGenerator.class, auditingMode);
         }
 
         entityTypes.forEach(AuditEntityGeneratorImpl::validateAuditedType);
@@ -112,7 +110,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
             final VersionStrategy versionStrategy)
     {
         if (auditingMode == AuditingMode.DISABLED) {
-            throw AuditingModeException.cannotBeUsed(AuditEntityGenerator.class, auditingMode);
+            throw AuditingModeException.cannotBeUsed(IAuditEntityGenerator.class, auditingMode);
         }
 
         class $ {
@@ -408,7 +406,7 @@ final class AuditEntityGeneratorImpl implements AuditEntityGenerator {
     };
 
     private static boolean isAudited(final PropertyMetadata.Persistent property) {
-        return !AuditEntityGenerator.NON_AUDITED_PROPERTIES.contains(property.name());
+        return !IAuditEntityGenerator.NON_AUDITED_PROPERTIES.contains(property.name());
     }
 
     /**

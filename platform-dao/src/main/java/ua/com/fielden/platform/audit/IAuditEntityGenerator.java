@@ -14,7 +14,7 @@ import java.util.Set;
  * Cannot be used if auditing is disabled, all methods will throw {@link AuditingModeException}.
  */
 @ImplementedBy(AuditEntityGeneratorImpl.class)
-public interface AuditEntityGenerator {
+public interface IAuditEntityGenerator {
 
     /**
      * Properties of base entity types that are excluded from auditing.

@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.test.server;
 
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.audit.AuditEntityGenerator;
-import ua.com.fielden.platform.audit.AuditEntityGenerator.VersionStrategy;
+import ua.com.fielden.platform.audit.IAuditEntityGenerator;
+import ua.com.fielden.platform.audit.IAuditEntityGenerator.VersionStrategy;
 import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 
@@ -10,7 +10,6 @@ import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
@@ -67,7 +66,7 @@ public class GenAudit {
         final var config = new AuditGenerationConfig(props);
         LOGGER.info("Generating audit types...");
 
-        final var generator = config.getInstance(AuditEntityGenerator.class);
+        final var generator = config.getInstance(IAuditEntityGenerator.class);
         final var results = generator.generate(
                 // Specify audited entity types
                 List.of(TgVehicle.class),

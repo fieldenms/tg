@@ -18,7 +18,7 @@ import java.util.Optional;
 
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
-import static ua.com.fielden.platform.audit.AuditEntityGenerator.NON_AUDITED_PROPERTIES;
+import static ua.com.fielden.platform.audit.IAuditEntityGenerator.NON_AUDITED_PROPERTIES;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.meta.PropertyNature.CALCULATED;
 import static ua.com.fielden.platform.meta.PropertyNature.PERSISTENT;

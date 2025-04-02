@@ -9,7 +9,7 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
  * A factory for creating Web UI configuration for audit-entities.
  */
 @ImplementedBy(AuditWebUiConfigFactoryImpl.class)
-public interface AuditWebUiConfigFactory {
+public interface IAuditWebUiConfigFactory {
 
     /**
      * Creates a Web UI configuration object for a synthetic audit-entity type.
