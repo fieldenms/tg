@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.audit;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.Provides;
-import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import jakarta.inject.Singleton;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -58,6 +60,8 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
         super.configure();
 
         newOptionalBinder(binder(), AuditingMode.class).setDefault().toInstance(AuditingMode.ENABLED);
+
+        requestStaticInjection(LogAuditingMode.class);
     }
 
     @Provides
@@ -78,5 +82,14 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
         };
     }
 
+    private static class LogAuditingMode {
+
+        private static final Logger LOGGER = LogManager.getLogger();
+
+        @Inject
+        static void run(final AuditingMode auditingMode) {
+            LOGGER.info(() -> "Active auditing mode: %s".formatted(auditingMode));
+        }
+    }
 
 }
