@@ -150,6 +150,17 @@ public interface IAuditTypeFinder {
          */
         Optional<Class<AbstractAuditProp<E>>> findAuditPropType(int version);
 
+        /**
+         * Returns all persistent audit types.
+         * The result is equivalent to the concatenation of {@link #allAuditEntityTypes()} and {@link #allAuditPropTypes()}.
+         */
+        Collection<Class<? extends AbstractEntity<?>>> allPersistentAuditTypes();
+
+        /**
+         * Returns all audit types.
+         */
+        Collection<Class<? extends AbstractEntity<?>>> allAuditTypes();
+
     }
 
 }

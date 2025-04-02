@@ -15,6 +15,7 @@ import static java.lang.String.format;
 import static java.util.Comparator.comparingLong;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 
 final class AuditTypeFinder implements IAuditTypeFinder {
 
@@ -94,6 +95,8 @@ final class AuditTypeFinder implements IAuditTypeFinder {
     /**
      * @param _auditEntityTypes  sorted by version ascending
      * @param _auditPropTypes  sorted by version ascending
+     * @param _synAuditEntityType  may be null if the auditing mode is {@link AuditingMode#GENERATION}
+     * @param _synAuditPropType  may be null if the auditing mode is {@link AuditingMode#GENERATION}
      */
     private record Context<E extends AbstractEntity<?>> (
             Class<E> _auditedType,
@@ -216,6 +219,26 @@ final class AuditTypeFinder implements IAuditTypeFinder {
                     ? Optional.empty()
                     : Optional.of(_auditPropTypes.get(version - 1));
         }
+
+        @Override
+        public Collection<Class<? extends AbstractEntity<?>>> allPersistentAuditTypes() {
+            return concatList(_auditEntityTypes, _auditPropTypes);
+        }
+
+        @Override
+        public Collection<Class<? extends AbstractEntity<?>>> allAuditTypes() {
+            final var builder = ImmutableList.<Class<? extends AbstractEntity<?>>>
+                    builderWithExpectedSize(2 + _auditEntityTypes.size() + _auditPropTypes.size());
+            if (_synAuditEntityType != null)  {
+                builder.add(_synAuditEntityType);
+            }
+            if (_synAuditPropType != null)  {
+                builder.add(_synAuditPropType);
+            }
+            builder.addAll(_auditEntityTypes).addAll(_auditPropTypes);
+            return builder.build();
+        }
+
     }
 
     private <E extends AbstractEntity<?>> Context<E> makeContext(
