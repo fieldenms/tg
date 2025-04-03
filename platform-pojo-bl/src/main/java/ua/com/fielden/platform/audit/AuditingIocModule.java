@@ -21,55 +21,41 @@ import static ua.com.fielden.platform.parser.IValueParser.enumIgnoreCaseParser;
 import static ua.com.fielden.platform.parser.IValueParser.optPropertyParser;
 import static ua.com.fielden.platform.utils.MiscUtilities.mkProperties;
 
-/**
- * IoC module that provides auditing configuration that pertains to modelling.
- *
- * <h4> Requirements </h4>
- * <ul>
- *   <li> Application property {@link #AUDIT_PATH} must be specified.
- * </ul>
- *
- * <h4> Bindings </h4>
- * <ul>
- *   <li> Discovery of audit types through {@link IAuditTypeFinder}.
- *   <li> Auditing mode.
- *   <p> There are several ways to specify the auditing mode, ordered from highest priority to lowest:
- *   <ol>
- *     <li> System property.
- *     <li> Application property.
- *     <li> IoC configuration, via {@link #withAuditingMode(AuditingMode)}.
- *   </ol>
- *   If the auditing mode is not specified, the default is {@link AuditingMode#ENABLED}.
- * </ul>
- */
+/// IoC module that provides auditing configuration that pertains to modelling.
+///
+/// ####  Requirements
+/// * Application property [#AUDIT_PATH] must be specified.
+///
+/// ####  Bindings
+/// * Discovery of audit types through [IAuditTypeFinder].
+/// * Auditing mode.
+///
+/// There are several ways to specify the auditing mode, ordered from highest priority to lowest:
+/// 1. System property.
+/// 2. Application property.
+/// 3. IoC configuration, via [#withAuditingMode(AuditingMode)].
+///
+///    If the auditing mode is not specified, the default is [AuditingMode#ENABLED].
 public final class AuditingIocModule extends AbstractPlatformIocModule {
 
-    /**
-     * Application property that specifies the location of class files for audit types.
-     * <ul>
-     *   <li> For development environment - a path to a directory (e.g., {@code app-pojo-bl/target/classes}).
-     *   <li> For deployment - a path to a JAR (e.g., {@code libs/app-pojo-bl-VERSION.jar}).
-     * </ul>
-     * <p>
-     * This name is to be used with the {@link jakarta.inject.Named} annotation.
-     */
+    /// Application property that specifies the location of class files for audit types.
+    /// * For development environment - a path to a directory (e.g., `app-pojo-bl/target/classes`).
+    /// * For deployment - a path to a JAR (e.g., `libs/app-pojo-bl-VERSION.jar`).
+    ///
+    /// This name is to be used with the [jakarta.inject.Named] annotation.
     public static final String AUDIT_PATH = "audit.path";
 
-    /**
-     * Application and system property that specifies the auditing mode.
-     * <p>
-     * This name is to be used with the {@link jakarta.inject.Named} annotation.
-     */
+    /// Application and system property that specifies the auditing mode.
+    ///
+    /// This name is to be used with the [jakarta.inject.Named] annotation.
     public static final String AUDIT_MODE = "audit.mode";
 
     private static final IValueParser<Object, AuditingMode> auditingModeParser = enumIgnoreCaseParser(AuditingMode.values());
 
-    /** Named binding for the default {@link AuditingMode}, which is specified via {@link #withAuditingMode(AuditingMode)}. */
+    /// Named binding for the default [AuditingMode], which is specified via [#withAuditingMode(AuditingMode)].
     private static final String DEFAULT_AUDITING_MODE = "DEFAULT_AUDITING_MODE";
 
-    /**
-     * Returns an IoC module that sets the specified auditing mode.
-     */
+    /// Returns an IoC module that sets the specified auditing mode.
     public static Module withAuditingMode(final AuditingMode mode) {
         return new AbstractModule() {
             @Override
@@ -108,9 +94,7 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
         };
     }
 
-    /**
-     * Decides which of the configured auditing modes is the definite one.
-     */
+    /// Decides which of the configured auditing modes is the definite one.
     @Provides
     @Singleton
     AuditingMode auditingMode(
