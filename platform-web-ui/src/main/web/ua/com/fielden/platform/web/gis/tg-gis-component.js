@@ -454,7 +454,7 @@ GisComponent.prototype.clearAll = function () {
  */
 GisComponent.prototype.promoteNewOrUpdatedEntities = function (newOrUpdatedEntities) {
     this.traverseEntities(newOrUpdatedEntities, null /* the parent for top-level entities is null */, (entity, parentFeature) => {
-        const indexToUpdate = this._entities.findIndex(prevEntity => this._reflector.equalsEx(entity, prevEntity));
+        const indexToUpdate = this._entities.findIndex(prevEntity => this._reflector.equalsEx(entity, prevEntity) || this._reflector.equalsExInHierarchy(entity, prevEntity));
         if (indexToUpdate >= 0) {
             const prevLayerId = this._entities[indexToUpdate].properties.layerId;
             // found prev entity could probably have no corresponding leaflet layer -- need to check this
