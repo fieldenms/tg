@@ -107,7 +107,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     public AttachmentUploader save(final AttachmentUploader uploader) {
         uploader.getEventSourceSubject().ifPresent(ess -> ess.publish(5));
         if (uploader.getInputStream() == null) {
-            LOGGER.fatal(() -> "Input stream is missing when attempting to upload [%s].".formatted(uploader.getOrigFileName()));
+            LOGGER.fatal(() -> "[%s] Input stream is missing when attempting to upload [%s].".formatted(getUser(), uploader.getOrigFileName()));
             throw failure(ERR_MISSING_INPUT_STREAM);
         }
 
@@ -117,7 +117,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             final MessageDigest md = MessageDigest.getInstance("SHA1");
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 10));
 
-            LOGGER.debug(() -> "Saving uploaded [%s] to tmp file [%s].".formatted(uploader.getOrigFileName(), tmpPath));
+            LOGGER.debug(() -> "[%s] Saving uploaded [%s] to tmp file [%s].".formatted(getUser(), uploader.getOrigFileName(), tmpPath));
             try (final InputStream is = uploader.getInputStream();
                  final DigestInputStream dis = new DigestInputStream(is, md) /* digest decorator to compute SHA1 checksum while reading a stream */ ) {
 
@@ -149,20 +149,20 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             }
 
         } catch (final Exception ex) {
-            LOGGER.fatal(() -> "Failed to upload [%s].".formatted(uploader.getOrigFileName()), ex);
+            LOGGER.fatal(() -> "[%s] Failed to upload [%s].".formatted(getUser(), uploader.getOrigFileName()), ex);
             throw failure(ex);
         } finally {
             // Delete the tmp file, and log a warning if it could not be deleted
             try {
                 Files.deleteIfExists(tmpPath);
             } catch (final IOException ex) {
-                LOGGER.warn(() -> "Could not remove tmp file [%s].".formatted(tmpPath), ex);
+                LOGGER.warn(() -> "[%s] Could not remove tmp file [%s].".formatted(getUser(), tmpPath), ex);
             }
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 85));
         }
 
         // Now we can create/retrieve a corresponding Attachment instance
-        LOGGER.debug(()-> "Creating an attachment for uploaded [%s].".formatted(uploader.getOrigFileName()));
+        LOGGER.debug(()-> "[%s] Creating an attachment for uploaded [%s].".formatted(getUser(), uploader.getOrigFileName()));
         final Attachment attachment = co$(Attachment.class).new_()
                 .setSha1(sha1)
                 .setOrigFileName(uploader.getOrigFileName())
@@ -171,11 +171,11 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         try {
             final Attachment savedAttachment = co$(Attachment.class).save(attachment);
             uploader.setKey(savedAttachment);
-            LOGGER.debug(() -> "New attachment [%s] is created successfully.".formatted(attachment));
+            LOGGER.debug(() -> "[%s] New attachment [%s] is created successfully.".formatted(getUser(), attachment));
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 95));
         } catch (final EntityAlreadyExists ex) {
             uploader.getEventSourceSubject().ifPresent(ess -> ess.publish(90));
-            LOGGER.debug(() -> "Attachment [%s] already exists. Reusing existing.".formatted(attachment));
+            LOGGER.debug(() -> "[%s] Attachment [%s] already exists. Reusing existing.".formatted(getUser(), attachment));
             final Attachment existingAttachment = co(Attachment.class).findByEntityAndFetch(co(Attachment.class).getFetchProvider().fetchModel(), attachment);
             if (existingAttachment == null) {
                 final String errAttachmentNotFound = ERR_ATTACHMENT_NOT_FOUND.formatted(attachment);
@@ -186,7 +186,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         }
 
         // Make sure we report 100% completion
-        LOGGER.debug(() -> "Completed attachment uploading of [%s] successfully.".formatted(uploader.getOrigFileName()));
+        LOGGER.debug(() -> "[%s] Completed attachment uploading of [%s] successfully.".formatted(getUser(), uploader.getOrigFileName()));
         uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 100));
 
         return uploader;
@@ -206,7 +206,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             // application/x-tika-msoffice  application/vnd.ms-excel
             // application/x-tika-msoffice  application/msword
 
-            LOGGER.debug(() -> "Mime type for uploaded file [%s] identified as [%s], and provided as [%s].".formatted(uploader.getOrigFileName(), mediaType, uploader.getMime()));
+            LOGGER.debug(() -> "[%s] Mime type for uploaded file [%s] identified as [%s], and provided as [%s].".formatted(getUser(), uploader.getOrigFileName(), mediaType, uploader.getMime()));
             // MediaType may contain other parameters in its toString, such as charset, which are not relevant for our purpose.
             // This is why we need to extract MIME as type/subtype.
             final var mime = mediaType.getType() + "/" + mediaType.getSubtype();
@@ -238,7 +238,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 yield failure(ERR_INFECTION_FOUND);
             }
             case ScannerError(String info) -> {
-                LOGGER.error(() -> "[%s] Malware scanner reported an error while scanning file [%s]:%n%s%n".formatted(getUser(), uploader.getOrigFileName(), info));
+                LOGGER.error(() -> "[%s] Malware scanner reported an error while scanning file [%s]: %s%n".formatted(getUser(), uploader.getOrigFileName(), info));
                 yield failure(ERR_MALWARE_SCANNING);
             }
             case ScannerNotAvailable(String info) -> {
@@ -274,11 +274,11 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             }
         } catch (final Exception ex) {
             if (ex instanceof ZipException && "encrypted ZIP entry not supported".equals(ex.getMessage())) {
-                LOGGER.error(() -> "Could not extract encrypted zip archive [%s] uploaded by [%s]. Aborting the file upload.".formatted(uploader.getOrigFileName(), user), ex);
+                LOGGER.error(() -> "[%s] Could not extract encrypted zip archive [%s]. Aborting the file upload.".formatted(user, uploader.getOrigFileName()), ex);
                 return failure(ERR_ENCRYPTED_ZIP);
             }
             else {
-                LOGGER.warn(() -> "Error while analysing archive [%s] uploaded by [%s]. Aborting the analysis.".formatted(uploader.getOrigFileName(), user), ex);
+                LOGGER.warn(() -> "[%s] Error while analysing archive [%s]. Aborting the analysis.".formatted(user, uploader.getOrigFileName()), ex);
             }
         }
         return successful();
@@ -296,7 +296,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 return check;
             }
         } catch (final Exception ex) {
-            LOGGER.warn(() -> "Error while analysing archive [%s] uploaded by [%s]. Aborting the analysis.".formatted(uploader.getOrigFileName(), user), ex);
+            LOGGER.warn(() -> "[%s] Error while analysing archive [%s]. Aborting the analysis.".formatted(user, uploader.getOrigFileName()), ex);
         }
         return successful();
     }
@@ -328,7 +328,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 }
             }
         } catch (final Exception ex) {
-            LOGGER.warn(() -> "Error while analysing archive [%s] uploaded by [%s]. Aborting the analysis.".formatted(uploader.getOrigFileName(), user), ex);
+            LOGGER.warn(() -> "[%s] Error while analysing archive [%s]. Aborting the analysis.".formatted(user, uploader.getOrigFileName()), ex);
         }
         return successful();
     }
@@ -346,7 +346,7 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
                 return check;
             }
         } catch (final Exception ex) {
-            LOGGER.warn(() -> "Error while analysing archive [%s] uploaded by [%s]. Aborting the analysis.".formatted(uploader.getOrigFileName(), user), ex);
+            LOGGER.warn(() -> "[%s] Error while analysing archive [%s]. Aborting the analysis.".formatted(user, uploader.getOrigFileName()), ex);
         }
         return successful();
     }
