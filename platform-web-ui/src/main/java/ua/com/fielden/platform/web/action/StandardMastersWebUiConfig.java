@@ -147,7 +147,7 @@ public class StandardMastersWebUiConfig {
                 .addProp("lastUpdatedDate").asDateTimePicker()
                 .also()
                 .addAction(MasterActions.REFRESH)
-                /*      */.shortDesc("OK").longDesc("Close this dialog.")
+                /*      */.shortDesc("Close").longDesc("Closes the dialog.")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster(1, MASTER_ACTION_DEFAULT_WIDTH))
                 .setLayoutFor(DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(TABLET, Optional.empty(), layout)
