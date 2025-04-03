@@ -5,10 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -682,6 +679,17 @@ public class EntityUtils {
                 throw new ReflectionException(msg, ex);
             }
         }
+    }
+
+    /**
+     * Determines whether the provided entity type represents a persistent entity and has audit information like created/updated*.
+     * This type should extend {@link AbstractPersistentEntity}.
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isPersistentWithAuditData(@Nullable final Class<?> type) {
+        return isPersistentEntityType(type) && AbstractPersistentEntity.class.isAssignableFrom(type);
     }
 
     /**

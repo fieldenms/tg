@@ -47,8 +47,8 @@ const TgEntityMasterTemplateBehaviorImpl = {
             return () => self._currEntity;
         };
 
-        self._isPersistentEntity = function(_currEntity) {
-            return true;
+        self._isPersistentEntityWithAuditData = function(_currEntity) {
+            return _currEntity && _currEntity.type().isPersistentWithAuditData();
         };
 
         self._isEntityPersisted = function(_currEntity) {

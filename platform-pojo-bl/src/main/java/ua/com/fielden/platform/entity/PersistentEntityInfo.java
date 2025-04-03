@@ -35,6 +35,7 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
     @IsProperty
     @Title(value = "Version", desc = "This entity version")
     @Readonly
+    @Required
     private Long entityVersion;
 
     @IsProperty

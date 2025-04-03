@@ -75,7 +75,7 @@ const template = html`<!-- TODO layout vertical -->
                 require-selected-entities='ONE'
                 require-master-entity='false'
                 current-entity = '[[_currentEntityForPersistentEntityInfo()]]'
-                hidden$="[[!_isPersistentEntity(_currEntity)]]"
+                hidden$="[[!_isPersistentEntityWithAuditData(_currEntity)]]"
                 disabled="[[!_isEntityPersisted(_currEntity)]]"
                 slot="persistent-entity-info-slot">
             </tg-ui-action>

@@ -1,19 +1,11 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.master.MasterInfo;
+
+import java.util.*;
 
 /**
  * The entity type to represent serialisable entity types for client-side handling.
@@ -49,8 +41,12 @@ public class EntityType extends AbstractEntity<String> {
     private final Map<String, EntityTypeProp> _props = new LinkedHashMap<>();
 
     @IsProperty
-    @Title(value = "Is Persistent?", desc = "Indicated whether the associated entity type represents a persistent entity.")
+    @Title(value = "Is Persistent?", desc = "Indicates whether the associated entity type represents a persistent entity.")
     private Boolean _persistent;
+
+    @IsProperty
+    @Title(value = "Is Persistent With Audit Data?", desc = "Indicates whether the associated entity type represents a persistent entity with audit data.")
+    private Boolean _persistentWithAudit;
 
     @IsProperty
     @Title(value = "Should Display Description?", desc = "Indicates whether editors for values of this type should display values descriptions")
@@ -152,6 +148,16 @@ public class EntityType extends AbstractEntity<String> {
 
     public Boolean get_displayDesc() {
         return _displayDesc;
+    }
+
+    public Boolean get_persistentWithAudit() {
+        return _persistentWithAudit;
+    }
+
+    @Observable
+    public EntityType set_persistentWithAudit(final Boolean _persistentWithAudit) {
+        this._persistentWithAudit = _persistentWithAudit;
+        return this;
     }
 
     @Observable

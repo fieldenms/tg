@@ -875,6 +875,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
+     * Returns 'true' if the entity type represents a persistent entity and contains audit data like created/update*, version etc.
+     *
+     */
+    EntityType.prototype.isPersistentWithAuditData = function () {
+        return typeof this['_persistentWithAudit'] === 'undefined' ? false : this['_persistentWithAudit'];
+    }
+
+    /**
      * Returns 'true' if the entity type represents a continuation entity.
      *
      */
