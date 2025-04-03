@@ -135,24 +135,25 @@ public class StandardMastersWebUiConfig {
     }
 
     public static EntityMaster<PersistentEntityInfo> createPersistentEntityInfoMaster(final Injector injector) {
-        final String layout = cell(cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).repeat(3),layout().withStyle("padding", MARGIN_PIX).end()).toString();
+        final String desktopLayout = cell(cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).repeat(3),layout().withStyle("padding", MARGIN_PIX).end()).toString();
+        final String mobileLayout = cell(cell().repeat(6),layout().withStyle("padding", MARGIN_PIX).end()).toString();
 
         final IMaster<PersistentEntityInfo> masterConfig = new SimpleMasterBuilder<PersistentEntityInfo>()
                 .forEntity(PersistentEntityInfo.class)
-                .addProp("entityId").asInteger().also()
-                .addProp("entityVersion").asInteger().also()
+                .addProp("lastUpdatedBy").asAutocompleter().also()
+                .addProp("lastUpdatedDate").asDateTimePicker().also()
                 .addProp("createdBy").asAutocompleter().also()
                 .addProp("createdDate").asDateTimePicker().also()
-                .addProp("lastUpdatedBy").asAutocompleter().also()
-                .addProp("lastUpdatedDate").asDateTimePicker()
+                .addProp("entityId").asInteger().also()
+                .addProp("entityVersion").asInteger()
                 .also()
                 .addAction(MasterActions.REFRESH)
-                /*      */.shortDesc("Close").longDesc("Closes the dialog.")
+                /*      */.shortDesc("Close").longDesc("Closes the dialog")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster(1, MASTER_ACTION_DEFAULT_WIDTH))
-                .setLayoutFor(DESKTOP, Optional.empty(), layout)
-                .setLayoutFor(TABLET, Optional.empty(), layout)
-                .setLayoutFor(MOBILE, Optional.empty(), layout)
-                .withDimensions(mkDim(640, 180, Unit.PX))
+                .setLayoutFor(DESKTOP, Optional.empty(), desktopLayout)
+                .setLayoutFor(TABLET, Optional.empty(), desktopLayout)
+                .setLayoutFor(MOBILE, Optional.empty(), mobileLayout)
+                .withDimensions(mkDim(590, 305, Unit.PX))
                 .done();
 
         return new EntityMaster<>(PersistentEntityInfo.class, PersistentEntityInfoProducer.class, masterConfig, injector);
