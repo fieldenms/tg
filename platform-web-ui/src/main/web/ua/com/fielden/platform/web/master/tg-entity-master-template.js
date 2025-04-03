@@ -14,17 +14,18 @@ const template = html`<!-- TODO layout vertical -->
     <style>
         #tgOpenPersistentEntityInfo {
             color: var(--paper-input-container-color, var(--secondary-text-color));
+            margin-left: 2px;
             --tg-ui-action-icon-button-height: 22px;
             --tg-ui-action-icon-button-width: 22px;
             --tg-ui-action-icon-button-padding: 0;
-            /* --tg-ui-action-spinner-width: 1.5rem;
-            --tg-ui-action-spinner-height: 1.5rem;
-            --tg-ui-action-spinner-min-width: 1rem;
-            --tg-ui-action-spinner-min-height: 1rem;
-            --tg-ui-action-spinner-max-width: 1.5rem;
-            --tg-ui-action-spinner-max-height: 1.5rem;
+            --tg-ui-action-spinner-width: 22px;
+            --tg-ui-action-spinner-height: 22px;
+            --tg-ui-action-spinner-min-width: 22px;
+            --tg-ui-action-spinner-min-height: 22px;
+            --tg-ui-action-spinner-max-width: 22px;
+            --tg-ui-action-spinner-max-height: 22px;
             --tg-ui-action-spinner-padding: 0px;
-            --tg-ui-action-spinner-margin-left: 0px; */
+            --tg-ui-action-spinner-margin-left: 0px;
         }
     </style>
     <tg-ui-action
