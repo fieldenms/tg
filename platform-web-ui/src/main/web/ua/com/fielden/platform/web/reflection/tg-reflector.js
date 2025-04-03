@@ -1128,7 +1128,7 @@ const _equalsEx = function (value1, value2) {
     if (_isDynamicEntityKey(value1)) {
         return value1._dynamicEntityKeyEqualsTo(value2);
     } else if (_isEntity(value1)) {
-        return _entitiesEqualsEx(value1, value2);
+        return _entitiesEqualsEx(value1, value2, false);
     } else if (Array.isArray(value1)) {
         return _arraysEqualsEx(value1, value2);
     } else if (value1 !== null && _isMoney(value1)) {
@@ -1167,13 +1167,15 @@ var _arraysEqualsEx = function (array1, array2) {
     return true;
 };
 
+const _type = entity => entity.constructor.prototype.type.call(entity);
+
 /**
  * Returns 'true' if the entities are equal, 'false' otherwise.
  *
  * IMPORTANT: this is the mirror of the java methods AbstractEntity.equals() and DynamicEntityKey.compareTo(). So, please be carefull and maintain it
  * in accordance with java counterparts.
  */
-const _entitiesEqualsEx = function (entity1, entity2) {
+const _entitiesEqualsEx = function (entity1, entity2, inHierarchy) {
     if (entity1 === entity2) {
         return true;
     }
@@ -1181,11 +1183,11 @@ const _entitiesEqualsEx = function (entity1, entity2) {
         return false;
     }
     // let's ensure that types match
-    const entity1Type = entity1.constructor.prototype.type.call(entity1);
-    const entity2Type = entity2.constructor.prototype.type.call(entity2);
+    const entity1Type = _type(entity1);
+    const entity2Type = _type(entity2);
     // in most cases, two entities of the same type will be compared -- their types will be equal by reference
     // however generated types re-register on each centre run / refresh, so need to compare their base types (this will also cover the case where multiple server nodes are used and different nodes generate different types from the same base type)
-    if (entity1Type !== entity2Type && entity1Type.notEnhancedFullClassName() !== entity2Type.notEnhancedFullClassName()) {
+    if (entity1Type !== entity2Type && entity1Type.notEnhancedFullClassName() !== entity2Type.notEnhancedFullClassName() && (inHierarchy ? _typeTable[entity1Type.notEnhancedFullClassName()].baseType() !== _typeTable[entity2Type.notEnhancedFullClassName()].baseType() : true) ) {
         return false;
     }
     // now can compare key values
@@ -1545,6 +1547,13 @@ export const TgReflector = Polymer({
      */
     equalsEx: function (value1, value2) {
         return _equalsEx(value1, value2);
+    },
+
+    /**
+     * Returns 'true' if the entity values are equal disregarding type hierarchy (synthetic-based-on-persistent / single-entity-key), 'false' otherwise.
+     */
+    equalsExInHierarchy: function (entity1, entity2) {
+        return _entitiesEqualsEx(entity1, entity2, true);
     },
 
     /**
