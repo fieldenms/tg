@@ -14,6 +14,10 @@ import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.BodyContentHandler;
 import org.xml.sax.SAXException;
+import ua.com.fielden.platform.attachment.IMalwareScanner.ScanResult.Found;
+import ua.com.fielden.platform.attachment.IMalwareScanner.ScanResult.Ok;
+import ua.com.fielden.platform.attachment.IMalwareScanner.ScanResult.ScannerError;
+import ua.com.fielden.platform.attachment.IMalwareScanner.ScanResult.ScannerNotAvailable;
 import ua.com.fielden.platform.cypher.HexString;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -77,19 +81,25 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
     public static final String ERR_MISSING_INPUT_STREAM = "Input stream was not provided.";
     public static final String ERR_ATTACHMENT_NOT_FOUND = "Attachment [%s] could not be located.";
     public static final String ERR_ENCRYPTED_ZIP = "Encrypted ZIP files are not supported.";
+    public static final String ERR_INFECTION_FOUND = "Infection found. This incident will be reported.";
+    public static final String ERR_MALWARE_SCANNING = "An error was encountered during malware scanning.";
 
     public final String attachmentsLocation;
     public final Set<String> attachmentsAllowlist;
 
+    private final IMalwareScanner malwareScanner;
+
     @Inject
     public AttachmentUploaderDao(
             final @Named("attachments.location") String attachmentsLocation,
-            final @Named("attachments.allowlist") String attachmentsAllowlist)
+            final @Named("attachments.allowlist") String attachmentsAllowlist,
+            final IMalwareScanner malwareScanner)
     {
         this.attachmentsLocation = attachmentsLocation;
         this.attachmentsAllowlist = isBlank(attachmentsAllowlist)
                                     ? Set.of()
                                     : Arrays.stream(attachmentsAllowlist.split(",")).map(String::trim).collect(toUnmodifiableSet());
+        this.malwareScanner = malwareScanner;
     }
 
     @Override
@@ -142,11 +152,11 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
             LOGGER.fatal(() -> "Failed to upload [%s].".formatted(uploader.getOrigFileName()), ex);
             throw failure(ex);
         } finally {
-            // Remove tmp file, and simply log an error if it could not be removed
+            // Delete the tmp file, and log a warning if it could not be deleted
             try {
                 Files.deleteIfExists(tmpPath);
             } catch (final IOException ex) {
-                LOGGER.error(() -> "Could not remove tmp file [%s].".formatted(tmpPath), ex);
+                LOGGER.warn(() -> "Could not remove tmp file [%s].".formatted(tmpPath), ex);
             }
             uploader.getEventSourceSubject().ifPresent(ess -> publishWithDelay(ess, 85));
         }
@@ -210,11 +220,31 @@ public class AttachmentUploaderDao extends CommonEntityDao<AttachmentUploader> i
         }
 
         // In the case of some archive files, we can inspect their contents.
-        return switch (FileTypes.fromMime(uploader.getMime())) {
+        final var res = switch (FileTypes.fromMime(uploader.getMime())) {
             case ZIP -> inspectZipArchive(uploader, tmpPath, user);
             case TAR -> inspectTarArchive(uploader, tmpPath, user);
             case GZIP -> inspectGzipArchive(uploader, tmpPath, user);
             case OTHER -> successful();
+        };
+        // If the MIME inspection result is not successful, return that result.
+        if (!res.isSuccessful()) {
+            return res;
+        }
+        // Otherwise, perform malware scanning and return the result of scanning.
+        return switch(malwareScanner.scan(tmpPath)) {
+            case Ok(String info) -> successful();
+            case Found(String info) -> {
+                LOGGER.error(() -> "[%s] Attempt to upload infected file [%s]: [%s].".formatted(getUser(), uploader.getOrigFileName(), info));
+                yield failure(ERR_INFECTION_FOUND);
+            }
+            case ScannerError(String info) -> {
+                LOGGER.error(() -> "[%s] Malware scanner reported an error while scanning file [%s]:%n%s%n".formatted(getUser(), uploader.getOrigFileName(), info));
+                yield failure(ERR_MALWARE_SCANNING);
+            }
+            case ScannerNotAvailable(String info) -> {
+                LOGGER.error(() -> "[%s] Malware scanner was not available to scan file [%s].".formatted(getUser(), uploader.getOrigFileName()));
+                yield failure(info);
+            }
         };
     }
 
