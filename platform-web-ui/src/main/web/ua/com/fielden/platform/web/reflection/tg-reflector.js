@@ -845,6 +845,13 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
+     * Returns full class name for base type for this synthetic-based-on-persistent / single-entity-key type (if it is of such kind, the full class name of the type itself otherwise).
+     */
+    EntityType.prototype.baseType = function () {
+        return typeof this['_baseType'] === 'undefined' ? this.fullClassName() : this['_baseType'];
+    }
+
+    /**
      * Returns 'true' if the entity type represents menu item entity in compound master.
      *
      */

@@ -1,19 +1,11 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.master.MasterInfo;
+
+import java.util.*;
 
 /**
  * The entity type to represent serialisable entity types for client-side handling.
@@ -83,6 +75,20 @@ public class EntityType extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "New Entity Master", desc = "Entity master data for new entity action")
     private MasterInfo _newEntityMaster;
+
+    @IsProperty
+    @Title(value = "Base Type", desc = "Represents base type for this synthetic-based-on-persistent / single-entity-key type (if it is of such kind, empty otherwise).")
+    private String _baseType;
+
+    @Observable
+    public EntityType set_baseType(final String value) {
+        this._baseType = value;
+        return this;
+    }
+
+    public String get_baseType() {
+        return _baseType;
+    }
 
     @Observable
     public EntityType set_newEntityMaster(final MasterInfo _newEntityMaster) {

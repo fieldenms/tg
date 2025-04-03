@@ -1096,6 +1096,45 @@ public class EntityUtils {
                 .findAny();
     }
 
+    /**
+     * Returns a non-empty result if {@code type} has a composite key with a single, entity-typed member.
+     */
+    @SuppressWarnings("unchecked")
+    public static Optional<T2<Class<? extends AbstractEntity<?>>, String>> getSingleMemberOfEntityType(final Class<? extends AbstractEntity<?>> type) {
+        final List<Field> keyMembers = getKeyMembers(type);
+        if (keyMembers.size() == 1) {
+            if (isCompositeEntity(type)) {
+                return isEntityType(keyMembers.get(0).getType()) ? Optional.of(t2((Class<? extends AbstractEntity<?>>) keyMembers.get(0).getType(), keyMembers.get(0).getName())) : Optional.empty();
+            }
+            final Class<? extends Comparable<?>> keyType = getKeyType(type);
+            return isEntityType(keyType) ? Optional.of(t2((Class<? extends AbstractEntity<?>>) keyType, KEY)) : Optional.empty();
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Returns a non-empty result if {@code type} is a synthetic entity that is based on some persistent entity type.
+     */
+    @SuppressWarnings("unchecked")
+    public static Optional<Class<? extends AbstractEntity<?>>> getBaseTypeForSyntheticEntity(final Class<? extends AbstractEntity<?>> type) {
+        if (isSyntheticBasedOnPersistentEntityType(type)) {
+            return Optional.of((Class<? extends AbstractEntity<?>>) type.getSuperclass());
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Returns base type for this synthetic-based-on-persistent / single-entity-key type (if it is of such kind, empty otherwise).
+     */
+    public static Optional<Class<? extends AbstractEntity<?>>> getBaseType(final Class<? extends AbstractEntity<?>> type) {
+        return ofNullable(
+            getBaseTypeForSyntheticEntity(type)
+            .orElseGet(() ->
+                getSingleMemberOfEntityType(type).map(t2 -> t2._1).orElse(null)
+            )
+        );
+    }
+
     public static class BigDecimalWithTwoPlaces {
     }
 

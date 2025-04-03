@@ -37,8 +37,7 @@ import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -125,6 +124,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(type)) {
             entityTypeInfo.set_compoundMenuItem(true);
         }
+        entityTypeInfo.set_baseType(getBaseType(type).map(Class::getName).orElse(null));
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
             entityTypeInfo.set_entityTitle(entityTitleAndDesc.getKey());
