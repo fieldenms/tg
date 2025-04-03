@@ -36,6 +36,24 @@ const TgEntityMasterTemplateBehaviorImpl = {
                 action.shortDesc = reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle() + " Master Help";
             }
         };
+
+        self._tgOpenPersistentEntityInfoMasterAttrs = {
+            entityType: "ua.com.fielden.platform.entity.PersistentEntityInfo", 
+            currentState: 'EDIT', 
+            centreUuid: self.uuid
+        };
+
+        self._currentEntityForPersistentEntityInfo = function() {
+            return () => self._currEntity;
+        };
+
+        self._isPersistentEntity = function(_currEntity) {
+            return true;
+        };
+
+        self._isEntityPersisted = function(_currEntity) {
+            return _currEntity && _currEntity.get("id") !== null;
+        };
     },
 
     attached: function () {

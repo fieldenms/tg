@@ -11,6 +11,22 @@ import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js'; // req
 const template = html`<!-- TODO layout vertical -->
     <style include="tg-entity-master-styles"></style> <!-- imported as part of tg-entity-master-template-behavior to reduce the size of resultant generated file -->
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <style>
+        #tgOpenPersistentEntityInfo {
+            color: var(--paper-input-container-color, var(--secondary-text-color));
+            --tg-ui-action-icon-button-height: 22px;
+            --tg-ui-action-icon-button-width: 22px;
+            --tg-ui-action-icon-button-padding: 0;
+            /* --tg-ui-action-spinner-width: 1.5rem;
+            --tg-ui-action-spinner-height: 1.5rem;
+            --tg-ui-action-spinner-min-width: 1rem;
+            --tg-ui-action-spinner-min-height: 1rem;
+            --tg-ui-action-spinner-max-width: 1.5rem;
+            --tg-ui-action-spinner-max-height: 1.5rem;
+            --tg-ui-action-spinner-padding: 0px;
+            --tg-ui-action-spinner-margin-left: 0px; */
+        }
+    </style>
     <tg-ui-action
         id="tgOpenHelpMasterAction"
         ui-role='ICON'
@@ -45,6 +61,24 @@ const template = html`<!-- TODO layout vertical -->
         _run-help-action="[[_helpMouseUpEventHandler]]"
         _has-embeded-view="[[_hasEmbededView]]"
         _saver-loading="{{_saverLoading}}">
+            <tg-ui-action
+                id="tgOpenPersistentEntityInfo"
+                ui-role='ICON'
+                icon="icons:info-outline"
+                component-uri = '/master_ui/ua.com.fielden.platform.entity.PersistentEntityInfo'
+                element-name = 'tg-PersistentEntityInfo-master'
+                show-dialog='[[_showDialog]]'
+                toaster='[[toaster]]'
+                create-context-holder='[[_createContextHolder]]'
+                attrs='[[_tgOpenPersistentEntityInfoMasterAttrs]]'
+                require-selection-criteria='false'
+                require-selected-entities='ONE'
+                require-master-entity='false'
+                current-entity = '[[_currentEntityForPersistentEntityInfo()]]'
+                hidden$="[[!_isPersistentEntity(_currEntity)]]"
+                disabled="[[!_isEntityPersisted(_currEntity)]]"
+                slot="persistent-entity-info-slot">
+            </tg-ui-action>
         <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
         <!--@tg-entity-master-content-->
         <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->

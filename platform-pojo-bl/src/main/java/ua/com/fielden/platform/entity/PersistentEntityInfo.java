@@ -26,7 +26,7 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
     @Title(value = "Unique Identifier", desc = "Persistent Entity Unique Identifier")
     @CompositeKeyMember(1)
     @Readonly
-    private Long entityID;
+    private Long entityId;
 
     @IsProperty
     @Title(value = "Entity Type", desc = "Persistent Entity Type")
@@ -120,13 +120,13 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
     }
 
     @Observable
-    public PersistentEntityInfo setEntityID(final Long entityID) {
-        this.entityID = entityID;
+    public PersistentEntityInfo setEntityId(final Long entityId) {
+        this.entityId = entityId;
         return this;
     }
 
-    public Long getEntityID() {
-        return entityID;
+    public Long getEntityId() {
+        return entityId;
     }
 
 }
