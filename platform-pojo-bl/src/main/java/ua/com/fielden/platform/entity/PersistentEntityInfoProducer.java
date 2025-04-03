@@ -22,15 +22,15 @@ public class PersistentEntityInfoProducer extends DefaultEntityProducerWithConte
     protected PersistentEntityInfo provideDefaultValues(final PersistentEntityInfo entity) {
         if (currentEntityNotEmpty()) {
             final AbstractEntity<?> currEntity = currentEntity();
-            if (isPersistentEntityType(currEntity.getType())) {
-                final IEntityDao<AbstractEntity<?>> entityCo = (IEntityDao<AbstractEntity<?>>) co(currEntity.getType());
-                final AbstractEntity<?> refetchedEntity = entityCo.findById(currEntity.getId(), fetchIdOnly(entityCo.getEntityType()).with("version", "createdBy", "createdDate", "lastUpdatedBy", "lastUpdatedDate"));
+            if (isPersistentEntityType(currEntity.getType()) && AbstractPersistentEntity.class.isAssignableFrom(currEntity.getType())) {
+                final IEntityDao<AbstractPersistentEntity<?>> entityCo = (IEntityDao<AbstractPersistentEntity<?>>) co(currEntity.getType());
+                final AbstractPersistentEntity<?> refetchedEntity = entityCo.findById(currEntity.getId(), fetchIdOnly(entityCo.getEntityType()).with("version", "createdBy", "createdDate", "lastUpdatedBy", "lastUpdatedDate"));
                 entity.setEntityId(refetchedEntity.getId())
-                        .setEntityVersion(entity.getVersion())
-                        .setCreatedBy(entity.getCreatedBy())
-                        .setCreatedDate(entity.getCreatedDate())
-                        .setLastUpdatedBy(entity.getLastUpdatedBy())
-                        .setLastUpdatedDate(entity.getLastUpdatedDate());
+                        .setEntityVersion(refetchedEntity.getVersion())
+                        .setCreatedBy(refetchedEntity.getCreatedBy())
+                        .setCreatedDate(refetchedEntity.getCreatedDate())
+                        .setLastUpdatedBy(refetchedEntity.getLastUpdatedBy())
+                        .setLastUpdatedDate(refetchedEntity.getLastUpdatedDate());
             }
         }
         return super.provideDefaultValues(entity);
