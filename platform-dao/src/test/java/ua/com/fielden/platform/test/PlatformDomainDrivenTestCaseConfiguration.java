@@ -3,6 +3,7 @@ package ua.com.fielden.platform.test;
 import com.google.inject.Injector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierTestIocModule;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerIocModule;
@@ -11,6 +12,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import java.util.Properties;
 
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
+import static ua.com.fielden.platform.audit.AuditingIocModule.withAuditingMode;
 
 /**
  * Provides Platform specific implementation of {@link IDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
@@ -32,6 +34,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
                             appDomainProvider.entityTypes(),
                             getProperties(properties)))
                     .add(new NewUserEmailNotifierTestIocModule())
+                    .add(withAuditingMode(AuditingMode.ENABLED))
                     .getInjector();
 
         } catch (final Exception e) {
