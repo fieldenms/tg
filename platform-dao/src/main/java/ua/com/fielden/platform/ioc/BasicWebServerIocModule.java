@@ -5,10 +5,7 @@ import com.google.inject.Stage;
 import com.google.inject.name.Names;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.audit.AbstractAuditEntity;
-import ua.com.fielden.platform.audit.AbstractAuditProp;
-import ua.com.fielden.platform.audit.AuditingMode;
-import ua.com.fielden.platform.audit.IAuditTypeFinder;
+import ua.com.fielden.platform.audit.*;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -39,6 +36,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.audit.AuditUtils.getAuditTypeVersion;
 import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
 import static ua.com.fielden.platform.web_api.GraphQLService.DEFAULT_MAX_QUERY_DEPTH;
 import static ua.com.fielden.platform.web_api.GraphQLService.WARN_INSUFFICIENT_MAX_QUERY_DEPTH;
@@ -130,6 +128,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.valueOf(props.getProperty("dates.finYearStartMonth", "7"))); // 7 - July, the 1st of July is the start of Fin Year in Australia
         // Auditing
         bindConstant().annotatedWith(Names.named(AUDIT_PATH)).to(props.getProperty(AUDIT_PATH));
+        bindConstant().annotatedWith(Names.named(AUDIT_MODE)).to(props.getProperty(AUDIT_MODE, ""));
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class);
         requireBinding(ISecurityTokenProvider.class);

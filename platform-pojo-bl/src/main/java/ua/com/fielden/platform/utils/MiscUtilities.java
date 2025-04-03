@@ -155,7 +155,16 @@ public class MiscUtilities {
         properties.putAll(map);
         return properties;
     }
-    
+
+    /**
+     * Creates a {@link Properties} instance populated with the specified entries.
+     */
+    public static Properties mkProperties(final String key, final String value) {
+        final var properties = new Properties();
+        properties.put(key, value);
+        return properties;
+    }
+
     /**
      * Returns a function accepting a format string and returning that string formatted with {@code args}.
      * <p>
