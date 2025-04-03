@@ -1,19 +1,6 @@
 package ua.com.fielden.platform.web.action;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.EntityExportAction.*;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
-
-import java.util.Optional;
-
 import com.google.inject.Injector;
-
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.attachment.producers.AttachmentPreviewEntityActionProducer;
@@ -31,6 +18,16 @@ import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityEditMa
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipulationMasterBuilder;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentPreviewEntityMaster;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentsUploadActionMaster;
+
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.EntityExportAction.*;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
 
 /**
  * A set of factory methods for various standard platform-level entity masters such as Export to Excel.
@@ -144,7 +141,7 @@ public class StandardMastersWebUiConfig {
                 .addProp("lastUpdatedDate").asDateTimePicker().also()
                 .addProp("createdBy").asAutocompleter().also()
                 .addProp("createdDate").asDateTimePicker().also()
-                .addProp("entityId").asInteger().also()
+                .addProp("entityId").asSinglelineText().also()
                 .addProp("entityVersion").asInteger()
                 .also()
                 .addAction(MasterActions.REFRESH)
