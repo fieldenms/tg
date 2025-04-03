@@ -11,8 +11,8 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 import java.util.Properties;
 
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
-import static ua.com.fielden.platform.audit.AuditingIocModule.withAuditingMode;
 
 /**
  * Provides Platform specific implementation of {@link IDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
@@ -34,7 +34,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
                             appDomainProvider.entityTypes(),
                             getProperties(properties)))
                     .add(new NewUserEmailNotifierTestIocModule())
-                    .add(withAuditingMode(AuditingMode.ENABLED))
                     .getInjector();
 
         } catch (final Exception e) {
@@ -44,8 +43,8 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
     }
 
     @SafeVarargs
-    private static Properties getProperties(final Properties hbc, final T2<String, String>... properties) {
-        final Properties props = new Properties(hbc);
+    private static Properties getProperties(final Properties properties, final T2<String, String>... pairs) {
+        final Properties props = new Properties(properties);
         // application properties
         props.setProperty("workflow", "development");
         props.setProperty("app.name", "TG Test");
@@ -55,6 +54,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
         props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
         props.setProperty(AUDIT_PATH, "../platform-pojo-bl/target/classes");
+        props.setProperty(AUDIT_MODE, AuditingMode.ENABLED.name());
         props.setProperty("attachments.location", "src/test/resources/attachments");
         props.setProperty("email.smtp", "non-existing-server");
         props.setProperty("email.fromAddress", "platform@fielden.com.au");
@@ -69,7 +69,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
         props.setProperty("dynamicPropertyAccess.tempTypeCache.maxSize", "2048");
         props.setProperty("dynamicPropertyAccess.tempTypeCache.expireAfterWrite", "10m");
 
-        for (final var pair : properties) {
+        for (final var pair : pairs) {
             props.setProperty(pair._1, pair._2);
         }
 

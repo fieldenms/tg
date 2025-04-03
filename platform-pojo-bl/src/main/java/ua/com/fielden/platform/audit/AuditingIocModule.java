@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.audit;
 
-import com.google.inject.*;
-import com.google.inject.Module;
+import com.google.inject.Inject;
+import com.google.inject.Key;
+import com.google.inject.Provides;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 import ua.com.fielden.platform.parser.IValueParser;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
@@ -23,66 +25,65 @@ import static ua.com.fielden.platform.utils.MiscUtilities.mkProperties;
 
 /// IoC module that provides auditing configuration that pertains to modelling.
 ///
-/// ####  Requirements
-/// * Application property [#AUDIT_PATH] must be specified.
-///
 /// ####  Bindings
-/// * Discovery of audit types through [IAuditTypeFinder].
+/// * Discovery of audit types through [IAuditTypeFinder] if [#AUDIT_PATH] is specified.
 /// * Auditing mode.
 ///
-/// There are several ways to specify the auditing mode, ordered from highest priority to lowest:
+/// There are several ways to specify the [auditing mode][#AUDIT_MODE], ordered from highest priority to lowest:
 /// 1. System property.
 /// 2. Application property.
-/// 3. IoC configuration, via [#withAuditingMode(AuditingMode)].
 ///
-///    If the auditing mode is not specified, the default is [AuditingMode#ENABLED].
+/// If the auditing mode is not specified, the default is [AuditingMode#ENABLED].
 public final class AuditingIocModule extends AbstractPlatformIocModule {
 
-    /// Application property that specifies the location of class files for audit types.
+    /// Application property (**not a system property**) that specifies the location of class files for audit types.
     /// * For development environment - a path to a directory (e.g., `app-pojo-bl/target/classes`).
     /// * For deployment - a path to a JAR (e.g., `libs/app-pojo-bl-VERSION.jar`).
     ///
     /// This name is to be used with the [jakarta.inject.Named] annotation.
+    /// An optional binding is created for this name.
+    /// Blank values are treated as if absent.
     public static final String AUDIT_PATH = "audit.path";
+    // We could support audit path as a system property, but that would require other IoC modules to use OptionalBinder to bind an audit path.
+    // More details can be found in the documentation of OptionalBinder.
+    // The reason that audit.mode
 
-    /// Application and system property that specifies the auditing mode.
+    /// System and application property that specifies the auditing mode.
     ///
     /// This name is to be used with the [jakarta.inject.Named] annotation.
+    /// An optional binding is created for this name.
+    /// Blank values are treated as if absent.
+    ///
+    /// **NOTE**: Any code outside of this module should use [AuditingMode] instead of this named binding.
+    /// This is because the value of a system property, if specified, will be reflected in [AuditingMode], but not in the named binding.
     public static final String AUDIT_MODE = "audit.mode";
 
     private static final IValueParser<Object, AuditingMode> auditingModeParser = enumIgnoreCaseParser(AuditingMode.values());
 
-    /// Named binding for the default [AuditingMode], which is specified via [#withAuditingMode(AuditingMode)].
-    private static final String DEFAULT_AUDITING_MODE = "DEFAULT_AUDITING_MODE";
+    private static final String ERR_MISSING_APP_PROPERTY = "Application property [%s] must be specified when auditing mode is [%s].";
 
-    /// Returns an IoC module that sets the specified auditing mode.
-    public static Module withAuditingMode(final AuditingMode mode) {
-        return new AbstractModule() {
-            @Override
-            protected void configure() {
-                newOptionalBinder(binder(), Key.get(AuditingMode.class, Names.named(DEFAULT_AUDITING_MODE)))
-                        .setBinding().toInstance(mode);
-            }
-        };
-    }
+    private static final AuditingMode DEFAULT_AUDITING_MODE = AuditingMode.ENABLED;
 
     @Override
     protected void configure() {
         super.configure();
 
-        newOptionalBinder(binder(), Key.get(AuditingMode.class, Names.named(DEFAULT_AUDITING_MODE)))
-                .setDefault().toInstance(AuditingMode.ENABLED);
+        // No defaults are set so that other modules can bind these names as usual, without using OptionalBinder
+        newOptionalBinder(binder(), Key.get(String.class, Names.named(AUDIT_PATH)));
+        newOptionalBinder(binder(), Key.get(String.class, Names.named(AUDIT_MODE)));
 
         requestStaticInjection(LogAuditingMode.class);
     }
 
     @Provides
     @Singleton
-    IAuditTypeFinder provideAuditTypeFinder(final @Named(AUDIT_PATH) String auditPath, final AuditingMode auditingMode) {
+    IAuditTypeFinder provideAuditTypeFinder(final @Named(AUDIT_PATH) Optional<String> maybeAuditPath, final AuditingMode auditingMode) {
         return switch (auditingMode) {
             // No need to scan the audit path if auditing is disabled
             case DISABLED -> new AuditTypeFinder(List.of(), auditingMode);
             default -> {
+                final var auditPath = maybeAuditPath.filter(not(String::isBlank))
+                        .orElseThrow(() -> new ApplicationConfigurationException(ERR_MISSING_APP_PROPERTY.formatted(AUDIT_PATH, auditingMode)));
                 final List<Class<?>> types;
                 try {
                     types = ClassesRetriever.getAllClassesInPackage(auditPath, "");
@@ -97,20 +98,17 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
     /// Decides which of the configured auditing modes is the definite one.
     @Provides
     @Singleton
-    AuditingMode auditingMode(
-            final @Named(AUDIT_MODE) String appAuditMode,
-            final @Named(DEFAULT_AUDITING_MODE) AuditingMode defaultAuditingMode)
-    {
+    AuditingMode auditingMode(final @Named(AUDIT_MODE) Optional<String> maybeAppAuditMode) {
         final var parser = optPropertyParser(AUDIT_MODE, auditingModeParser);
         return parser.apply(System.getProperties())
                 .refineError(() -> "Could not parse system property [%s]".formatted(AUDIT_MODE))
                 .getOrThrow()
-                .or(() -> Optional.of(appAuditMode)
+                .or(() -> maybeAppAuditMode
                         .filter(not(String::isBlank))
                         .flatMap(it -> parser.apply(mkProperties(AUDIT_MODE, it))
                                 .refineError(() -> "Could not parse application property [%s]".formatted(AUDIT_MODE))
                                 .getOrThrow()))
-                .orElse(defaultAuditingMode);
+                .orElse(DEFAULT_AUDITING_MODE);
     }
 
     private static class LogAuditingMode {

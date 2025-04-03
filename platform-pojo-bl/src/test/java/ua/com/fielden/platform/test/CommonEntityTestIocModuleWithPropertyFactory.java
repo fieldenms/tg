@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.test;
 
 import com.google.inject.name.Names;
-import ua.com.fielden.platform.audit.AuditingIocModule;
 import ua.com.fielden.platform.audit.AuditingMode;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
@@ -15,6 +14,8 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 import java.util.Properties;
+
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly.
@@ -52,7 +53,7 @@ public class CommonEntityTestIocModuleWithPropertyFactory extends EntityTestIocM
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
         bind(ITgPersistentEntityWithProperties.class).to(TgPersistentEntityWithPropertiesDaoStub.class);
 
-        install(AuditingIocModule.withAuditingMode(auditingMode()));
+        bindConstant().annotatedWith(Names.named(AUDIT_MODE)).to(auditingMode().name());
     }
     
 }

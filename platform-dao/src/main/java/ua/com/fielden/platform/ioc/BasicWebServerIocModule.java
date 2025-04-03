@@ -127,7 +127,7 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.valueOf(props.getProperty("dates.finYearStartDay", "1"))); // 1 - the first day of the month
         bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.valueOf(props.getProperty("dates.finYearStartMonth", "7"))); // 7 - July, the 1st of July is the start of Fin Year in Australia
         // Auditing
-        bindConstant().annotatedWith(Names.named(AUDIT_PATH)).to(props.getProperty(AUDIT_PATH));
+        bindConstant().annotatedWith(Names.named(AUDIT_PATH)).to(props.getProperty(AUDIT_PATH, ""));
         bindConstant().annotatedWith(Names.named(AUDIT_MODE)).to(props.getProperty(AUDIT_MODE, ""));
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class);

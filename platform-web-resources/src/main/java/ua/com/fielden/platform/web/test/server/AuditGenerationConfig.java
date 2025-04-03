@@ -9,8 +9,8 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 import java.util.Properties;
 
+import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
-import static ua.com.fielden.platform.audit.AuditingIocModule.withAuditingMode;
 
 /**
  * Configures the test application to enable generation of audit types.
@@ -31,6 +31,7 @@ public final class AuditGenerationConfig implements IDomainDrivenTestCaseConfigu
             props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
             props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
             props.setProperty(AUDIT_PATH, "../platform-pojo-bl/target/classes");
+            props.setProperty(AUDIT_MODE, AuditingMode.GENERATION.name());
             props.setProperty("workflow", "development");
             props.setProperty("email.smtp", "localhost");
             props.setProperty("email.fromAddress", "tg@localhost");
@@ -40,7 +41,6 @@ public final class AuditGenerationConfig implements IDomainDrivenTestCaseConfigu
                     .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), props))
                     .add(new NewUserEmailNotifierTestIocModule())
                     .add(new DataFilterTestIocModule())
-                    .add(withAuditingMode(AuditingMode.GENERATION))
                     .getInjector();
         } catch (final Exception e) {
             throw new IllegalStateException("Could not create audit generation configuration.", e);
