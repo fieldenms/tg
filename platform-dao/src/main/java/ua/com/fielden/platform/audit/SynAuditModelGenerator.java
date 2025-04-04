@@ -10,21 +10,27 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadataUtils.SubPropertyNaming;
+import ua.com.fielden.platform.meta.PropertyTypeMetadata;
+import ua.com.fielden.platform.meta.PropertyTypeMetadata.Component;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.partitioningBy;
+import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.BASE_PROPERTIES;
 import static ua.com.fielden.platform.audit.AuditUtils.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
+import static ua.com.fielden.platform.meta.PropertyMetadataKeys.UNION_MEMBER;
 import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 
 @Singleton
@@ -105,8 +111,9 @@ final class SynAuditModelGenerator implements ISynAuditModelGenerator {
                 .stream()
                 .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(partitioningBy(p -> auditEntityMetadata.propertyOpt(p.name())
-                        .filter(currProp -> currProp.get(AUDIT_PROPERTY).orElseThrow().active())
-                        .isPresent()));
+                                                .filter(currProp -> currProp.get(AUDIT_PROPERTY).orElseThrow().active())
+                                                .isPresent(),
+                                        flatMapping(this::expand, toList())));
 
         final var presentAndActiveProps = groups.get(true).stream().map(PropertyMetadata::name).toList();
         final var nullYields = makeNullYields(groups.get(false));
@@ -115,6 +122,24 @@ final class SynAuditModelGenerator implements ISynAuditModelGenerator {
                          synAuditEntityType,
                          concatList(List.of(ID), BASE_PROPERTIES, presentAndActiveProps),
                          nullYields);
+    }
+
+    /// Expands a property into sub-properties whose names form a path with the property (e.g., `money.amount`).
+    /// This applies only if the property type is a component type or a union entity type.
+    /// Otherwise, the property is expanded to itself.
+    ///
+    /// This process is necessary to overcome the limitation of EQL -- to yield a union-typed or component-typed property,
+    /// all sub-properties must be yielded.
+    private Stream<PropertyMetadata> expand(final PropertyMetadata property) {
+        return switch (property.type()) {
+            case Component $ -> domainMetadata.propertyMetadataUtils().subProperties(property, SubPropertyNaming.PATH).stream();
+            case PropertyTypeMetadata.Entity type
+                    when domainMetadata.propertyMetadataUtils().isPropEntityType(type, EntityMetadata::isUnion)
+                    -> domainMetadata.propertyMetadataUtils().subProperties(property, SubPropertyNaming.PATH)
+                        .stream()
+                        .filter(p -> p.has(UNION_MEMBER));
+            default -> Stream.of(property);
+        };
     }
 
     private <E extends AbstractEntity<?>> List<EntityResultQueryModel<AbstractSynAuditProp<E>>> generateSynAuditPropModel(
