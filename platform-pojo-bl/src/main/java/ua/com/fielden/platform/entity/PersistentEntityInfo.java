@@ -23,13 +23,13 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
     @IsProperty
-    @Title(value = "Unique Identifier", desc = "Persistent Entity Unique Identifier")
+    @Title(value = "Unique Identifier", desc = "Persistent entity unique identifier")
     @CompositeKeyMember(1)
     @Readonly
     private Long entityId;
 
     @IsProperty
-    @Title(value = "Entity Type", desc = "Persistent Entity Type")
+    @Title(value = "Entity Type", desc = "Persistent entity type")
     private String entityType;
 
     @IsProperty

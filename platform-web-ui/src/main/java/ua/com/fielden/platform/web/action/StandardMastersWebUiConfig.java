@@ -131,6 +131,12 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(AttachmentsUploadAction.class, AttachmentsUploadActionProducer.class, masterConfig, injector);
     }
 
+    /**
+     * Creates entity master configuration for {@link PersistentEntityInfo} entity.
+     *
+     * @param injector
+     * @return
+     */
     public static EntityMaster<PersistentEntityInfo> createPersistentEntityInfoMaster(final Injector injector) {
         final String desktopLayout = cell(cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).repeat(3),layout().withStyle("padding", MARGIN_PIX).end()).toString();
         final String mobileLayout = cell(cell().repeat(6),layout().withStyle("padding", MARGIN_PIX).end()).toString();

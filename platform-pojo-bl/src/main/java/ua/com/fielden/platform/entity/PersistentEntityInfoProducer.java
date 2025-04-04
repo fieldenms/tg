@@ -12,6 +12,9 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentWithAuditData;
 
+/**
+ * Producer of {@link PersistentEntityInfo} that initialises audit information for entity that is in the context for this producer.
+ */
 public class PersistentEntityInfoProducer extends DefaultEntityProducerWithContext<PersistentEntityInfo> {
 
     @Inject
