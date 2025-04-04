@@ -45,7 +45,7 @@ public class EntityType extends AbstractEntity<String> {
     private Boolean _persistent;
 
     @IsProperty
-    @Title(value = "Is Persistent With Audit Data?", desc = "Indicates whether the associated entity type represents a persistent entity with audit data.")
+    @Title(value = "Persistent with audit data?", desc = "Indicates whether the associated entity type represents a persistent entity with audit data.")
     private Boolean _persistentWithAudit;
 
     @IsProperty

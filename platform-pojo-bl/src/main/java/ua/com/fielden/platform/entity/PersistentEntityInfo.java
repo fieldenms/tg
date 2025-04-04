@@ -12,7 +12,7 @@ import java.util.Date;
  *
  * @author TG Team
  */
-@EntityTitle("Information about a persistent entity")
+@EntityTitle("Persistent Entity Audit Data")
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(PersistentEntityInfoCo.class)
 @KeyTitle("Persistent Entity ID")

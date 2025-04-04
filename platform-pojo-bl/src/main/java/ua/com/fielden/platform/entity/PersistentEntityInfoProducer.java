@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -18,6 +20,7 @@ public class PersistentEntityInfoProducer extends DefaultEntityProducerWithConte
     }
 
     @Override
+    @Authorise(PersistentEntityInfo_CanExecute_Token.class)
     protected PersistentEntityInfo provideDefaultValues(final PersistentEntityInfo entity) {
         if (currentEntityNotEmpty()) {
             final AbstractEntity<?> currEntity = currentEntity();
