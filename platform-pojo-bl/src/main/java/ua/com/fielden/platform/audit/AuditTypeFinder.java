@@ -10,6 +10,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.IntStream;
 
 import static java.lang.String.format;
 import static java.util.Comparator.comparingLong;
@@ -18,6 +19,19 @@ import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 
 final class AuditTypeFinder implements IAuditTypeFinder {
+
+    private static final String
+            ERR_INCORRECT_AUDIT_TYPE_VERSIONS = """
+                Incorrect audit type versions for audited type [%s].
+                Expected: %s
+                Actual audit-entity type versions: %s
+                Actual audit-prop type versions: %s""",
+            ERR_MUST_HAVE_ONE_SYN_AUDIT_ENTITY_TYPE = "Audited type [%s] must have exactly one synthetic audit-entity type, but had %s: [%s].",
+            ERR_MUST_HAVE_ONE_SYN_AUDIT_PROP_TYPE = "Audited type [%s] must have exactly one synthetic audit-prop type, but had %s: [%s].",
+            ERR_MUST_HAVE_AT_LEAST_ONE_PERSISTENT_AUDIT_ENTITY_TYPE = "Audited type [%s] must have at least one persistent audit-entity type, but none were found.",
+            ERR_VERSION_MUST_BE_GREATER_THAN_ZERO = "Version must be greater than zero, but was %s.",
+            ERR_AUDITED_TYPE_WITH_NO_AUDIT_TYPES = "Entity type [%s] is marked as audited, but has no audit types.",
+            ERR_NO_RELATED_AUDIT_TYPES = "Could not find audit types related to [%s]. Ensure that the given type is either audited or is a discoverable audit type.";
 
     private final AuditingMode auditingMode;
     /**
@@ -48,6 +62,14 @@ final class AuditTypeFinder implements IAuditTypeFinder {
             });
 
             this.contextMap = contextMapBuilder.buildOrThrow();
+
+            if (auditingMode == AuditingMode.ENABLED) {
+                for (final var type : types) {
+                    if (AuditUtils.isAudited((Class<? extends AbstractEntity<?>>) type) && !contextMap.containsKey(type)) {
+                        throw new EntityDefinitionException(format(ERR_AUDITED_TYPE_WITH_NO_AUDIT_TYPES, type.getTypeName()));
+                    }
+                }
+            }
         }
     }
 
@@ -60,9 +82,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
 
         final var context = contextMap.get(baseType);
         if (context == null) {
-            throw new IllegalArgumentException(
-                    format("Could not find audit types related to type [%s]. Ensure that the given type is either audited or is a discoverable audit type.",
-                           baseType.getTypeName()));
+            throw new IllegalArgumentException(format(ERR_NO_RELATED_AUDIT_TYPES, baseType.getTypeName()));
         }
         return context;
     }
@@ -160,7 +180,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Class<AbstractAuditEntity<E>> auditEntityType(final int version) {
             if (version <= 0) {
-                throw new IllegalArgumentException("Version must be greater than zero, but was %s.".formatted(version));
+                throw new IllegalArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
             }
             if (version > _auditEntityTypes.size()) {
                 throw new IllegalArgumentException("Persistent audit-entity type with version %s for [%s] does not exist.".formatted(version, _auditedType.getSimpleName()));
@@ -172,7 +192,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Optional<Class<AbstractAuditEntity<E>>> findAuditEntityType(final int version) {
             if (version <= 0) {
-                throw new IllegalArgumentException("Version must be greater than zero, but was %s.".formatted(version));
+                throw new IllegalArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
             }
             return version > _auditEntityTypes.size()
                     ? Optional.empty()
@@ -201,7 +221,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Class<AbstractAuditProp<E>> auditPropType(final int version) {
             if (version <= 0) {
-                throw new IllegalArgumentException("Version must be greater than zero, but was %s.".formatted(version));
+                throw new IllegalArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
             }
             if (version > _auditPropTypes.size()) {
                 throw new IllegalArgumentException("Persistent audit-prop type with version %s for [%s] does not exist.".formatted(version, _auditedType.getSimpleName()));
@@ -213,7 +233,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         @Override
         public Optional<Class<AbstractAuditProp<E>>> findAuditPropType(final int version) {
             if (version <= 0) {
-                throw new IllegalArgumentException("Version must be greater than zero, but was %s.".formatted(version));
+                throw new IllegalArgumentException(ERR_VERSION_MUST_BE_GREATER_THAN_ZERO.formatted(version));
             }
             return version > _auditPropTypes.size()
                     ? Optional.empty()
@@ -267,49 +287,55 @@ final class AuditTypeFinder implements IAuditTypeFinder {
                     }
                 }));
 
-        final var auditEntityTypes = groups.getOrDefault(Kind.AUDIT_ENTITY, ImmutableList.of());
-        final var auditPropTypes = groups.getOrDefault(Kind.AUDIT_PROP, ImmutableList.of());
+        final List<Class<AbstractAuditEntity<?>>> auditEntityTypes =
+                ImmutableList.sortedCopyOf((Comparator) comparingLong(AuditUtils::getAuditTypeVersion),
+                                           groups.getOrDefault(Kind.AUDIT_ENTITY, ImmutableList.of()));
+        final List<Class<AbstractAuditProp<?>>> auditPropTypes =
+                ImmutableList.sortedCopyOf((Comparator) comparingLong(AuditUtils::getAuditTypeVersion),
+                                           groups.getOrDefault(Kind.AUDIT_PROP, ImmutableList.of()));
         final var synAuditEntityGroup = groups.getOrDefault(Kind.SYN_AUDIT_ENTITY, List.of());
         final var synAuditPropGroup = groups.getOrDefault(Kind.SYN_AUDIT_PROP, List.of());
 
-        if (auditingMode == AuditingMode.ENABLED && auditEntityTypes.isEmpty()) {
-            throw new EntityDefinitionException("Audited type [%s] must have at least one persistent audit-entity type, but none were found.");
+        // If auditing is enabled, validate existence of audit types.
+        if (auditingMode == AuditingMode.ENABLED) {
+            if (auditEntityTypes.isEmpty()) {
+                throw new EntityDefinitionException(ERR_MUST_HAVE_AT_LEAST_ONE_PERSISTENT_AUDIT_ENTITY_TYPE);
+            }
+
+            final var expectedTypeVersions = IntStream.rangeClosed(1, auditEntityTypes.size()).toArray();
+            final var auditEntityTypeVersions = auditEntityTypes.stream().mapToInt(AuditUtils::getAuditTypeVersion).toArray();
+            final var auditPropTypeVersions = auditPropTypes.stream().mapToInt(AuditUtils::getAuditTypeVersion).toArray();
+            if (!Arrays.equals(expectedTypeVersions, auditEntityTypeVersions) || !Arrays.equals(expectedTypeVersions, auditPropTypeVersions)) {
+                throw new EntityDefinitionException(format(
+                        ERR_INCORRECT_AUDIT_TYPE_VERSIONS,
+                        auditedType.getTypeName(),
+                        Arrays.toString(expectedTypeVersions),
+                        Arrays.toString(auditEntityTypeVersions),
+                        Arrays.toString(auditPropTypeVersions)));
+            }
+
+            if (synAuditEntityGroup.size() != 1) {
+                throw new EntityDefinitionException(format(
+                        ERR_MUST_HAVE_ONE_SYN_AUDIT_ENTITY_TYPE,
+                        auditedType,
+                        synAuditEntityGroup.size(),
+                        synAuditEntityGroup.stream().map(Class::getTypeName).collect(joining(", "))));
+            }
+
+            if (synAuditPropGroup.size() != 1) {
+                throw new EntityDefinitionException(format(
+                        ERR_MUST_HAVE_ONE_SYN_AUDIT_PROP_TYPE,
+                        auditedType,
+                        synAuditPropGroup.size(),
+                        synAuditPropGroup.stream().map(Class::getTypeName).collect(joining(", "))));
+            }
         }
 
-        if (auditingMode == AuditingMode.ENABLED && auditPropTypes.isEmpty()) {
-            throw new EntityDefinitionException("Audited type [%s] must have at least one persistent audit-prop type, but none were found.");
-        }
-
-        if (synAuditEntityGroup.size() > 1) {
-            throw new EntityDefinitionException(format(
-                    "Audited type [%s] cannot have more than one synthetic audit-entity type, but had %s: [%s].",
-                    auditedType,
-                    synAuditEntityGroup.size(),
-                    synAuditEntityGroup.stream().map(Class::getSimpleName).collect(joining(", "))));
-        }
-        else if (auditingMode == AuditingMode.ENABLED && synAuditEntityGroup.isEmpty()) {
-            throw new EntityDefinitionException("Audited type [%s] is missing a corresponding synthetic audit-entity type.");
-        }
-
-        if (synAuditPropGroup.size() > 1) {
-            throw new EntityDefinitionException(format(
-                    "Audited type [%s] cannot have more than one synthetic audit-prop type, but had %s: [%s].",
-                    auditedType,
-                    synAuditPropGroup.size(),
-                    synAuditPropGroup.stream().map(Class::getSimpleName).collect(joining(", "))));
-        }
-        else if (auditingMode == AuditingMode.ENABLED && synAuditPropGroup.isEmpty()) {
-            throw new EntityDefinitionException("Audited type [%s] is missing a corresponding synthetic audit-prop type.");
-        }
-
-        return new Context<E>(
-                auditedType,
-                ImmutableList.sortedCopyOf((Comparator) comparingLong(AuditUtils::getAuditTypeVersion),
-                                           (List) auditEntityTypes),
-                ImmutableList.sortedCopyOf((Comparator) comparingLong(AuditUtils::getAuditTypeVersion),
-                                           (List) auditPropTypes),
-                (Class) synAuditEntityGroup.stream().findFirst().orElse(null),
-                (Class) synAuditPropGroup.stream().findFirst().orElse(null));
+        return new Context<E>(auditedType,
+                              (List) auditEntityTypes,
+                              (List) auditPropTypes,
+                              (Class) synAuditEntityGroup.stream().findFirst().orElse(null),
+                              (Class) synAuditPropGroup.stream().findFirst().orElse(null));
     }
 
 }
