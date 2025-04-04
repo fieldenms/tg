@@ -42,49 +42,65 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
     }
 
     @Override
-    public List<PropertyMetadata> subProperties(final PropertyMetadata pm) {
+    public List<PropertyMetadata> subProperties(final PropertyMetadata pm, final SubPropertyNaming naming) {
         return switch (pm.type()) {
-            case PropertyTypeMetadata.Component ct -> subPropertiesForComponent(pm, ct);
-            case PropertyTypeMetadata.Entity et -> subPropertiesForEntity(pm, et);
+            case PropertyTypeMetadata.Component ct -> subPropertiesForComponent(pm, ct, naming);
+            case PropertyTypeMetadata.Entity et -> subPropertiesForEntity(pm, et, naming);
             default -> ImmutableList.of();
         };
     }
 
-    private List<PropertyMetadata> subPropertiesForEntity(final PropertyMetadata pm, final PropertyTypeMetadata.Entity et) {
+    private List<PropertyMetadata> subPropertiesForEntity(
+            final PropertyMetadata pm,
+            final PropertyTypeMetadata.Entity et,
+            final SubPropertyNaming naming)
+    {
         return domainMetadata.forEntityOpt(et.javaType())
                 .flatMap(EntityMetadata::asUnion)
-                .map(em -> subPropertiesForUnionEntity(pm, em))
+                .map(em -> subPropertiesForUnionEntity(pm, em, naming))
                 .orElseGet(ImmutableList::of);
     }
 
-    private List<PropertyMetadata> subPropertiesForUnionEntity(final PropertyMetadata pm, final EntityMetadata.Union em) {
+    private List<PropertyMetadata> subPropertiesForUnionEntity(
+            final PropertyMetadata pm,
+            final EntityMetadata.Union em,
+            final SubPropertyNaming naming)
+    {
         return ImmutableList.<PropertyMetadata>builder()
-                .addAll(generator.generateUnionImplicitCalcSubprops(em.javaType(), pm.name(), EntityMetadataBuilder.toBuilder(em)))
+                .addAll(generator.generateUnionImplicitCalcSubprops(em.javaType(), pm.name(), EntityMetadataBuilder.toBuilder(em), naming))
                 .addAll(domainMetadata.entityMetadataUtils().unionMembers(em).stream()
-                                .map(member -> combineUnionMember(pm, member))
+                                .map(member -> combineUnionMember(pm, member, naming))
                                 .iterator())
                 .build();
     }
     // where
-    private PropertyMetadata combineUnionMember(final PropertyMetadata parent, final PropertyMetadata member) {
+    private PropertyMetadata combineUnionMember(
+            final PropertyMetadata parent,
+            final PropertyMetadata member,
+            final SubPropertyNaming naming)
+    {
         // union members must be persistent
         return member.asPersistent().map(persistentMember -> {
             final var columnName = parent.asPersistent().map(p -> p.data().column() + "_").orElse("") + persistentMember.data().column();
-            return persistentProp(member.name(), member.type(), member.hibType(),
+            return persistentProp(naming.apply(parent.name(), member.name()), member.type(), member.hibType(),
                                   PropertyNature.Persistent.data(generator.propColumn(columnName)))
                     .build();
         }).orElse(member);
     }
 
-    private List<PropertyMetadata> subPropertiesForComponent(final PropertyMetadata prop, final PropertyTypeMetadata.Component ct) {
+    private List<PropertyMetadata> subPropertiesForComponent(
+            final PropertyMetadata prop,
+            final PropertyTypeMetadata.Component ct,
+            final SubPropertyNaming naming)
+    {
         final var componentTypeMetadata = domainMetadata.forComponent(ct.javaType())
                 .orElseThrow(() -> new DomainMetadataGenerationException(ERR_UNKNOWN_COMPONENT_TYPE.formatted(ct.javaType().getTypeName())));
         return switch (prop) {
-            case PropertyMetadata.Persistent it -> subPropertiesForComponentPersistent(it, componentTypeMetadata);
-            case Calculated it -> subPropertiesForComponentCalculated(it, componentTypeMetadata);
+            case PropertyMetadata.Persistent it -> subPropertiesForComponentPersistent(it, componentTypeMetadata, naming);
+            case Calculated it -> subPropertiesForComponentCalculated(it, componentTypeMetadata, naming);
             // Hibernate type is required to make sense of a component type's representation
             default -> prop.hibType() != null
-                    ? subPropertiesForComponentAny(prop, prop.hibType(), componentTypeMetadata)
+                    ? subPropertiesForComponentAny(prop, prop.hibType(), componentTypeMetadata, naming)
                     : ImmutableList.of();
         };
     }
@@ -92,7 +108,8 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
     private List<PropertyMetadata> subPropertiesForComponentAny(
             final PropertyMetadata prop,
             final Object hibType,
-            final TypeMetadata.Component componentTypeMetadata)
+            final TypeMetadata.Component componentTypeMetadata,
+            final SubPropertyNaming naming)
     {
         final var componentHibType = (ICompositeUserTypeInstantiate) hibType;
 
@@ -100,14 +117,15 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
                     .orElseThrow(() -> new DomainMetadataGenerationException(ERR_MISSING_PROPERTY.formatted(subPropName, componentTypeMetadata, componentHibType)));
             return PropertyMetadataImpl.Builder.toBuilder(prop)
-                    .name(subPropName).type(subProp.type()).hibType(subHibType)
+                    .name(naming.apply(prop.name(), subPropName)).type(subProp.type()).hibType(subHibType)
                     .build();
         }).toList();
     }
 
     private List<PropertyMetadata> subPropertiesForComponentPersistent(
             final PropertyMetadata.Persistent prop,
-            final TypeMetadata.Component componentTypeMetadata)
+            final TypeMetadata.Component componentTypeMetadata,
+            final SubPropertyNaming naming)
     {
         if (prop.hibType() == null) {
             throw new DomainMetadataGenerationException(ERR_MISSING_HIBERNATE_TYPE.formatted(prop));
@@ -131,13 +149,18 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
                        + (isEmpty(mapToColumn) ? subPropName.toUpperCase() : mapToColumn));
             final var propColumn = generator.propColumn(
                     columnName, getPropertyAnnotationOptionally(IsProperty.class, componentJavaType, subPropName));
-            return persistentProp(subPropName, subProp.type(), subHibType, PropertyNature.Persistent.data(propColumn)).build();
+            return persistentProp(naming.apply(prop.name(), subPropName),
+                                  subProp.type(),
+                                  subHibType,
+                                  PropertyNature.Persistent.data(propColumn))
+                    .build();
         }).toList();
     }
 
     private List<PropertyMetadata> subPropertiesForComponentCalculated(
             final Calculated prop,
-            final TypeMetadata.Component componentTypeMetadata)
+            final TypeMetadata.Component componentTypeMetadata,
+            final SubPropertyNaming naming)
     {
         if (prop.hibType() == null) {
             throw new DomainMetadataGenerationException(ERR_MISSING_HIBERNATE_TYPE.formatted(prop));
@@ -147,7 +170,11 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
         return zip(stream(componentHibType.getPropertyNames()), stream(componentHibType.getPropertyTypes()), (subPropName, subHibType) -> {
             final var subProp = componentTypeMetadata.propertyOpt(subPropName)
                     .orElseThrow(() -> new DomainMetadataGenerationException(ERR_MISSING_PROPERTY.formatted(subPropName, componentTypeMetadata, componentHibType)));
-            return calculatedProp(subPropName, subProp.type(), subHibType, prop.data()).build();
+            return calculatedProp(naming.apply(prop.name(), subPropName),
+                                  subProp.type(),
+                                  subHibType,
+                                  prop.data())
+                    .build();
         }).toList();
     }
 

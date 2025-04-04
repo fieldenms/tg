@@ -20,6 +20,7 @@ import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.eql.retrieval.EntityContainerEnhancer;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
+import ua.com.fielden.platform.meta.PropertyMetadataUtils.SubPropertyNaming;
 import ua.com.fielden.platform.meta.exceptions.DomainMetadataGenerationException;
 import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -28,9 +29,10 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.time.Duration;
-import java.util.Optional;
 import java.util.*;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -303,7 +305,7 @@ final class DomainMetadataGenerator {
         switch (entityBuilder) {
             case EntityMetadataBuilder.Union u -> {
                 return ImmutableList.<PropertyMetadata>builder()
-                        .addAll(generateUnionImplicitCalcSubprops(u.getJavaType(), entityBuilder))
+                        .addAll(generateUnionImplicitCalcSubprops(u.getJavaType(), entityBuilder, SubPropertyNaming.SIMPLE))
                         // union members
                         .addAll(unionProperties(u.getJavaType()).stream()
                                         .map(field -> mkProp(field, u)).flatMap(Optional::stream)
@@ -678,21 +680,27 @@ final class DomainMetadataGenerator {
     List<PropertyMetadata> generateUnionImplicitCalcSubprops(
             final Class<? extends AbstractUnionEntity> unionType,
             @Nullable final String contextPropName,
-            final EntityMetadataBuilder<?, ?> entityBuilder)
+            final EntityMetadataBuilder<?, ?> entityBuilder,
+            final SubPropertyNaming naming)
     {
         final List<Field> unionMembers = unionProperties(unionType);
         if (unionMembers.isEmpty()) {
             throw new EntityDefinitionException(ERR_UNION_ENTITY_HAS_NO_UNION_MEMBERS.formatted(unionType.getTypeName()));
         }
+
+        final Function<String, String> makeName = contextPropName == null
+                ? Function.identity()
+                : subPropName -> naming.apply(contextPropName, subPropName);
+
         final List<String> unionMembersNames = unionMembers.stream().map(Field::getName).toList();
         final List<PropertyMetadata> props = new ArrayList<>();
-        props.add(calculatedProp(KEY, mkPropertyTypeOrThrow(String.class), H_STRING,
+        props.add(calculatedProp(makeName.apply(KEY), mkPropertyTypeOrThrow(String.class), H_STRING,
                                  PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName), true, false))
                           .build());
-        props.add(calculatedProp(ID, mkPropertyTypeOrThrow(Long.class), H_ENTITY,
+        props.add(calculatedProp(makeName.apply(ID), mkPropertyTypeOrThrow(Long.class), H_ENTITY,
                                  PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName), true, false))
                           .build());
-        props.add(calculatedProp(DESC, mkPropertyTypeOrThrow(String.class), H_STRING,
+        props.add(calculatedProp(makeName.apply(DESC), mkPropertyTypeOrThrow(String.class), H_STRING,
                                  PropertyNature.Calculated.data(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName), true, false))
                           .build());
 
@@ -703,7 +711,8 @@ final class DomainMetadataGenerator {
             }
             final Field commonPropField = findFieldByName(firstUnionEntityPropType, commonProp);
             final PropertyTypeMetadata typeMetadata = mkPropertyTypeOrThrow(commonPropField);
-            props.add(calculatedProp(commonProp, typeMetadata,
+            props.add(calculatedProp(makeName.apply(commonProp),
+                                     typeMetadata,
                                      hibTypeGenerator.generate(typeMetadata).use(commonPropField).get(),
                                      PropertyNature.Calculated.data(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName), true, false))
                               .build());
@@ -712,10 +721,12 @@ final class DomainMetadataGenerator {
         return unmodifiableList(props);
     }
 
-    private List<PropertyMetadata> generateUnionImplicitCalcSubprops
-            (final Class<? extends AbstractUnionEntity> unionType, final EntityMetadataBuilder<?, ?> entityBuilder)
+    private List<PropertyMetadata> generateUnionImplicitCalcSubprops(
+            final Class<? extends AbstractUnionEntity> unionType,
+            final EntityMetadataBuilder<?, ?> entityBuilder,
+            final SubPropertyNaming naming)
     {
-        return generateUnionImplicitCalcSubprops(unionType, null, entityBuilder);
+        return generateUnionImplicitCalcSubprops(unionType, null, entityBuilder, naming);
     }
 
     private ExpressionModel generateUnionCommonDescPropExpressionModel(final List<Field> unionMembers, final @Nullable String contextPropName) {

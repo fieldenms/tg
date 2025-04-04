@@ -21,6 +21,11 @@ public interface PropertyMetadataUtils {
         return isPropEntityType(pm.type(), predicate);
     }
 
+    /// Equivalent to [#subProperties(PropertyMetadata, SubPropertyNaming)] with [SubPropertyNaming#SIMPLE] naming.
+    default List<PropertyMetadata> subProperties(PropertyMetadata pm) {
+        return subProperties(pm, SubPropertyNaming.SIMPLE);
+    }
+
     /**
      * Returns sub-properties of a property.
      * The result depends on the property's type and nature.
@@ -44,7 +49,32 @@ public interface PropertyMetadataUtils {
      *     Each of these representations is free to decide which properties of {@link Money} are included.
      *   <li> Other types - nothing is included.
      * </ul>
+     *
+     * @param naming  specifies how to form the names of resulting sub-properties
      */
-    List<PropertyMetadata> subProperties(PropertyMetadata pm);
+    List<PropertyMetadata> subProperties(PropertyMetadata pm, SubPropertyNaming naming);
+
+    /// Naming strategies for sub-properties.
+    enum SubPropertyNaming {
+
+        /// The resulting name is the simple name of the sub-property.
+        SIMPLE {
+            @Override
+            public String apply(final String propName, final String subPropName) {
+                return subPropName;
+            }
+        },
+
+        /// The resulting name is a path that ends with the sub-property's name.
+        PATH {
+            @Override
+            public String apply(final String propName, final String subPropName) {
+                return propName + '.' + subPropName;
+            }
+        };
+
+        public abstract String apply(final String propName, final String subPropName);
+
+    }
 
 }
