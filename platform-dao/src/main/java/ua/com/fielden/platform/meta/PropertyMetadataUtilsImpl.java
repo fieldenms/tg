@@ -15,6 +15,7 @@ import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.calculatedProp;
 import static ua.com.fielden.platform.meta.PropertyMetadataImpl.Builder.persistentProp;
+import static ua.com.fielden.platform.meta.PropertyMetadataKeys.UNION_MEMBER;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
@@ -84,6 +85,7 @@ final class PropertyMetadataUtilsImpl implements PropertyMetadataUtils {
             final var columnName = parent.asPersistent().map(p -> p.data().column() + "_").orElse("") + persistentMember.data().column();
             return persistentProp(naming.apply(parent.name(), member.name()), member.type(), member.hibType(),
                                   PropertyNature.Persistent.data(generator.propColumn(columnName)))
+                    .with(UNION_MEMBER, true)
                     .build();
         }).orElse(member);
     }
