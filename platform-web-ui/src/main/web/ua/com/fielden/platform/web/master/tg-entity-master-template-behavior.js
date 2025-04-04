@@ -54,6 +54,10 @@ const TgEntityMasterTemplateBehaviorImpl = {
         self._isEntityPersisted = function(_currEntity) {
             return _currEntity && _currEntity.get("id") !== null;
         };
+
+        self._modifyAuditInfoFunctionalEntity = function (bindingEntity, master, action) {
+            master.fire('tg-dynamic-title-changed', bindingEntity["@@origin"]["entityTitle"]);
+        }
     },
 
     attached: function () {

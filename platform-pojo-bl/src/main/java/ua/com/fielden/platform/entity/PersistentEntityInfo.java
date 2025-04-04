@@ -60,6 +60,20 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
     @Readonly
     private Date lastUpdatedDate;
 
+    @IsProperty
+    @Title("Entity Title")
+    private String entityTitle;
+
+    public String getEntityTitle() {
+        return entityTitle;
+    }
+
+    @Observable
+    public PersistentEntityInfo setEntityTitle(final String entityTitle) {
+        this.entityTitle = entityTitle;
+        return this;
+    }
+
     @Observable
     public PersistentEntityInfo setLastUpdatedDate(final Date lastUpdatedDate) {
         this.lastUpdatedDate = lastUpdatedDate;
