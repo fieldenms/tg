@@ -10,11 +10,12 @@ import javax.annotation.Nullable;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 
 /**
  * Static utilities for auditing.
  * <p>
- * To locate audit types for audited entity types, {@link IAuditTypeFinder} should be used.
+ * To locate audit types, {@link IAuditTypeFinder} should be used.
  */
 public final class AuditUtils {
 
@@ -45,9 +46,7 @@ public final class AuditUtils {
      * It is an error if {@code auditedPropertyName} is {@code null} or blank.
      */
     public static @Nullable String auditedPropertyName(final CharSequence auditPropertyName) {
-        if (auditPropertyName == null) {
-            throw new InvalidArgumentException("Argument [auditPropertyName] must not be null.");
-        }
+        requireNonNull(auditPropertyName, "auditPropertyName");
         if (StringUtils.isBlank(auditPropertyName)) {
             throw new InvalidArgumentException("Argument [auditPropertyName] must not be blank.");
         }
@@ -59,9 +58,7 @@ public final class AuditUtils {
      * Returns {@code true} if the specified property names an audit property (i.e., was constructed with {@link #auditPropertyName(CharSequence)}).
      */
     public static boolean isAuditProperty(final CharSequence property) {
-        if (property == null) {
-            throw new InvalidArgumentException("Argument [property] must not be null.");
-        }
+        requireNonNull(property, "property");
         return StringUtils.startsWith(property, "a3t_");
     }
 
