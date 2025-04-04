@@ -1,22 +1,12 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import org.junit.Ignore;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.types.Money;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 @KeyType(String.class)
 @MapEntityTo
@@ -24,7 +14,7 @@ import ua.com.fielden.platform.types.Money;
 @Ignore
 @CompanionObject(ITeVehicleMake.class)
 public class TeVehicleMake extends AbstractEntity<String> {
-   
+
     @IsProperty
     @Calculated
     private String c1;

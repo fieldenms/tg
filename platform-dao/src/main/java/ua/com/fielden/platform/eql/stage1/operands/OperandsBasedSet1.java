@@ -28,7 +28,7 @@ public record OperandsBasedSet1 (List<? extends ISingleOperand1<? extends ISingl
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

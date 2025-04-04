@@ -80,7 +80,7 @@ public abstract class AbstractQuery3 implements ToString.IFormattable {
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

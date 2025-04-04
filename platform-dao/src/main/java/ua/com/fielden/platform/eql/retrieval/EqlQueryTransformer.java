@@ -38,11 +38,12 @@ import static java.util.Collections.unmodifiableList;
  * <li> <b>Stage 1: property resolution</b>.
  *      Properties are resolved to their respective sources.
  *      An important part of this stage is the resolution of dot-notated properties.
- * <li> <b>Stage 2:</b>
+ * <li> <b>Stage 2</b>.
  *      <ul>
  *        <li> Processing of dot-expressions: builds up implicit table joins that result from dot-expressions,
  *             substitutes calculated property names used in dot-expressions with their respective expressions.
  *        <li> Substitution of literal values with parameters (crucial for strings as to prevent SQL injection).
+ *        <li> Optimisation of union queries with an ordering.
  *      </ul>
  *
  * <li> <b>Stage 3: SQL generation</b>.

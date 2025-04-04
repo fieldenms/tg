@@ -14,7 +14,7 @@ public record NullPredicate3 (ISingleOperand3 operand, boolean negated) implemen
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

@@ -22,7 +22,7 @@ public record Yield2(ISingleOperand2<? extends ISingleOperand3> operand, String 
 
         @Override
         public String toString() {
-            return toString(ToString.separateLines);
+            return toString(ToString.separateLines());
         }
 
         @Override

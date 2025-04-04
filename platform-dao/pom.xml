@@ -107,6 +107,7 @@
             <artifactId>javapoet</artifactId>
             <version>${javapoet.version}</version>
         </dependency>
+
     </dependencies>
 
     <build>

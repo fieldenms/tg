@@ -92,7 +92,7 @@ public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) impl
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override
@@ -102,6 +102,10 @@ public record OrderBys2 (List<OrderBy2> orderBys, Limit limit, long offset) impl
                 .add("offset", offset)
                 .add("orderBys", orderBys)
                 .$();
+    }
+
+    public OrderBys2 setModels(final List<OrderBy2> models) {
+        return orderBys2(models, limit, offset);
     }
 
 }

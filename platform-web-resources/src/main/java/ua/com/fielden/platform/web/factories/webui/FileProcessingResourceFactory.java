@@ -61,7 +61,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.fileSizeLimitBytes = fileSizeLimitKb * 1024;
         this.types.add(type);
-        Arrays.stream(types).forEach(this.types::add);
+        this.types.addAll(Arrays.asList(types));
         this.deviceProvider = deviceProvider;
         this.dates = dates;
     }

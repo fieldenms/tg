@@ -51,7 +51,7 @@ public abstract class AbstractSource1<T extends ISource2<?>> implements ISource1
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     protected ToString addToString(final ToString toString) {

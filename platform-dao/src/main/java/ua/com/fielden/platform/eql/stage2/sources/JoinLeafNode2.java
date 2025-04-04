@@ -115,7 +115,7 @@ public record JoinLeafNode2 (ISource2<?> source) implements IJoinNode2<IJoinNode
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import java.lang.reflect.Array;
-import java.util.stream.Stream;
+import java.util.Objects;
 
 public final class ArrayUtils {
 
@@ -22,6 +22,19 @@ public final class ArrayUtils {
         newArray[0] = firstElement;
         System.arraycopy(array, 0, newArray, 1, array.length);
         return newArray;
+    }
+
+    /**
+     * Returns {@code true} if the specified array contains the specified item.
+     * Array elements and the item are compared using {@link Objects#equals(Object, Object)}.
+     */
+    public static <X> boolean contains(final X[] xs, final X item) {
+        for (var x : xs) {
+            if (Objects.equals(x, item)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private ArrayUtils() {}

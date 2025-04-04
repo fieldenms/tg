@@ -144,7 +144,7 @@ public class QuerySourceInfoProvider {
                     final var modelledQuerySourceInfo = generateModelledQuerySourceInfoForSyntheticType(seType, seModels.get(seType));
                     modelledQuerySourceInfoMap.put(modelledQuerySourceInfo.javaType(), modelledQuerySourceInfo);
                 } catch (final Exception ex) {
-                    final var msg = ERR_FAILED_GENERATION_FOR_SYNTHETIC_ENTITY.formatted(seType);
+                    final var msg = ERR_FAILED_GENERATION_FOR_SYNTHETIC_ENTITY.formatted(seType.getTypeName());
                     LOGGER.error(msg, ex);
                     throw new EqlMetadataGenerationException(msg, ex);
                 }

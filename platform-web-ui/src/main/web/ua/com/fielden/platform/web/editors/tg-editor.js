@@ -89,7 +89,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             .label-title {
                 margin-right: 4px;
             }
-            #decorator[focused] .label-title {
+            #decorator[focused]:not([disabled]) .label-title {
                 font-weight: 700;
             }
             .label-action {

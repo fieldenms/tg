@@ -3,11 +3,8 @@ package ua.com.fielden.platform.eql.retrieval;
 import com.google.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
-import org.joda.time.DateTime;
-import org.joda.time.Period;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
@@ -17,6 +14,7 @@ import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -39,7 +37,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 @Singleton
 final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
 
-    private final Logger logger = getLogger(this.getClass());
+    private static final Logger LOGGER = getLogger();
+
+    public static final String ERR_DURING_ENTITY_RETRIEVAL = "Error during entity retrieval.";
 
     private final IDomainMetadata domainMetadata;
     private final IDbVersionProvider dbVersionProvider;
@@ -75,11 +75,16 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final Integer pageNumber,
             final Integer pageCapacity)
     {
-        final var modelResult = getModelResult(queryModel);
-        final List<EntityContainer<E>> result = listContainersAsIs(session, modelResult, pageNumber, pageCapacity);
-        // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
-        return new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache)
-                .enhance(session, result, modelResult.fetchModel(), queryModel.getParamValues());
+        try {
+            final var modelResult = getModelResult(queryModel);
+            final List<EntityContainer<E>> result = listContainersAsIs(session, modelResult, pageNumber, pageCapacity);
+            return new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache)
+                    .enhance(session, result, modelResult.fetchModel(), queryModel.getParamValues());
+        } catch (final Exception ex) {
+            final var exception = ex instanceof EntityRetrievalException it ? it : new EntityRetrievalException(ERR_DURING_ENTITY_RETRIEVAL, ex);
+            LOGGER.error(() -> "%s\nQuery: %s".formatted(exception.getMessage(), queryModel), exception);
+            throw exception;
+        }
     }
 
     @Override
@@ -88,22 +93,22 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final QueryProcessingModel<E, ?> queryModel,
             final Optional<Integer> fetchSize)
     {
-        final var modelResult = getModelResult(queryModel);
-        final Stream<List<EntityContainer<E>>> stream = streamContainersAsIs(session, modelResult, fetchSize);
-        // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
-
-        final EntityContainerEnhancer entityContainerEnhancer = new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache);
-
-        return stream.map(container -> entityContainerEnhancer.enhance(session, container, modelResult.fetchModel(), queryModel.getParamValues()));
+        try {
+            final var modelResult = getModelResult(queryModel);
+            final Stream<List<EntityContainer<E>>> stream = streamContainersAsIs(session, modelResult, fetchSize);
+            final var entityContainerEnhancer = new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache);
+            return stream.map(container -> entityContainerEnhancer.enhance(session, container, modelResult.fetchModel(), queryModel.getParamValues()));
+        } catch (final Exception ex) {
+            final var exception = ex instanceof EntityRetrievalException it ? it : new EntityRetrievalException(ERR_DURING_ENTITY_RETRIEVAL, ex);
+            LOGGER.error(() -> "%s\nQuery: %s".formatted(exception.getMessage(), queryModel), exception);
+            throw exception;
+        }
     }
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qpm) {
         class $ {
             /**
              * This predicate identifies cases where only ID is yielded, and a query needs to be extended to a query for retrieving an entity with that ID instead of just an ID value as a number.
-             *
-             * @param queryModelResult
-             * @return
              */
             static boolean isIdOnlyQuery(final QueryModelResult<?> queryModelResult) {
                 return isPersistentEntityType(queryModelResult.resultType())
@@ -138,15 +143,13 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final Integer pageCapacity)
     {
         final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
+        final var query = produceQueryWithPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity, dbVersionProvider.dbVersion());
+        final var entityRawResultConverter = new EntityRawResultConverter<E>(entityFactory);
 
-        final Query query = produceQueryWithPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity, dbVersionProvider.dbVersion());
-
-        final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(entityFactory);
-
-        // let's execute the query and time the duration
-        final DateTime st = new DateTime();
+        // Uncomment to time the duration.
+        // final DateTime st = new DateTime();
         final List<?> res = query.list();
-        final Period pd = new Period(st, new DateTime());
+        // final Period pd = new Period(st, new DateTime());
         // logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType().getSimpleName()));
 
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
@@ -159,11 +162,11 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
     {
         final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), querySourceInfoProvider);
         final int batchSize = fetchSize.orElse(100);
-        final Query query = produceQueryWithoutPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), dbVersionProvider.dbVersion())
-                            .setFetchSize(batchSize);
+        final var query = produceQueryWithoutPagination(session, modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), dbVersionProvider.dbVersion())
+                          .setFetchSize(batchSize);
         final Stream<Object[]> stream = ScrollableResultStream.streamOf(query.scroll(ScrollMode.FORWARD_ONLY));
 
-        final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(entityFactory);
+        final var entityRawResultConverter = new EntityRawResultConverter<E>(entityFactory);
 
         return StreamUtils.windowed(stream, batchSize)
                 .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));

@@ -748,7 +748,9 @@ After quote.
     }
 
     private static void assertCoreText(final String expected, final String input) {
-        assertEquals(expected, RichText.fromHtml(input).coreText());
+        final var richText = RichText.fromHtml(input);
+        assertEquals(expected, richText.coreText());
+        assertEquals(expected, richText.toString());
     }
 
     private static void assertCoreTextId(final String input) {

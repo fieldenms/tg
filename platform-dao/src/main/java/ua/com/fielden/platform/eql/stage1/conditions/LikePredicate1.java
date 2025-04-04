@@ -37,7 +37,7 @@ public record LikePredicate1 (ISingleOperand1<? extends ISingleOperand2<?>> matc
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

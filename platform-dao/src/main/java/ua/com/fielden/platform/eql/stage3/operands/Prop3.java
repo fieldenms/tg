@@ -11,8 +11,9 @@ import java.util.Objects;
 public class Prop3 extends AbstractSingleOperand3 {
 
     /**
-     * Ordinarily property name, but in case of union-type property this name contains a subproperty of the union type (e.g., "location.workshop").
-     * If component types were to be supported, then it could also include lower level component attribute name (e.g., "cost.amount").
+     * In most cases a simple property name.
+     * In case of a property declared in a union entity type -- path to a subproperty of the union type (e.g., {@code location.workshop}).
+     * In case of a component-typed property -- path to a component subproperty (e.g., {@code richText.coreText}).
      */
     public final String name;
 

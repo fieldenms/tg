@@ -38,7 +38,7 @@ public record ExistencePredicate2 (boolean negated, SubQueryForExists2 subQuery)
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

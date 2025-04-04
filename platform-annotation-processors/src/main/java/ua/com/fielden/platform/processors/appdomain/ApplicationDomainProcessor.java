@@ -331,7 +331,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printError("Failed to generate %s: %s\n%s", appDomainFqn, ex.getMessage(), ExceptionUtils.getStackTrace(ex));
+            printError("Failed to generate %s: %s%n%s", appDomainFqn, ex.getMessage(), ExceptionUtils.getStackTrace(ex));
             return;
         }
 

@@ -108,7 +108,7 @@ public record Conditions2 (boolean negated, List<List<? extends ICondition2<?>>>
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override

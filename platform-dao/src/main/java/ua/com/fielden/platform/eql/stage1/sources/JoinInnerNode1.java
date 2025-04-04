@@ -46,7 +46,7 @@ public record JoinInnerNode1 (IJoinNode1<? extends IJoinNode2<?>> leftNode,
 
     @Override
     public String toString() {
-        return toString(ToString.separateLines);
+        return toString(ToString.separateLines());
     }
 
     @Override
