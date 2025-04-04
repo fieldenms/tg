@@ -14,8 +14,8 @@ import java.util.stream.IntStream;
 
 import static java.lang.String.format;
 import static java.util.Comparator.comparingLong;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.joining;
+import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 
 final class AuditTypeFinder implements IAuditTypeFinder {
@@ -30,7 +30,6 @@ final class AuditTypeFinder implements IAuditTypeFinder {
             ERR_MUST_HAVE_ONE_SYN_AUDIT_PROP_TYPE = "Audited type [%s] must have exactly one synthetic audit-prop type, but had %s: [%s].",
             ERR_MUST_HAVE_AT_LEAST_ONE_PERSISTENT_AUDIT_ENTITY_TYPE = "Audited type [%s] must have at least one persistent audit-entity type, but none were found.",
             ERR_VERSION_MUST_BE_GREATER_THAN_ZERO = "Version must be greater than zero, but was %s.",
-            ERR_AUDITED_TYPE_WITH_NO_AUDIT_TYPES = "Entity type [%s] is marked as audited, but has no audit types.",
             ERR_NO_RELATED_AUDIT_TYPES = "Could not find audit types related to [%s]. Ensure that the given type is either audited or is a discoverable audit type.";
 
     private final AuditingMode auditingMode;
@@ -47,10 +46,13 @@ final class AuditTypeFinder implements IAuditTypeFinder {
             contextMap = ImmutableMap.of();
         }
         else {
-            // { auditedType : [auditType] }
+            // { auditedType : [auditType] (zero or more) }
+            // Collect both the audited type and its audit types to ensure that empty [auditType] are also recorded.
             final var auditedToAuditTypesMap = Streams.stream(types)
-                    .filter(ty -> ty.isAnnotationPresent(AuditFor.class))
-                    .collect(groupingBy(ty -> ty.getAnnotation(AuditFor.class).value()));
+                    .filter(ty -> isAudited(ty) || ty.isAnnotationPresent(AuditFor.class))
+                    .collect(groupingBy(ty -> isAudited(ty) ? ty : ty.getAnnotation(AuditFor.class).value(),
+                                        // Exclude the audited type from [auditType].
+                                        filtering(not(AuditTypeFinder::isAudited), toList())));
 
             final var contextMapBuilder = ImmutableMap.<Class<?>, Context<?>>builderWithExpectedSize(
                     auditedToAuditTypesMap.size() * 4);
@@ -58,22 +60,14 @@ final class AuditTypeFinder implements IAuditTypeFinder {
             // Skip audited types that are not actually audited.
             // This enables one to remove the @Audited annotation without having to delete audit types.
             auditedToAuditTypesMap.forEach((auditedType, auditTypes) -> {
-                if (AuditUtils.isAudited(auditedType)) {
-                    final var context = makeContext(auditedType, auditTypes, auditingMode);
+                if (isAudited(auditedType)) {
+                    final var context = makeContext((Class<? extends AbstractEntity<?>>) auditedType, auditTypes, auditingMode);
                     contextMapBuilder.put(auditedType, context);
                     auditTypes.forEach(auditType -> contextMapBuilder.put(auditType, context));
                 }
             });
 
             this.contextMap = contextMapBuilder.buildOrThrow();
-
-            if (auditingMode == AuditingMode.ENABLED) {
-                for (final var type : types) {
-                    if (AuditUtils.isAudited((Class<? extends AbstractEntity<?>>) type) && !contextMap.containsKey(type)) {
-                        throw new EntityDefinitionException(format(ERR_AUDITED_TYPE_WITH_NO_AUDIT_TYPES, type.getTypeName()));
-                    }
-                }
-            }
         }
     }
 
@@ -340,6 +334,10 @@ final class AuditTypeFinder implements IAuditTypeFinder {
                               (List) auditPropTypes,
                               (Class) synAuditEntityGroup.stream().findFirst().orElse(null),
                               (Class) synAuditPropGroup.stream().findFirst().orElse(null));
+    }
+
+    private static boolean isAudited(final Class<?> type) {
+        return AbstractEntity.class.isAssignableFrom(type) && AuditUtils.isAudited((Class<? extends AbstractEntity<?>>) type);
     }
 
 }
