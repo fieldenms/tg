@@ -55,10 +55,14 @@ final class AuditTypeFinder implements IAuditTypeFinder {
             final var contextMapBuilder = ImmutableMap.<Class<?>, Context<?>>builderWithExpectedSize(
                     auditedToAuditTypesMap.size() * 4);
 
+            // Skip audited types that are not actually audited.
+            // This enables one to remove the @Audited annotation without having to delete audit types.
             auditedToAuditTypesMap.forEach((auditedType, auditTypes) -> {
-                final var context = makeContext(auditedType, auditTypes, auditingMode);
-                contextMapBuilder.put(auditedType, context);
-                auditTypes.forEach(auditType -> contextMapBuilder.put(auditType, context));
+                if (AuditUtils.isAudited(auditedType)) {
+                    final var context = makeContext(auditedType, auditTypes, auditingMode);
+                    contextMapBuilder.put(auditedType, context);
+                    auditTypes.forEach(auditType -> contextMapBuilder.put(auditType, context));
+                }
             });
 
             this.contextMap = contextMapBuilder.buildOrThrow();
