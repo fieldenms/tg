@@ -62,30 +62,30 @@ const template = html`<!-- TODO layout vertical -->
         _run-help-action="[[_helpMouseUpEventHandler]]"
         _has-embeded-view="[[_hasEmbededView]]"
         _saver-loading="{{_saverLoading}}">
-            <tg-ui-action
-                id="tgOpenPersistentEntityInfo"
-                ui-role='ICON'
-                icon="icons:info-outline"
-                component-uri = '/master_ui/ua.com.fielden.platform.entity.PersistentEntityInfo'
-                element-name = 'tg-PersistentEntityInfo-master'
-                show-dialog='[[_showDialog]]'
-                toaster='[[toaster]]'
-                create-context-holder='[[_createContextHolder]]'
-                attrs='[[_tgOpenPersistentEntityInfoMasterAttrs]]'
-                require-selection-criteria='false'
-                require-selected-entities='ONE'
-                require-master-entity='false'
-                short-desc="Audit data"
-                long-desc="Audit data"
-                modify-functional-entity = "[[_modifyAuditInfoFunctionalEntity]]"
-                current-entity = '[[_currentEntityForPersistentEntityInfo()]]'
-                hidden$="[[!_isPersistentEntityWithAuditData(_currEntity)]]"
-                disabled="[[!_isEntityPersisted(_currEntity)]]"
-                slot="persistent-entity-info-slot">
-            </tg-ui-action>
         <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
         <!--@tg-entity-master-content-->
         <!--END OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
+        <tg-ui-action
+            id="tgOpenPersistentEntityInfo"
+            ui-role='ICON'
+            icon="icons:info-outline"
+            component-uri = '/master_ui/ua.com.fielden.platform.entity.PersistentEntityInfo'
+            element-name = 'tg-PersistentEntityInfo-master'
+            show-dialog='[[_showDialog]]'
+            toaster='[[toaster]]'
+            create-context-holder='[[_createContextHolder]]'
+            attrs='[[_tgOpenPersistentEntityInfoMasterAttrs]]'
+            require-selection-criteria='false'
+            require-selected-entities='ONE'
+            require-master-entity='false'
+            short-desc="Audit data"
+            long-desc="Audit data"
+            modify-functional-entity = "[[_modifyAuditInfoFunctionalEntity]]"
+            current-entity = '[[_currentEntityForPersistentEntityInfo()]]'
+            hidden$="[[!_isPersistentEntityWithAuditData(_currEntity)]]"
+            disabled="[[!_isEntityPersisted(_currEntity)]]"
+            slot="persistent-entity-info-slot">
+        </tg-ui-action>
     </tg-entity-master>
 `;
 
