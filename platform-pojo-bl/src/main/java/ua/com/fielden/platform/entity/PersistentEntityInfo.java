@@ -29,10 +29,6 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
     private Long entityId;
 
     @IsProperty
-    @Title(value = "Entity Type", desc = "Persistent entity type.")
-    private String entityType;
-
-    @IsProperty
     @Title(value = "Version", desc = "A version of this record. Indicates how many times it was changed. Value 0 corresponds to newly created records.")
     @Readonly
     @Required
@@ -122,16 +118,6 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
 
     public Long getEntityVersion() {
         return entityVersion;
-    }
-
-    @Observable
-    public PersistentEntityInfo setEntityType(final String entityType) {
-        this.entityType = entityType;
-        return this;
-    }
-
-    public String getEntityType() {
-        return entityType;
     }
 
     @Observable
