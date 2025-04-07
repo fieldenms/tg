@@ -9,12 +9,12 @@ import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import static ua.com.fielden.platform.audit.AuditUtils.*;
 
 @Singleton
-final class EntityCompanionGeneratorImpl implements IEntityCompanionGenerator {
+final class CompanionGeneratorImpl implements ICompanionGenerator {
 
-    private final IAuditEntityCompanionGenerator auditCoGenerator;
+    private final IAuditCompanionGenerator auditCoGenerator;
 
     @Inject
-    public EntityCompanionGeneratorImpl(final IAuditEntityCompanionGenerator auditCoGenerator) {
+    public CompanionGeneratorImpl(final IAuditCompanionGenerator auditCoGenerator) {
         this.auditCoGenerator = auditCoGenerator;
     }
 

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import com.google.inject.name.Names;
-import ua.com.fielden.platform.companion.IEntityCompanionGenerator;
+import ua.com.fielden.platform.companion.ICompanionGenerator;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
@@ -47,7 +47,7 @@ public class EntityTestIocModuleWithPropertyFactory extends EntityIocModule {
         bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
         bind(IDates.class).to(DatesForTesting.class);
 
-        bind(IEntityCompanionGenerator.class).to(EntityCompanionGeneratorStub.class);
+        bind(ICompanionGenerator.class).to(CompanionGeneratorStub.class);
 
         bindConstant().annotatedWith(Names.named(AUDIT_PATH)).to("../platform-pojo-bl/target/classes");
     }

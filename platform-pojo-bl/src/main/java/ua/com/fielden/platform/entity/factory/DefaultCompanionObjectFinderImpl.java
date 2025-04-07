@@ -5,7 +5,7 @@ import com.google.inject.Injector;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.companion.ICanReadUninstrumented;
-import ua.com.fielden.platform.companion.IEntityCompanionGenerator;
+import ua.com.fielden.platform.companion.ICompanionGenerator;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -28,12 +28,12 @@ final class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
     public static final String ERR_UNINSTRUMENTED_NOT_SUPPORTED_BY_CO = "Cannot produce uninstrumented companion of type [%s].";
 
     private final Injector injector;
-    private final IEntityCompanionGenerator companionGenerator;
+    private final ICompanionGenerator companionGenerator;
 
     @Inject
     public DefaultCompanionObjectFinderImpl(
             final Injector injector,
-            final IEntityCompanionGenerator companionGenerator)
+            final ICompanionGenerator companionGenerator)
     {
         this.injector = injector;
         this.companionGenerator = companionGenerator;

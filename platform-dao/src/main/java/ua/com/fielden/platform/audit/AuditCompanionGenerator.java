@@ -15,19 +15,19 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
  * its original type should be used.
  */
 @Singleton
-final class AuditEntityCompanionGenerator implements IAuditEntityCompanionGenerator {
+final class AuditCompanionGenerator implements IAuditCompanionGenerator {
 
     private final AuditingMode auditingMode;
 
     @Inject
-    AuditEntityCompanionGenerator(final AuditingMode auditingMode) {
+    AuditCompanionGenerator(final AuditingMode auditingMode) {
         this.auditingMode = auditingMode;
     }
 
     @Override
     public Class<?> generateCompanion(final Class<? extends AbstractAuditEntity> type) {
         if (auditingMode == AuditingMode.DISABLED) {
-            throw AuditingModeException.cannotBeUsed(IAuditEntityCompanionGenerator.class, auditingMode);
+            throw AuditingModeException.cannotBeUsed(IAuditCompanionGenerator.class, auditingMode);
         }
 
         final var baseType = PropertyTypeDeterminator.baseEntityType((Class<? extends AbstractEntity<?>>) type);
@@ -46,7 +46,7 @@ final class AuditEntityCompanionGenerator implements IAuditEntityCompanionGenera
     @Override
     public Class<?> generateCompanionForAuditProp(final Class<? extends AbstractAuditProp> type) {
         if (auditingMode == AuditingMode.DISABLED) {
-            throw AuditingModeException.cannotBeUsed(IAuditEntityCompanionGenerator.class, auditingMode);
+            throw AuditingModeException.cannotBeUsed(IAuditCompanionGenerator.class, auditingMode);
         }
 
         final var baseType = PropertyTypeDeterminator.baseEntityType((Class<? extends AbstractEntity<?>>) type);
@@ -65,7 +65,7 @@ final class AuditEntityCompanionGenerator implements IAuditEntityCompanionGenera
     @Override
     public Class<?> generateCompanionForSynAuditEntity(final Class<? extends AbstractSynAuditEntity> type) {
         if (auditingMode == AuditingMode.DISABLED) {
-            throw AuditingModeException.cannotBeUsed(IAuditEntityCompanionGenerator.class, auditingMode);
+            throw AuditingModeException.cannotBeUsed(IAuditCompanionGenerator.class, auditingMode);
         }
 
         final var baseType = PropertyTypeDeterminator.baseEntityType((Class<? extends AbstractEntity<?>>) type);
@@ -84,7 +84,7 @@ final class AuditEntityCompanionGenerator implements IAuditEntityCompanionGenera
     @Override
     public Class<?> generateCompanionForSynAuditProp(final Class<? extends AbstractSynAuditProp> type) {
         if (auditingMode == AuditingMode.DISABLED) {
-            throw AuditingModeException.cannotBeUsed(IAuditEntityCompanionGenerator.class, auditingMode);
+            throw AuditingModeException.cannotBeUsed(IAuditCompanionGenerator.class, auditingMode);
         }
 
         final var baseType = PropertyTypeDeterminator.baseEntityType((Class<? extends AbstractEntity<?>>) type);

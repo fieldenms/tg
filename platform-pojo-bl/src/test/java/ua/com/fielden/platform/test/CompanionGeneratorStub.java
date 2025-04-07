@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import jakarta.inject.Singleton;
-import ua.com.fielden.platform.companion.IEntityCompanionGenerator;
+import ua.com.fielden.platform.companion.ICompanionGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * IoC module that binds the real implementation should be used.
  */
 @Singleton
-public final class EntityCompanionGeneratorStub implements IEntityCompanionGenerator {
+public final class CompanionGeneratorStub implements ICompanionGenerator {
 
     @Override
     public Class<?> generateCompanion(final Class<? extends AbstractEntity> type) {

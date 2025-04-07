@@ -6,13 +6,13 @@ import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 /**
  * This IoC module configures the generation of entity companions.
  *
- * @see IEntityCompanionGenerator
+ * @see ICompanionGenerator
  */
 public final class EntityCompanionGenerationIocModule extends AbstractPlatformIocModule {
 
     @Override
     protected void configure() {
-        bind(IEntityCompanionGenerator.class).to(EntityCompanionGeneratorImpl.class);
+        bind(ICompanionGenerator.class).to(CompanionGeneratorImpl.class);
         install(new AuditEntityCompanionGenerationIocModule());
     }
 

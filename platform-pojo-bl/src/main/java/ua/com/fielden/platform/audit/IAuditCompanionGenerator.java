@@ -7,7 +7,7 @@ import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
  * <p>
  * Cannot be used if auditing is disabled, all methods will throw {@link AuditingModeException}.
  */
-public interface IAuditEntityCompanionGenerator {
+public interface IAuditCompanionGenerator {
 
     /**
      * Generates a companion object implementation for the specified audit-entity type.
