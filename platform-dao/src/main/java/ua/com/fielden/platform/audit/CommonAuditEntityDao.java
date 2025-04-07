@@ -2,8 +2,6 @@ package ua.com.fielden.platform.audit;
 
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Streams;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.companion.IEntityReader;
@@ -147,38 +145,42 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         //      To truly enforce the contract of this method described in IAuditEntityDao, a version of save() without
         //      SessionRequired would need to be used.
 
-        // Audit-entity may need to be refetched for its ID (and nothing else) is required to persist audit-prop entities below.
-        final var refetchedAuditedEntity = refetchAuditedEntity(auditedEntity);
-        final AbstractAuditEntity<E> auditEntity = save(newAudit(refetchedAuditedEntity, transactionGuid), Optional.of(fetchNone(getEntityType()).with(ID))).asRight().value();
+        final var anyAuditedPropertyDirty = auditedPropertyNames().stream().anyMatch(dirtyProperties::contains);
 
-        if (!Iterables.isEmpty(dirtyProperties)) {
-            // Audit information about changed properites
-            final boolean isNewAuditedEntity = refetchedAuditedEntity.getVersion() == 0L;
-            final var auditProps = Streams.stream(dirtyProperties)
-                    .map(property -> {
-                        final var auditProperty = getAuditPropertyName(property);
-                        // Ignore properties that are not audited.
-                        // Ignore nulls if this is the very first version of the audited entity, which means that there are no historical values for its properties.
-                        if (auditProperty != null && !(isNewAuditedEntity && refetchedAuditedEntity.get(property.toString()) == null)) {
-                            // We can use the fast method because its arguments are known to be valid at this point.
-                            return auditPropInstantiator.fastNewAuditProp(auditEntity, auditProperty);
-                        }
-                        else {
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(toImmutableList());
-            // Batch insertion is most helpful when saving the very first audit record (i.e., the audited entity is 'new'),
-            // as it results in all assigned properties being audited.
-            final var batchInsert = batchInsertFactory.create(() -> new TransactionalExecution(userProvider, this::getSession));
-            batchInsert.batchInsert(auditProps, AUDIT_PROP_BATCH_SIZE);
+        if (anyAuditedPropertyDirty) {
+            // Audit-entity may need to be refetched for its ID (and nothing else) is required to persist audit-prop entities below.
+            final var refetchedAuditedEntity = refetchAuditedEntity(auditedEntity);
+            final AbstractAuditEntity<E> auditEntity = save(newAudit(refetchedAuditedEntity, transactionGuid), Optional.of(fetchNone(getEntityType()).with(ID))).asRight().value();
+
+            if (!dirtyProperties.isEmpty()) {
+                // Audit information about changed properites
+                final boolean isNewAuditedEntity = refetchedAuditedEntity.getVersion() == 0L;
+                final var auditProps = dirtyProperties.stream()
+                        .map(property -> {
+                            final var auditProperty = getAuditPropertyName(property);
+                            // Ignore properties that are not audited.
+                            // Ignore nulls if this is the very first version of the audited entity, which means that there are no historical values for its properties.
+                            if (auditProperty != null && !(isNewAuditedEntity && refetchedAuditedEntity.get(property.toString()) == null)) {
+                                // We can use the fast method because its arguments are known to be valid at this point.
+                                return auditPropInstantiator.fastNewAuditProp(auditEntity, auditProperty);
+                            }
+                            else {
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(toImmutableList());
+                // Batch insertion is most helpful when saving the very first audit record (i.e., the audited entity is 'new'),
+                // as it results in all assigned properties being audited.
+                final var batchInsert = batchInsertFactory.create(() -> new TransactionalExecution(userProvider, this::getSession));
+                batchInsert.batchInsert(auditProps, AUDIT_PROP_BATCH_SIZE);
+            }
         }
     }
 
     @Override
     public void audit(final E auditedEntity, final String transactionGuid) {
-        final var dirtyProperties = auditedEntity.getDirtyProperties().stream().map(MetaProperty::getName).toList();
+        final var dirtyProperties = auditedEntity.getDirtyProperties().stream().map(MetaProperty::getName).collect(toSet());
         audit(auditedEntity, transactionGuid, dirtyProperties);
     }
 
@@ -228,6 +230,10 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
                               .filter(PropertyMetadata::isPersistent)
                               .map(PropertyMetadata::name)
                               .collect(toSet()));
+    }
+
+    private Collection<String> auditedPropertyNames() {
+        return auditedToAuditPropertyNames.keySet();
     }
 
     /**

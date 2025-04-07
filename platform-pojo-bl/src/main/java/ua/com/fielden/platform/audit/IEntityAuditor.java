@@ -23,6 +23,8 @@ public interface IEntityAuditor<E extends AbstractEntity<?>> {
      *        {@code null} values are not considered changed.
      * </ul>
      * <p>
+     * If none of the audited properties are dirty, auditing is not performed.
+     * <p>
      * This method requires a session but is deliberately not annotated with {@code @SessionRequired}, which must also be the case for its implementation.
      * This enforces the contract that this method may only be used as a part of a save operation on an audited entity.
      *

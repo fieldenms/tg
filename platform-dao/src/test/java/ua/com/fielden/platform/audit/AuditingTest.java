@@ -2,23 +2,30 @@ package ua.com.fielden.platform.audit;
 
 import com.google.inject.Inject;
 import org.junit.Test;
+import ua.com.fielden.platform.sample.domain.AuditedEntity;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IDates;
 
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.CHANGED_PROPS;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 
 public class AuditingTest extends AbstractDaoTestCase {
 
+    private @Inject IDates dates;
+    private IAuditTypeFinder auditTypeFinder;
     private Class<AbstractSynAuditEntity<TgVehicle>> tgVehicleSynAuditType;
     private ISynAuditEntityDao<TgVehicle> coTgVehicleAudit;
     private Class<AbstractSynAuditProp<TgVehicle>> tgVehicleSynAuditPropType;
@@ -26,6 +33,7 @@ public class AuditingTest extends AbstractDaoTestCase {
 
     @Inject
     void setAuditTypeFinder(final IAuditTypeFinder auditTypeFinder) {
+        this.auditTypeFinder = auditTypeFinder;
         tgVehicleSynAuditType = auditTypeFinder.navigate(TgVehicle.class).synAuditEntityType();
         coTgVehicleAudit = co(tgVehicleSynAuditType);
         tgVehicleSynAuditPropType = auditTypeFinder.navigate(TgVehicle.class).synAuditPropType();
@@ -156,6 +164,27 @@ public class AuditingTest extends AbstractDaoTestCase {
             assertEquals("Incorrect entity type referenced by property descriptor of changed property [%s]".formatted(changedProp),
                          tgVehicleSynAuditType, changedProp.getProperty().getEntityType());
         }
+    }
+
+    @Test
+    public void audit_record_is_not_created_if_none_of_audited_properties_were_changed() {
+        final var entity = save(new_(AuditedEntity.class, "A"));
+        final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
+
+        assertThat(coAudit.getAudits(entity))
+                .extracting(AbstractSynAuditEntity::getAuditedVersion)
+                .containsExactlyInAnyOrder(0L);
+
+        final IUser userCo = co$(User.class);
+        final var anotherUser = userCo.findUser(User.system_users.UNIT_TEST_USER.name());
+        assertNotNull(anotherUser);
+        assertNotEquals(entity.get(LAST_UPDATED_BY), anotherUser);
+        entity.set(LAST_UPDATED_BY, anotherUser);
+        save(entity);
+
+        assertThat(coAudit.getAudits(entity))
+                .extracting(AbstractSynAuditEntity::getAuditedVersion)
+                .containsExactlyInAnyOrder(0L);
     }
 
     @Override

@@ -12,6 +12,7 @@ import java.util.Date;
  */
 @KeyType(String.class)
 @MapEntityTo
+@CompanionObject(AuditedEntityCo.class)
 @Audited
 public class AuditedEntity extends AbstractPersistentEntity<String> {
 
