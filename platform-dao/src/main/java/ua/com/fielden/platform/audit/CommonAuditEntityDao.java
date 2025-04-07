@@ -24,6 +24,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -141,7 +142,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
     }
 
     @Override
-    public void audit(final E auditedEntity, final String transactionGuid, final Iterable<? extends CharSequence> dirtyProperties) {
+    public void audit(final E auditedEntity, final String transactionGuid, final Collection<String> dirtyProperties) {
         // NOTE save() is annotated with SessionRequired.
         //      To truly enforce the contract of this method described in IAuditEntityDao, a version of save() without
         //      SessionRequired would need to be used.

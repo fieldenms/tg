@@ -14,6 +14,7 @@ import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -63,7 +64,7 @@ public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
     }
 
     @Override
-    public void audit(final E auditedEntity, final String transactionGuid, final Iterable<? extends CharSequence> dirtyProperties) {
+    public void audit(final E auditedEntity, final String transactionGuid, final Collection<String> dirtyProperties) {
         coAuditEntity.audit(auditedEntity, transactionGuid, dirtyProperties);
     }
 

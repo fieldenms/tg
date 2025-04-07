@@ -279,7 +279,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     @FunctionalInterface
     private interface Auditor<E extends AbstractEntity<?>> {
 
-        void audit(final E entity, final String transactionGuid, Iterable<? extends CharSequence> dirtyProperties);
+        void audit(final E entity, final String transactionGuid, Collection<String> dirtyProperties);
 
     }
 

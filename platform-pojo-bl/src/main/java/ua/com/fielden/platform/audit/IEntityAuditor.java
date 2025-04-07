@@ -3,6 +3,8 @@ package ua.com.fielden.platform.audit;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 
+import java.util.Collection;
+
 /**
  * A contract to perform auditing of entities.
  *
@@ -31,10 +33,10 @@ public interface IEntityAuditor<E extends AbstractEntity<?>> {
      * @param dirtyProperties  names of properties of the audited entity whose values changed.
      *                         Only audited properties are considered, others are ignored.
      */
-    void audit(E auditedEntity, String transactionGuid, Iterable<? extends CharSequence> dirtyProperties);
+    void audit(E auditedEntity, String transactionGuid, Collection<String> dirtyProperties);
 
     /**
-     * Similar to {@link #audit(AbstractEntity, String, Iterable)}, but dirty properties are identified internally.
+     * Similar to {@link #audit(AbstractEntity, String, Collection)}, but dirty properties are identified internally.
      */
     void audit(E auditedEntity, String transactionGuid);
 
