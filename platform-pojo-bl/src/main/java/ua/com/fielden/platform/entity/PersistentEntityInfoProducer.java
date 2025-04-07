@@ -28,17 +28,23 @@ public class PersistentEntityInfoProducer extends DefaultEntityProducerWithConte
         if (currentEntityNotEmpty()) {
             final AbstractEntity<?> currEntity = currentEntity();
             if (isPersistentWithAuditData(currEntity.getType())) {
-                final IEntityDao<AbstractPersistentEntity<?>> entityCo = (IEntityDao<AbstractPersistentEntity<?>>) co(currEntity.getType());
-                final AbstractPersistentEntity<?> refetchedEntity = entityCo.findById(currEntity.getId(), fetchKeyAndDescOnly(entityCo.getEntityType()).with("version", "createdBy", "createdDate", "lastUpdatedBy", "lastUpdatedDate"));
-                entity.setEntityId(refetchedEntity.getId())
-                        .setEntityVersion(refetchedEntity.getVersion())
-                        .setCreatedBy(refetchedEntity.getCreatedBy())
-                        .setCreatedDate(refetchedEntity.getCreatedDate())
-                        .setLastUpdatedBy(refetchedEntity.getLastUpdatedBy())
-                        .setLastUpdatedDate(refetchedEntity.getLastUpdatedDate())
-                        .setEntityTitle(isEmpty(refetchedEntity.getDesc()) ? format("%s", refetchedEntity.getKey()) : format("%s: %s", refetchedEntity.getKey(), refetchedEntity.getDesc()));
+                final var entityCo = (IEntityDao<AbstractPersistentEntity<?>>) co(currEntity.getType());
+                final var entityWithInfo = entityCo.findById(currEntity.getId(), fetchKeyAndDescOnly(entityCo.getEntityType())
+                        .with(AbstractPersistentEntity.VERSION)
+                        .with(AbstractPersistentEntity.CREATED_BY)
+                        .with(AbstractPersistentEntity.CREATED_DATE)
+                        .with(AbstractPersistentEntity.LAST_UPDATED_BY)
+                        .with(AbstractPersistentEntity.LAST_UPDATED_DATE));
+                entity.setEntityId(entityWithInfo.getId())
+                        .setEntityVersion(entityWithInfo.getVersion())
+                        .setCreatedBy(entityWithInfo.getCreatedBy())
+                        .setCreatedDate(entityWithInfo.getCreatedDate())
+                        .setLastUpdatedBy(entityWithInfo.getLastUpdatedBy())
+                        .setLastUpdatedDate(entityWithInfo.getLastUpdatedDate())
+                        .setEntityTitle(isEmpty(entityWithInfo.getDesc()) ? "%s".formatted(entityWithInfo.getKey()) : "%s: %s".formatted(entityWithInfo.getKey(), entityWithInfo.getDesc()));
             }
         }
         return super.provideDefaultValues(entity);
     }
+
 }

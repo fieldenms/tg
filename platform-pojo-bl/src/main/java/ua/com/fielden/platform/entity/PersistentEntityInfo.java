@@ -23,40 +23,36 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
     @IsProperty
-    @Title(value = "Unique Identifier", desc = "Persistent entity unique identifier")
+    @Title(value = "Unique Identifier", desc = "A unique identifier of this record at the database level.")
     @CompositeKeyMember(1)
     @Readonly
     private Long entityId;
 
     @IsProperty
-    @Title(value = "Entity Type", desc = "Persistent entity type")
-    private String entityType;
-
-    @IsProperty
-    @Title(value = "Version", desc = "This entity version")
+    @Title(value = "Version", desc = "A version of this record. Indicates how many times it was changed. Value 0 corresponds to newly created records.")
     @Readonly
     @Required
     private Long entityVersion;
 
     @IsProperty
-    @Title(value = "Created by User", desc = "The user who originally created this entity instance.")
+    @Title(value = "Created by User", desc = "A user who created this record.")
     @SkipEntityExistsValidation
     @Readonly
     private User createdBy;
 
     @IsProperty
-    @Title(value = "Creation Date", desc = "The date/time when this entity instace was created.")
+    @Title(value = "Creation Date", desc = "A date/time when this record was created.")
     @Readonly
     private Date createdDate;
 
     @IsProperty
-    @Title(value = "Last Updated By", desc = "The user who was the last to update this entity instance.")
+    @Title(value = "Last Updated By", desc = "A user who was the last to update this record.")
     @SkipEntityExistsValidation
     @Readonly
     private User lastUpdatedBy;
 
     @IsProperty
-    @Title(value = "Last Updated Date", desc = "The date/time when this entity instance was last updated.")
+    @Title(value = "Last Updated Date", desc = "A date/time when this record was last updated.")
     @Readonly
     private Date lastUpdatedDate;
 
@@ -122,16 +118,6 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
 
     public Long getEntityVersion() {
         return entityVersion;
-    }
-
-    @Observable
-    public PersistentEntityInfo setEntityType(final String entityType) {
-        this.entityType = entityType;
-        return this;
-    }
-
-    public String getEntityType() {
-        return entityType;
     }
 
     @Observable
