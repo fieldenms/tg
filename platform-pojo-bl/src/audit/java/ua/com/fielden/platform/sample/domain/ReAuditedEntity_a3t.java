@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-03-25 16:16:54 EET
+// Generation timestamp: 2025-04-07 17:00:50 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
+import ua.com.fielden.platform.types.RichText;
 
 @AuditFor(AuditedEntity.class)
 @EntityTitle("Audited Entity Audit")
@@ -62,6 +63,20 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   )
   @IsProperty
   private String a3t_str2;
+
+  @Title(
+      value = "Rich Text",
+      desc = "[Rich Text] at the time of the audited event."
+  )
+  @IsProperty
+  private RichText a3t_richText;
+
+  @Title(
+      value = "Union Entity",
+      desc = "[Union Entity] at the time of the audited event."
+  )
+  @IsProperty
+  private UnionEntity a3t_union;
 
   @Title(
       value = "Key",
@@ -131,6 +146,26 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   @Observable
   public ReAuditedEntity_a3t setA3t_str2(final String a3t_str2) {
     this.a3t_str2 = a3t_str2;
+    return this;
+  }
+
+  public RichText getA3t_richText() {
+    return this.a3t_richText;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_richText(final RichText a3t_richText) {
+    this.a3t_richText = a3t_richText;
+    return this;
+  }
+
+  public UnionEntity getA3t_union() {
+    return this.a3t_union;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_union(final UnionEntity a3t_union) {
+    this.a3t_union = a3t_union;
     return this;
   }
 

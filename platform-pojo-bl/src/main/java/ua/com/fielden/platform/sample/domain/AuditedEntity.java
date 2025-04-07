@@ -3,6 +3,8 @@ package ua.com.fielden.platform.sample.domain;
 import ua.com.fielden.platform.audit.Audited;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
+import ua.com.fielden.platform.types.RichText;
 
 import java.util.Date;
 
@@ -16,6 +18,15 @@ import java.util.Date;
 @Audited
 public class AuditedEntity extends AbstractPersistentEntity<String> {
 
+    public enum Property implements IConvertableToPath {
+        date1, bool1, str2, richText, union;
+
+        @Override
+        public String toPath() {
+            return name();
+        }
+    }
+
     @IsProperty
     @MapTo
     private Date date1;
@@ -27,6 +38,34 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
     @IsProperty
     @MapTo
     private String str2;
+
+    @IsProperty
+    @MapTo
+    private RichText richText;
+
+    @IsProperty
+    @MapTo
+    private UnionEntity union;
+
+    public UnionEntity getUnion() {
+        return union;
+    }
+
+    @Observable
+    public AuditedEntity setUnion(final UnionEntity union) {
+        this.union = union;
+        return this;
+    }
+
+    public RichText getRichText() {
+        return richText;
+    }
+
+    @Observable
+    public AuditedEntity setRichText(final RichText richText) {
+        this.richText = richText;
+        return this;
+    }
 
     public String getStr2() {
         return str2;

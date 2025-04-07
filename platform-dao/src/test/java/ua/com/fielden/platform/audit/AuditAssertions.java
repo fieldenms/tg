@@ -3,6 +3,7 @@ package ua.com.fielden.platform.audit;
 import com.google.inject.Inject;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.api.ThrowingConsumer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -97,10 +98,18 @@ final class AuditAssertions {
         }
 
         /**
-         * Asserts that the audited entity's property has a value that is equal to that of a corresdponding audit-property in the audit-entity under test.
+         * Asserts that the audited entity's property has a value that is equal to that of a corresponding audit-property in the audit-entity under test.
          */
         public SynAuditEntityAssert<E> isAuditPropertyFor(final E entity, final CharSequence auditedProperty) {
             assertAuditPropertyEqualsToAudited(lazyRefetchedAudit.get(), entity, auditedProperty);
+            return this;
+        }
+
+        public SynAuditEntityAssert<E> auditPropertySatisfies(final CharSequence auditedProperty, final ThrowingConsumer<? super Object> cond) {
+            Assertions.assertThat(lazyRefetchedAudit.get().<Object>getA3t(auditedProperty))
+                    .withFailMessage(() -> "Audited value for [%s] in audit-entity [%s] did not satisfy the given condition."
+                                            .formatted(auditedProperty, lazyRefetchedAudit.get()))
+                    .satisfies(cond::accept);
             return this;
         }
 

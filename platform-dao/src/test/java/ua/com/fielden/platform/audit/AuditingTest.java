@@ -2,14 +2,12 @@ package ua.com.fielden.platform.audit;
 
 import com.google.inject.Inject;
 import org.junit.Test;
-import ua.com.fielden.platform.sample.domain.AuditedEntity;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.IDates;
 
 import java.util.stream.Stream;
@@ -185,6 +183,56 @@ public class AuditingTest extends AbstractDaoTestCase {
         assertThat(coAudit.getAudits(entity))
                 .extracting(AbstractSynAuditEntity::getAuditedVersion)
                 .containsExactlyInAnyOrder(0L);
+    }
+
+    @Test
+    public void union_typed_properties_are_audited() {
+        final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
+
+        final AuditedEntity entity;
+
+        {
+            final var union = save(new_(UnionEntity.class).setPropertyOne(save(new_(EntityOne.class, "One"))));
+            entity = save(new_(AuditedEntity.class, "A").setUnion(union));
+
+            final var audit = coAudit.getAudit(entity);
+            a3t_assertions.assertThat(audit)
+                    .auditPropertySatisfies(AuditedEntity.Property.union, union_a3t -> assertEquals(union, union_a3t));
+        }
+
+        {
+            final var union = save(new_(UnionEntity.class).setPropertyTwo(save(new_(EntityTwo.class, 2))));
+            final var entity_v2 = save(entity.setUnion(union));
+
+            final var audit = coAudit.getAudit(entity_v2);
+            a3t_assertions.assertThat(audit)
+                    .auditPropertySatisfies(AuditedEntity.Property.union, union_a3t -> assertEquals(union, union_a3t));
+        }
+    }
+
+    @Test
+    public void component_typed_properties_are_audited() {
+        final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
+
+        final AuditedEntity entity;
+
+        {
+            final var richText = RichText.fromPlainText("First version");
+            entity = save(new_(AuditedEntity.class, "A").setRichText(richText));
+
+            final var audit = coAudit.getAudit(entity);
+            a3t_assertions.assertThat(audit)
+                    .auditPropertySatisfies(AuditedEntity.Property.richText, richText_a3t -> assertEquals(richText, richText_a3t));
+        }
+
+        {
+            final var richText = RichText.fromPlainText("Second version");
+            final var entity_v2 = save(entity.setRichText(richText));
+
+            final var audit = coAudit.getAudit(entity_v2);
+            a3t_assertions.assertThat(audit)
+                    .auditPropertySatisfies(AuditedEntity.Property.richText, richText_a3t -> assertEquals(richText, richText_a3t));
+        }
     }
 
     @Override
