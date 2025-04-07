@@ -414,7 +414,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         private void includeKeyAndDescOnly() {
             includeIdAndVersionOnly();
 
-            with(KEY, true);
+            with(KEY, false);
 
             if (entityMetadata.hasProperty(DESC)) {
                 primProps.add(DESC);
