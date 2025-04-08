@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.audit;
 
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 import jakarta.inject.Inject;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
@@ -9,6 +8,7 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -22,13 +22,11 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.util.Objects.requireNonNull;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -50,6 +48,8 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         implements IEntityAuditor<E>
 {
 
+    private static final String ERR_AUDIT_PROPERTY_UNEXPECTED_NAME = "Audit-property [%s.%s] has unexpected name.";
+
     private static final int AUDIT_PROP_BATCH_SIZE = 100;
 
     // All fields below are effectively final, but cannot be declared so due to late initialisation.
@@ -60,19 +60,10 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
     private fetch<E> fetchModelForAuditing;
     private EntityBatchInsertOperation.Factory batchInsertFactory;
     private IUserProvider userProvider;
-    /**
-     * Names of properties of the audited entity that are required to create an audit record.
-     * These properties must not be proxied.
-     */
+    /** Names of properties of the audited entity that are required to create an audit record. */
     private Set<String> propertiesForAuditing;
-    /**
-     * A bidirectional mapping between names of audited and audit properties.
-     * <p>
-     * Standard direction: keys - audited properties, values - audit properties.
-     * <p>
-     * Inverse direction: keys - audit properties, values - audited properties.
-     */
-    private ImmutableBiMap<String, String> auditedToAuditPropertyNames;
+    /** Key: audited property. Value: audit-property. */
+    private Map<String, String> auditedToAuditPropertyNames;
 
     @Inject
     protected void init(
@@ -131,14 +122,6 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         return auditedToAuditPropertyNames.get(auditedProperty.toString());
     }
 
-    /**
-     * Returns the name of a property of the audited entity type that is audited by the specified property of this audit-entity type,
-     * if the specified property is an audit property; otherwise, returns {@code null}.
-     */
-    protected final @Nullable String getAuditedPropertyName(final CharSequence auditProperty) {
-        return auditedToAuditPropertyNames.inverse().get(auditProperty.toString());
-    }
-
     @Override
     public void audit(final E auditedEntity, final String transactionGuid, final Collection<String> dirtyProperties) {
         // NOTE save() is annotated with SessionRequired.
@@ -160,7 +143,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
                             final var auditProperty = getAuditPropertyName(property);
                             // Ignore properties that are not audited.
                             // Ignore nulls if this is the very first version of the audited entity, which means that there are no historical values for its properties.
-                            if (auditProperty != null && !(isNewAuditedEntity && refetchedAuditedEntity.get(property.toString()) == null)) {
+                            if (auditProperty != null && !(isNewAuditedEntity && refetchedAuditedEntity.get(property) == null)) {
                                 // We can use the fast method because its arguments are known to be valid at this point.
                                 return auditPropInstantiator.fastNewAuditProp(auditEntity, auditProperty);
                             }
@@ -247,18 +230,18 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         return user;
     }
 
-    private ImmutableBiMap<String, String> makeAuditedToAuditPropertyNames(final IDomainMetadata domainMetadata) {
+    private Map<String, String> makeAuditedToAuditPropertyNames(final IDomainMetadata domainMetadata) {
         final var auditEntityMetadata = domainMetadata.forEntity(getEntityType());
-        final var builder = ImmutableBiMap.<String, String> builderWithExpectedSize(auditEntityMetadata.properties().size() - 6);
-        auditEntityMetadata.properties()
+
+        return auditEntityMetadata.properties()
                 .stream()
                 // Skip inactive audit properties.
                 .filter(p -> p.get(AUDIT_PROPERTY).filter(KAuditProperty.Data::active).isPresent())
-                .forEach(property -> {
-                    final var auditedPropName = requireNonNull(AuditUtils.auditedPropertyName(property.name()));
-                    builder.put(auditedPropName, property.name());
-                });
-        return builder.buildOrThrow();
+                .collect(toImmutableMap(p -> Optional.ofNullable(AuditUtils.auditedPropertyName(p.name()))
+                                                .orElseThrow(() -> new EntityDefinitionException(format(
+                                                        ERR_AUDIT_PROPERTY_UNEXPECTED_NAME,
+                                                        auditEntityMetadata.javaType().getSimpleName(), p.name()))),
+                                        PropertyMetadata::name));
     }
 
 }
