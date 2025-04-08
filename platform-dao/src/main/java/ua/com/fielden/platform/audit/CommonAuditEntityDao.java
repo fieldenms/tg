@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataKeys.KAuditProperty;
@@ -33,6 +34,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitle;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
@@ -48,6 +50,9 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
 {
 
     private static final String ERR_AUDIT_PROPERTY_UNEXPECTED_NAME = "Audit-property [%s.%s] has unexpected name.";
+    static final String ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED = "Only persisted instances can be audited.";
+    static final String ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED = "Only non-dirty instances can be audited.";
+    static final String ERR_ONLY_VALID_INSTANCES_CAN_BE_AUDITED = "Only valid instances can be audited.";
 
     private static final int AUDIT_PROP_BATCH_SIZE = 100;
 
@@ -117,7 +122,7 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
      * Returns the name of a property of this audit-entity type that audits the specified property of the audited entity type,
      * if the specified property is indeed audited; otherwise, returns {@code null}.
      */
-    protected final @Nullable String getAuditPropertyName(final CharSequence auditedProperty) {
+    private @Nullable String getAuditPropertyName(final CharSequence auditedProperty) {
         return auditedToAuditPropertyNames.get(auditedProperty.toString());
     }
 
@@ -126,6 +131,16 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         // NOTE save() is annotated with SessionRequired.
         //      To truly enforce the contract of this method described in IAuditEntityDao, a version of save() without
         //      SessionRequired would need to be used.
+
+        if (!auditedEntity.isPersisted()) {
+            throw cannotBeAuditedFailure(auditedEntity, ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED);
+        }
+        if (auditedEntity.isDirty()) {
+            throw cannotBeAuditedFailure(auditedEntity, ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED);
+        }
+        if (!auditedEntity.isValid().isSuccessful()) {
+            throw cannotBeAuditedFailure(auditedEntity, ERR_ONLY_VALID_INSTANCES_CAN_BE_AUDITED);
+        }
 
         final var anyAuditedPropertyDirty = auditedPropertyNames().stream().anyMatch(dirtyProperties::contains);
 
@@ -160,6 +175,12 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         }
     }
 
+    private Result cannotBeAuditedFailure(final E auditedEntity, final String format, final Object... args) {
+        return failuref(String.join(".",
+                                    "%s [%s] cannot be audited".formatted(getEntityTitle(getEntityType()), auditedEntity),
+                                    format.formatted(args)));
+    }
+
     /**
      * Returns a new, initialised instance of this audit-entity type.
      *
@@ -168,11 +189,6 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
      * @param transactionGuid  identifier of a transaction that was used to save the audited entity
      */
     private AbstractAuditEntity<E> newAudit(final E auditedEntity, final String transactionGuid) {
-        if (auditedEntity.isDirty()) {
-            throw failuref("Only persisted and non-dirty instances of [%s] can be audited.", auditedEntity.getType().getTypeName());
-        }
-        // TODO Assert that audited entity is valid?
-
         final AbstractAuditEntity<E> audit = new_();
         audit.beginInitialising();
 

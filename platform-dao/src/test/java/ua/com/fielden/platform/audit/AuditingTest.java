@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.audit;
 
 import com.google.inject.Inject;
+import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Test;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
@@ -10,12 +13,17 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.IDates;
 
+import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.CHANGED_PROPS;
+import static ua.com.fielden.platform.audit.CommonAuditEntityDao.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
@@ -235,6 +243,46 @@ public class AuditingTest extends AbstractDaoTestCase {
         }
     }
 
+    @Test
+    public void dirty_entities_cannot_be_audited() {
+        final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
+
+        final var entity = save(new_(AuditedEntity.class, "A"))
+                .setStr2("foo");
+        assertThatThrownBy(() -> audit(coAudit, entity, generateTransactionGuid(), Set.of(AuditedEntity.Property.str2.toString())))
+                .hasMessageContaining(ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED);
+    }
+
+    @Test
+    public void non_persisted_entities_cannot_be_audited() {
+        final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
+
+        final var entity = new_(AuditedEntity.class, "A").setStr2("foo");
+        assertThatThrownBy(() -> audit(coAudit, entity, generateTransactionGuid(), Set.of(KEY, AuditedEntity.Property.str2.toString())))
+                .hasMessageContaining(ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED);
+    }
+
+    @Test
+    public void invalid_entities_cannot_be_audited() {
+        final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
+
+        final var entity = save(new_(AuditedEntity.class, "A"));
+        entity.getProperty(AuditedEntity.Property.str2).setRequired(true);
+        assertThatThrownBy(() -> audit(coAudit, entity, generateTransactionGuid(), Set.of(KEY)))
+                .hasMessageContaining(ERR_ONLY_VALID_INSTANCES_CAN_BE_AUDITED);
+    }
+
+    /// Performs the auditing operation in a session, as described in [IEntityAuditor#audit(AbstractEntity, String, Collection)].
+    @SessionRequired
+    protected <E extends AbstractEntity<?>> void audit(
+            final ISynAuditEntityDao<E> coAudit,
+            final E auditedEntity,
+            final String transactionGuid,
+            final Collection<String> dirtyProperties)
+    {
+        coAudit.audit(auditedEntity, transactionGuid, dirtyProperties);
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
@@ -288,6 +336,14 @@ public class AuditingTest extends AbstractDaoTestCase {
         TgVehicles(final String key) {
             this.key = key;
         }
+    }
+
+    private static String generateTransactionGuid() {
+        class $ {
+            static final RandomStringGenerator G = RandomStringGenerator.builder().withinRange('a', 'z').build();
+        }
+
+        return $.G.generate(32);
     }
 
 }
