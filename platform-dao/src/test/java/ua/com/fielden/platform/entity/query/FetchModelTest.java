@@ -17,17 +17,17 @@ import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertNotEmpty;
@@ -41,7 +41,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
                                                     domainMetadata,
                                                     getInstance(QuerySourceInfoProvider.class));
     }
-    
+
     private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final Class<T> entityType, final FetchCategory fetchCategory) {
         return produceRetrievalModel(new fetch<T>(entityType, fetchCategory));
     }
@@ -184,6 +184,35 @@ public class FetchModelTest extends AbstractDaoTestCase {
     {
         final var fetchModel = produceRetrievalModel(entityType, category);
         assertPropsAreNotFetched(fetchModel, Set.of("key"));
+    }
+
+    /*----------------------------------------------------------------------------
+     | Fetching of simple entity-typed key (one-to-one association)
+     -----------------------------------------------------------------------------*/
+
+    @Test
+    public void simple_entity_typed_key_is_implicitly_assigned_a_sub_fetch_model() {
+        assertThat(List.of(ALL, ALL_INCL_CALC, DEFAULT, KEY_AND_DESC))
+                .allSatisfy(category -> _simple_entity_typed_key_is_implicitly_assigned_a_sub_fetch_model(
+                        TgVehicleFinDetails.class, category,
+                        model -> assertThat(model)
+                                .usingEquals(FetchModelTest::areEqualByProperties)
+                                .isEqualTo(produceRetrievalModel(TgVehicle.class, KEY_AND_DESC))));
+
+        assertThat(List.of(ID_AND_VERSION, ID_ONLY))
+                .allSatisfy(category -> assertPropsAreNotFetched(produceRetrievalModel(TgVehicleFinDetails.class, category), Set.of(KEY)));
+    }
+
+    private void _simple_entity_typed_key_is_implicitly_assigned_a_sub_fetch_model(
+            final Class<? extends AbstractEntity<? extends AbstractEntity<?>>> entityType,
+            final FetchCategory category,
+            final Consumer<? super IRetrievalModel<?>> assertSubFetchModel)
+    {
+        assertTrue(domainMetadata.forProperty(entityType, KEY).type().isEntity());
+
+        final var fetchModel = produceRetrievalModel(entityType, category);
+        assertPropsAreFetched(fetchModel, Set.of(KEY));
+        assertSubFetchModel.accept(fetchModel.getRetrievalModel(KEY));
     }
 
     /*----------------------------------------------------------------------------
@@ -399,11 +428,11 @@ public class FetchModelTest extends AbstractDaoTestCase {
     public void test_key_and_desc_fetching_of_fuel_usage() {
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, KEY_AND_DESC);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "date"));
-        
+
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
         assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
-       
+
         assertPropsAreProxied(fetchModel, Set.of("qty", "fuelType"));
     }
 
@@ -428,7 +457,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "fuelType"));
         assertPropsAreProxied(fetchModel, Set.of("date", "qty"));
-        
+
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
         assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
@@ -528,7 +557,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
         assertPropsAreFetched(fetchModel, Set.of("id"));
         assertPropsAreProxied(fetchModel, Set.of("version", "key", "location"));
     }
-    
+
     @Test
     public void fetch_composite_key_of_synthetic_entity() {
         final IRetrievalModel<TgPublishedYearly> fetchModel = produceRetrievalModel(TgPublishedYearly.class, KEY_AND_DESC);
@@ -678,5 +707,35 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Override
     protected void populateDomain() {}
+
+    /*----------------------------------------------------------------------------
+     | Utilities
+     -----------------------------------------------------------------------------*/
+
+    private static boolean areEqualByProperties(final IRetrievalModel<?> model1, final IRetrievalModel<?> model2) {
+        return model1.getPrimProps().equals(model2.getPrimProps())
+               && model1.getProxiedProps().equals(model2.getProxiedProps())
+               && areEqualByValues(model1.getRetrievalModels(), model2.getRetrievalModels(), FetchModelTest::areEqualByProperties);
+    }
+
+    private static <K, V1, V2> boolean areEqualByValues(
+            final Map<? extends K, V1> map1,
+            final Map<? extends K, V2> map2,
+            final BiPredicate<? super V1, ? super V2> predicate)
+    {
+        if (map1.size() != map2.size()) {
+            return false;
+        }
+        else {
+            for (final var entry : map1.entrySet()) {
+                final var val1 = entry.getValue();
+                final var val2 = map2.get(entry.getKey());
+                if (!predicate.test(val1, val2)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
 
 }

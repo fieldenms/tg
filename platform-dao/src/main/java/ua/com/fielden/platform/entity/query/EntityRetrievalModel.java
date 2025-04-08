@@ -27,8 +27,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
@@ -414,7 +413,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         private void includeKeyAndDescOnly() {
             includeIdAndVersionOnly();
 
-            with(KEY, true);
+            with(KEY, false);
 
             if (entityMetadata.hasProperty(DESC)) {
                 primProps.add(DESC);
@@ -488,7 +487,12 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                         if (!skipEntities) {
                             if (propMetadataUtils.isPropEntityType(propType, EntityMetadata::isUnion)) {
                                 with(propName, fetchAll(et.javaType()));
-                            } else {
+                            }
+                            // Simple entity-typed key, where entity-type represents the left side of a one-2-one relationship.
+                            else if (propName.equals(KEY)) {
+                                with(propName, fetchKeyAndDescOnly(et.javaType()));
+                            }
+                            else {
                                 with(propName, EntityQueryUtils.fetch(et.javaType()));
                             }
                         } else if (pm.isPersistent()) {

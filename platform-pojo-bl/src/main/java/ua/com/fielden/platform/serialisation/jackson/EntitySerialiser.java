@@ -37,8 +37,7 @@ import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -90,6 +89,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         // let's inform the client of the type's persistence nature
         if (isPersistentEntityType(type)) {
             entityTypeInfo.set_persistent(true);
+        }
+
+        // let's inform the client of the type's persistence nature with audit data
+        if (isPersistentWithAuditData(type)) {
+            entityTypeInfo.set_persistentWithAudit(true);
         }
 
         if (IContinuationData.class.isAssignableFrom(type)) {
