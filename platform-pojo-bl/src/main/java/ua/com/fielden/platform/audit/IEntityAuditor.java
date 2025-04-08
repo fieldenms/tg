@@ -38,11 +38,6 @@ public interface IEntityAuditor<E extends AbstractEntity<?>> {
     void audit(E auditedEntity, String transactionGuid, Collection<String> dirtyProperties);
 
     /**
-     * Similar to {@link #audit(AbstractEntity, String, Collection)}, but dirty properties are identified internally.
-     */
-    void audit(E auditedEntity, String transactionGuid);
-
-    /**
      * Returns a fetch model for the audited entity type that includes all properties that are necessary to perform auditing.
      */
     fetch<E> fetchModelForAuditing();
