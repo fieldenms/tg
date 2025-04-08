@@ -197,7 +197,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
                         TgVehicleFinDetails.class, category,
                         model -> assertThat(model)
                                 .usingEquals(FetchModelTest::areEqualByProperties)
-                                .isEqualTo(produceRetrievalModel(TgVehicle.class, DEFAULT))));
+                                .isEqualTo(produceRetrievalModel(TgVehicle.class, KEY_AND_DESC))));
 
         assertThat(List.of(ID_AND_VERSION, ID_ONLY))
                 .allSatisfy(category -> assertPropsAreNotFetched(produceRetrievalModel(TgVehicleFinDetails.class, category), Set.of(KEY)));
