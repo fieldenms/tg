@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.meta;
 
 import org.junit.Test;
+import ua.com.fielden.platform.audit.AuditUtils;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.AuditedEntity_a3t_1;
@@ -16,6 +17,9 @@ import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 
 public class AuditingMetadataTest {
 
+    // TODO: Refactor this test class to use IoC.
+    //       Then, use IAuditTypeFinder instead of acessing audit types directly.
+
     private final TestDomainMetadataGenerator generator;
 
     public AuditingMetadataTest() {
@@ -29,7 +33,7 @@ public class AuditingMetadataTest {
         final var auditedEntity_a3t_1_metadata = generator.forEntity(AuditedEntity_a3t_1.class);
 
         final var auditPropertyNames = Stream.of("key", "date1", "bool1", "str1")
-                .map("a3t_"::concat)
+                .map(AuditUtils::auditPropertyName)
                 .collect(toSet());
 
         assertThat(auditedEntity_a3t_1_metadata.properties())
@@ -46,11 +50,11 @@ public class AuditingMetadataTest {
         final var auditedEntity_a3t_1_metadata = generator.forEntity(AuditedEntity_a3t_2.class);
 
         final var activeAuditPropertyNames = Stream.of("key", "date1", "bool1", "str2")
-                .map("a3t_"::concat)
+                .map(AuditUtils::auditPropertyName)
                 .collect(toSet());
 
         final var inactiveAuditPropertyNames = Stream.of("str1")
-                .map("a3t_"::concat)
+                .map(AuditUtils::auditPropertyName)
                 .collect(toSet());
 
         assertThat(auditedEntity_a3t_1_metadata.properties())
@@ -67,11 +71,11 @@ public class AuditingMetadataTest {
         final var synAuditMetadata = generator.forEntity(ReAuditedEntity_a3t.class);
 
         final var activeAuditPropertyNames = Stream.of("key", "date1", "bool1", "str2")
-                .map("a3t_"::concat)
+                .map(AuditUtils::auditPropertyName)
                 .collect(toSet());
 
         final var inactiveAuditPropertyNames = Stream.of("str1")
-                .map("a3t_"::concat)
+                .map(AuditUtils::auditPropertyName)
                 .collect(toSet());
 
         assertThat(synAuditMetadata.properties())

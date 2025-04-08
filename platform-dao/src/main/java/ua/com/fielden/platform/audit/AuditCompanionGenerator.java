@@ -11,8 +11,8 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 /**
- * Generated companions should always be based on the original entity type. If an instrumented entity type is provided,
- * its original type should be used.
+ * Generated companions should always be based on the original entity type.
+ * If an instrumented entity type is provided, its original type should be used.
  */
 @Singleton
 final class AuditCompanionGenerator implements IAuditCompanionGenerator {

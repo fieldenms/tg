@@ -11,8 +11,7 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import java.util.Objects;
-
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.exceptions.NoSuchPropertyException.noSuchPropertyException;
 
@@ -33,10 +32,6 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>>
 
     private IDomainMetadata domainMetadata;
 
-    protected CommonAuditPropDao() {
-        super();
-    }
-
     @Inject
     protected void init(
             final AuditingMode auditingMode,
@@ -51,13 +46,13 @@ public abstract class CommonAuditPropDao<E extends AbstractEntity<?>>
         final var navigator = auditTypeFinder.navigateAuditProp(getEntityType());
         auditEntityType = navigator.auditEntityType();
         synAuditEntityType = navigator.synAuditEntityType();
-
     }
 
     @Override
     public AbstractAuditProp<E> newAuditProp(final AbstractAuditEntity<E> auditEntity, final CharSequence property) {
         if (!(auditEntity.isPersisted() && !auditEntity.isDirty())) {
-            throw new InvalidArgumentException("Audit-entity must be persisted and non-dirty.");
+            throw new InvalidArgumentException(format("Audit-entity [%s]@[%s] must be persisted and non-dirty.",
+                                                      auditEntity, auditEntity.getType().getSimpleName()));
         }
         if (domainMetadata.forPropertyOpt(auditEntityType, property).isEmpty()) {
             throw noSuchPropertyException(auditEntityType, property);

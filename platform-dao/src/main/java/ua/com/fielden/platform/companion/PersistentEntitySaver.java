@@ -109,6 +109,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
     private final FindEntityById<T> findById;
     private final Function<EntityResultQueryModel<T>, Boolean> entityExists;
+    private final boolean audited;
     private final Lazy<Auditor<T>> lazyAuditor;
 
     private Boolean targetEntityTypeHasValidateOverridden;
@@ -132,7 +133,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final IUniversalConstants universalConstants,
             final ICompanionObjectFinder coFinder,
             final IDomainMetadata domainMetadata,
-            final IAuditTypeFinder a3tFinder,
+            final IAuditTypeFinder auditTypeFinder,
             final AuditingMode auditingMode)
     {
         this.session = session;
@@ -150,7 +151,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.now = universalConstants::now;
         this.coFinder = coFinder;
         this.domainMetadata = domainMetadata;
-        this.lazyAuditor = lazySupplier(() -> makeAuditor(entityType, auditingMode, a3tFinder, coFinder));
+        this.audited = auditingMode == AuditingMode.ENABLED && isAudited(entityType);
+        this.lazyAuditor = lazySupplier(() -> makeAuditor(entityType, audited, auditTypeFinder, coFinder));
     }
 
     @ImplementedBy(FactoryImpl.class)
@@ -237,7 +239,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }).collect(toSet());
 
         // Auditing requires an audited entity to be refetched so that audit records can be created.
-        final boolean reallySkipRefetching = skipRefetching && !isAudited(entityType);
+        final boolean reallySkipRefetching = skipRefetching && !audited;
 
         final T2<Long, T> savedEntityAndId;
         // let's try to save entity
@@ -285,13 +287,13 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
     private static <E extends AbstractEntity<?>> Auditor<E> makeAuditor(
             final Class<E> entityType,
-            final AuditingMode auditingMode,
-            final IAuditTypeFinder a3tFinder,
+            final boolean audited,
+            final IAuditTypeFinder auditTypeFinder,
             final ICompanionObjectFinder coFinder)
     {
-        if (auditingMode == AuditingMode.ENABLED && isAudited(entityType)) {
+        if (audited) {
             // Performance benefit: the companion is created only once.
-            final ISynAuditEntityDao<E> coSynAudit = coFinder.find(a3tFinder.navigate(entityType).synAuditEntityType());
+            final ISynAuditEntityDao<E> coSynAudit = coFinder.find(auditTypeFinder.navigate(entityType).synAuditEntityType());
             return coSynAudit::audit;
         }
         else {
@@ -827,7 +829,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         private final IUniversalConstants universalConstants;
         private final ICompanionObjectFinder coFinder;
         private final IDomainMetadata domainMetadata;
-        private final IAuditTypeFinder a3tFinder;
+        private final IAuditTypeFinder auditTypeFinder;
         private final AuditingMode auditingMode;
 
         @Inject
@@ -837,7 +839,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     final IUniversalConstants universalConstants,
                     final ICompanionObjectFinder coFinder,
                     final IDomainMetadata domainMetadata,
-                    final IAuditTypeFinder a3tFinder,
+                    final IAuditTypeFinder auditTypeFinder,
                     final AuditingMode auditingMode)
         {
             this.dbVersionProvider = dbVersionProvider;
@@ -846,7 +848,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             this.universalConstants = universalConstants;
             this.coFinder = coFinder;
             this.domainMetadata = domainMetadata;
-            this.a3tFinder = a3tFinder;
+            this.auditTypeFinder = auditTypeFinder;
             this.auditingMode = auditingMode;
         }
 
@@ -864,7 +866,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return new PersistentEntitySaver<>(session, transactionGuid, entityType, keyType, processAfterSaveEvent,
                                                assignBeforeSave, findById, entityExists, logger,
                                                dbVersionProvider, entityFetcher, userProvider, universalConstants,
-                                               coFinder, domainMetadata, a3tFinder, auditingMode);
+                                               coFinder, domainMetadata, auditTypeFinder, auditingMode);
         }
     }
 

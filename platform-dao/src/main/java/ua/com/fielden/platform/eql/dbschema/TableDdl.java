@@ -11,8 +11,8 @@ import ua.com.fielden.platform.persistence.HibernateHelpers;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 import java.lang.reflect.Field;
-import java.util.Optional;
 import java.util.*;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,15 +59,14 @@ public class TableDdl {
     private static Map<String, ColumnDefinition> populateColumns(final ColumnDefinitionExtractor columnDefinitionExtractor, final Class<? extends AbstractEntity<?>> entityType) {
         final var columns = ImmutableMap.<String, ColumnDefinition> builder();
 
-        columns.put(ID, columnDefinitionExtractor.extractIdProperty(entityType
-        ));
+        columns.put(ID, columnDefinitionExtractor.extractIdProperty(entityType));
 
         columnDefinitionExtractor.extractSimpleKeyProperty(entityType).ifPresent(colDef -> columns.put(KEY, colDef));
 
         columns.put(VERSION, columnDefinitionExtractor.extractVersionProperty(entityType));
 
         for (final Field propField : findRealProperties(entityType, MapTo.class)) {
-            if (!shouldIgnore(propField, entityType)) {
+            if (!shouldIgnore(propField)) {
                 final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propField.getName());
                 final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, entityType, propField.getName());
                 final PersistentType persistedType = getPropertyAnnotation(PersistentType.class, entityType, propField.getName());
@@ -81,7 +80,7 @@ public class TableDdl {
         return columns.buildOrThrow();
     }
 
-    private static boolean shouldIgnore(final Field propField, final Class<? extends AbstractEntity<?>> entityType) {
+    private static boolean shouldIgnore(final Field propField) {
         return KEY.equals(propField.getName());
     }
 

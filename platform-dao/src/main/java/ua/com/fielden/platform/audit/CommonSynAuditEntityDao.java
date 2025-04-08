@@ -38,7 +38,6 @@ public abstract class CommonSynAuditEntityDao<E extends AbstractEntity<?>>
 
     private static final String ERR_AUDIT_RECORD_DOES_NOT_EXIST = "Audit record does not exist for entity [%s] with ID=%s, version=%s.";
 
-
     // All fields below are effectively final, but cannot be declared so due to late initialisation.
 
     private IDomainMetadata domainMetadata;

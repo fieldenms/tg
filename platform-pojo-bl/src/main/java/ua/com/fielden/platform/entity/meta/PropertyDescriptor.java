@@ -165,7 +165,7 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
     }
 
     /** A convenient factory method, which instantiates property descriptor from its toString representation. */
-    public static <T extends AbstractEntity<?>> PropertyDescriptor<T> fromString(final String toStringRepresentation, final Optional<EntityFactory> factory) {
+    public static <T extends AbstractEntity<?>> PropertyDescriptor<T> fromString(final String toStringRepresentation, final Optional<EntityFactory> maybeFactory) {
         try {
             final String[] parts = toStringRepresentation.split(":");
             final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
@@ -177,12 +177,12 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             // which will cause an error during retrieval with EQL. To prevent this, let's always use a non-blank title.
             final String propTitle = nonBlankPropertyTitle(propertyName, entityType);
 
-            final PropertyDescriptor<T> inst = (PropertyDescriptor<T>) factory.map(f -> f.newByKey(PropertyDescriptor.class, propTitle)).orElse(new PropertyDescriptor<>());
-            inst.setKey(propTitle);
-            inst.setDesc(getTitleAndDesc(propertyName, entityType).getValue());
-            inst.entityType = entityType;
-            inst.propertyName = propertyName;
-            return inst;
+            final PropertyDescriptor<T> pd = maybeFactory.map(f -> f.newByKey(PropertyDescriptor.class, propTitle)).orElseGet(PropertyDescriptor<T>::new);
+            pd.setKey(propTitle);
+            pd.setDesc(getTitleAndDesc(propertyName, entityType).getValue());
+            pd.entityType = entityType;
+            pd.propertyName = propertyName;
+            return pd;
         } catch (final Exception ex) {
             final String msg = format(ERR_COULD_NOT_BE_CREATED, toStringRepresentation);
             LOGGER.error(msg, ex);

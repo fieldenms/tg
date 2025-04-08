@@ -4,7 +4,6 @@ package ua.com.fielden.platform.audit;
  * Modes of auditing that an application can use.
  * <p>
  * The standard mode is {@link #ENABLED}.
- * Other modes can be used by installing an IoC module obtained from {@link AuditingIocModule#withAuditingMode(AuditingMode)}.
  * <p>
  * Auditing facilities should document their behaviour that depends on the active mode.
  */
