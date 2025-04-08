@@ -51,8 +51,9 @@ public class PersistentEntityInfoProducer extends DefaultEntityProducerWithConte
                 throw new InvalidStateException(ERR_NOT_SUITABLE_ENTITY.formatted(currEntity.getType().getSimpleName()));
             }
         }
+        // This happens when the entity master gets closed.
         else {
-            throw new InvalidStateException(ERR_MISSING_ENTITY);
+            return super.provideDefaultValues(entity);
         }
     }
 
