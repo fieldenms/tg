@@ -1,24 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
-import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
-import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
@@ -36,6 +18,20 @@ import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
+import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 
 /**
  * This utility class contains additional methods applicable to {@link CentreUpdater}.
@@ -242,14 +238,14 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * Finds optional configuration for {@code uuid}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
      */
     public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final EntityCentreConfigCo eccCompanion) {
-        return findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, surrogateName)), uuid, eccCompanion);
+        return findConfigOptByUuid(centreConfigQueryFor(miType, device, surrogateName), uuid, eccCompanion);
     }
     
     /**
      * Finds optional configuration for {@code uuid}, {@code user}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
      */
     public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final EntityCentreConfigCo eccCompanion) {
-        return findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, surrogateName)), uuid, eccCompanion);
+        return findConfigOptByUuid(centreConfigQueryFor(user, miType, device, surrogateName), uuid, eccCompanion);
     }
     
     /**
