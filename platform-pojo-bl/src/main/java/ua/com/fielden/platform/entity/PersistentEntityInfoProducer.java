@@ -18,7 +18,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentWithAuditDat
 public class PersistentEntityInfoProducer extends DefaultEntityProducerWithContext<PersistentEntityInfo> {
 
     public static final String ERR_NOT_SUITABLE_ENTITY = "Current entity [%s] does not have the versioning info.";
-    public static final String ERR_MISSING_ENTITY = "Context is missing the current entity.";
 
     @Inject
     public PersistentEntityInfoProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
