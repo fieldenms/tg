@@ -165,6 +165,22 @@ public class MiscUtilities {
         return properties;
     }
 
+    /// Left-biased union of properties.
+    public static Properties propertiesUnionLeft(final Properties left, final Properties right) {
+        if (left.isEmpty()) {
+            return right;
+        }
+        if (right.isEmpty()) {
+            return right;
+        }
+        else {
+            final var result = new Properties();
+            result.putAll(right);
+            result.putAll(left);
+            return result;
+        }
+    }
+
     /**
      * Returns a function accepting a format string and returning that string formatted with {@code args}.
      * <p>

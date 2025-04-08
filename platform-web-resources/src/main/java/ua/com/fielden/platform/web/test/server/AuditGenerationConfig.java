@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_MODE;
 import static ua.com.fielden.platform.audit.AuditingIocModule.AUDIT_PATH;
+import static ua.com.fielden.platform.utils.MiscUtilities.propertiesUnionLeft;
 
 /**
  * Configures the test application to enable generation of audit types.
@@ -24,21 +25,24 @@ public final class AuditGenerationConfig implements IDomainDrivenTestCaseConfigu
     public AuditGenerationConfig(final Properties props) {
         try {
             // application properties
-            props.setProperty("app.name", "TG Test App");
-            props.setProperty("reports.path", "");
-            props.setProperty("domain.path", "../platform-pojo-bl/target/classes");
-            props.setProperty("domain.package", "ua.com.fielden.platform.sample.domain");
-            props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
-            props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
-            props.setProperty(AUDIT_PATH, "../platform-pojo-bl/target/classes");
-            props.setProperty(AUDIT_MODE, AuditingMode.GENERATION.name());
-            props.setProperty("workflow", "development");
-            props.setProperty("email.smtp", "localhost");
-            props.setProperty("email.fromAddress", "tg@localhost");
+            final var defaultProps = new Properties();
+            defaultProps.setProperty("app.name", "TG Test App");
+            defaultProps.setProperty("reports.path", "");
+            defaultProps.setProperty("domain.path", "../platform-pojo-bl/target/classes");
+            defaultProps.setProperty("domain.package", "ua.com.fielden.platform.sample.domain");
+            defaultProps.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
+            defaultProps.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
+            defaultProps.setProperty(AUDIT_PATH, "../platform-pojo-bl/target/classes");
+            defaultProps.setProperty(AUDIT_MODE, AuditingMode.GENERATION.name());
+            defaultProps.setProperty("workflow", "development");
+            defaultProps.setProperty("email.smtp", "localhost");
+            defaultProps.setProperty("email.fromAddress", "tg@localhost");
+
+            final var finalProps = propertiesUnionLeft(props, defaultProps);
 
             final var appDomain = new ApplicationDomain();
             injector = new ApplicationInjectorFactory()
-                    .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), props))
+                    .add(new TgTestApplicationServerIocModule(appDomain, appDomain.domainTypes(), finalProps))
                     .add(new NewUserEmailNotifierTestIocModule())
                     .add(new DataFilterTestIocModule())
                     .getInjector();
