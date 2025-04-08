@@ -681,13 +681,13 @@ public class EntityUtils {
         }
     }
 
-    /**
-     * Determines whether the provided entity type represents a persistent entity and has audit information like created/updated*.
-     * This type should extend {@link AbstractPersistentEntity}.
-     *
-     * @param type
-     * @return
-     */
+    ///
+    /// Determines whether the provided entity type represents a persistent entity and has versioning information like created/updated, version, etc.
+    /// This type should extend [AbstractPersistentEntity].
+    ///
+    /// @param type
+    /// @return
+    ///
     public static boolean isPersistentWithAuditData(@Nullable final Class<?> type) {
         return isPersistentEntityType(type) && AbstractPersistentEntity.class.isAssignableFrom(type);
     }

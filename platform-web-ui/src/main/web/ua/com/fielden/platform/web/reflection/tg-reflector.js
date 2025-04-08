@@ -875,7 +875,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
-     * Returns 'true' if the entity type represents a persistent entity and contains audit data like created/update*, version etc.
+     * Returns 'true' if the entity type represents a persistent entity and contains versioning information like created/updated, version, etc.
      *
      */
     EntityType.prototype.isPersistentWithAuditData = function () {
