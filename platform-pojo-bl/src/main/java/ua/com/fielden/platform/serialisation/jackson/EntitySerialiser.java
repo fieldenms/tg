@@ -129,6 +129,8 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(type)) {
             entityTypeInfo.set_compoundMenuItem(true);
         }
+        // Only set to non-'null' value for specific types having base type.
+        // 'null' values will not be serialised as a JSON properties in a type table.
         entityTypeInfo.set_baseType(getBaseType(type).map(Class::getName).orElse(null));
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
