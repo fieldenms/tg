@@ -7,11 +7,15 @@ import ua.com.fielden.platform.utils.Pair;
 
 import java.util.Date;
 
-/**
- * A functional entity that stores information about the persistent entity (including details about who created or updated it and when).
- *
- * @author TG Team
- */
+///
+/// An action-entity that is used to retrieve and represent a persistent versioning information about an entity that extends [AbstractPersistentEntity].
+/// The actual data retrieval is implemented in [PersistentEntityInfoProducer].
+///
+/// #### Refactoring considerations
+/// Note that the full name of this class is used in the JavaScript code.
+/// For example, in `platform-web-ui/src/main/web/ua/com/fielden/platform/web/master/tg-entity-master-template-behavior.js`.
+/// Extra care should be taken when renaming.
+///
 @EntityTitle("Persistent Entity Audit Data")
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(PersistentEntityInfoCo.class)

@@ -2,20 +2,23 @@ package ua.com.fielden.platform.entity;
 
 import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentWithAuditData;
 
-/**
- * Producer of {@link PersistentEntityInfo} that initialises audit information for entity that is in the context for this producer.
- */
+///
+/// Producer of {@link PersistentEntityInfo} that retrieve the versioning information for an entity that is passed as the "current entity" in the context.
+///
 public class PersistentEntityInfoProducer extends DefaultEntityProducerWithContext<PersistentEntityInfo> {
+
+    public static final String ERR_NOT_SUITABLE_ENTITY = "Current entity [%s] does not have the versioning info.";
+    public static final String ERR_MISSING_ENTITY = "Context is missing the current entity.";
 
     @Inject
     public PersistentEntityInfoProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -42,9 +45,15 @@ public class PersistentEntityInfoProducer extends DefaultEntityProducerWithConte
                         .setLastUpdatedBy(entityWithInfo.getLastUpdatedBy())
                         .setLastUpdatedDate(entityWithInfo.getLastUpdatedDate())
                         .setEntityTitle(isEmpty(entityWithInfo.getDesc()) ? "%s".formatted(entityWithInfo.getKey()) : "%s: %s".formatted(entityWithInfo.getKey(), entityWithInfo.getDesc()));
+                return super.provideDefaultValues(entity);
+            }
+            else {
+                throw new InvalidStateException(ERR_NOT_SUITABLE_ENTITY.formatted(currEntity.getType().getSimpleName()));
             }
         }
-        return super.provideDefaultValues(entity);
+        else {
+            throw new InvalidStateException(ERR_MISSING_ENTITY);
+        }
     }
 
 }
