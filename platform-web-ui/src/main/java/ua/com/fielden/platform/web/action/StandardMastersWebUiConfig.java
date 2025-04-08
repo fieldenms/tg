@@ -29,12 +29,9 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
 
-/**
- * A set of factory methods for various standard platform-level entity masters such as Export to Excel.
- *
- * @author TG Team
- *
- */
+///
+/// A set of factory methods for various standard platform-level entity masters such as Export to Excel.
+///
 public class StandardMastersWebUiConfig {
     public static final int MASTER_ACTION_DEFAULT_WIDTH = 80;
     public static final String MASTER_ACTION_CUSTOM_SPECIFICATION = "'margin: 10px', 'width: %spx'";
@@ -131,12 +128,12 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(AttachmentsUploadAction.class, AttachmentsUploadActionProducer.class, masterConfig, injector);
     }
 
-    /**
-     * Creates entity master configuration for {@link PersistentEntityInfo} entity.
-     *
-     * @param injector
-     * @return
-     */
+    ///
+    /// Creates an entity master configuration for {@link PersistentEntityInfo}.
+    ///
+    /// @param injector
+    /// @return
+    ///
     public static EntityMaster<PersistentEntityInfo> createPersistentEntityInfoMaster(final Injector injector) {
         final String desktopLayout = cell(cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).repeat(3),layout().withStyle("padding", MARGIN_PIX).end()).toString();
         final String mobileLayout = cell(cell().repeat(6),layout().withStyle("padding", MARGIN_PIX).end()).toString();
@@ -151,7 +148,8 @@ public class StandardMastersWebUiConfig {
                 .addProp("entityVersion").asInteger()
                 .also()
                 .addAction(MasterActions.REFRESH)
-                /*      */.shortDesc("Close").longDesc("Closes the dialog")
+                    .shortDesc("Close")
+                    .longDesc("Closes the dialog.")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster(1, MASTER_ACTION_DEFAULT_WIDTH))
                 .setLayoutFor(DESKTOP, Optional.empty(), desktopLayout)
                 .setLayoutFor(TABLET, Optional.empty(), desktopLayout)
