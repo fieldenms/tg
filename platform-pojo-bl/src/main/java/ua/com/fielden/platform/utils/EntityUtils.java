@@ -794,6 +794,14 @@ public class EntityUtils {
         if (!isSyntheticEntityType(type)) {
             return false;
         }
+        return getBasePersistentTypeOpt(type).isPresent();
+    }
+
+    /**
+     * Returns base persistent type in a hierarchy of {@code type}, if any.
+     */
+    @SuppressWarnings("unchecked")
+    private static Optional<Class<? extends AbstractEntity<?>>> getBasePersistentTypeOpt(final Class<? extends AbstractEntity<?>> type) {
         // Let's traverse the type hierarchy to identify if there is a persistent super type...
         // Such traversal is now required because generation of new types extends the original type.
         // And so, there can be situations where a generated type has a synthetic-based-on-persistent type as its super type, and also needs to be recognised as being synthetic-based-on-persistent.
@@ -801,11 +809,11 @@ public class EntityUtils {
         Class<?> superType = type.getSuperclass();
         while (superType != AbstractEntity.class) {
             if (isPersistentEntityType(superType)) {
-                return true;
+                return Optional.of((Class<? extends AbstractEntity<?>>) superType);
             }
             superType = superType.getSuperclass();
         }
-        return false;
+        return Optional.empty();
     }
 
     /**
@@ -1105,7 +1113,10 @@ public class EntityUtils {
     }
 
     /**
-     * Returns a non-empty result if {@code type} has a composite key with a single, entity-typed member.
+     * Returns a non-empty pair of [key; relative name] if {@code type} has a key with a single, entity-typed member.
+     * This is applicable to both composite types [single entity-typed key] and non-composite [entity-typed keys] types (one-2-one).
+     * <p>
+     * Returns empty {@link Optional} otherwise.
      */
     @SuppressWarnings("unchecked")
     public static Optional<T2<Class<? extends AbstractEntity<?>>, String>> getSingleMemberOfEntityType(final Class<? extends AbstractEntity<?>> type) {
@@ -1121,12 +1132,13 @@ public class EntityUtils {
     }
 
     /**
-     * Returns a non-empty result if {@code type} is a synthetic entity that is based on some persistent entity type.
+     * Returns a non-empty base type if {@code type} is a synthetic, that is based on some persistent entity type.
+     * Returns empty {@link Optional} otherwise.
      */
     @SuppressWarnings("unchecked")
     public static Optional<Class<? extends AbstractEntity<?>>> getBaseTypeForSyntheticEntity(final Class<? extends AbstractEntity<?>> type) {
         if (isSyntheticBasedOnPersistentEntityType(type)) {
-            return Optional.of((Class<? extends AbstractEntity<?>>) type.getSuperclass());
+            return getBasePersistentTypeOpt(type);
         }
         return Optional.empty();
     }
