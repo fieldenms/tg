@@ -32,26 +32,26 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
     @Inject @Named("attachments.allowlist")
     private String attachmentsAllowlist;
 
-    private final String plainTextFileName = "!readme.txt";
-    private final String phpTextFileName = "exploit.php";
-    private final String phpZipTextFileName = phpTextFileName + ".zip";
-    private final String phpZipProtectedTextFileName = phpTextFileName + ".protected.zip";
-    private final String phpGZipTextFileName = phpTextFileName + ".gz";
-    private final String phpTarTextFileName = phpTextFileName + ".tar";
-    private final String phpGZipTarTextFileName = phpTextFileName + ".tar.gz";
-    private final String phpDblExtTextFileName = phpTextFileName + ".txt";
-    private final String phpWrongExtTextFileName = "exploit.php5";
-    private final String pythonTextFileName = "script.py";
-    private final String perlTextFileName = "script.pl";
-    private final String perlDblExtTextFileName = perlTextFileName + ".txt";
-    private final String rubyTextFileName = "script.rb";
-    private final String bashTextFileName = "script.sh";
-    private final String bashDblExtTextFileName = bashTextFileName + ".txt";
-    private final String docsFileName = "document.docx";
-    private final String pdfFileName = "document.pdf";
-    private final String zipArchiveFileName = "archive.zip";
-    private final String tarWithPlainAndPhpFileName = "plain+php.tar";
-    private final String tarWithPlainAndPdfFileName = "plain+pdf.tar";
+    private static final String plainTextFileName = "!readme.txt";
+    private static final String phpTextFileName = "exploit.php";
+    private static final String phpZipTextFileName = phpTextFileName + ".zip";
+    private static final String phpZipProtectedTextFileName = phpTextFileName + ".protected.zip";
+    private static final String phpGZipTextFileName = phpTextFileName + ".gz";
+    private static final String phpTarTextFileName = phpTextFileName + ".tar";
+    private static final String phpGZipTarTextFileName = phpTextFileName + ".tar.gz";
+    private static final String phpDblExtTextFileName = phpTextFileName + ".txt";
+    private static final String phpWrongExtTextFileName = "exploit.php5";
+    private static final String pythonTextFileName = "script.py";
+    private static final String perlTextFileName = "script.pl";
+    private static final String perlDblExtTextFileName = perlTextFileName + ".txt";
+    private static final String rubyTextFileName = "script.rb";
+    private static final String bashTextFileName = "script.sh";
+    private static final String bashDblExtTextFileName = bashTextFileName + ".txt";
+    private static final String docsFileName = "document.docx";
+    private static final String pdfFileName = "document.pdf";
+    private static final String zipArchiveFileName = "archive.zip";
+    private static final String tarWithPlainAndPhpFileName = "plain+php.tar";
+    private static final String tarWithPlainAndPdfFileName = "plain+pdf.tar";
 
     @Test
     public void allowlist_is_formed_correctly_from_application_properties() {

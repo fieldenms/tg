@@ -97,11 +97,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             this.jobUid = request.getHeaders().getFirstValue("jobUid", /*ignore case*/ true);
             this.sseUid = request.getHeaders().getFirstValue("sseUid", /*ignore case*/ true);
             this.user = userProvider.getUser();
-            try {
-                this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8.toString());
-            } catch (final UnsupportedEncodingException ex) {
-                throw new IllegalArgumentException("Could not decode the value for origFileName.", ex);
-            }
+            this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8);
             this.mimeAsProvided = request.getHeaders().getFirstValue("mime", /*ignore case*/ true);
 
             final long lastModified = Long.parseLong(request.getHeaders().getFirstValue("lastModified", /*ignore case*/ true));

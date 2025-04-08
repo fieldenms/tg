@@ -333,6 +333,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         LOGGER.info("\tPopulating GraphQL data...");
         populateGraphQlData();
 
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY1").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY1</p>")).setDesc("rich text desc 1"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY2").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY2</p>")).setDesc("rich text desc 2"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY3").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY3</p>")).setDesc("rich text desc 3"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY4").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY4</p>")).setDesc("rich text desc 4"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY5</p>")).setDesc("rich text desc 5"));
+        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY6").setRichTextProp(fromHtml("hello world")).setDesc("rich text desc 6")); // deliberate value without paragraph tags to induce Toast UI transformation; used to test SAVE disablement
 
         try {
             final ISecurityTokenProvider provider = config.getInstance(ISecurityTokenProvider.class); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
@@ -347,13 +353,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
-
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY1").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY1</p>")).setDesc("rich text desc 1"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY2").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY2</p>")).setDesc("rich text desc 2"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY3").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY3</p>")).setDesc("rich text desc 3"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY4").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY4</p>")).setDesc("rich text desc 4"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY5</p>")).setDesc("rich text desc 5"));
-        save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY6").setRichTextProp(fromHtml("hello world")).setDesc("rich text desc 6")); // deliberate value without paragraph tags to induce Toast UI transformation; used to test SAVE disablement
     }
 
     private void populateGraphQlData() {

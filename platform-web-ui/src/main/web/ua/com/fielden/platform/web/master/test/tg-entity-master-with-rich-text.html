@@ -66,11 +66,11 @@
             });
             
             test('works for new persisted entity', function(done) {
-                master.entityId = '216';
+                master.entityId = '141';
                 
                 master.postRetrieved = function(entity, bindingEntity, customObject) {
                     assert.strictEqual(entity.type().fullClassName(), 'ua.com.fielden.platform.sample.domain.TgEntityWithRichTextProp', 'The type of entity is not correct.');
-                    assert.strictEqual(entity.get('id'), 216, 'The id of entity is not correct.');
+                    assert.strictEqual(entity.get('id'), 141, 'The id of entity is not correct.');
                     assert.strictEqual(entity.version, 0, 'The version of entity is not correct.');
 
                     // properties:
@@ -104,7 +104,7 @@
             });
 
             test('works for RichText property', function (done) {
-                master.entityId = '216';
+                master.entityId = '141';
                 const edProperty = master.$.editor_4_richTextProp;
 
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
@@ -155,7 +155,7 @@
             });
 
             test('gets failed for restricted RichText property tags', function (done) {
-                master.entityId = '216';
+                master.entityId = '141';
                 const edProperty = master.$.editor_4_richTextProp;
 
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {

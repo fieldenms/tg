@@ -91,6 +91,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_persistent(true);
         }
 
+        // let's inform the client of the type's persistence nature with audit data
+        if (isPersistentWithAuditData(type)) {
+            entityTypeInfo.set_persistentWithAudit(true);
+        }
+
         if (IContinuationData.class.isAssignableFrom(type)) {
             entityTypeInfo.set_continuation(true);
         }

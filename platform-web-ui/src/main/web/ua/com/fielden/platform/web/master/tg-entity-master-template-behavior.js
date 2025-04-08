@@ -36,6 +36,28 @@ const TgEntityMasterTemplateBehaviorImpl = {
                 action.shortDesc = reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle() + " Master Help";
             }
         };
+
+        self._tgOpenPersistentEntityInfoMasterAttrs = {
+            entityType: "ua.com.fielden.platform.entity.PersistentEntityInfo", 
+            currentState: 'EDIT', 
+            centreUuid: self.uuid
+        };
+
+        self._currentEntityForPersistentEntityInfo = function() {
+            return () => self._currEntity;
+        };
+
+        self._isPersistentEntityWithAuditData = function(_currEntity) {
+            return _currEntity && _currEntity.type().isPersistentWithAuditData();
+        };
+
+        self._isEntityPersisted = function(_currEntity) {
+            return _currEntity && _currEntity.get("id") !== null;
+        };
+
+        self._modifyAuditInfoFunctionalEntity = function (bindingEntity, master, action) {
+            master.fire('tg-dynamic-title-changed', bindingEntity["@@origin"]["entityTitle"]);
+        }
     },
 
     attached: function () {
