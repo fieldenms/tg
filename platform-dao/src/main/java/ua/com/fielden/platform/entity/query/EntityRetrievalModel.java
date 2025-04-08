@@ -488,7 +488,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                             if (propMetadataUtils.isPropEntityType(propType, EntityMetadata::isUnion)) {
                                 with(propName, fetchAll(et.javaType()));
                             }
-                            // Simple entity-typed key
+                            // Simple entity-typed key, where entity-type represents the left side of a one-2-one relationship.
                             else if (propName.equals(KEY)) {
                                 with(propName, fetchKeyAndDescOnly(et.javaType()));
                             }
