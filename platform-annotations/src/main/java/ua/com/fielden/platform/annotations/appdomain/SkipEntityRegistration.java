@@ -6,11 +6,7 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.CLASS;
 
-/**
- * Annotation that indicates that an entity type should not be registered with {@code ApplicationDomain}.
- *
- * @see ApplicationDomainProcessor
- */
+/// Annotates an entity type to indicate that it should not be registered, i.e., should not be included in `ApplictionDomain` by the annotation processor.
 @Retention(CLASS)
 @Target(TYPE)
 public @interface SkipEntityRegistration {
