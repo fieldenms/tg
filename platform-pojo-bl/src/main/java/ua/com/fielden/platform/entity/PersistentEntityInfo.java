@@ -16,7 +16,7 @@ import java.util.Date;
 /// For example, in `platform-web-ui/src/main/web/ua/com/fielden/platform/web/master/tg-entity-master-template-behavior.js`.
 /// Extra care should be taken when renaming.
 ///
-@EntityTitle("Persistent Entity Audit Data")
+@EntityTitle("Persistent Entity Version Info")
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(PersistentEntityInfoCo.class)
 @KeyTitle("Persistent Entity ID")
