@@ -1,7 +1,0 @@
-# Cancel exclusion of target/generated-test-sources/audit/
-# This is achieved by also canceling the exclusion of each parent directory.
-!target/
-target/*
-!target/generated-test-sources/
-target/generated-test-sources/*
-!target/generated-test-sources/audit/
