@@ -32,7 +32,6 @@ import static java.util.Optional.of;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static ua.com.fielden.platform.audit.AuditUtils.isAuditEntityType;
-import static ua.com.fielden.platform.audit.AuditUtils.isAuditProperty;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.eql.dbschema.ColumnIndex.Order.ASC;
@@ -118,8 +117,7 @@ public class ColumnDefinitionExtractor {
         } else {
             if (hibType instanceof Type t) {
                 return ImmutableMap.of(propName,
-                                       new ColumnDefinition(unique, compositeKeyMemberOrder,
-                                                            isNullable(enclosingEntityType, propType, propName, required),
+                                       new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
                                                             length, scale, precision, mapTo.defaultValue(),
@@ -127,8 +125,7 @@ public class ColumnDefinitionExtractor {
                                                             dialect));
             } else if (hibType instanceof UserType t) {
                 return ImmutableMap.of(propName,
-                                       new ColumnDefinition(unique, compositeKeyMemberOrder,
-                                                            isNullable(enclosingEntityType, propType, propName, required),
+                                       new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                             columnName, propType,
                                                             jdbcSqlTypeFor(t),
                                                             length, scale, precision, mapTo.defaultValue(),
@@ -192,8 +189,7 @@ public class ColumnDefinitionExtractor {
                                                sMaybeIndex = maybeIndexFor(sType, sField.getType(), sName);
                                            }
 
-                                           return new ColumnDefinition(unique, compositeKeyMemberOrder,
-                                                                       isNullable(enclosingEntityType, propType, propName, required),
+                                           return new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
                                                                        sColumnName, sField.getType(), sSqlType,
                                                                        sLength, sScale, sPrecision,
                                                                        sMapTo.defaultValue(), sMaybeIndex, dialect);
@@ -221,15 +217,8 @@ public class ColumnDefinitionExtractor {
         }
     }
 
-    private boolean isNullable(
-            final Class<? extends AbstractEntity<?>> enclosingEntityType,
-            final Class<?> propType,
-            final CharSequence propertyName,
-            final boolean required)
-    {
-        return !required &&
-               (!boolean.class.isAssignableFrom(propType) && !Boolean.class.isAssignableFrom(propType)
-                || isAuditEntityType(enclosingEntityType) && isAuditProperty(propertyName));
+    private boolean isNullable(final Class<?> propType, final boolean required) {
+        return !required && !boolean.class.isAssignableFrom(propType) && !Boolean.class.isAssignableFrom(propType);
     }
     
     public ColumnDefinition extractVersionProperty(final Class<? extends AbstractEntity<?>> enclosingEntityType) {
