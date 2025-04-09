@@ -80,6 +80,20 @@ public class EntityType extends AbstractEntity<String> {
     @Title(value = "New Entity Master", desc = "Entity master data for new entity action")
     private MasterInfo _newEntityMaster;
 
+    @IsProperty
+    @Title(value = "Base Type", desc = "Represents base type for this synthetic-based-on-persistent / single-entity-key type (if it is of such kind, empty otherwise).")
+    private String _baseType;
+
+    @Observable
+    public EntityType set_baseType(final String value) {
+        this._baseType = value;
+        return this;
+    }
+
+    public String get_baseType() {
+        return _baseType;
+    }
+
     @Observable
     public EntityType set_newEntityMaster(final MasterInfo _newEntityMaster) {
         this._newEntityMaster = _newEntityMaster;
