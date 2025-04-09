@@ -11,6 +11,7 @@ import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.tokens.ISecurityTokenGenerator;
 import ua.com.fielden.platform.security.tokens.Template;
 import ua.com.fielden.platform.security.tokens.attachment.*;
+import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
@@ -113,7 +114,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 KeyNumber_CanRead_Token.class,
                 KeyNumber_CanReadModel_Token.class,
                 GraphiQL_CanExecute_Token.class,
-                UserDefinableHelp_CanSave_Token.class);
+                UserDefinableHelp_CanSave_Token.class,
+                PersistentEntityInfo_CanExecute_Token.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
         allTokens.addAll(platformLevelTokens);
         allTokens.addAll(extraTokens);
