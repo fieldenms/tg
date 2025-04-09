@@ -149,7 +149,7 @@ public class MasterInfoProvider {
                 // If none of the above yields anything, the constructed supplier returns {@code null}.
                 return getBaseTypeForSyntheticEntity(type)
                     .map(baseType -> buildConfiguredMasterActionInfo(webUiBuilder, baseType, relativePropertyName))
-                    .orElseGet(() -> getSingleMemberOfEntityType(type)
+                    .orElseGet(() -> maybeSingleKeyMemberOfEntityType(type)
                         .map(keyTypeName -> buildConfiguredMasterActionInfo(webUiBuilder, keyTypeName._1, keyTypeName._2))
                         .orElse(null));
             }
@@ -181,7 +181,7 @@ public class MasterInfoProvider {
                 // Tries to determine a master for {@code type} in case it is a synthetic type based on some entity that may have a master (e.g. the case of ReWorkActivity extending WorkActivity).
                 // If that fails, it tries to check if {@code type} is perhaps an entity with a single composite key member of an entity type that may have a master (e.g. the case of Manager with a single key member of type Person).
                 // If none of the above yields anything, the constructed supplier returns {@code null}.
-                return getBaseType(type)
+                return maybeBaseTypeForSyntheticEntityOrSingleKeyMemberEntityType(type)
                     .map(baseType -> buildConfiguredNewEntityMasterActionInfo(webUiBuilder, baseType))
                     .orElse(null);
             }

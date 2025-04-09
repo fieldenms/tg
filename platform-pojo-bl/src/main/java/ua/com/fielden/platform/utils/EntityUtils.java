@@ -1112,47 +1112,51 @@ public class EntityUtils {
                 .findAny();
     }
 
-    /**
-     * Returns a non-empty pair of [key; relative name] if {@code type} has a key with a single, entity-typed member.
-     * This is applicable to both composite types [single entity-typed key] and non-composite [entity-typed keys] types (one-2-one).
-     * <p>
-     * Returns empty {@link Optional} otherwise.
-     */
+    ///
+    /// Returns a tuple of `(key, relative name)`, if `type` has a key with a single, entity-typed member.
+    /// This is applicable to entities with composite keys that have a single entity-typed member, and entities representing one-2-one relationships.
+    ///
+    /// Returns empty [Optional] otherwise.
+    ///
     @SuppressWarnings("unchecked")
-    public static Optional<T2<Class<? extends AbstractEntity<?>>, String>> getSingleMemberOfEntityType(final Class<? extends AbstractEntity<?>> type) {
-        final List<Field> keyMembers = getKeyMembers(type);
+    public static Optional<T2<Class<? extends AbstractEntity<?>>, String>> maybeSingleKeyMemberOfEntityType(final Class<? extends AbstractEntity<?>> type) {
+        final var keyMembers = getKeyMembers(type);
         if (keyMembers.size() == 1) {
             if (isCompositeEntity(type)) {
-                return isEntityType(keyMembers.get(0).getType()) ? Optional.of(t2((Class<? extends AbstractEntity<?>>) keyMembers.get(0).getType(), keyMembers.get(0).getName())) : Optional.empty();
+                return isEntityType(keyMembers.getFirst().getType())
+                       ? Optional.of(t2((Class<? extends AbstractEntity<?>>) keyMembers.getFirst().getType(), keyMembers.getFirst().getName()))
+                       : Optional.empty();
             }
-            final Class<? extends Comparable<?>> keyType = getKeyType(type);
-            return isEntityType(keyType) ? Optional.of(t2((Class<? extends AbstractEntity<?>>) keyType, KEY)) : Optional.empty();
+            final var keyType = getKeyType(type);
+            return isEntityType(keyType)
+                   ? Optional.of(t2((Class<? extends AbstractEntity<?>>) keyType, KEY))
+                   : Optional.empty();
         }
         return Optional.empty();
     }
 
-    /**
-     * Returns a non-empty base type if {@code type} is a synthetic, that is based on some persistent entity type.
-     * Returns empty {@link Optional} otherwise.
-     */
-    @SuppressWarnings("unchecked")
+    ///
+    /// Returns a base type if `type` is synthetic, based on a persistent entity type.
+    ///
+    /// Returns empty [Optional] otherwise.
+    ///
     public static Optional<Class<? extends AbstractEntity<?>>> getBaseTypeForSyntheticEntity(final Class<? extends AbstractEntity<?>> type) {
-        if (isSyntheticBasedOnPersistentEntityType(type)) {
-            return getBasePersistentTypeOpt(type);
-        }
-        return Optional.empty();
+        return isSyntheticBasedOnPersistentEntityType(type)
+               ? getBasePersistentTypeOpt(type)
+               : Optional.empty();
     }
 
-    /**
-     * Returns base type for this synthetic-based-on-persistent / single-entity-key type (if it is of such kind, empty otherwise).
-     */
-    public static Optional<Class<? extends AbstractEntity<?>>> getBaseType(final Class<? extends AbstractEntity<?>> type) {
-        return ofNullable(
-            getBaseTypeForSyntheticEntity(type)
-            .orElseGet(() ->
-                getSingleMemberOfEntityType(type).map(t2 -> t2._1).orElse(null)
-            )
-        );
+    ///
+    /// If `type` is a synthetic-based-on-persistent, then returns its base type.
+    /// If `type` represents a one-2-one relationship or has a single entity-typed composite key member, then return that key's type.
+    ///
+    /// Returns empty [Optional] otherwise.
+    ///
+    public static Optional<Class<? extends AbstractEntity<?>>> maybeBaseTypeForSyntheticEntityOrSingleKeyMemberEntityType(final Class<? extends AbstractEntity<?>> type) {
+        final var baseTypeForSyntheticEntity = getBaseTypeForSyntheticEntity(type);
+        return baseTypeForSyntheticEntity.isPresent()
+               ? baseTypeForSyntheticEntity
+               : maybeSingleKeyMemberOfEntityType(type).map(t2 -> t2._1);
     }
 
     public static class BigDecimalWithTwoPlaces {

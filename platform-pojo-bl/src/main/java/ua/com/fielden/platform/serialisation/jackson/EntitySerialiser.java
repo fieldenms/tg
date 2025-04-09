@@ -131,7 +131,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         }
         // Only set to non-'null' value for specific types having base type.
         // 'null' values will not be serialised as a JSON properties in a type table.
-        entityTypeInfo.set_baseType(getBaseType(type).map(Class::getName).orElse(null));
+        entityTypeInfo.set_baseType(maybeBaseTypeForSyntheticEntityOrSingleKeyMemberEntityType(type).map(Class::getName).orElse(null));
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
             entityTypeInfo.set_entityTitle(entityTitleAndDesc.getKey());
