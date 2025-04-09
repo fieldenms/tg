@@ -24,7 +24,6 @@ import ua.com.fielden.platform.utils.Pair;
  * This is a helper class to retrieve classes for packages/jars etc.
  *
  * @author TG Team
- *
  */
 public class ClassesRetriever {
     private static final SecurityTokenClassLoader URL_CLASS_LOADER = new SecurityTokenClassLoader(ClassLoader.getSystemClassLoader());
@@ -36,8 +35,7 @@ public class ClassesRetriever {
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
-    private ClassesRetriever() {
-    }
+    private ClassesRetriever() {}
 
     /**
      * Registers a class so that it can be found with {@link #findClass(String)}.
@@ -49,19 +47,13 @@ public class ClassesRetriever {
     }
 
     /**
-     * Returns all classes in the specified package that is located on the path.
-     * The path might be a directory or *.jar archive according to condition specified by {@code typePredicate}.
+     * Returns all classes in the specified package that is located on the specified path.
+     * The path might be a directory or a JAR archive.
      *
-     * @param path
-     * @param packageName
-     * @param typePredicate – used to include only the types in the result, which satisfy the predicate.
-     * @return
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws Exception
+     * @param typePredicate  used to include only those types in the result that satisfy the predicate
      */
     public static List<Class<?>> getClassesInPackage(final String path, final String packageName, final Predicate<Class<?>> typePredicate) throws Exception {
-        final SortedSet<Class<?>> classes = new TreeSet<>((o1, o2) -> o1.getName().compareTo(o2.getName()));
+        final SortedSet<Class<?>> classes = new TreeSet<>(Comparator.comparing(Class::getName));
         final String packagePath = packageName.replace('.', '/');
         addPath(path.replace("%20", " "));
         if (path.indexOf(".jar") > 0) {

@@ -22,6 +22,8 @@ public final class AuditGenerationConfig implements IDomainDrivenTestCaseConfigu
 
     private final Injector injector;
 
+    /// Creates a configuration using the provided properties.
+    /// Some default properties are set by this constructor, but the provided ones take precedence.
     public AuditGenerationConfig(final Properties props) {
         try {
             // application properties

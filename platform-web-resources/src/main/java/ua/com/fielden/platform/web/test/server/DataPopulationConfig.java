@@ -23,7 +23,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     private final Injector injector;
 
     /// Creates a configuration using the provided properties.
-    /// Some default propeprties are set by this constructor, but the provided ones take precedence.
+    /// Some default properties are set by this constructor, but the provided ones take precedence.
     public DataPopulationConfig(final Properties props) {
         // instantiate all the factories and Hibernate utility
         try {

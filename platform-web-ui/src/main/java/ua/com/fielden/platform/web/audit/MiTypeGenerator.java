@@ -14,9 +14,7 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 
-/**
- * Generates Mi types (subclasses of {@link MiWithConfigurationSupport}) at runtime.
- */
+/// Generates Mi types (subclasses of [MiWithConfigurationSupport]).
 @Singleton
 final class MiTypeGenerator {
 

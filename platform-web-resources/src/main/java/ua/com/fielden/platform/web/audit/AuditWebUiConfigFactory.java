@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.audit;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -35,8 +36,10 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.*;
 import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
@@ -51,6 +54,8 @@ import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EXPORT_EMBEDDED_CENTRE_ACTION;
 
 final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
+
+    private static final Logger LOGGER = getLogger();
 
     private final IAuditTypeFinder auditTypeFinder;
     private final MiTypeGenerator miTypeGenerator;
@@ -155,11 +160,12 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
         final var layout = LayoutComposer.mkGridForCentre(4 + auditProperties.size(), 1);
 
         IAlsoCrit centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
-                .addTopAction(standardExportAction)
-                .also().addTopAction(standardSortAction)
+                .addTopAction(standardExportAction).also()
+                .addTopAction(standardSortAction)
 
                 .addCrit(AUDITED_ENTITY).asMulti().autocompleter(auditedType).also()
                 .addCrit(AUDIT_DATE).asRange().dateTime().also()
+                // TODO: Autocompletion can be improved by using only audit-properties.
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType)).also()
                 .addCrit(USER).asMulti().autocompleter(User.class);
 
@@ -221,6 +227,8 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
             return builder.addCrit(property.name()).asMulti().text();
         }
         else {
+            LOGGER.warn(() -> format("Audit-property [%s] will not be added to centre criteria. Unexpected property type [%s].",
+                                     property.name(), property.type().genericJavaType().getTypeName()));
             return null;
         }
     }
@@ -261,19 +269,5 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
         }
 
     }
-
-    // private static class ChangedPropsMatcher extends AbstractSearchPropertyDescriptorByKeyWithCentreContext {
-    //
-    //     @Override
-    //     public IValueMatcherWithCentreContext setContext(final CentreContext context) {
-    //         return null;
-    //     }
-    //
-    //     @Override
-    //     public void setFetch(final fetch fetchModel) {
-    //
-    //     }
-    //
-    // }
 
 }
