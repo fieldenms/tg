@@ -1,25 +1,26 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static org.restlet.data.MediaType.TEXT_HTML;
-import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
-
-import java.lang.management.ManagementFactory;
-
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+
+import java.io.ByteArrayInputStream;
+import java.lang.management.ManagementFactory;
+
+import static com.google.common.base.Charsets.UTF_8;
+import static org.restlet.data.MediaType.TEXT_HTML;
+import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
 /**
  * Responds to GET request with a generated application specific index resource (for desktop and mobile web apps).
@@ -68,6 +69,9 @@ public class AppIndexResource extends AbstractWebResource {
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
+        }
+        if (getReference().getRemainingPart().endsWith("?resources=true")) {
+            return encodedRepresentation(new ByteArrayInputStream(webResourceLoader.resourcesList().getBytes(UTF_8)), TEXT_HTML);
         }
         return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
     }

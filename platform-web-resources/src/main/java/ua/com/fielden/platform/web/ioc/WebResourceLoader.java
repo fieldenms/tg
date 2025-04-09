@@ -109,6 +109,11 @@ public class WebResourceLoader implements IWebResourceLoader {
         return webUiConfig.checksum(resourceURI);
     }
 
+    @Override
+    public String resourcesList() {
+        return webUiConfig.resourcesList();
+    }
+
     /**
      * Generates 'tg-reflector' resource with type table containing master configurations.
      *

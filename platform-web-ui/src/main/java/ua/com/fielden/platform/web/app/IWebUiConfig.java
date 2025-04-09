@@ -198,6 +198,11 @@ public interface IWebUiConfig extends IMenuRetriever {
     Optional<String> checksum(final String resourceURI);
 
     /**
+     * Loads list of '/resources/*' paths for deployment mode of an application.
+     */
+    String resourcesList();
+
+    /**
      * Returns true if server and client applications operate in the same time-zone, otherwise false.
      * The only exception is handling of 'now': it calculates based on real user time-zone (and later converts to server time-zone).
      *

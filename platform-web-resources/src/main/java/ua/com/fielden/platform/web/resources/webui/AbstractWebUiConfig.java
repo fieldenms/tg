@@ -51,6 +51,7 @@ import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -387,6 +388,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public Optional<String> checksum(final String resourceURI) {
         return ofNullable(checksums.get(resourceURI));
+    }
+
+    @Override
+    public String resourcesList() {
+        return checksums.keySet().stream()
+            .filter(path -> path.startsWith("/resources/"))
+            .collect(joining("|"));
     }
 
     @Override
