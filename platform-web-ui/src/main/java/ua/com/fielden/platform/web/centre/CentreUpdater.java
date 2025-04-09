@@ -8,7 +8,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -46,13 +45,13 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.valueOf;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.*;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.valueOf;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -576,7 +575,7 @@ public class CentreUpdater {
                     // find config creators not being equal to current user...
                     if (!notInheritedFromBaseUuids.isEmpty()) {
                         eccCompanion.getAllEntities(
-                            from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
+                            from(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME)
                                 .and().prop("configUuid").in().values(notInheritedFromBaseUuids.toArray())
                                 .and().prop("owner").ne().val(user)
                                 .and().begin() // we look only for shared configs; base user could have changed the title of base config already loaded by current user; so we need to look for ...
@@ -613,7 +612,7 @@ public class CentreUpdater {
                     if (!ownSaveAsUuids.isEmpty()) {
                         // find config creators for that uuids
                         final List<EntityCentreConfig> savedConfigsWithCreators = eccCompanion.getAllEntities(
-                            from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
+                            from(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME)
                                 .and().prop("configUuid").in().values(ownSaveAsUuids.toArray()).model()
                             )
                             .with(FETCH_CONFIG.with("configUuid").with("owner", fetch(User.class).with("key")))
@@ -650,7 +649,7 @@ public class CentreUpdater {
         return saveAsNameOpt -> {
             return saveAsNameOpt
                 .map(saveAsName -> modelFor(user, miType.getName(), NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device)))
-                .orElseGet(() -> eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)).model());
+                .orElseGet(() -> centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME).model());
         };
     }
     
@@ -667,7 +666,7 @@ public class CentreUpdater {
      */
     private static List<EntityCentreConfig> getAllPreferredConfigs(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME))
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)
             .and().prop("preferred").eq().val(true).model();
         final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").fetchModel();
         return eccCompanion.getAllEntities(from(queryForCurrentUser).with(fetch).model());
@@ -782,14 +781,11 @@ public class CentreUpdater {
      * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
      * @return
      */
-    static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
-        return dbVersion -> {
-            final String escapedOpeningBracket = DbVersion.MSSQL == dbVersion ? "[[]" : "["; // need to provide escaping for opening bracket to find records with [, see https://stackoverflow.com/questions/439495/how-can-i-escape-square-brackets-in-a-like-clause
-            return select(EntityCentreConfig.class).where()
-                .prop("title").like().val(deviceSpecific(surrogateName, device) + escapedOpeningBracket + "%")
-                .and().prop("title").notLike().val(deviceSpecific(surrogateName, opposite(device)) + escapedOpeningBracket + "%")
-                .and().prop("menuItem.key").eq().val(miType.getName());
-        };
+    static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+        return select(EntityCentreConfig.class).where()
+            .prop("title").like().val(deviceSpecific(surrogateName, device) + "[%")
+            .and().prop("title").notLike().val(deviceSpecific(surrogateName, opposite(device)) + "[%")
+            .and().prop("menuItem.key").eq().val(miType.getName());
     }
     
     /**
@@ -803,8 +799,8 @@ public class CentreUpdater {
      * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
      * @return
      */
-    static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
-        return dbVersion -> centreConfigQueryFor(miType, device, surrogateName).apply(dbVersion)
+    static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+        return centreConfigQueryFor(miType, device, surrogateName)
             .and().prop("owner").eq().val(user);
     }
     

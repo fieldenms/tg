@@ -845,6 +845,13 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
+     * Returns full class name for base type for this synthetic-based-on-persistent / single-entity-key type (if it is of such kind, the full class name of the type itself otherwise).
+     */
+    EntityType.prototype.baseType = function () {
+        return typeof this['_baseType'] === 'undefined' ? this.fullClassName() : this['_baseType'];
+    }
+
+    /**
      * Returns 'true' if the entity type represents menu item entity in compound master.
      *
      */
@@ -872,6 +879,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      */
     EntityType.prototype.isPersistent = function () {
         return typeof this['_persistent'] === 'undefined' ? false : this['_persistent'];
+    }
+
+    /**
+     * Returns 'true' if the entity type represents a persistent entity and contains versioning information like created/updated, version, etc.
+     *
+     */
+    EntityType.prototype.isPersistentWithAuditData = function () {
+        return typeof this['_persistentWithAudit'] === 'undefined' ? false : this['_persistentWithAudit'];
     }
 
     /**
@@ -1121,7 +1136,7 @@ const _equalsEx = function (value1, value2) {
     if (_isDynamicEntityKey(value1)) {
         return value1._dynamicEntityKeyEqualsTo(value2);
     } else if (_isEntity(value1)) {
-        return _entitiesEqualsEx(value1, value2);
+        return _entitiesEqualsEx(value1, value2, false);
     } else if (Array.isArray(value1)) {
         return _arraysEqualsEx(value1, value2);
     } else if (value1 !== null && _isMoney(value1)) {
@@ -1160,28 +1175,34 @@ var _arraysEqualsEx = function (array1, array2) {
     return true;
 };
 
+const _type = entity => entity.constructor.prototype.type.call(entity);
+
 /**
  * Returns 'true' if the entities are equal, 'false' otherwise.
  *
  * IMPORTANT: this is the mirror of the java methods AbstractEntity.equals() and DynamicEntityKey.compareTo(). So, please be carefull and maintain it
  * in accordance with java counterparts.
  */
-const _entitiesEqualsEx = function (entity1, entity2) {
+const _entitiesEqualsEx = function (entity1, entity2, inHierarchy) {
     if (entity1 === entity2) {
         return true;
     }
     if (!_isEntity(entity2)) {
         return false;
     }
-    // let's ensure that types match
-    const entity1Type = entity1.constructor.prototype.type.call(entity1);
-    const entity2Type = entity2.constructor.prototype.type.call(entity2);
-    // in most cases, two entities of the same type will be compared -- their types will be equal by reference
-    // however generated types re-register on each centre run / refresh, so need to compare their base types (this will also cover the case where multiple server nodes are used and different nodes generate different types from the same base type)
-    if (entity1Type !== entity2Type && entity1Type.notEnhancedFullClassName() !== entity2Type.notEnhancedFullClassName()) {
+    // Let's ensure that types match.
+    const entity1Type = _type(entity1);
+    const entity2Type = _type(entity2);
+    // In most cases, two entities of the same type will be compared -- their types will be equal by reference.
+    // However, generated types re-register on each centre run / refresh
+    // This is why we need to compare their base types (this also covers the case where multiple server nodes are used and different nodes generate different types from the same base type).
+    if (entity1Type !== entity2Type &&
+        entity1Type.notEnhancedFullClassName() !== entity2Type.notEnhancedFullClassName() &&
+        (inHierarchy === false || _typeTable[entity1Type.notEnhancedFullClassName()].baseType() !== _typeTable[entity2Type.notEnhancedFullClassName()].baseType()))
+    {
         return false;
     }
-    // now can compare key values
+    // Now can compare key values.
     let key1, key2;
 
     try {
@@ -1538,6 +1559,13 @@ export const TgReflector = Polymer({
      */
     equalsEx: function (value1, value2) {
         return _equalsEx(value1, value2);
+    },
+
+    /**
+     * Returns 'true' if the entity values are equal disregarding type hierarchy (synthetic-based-on-persistent / single-entity-key), 'false' otherwise.
+     */
+    equalsExInHierarchy: function (entity1, entity2) {
+        return _entitiesEqualsEx(entity1, entity2, true);
     },
 
     /**

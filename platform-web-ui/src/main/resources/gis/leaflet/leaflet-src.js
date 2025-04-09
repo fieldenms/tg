@@ -2466,32 +2466,56 @@
   // Cancels the effects of a previous [`L.DomUtil.disableTextSelection`](#domutil-disabletextselection).
   var disableTextSelection;
   var enableTextSelection;
-  var _userSelect;
-  if ('onselectstart' in document) {
-  	disableTextSelection = function () {
-  		on(window, 'selectstart', preventDefault);
-  	};
-  	enableTextSelection = function () {
-  		off(window, 'selectstart', preventDefault);
-  	};
-  } else {
-  	var userSelectProperty = testProp(
-  		['userSelect', 'WebkitUserSelect', 'OUserSelect', 'MozUserSelect', 'msUserSelect']);
+/*TG #2368*/
+//  var _userSelect;
+//  if ('onselectstart' in document) {
+//  	disableTextSelection = function () {
+//  		on(window, 'selectstart', preventDefault);
+//  		on(window, 'selectstart', () => console.error('disable'));
+//  	};
+//  	enableTextSelection = function () {
+//  		off(window, 'selectstart', preventDefault);
+//  	};
+//  } else {
+//  	var userSelectProperty = testProp(
+//  		['userSelect', 'WebkitUserSelect', 'OUserSelect', 'MozUserSelect', 'msUserSelect']);
+//
+const documentStyle = document.documentElement.style;
+// Safari still needs a vendor prefix, we need to detect with property name is supported.
+const userSelectProp = ['userSelect', 'WebkitUserSelect'].find(prop => prop in documentStyle);
+let prevUserSelect;
+disableTextSelection = function () {
+    const value = documentStyle[userSelectProp];
 
-  	disableTextSelection = function () {
-  		if (userSelectProperty) {
-  			var style = document.documentElement.style;
-  			_userSelect = style[userSelectProperty];
-  			style[userSelectProperty] = 'none';
-  		}
-  	};
-  	enableTextSelection = function () {
-  		if (userSelectProperty) {
-  			document.documentElement.style[userSelectProperty] = _userSelect;
-  			_userSelect = undefined;
-  		}
-  	};
-  }
+    if (value === 'none') {
+        return;
+    }
+
+    prevUserSelect = value;
+    documentStyle[userSelectProp] = 'none';
+};
+enableTextSelection = function () {
+    if (typeof prevUserSelect === 'undefined') {
+        return;
+    }
+
+    documentStyle[userSelectProp] = prevUserSelect;
+    prevUserSelect = undefined;
+};
+//  	disableTextSelection = function () {
+//  		if (userSelectProperty) {
+//  			var style = document.documentElement.style;
+//  			_userSelect = style[userSelectProperty];
+//  			style[userSelectProperty] = 'none';
+//  		}
+//  	};
+//  	enableTextSelection = function () {
+//  		if (userSelectProperty) {
+//  			document.documentElement.style[userSelectProperty] = _userSelect;
+//  			_userSelect = undefined;
+//  		}
+//  	};
+//  }
 
   // @function disableImageDrag()
   // As [`L.DomUtil.disableTextSelection`](#domutil-disabletextselection), but

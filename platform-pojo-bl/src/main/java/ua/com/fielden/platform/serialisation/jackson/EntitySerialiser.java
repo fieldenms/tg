@@ -37,8 +37,7 @@ import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -92,6 +91,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_persistent(true);
         }
 
+        // let's inform the client of the type's persistence nature with audit data
+        if (isPersistentWithAuditData(type)) {
+            entityTypeInfo.set_persistentWithAudit(true);
+        }
+
         if (IContinuationData.class.isAssignableFrom(type)) {
             entityTypeInfo.set_continuation(true);
         }
@@ -125,6 +129,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(type)) {
             entityTypeInfo.set_compoundMenuItem(true);
         }
+        // Only set to non-'null' value for specific types having base type.
+        // 'null' values will not be serialised as a JSON properties in a type table.
+        entityTypeInfo.set_baseType(maybeBaseTypeForSyntheticEntityOrSingleKeyMemberEntityType(type).map(Class::getName).orElse(null));
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
             entityTypeInfo.set_entityTitle(entityTitleAndDesc.getKey());
