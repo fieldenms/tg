@@ -25,7 +25,6 @@ public class CentreToolbar implements IToolbarConfig {
     /**
      * Creates standard {@link CentreToolbar}. Standard switch view button width will be 60 (if present).
      *
-     * @param switchViewButtonWidth
      */
     public CentreToolbar() {
         this(DEFAULT_WIDTH_FOR_VIEW_SWITCH); //Default width of switch view button
@@ -210,6 +209,13 @@ public class CentreToolbar implements IToolbarConfig {
         return withTopActionsViewSwitchPaginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
     }
 
+    ///
+    /// A convenient factory method to create a toolbar that includes top actions, a view switch button, config action, a pagination panel, a refresh action, and a help action.
+    ///
+    public static IToolbarConfig withTopActionsViewSwitchConfigPaginationRefreshAndHelp() {
+        return new CentreToolbar(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    }
+
     /**
      * The same as {link {@link #withTopActionsViewSwitchPaginationAndRefresh()}, but accepts a desired width for the alternative view switching button.
      *
@@ -230,11 +236,11 @@ public class CentreToolbar implements IToolbarConfig {
      *
      * @return
      */
-    public static IToolbarConfig withTopActionsViewSwitchFilterPeginationAndRefresh() {
-        return withTopActionsViewSwitchFilterPeginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    public static IToolbarConfig withTopActionsViewSwitchFilterPaginationAndRefresh() {
+        return withTopActionsViewSwitchFilterPaginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
     }
 
-    public static IToolbarConfig withTopActionsViewSwitchFilterPeginationAndRefresh(final int switchViewButtonWidth) {
+    public static IToolbarConfig withTopActionsViewSwitchFilterPaginationAndRefresh(final int switchViewButtonWidth) {
         return new CentreToolbar(switchViewButtonWidth) {
             @Override
             protected DomElement createToolbarElement() {
