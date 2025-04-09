@@ -26,8 +26,6 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByNameOptionally;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.*;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
@@ -116,6 +114,10 @@ public final class AnnotationReflector {
         }
 
         return annotationExtractionHelper(field, name, cachedFieldAnnotations);
+    }
+
+    public static Map<Class<? extends Annotation>, Annotation> getFieldAnnotations(final Class<?> enclosingType, final CharSequence fieldPath) {
+        return getFieldAnnotations(Finder.findFieldByName(enclosingType, fieldPath));
     }
 
     public static Map<Class<? extends Annotation>, Annotation> getMethodAnnotations(final Method method) {
@@ -318,6 +320,20 @@ public final class AnnotationReflector {
         else {
             return findFieldByNameOptionally(forType, dotNotationExp).map(field -> getAnnotation(field, annotationType)).orElse(null);
         }
+    }
+
+    /// Same as [#getPropertyAnnotation(Class, Class, String)] but throws instead of returning null.
+    public static <A extends Annotation> A requirePropertyAnnotation(
+            final Class<A> annotationType,
+            final Class<?> forType,
+            final CharSequence propertyPath)
+    {
+        final var annotation = getPropertyAnnotation(annotationType, forType, propertyPath.toString());
+        if (annotation == null) {
+            throw new ReflectionException(format("Missing annotation @%s on property [%s] in [%s]",
+                                                 annotationType.getTypeName(), propertyPath, forType.getTypeName()));
+        }
+        return annotation;
     }
 
     /**

@@ -142,14 +142,21 @@ final class PropertySpec {
         return builder.build();
     }
 
-    public MethodSpec getSetterSpec(final GeneratorEnvironment environment, final TypeName declaringClassName) {
-        return getSetterSpecWithParamType(environment, declaringClassName, typeName);
+    /// Creates a method that represents a setter for this property.
+    ///
+    /// @param declaringTypeName  name of the type that declares this setter
+    public MethodSpec getSetterSpec(final GeneratorEnvironment environment, final TypeName declaringTypeName) {
+        return getSetterSpecWithParamType(environment, declaringTypeName, typeName);
     }
 
-    public MethodSpec getSetterSpecWithParamType(final GeneratorEnvironment environment, final TypeName declaringClassName, final TypeName paramTypeName) {
+    /// Creates a method that represents a setter for this property.
+    ///
+    /// @param declaringTypeName  name of the type that declares this setter
+    /// @param paramTypeName  name of the parameter type
+    public MethodSpec getSetterSpecWithParamType(final GeneratorEnvironment environment, final TypeName declaringTypeName, final TypeName paramTypeName) {
         final var builder = MethodSpec.methodBuilder("set" + StringUtils.capitalize(name))
                 .addModifiers(PUBLIC)
-                .returns(declaringClassName)
+                .returns(declaringTypeName)
                 .addAnnotation(Observable.class)
                 .addParameter(paramTypeName, name, FINAL);
 
@@ -163,10 +170,6 @@ final class PropertySpec {
                                          .addStatement("return this"));
 
         return builder.build();
-    }
-
-    public MethodSpec getSetterSpec(final GeneratorEnvironment environment, final Type declaringType) {
-        return getSetterSpec(environment, TypeName.get(declaringType));
     }
 
     public boolean hasAnnotation(final ClassName className) {
