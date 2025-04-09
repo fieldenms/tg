@@ -167,10 +167,12 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
                         })
                         .filter(Objects::nonNull)
                         .collect(toImmutableList());
-                // Batch insertion is most helpful when saving the very first audit record (i.e., the audited entity is 'new'),
-                // as it results in all assigned properties being audited.
-                final var batchInsert = batchInsertFactory.create(() -> new TransactionalExecution(userProvider, this::getSession));
-                batchInsert.batchInsert(auditProps, AUDIT_PROP_BATCH_SIZE);
+                if (!auditProps.isEmpty()) {
+                    // Batch insertion is most helpful when saving the very first audit record (i.e., the audited entity is 'new'),
+                    // as it results in all assigned properties being audited.
+                    final var batchInsert = batchInsertFactory.create(() -> new TransactionalExecution(userProvider, this::getSession));
+                    batchInsert.batchInsert(auditProps, AUDIT_PROP_BATCH_SIZE);
+                }
             }
         }
     }
