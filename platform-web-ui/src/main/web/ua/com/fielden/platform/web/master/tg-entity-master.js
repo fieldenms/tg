@@ -79,6 +79,7 @@ const template = html`
         <tg-scrollable-component id="scrollableContainer" class="layout vertical flex-auto relative">
             <div class="layout horizontal end-justified master-util-toolbar">
                 <paper-icon-button id="helpButton" class="help-button" icon="icons:help-outline" on-mousedown="_initiateHelpAction" on-touchstart="_initiateHelpAction" on-mouseup="_runHelpAction" on-touchend="_runHelpAction" tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link." hidden$="[[_hasEmbededView()]]"></paper-icon-button>
+                <slot name="persistent-entity-info-slot"></slot>
             </div>
             <slot name="property-editors"></slot>
         </tg-scrollable-component>

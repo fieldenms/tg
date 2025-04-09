@@ -5,10 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -684,6 +681,17 @@ public class EntityUtils {
         }
     }
 
+    ///
+    /// Determines whether the provided entity type represents a persistent entity and has versioning information like created/updated, version, etc.
+    /// This type should extend [AbstractPersistentEntity].
+    ///
+    /// @param type
+    /// @return
+    ///
+    public static boolean isPersistentWithAuditData(@Nullable final Class<?> type) {
+        return isPersistentEntityType(type) && AbstractPersistentEntity.class.isAssignableFrom(type);
+    }
+
     /**
      * This was the original method, which had a typo in its name – `persisted` instead of `persistent`.
      * Method {@link #isPersistentEntityType(Class)} should be used instead.
@@ -786,6 +794,14 @@ public class EntityUtils {
         if (!isSyntheticEntityType(type)) {
             return false;
         }
+        return getBasePersistentTypeOpt(type).isPresent();
+    }
+
+    /**
+     * Returns base persistent type in a hierarchy of {@code type}, if any.
+     */
+    @SuppressWarnings("unchecked")
+    private static Optional<Class<? extends AbstractEntity<?>>> getBasePersistentTypeOpt(final Class<? extends AbstractEntity<?>> type) {
         // Let's traverse the type hierarchy to identify if there is a persistent super type...
         // Such traversal is now required because generation of new types extends the original type.
         // And so, there can be situations where a generated type has a synthetic-based-on-persistent type as its super type, and also needs to be recognised as being synthetic-based-on-persistent.
@@ -793,11 +809,11 @@ public class EntityUtils {
         Class<?> superType = type.getSuperclass();
         while (superType != AbstractEntity.class) {
             if (isPersistentEntityType(superType)) {
-                return true;
+                return Optional.of((Class<? extends AbstractEntity<?>>) superType);
             }
             superType = superType.getSuperclass();
         }
-        return false;
+        return Optional.empty();
     }
 
     /**
@@ -1094,6 +1110,53 @@ public class EntityUtils {
         return streamCollectionalProperties(entityType)
                 .filter(prop -> prop.getName().contentEquals(name))
                 .findAny();
+    }
+
+    ///
+    /// Returns a tuple of `(key, relative name)`, if `type` has a key with a single, entity-typed member.
+    /// This is applicable to entities with composite keys that have a single entity-typed member, and entities representing one-2-one relationships.
+    ///
+    /// Returns empty [Optional] otherwise.
+    ///
+    @SuppressWarnings("unchecked")
+    public static Optional<T2<Class<? extends AbstractEntity<?>>, String>> maybeSingleKeyMemberOfEntityType(final Class<? extends AbstractEntity<?>> type) {
+        final var keyMembers = getKeyMembers(type);
+        if (keyMembers.size() == 1) {
+            if (isCompositeEntity(type)) {
+                return isEntityType(keyMembers.getFirst().getType())
+                       ? Optional.of(t2((Class<? extends AbstractEntity<?>>) keyMembers.getFirst().getType(), keyMembers.getFirst().getName()))
+                       : Optional.empty();
+            }
+            final var keyType = getKeyType(type);
+            return isEntityType(keyType)
+                   ? Optional.of(t2((Class<? extends AbstractEntity<?>>) keyType, KEY))
+                   : Optional.empty();
+        }
+        return Optional.empty();
+    }
+
+    ///
+    /// Returns a base type if `type` is synthetic, based on a persistent entity type.
+    ///
+    /// Returns empty [Optional] otherwise.
+    ///
+    public static Optional<Class<? extends AbstractEntity<?>>> getBaseTypeForSyntheticEntity(final Class<? extends AbstractEntity<?>> type) {
+        return isSyntheticBasedOnPersistentEntityType(type)
+               ? getBasePersistentTypeOpt(type)
+               : Optional.empty();
+    }
+
+    ///
+    /// If `type` is a synthetic-based-on-persistent, then returns its base type.
+    /// If `type` represents a one-2-one relationship or has a single entity-typed composite key member, then return that key's type.
+    ///
+    /// Returns empty [Optional] otherwise.
+    ///
+    public static Optional<Class<? extends AbstractEntity<?>>> maybeBaseTypeForSyntheticEntityOrSingleKeyMemberEntityType(final Class<? extends AbstractEntity<?>> type) {
+        final var baseTypeForSyntheticEntity = getBaseTypeForSyntheticEntity(type);
+        return baseTypeForSyntheticEntity.isPresent()
+               ? baseTypeForSyntheticEntity
+               : maybeSingleKeyMemberOfEntityType(type).map(t2 -> t2._1);
     }
 
     public static class BigDecimalWithTwoPlaces {

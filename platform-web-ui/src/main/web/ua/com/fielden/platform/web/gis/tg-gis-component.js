@@ -110,7 +110,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
      */
     self.restorePrevEntityAndWasPopupOpen = (prevEntity, wasPopupOpen) => {
         if (_isEntity(prevEntity)) { // if there was previously selected layer (with or without popup) and corresponding entity was found
-            const foundEntity = this._entities.find(entity => this._reflector.equalsEx(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
+            const foundEntity = this._entities.find(entity => this._reflector.equalsExInHierarchy(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
             if (foundEntity) {
                 const _select = this._select;
                 const foundLayerId = _select.getLayerIdByEntity(foundEntity); // find leaflet layer id of the new corresponding layer (if present)
@@ -454,7 +454,7 @@ GisComponent.prototype.clearAll = function () {
  */
 GisComponent.prototype.promoteNewOrUpdatedEntities = function (newOrUpdatedEntities) {
     this.traverseEntities(newOrUpdatedEntities, null /* the parent for top-level entities is null */, (entity, parentFeature) => {
-        const indexToUpdate = this._entities.findIndex(prevEntity => this._reflector.equalsEx(entity, prevEntity));
+        const indexToUpdate = this._entities.findIndex(prevEntity => this._reflector.equalsExInHierarchy(entity, prevEntity));
         if (indexToUpdate >= 0) {
             const prevLayerId = this._entities[indexToUpdate].properties.layerId;
             // found prev entity could probably have no corresponding leaflet layer -- need to check this
