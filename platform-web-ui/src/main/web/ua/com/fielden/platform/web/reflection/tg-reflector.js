@@ -1190,15 +1190,19 @@ const _entitiesEqualsEx = function (entity1, entity2, inHierarchy) {
     if (!_isEntity(entity2)) {
         return false;
     }
-    // let's ensure that types match
+    // Let's ensure that types match.
     const entity1Type = _type(entity1);
     const entity2Type = _type(entity2);
-    // in most cases, two entities of the same type will be compared -- their types will be equal by reference
-    // however generated types re-register on each centre run / refresh, so need to compare their base types (this will also cover the case where multiple server nodes are used and different nodes generate different types from the same base type)
-    if (entity1Type !== entity2Type && entity1Type.notEnhancedFullClassName() !== entity2Type.notEnhancedFullClassName() && (inHierarchy ? _typeTable[entity1Type.notEnhancedFullClassName()].baseType() !== _typeTable[entity2Type.notEnhancedFullClassName()].baseType() : true) ) {
+    // In most cases, two entities of the same type will be compared -- their types will be equal by reference.
+    // However, generated types re-register on each centre run / refresh
+    // This is why we need to compare their base types (this also covers the case where multiple server nodes are used and different nodes generate different types from the same base type).
+    if (entity1Type !== entity2Type &&
+        entity1Type.notEnhancedFullClassName() !== entity2Type.notEnhancedFullClassName() &&
+        (inHierarchy === false || _typeTable[entity1Type.notEnhancedFullClassName()].baseType() !== _typeTable[entity2Type.notEnhancedFullClassName()].baseType()))
+    {
         return false;
     }
-    // now can compare key values
+    // Now can compare key values.
     let key1, key2;
 
     try {
