@@ -29,11 +29,11 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
             AUDITED_TRANSACTION_GUID = "auditedTransactionGuid";
 
     /**
-     * Name of the property that is declared by specific audit-entity types.
+     * Name of a property declared by subtypes.
      * This property is a key-member representing a reference to the audited entity.
      * Its type is the type of the audited entity.
      * <p>
-     * For example, audit-entity {@code VehicleAudit} is expected to declare property {@code auditedEntity} of type {@code Vehicle}.
+     * For example, audit-entity {@code ReVehicle_a3t} is expected to declare property {@code auditedEntity} of type {@code Vehicle}.
      */
     public static final String AUDITED_ENTITY = "auditedEntity";
 
