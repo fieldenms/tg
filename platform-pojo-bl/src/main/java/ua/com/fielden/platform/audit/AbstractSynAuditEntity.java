@@ -73,7 +73,7 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
     public abstract E getAuditedEntity();
 
     @IsProperty
-    @Title(value = "Audited entity version", desc = "Version of the entity for which this audit record was created.")
+    @Title(value = "Version", desc = "Version of the entity for which this audit record was created.")
     @CompositeKeyMember(2)
     @DenyIntrospection
     private Long auditedVersion;
@@ -89,7 +89,7 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
     private User user;
 
     @IsProperty
-    @Title(value = "Audited Transaction ID", desc = "A unique identifier of the transaction for the audited event.")
+    @Title(value = "Transaction ID", desc = "A unique identifier of the transaction for the audited event.")
     @DenyIntrospection
     private String auditedTransactionGuid;
 
