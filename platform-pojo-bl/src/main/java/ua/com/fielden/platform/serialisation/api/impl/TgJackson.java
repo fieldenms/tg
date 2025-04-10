@@ -23,13 +23,8 @@ import ua.com.fielden.platform.serialisation.jackson.*;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.*;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntitySerialisationException;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.ColourJsonSerialiser;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.HyperlinkJsonSerialiser;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.MoneyJsonSerialiser;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.ResultJsonSerialiser;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
-import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.serialisation.jackson.serialisers.*;
+import ua.com.fielden.platform.types.*;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import java.io.ByteArrayInputStream;
@@ -88,6 +83,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
         registerEntityTypes(provider, this.module);
 
+        // If a serializer is registered for a supertype, it will also be used for serialization of its subtypes,
+        // unless a more specific serializer is registered.
+
         this.module.addSerializer(Money.class, new MoneyJsonSerialiser());
         this.module.addDeserializer(Money.class, new MoneyJsonDeserialiser());
         
@@ -96,6 +94,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         
         this.module.addSerializer(Hyperlink.class, new HyperlinkJsonSerialiser());
         this.module.addDeserializer(Hyperlink.class, new HyperlinkJsonDeserialiser());
+
+        this.module.addSerializer(RichText.class, new RichTextJsonSerialiser());
+        this.module.addDeserializer(RichText.class, new RichTextJsonDeserialiser(this));
 
         this.module.addSerializer(Result.class, new ResultJsonSerialiser(this));
         this.module.addDeserializer(Result.class, new ResultJsonDeserialiser(this));

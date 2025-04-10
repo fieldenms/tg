@@ -36,8 +36,8 @@ import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersist
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChild;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgUnion;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.ui.menu.sample.MiTgCentreDiffSerialisation;
@@ -53,7 +53,7 @@ public class CentreUpdaterTestMixin {
     private static final Class<?> ROOT_GENERIC = TgCentreDiffSerialisation.class;
     static final Class<AbstractEntity<?>> ROOT = (Class<AbstractEntity<?>>) ROOT_GENERIC;
     private static final Class<? extends MiWithConfigurationSupport<?>> MI_TYPE = MiTgCentreDiffSerialisation.class;
-    private static final EntityModuleWithPropertyFactory MODULE = new CommonTestEntityModuleWithPropertyFactory();
+    private static final EntityTestIocModuleWithPropertyFactory MODULE = new CommonEntityTestIocModuleWithPropertyFactory();
     private static final Injector INJECTOR = new ApplicationInjectorFactory().add(MODULE).getInjector();
     private static final EntityFactory FACTORY = INJECTOR.getInstance(EntityFactory.class);
     static final Date d2018 = new DateTime(2018, 1, 1, 0, 0).toDate();

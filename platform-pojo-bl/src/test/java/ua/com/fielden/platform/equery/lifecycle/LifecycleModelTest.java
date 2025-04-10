@@ -10,12 +10,12 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.equery.lifecycle.IProperty.ITimeProperty;
 import ua.com.fielden.platform.equery.lifecycle.IProperty.IValueProperty;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
@@ -28,7 +28,7 @@ import com.google.inject.Module;
  * 
  */
 public class LifecycleModelTest {
-    private final Module module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Module module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 

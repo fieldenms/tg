@@ -10,8 +10,8 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithMultyEndedRangeProperties;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 
 import com.google.inject.Injector;
 
@@ -23,7 +23,7 @@ import com.google.inject.Injector;
  */
 public class IntMultiRangePropertyValidatorTest {
 
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
@@ -34,7 +34,7 @@ public class IntMultiRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
     }
 
     @Test
@@ -63,8 +63,8 @@ public class IntMultiRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(16), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getToInt());
     }
 
     @Test
@@ -75,8 +75,8 @@ public class IntMultiRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(16), entity.getMiddleInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getMiddleInt());
     }
 
     @Test
@@ -101,7 +101,7 @@ public class IntMultiRangePropertyValidatorTest {
         entity.setToInt(12);
 
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
-        assertEquals("Incorrect value", new Integer(16), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getFromInt());
         assertFalse("Should not be valid", entity.getProperty("toInt").isValid());
         assertNull("Incorrect value", entity.getToInt());
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
@@ -112,8 +112,8 @@ public class IntMultiRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
 
-        assertEquals("Incorrect value", new Integer(6), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(12), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(6), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getToInt());
     }
 
     @Test
@@ -123,7 +123,7 @@ public class IntMultiRangePropertyValidatorTest {
         entity.setMiddleInt(12);
 
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
-        assertEquals("Incorrect value", new Integer(16), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getFromInt());
         assertFalse("Should not be valid", entity.getProperty("middleInt").isValid());
         assertNull("Incorrect value", entity.getToInt());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
@@ -134,8 +134,8 @@ public class IntMultiRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
 
-        assertEquals("Incorrect value", new Integer(6), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(12), entity.getMiddleInt());
+        assertEquals("Incorrect value", Integer.valueOf(6), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getMiddleInt());
     }
 
     @Test
@@ -158,9 +158,9 @@ public class IntMultiRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
 
-        assertEquals("Incorrect value", new Integer(6), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(12), entity.getMiddleInt());
-        assertEquals("Incorrect value", new Integer(16), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(6), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getMiddleInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getToInt());
     }
 
     @Test
@@ -171,9 +171,9 @@ public class IntMultiRangePropertyValidatorTest {
         entity.setMiddleInt(18);
 
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(16), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getToInt());
         assertFalse("Should not be valid", entity.getProperty("middleInt").isValid());
 
         entity.setMiddleInt(14);
@@ -182,9 +182,9 @@ public class IntMultiRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
 
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(14), entity.getMiddleInt());
-        assertEquals("Incorrect value", new Integer(16), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(14), entity.getMiddleInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getToInt());
     }
 
     @Test
@@ -195,9 +195,9 @@ public class IntMultiRangePropertyValidatorTest {
         entity.setToInt(16);
 
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(16), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getToInt());
         assertFalse("Should not be valid", entity.getProperty("middleInt").isValid());
 
         entity.setMiddleInt(14);
@@ -206,9 +206,9 @@ public class IntMultiRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
 
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(14), entity.getMiddleInt());
-        assertEquals("Incorrect value", new Integer(16), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(14), entity.getMiddleInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getToInt());
     }
 
     @Test
@@ -219,11 +219,11 @@ public class IntMultiRangePropertyValidatorTest {
         entity.setToInt(16);
 
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
         assertFalse("Should not be valid", entity.getProperty("middleInt").isValid());
         assertNull("Incorrect value", entity.getMiddleInt());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(16), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getToInt());
 
         entity.setFromInt(8);
 
@@ -231,9 +231,9 @@ public class IntMultiRangePropertyValidatorTest {
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
 
-        assertEquals("Incorrect value", new Integer(8), entity.getFromInt());
-        assertEquals("Incorrect value", new Integer(10), entity.getMiddleInt());
-        assertEquals("Incorrect value", new Integer(16), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(8), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(10), entity.getMiddleInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getToInt());
     }
 
     @Test
@@ -243,28 +243,28 @@ public class IntMultiRangePropertyValidatorTest {
         entity.setMiddleInt(16);
 
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
-        assertEquals("Incorrect value", new Integer(16), entity.getMiddleInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getMiddleInt());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
         assertNull("Incorrect value", entity.getToInt());
 
         entity.setToInt(14); // attempting to set incorrect value
 
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
-        assertEquals("Incorrect value", new Integer(16), entity.getMiddleInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getMiddleInt());
         assertFalse("Should not be valid", entity.getProperty("toInt").isValid());
         assertNull("Incorrect value", entity.getToInt());
 
         entity.setToInt(18); // attempting to set correct value
 
         assertTrue("Should be valid", entity.getProperty("fromInt").isValid());
-        assertEquals("Incorrect value", new Integer(12), entity.getFromInt());
+        assertEquals("Incorrect value", Integer.valueOf(12), entity.getFromInt());
         assertTrue("Should be valid", entity.getProperty("middleInt").isValid());
-        assertEquals("Incorrect value", new Integer(16), entity.getMiddleInt());
+        assertEquals("Incorrect value", Integer.valueOf(16), entity.getMiddleInt());
         assertTrue("Should be valid", entity.getProperty("toInt").isValid());
-        assertEquals("Incorrect value", new Integer(18), entity.getToInt());
+        assertEquals("Incorrect value", Integer.valueOf(18), entity.getToInt());
     }
 }

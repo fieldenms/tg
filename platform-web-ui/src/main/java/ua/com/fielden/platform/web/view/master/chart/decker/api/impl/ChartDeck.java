@@ -97,10 +97,10 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     }
 
     @Override
-    public IChartDeckerWithSeriesColour<T> withSeries(final String propertyName) {
-        final ChartSeries<T> series = new ChartSeries<>(this, propertyName);
+    public IChartDeckerWithSeriesColour<T> withSeries(final CharSequence propertyName) {
+        final ChartSeries<T> series = new ChartSeries<>(this, propertyName.toString());
         if (!this.series.stream().allMatch(s -> s.getPropertyType().equals(series.getPropertyType()))) {
-            throw new ChartConfigurationError(format("The chart series should have the same type: %. But there was attempt to add series with different type: %",
+            throw new ChartConfigurationError(format("The chart series should have the same type: %s. But there was attempt to add series with different type: %s",
                     this.series.get(0).getPropertyType().getSimpleName(),
                     series.getPropertyType().getSimpleName()));
         }
@@ -125,8 +125,8 @@ public class ChartDeck<T extends AbstractEntity<?>> implements IChartDeckerMode<
     }
 
     @Override
-    public IChartDeckerLineColour<T> withLine(final String propertyName) {
-        final ChartLine<T> line = new ChartLine<>(this, propertyName);
+    public IChartDeckerLineColour<T> withLine(final CharSequence propertyName) {
+        final ChartLine<T> line = new ChartLine<>(this, propertyName.toString());
         this.lines.add(line);
         return line;
     }

@@ -25,6 +25,6 @@ public class AbsOf1 extends SingleOperandFunction1<AbsOf2> {
     
     @Override
     public boolean equals(final Object obj) {
-        return this == obj || super.equals(obj) && obj instanceof AbsOf1; 
+        return this == obj || obj instanceof AbsOf1 && super.equals(obj) ;
     }
 }

@@ -1,31 +1,28 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import static java.util.Collections.emptySet;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
-import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.hibTypeFromJavaType;
-
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage3.operands.Value3;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.ToString;
 
-public class Value2 implements ISingleOperand2<Value3> {
-    private final Object value;
-    private final boolean ignoreNull;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+
+import static java.util.Collections.emptySet;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
+import static ua.com.fielden.platform.eql.meta.PropType.propType;
+import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.hibTypeFromJavaType;
+import static ua.com.fielden.platform.persistence.HibernateConstants.N;
+import static ua.com.fielden.platform.persistence.HibernateConstants.Y;
+
+public record Value2 (Object value, boolean ignoreNull) implements ISingleOperand2<Value3>, ToString.IFormattable {
 
     public Value2(final Object value) {
         this(value, false);
-    }
-
-    public Value2(final Object value, final boolean ignoreNull) {
-        this.value = value;
-        this.ignoreNull = ignoreNull;
     }
 
     private boolean needsParameter() {
@@ -43,7 +40,18 @@ public class Value2 implements ISingleOperand2<Value3> {
 
     @Override
     public PropType type() {
-        return value == null ? null : new PropType(value.getClass(), hibTypeFromJavaType(value.getClass())); // TODO provide proper hibType once value original (not converted) will be taken into account.
+        return value == null ? NULL_TYPE : propType(value.getClass(), hibTypeFromJavaType(value.getClass())); // TODO provide proper hibType once value original (not converted) will be taken into account.
+    }
+
+    /**
+     * Maps over this instance on the underlying value.
+     *
+     * @param fn  the mapping function.
+     *            Argument may be null.
+     */
+    public Value2 map(final Function</*Nullable*/ Object, Object> fn) {
+        final var newValue = fn.apply(value);
+        return Objects.equals(newValue, value) ? this : new Value2(newValue, ignoreNull);
     }
 
     @Override
@@ -73,26 +81,16 @@ public class Value2 implements ISingleOperand2<Value3> {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (ignoreNull ? 1231 : 1237);
-        result = prime * result + ((value == null) ? 0 : value.hashCode());
-        return result;
+    public String toString() {
+        return toString(ToString.standard);
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof Value2)) {
-            return false;
-        }
-
-        final Value2 other = (Value2) obj;
-
-        return Objects.equals(value, other.value) && ignoreNull == other.ignoreNull;
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("value", value)
+                .add("ignoreNull", ignoreNull)
+                .$();
     }
+
 }

@@ -1,33 +1,11 @@
 package ua.com.fielden.platform.web.action;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.EntityExportAction.*;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
-
-import java.util.Optional;
-
 import com.google.inject.Injector;
-
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.attachment.producers.AttachmentPreviewEntityActionProducer;
 import ua.com.fielden.platform.attachment.producers.AttachmentsUploadActionProducer;
-import ua.com.fielden.platform.entity.EntityEditAction;
-import ua.com.fielden.platform.entity.EntityEditActionProducer;
-import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.EntityExportActionProducer;
-import ua.com.fielden.platform.entity.EntityNewAction;
-import ua.com.fielden.platform.entity.EntityNewActionProducer;
-import ua.com.fielden.platform.entity.UserDefinableHelp;
-import ua.com.fielden.platform.entity.UserDefinableHelpProducer;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -41,12 +19,19 @@ import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipu
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentPreviewEntityMaster;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentsUploadActionMaster;
 
-/**
- * A set of factory methods for various standard platform-level entity masters such as Export to Excel.
- *
- * @author TG Team
- *
- */
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.EntityExportAction.*;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
+
+///
+/// A set of factory methods for various standard platform-level entity masters such as Export to Excel.
+///
 public class StandardMastersWebUiConfig {
     public static final int MASTER_ACTION_DEFAULT_WIDTH = 80;
     public static final String MASTER_ACTION_CUSTOM_SPECIFICATION = "'margin: 10px', 'width: %spx'";
@@ -141,6 +126,38 @@ public class StandardMastersWebUiConfig {
             final String... moreMimeTypes) {
         final IMaster<AttachmentsUploadAction> masterConfig = new AttachmentsUploadActionMaster(dims, fileSizeLimitKb, mimeType, moreMimeTypes);
         return new EntityMaster<>(AttachmentsUploadAction.class, AttachmentsUploadActionProducer.class, masterConfig, injector);
+    }
+
+    ///
+    /// Creates an entity master configuration for {@link PersistentEntityInfo}.
+    ///
+    /// @param injector
+    /// @return
+    ///
+    public static EntityMaster<PersistentEntityInfo> createPersistentEntityInfoMaster(final Injector injector) {
+        final String desktopLayout = cell(cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN)).repeat(3),layout().withStyle("padding", MARGIN_PIX).end()).toString();
+        final String mobileLayout = cell(cell().repeat(6),layout().withStyle("padding", MARGIN_PIX).end()).toString();
+
+        final IMaster<PersistentEntityInfo> masterConfig = new SimpleMasterBuilder<PersistentEntityInfo>()
+                .forEntity(PersistentEntityInfo.class)
+                .addProp("lastUpdatedBy").asAutocompleter().also()
+                .addProp("lastUpdatedDate").asDateTimePicker().also()
+                .addProp("createdBy").asAutocompleter().also()
+                .addProp("createdDate").asDateTimePicker().also()
+                .addProp("entityId").asSinglelineText().also()
+                .addProp("entityVersion").asInteger()
+                .also()
+                .addAction(MasterActions.REFRESH)
+                    .shortDesc("Close")
+                    .longDesc("Closes the dialog.")
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster(1, MASTER_ACTION_DEFAULT_WIDTH))
+                .setLayoutFor(DESKTOP, Optional.empty(), desktopLayout)
+                .setLayoutFor(TABLET, Optional.empty(), desktopLayout)
+                .setLayoutFor(MOBILE, Optional.empty(), mobileLayout)
+                .withDimensions(mkDim(590, 305, Unit.PX))
+                .done();
+
+        return new EntityMaster<>(PersistentEntityInfo.class, PersistentEntityInfoProducer.class, masterConfig, injector);
     }
 
     // TODO once it will be necessary, uncomment this code to implement generic EDIT / NEW actions with 'no parent centre refresh' capability:

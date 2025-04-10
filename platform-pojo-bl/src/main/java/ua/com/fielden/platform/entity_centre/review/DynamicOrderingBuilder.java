@@ -1,18 +1,19 @@
 package ua.com.fielden.platform.entity_centre.review;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy.IOrderingItem;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy.IOrderingItemCloseable;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
+import ua.com.fielden.platform.utils.Pair;
 
 import java.util.List;
 
-import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItemCloseable;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 
 /**
- * Utility class that is responsible for creating ordering model.
+ * Utility class that is responsible for creating ordering models.
  * 
  * @author TG Team
  * 
@@ -25,14 +26,13 @@ public class DynamicOrderingBuilder {
      * @return
      */
     public static OrderingModel createOrderingModel(final Class<?> root, final List<Pair<String, Ordering>> orderedPairs) {
-        if (root == null || orderedPairs == null) {
-            throw new NullPointerException("The root or orderedPirs parameters can not be null");
-        }
+        EntityCentreExecutionException.requireNotNullArgument(root, "root");
+        EntityCentreExecutionException.requireNotNullArgument(orderedPairs, "orderedPairs");
         IOrderingItemCloseable closeOrderable = null;
         for (final Pair<String, Ordering> orderPair : orderedPairs) {
             final IOrderingItem orderingItem = closeOrderable == null ? orderBy() : closeOrderable;
             final DynamicPropertyAnalyser analyser = new DynamicPropertyAnalyser(root, orderPair.getKey());
-            final ISingleOperandOrderable part = orderingItem.yield(analyser.getCriteriaFullName());
+            final StandaloneOrderBy.ISingleOperandOrderable part = orderingItem.yield(analyser.getCriteriaFullName());
             closeOrderable = orderPair.getValue().equals(Ordering.ASCENDING) ? part.asc() : part.desc();
         }
         return closeOrderable == null ? null : closeOrderable.model();

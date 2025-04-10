@@ -29,7 +29,7 @@ public interface ICompositeUserTypeInstantiate {
      * 
      * @return Class
      */
-    public Class returnedClass();
+    public Class<?> returnedClass();
 
     public Object[] getPropertyTypes();
 }

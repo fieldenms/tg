@@ -31,8 +31,8 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
  */
 public class CompanionObjectAutobinder {
 
-    public static final String ERR_MISSING_CO = "Could not find a implementation for companion object of type [%s].";
-    public static final String ERR_MISSING_CO_DECLARATION = "Entity of type [%s] is missing a companion object declaration.";
+    public static final String ERR_MISSING_CO = "Could not find an implementation for companion object [%s].";
+    public static final String ERR_MISSING_CO_DECLARATION = "Entity [%s] is missing a companion object declaration.";
 
     private CompanionObjectAutobinder() {}
 

@@ -12,10 +12,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.Optional.ofNullable;
@@ -199,7 +196,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      * @param type
      * @return
      */
-    public static final Set<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
+    public static final SequencedSet<String> commonProperties(final Class<? extends AbstractUnionEntity> type) {
         // collect all properties of entity type
         final List<Class<? extends AbstractEntity<?>>> propertyTypes = new ArrayList<>();
         final List<Field> fields = unionProperties(type);
@@ -218,14 +215,16 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     /**
      * Finds all properties of {@link AbstractEntity} type that will form properties "union".
-     *
-     * Important : no other (non-union) properties should exist inside {@link AbstractUnionEntity} class.
+     * <p>
+     * Important: no other (non-union) properties should exist inside {@link AbstractUnionEntity} class.
      *
      * @return
      */
     public static final List<Field> unionProperties(final Class<? extends AbstractUnionEntity> type) {
         final List<Field> unionProperties = new ArrayList<>();
-        // find all properties of AE type that will form properties "union". Note 1 : no other properties should exist inside AUE class. Note 2: desc and key are ignored.
+        // Find all properties of AE type that will form properties "union".
+        // Note 1: no other properties should exist inside AUE class.
+        // Note 2: desc and key are ignored.
         for (final Field field : Finder.findRealProperties(type)) {
             if (AbstractEntity.class.isAssignableFrom(field.getType())) {
                 unionProperties.add(field);

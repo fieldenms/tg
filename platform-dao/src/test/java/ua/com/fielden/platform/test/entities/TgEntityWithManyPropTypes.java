@@ -17,8 +17,8 @@ import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IMoneyUserType;
-import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountUserType;
+import ua.com.fielden.platform.types.markers.IMoneyType;
+import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountType;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAmountType;
 import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAndExTaxAmountType;
@@ -72,11 +72,7 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
     @IsProperty(precision = 10, scale = 3)
     @MapTo
     private BigDecimal bigDecimalProp;
-    
-    @IsProperty
-    @MapTo
-    private int intProp;
-    
+
     @IsProperty
     @MapTo
     private Integer integerProp;
@@ -95,12 +91,12 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @PersistentType(userType = IMoneyUserType.class)
+    @PersistentType(userType = IMoneyType.class)
     private Money moneyUserTypeProp;
     
     @IsProperty
     @MapTo
-    @PersistentType(userType = IMoneyWithTaxAmountUserType.class)
+    @PersistentType(userType = IMoneyWithTaxAmountType.class)
     private Money moneyWithTaxAmountUserTypeProp;
 
     @IsProperty
@@ -206,16 +202,6 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
 
     public Integer getIntegerProp() {
         return integerProp;
-    }
-
-    @Observable
-    public TgEntityWithManyPropTypes setIntProp(final int intProp) {
-        this.intProp = intProp;
-        return this;
-    }
-
-    public int getIntProp() {
-        return intProp;
     }
 
     @Observable

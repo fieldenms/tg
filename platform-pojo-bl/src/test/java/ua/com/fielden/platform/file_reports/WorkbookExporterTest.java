@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.file_reports;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
+
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -120,9 +126,11 @@ public class WorkbookExporterTest {
     @Test
     public void null_property_can_be_exported() {
         final MasterEntity entityToExport = new MasterEntity();
-        entityToExport.setDoubleProp(null);
-        final String[] propertyNames = { "doubleProp" };
-        final String[] propertyTitles = { "Double property" };
+
+        entityToExport.setBigDecimalProp(null);
+        final String[] propertyNames = { "bigDecimalProp" };
+        final String[] propertyTitles = { "BigDecimal property" };
+
         final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Null property should have blank style", CellType.BLANK, exportedRow.getCell(0).getCellType());
@@ -366,9 +374,11 @@ public class WorkbookExporterTest {
     @Test
     public void entity_aggregats_with_null_property_can_be_exported() {
         final EntityAggregates entityToExport = new EntityAggregates();
-        entityToExport.set("doubleProp", null);
-        final String[] propertyNames = { "doubleProp" };
-        final String[] propertyTitles = { "Double property" };
+
+        entityToExport.set("bigDecimalProp", null);
+        final String[] propertyNames = { "bigDecimalProp" };
+        final String[] propertyTitles = { "BigDecimal property" };
+
         final Sheet sheet = WorkbookExporter.export(Stream.of(entityToExport), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Entity aggregate's null property should have blank style", CellType.BLANK, exportedRow.getCell(0).getCellType());

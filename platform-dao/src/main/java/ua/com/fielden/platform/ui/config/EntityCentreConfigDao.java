@@ -7,14 +7,12 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 
 import javax.persistence.OptimisticLockException;
 import java.util.Map;
-import java.util.function.Function;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.isConflicting;
@@ -58,11 +56,6 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
     @SessionRequired
     public int batchDelete(final EntityResultQueryModel<EntityCentreConfig> model) {
         return defaultBatchDelete(model);
-    }
-    
-    @Override
-    public <T> T withDbVersion(final Function<DbVersion, T> fun) {
-        return fun.apply(getDbVersion());
     }
 
     /**

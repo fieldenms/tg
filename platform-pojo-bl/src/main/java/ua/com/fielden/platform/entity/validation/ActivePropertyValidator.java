@@ -44,7 +44,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     private static final String PAD_STR = "\u00A0";
     public static final String ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s.";
     public static final String ERR_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s:%n%n<br><br>%s<hr>%n<br>%s";
-    public static final String INFO_DEPENDENCY = "<tt>%s%s\u00A0%s</tt>";
+    public static final String INFO_DEPENDENCY = "<span style='font-family:monospace'>%s%s\u00A0%s</span>";
     public static final String ERR_INACTIVE_REFERENCES = "Property [%s] in %s [%s] references inactive %s [%s].";
 
     public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_ENTITY_TYPE = EntityUtils::isActivatableEntityType;

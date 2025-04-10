@@ -6,6 +6,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
+import javax.annotation.Nullable;
+
 /**
  * A structure that represents a query source item of entity type {@code T}.
  *
@@ -15,11 +17,22 @@ public class QuerySourceItemForEntityType<T extends AbstractEntity<?>> extends A
     public final QuerySourceInfo<T> querySourceInfo;
     public final boolean nonnullable;
 
-    public QuerySourceItemForEntityType(final String name, final QuerySourceInfo<T> querySourceInfo, final Object hibType, final boolean nonnullable) {
+    public QuerySourceItemForEntityType(
+            final String name,
+            final QuerySourceInfo<T> querySourceInfo,
+            final @Nullable Object hibType,
+            final boolean nonnullable)
+    {
         this(name, querySourceInfo, hibType, nonnullable, null);
     }
 
-    public QuerySourceItemForEntityType(final String name, final QuerySourceInfo<T> querySourceInfo, final Object hibType, final boolean nonnullable, final CalcPropInfo expression) {
+    public QuerySourceItemForEntityType(
+            final String name,
+            final QuerySourceInfo<T> querySourceInfo,
+            final @Nullable Object hibType,
+            final boolean nonnullable,
+            final @Nullable CalcPropInfo expression)
+    {
         super(name, hibType, expression);
         this.querySourceInfo = querySourceInfo;
         this.nonnullable = nonnullable;

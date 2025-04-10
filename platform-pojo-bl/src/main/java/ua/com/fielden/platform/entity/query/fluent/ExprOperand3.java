@@ -5,24 +5,25 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IExprOperationOrEnd3;
 
 abstract class ExprOperand3<T, ET extends AbstractEntity<?>> //
-		extends SingleOperand<IExprOperationOrEnd3<T, ET>, ET> //
-		implements IExprOperand3<T, ET> {
+        extends SingleOperand<IExprOperationOrEnd3<T, ET>, ET> //
+        implements IExprOperand3<T, ET> {
 
-    protected ExprOperand3(final Tokens tokens) {
-        super(tokens);
+    protected ExprOperand3(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForExprOperand3(final Tokens tokens);
 
-	@Override
-	protected IExprOperationOrEnd3<T, ET> nextForSingleOperand(final Tokens tokens) {
-		return new ExprOperationOrEnd3<T, ET>(tokens) {
+    protected abstract T nextForExprOperand3(final EqlSentenceBuilder builder);
 
-			@Override
-			protected T nextForExprOperationOrEnd3(final Tokens tokens) {
-				return ExprOperand3.this.nextForExprOperand3(tokens);
-			}
+    @Override
+    protected IExprOperationOrEnd3<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+        return new ExprOperationOrEnd3<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForExprOperationOrEnd3(final EqlSentenceBuilder builder) {
+                return ExprOperand3.this.nextForExprOperand3(builder);
+            }
+
+        };
+    }
+
 }

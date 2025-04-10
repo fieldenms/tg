@@ -4,14 +4,13 @@
 package ua.com.fielden.platform.entity.validation.test_entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
 import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
 import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.RichText;
 
 /**
  * Entity for testing of validator {@link MaxLengthValidator}.
@@ -44,6 +43,73 @@ public class EntityWithMaxLengthValidation extends AbstractEntity<String> {
     @IsProperty(length = 30)
     @BeforeChange(@Handler(MaxLengthValidator.class))
     private Hyperlink propHyperlink;
+
+    @IsProperty(length = 27)
+    @BeforeChange(@Handler(MaxLengthValidator.class))
+    private RichText richText;
+
+    @IsProperty(length = 52)
+    private String stringPropWithoutExplicitMaxLengthValidator;
+
+    @IsProperty(length = 27)
+    private RichText richTextPropWithoutExplicitMaxLengthValidator;
+
+    @IsProperty(length = 27)
+    private Hyperlink hyperlinkPropWithoutExplicitMaxLengthValidator;
+
+    public Hyperlink getHyperlinkPropWithoutExplicitMaxLengthValidator() {
+        return hyperlinkPropWithoutExplicitMaxLengthValidator;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setHyperlinkPropWithoutExplicitMaxLengthValidator(final Hyperlink hyperlinkPropWithoutExplicitMaxLengthValidator) {
+        this.hyperlinkPropWithoutExplicitMaxLengthValidator = hyperlinkPropWithoutExplicitMaxLengthValidator;
+        return this;
+    }
+
+    @IsProperty
+    @BeforeChange(@Handler(MaxLengthValidator.class))
+    private Integer intProp;
+
+    public RichText getRichTextPropWithoutExplicitMaxLengthValidator() {
+        return richTextPropWithoutExplicitMaxLengthValidator;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setRichTextPropWithoutExplicitMaxLengthValidator(final RichText richTextPropWithoutExplicitMaxLengthValidator) {
+        this.richTextPropWithoutExplicitMaxLengthValidator = richTextPropWithoutExplicitMaxLengthValidator;
+        return this;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setStringPropWithoutExplicitMaxLengthValidator(final String stringPropWithoutExplicitMaxLengthValidator) {
+        this.stringPropWithoutExplicitMaxLengthValidator = stringPropWithoutExplicitMaxLengthValidator;
+        return this;
+    }
+
+    public String getStringPropWithoutExplicitMaxLengthValidator() {
+        return stringPropWithoutExplicitMaxLengthValidator;
+    }
+
+    public Integer getIntProp() {
+        return intProp;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setIntProp(final Integer intProp) {
+        this.intProp = intProp;
+        return this;
+    }
+
+    public RichText getRichText() {
+        return richText;
+    }
+
+    @Observable
+    public EntityWithMaxLengthValidation setRichText(final RichText richText) {
+        this.richText = richText;
+        return this;
+    }
 
     @Observable
     public EntityWithMaxLengthValidation setPropHyperlink(final Hyperlink propHyperlink) {

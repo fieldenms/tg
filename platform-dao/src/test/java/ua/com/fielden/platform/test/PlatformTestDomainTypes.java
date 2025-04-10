@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.test;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.companion.PersistentEntityWithAllKindsOfProperties;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.test_entities.EntityToFill;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequiredness;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
@@ -35,6 +37,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
     static {
         entityTypes.addAll(PlatformDomainTypes.typesNotDependentOnWebUI);
         // and test domain entities
+        add(TgPattern.class);
         add(TgPerson.class);
         add(TgPersonName.class);
         add(TgAuthor.class);
@@ -100,6 +103,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(EntityWithDynamicCompositeKey.class);
         add(EntityWithSingleMemberDynamicCompositeKey.class);
         add(EntityWithAutoAssignableProperties.class);
+        add(EntityWithRichText.class);
         add(EntityBasedOnAbstractPersistentEntity.class);
         add(EntityBasedOnAbstractPersistentEntity2.class);
         add(TgAverageFuelUsage.class);
@@ -124,6 +128,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgDateTestEntity.class);
         add(EntityWithDynamicRequiredness.class);
         add(TgEntityWithManyPropTypes.class);
+        add(TgEntityWithTimeZoneDates.class);
         add(EntityOne.class);
         add(EntityTwo.class);
         add(UnionEntity.class);
@@ -131,6 +136,10 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgUnionType1.class);
         add(TgUnionType2.class);
         add(TgUnionCommonType.class);
+        add(TgNote.class);
+        add(PersistentEntityWithAllKindsOfProperties.class);
+        add(TrivialPersistentEntity.class);
+        add(EntityToFill.class);
         add(TgInventoryPart.class);
         add(TgInventory.class);
         add(TgInventoryBin.class);

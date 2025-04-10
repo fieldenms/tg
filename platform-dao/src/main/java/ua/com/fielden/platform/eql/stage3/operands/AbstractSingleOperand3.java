@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
+import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.utils.ToString;
+
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.meta.PropType;
-
-public abstract class AbstractSingleOperand3 implements ISingleOperand3 {
+public abstract class AbstractSingleOperand3 implements ISingleOperand3, ToString.IFormattable {
     public final PropType type;
     
     public AbstractSingleOperand3(final PropType type) {
@@ -26,16 +27,26 @@ public abstract class AbstractSingleOperand3 implements ISingleOperand3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof AbstractSingleOperand3)) {
-            return false;
-        }
-
-        final AbstractSingleOperand3 other = (AbstractSingleOperand3) obj;
-
-        return Objects.equals(type, other.type);
+        return this == obj
+               || obj instanceof AbstractSingleOperand3 that
+                  && Objects.equals(this.type, that.type);
     }
+
+    @Override
+    public String toString() {
+        return toString(ToString.separateLines());
+    }
+
+    @Override
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("type", type)
+                .pipe(this::addToString)
+                .$();
+    }
+
+    protected ToString addToString(final ToString toString) {
+        return toString;
+    }
+
 }

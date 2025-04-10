@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.before_change_event_handling.EnumForParams
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.StringConverter;
 
@@ -32,7 +32,7 @@ import ua.com.fielden.platform.utils.StringConverter;
  *
  */
 public class AfterChangeTest {
-    private final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+    private final Injector injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     @Test

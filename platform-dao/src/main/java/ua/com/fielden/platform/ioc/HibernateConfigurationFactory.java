@@ -1,36 +1,47 @@
 package ua.com.fielden.platform.ioc;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-
-import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
-
-import com.google.inject.Guice;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
+
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Properties;
+
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
- * Hibernate configuration factory. All Hibernate specific properties should be passed as {@link Properties} values. The following list of properties is supported:
+ * Hibernate configuration factory.
+ * All Hibernate specific properties should be passed as {@link Properties} values.
+ * <h4>DB connection</h4>
  * <ul>
- * <li><i><font color="981515">hibernate.connection.url</font></i> -- required;
- * <li><i><font color="981515">hibernate.connection.driver_class</font></i> -- required;
- * <li><i><font color="981515">hibernate.dialect</font></i> -- required;
- * <li><i><font color="981515">hibernate.connection.username</font></i> -- required;
- * <li><i><font color="981515">hibernate.connection.password</font></i> -- required;
- * <li><i>hibernate.show_sql</i> -- defaults to "true";
- * <li><i>hibernate.format_sql</i> -- defaults to "true";
- * <li><i>hibernate.connection.provider_class</i> -- if provided value org.hibernate.connection.C3P0ConnectionProvider is expected; other types of pulls are not yet supported;
+ * <li><i><font color="981515">hibernate.connection.url</font></i> – required;
+ * <li><i><font color="981515">hibernate.connection.driver_class</font></i> – required;
+ * <li><i><font color="981515">hibernate.dialect</font></i> – required;
+ * <li><i><font color="981515">hibernate.connection.username</font></i> – required;
+ * <li><i><font color="981515">hibernate.connection.password</font></i> – required;
+ * <li><i>hibernate.show_sql</i> – defaults to {@code false};
+ * <li><i>hibernate.format_sql</i> – defaults to {@code false};
+ * </ul>
+ * <h4>DB connection pool providers and their properties</h4>
+ * <i>hibernate.connection.provider_class</i> – HikariCP {@code org.hibernate.hikaricp.internal.HikariCPConnectionProvider} is used by default; c3p0 {@code org.hibernate.connection.C3P0ConnectionProvider} is also supported;
+ *
+ * <h5>HikariCP configuration properties</h5>
+ * Refer to the official <a href='https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#gear-configuration-knobs-baby'>Gear Configuration</a> for more details.
+ * <ul>
+ * <li><i>hibernate.hikari.connectionTimeout</i> – a maximum waiting time in millis for a connection from the pool; defaults to 3000 (30 seconds);
+ * <li><i>hibernate.hikari.minimumIdle</i> -- a minimum number of ideal connections in the pool; defaults to the same value as maximumPoolSize;
+ * <li><i>hibernate.hikari.maximumPoolSize</i> -- a maximum number of actual connections in the pool; defaults to 10 (refer <a href='https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing">About Pool Sizing</a> for more information);
+ * <li><i>hibernate.hikari.idleTimeout</i> -- a maximum time in millis that a connection is allowed to sit idle in the pool; defaults to 240000 (4 minutes), which is suitable for Azure SQL;
+ * <li><i>hibernate.hikari.maxLifetime</i> -- a maximum lifetime in millis of a connection in the pool; defaults to 270000 (4:30 minutes).
+ * </ul>
+ * <h5>c3p0 configuration properties</h5>
+ * <ul>
  * <li><i>hibernate.c3p0.min_size</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
  * <li><i>hibernate.c3p0.max_size</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
  * <li><i>hibernate.c3p0.timeout</i> -- should accompany the C3P0ConnectionProvider in case it is specified;
@@ -73,62 +84,33 @@ public class HibernateConfigurationFactory {
     private static final String CONNECTION_PASWD = "hibernate.connection.password";
 
     private final Properties props;
-    private final DomainMetadata domainMetadata;
-    private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
-
     private final Configuration cfg = new Configuration();
     private final Configuration cfgManaged = new Configuration();
 
-    public HibernateConfigurationFactory(//
-            final Properties props, //
-            final Map<Class, Class> defaultHibernateTypes, //
-            final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes) {
+    public HibernateConfigurationFactory(final Properties props, final HibernateMappingsGenerator generator) {
         this.props = props;
+        // TODO use declarative style
+        // Register our custom type mapping so that Hibernate uses it during the binding of query parameters.
+        cfg.registerTypeContributor((typeContributions, $) -> typeContributions.contributeType(DateTimeType.INSTANCE));
 
-        domainMetadata = new DomainMetadata(//
-                defaultHibernateTypes,//
-                Guice.createInjector(new HibernateUserTypesModule()), //
-                applicationEntityTypes, //
-                determineDbVersion(props),
-                determineEql2(props));
-
-        idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata.eqlDomainMetadata);
-
-        final String generatedMappings = HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata);
-
+        final String generatedMappings = generator.generateMappings();
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
             cfgManaged.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
-
     }
 
     public static DbVersion determineDbVersion(final Properties props) {
         return determineDbVersion(props.getProperty(DIALECT));
     }
 
-    private static boolean determineEql2(final Properties props) {
-        final String prop = props.getProperty("eql2");
-        return (prop != null && prop.toLowerCase().equals("true"));
-    }
-
     public static DbVersion determineDbVersion(final String dialect) {
         if (isEmpty(dialect)) {
-            throw new IllegalStateException("Hibernate dialect was not provided, but is required");
+            throw new InvalidArgumentException("Hibernate dialect was not provided, but is required");
         }
-        if (dialect.equals("org.hibernate.dialect.H2Dialect")) {
-            return DbVersion.H2;
-        } else if (dialect.equals("org.hibernate.dialect.PostgreSQLDialect")) {
-            return DbVersion.POSTGRESQL;
-        } else if (dialect.contains("SQLServer")) {
-            return DbVersion.MSSQL;
-        } else if (dialect.equals("org.hibernate.dialect.OracleDialect")) {
-            return DbVersion.ORACLE;
-        }
-
-        throw new IllegalStateException("Could not determine DB version based on the provided Hibernate dialect \"" + dialect + "\".");
+        return HibernateHelpers.getDbVersion(HibernateHelpers.getDialect(dialect));
     }
 
     public Configuration build() {
@@ -138,7 +120,7 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, FORMAT_SQL, "true");
         setSafely(cfg, JDBC_USE_GET_GENERATED_KEYS, "true");
 
-        setSafely(cfg, CONNECTION_PROVIDER_CLASS);
+        setSafely(cfg, CONNECTION_PROVIDER_CLASS, "org.hibernate.hikaricp.internal.HikariCPConnectionProvider");
 
         setSafely(cfg, C3P0_NUM_HELPER_THREADS);
         setSafely(cfg, C3P0_MIN_SIZE);
@@ -148,11 +130,11 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, C3P0_ACQUIRE_INCREMENT);
         setSafely(cfg, C3P0_IDLE_TEST_PERIOD);
 
-        setSafely(cfg, HIKARI_CONNECTION_TIMEOUT);
-        setSafely(cfg, HIKARI_MIN_SIZE);
-        setSafely(cfg, HIKARI_MAX_SIZE);
-        setSafely(cfg, HIKARI_IDLE_TIMEOUT);
-        setSafely(cfg, HIKARI_MAX_LIFETIME);
+        setSafely(cfg, HIKARI_CONNECTION_TIMEOUT, "3000"); // 30 seconds
+        setSafely(cfg, HIKARI_MIN_SIZE); // nothing, allowing HikariCP to do its thing
+        setSafely(cfg, HIKARI_MAX_SIZE, "10"); // 10 connections are plenty in most cases
+        setSafely(cfg, HIKARI_IDLE_TIMEOUT, "240000"); // 4 minutes
+        setSafely(cfg, HIKARI_MAX_LIFETIME, "270000"); // 4 minutes and 30 seconds
 
         setSafely(cfg, HBM2DDL_AUTO);
 
@@ -163,14 +145,6 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, CONNECTION_PASWD, "");
 
         return cfg;
-    }
-
-    public DomainMetadata getDomainMetadata() {
-        return domainMetadata;
-    }
-
-    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
-        return idOnlyProxiedEntityTypeCache;
     }
 
     private Configuration setSafely(final Configuration cfg, final String propertyName, final String defaultValue) {

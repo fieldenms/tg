@@ -15,7 +15,7 @@ public class DynamicKeyEntity extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     @CompositeKeyMember(1)
-    private String firstKeyMemeber;
+    private String firstKeyMember;
 
     @IsProperty
     @CompositeKeyMember(2)

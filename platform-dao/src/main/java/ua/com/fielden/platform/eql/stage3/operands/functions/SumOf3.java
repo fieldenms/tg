@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.operands.functions;
 
-import static java.lang.String.format;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
+
+import static java.lang.String.format;
 
 public class SumOf3 extends SingleOperandFunction3 {
     private final boolean distinct;
@@ -15,9 +17,9 @@ public class SumOf3 extends SingleOperandFunction3 {
     }
     
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final String distinctClause = distinct ? "DISTINCT " : "";
-        return format("SUM(%s %s)", distinctClause, operand.sql(dbVersion));
+        return format("SUM(%s %s)", distinctClause, operand.sql(metadata, dbVersion));
     }
 
     @Override
@@ -29,20 +31,15 @@ public class SumOf3 extends SingleOperandFunction3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        
-        if (!super.equals(obj)) {
-            return false;
-        }
-        
-        if (!(obj instanceof SumOf3)) {
-            return false;
-        }
-        
-        final SumOf3 other = (SumOf3) obj;
-        
-        return distinct == other.distinct;
+        return this == obj
+               || obj instanceof SumOf3 that
+                  && distinct == that.distinct
+                  && super.equals(obj);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("distinct", distinct);
+    }
+
 }

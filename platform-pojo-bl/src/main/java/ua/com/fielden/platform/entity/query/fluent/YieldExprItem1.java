@@ -6,36 +6,37 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IYieldExprOperationOrEnd1;
 
 abstract class YieldExprItem1<T, ET extends AbstractEntity<?>> //
-		extends YieldExprOperand<IYieldExprOperationOrEnd1<T, ET>, IYieldExprItem2<T, ET>, ET> //
-		implements IYieldExprItem1<T, ET> {
+        extends YieldExprOperand<IYieldExprOperationOrEnd1<T, ET>, IYieldExprItem2<T, ET>, ET> //
+        implements IYieldExprItem1<T, ET> {
 
-    protected YieldExprItem1(final Tokens tokens) {
-        super(tokens);
+    protected YieldExprItem1(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForYieldExprItem1(final Tokens tokens);
 
-	@Override
-	protected IYieldExprItem2<T, ET> nextForYieldExprOperand(final Tokens tokens) {
-		return new YieldExprItem2<T, ET>(tokens) {
+    protected abstract T nextForYieldExprItem1(final EqlSentenceBuilder builder);
 
-			@Override
-			protected T nextForYieldExprItem2(final Tokens tokens) {
-				return YieldExprItem1.this.nextForYieldExprItem1(tokens);
-			}
+    @Override
+    protected IYieldExprItem2<T, ET> nextForYieldExprOperand(final EqlSentenceBuilder builder) {
+        return new YieldExprItem2<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForYieldExprItem2(final EqlSentenceBuilder builder) {
+                return YieldExprItem1.this.nextForYieldExprItem1(builder);
+            }
 
-	@Override
-	protected IYieldExprOperationOrEnd1<T, ET> nextForSingleOperand(final Tokens tokens) {
-		return new YieldExprOperationOrEnd1<T, ET>(tokens) {
+        };
+    }
 
-			@Override
-			protected T nextForYieldExprOperationOrEnd1(final Tokens tokens) {
-				return YieldExprItem1.this.nextForYieldExprItem1(tokens);
-			}
+    @Override
+    protected IYieldExprOperationOrEnd1<T, ET> nextForSingleOperand(final EqlSentenceBuilder builder) {
+        return new YieldExprOperationOrEnd1<T, ET>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForYieldExprOperationOrEnd1(final EqlSentenceBuilder builder) {
+                return YieldExprItem1.this.nextForYieldExprItem1(builder);
+            }
+
+        };
+    }
+
 }

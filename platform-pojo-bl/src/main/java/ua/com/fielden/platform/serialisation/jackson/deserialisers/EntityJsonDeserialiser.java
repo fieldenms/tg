@@ -1,35 +1,5 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
-import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.fromString;
-import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditableDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequiredDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValueChangeCountDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisibleDefault;
-import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
-
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -39,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.type.SimpleType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -56,6 +25,28 @@ import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.util.*;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.regex.Pattern;
+
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
+import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.fromString;
+import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
+import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
+import static ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser.VALIDATION_RESULT;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
 
 /**
  * Standard Jackson deserialiser for TG entities.
@@ -127,9 +118,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JsonNode instrumentedJsonNode = node.get("@_i");
             final boolean uninstrumented = instrumentedJsonNode == null;
 
-            final String[] proxiedProps = properties.keySet().stream()
+            final Set<String> proxiedProps = properties.keySet().stream()
                     .filter(prop -> node.get(prop) == null)
-                    .toArray(String[]::new);
+                    .collect(toImmutableSet());
 
             final T entity;
             // Property Descriptor: key and desc properties of propDescriptor are set through setters, not through fields; avoid validators on these properties or otherwise isInitialising:=true would be needed here
@@ -248,7 +239,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private MetaProperty<Object> deserialiseMetaProperty(final MetaProperty<Object> metaProperty, final JsonNode metaPropNode, final Field propField) {
         // deserialise validation result
         if (metaPropNode != null && metaPropNode.isObject() && metaPropNode.size() > 0) {
-            final JsonNode validationResultNode = metaPropNode.get("_validationResult");
+            final JsonNode validationResultNode = metaPropNode.get(VALIDATION_RESULT);
             if (validationResultNode != null) {
                 assertNonEmptyNode(validationResultNode);
                 try {

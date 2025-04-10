@@ -1,6 +1,12 @@
 package ua.com.fielden.platform.entity.factory;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -8,38 +14,22 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import com.google.inject.Injector;
-import com.google.inject.Provider;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.Reflector;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 
 /**
  *
- * Factory for instantiating entities derived from {@link AbstractEntity} with APO/IoC support.
- *
- * This factory is thread-safe -- the only state it has is final {@link Injector}, which is thread-safe because it uses new anonymous instances of {@link Provider} interface in its
- * {@link Injector#getInstance(Class)} method.
+ * Factory for instantiating entities derived from {@link AbstractEntity} with AOP/IoC support.
  *
  * @author TG Team
- *
  */
+@Singleton
 public class EntityFactory {
-    private Injector injector;
 
-    /**
-     * Setting of a different injector instead of the one created upon class instantiation might be required usually in cases where an injector with more modules is needed to
-     * entity instantiation.
-     *
-     * @param injector
-     */
-    public void setInjector(final Injector injector) {
+    private final Injector injector;
+
+    @Inject
+    EntityFactory(final Injector injector) {
         this.injector = injector;
-    }
-
-    protected EntityFactory() {
     }
 
     /**

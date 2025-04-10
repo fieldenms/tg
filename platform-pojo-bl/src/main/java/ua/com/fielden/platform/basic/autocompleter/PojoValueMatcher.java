@@ -3,10 +3,16 @@ package ua.com.fielden.platform.basic.autocompleter;
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.types.RichText;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
+
+import static ua.com.fielden.platform.basic.ValueMatcherException.unsupportedValueType;
 
 /**
  * Provides a collection-based implementation of the {@link IValueMatcher} with wild card support.
@@ -17,6 +23,9 @@ import java.util.regex.Pattern;
 public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher<T> {
 
     public static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
+
+    private static final String ERR_UNSUPPORTED_MATCH_AGAINST =
+            "[" + PojoValueMatcher.class.getTypeName() + "] does not support matching against [%s].";
 
     private final Collection<T> instances;
     private final BiPredicate<Pattern, T> matchingPredicate;
@@ -85,9 +94,20 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
         return (pattern, entity) -> {
             return propNamesToMatchBy.stream()
                     .map(entity::get)
-                    .filter(Objects::nonNull)
-                    .anyMatch(value -> pattern.matcher(value.toString().toUpperCase()).find());
+                    .anyMatch(value -> valueMatches(value, pattern));
         };
+    }
+
+    private static boolean valueMatches(final Object value, final Pattern pattern) {
+        if (value == null) {
+            return false;
+        }
+        if (value instanceof RichText $) {
+            throw unsupportedValueType(PojoValueMatcher.class, RichText.class);
+        }
+        else {
+            return pattern.matcher(value.toString().toUpperCase()).find();
+        }
     }
 
 }

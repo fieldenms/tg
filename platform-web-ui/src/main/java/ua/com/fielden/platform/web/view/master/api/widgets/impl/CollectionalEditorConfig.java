@@ -24,14 +24,14 @@ public class CollectionalEditorConfig<T extends AbstractEntity<?>>
     }
 
     @Override
-    public ICollectionalEditorConfig2<T> withHeader(final String headerPropertyName) {
-        widget().setHeaderPropertyName(headerPropertyName);
+    public ICollectionalEditorConfig2<T> withHeader(final CharSequence headerPropertyName) {
+        widget().setHeaderPropertyName(headerPropertyName.toString());
         return this;
     }
 
     @Override
-    public ICollectionalEditorConfig2<T> withDescription(final String descriptionPropertyName) {
-        widget().setDescriptionPropertyName(descriptionPropertyName);
+    public ICollectionalEditorConfig2<T> withDescription(final CharSequence descriptionPropertyName) {
+        widget().setDescriptionPropertyName(descriptionPropertyName.toString());
         return this;
     }
 

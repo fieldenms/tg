@@ -12,9 +12,9 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItemCloseable;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy.IOrderingItem;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.StandaloneOrderBy.IOrderingItemCloseable;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicPropertyAnalyser;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
@@ -185,7 +185,7 @@ public class RootEntityUtils {
      */
     private static <T extends AbstractEntity<?>> IOrderingItemCloseable appendPropertyOrdering(final IOrderingItem partialOrderingModel, final Pair<String, Ordering> propertyOrdering, final Class<T> entityType) {
         // we use '.prop(' EQL ordering instead of '.yield(' -- ordering by yield is only required for ad-hoc calculated properties that are not supported in Web API yet
-        final ISingleOperandOrderable part = partialOrderingModel.prop(createConditionProperty(new DynamicPropertyAnalyser(entityType, propertyOrdering.getKey()).getCriteriaFullName())); // createConditionProperty is required because of the need to have property prepended with alias
+        final EntityQueryProgressiveInterfaces.StandaloneOrderBy.ISingleOperandOrderable part = partialOrderingModel.prop(createConditionProperty(new DynamicPropertyAnalyser(entityType, propertyOrdering.getKey()).getCriteriaFullName())); // createConditionProperty is required because of the need to have property prepended with alias
         return ASCENDING.equals(propertyOrdering.getValue()) ? part.asc() : part.desc();
     }
     
