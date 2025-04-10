@@ -101,7 +101,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(toImmutableList());
 
-        final var layout = LayoutComposer.mkGridForCentre(3 + auditProperties.size(), 1);
+        final var layout = LayoutComposer.mkGridForCentre(4 + auditProperties.size(), 1);
 
         final EntityActionConfig standardExportAction = EXPORT_EMBEDDED_CENTRE_ACTION.mkAction(synAuditType);
         final EntityActionConfig standardSortAction = CUSTOMISE_COLUMNS_ACTION.mkAction();
@@ -112,6 +112,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addTopAction(standardExportAction)
 
                 .addCrit(USER).asMulti().autocompleter(User.class)
+                .also().addCrit(AUDITED_VERSION).asRange().integer()
                 .also().addCrit(AUDIT_DATE).asRange().date()
                 .also().addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType))
                 ;
@@ -126,11 +127,12 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .setLayoutFor(TABLET, empty(), layout)
                 .setLayoutFor(MOBILE, empty(), layout)
 
-                .addProp(AUDIT_DATE).order(1).desc().minWidth(140)
+                // Order by version, which resembles entity history more accurately than audit date.
+                .addProp(AUDITED_VERSION).order(1).desc().minWidth(60)
+                .also().addProp(AUDIT_DATE).minWidth(140)
                 .also().addProp(USER).minWidth(60)
                 .also().addProp(CHANGED_PROPS).minWidth(120)
-                    .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching audit records.")
-                ;
+                    .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching audit records.");
 
         for (final var prop : auditProperties) {
             centreBuilder2 = centreBuilder2.also().addProp(prop.name());
@@ -157,13 +159,14 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .filter(p -> p.has(AUDIT_PROPERTY))
                 .collect(toImmutableList());
 
-        final var layout = LayoutComposer.mkGridForCentre(4 + auditProperties.size(), 1);
+        final var layout = LayoutComposer.mkGridForCentre(5 + auditProperties.size(), 1);
 
         IAlsoCrit centreBuilder1 = EntityCentreBuilder.centreFor(synAuditType)
                 .addTopAction(standardExportAction).also()
                 .addTopAction(standardSortAction)
 
                 .addCrit(AUDITED_ENTITY).asMulti().autocompleter(auditedType).also()
+                .addCrit(AUDITED_VERSION).asRange().integer().also()
                 .addCrit(AUDIT_DATE).asRange().dateTime().also()
                 // TODO: Autocompletion can be improved by using only audit-properties.
                 .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType)).also()
@@ -181,6 +184,9 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
 
                 .addProp(AUDITED_ENTITY)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching audit records.").also()
+                .addProp(AUDITED_VERSION).minWidth(60).also()
+                // Order by audit date, since this is a top-level centre that includes all audit records.
+                // Moreover, there is no standalone index for auditedVersion to make such an ordering performant.
                 .addProp(AUDIT_DATE).order(1).desc().also()
                 .addProp(CHANGED_PROPS).minWidth(200).also()
                 .addProp(USER);
