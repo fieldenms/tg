@@ -337,7 +337,10 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         }
         // assignBeforeSave is ignored, its semantics should not be applied to audit-entities
         if (isProperty.length() != IsProperty.DEFAULT_LENGTH) {
-            builder.addMember("length", "$L", isProperty.length());
+            final var length = isProperty.length() == IsProperty.MAX_LENGTH
+                    ? CodeBlock.of("$T.MAX_LENGTH", IsProperty.class)
+                    : isProperty.length();
+            builder.addMember("length", "$L", length);
         }
         if (isProperty.precision() != IsProperty.DEFAULT_PRECISION) {
             builder.addMember("precision", "$L", isProperty.precision());
