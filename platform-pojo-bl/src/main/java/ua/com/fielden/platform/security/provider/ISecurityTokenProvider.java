@@ -11,6 +11,8 @@ import ua.com.fielden.platform.security.ISecurityToken;
 ///
 /// One of the objectives for this contract is to provide a singleton implementation that could cache computationally intensive results for reading and transformation of tokens.
 ///
+/// The default implementation is {@link SecurityTokenProvider}, which should be subclassed if some custom logic is needed in an application.
+///
 /// @author TG Team
 /// @see ISecurityTokenNodeTransformation
 @ImplementedBy(SecurityTokenProvider.class)

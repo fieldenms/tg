@@ -9,6 +9,7 @@ import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.security.AuditModuleToken;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.tokens.ISecurityTokenGenerator;
@@ -119,7 +120,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 KeyNumber_CanReadModel_Token.class,
                 GraphiQL_CanExecute_Token.class,
                 UserDefinableHelp_CanSave_Token.class,
-                PersistentEntityInfo_CanExecute_Token.class);
+                PersistentEntityInfo_CanExecute_Token.class,
+                AuditModuleToken.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
         allTokens.addAll(platformLevelTokens);
         allTokens.addAll(extraTokens);
@@ -135,7 +137,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
      * Called by the IoC framework.
      */
     @Inject
-    protected void init(
+    private void init(
             final AuditingMode auditingMode,
             final IApplicationDomainProvider appDomain,
             final IAuditTypeFinder auditTypeFinder,
@@ -145,6 +147,9 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             registerAuditTokens(appDomain, auditTypeFinder, generator);
         }
 
+        if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
+            throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
+        }
         topLevelSecurityTokenNodes = buildTokenNodes(tokenClassesByName.values());
     }
 
@@ -157,16 +162,14 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 .filter(AuditUtils::isAudited)
                 .flatMap(ty -> {
                     final var synAuditEntityType = auditTypeFinder.navigate(ty).synAuditEntityType();
-                    return templatesForAuditedType(ty).stream().map(template -> generator.generateToken(synAuditEntityType, template));
+                    return templatesForAuditedType(ty)
+                            .stream()
+                            .map(template -> generator.generateToken(synAuditEntityType, template, Optional.of(AuditModuleToken.class)));
                 })
                 .forEach(tok -> {
                     tokenClassesByName.put(tok.getName(), tok);
                     tokenClassesBySimpleName.put(tok.getSimpleName(), tok);
                 });
-
-        if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
-            throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
-        }
     }
 
     /**
