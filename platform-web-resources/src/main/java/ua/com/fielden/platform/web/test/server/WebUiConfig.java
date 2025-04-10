@@ -1,111 +1,22 @@
 package ua.com.fielden.platform.web.test.server;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
-import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
-import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
-import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
-import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkVarGridForCentre;
-import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
-import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
-import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
-import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.noUiFunctionalMaster;
-
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.function.Function;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-
 import com.google.inject.Inject;
-
 import fielden.test_app.config.close_leave.TgCloseLeaveExampleWebUiConfig;
 import fielden.test_app.config.compound.TgCompoundEntityWebUiConfig;
 import fielden.test_app.main.menu.close_leave.MiTgCloseLeaveExample;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchPropertyDescriptorByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityEditAction;
-import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.sample.domain.ExportAction;
-import ua.com.fielden.platform.sample.domain.ExportActionProducer;
-import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
-import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
-import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
-import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
-import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
-import ua.com.fielden.platform.sample.domain.TgDeletionTestEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgDummyAction;
-import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependencyProducer;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptorExt;
-import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
-import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
-import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
-import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
-import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
-import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleActionProducer;
-import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityLocator;
 import ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction;
 import ua.com.fielden.platform.sample.domain.ui_actions.producers.MakeCompletedActionProducer;
@@ -113,22 +24,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.ui.menu.sample.MiDeletionTestEntity;
-import ua.com.fielden.platform.ui.menu.sample.MiDetailsCentre;
-import ua.com.fielden.platform.ui.menu.sample.MiEntityCentreNotGenerated;
-import ua.com.fielden.platform.ui.menu.sample.MiTgCollectionalSerialisationParent;
-import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDependency;
-import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptorExt;
-import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates;
-import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
-import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntity;
-import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntityForTrippleDecAnalysis;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties5;
+import ua.com.fielden.platform.ui.menu.sample.*;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
@@ -165,11 +61,7 @@ import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.DashboardRefreshFrequencyWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.SecurityMatrixWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.*;
 import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
@@ -185,6 +77,44 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
+
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.function.Function;
+
+import static java.lang.String.format;
+import static java.util.Optional.*;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
+import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
+import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
+import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.*;
+import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
+import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
+import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.noUiFunctionalMaster;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -203,7 +133,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String envWatermarkCss;
 
     public WebUiConfig(final Properties props) {
-        super("TG Test and Demo Application", Workflows.valueOf(props.getProperty("workflow")), new String[0], Boolean.valueOf(props.getProperty("independent.time.zone")));
+        super("TG Test and Demo Application",
+                Workflows.valueOf(props.getProperty("workflow")),
+                new String[0],
+                Boolean.valueOf(props.getProperty("independent.time.zone")),
+                Optional.empty(),
+                Optional.of("https://www.google.com"));
         if (StringUtils.isEmpty(props.getProperty("web.domain")) || StringUtils.isEmpty(props.getProperty("web.path"))) {
             throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
         }
@@ -480,6 +415,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
                 .subheaderOpen("Other components 1")
                 .cell(cell(CELL_LAYOUT), layout().flexAuto().end())
+                .cell(cell(CELL_LAYOUT).repeat(1).withGapBetweenCells(MARGIN))
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
                 .subheaderOpen("Other components 2")
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
@@ -597,6 +533,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .shortDesc("Dummy")
                         .longDesc("Dummy action, simply prints its result into console.")
                         .build())
+                .also()
+                .addProp("compProp").asAutocompleter()
                 .also()
                 .addProp("booleanProp").asCheckbox()
                     .withAction(

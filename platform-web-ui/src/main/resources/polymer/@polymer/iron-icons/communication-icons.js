@@ -1,3 +1,7 @@
+import '../iron-icon/iron-icon.js';
+import '../iron-iconset-svg/iron-iconset-svg.js';
+import { html } from '../polymer/lib/utils/html-tag.js';
+
 /**
 @license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
@@ -8,9 +12,7 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../iron-icon/iron-icon.js";
-import "../iron-iconset-svg/iron-iconset-svg.js";
-import { html } from "../polymer/lib/utils/html-tag.js";
+
 const template = html`<iron-iconset-svg name="communication" size="24">
 <svg><defs>
 <g id="business"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"></path></g>
@@ -65,4 +67,5 @@ const template = html`<iron-iconset-svg name="communication" size="24">
 <g id="vpn-key"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"></path></g>
 </defs></svg>
 </iron-iconset-svg>`;
+
 document.head.appendChild(template.content);

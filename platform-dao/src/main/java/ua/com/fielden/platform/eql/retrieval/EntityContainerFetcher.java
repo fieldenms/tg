@@ -118,8 +118,8 @@ public class EntityContainerFetcher {
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(executionContext.getEntityFactory());
 
-        return SequentialGroupingStream.stream(stream, (el, group) -> group.size() < batchSize, Optional.of(batchSize)) //
-                .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
+        return SequentialGroupingStream.stream(stream, (el, group) -> group.size() < batchSize, Optional.of(batchSize))
+                                       .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
     }
 
     protected static <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username, final IDates dates, final EqlDomainMetadata eqlDomainMetadata) {

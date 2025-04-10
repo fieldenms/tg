@@ -1,21 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static com.google.common.base.Charsets.UTF_8;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static org.restlet.data.MediaType.ALL;
-import static org.restlet.data.MediaType.IMAGE_PNG;
-import static org.restlet.data.MediaType.IMAGE_SVG;
-import static org.restlet.data.MediaType.TEXT_CSS;
-import static org.restlet.data.MediaType.TEXT_HTML;
-import static org.restlet.data.MediaType.TEXT_JAVASCRIPT;
-import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
-
-import java.io.ByteArrayInputStream;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Supplier;
-
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -24,11 +8,21 @@ import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
-
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+
+import java.io.ByteArrayInputStream;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
+
+import static com.google.common.base.Charsets.UTF_8;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.restlet.data.MediaType.*;
+import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
 
 /**
  * Web server resource that searches for file resource among resource paths and returns it to client.
@@ -160,6 +154,7 @@ public class FileResource extends AbstractWebResource {
         case "png":
             return IMAGE_PNG;
         case "js":
+        case "mjs":
         case "json":
         case "webmanifest":
         case "":

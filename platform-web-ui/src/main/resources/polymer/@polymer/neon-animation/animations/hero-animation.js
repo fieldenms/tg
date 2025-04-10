@@ -1,3 +1,7 @@
+import '../../polymer/polymer-legacy.js';
+import { Polymer } from '../../polymer/lib/legacy/polymer-fn.js';
+import { NeonSharedElementAnimationBehavior } from '../neon-shared-element-animation-behavior.js';
+
 /**
 @license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
@@ -8,9 +12,6 @@ found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as
 part of the polymer project is also subject to an additional IP rights grant
 found at http://polymer.github.io/PATENTS.txt
 */
-import "../../polymer/polymer-legacy.js";
-import { Polymer } from "../../polymer/lib/legacy/polymer-fn.js";
-import { NeonSharedElementAnimationBehavior } from '../neon-shared-element-animation-behavior.js';
 /*
 `<hero-animation>` is a shared element animation that scales and transform an
 element such that it appears to be shared between two pages. Use this in
@@ -32,41 +33,51 @@ Configuration:
 }
 ```
 */
-
 Polymer({
-  is: 'hero-animation',
-  behaviors: [NeonSharedElementAnimationBehavior],
-  configure: function (config) {
-    var shared = this.findSharedElements(config);
 
+  is: 'hero-animation',
+
+  behaviors: [NeonSharedElementAnimationBehavior],
+
+  configure: function(config) {
+    var shared = this.findSharedElements(config);
     if (!shared) {
       return;
     }
 
     var fromRect = shared.from.getBoundingClientRect();
     var toRect = shared.to.getBoundingClientRect();
+
     var deltaLeft = fromRect.left - toRect.left;
     var deltaTop = fromRect.top - toRect.top;
     var deltaWidth = fromRect.width / toRect.width;
     var deltaHeight = fromRect.height / toRect.height;
-    this._effect = new KeyframeEffect(shared.to, [{
-      'transform': 'translate(' + deltaLeft + 'px,' + deltaTop + 'px) scale(' + deltaWidth + ',' + deltaHeight + ')'
-    }, {
-      'transform': 'none'
-    }], this.timingFromConfig(config));
+
+    this._effect = new KeyframeEffect(
+        shared.to,
+        [
+          {
+            'transform': 'translate(' + deltaLeft + 'px,' + deltaTop +
+                'px) scale(' + deltaWidth + ',' + deltaHeight + ')'
+          },
+          {'transform': 'none'}
+        ],
+        this.timingFromConfig(config));
+
     this.setPrefixedProperty(shared.to, 'transformOrigin', '0 0');
     shared.to.style.zIndex = 10000;
     shared.from.style.visibility = 'hidden';
+
     return this._effect;
   },
-  complete: function (config) {
-    var shared = this.findSharedElements(config);
 
+  complete: function(config) {
+    var shared = this.findSharedElements(config);
     if (!shared) {
       return null;
     }
-
     shared.to.style.zIndex = '';
     shared.from.style.visibility = '';
   }
+
 });

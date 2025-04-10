@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/lib/elements/custom-style.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
+import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
 import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
 import { _featureType, createStyleModule } from '/resources/gis/tg-gis-utils.js';

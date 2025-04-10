@@ -30,7 +30,7 @@ public class ActivatableEntityRetrospectionHelper {
     /**
      * Determines whether the specified property does not represent a special activatable entity that does not affect the reference count and should be skipped upon updating reference counts. 
      * 
-     * @param prop
+     * @param propField
      * @return
      */
     public static boolean isNotSpecialActivatableToBeSkipped(final Field propField) {

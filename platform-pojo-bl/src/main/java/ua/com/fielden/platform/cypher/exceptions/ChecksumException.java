@@ -3,7 +3,7 @@ package ua.com.fielden.platform.cypher.exceptions;
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 
 /**
- * A runtime exception that indicates erroneous situation during a checksum computation.
+ * A runtime exception that indicates an erroneous situation during a checksum computation.
  * 
  * @author TG Team
  *
