@@ -672,6 +672,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                 .addAnnotation(compositeKeyMember(AbstractSynAuditEntity.AUDITED_ENTITY_KEY_MEMBER_ORDER))
                 .addAnnotation(AnnotationSpecs.title(getEntityTitle(auditedType),
                                                      "The audited %s.".formatted(getEntityTitle(auditedType))))
+                .addAnnotation(javaPoet.getAnnotation(DenyIntrospection.class))
                 .build();
         addPropertyTo(auditedEntityProp, builder, synAuditEntityClassName);
 
@@ -679,6 +680,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         final var synAuditPropClassName = ClassName.get(synAuditEntityClassName.packageName(), synAuditEntityClassName.simpleName() + "_Prop");
         addPropertyTo(propertyBuilder(AbstractSynAuditEntity.CHANGED_PROPS, ParameterizedTypeName.get(ClassName.get(Set.class), synAuditPropClassName))
                               .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of the audit event."))
+                              .addAnnotation(javaPoet.getAnnotation(DenyIntrospection.class))
                               .initializer("new $T<>()", ClassName.get(HashSet.class))
                               .build(),
                       builder, synAuditEntityClassName);
@@ -688,6 +690,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
                                       ParameterizedTypeName.get(ClassName.get(PropertyDescriptor.class), synAuditEntityClassName))
                               .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of the audit event."))
                               .addAnnotation(AnnotationSpecs.critOnly(CritOnly.Type.MULTI))
+                              .addAnnotation(javaPoet.getAnnotation(DenyIntrospection.class))
                               .build(),
                       builder, synAuditEntityClassName);
 
