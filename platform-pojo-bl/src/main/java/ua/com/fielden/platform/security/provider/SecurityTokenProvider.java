@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.provider;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -29,9 +30,12 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.*;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toCollection;
+import static org.apache.commons.collections4.CollectionUtils.disjunction;
 
 /**
  * Searches for all available security tokens in the application based on the provided path and package name.
@@ -201,58 +205,57 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return ofNullable(classBySimpleName != null ? classBySimpleName : (Class<T>) tokenClassesByName.get(tokenClassSimpleName));
     }
 
-    /**
-     * Transforms a set of security tokens into a hierarchy of {@link SecurityTokenNode} nodes.
-     * <p>
-     * The result is a forest of trees (i.e., multiple trees), ordered according to the comparator, implemented by {@link SecurityTokenNode}.
-     * Roots for each trees represent one of the top most security tokens.
-     *
-     * @param allTokens
-     * @return
-     */
+    /// Transforms a set of security tokens into a hierarchy of [SecurityTokenNode] nodes.
+    ///
+    /// The result is a forest of trees (i.e., multiple trees), ordered according to the comparator, implemented by [SecurityTokenNode].
+    /// Roots for each trees represent one of the top-level security tokens.
+    ///
+    /// `allTokens` must contain all tokens that are contained in the resulting forest of trees.
+    /// For example, it is an error if `allTokens` contains a sub-token but does not contain its parent token.
     private static SortedSet<SecurityTokenNode> buildTokenNodes(final Iterable<Class<? extends ISecurityToken>> allTokens) {
-        final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
+        final Map<Class<? extends ISecurityToken>, SecurityTokenNode> tokenTypeToNode = new HashMap<>(Iterables.size(allTokens));
+        allTokens.forEach(t -> buildTokenNodes_(t, tokenTypeToNode));
 
-        allTokens.forEach(token -> {
-            // First get a list of super classes and then for each such class that doesn't exist in the hierarchy of SecurityTokenNodes, create a node and add it to the hierarchy.
-            final List<Class<? extends ISecurityToken>> tokenHierarchy = genHierarchyPath(token);
-            tokenHierarchy.stream().reduce((SecurityTokenNode) null, (tokenNode, tokenClass) -> {
-                // Argument tokenNode can only be null if tokenClass is the top most class, implementing ISecurityToken.
-                // Otherwise, tokenNode was created for a super class of tokenClass.
-                SecurityTokenNode nextNode = tokenNode == null ? topTokenNodes.get(tokenClass) : tokenNode.getSubTokenNode(tokenClass);
-                // If there is no next token node for tokenClass then create a new one, and
-                // add it to the hierarchy as a sub-node of tokenNode or, if tokenNode is null, nextNode becomes top most node.
-                if (nextNode == null) {
-                    // a token for the next node is a subtype of the token represented by tokenNode
-                    nextNode = new SecurityTokenNode(tokenClass, tokenNode);
-                    // Is next token the top most?
-                    if (tokenNode == null) {
-                        topTokenNodes.put(tokenClass, nextNode);
-                    }
-                }
-                return nextNode;
-            }, (prev, next) -> next);
-        });
+        if (tokenTypeToNode.size() != Iterables.size(allTokens)) {
+            final var unregisteredTokens = disjunction(tokenTypeToNode.keySet(), allTokens);
+            throw new SecurityException(format(
+                    "There are %s unregistered tokens. They should be registered with [%s]. Unregistered tokens: [%s]",
+                    unregisteredTokens.size(),
+                    ISecurityTokenProvider.class.getSimpleName(),
+                    CollectionUtil.toString(unregisteredTokens, Class::getSimpleName, ", ")));
+        }
 
-        return new TreeSet<>(topTokenNodes.values());
+        return tokenTypeToNode.values()
+                .stream()
+                .filter(node -> node.getSuperTokenNode() == null)
+                .collect(toCollection(TreeSet::new));
     }
 
-    /**
-     * Linearises the class hierarchy of specified token starting from class that directly implements ISecurityToken to the class specified as token.
-     *
-     * @param token
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private static List<Class<? extends ISecurityToken>> genHierarchyPath(final Class<? extends ISecurityToken> token) {
-        final List<Class<? extends ISecurityToken>> tokenHierarchyList = new ArrayList<>();
-        Class<?> parentNode = token;
-        while (ISecurityToken.class.isAssignableFrom(parentNode)) {
-            tokenHierarchyList.add((Class<? extends ISecurityToken>) parentNode);
-            parentNode = parentNode.getSuperclass();
+    /// Builds a token node for `tokenType`.
+    /// Mutates `tokenTypeToNode` in the process.
+    private static SecurityTokenNode buildTokenNodes_(
+            final Class<? extends ISecurityToken> tokenType,
+            final Map<Class<? extends ISecurityToken>, SecurityTokenNode> tokenTypeToNode)
+    {
+        final var existingTokenNode = tokenTypeToNode.get(tokenType);
+        if (existingTokenNode != null) {
+            return existingTokenNode;
         }
-        Collections.reverse(tokenHierarchyList);
-        return tokenHierarchyList;
+        else {
+            final SecurityTokenNode tokenNode;
+            final var superclass = tokenType.getSuperclass();
+            // Sub-token
+            if (ISecurityToken.class.isAssignableFrom(superclass)) {
+                final var superTokenNode = buildTokenNodes_((Class) superclass, tokenTypeToNode);
+                tokenNode = new SecurityTokenNode(tokenType, superTokenNode);
+            }
+            // Top-level token
+            else {
+                tokenNode = new SecurityTokenNode(tokenType, null);
+            }
+            tokenTypeToNode.put(tokenType, tokenNode);
+            return tokenNode;
+        }
     }
 
 }
