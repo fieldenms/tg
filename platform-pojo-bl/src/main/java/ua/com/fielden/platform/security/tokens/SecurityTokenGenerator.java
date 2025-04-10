@@ -10,6 +10,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.ISecurityToken;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,7 +22,8 @@ final class SecurityTokenGenerator implements ISecurityTokenGenerator {
     @Override
     public Class<? extends ISecurityToken> generateToken(
             final Class<? extends AbstractEntity<?>> entityType,
-            final Template template)
+            final Template template,
+            final Optional<Class<? extends ISecurityToken>> maybeParentType)
     {
         final var baseType = PropertyTypeDeterminator.baseEntityType(entityType);
 
@@ -32,7 +34,7 @@ final class SecurityTokenGenerator implements ISecurityTokenGenerator {
                 .collect(Collectors.joining("."));
 
         final var tokenType = new ByteBuddy()
-                .subclass(ISecurityToken.class)
+                .subclass(maybeParentType.orElse(ISecurityToken.class))
                 .name(tokenFqn)
                 .modifiers(Visibility.PUBLIC)
                 .defineField("TITLE", String.class, Visibility.PUBLIC, Ownership.STATIC, FieldManifestation.FINAL)
