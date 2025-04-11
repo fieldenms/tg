@@ -43,14 +43,14 @@ const isResponseSuccessful = function (response) {
 /**
  * Creates URL object from 'requestUrl' string.
  */
-const createURL(requestUrl) {
+const createURL = function (requestUrl) {
     return new URL(requestUrl);
 };
 
 /**
  * Creates GET Request object from 'url'.
  */
-const createGETRequest(url) {
+const createGETRequest = function (url) {
     return new Request(url, { method: 'GET' });
 };
 
@@ -111,7 +111,7 @@ const getTextFrom = function (response) {
     }
 };
 
-self.addEventListener('install', event => {
+addEventListener('install', event => {
     // New updated service worker can be installed, but not yet activated until the page will be closed / opened again.
     // Currently, even 'Hard reload' or 'Empty cache and hard reload' in Chrome does not insist on service worker update.
     // Actually, these actions do nothing - not even installing an updated service worker (unlike Normal Reload, Ctrl+R).
@@ -122,10 +122,10 @@ self.addEventListener('install', event => {
     //   (See https://w3c.github.io/ServiceWorker/#activate 8.1 and 8.2).
     // In case of some browser implementation deficiencies, clients.claim() should also additionally enforce that.
     // But clients.claim() is not strictly required (see it's usage below for more details on the reason why it is needed).
-    self.skipWaiting();
+    skipWaiting();
 });
 
-self.addEventListener('activate', event => {
+addEventListener('activate', event => {
     // By default the page's fetches will not go through service worker if it was not fetched through service worker.
     // This is the case for the very first time 'index.html' loading.
     // However we can enforce service worker to take full control as soon as first activation performs.
@@ -133,7 +133,7 @@ self.addEventListener('activate', event => {
     clients.claim();
 });
 
-self.addEventListener('fetch', function (event) {
+addEventListener('fetch', function (event) {
     const request = event.request;
     const urlObj = createURL(request.url);
     if (isStatic(urlObj.pathname, request.method)) { // only consider intercepting for static resources
