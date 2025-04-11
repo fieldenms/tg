@@ -16,7 +16,7 @@ const checksumCacheName = 'tg-deployment-cache-checksums';
  * @param pathName
  * @param method
  */
-const isStatic = function (pathName, method) {
+function isStatic (pathName, method) {
     return 'GET' === method && (pathName === '/' ||
         pathName === '/forgotten' ||
         pathName.startsWith('/resources/') ||
@@ -24,37 +24,37 @@ const isStatic = function (pathName, method) {
         pathName.startsWith('/centre_ui/') ||
         pathName.startsWith('/master_ui/') ||
         pathName.startsWith('/custom_view/'));
-};
+}
 
 /**
  * Creates response indicating that client application is stale and is needed to be refreshed fully.
  */
-const staleResponse = function () {
+function staleResponse () {
     return new Response('STALE', {status: 412, statusText: 'BAD', headers: {'Content-Type': 'text/plain'}});
-};
+}
 
 /**
  * Indicates whether response is successful.
  */
-const isResponseSuccessful = function (response) {
+function isResponseSuccessful (response) {
     return response && response.ok;
-};
+}
 
 /**
  * Creates URL object from 'requestUrl' string.
  */
-const createURL = function (requestUrl) {
+function createURL (requestUrl) {
     return new URL(requestUrl);
-};
+}
 
 /**
  * Creates GET Request object from 'url'.
  */
-const createGETRequest = function (url) {
+function createGETRequest (url) {
     return new Request(url, { method: 'GET' });
-};
+}
 
-const cleanUp = function (url, cache) {
+function cleanUp (url, cache) {
     const serverResourcesRequest = createGETRequest(url + '?resources=true');
     return fetch(serverResourcesRequest).then(function(serverResourcesResponse) { // fetch resources; it should not fail (otherwise bad response will be returned)
         return getTextFrom(serverResourcesResponse).then(function (serverResourcesStr) {
@@ -72,13 +72,13 @@ const cleanUp = function (url, cache) {
             });
         });
     });
-};
+}
 
 /**
  * Caches the specified 'response' and its checksum ('checksumResponse') in case where they are both successful.
  * Returns promise resolving to 'response'.
  */
-const cacheIfSuccessful = function (response, checksumRequest, checksumResponse, url, cache, checksumCache, urlObj, event) {
+function cacheIfSuccessful (response, checksumRequest, checksumResponse, url, cache, checksumCache, urlObj, event) {
     if (isResponseSuccessful(response)) { // cache response if it is successful; 'checksumResponse' is successful at this stage
         // IMPORTANT: Clone the response. A response is a stream and because we want the browser to consume the response
         // as well as the cache consuming the response, we need to clone it so we have two streams.
@@ -96,20 +96,20 @@ const cacheIfSuccessful = function (response, checksumRequest, checksumResponse,
         });
     }
     return Promise.resolve(response); // do not blow up response if for some reason response was not successful; just return it as if the request was not intercepted by service worker
-};
+}
 
 /**
  * Returns promise resolving to response text if successful, otherwise returns rejection promise containing unsuccessful response.
  * 
  * @param response 
  */
-const getTextFrom = function (response) {
+function getTextFrom (response) {
     if (isResponseSuccessful(response)) {
         return response.clone().text(); // perform cloning here to leave original 'response' stream unaffected
     } else {
         return Promise.reject(response);
     }
-};
+}
 
 addEventListener('install', event => {
     // New updated service worker can be installed, but not yet activated until the page will be closed / opened again.
