@@ -38,6 +38,7 @@ import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.*;
+import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY;
 import static ua.com.fielden.platform.audit.AbstractAuditEntity.AUDITED_ENTITY_KEY_MEMBER_ORDER;
@@ -57,6 +58,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 final class AuditEntityGenerator implements IAuditEntityGenerator {
 
     private static final Logger LOGGER = getLogger();
+    public static final String INACTIVE_AUDIT_PROPERTY_TITLE_SUFFIX = " [removed]";
 
     private final AuditingMode auditingMode;
     private final IDomainMetadata domainMetadata;
@@ -258,7 +260,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
 
                     final var propTitle = nonBlankPropertyTitle(pm.name(), prevAuditEntityType);
                     if (!propTitle.isEmpty()) {
-                        propBuilder.addAnnotation(title(propTitle, "Non-existing property."));
+                        propBuilder.addAnnotation(title(propTitle + INACTIVE_AUDIT_PROPERTY_TITLE_SUFFIX, "[%s] at the time of the audited event.".formatted(propTitle)));
                     }
 
                     return propBuilder.build();
@@ -717,8 +719,11 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         allAuditProperties.stream()
                 .map(prop -> {
                     final var title = prop.title().orElse("");
+                    final var origTitle = prop.hasAnnotation(InactiveAuditProperty.class)
+                            ? substringBeforeLast(title, INACTIVE_AUDIT_PROPERTY_TITLE_SUFFIX)
+                            : title;
                     final var propBuilder = propertyBuilder(prop.name(), prop.type());
-                    propBuilder.addAnnotation(title(title, "[%s] at the time of the audited event.".formatted(title)));
+                    propBuilder.addAnnotation(title(title, "[%s] at the time of the audited event.".formatted(origTitle)));
                     if (prop.hasAnnotation(InactiveAuditProperty.class)) {
                         propBuilder.addAnnotation(InactiveAuditProperty.class);
                     }
