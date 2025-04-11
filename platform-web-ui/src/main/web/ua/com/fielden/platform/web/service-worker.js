@@ -137,8 +137,8 @@ addEventListener('fetch', event => {
     const request = event.request;
     const urlObj = createURL(request.url);
     if (isStatic(urlObj.pathname, request.method)) { // only consider intercepting for static resources
-        event.respondWith((() => {
-            return caches.open(CACHE_NAME).then(cache => { // open main cache; it should not fail (otherwise bad response will be returned)
+        event.respondWith(
+            caches.open(CACHE_NAME).then(cache => { // open main cache; it should not fail (otherwise bad response will be returned)
                 // 'request.url' may contain '#' / '?' parts -- use only 'origin' and 'pathname'.
                 const url = urlObj.origin + urlObj.pathname;
                 const serverChecksumRequest = createGETRequest(url + '?checksum=true');
@@ -190,7 +190,7 @@ addEventListener('fetch', event => {
                         });
                     });
                 });
-            });
-        })());
+            })
+        )
     } // all non-static resources should be bypassed by service worker, just ignoring them in 'fetch' event; this will trigger default logic
 });
