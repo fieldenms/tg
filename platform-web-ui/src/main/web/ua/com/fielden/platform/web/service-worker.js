@@ -8,23 +8,22 @@ const cacheName = 'tg-deployment-cache';
 const checksumCacheName = 'tg-deployment-cache-checksums';
 
 /**
- * Determines whether request 'url' represents static resource, i.e. such resource that does not change between releases.
+ * Determines whether request 'pathName' represents static resource, i.e. such resource that does not change between releases.
  * 
  * Please note that for deployment mode only '/', '/forgotten' and '/resources/...' are needed.
  * However, we have listed all possible resources here to avoid the change to service worker later.
  * 
- * @param url
+ * @param pathName
  * @param method
  */
-const isStatic = function (url, method) {
-    const pathname = new URL(url).pathname;
-    return 'GET' === method && (pathname === '/' ||
-        pathname === '/forgotten' ||
-        pathname.startsWith('/resources/') ||
-        pathname.startsWith('/app/') ||
-        pathname.startsWith('/centre_ui/') ||
-        pathname.startsWith('/master_ui/') ||
-        pathname.startsWith('/custom_view/'));
+const isStatic = function (pathName, method) {
+    return 'GET' === method && (pathName === '/' ||
+        pathName === '/forgotten' ||
+        pathName.startsWith('/resources/') ||
+        pathName.startsWith('/app/') ||
+        pathName.startsWith('/centre_ui/') ||
+        pathName.startsWith('/master_ui/') ||
+        pathName.startsWith('/custom_view/'));
 };
 
 /**
@@ -123,10 +122,10 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', function (event) {
     const request = event.request;
     const urlObj = new URL(request.url);
-    const url = urlObj.origin + urlObj.pathname;
-    if (isStatic(url, request.method)) { // only consider intercepting for static resources
+    if (isStatic(urlObj.pathname, request.method)) { // only consider intercepting for static resources
         event.respondWith(function() {
             return caches.open(cacheName).then(function (cache) { // open main cache; it should not fail (otherwise bad response will be returned)
+                const url = urlObj.origin + urlObj.pathname;
                 const serverChecksumRequest = new Request(url + '?checksum=true', { method: 'GET' });
                 return fetch(serverChecksumRequest).then(function(serverChecksumResponse) { // fetch checksum for the intercepted resource; it should not fail (otherwise bad response will be returned)
                     return cache.match(url).then(function (cachedResponse) { // match resource in main cache; it should not fail (otherwise bad response will be returned)
