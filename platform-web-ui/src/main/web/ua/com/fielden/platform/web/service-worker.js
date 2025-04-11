@@ -40,6 +40,13 @@ const isResponseSuccessful = function (response) {
     return response && response.ok;
 };
 
+/**
+ * Creates URL object from 'requestUrl' string.
+ */
+const createURL(requestUrl) {
+    return new URL(requestUrl);
+};
+
 const cleanUp = function (url, cache) {
     const serverResourcesRequest = new Request(url + '?resources=true', { method: 'GET' });
     return fetch(serverResourcesRequest).then(function(serverResourcesResponse) { // fetch resources; it should not fail (otherwise bad response will be returned)
@@ -49,7 +56,7 @@ const cleanUp = function (url, cache) {
             return cache.keys().then(function (requests) {
                 for (const request of requests) {
                     console.warn(`CACHED ${request.url}`);
-                    const requestPathname = new URL(request.url).pathname;
+                    const requestPathname = createURL(request.url).pathname;
                     if (requestPathname.startsWith('/resources/') /*&& !serverResources.has(requestPathname)*/) {
                         console.warn(`CACHED, TO BE DELETED ${request.url}`);
                     }
@@ -121,10 +128,11 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', function (event) {
     const request = event.request;
-    const urlObj = new URL(request.url);
+    const urlObj = createURL(request.url);
     if (isStatic(urlObj.pathname, request.method)) { // only consider intercepting for static resources
         event.respondWith(function() {
             return caches.open(cacheName).then(function (cache) { // open main cache; it should not fail (otherwise bad response will be returned)
+                // 'request.url' may contain '#' / '?' parts -- use only 'origin' and 'pathname'.
                 const url = urlObj.origin + urlObj.pathname;
                 const serverChecksumRequest = new Request(url + '?checksum=true', { method: 'GET' });
                 return fetch(serverChecksumRequest).then(function(serverChecksumResponse) { // fetch checksum for the intercepted resource; it should not fail (otherwise bad response will be returned)
