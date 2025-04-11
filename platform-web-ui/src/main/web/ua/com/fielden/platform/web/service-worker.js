@@ -47,8 +47,15 @@ const createURL(requestUrl) {
     return new URL(requestUrl);
 };
 
+/**
+ * Creates GET Request object from 'url'.
+ */
+const createGETRequest(url) {
+    return new Request(url, { method: 'GET' });
+};
+
 const cleanUp = function (url, cache) {
-    const serverResourcesRequest = new Request(url + '?resources=true', { method: 'GET' });
+    const serverResourcesRequest = createGETRequest(url + '?resources=true');
     return fetch(serverResourcesRequest).then(function(serverResourcesResponse) { // fetch resources; it should not fail (otherwise bad response will be returned)
         return getTextFrom(serverResourcesResponse).then(function (serverResourcesStr) {
             const serverResources = new Set(serverResourcesStr.split('|'));
@@ -134,7 +141,7 @@ self.addEventListener('fetch', function (event) {
             return caches.open(cacheName).then(function (cache) { // open main cache; it should not fail (otherwise bad response will be returned)
                 // 'request.url' may contain '#' / '?' parts -- use only 'origin' and 'pathname'.
                 const url = urlObj.origin + urlObj.pathname;
-                const serverChecksumRequest = new Request(url + '?checksum=true', { method: 'GET' });
+                const serverChecksumRequest = createGETRequest(url + '?checksum=true');
                 return fetch(serverChecksumRequest).then(function(serverChecksumResponse) { // fetch checksum for the intercepted resource; it should not fail (otherwise bad response will be returned)
                     return cache.match(url).then(function (cachedResponse) { // match resource in main cache; it should not fail (otherwise bad response will be returned)
                         return caches.open(checksumCacheName).then(function (checksumCache) { // open checksum cache; it should not fail (otherwise bad response will be returned)
