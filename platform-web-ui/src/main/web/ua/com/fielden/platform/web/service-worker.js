@@ -1,11 +1,11 @@
 /**
  * The name for resources cache.
  */
-const cacheName = 'tg-deployment-cache';
+const CACHE_NAME = 'tg-deployment-cache';
 /**
  * The name for separate cache of resource checksums.
  */
-const checksumCacheName = 'tg-deployment-cache-checksums';
+const CHECKSUM_CACHE_NAME = 'tg-deployment-cache-checksums';
 
 /**
  * Determines whether request 'pathName' represents static resource, i.e. such resource that does not change between releases.
@@ -138,13 +138,13 @@ addEventListener('fetch', function (event) {
     const urlObj = createURL(request.url);
     if (isStatic(urlObj.pathname, request.method)) { // only consider intercepting for static resources
         event.respondWith(function() {
-            return caches.open(cacheName).then(function (cache) { // open main cache; it should not fail (otherwise bad response will be returned)
+            return caches.open(CACHE_NAME).then(function (cache) { // open main cache; it should not fail (otherwise bad response will be returned)
                 // 'request.url' may contain '#' / '?' parts -- use only 'origin' and 'pathname'.
                 const url = urlObj.origin + urlObj.pathname;
                 const serverChecksumRequest = createGETRequest(url + '?checksum=true');
                 return fetch(serverChecksumRequest).then(function(serverChecksumResponse) { // fetch checksum for the intercepted resource; it should not fail (otherwise bad response will be returned)
                     return cache.match(url).then(function (cachedResponse) { // match resource in main cache; it should not fail (otherwise bad response will be returned)
-                        return caches.open(checksumCacheName).then(function (checksumCache) { // open checksum cache; it should not fail (otherwise bad response will be returned)
+                        return caches.open(CHECKSUM_CACHE_NAME).then(function (checksumCache) { // open checksum cache; it should not fail (otherwise bad response will be returned)
                             return checksumCache.match(url + '?checksum=true').then(function (cachedChecksumResponse) { // match resource's checksum in checksum cache; it should not fail (otherwise bad response will be returned)
                                 return getTextFrom(serverChecksumResponse).then(function (serverChecksum) { // get checksum text; checksum response should be successful (otherwise bad response will be returned)
                                     if (cachedResponse && cachedChecksumResponse) { // cached entry exists and it has proper checksum too
