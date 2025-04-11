@@ -1042,7 +1042,7 @@ Polymer({
         const persistedIps = new Set(ipOrders.flat());
         const dslIps = new Set(ips.map(ip => ip.functionalMasterTagName));
         const removedIps = persistedIps.difference(dslIps);
-        if (removedIps.size === 0 && dslIps.isSubsetOf(persistedIps)) { // all previously persisted insertion points in custom layout exist in Centre DSL list of IPs and vice versa
+        if (removedIps.size === 0 && persistedIps.isSubsetOf(dslIps)) { // all previously persisted insertion points in custom layout exist in Centre DSL list of IPs and vice versa
             keys.forEach((key, i) => {
                 this._restoreOrderForContainer(containers[i], ipOrders[i], ips);
             });
