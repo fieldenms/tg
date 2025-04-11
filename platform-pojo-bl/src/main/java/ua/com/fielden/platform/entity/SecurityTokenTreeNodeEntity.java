@@ -33,7 +33,7 @@ public class SecurityTokenTreeNodeEntity extends AbstractEntity<String> {
 
     @IsProperty(SecurityTokenTreeNodeEntity.class)
     @Title(value = "Children", desc = "Desc")
-    private Set<SecurityTokenTreeNodeEntity> children = new HashSet<>();
+    private final Set<SecurityTokenTreeNodeEntity> children = new TreeSet<>();
 
     @Observable
     public SecurityTokenTreeNodeEntity setTitle(final String title) {
