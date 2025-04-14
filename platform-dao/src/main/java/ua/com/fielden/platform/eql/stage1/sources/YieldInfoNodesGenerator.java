@@ -18,7 +18,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
 import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPath;
-import static ua.com.fielden.platform.utils.StreamUtils.enumerated;
+import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
 
 /**
  * Transforms yields from multiple source queries into <i>yield trees</i>.
@@ -120,7 +120,7 @@ public class YieldInfoNodesGenerator {
             final var exception = new InvalidYieldMatrixException(
                     ERR_INVALID_YIELDS_MATRIX.formatted(invalidYields.stream().map(t2 -> t2.map("\"%s\" (occurs %s times)"::formatted)).collect(joining(", ")),
                                                         models.size()));
-            LOGGER.error(() -> "%s%nSource queries:%n%s".formatted(exception.getMessage(), enumerated(models.stream(), "%s. %s"::formatted)), exception);
+            LOGGER.error(() -> "%s%nSource queries:%n%s".formatted(exception.getMessage(), enumerate(models.stream(), (m, i) -> "%s. %s".formatted(i, m))), exception);
             throw exception;
         }
     }
