@@ -62,26 +62,26 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
 
     @IsProperty
     @MapTo
-    @Title(value = "Version", desc = "Version of the entity for which this audit record was created.")
+    @Title(value = "Audit Version", desc = "Version of the entity for which this audit record was created.")
     @CompositeKeyMember(2)
     private Long auditedVersion;
 
     @IsProperty
-    @Title(value = "Date", desc = "Date/time the audited event took place.")
+    @Title(value = "Audit Date", desc = "Date/time the audited event took place.")
     @MapTo
     @Final
     @Required
     private Date auditDate;
 
     @IsProperty
-    @Title(value = "User", desc = "User who performed the audited event.")
+    @Title(value = "Audit User", desc = "User who performed the audited event.")
     @MapTo
     @Final
     @Required
     private User user;
 
     @IsProperty
-    @Title(value = "Transaction ID", desc = "A unique identifier of the transaction for the audited event.")
+    @Title(value = "Audit Transaction ID", desc = "A unique identifier of the transaction for the audited event.")
     @MapTo
     @Final
     @Required

@@ -73,23 +73,23 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
     public abstract E getAuditedEntity();
 
     @IsProperty
-    @Title(value = "Version", desc = "Version of the entity for which this audit record was created.")
+    @Title(value = "Audit Version", desc = "Version of the entity for which this audit record was created.")
     @CompositeKeyMember(2)
     @DenyIntrospection
     private Long auditedVersion;
 
     @IsProperty
-    @Title(value = "Date", desc = "Date/time the audited event took place.")
+    @Title(value = "Audit Date", desc = "Date/time the audited event took place.")
     @DenyIntrospection
     private Date auditDate;
 
     @IsProperty
-    @Title(value = "User", desc = "User who performed the audited event.")
+    @Title(value = "Audit User", desc = "User who performed the audited event.")
     @DenyIntrospection
     private User user;
 
     @IsProperty
-    @Title(value = "Transaction ID", desc = "A unique identifier of the transaction for the audited event.")
+    @Title(value = "Audit Transaction ID", desc = "A unique identifier of the transaction for the audited event.")
     @DenyIntrospection
     private String auditedTransactionGuid;
 
