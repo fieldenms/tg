@@ -1314,15 +1314,10 @@ public class EntityUtils {
     }
 
     ///
-    /// The same as [#copy], but with a set of [IConvertableToPath] as the last argument.
+    /// The same as [#copy], but with variable arity for property names.
     ///
-    /// @param fromEntity
-    /// @param toEntity
-    /// @param skipProperties
-    /// @param <T>
-    ///
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
-        copy(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).toList().toArray(new String[]{}));
+    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final CharSequence... skipProperties) {
+        copy_(fromEntity, toEntity, Stream.of(skipProperties).map(CharSequence::toString).collect(Collectors.toSet()));
     }
 
     ///
@@ -1333,10 +1328,11 @@ public class EntityUtils {
     /// @param toEntity   A destination that is an instance where the property values are copied to.
     /// @param skipProperties  A sequence of property names, which may include ID and VERSION.
     ///
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final CharSequence... skipProperties) {
-        // Convert an array with property names to be skipped into a set for more efficient use.
-        final Set<String> skipPropertyName = Stream.of(skipProperties).map(CharSequence::toString).collect(Collectors.toSet());
+    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
+        copy_(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).collect(Collectors.toSet()));
+    }
 
+    private static <T extends AbstractEntity> void copy_(final AbstractEntity<?> fromEntity, final T toEntity, final Set<String> skipProperties) {
         // Under certain circumstances, copying happens for an uninstrumented entity instance
         // In such cases, there would be no meta-properties, and copying would fail.
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
@@ -1348,19 +1344,19 @@ public class EntityUtils {
 
         // Copy each identified property, which is not proxied or skipped into a new instance.
         realProperties.stream()
-            .filter(name -> !skipPropertyName.contains(name))
-            .filter(propName -> !fromEntity.proxiedPropertyNames().contains(propName))
-            .forEach(propName -> {
-                if (KEY.equals(propName) && toEntity.getKeyType().equals(fromEntity.getKeyType()) && DynamicEntityKey.class.isAssignableFrom(fromEntity.getKeyType())) {
-                    toEntity.setKey(new DynamicEntityKey(toEntity));
-                } else {
-                    try {
-                        toEntity.set(propName, fromEntity.get(propName));
-                    } catch (final Exception ex) {
-                        logger.trace(() -> "Setter for property %s did not succeed during copying.".formatted(propName), ex);
+                .filter(name -> !skipProperties.contains(name))
+                .filter(propName -> !fromEntity.proxiedPropertyNames().contains(propName))
+                .forEach(propName -> {
+                    if (KEY.equals(propName) && toEntity.getKeyType().equals(fromEntity.getKeyType()) && DynamicEntityKey.class.isAssignableFrom(fromEntity.getKeyType())) {
+                        toEntity.setKey(new DynamicEntityKey(toEntity));
+                    } else {
+                        try {
+                            toEntity.set(propName, fromEntity.get(propName));
+                        } catch (final Exception ex) {
+                            logger.trace(() -> "Setter for property %s did not succeed during copying.".formatted(propName), ex);
+                        }
                     }
-                }
-            });
+                });
     }
 
     /**
