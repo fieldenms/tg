@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.types.tuples;
 
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.Map;
+import java.util.function.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
@@ -35,6 +35,14 @@ public class T2<T_1, T_2> {
      */
     public static <T_1, T_2> T2<T_1, T_2> t2(final T_1 _1, final T_2 _2) {
         return new T2<>(_1, _2);
+    }
+
+    public T_1 _1() {
+        return _1;
+    }
+
+    public T_2 _2() {
+        return _2;
     }
 
     ////////////////////////////////////
@@ -77,6 +85,24 @@ public class T2<T_1, T_2> {
     public void run(final BiConsumer<? super T_1, ? super T_2> action) {
         action.accept(_1, _2);
     }
+    ////////////////////////////////////
+
+    ////////////////////////////////////
+    //////// Utilities /////////////////
+    ////////////////////////////////////
+
+    public static <A, B> Collector<T2<A, B>, ?, Map<A, B>> toMap() {
+        return Collectors.toMap(T2::_1, T2::_2);
+    }
+
+    public static <A, B> Collector<T2<A, B>, ?, Map<A, B>> toMap(BinaryOperator<B> mergeFunction) {
+        return Collectors.toMap(T2::_1, T2::_2, mergeFunction);
+    }
+
+    public static <A, B, M extends Map<A, B>> Collector<T2<A, B>, ?, M> toMap(BinaryOperator<B> mergeFunction, Supplier<M> mapFactory) {
+        return Collectors.toMap(T2::_1, T2::_2, mergeFunction, mapFactory);
+    }
+
     ////////////////////////////////////
 
     @Override

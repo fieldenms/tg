@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toMap;
-
 /// Standard rendering customiser for synthetic audit-entity types.
 ///
 public class AuditEntityRenderingCustomiser implements IRenderingCustomiser<Map<String, Object>> {
@@ -30,7 +28,7 @@ public class AuditEntityRenderingCustomiser implements IRenderingCustomiser<Map<
         final Map<String, Object> styles = synAudit.getChangedProps().stream()
                 .map(prop -> prop.getProperty().getPropertyName())
                 .flatMap(prop -> makeStyles(synAudit, prop))
-                .collect(toMap(t2 -> t2._1, t2 -> t2._2, ($1, $2) -> $2, HashMap::new));
+                .collect(T2.toMap(($1, $2) -> $2, HashMap::new));
 
         return Optional.of(styles);
     }
