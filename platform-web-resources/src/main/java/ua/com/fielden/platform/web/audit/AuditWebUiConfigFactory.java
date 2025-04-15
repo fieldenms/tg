@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
 import ua.com.fielden.platform.audit.IAuditTypeFinder;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.security.user.User;
@@ -15,9 +14,7 @@ import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
-import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
@@ -28,17 +25,13 @@ import ua.com.fielden.platform.web.test.server.config.StandardActions;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
-import java.util.Optional;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
-import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.*;
-import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
-import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.AUDIT_PROPERTY;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
@@ -134,7 +127,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
         }
 
         final EntityCentreConfig centre = centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class)
-                .setQueryEnhancer(QueryEnhancer.class, context().withMasterEntity().build())
+                .setQueryEnhancer(AuditEntityQueryEnhancer.class, context().withMasterEntity().build())
                 .build();
 
         return new EntityCentre<>(masterMiType, centre, injector);
@@ -232,18 +225,6 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                                      property.name(), property.type().genericJavaType().getTypeName()));
             return null;
         }
-    }
-
-    private static class QueryEnhancer implements IQueryEnhancer<AbstractSynAuditEntity<?>> {
-
-        @Override
-        public EntityQueryProgressiveInterfaces.ICompleted<AbstractSynAuditEntity<?>> enhanceQuery(
-                final EntityQueryProgressiveInterfaces.IWhere0<AbstractSynAuditEntity<?>> where,
-                final Optional<CentreContext<AbstractSynAuditEntity<?>, ?>> context)
-        {
-            return enhanceEmbededCentreQuery(where, createConditionProperty(AUDITED_ENTITY), context.get().getMasterEntity().getKey());
-        }
-
     }
 
 }
