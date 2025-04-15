@@ -187,9 +187,9 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addProp(AUDITED_VERSION).minWidth(60).also()
                 // Order by audit date, since this is a top-level centre that includes all audit records.
                 // Moreover, there is no standalone index for auditedVersion to make such an ordering performant.
-                .addProp(AUDIT_DATE).order(1).desc().also()
-                .addProp(CHANGED_PROPS).minWidth(200).also()
-                .addProp(USER);
+                .addProp(AUDIT_DATE).order(1).desc().minWidth(140).also()
+                .addProp(USER).minWidth(60).also()
+                .addProp(CHANGED_PROPS).minWidth(120);
 
         for (final var prop : auditProperties) {
             centreBuilder2 = centreBuilder2.also().addProp(prop.name());
