@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.audit;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.apache.logging.log4j.Logger;
@@ -24,16 +23,12 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
-import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.lang.String.format;
@@ -138,7 +133,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
             centreBuilder2 = centreBuilder2.also().addProp(prop.name());
         }
 
-        final EntityCentreConfig centre = centreBuilder2.setRenderingCustomiser(RenderingCustomiser.class)
+        final EntityCentreConfig centre = centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class)
                 .setQueryEnhancer(QueryEnhancer.class, context().withMasterEntity().build())
                 .build();
 
@@ -195,7 +190,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
             centreBuilder2 = centreBuilder2.also().addProp(prop.name());
         }
 
-        final var centreBuilder3 = centreBuilder2.setRenderingCustomiser(RenderingCustomiser.class);
+        final var centreBuilder3 = centreBuilder2.setRenderingCustomiser(AuditEntityRenderingCustomiser.class);
 
         final var ecc = centreBuilder3.build();
 
@@ -236,31 +231,6 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
             LOGGER.warn(() -> format("Audit-property [%s] will not be added to centre criteria. Unexpected property type [%s].",
                                      property.name(), property.type().genericJavaType().getTypeName()));
             return null;
-        }
-    }
-
-    private static class RenderingCustomiser implements IRenderingCustomiser<Map<String, Object>> {
-
-        // TODO Enable configuration of style by applications
-        private static final String LIGHT_BLUE = "#42A5F5";
-        private static final Map<String, Map<String, String>> PROP_STYLE =
-                ImmutableMap.of("backgroundStyles", ImmutableMap.of("background-color", LIGHT_BLUE));
-
-        /**
-         * @param entity  synthetic audit-entity
-         */
-        @Override
-        public Optional<Map<String, Object>> getCustomRenderingFor(final AbstractEntity<?> entity) {
-            final var synAudit = (AbstractSynAuditEntity<?>) entity;
-
-            final Map<String, Object> styles = synAudit.getChangedProps().stream()
-                    .map(ap -> ap.getProperty().getPropertyName())
-                    .collect(toMap(Function.identity(),
-                                   $ -> PROP_STYLE,
-                                   ($1, $2) -> $2,
-                                   HashMap::new));
-
-            return Optional.of(styles);
         }
     }
 
