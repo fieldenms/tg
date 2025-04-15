@@ -38,8 +38,8 @@ import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.Optional;
 import java.util.*;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -1313,33 +1313,30 @@ public class EntityUtils {
         }
     }
 
-    /**
-     * The same as {@link #copy(AbstractEntity, AbstractEntity, String...)}, but with a set of {@link IConvertableToPath} as the last argument.
-     *
-     * @param fromEntity
-     * @param toEntity
-     * @param skipProperties
-     * @param <T>
-     */
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
-        copy(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).toList().toArray(new String[]{}));
+    ///
+    /// The same as [#copy], but with variable arity for property names.
+    ///
+    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final CharSequence... skipProperties) {
+        copy_(fromEntity, toEntity, Stream.of(skipProperties).map(CharSequence::toString).collect(Collectors.toSet()));
     }
 
-    /**
-     * The most generic and most straightforward function to copy properties from instance {@code fromEntity} to {@code toEntity}, with the ability to skip the specified properties from being copied.
-     *
-     * @param fromEntity
-     * @param toEntity
-     * @param skipProperties -- a sequence of property names, which may include ID and VERSION.
-     */
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final String... skipProperties) {
-        // convert an array with property names to be skipped into a set for more efficient use
-        final Set<String> skipPropertyName = new HashSet<>(Arrays.asList(skipProperties));
+    ///
+    /// The most generic and most straightforward function to copy properties from instance `fromEntity` to `toEntity``,
+    /// with the ability to skip the specified properties from being copied.
+    ///
+    /// @param fromEntity  An instance that is the source from which property values are copied from.
+    /// @param toEntity   A destination that is an instance where the property values are copied to.
+    /// @param skipProperties  A sequence of property names, which may include ID and VERSION.
+    ///
+    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
+        copy_(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).collect(Collectors.toSet()));
+    }
 
-        // Under certain circumstances copying happens for an uninstrumented entity instance
-        // In such cases there would be no meta-properties, and copying would fail.
+    private static <T extends AbstractEntity> void copy_(final AbstractEntity<?> fromEntity, final T toEntity, final Set<String> skipProperties) {
+        // Under certain circumstances, copying happens for an uninstrumented entity instance
+        // In such cases, there would be no meta-properties, and copying would fail.
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
-        final List<String> realProperties = Finder.streamRealProperties(fromEntity.getType()).map(field -> field.getName()).collect(Collectors.toList());
+        final List<String> realProperties = Finder.streamRealProperties(fromEntity.getType()).map(Field::getName).collect(Collectors.toList());
         // Need to add ID and VERSION in order for them to be treated as entity properties
         // They will get skipped if provided as part of skipProperties array
         realProperties.add(ID);
@@ -1347,19 +1344,19 @@ public class EntityUtils {
 
         // Copy each identified property, which is not proxied or skipped into a new instance.
         realProperties.stream()
-            .filter(name -> !skipPropertyName.contains(name))
-            .filter(propName -> !fromEntity.proxiedPropertyNames().contains(propName))
-            .forEach(propName -> {
-                if (KEY.equals(propName) && toEntity.getKeyType().equals(fromEntity.getKeyType()) && DynamicEntityKey.class.isAssignableFrom(fromEntity.getKeyType())) {
-                    toEntity.setKey(new DynamicEntityKey(toEntity));
-                } else {
-                    try {
-                        toEntity.set(propName, fromEntity.get(propName));
-                    } catch (final Exception e) {
-                        logger.trace(format("Setter for property %s did not succeed during copying.", propName), e);
+                .filter(name -> !skipProperties.contains(name))
+                .filter(propName -> !fromEntity.proxiedPropertyNames().contains(propName))
+                .forEach(propName -> {
+                    if (KEY.equals(propName) && toEntity.getKeyType().equals(fromEntity.getKeyType()) && DynamicEntityKey.class.isAssignableFrom(fromEntity.getKeyType())) {
+                        toEntity.setKey(new DynamicEntityKey(toEntity));
+                    } else {
+                        try {
+                            toEntity.set(propName, fromEntity.get(propName));
+                        } catch (final Exception ex) {
+                            logger.trace(() -> "Setter for property %s did not succeed during copying.".formatted(propName), ex);
+                        }
                     }
-                }
-            });
+                });
     }
 
     /**

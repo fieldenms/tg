@@ -593,20 +593,4 @@ public class StreamUtils {
     private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(Boolean.FALSE);
     private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(Boolean.TRUE);
 
-    /**
-     * Constructs a stream by zipping the given stream with a sequential ascending stream of integers (step = 1).
-     *
-     * @param start  starting point of the integer stream
-     */
-    public static <R, T> Stream<R> enumerated(final BaseStream<T, ?> stream, final int start, final BiFunction<? super Integer, ? super T, R> combiner) {
-        return zip(IntStream.iterate(start, n -> n + 1), stream, combiner);
-    }
-
-    /**
-     * Like {@link #enumerated(BaseStream, int, BiFunction)} but always starts from 0.
-     */
-    public static <R, T> Stream<R> enumerated(final BaseStream<T, ?> stream, final BiFunction<? super Integer, ? super T, R> combiner) {
-        return zip(IntStream.iterate(0, n -> n + 1), stream, combiner);
-    }
-
 }

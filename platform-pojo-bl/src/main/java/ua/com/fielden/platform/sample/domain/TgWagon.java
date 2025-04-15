@@ -1,15 +1,16 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
+
+import javax.annotation.Nonnull;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(String.class)
 @KeyTitle(value = "Wagon No", desc = "Wagon number")
@@ -17,12 +18,12 @@ import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 @MapEntityTo
 @CompanionObject(ITgWagon.class)
 public class TgWagon extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     public enum Property implements IConvertableToPath {
         serialNo, wagonClass, slots, firstSlot, internalNumber;
 
         @Override
+        @Nonnull
         public String toPath() {
             return name();
         }

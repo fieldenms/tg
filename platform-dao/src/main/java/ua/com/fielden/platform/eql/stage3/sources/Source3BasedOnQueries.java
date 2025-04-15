@@ -21,8 +21,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.NO_EXPECTED_TYPE;
-import static ua.com.fielden.platform.utils.StreamUtils.enumerated;
-import static ua.com.fielden.platform.utils.StreamUtils.transpose;
+import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 /**
  * A query source formed by concatenating results of its underlying queries.
@@ -48,7 +47,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
         if (!isValidNumberOfYields) {
             final var exception = new EqlStage3ProcessingException(ERR_SOURCE_QUERIES_NUMBER_OF_YIELDS);
             LOGGER.error(() -> "%s\nQueries:%n%s".formatted(exception.getMessage(),
-                                                            enumerated(models.stream(), 1, "%s. %s"::formatted).collect(joining("\n"))));
+                                                            enumerate(models.stream(), 1, (m, i) -> "%s. %s".formatted(i, m)).collect(joining("\n"))));
             throw exception;
         }
 

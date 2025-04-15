@@ -9,6 +9,8 @@ import ua.com.fielden.platform.entity.validation.UnhappyValidator;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.types.RichText;
 
+import javax.annotation.Nonnull;
+
 /**
  * Entity class used for testing.
  *
@@ -22,6 +24,7 @@ public class EntityWithRichText extends AbstractEntity<String> {
         richText, unhappyRichText;
 
         @Override
+        @Nonnull
         public String toPath() {
             return name();
         }

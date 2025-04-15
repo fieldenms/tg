@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.metamodel;
 
+import javax.annotation.Nonnull;
 import java.util.stream.IntStream;
 
 /**
@@ -10,6 +11,7 @@ import java.util.stream.IntStream;
  */
 public interface IConvertableToPath extends CharSequence {
 
+    @Nonnull
     String toPath();
 
     @Override
@@ -28,16 +30,19 @@ public interface IConvertableToPath extends CharSequence {
     }
 
     @Override
+    @Nonnull
     default CharSequence subSequence(int start, int end) {
         return toPath().subSequence(start, end);
     }
 
     @Override
+    @Nonnull
     default IntStream chars() {
         return toPath().chars();
     }
 
     @Override
+    @Nonnull
     default IntStream codePoints() {
         return toPath().codePoints();
     }
