@@ -1335,7 +1335,7 @@ public class EntityUtils {
     ///
     public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final CharSequence... skipProperties) {
         // Convert an array with property names to be skipped into a set for more efficient use.
-        final Set<CharSequence> skipPropertyName = new HashSet<>(Arrays.asList(skipProperties));
+        final Set<String> skipPropertyName = Stream.of(skipProperties).map(CharSequence::toString).collect(Collectors.toSet());
 
         // Under certain circumstances, copying happens for an uninstrumented entity instance
         // In such cases, there would be no meta-properties, and copying would fail.
