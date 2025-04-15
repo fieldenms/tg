@@ -16,7 +16,7 @@ const CHECKSUM_CACHE_NAME = 'tg-deployment-cache-checksums';
  * @param pathName
  * @param method
  */
-function isStatic (pathName, method) {
+function isStatic(pathName, method) {
     return 'GET' === method && (pathName === '/' ||
         pathName === '/forgotten' ||
         pathName.startsWith('/resources/') ||
@@ -29,28 +29,28 @@ function isStatic (pathName, method) {
 /**
  * Creates response indicating that client application is stale and is needed to be refreshed fully.
  */
-function staleResponse () {
+function staleResponse() {
     return new Response('STALE', {status: 412, statusText: 'BAD', headers: {'Content-Type': 'text/plain'}});
 }
 
 /**
  * Indicates whether response is successful.
  */
-function isResponseSuccessful (response) {
+function isResponseSuccessful(response) {
     return response && response.ok;
 }
 
 /**
  * Creates URL object from 'requestUrl' string.
  */
-function createURL (requestUrl) {
+function createURL(requestUrl) {
     return new URL(requestUrl);
 }
 
 /**
  * Creates GET Request object from 'url'.
  */
-function createGETRequest (url) {
+function createGETRequest(url) {
     return new Request(url, { method: 'GET' });
 }
 
@@ -58,7 +58,7 @@ function createGETRequest (url) {
  * Creates Promise for 'cache' entry deletion by it's 'url'.
  * Warns about unsuccessful deletion or when resources was not found for deletion ('deleted' === false).
  */
-function deleteCacheEntry (url, cache) {
+function deleteCacheEntry(url, cache) {
     return cache.delete(url).then(
         deleted => {
             if (!deleted) {
@@ -79,7 +79,7 @@ function deleteCacheEntry (url, cache) {
  * It does so by loading a set of present server resources and comparing it with Cache Storage entries.
  * Missing server resources will be deleted from both 'cache' and 'checksumCache'.
  */
-function cleanUp (url, cache, checksumCache) {
+function cleanUp(url, cache, checksumCache) {
     // Create special request against root '/' (aka 'index.html') to load paths of current '/resources/*'.
     const serverResourcesRequest = createGETRequest(url + '?resources=true');
     // Fetch the request and get text from a response.
@@ -112,7 +112,7 @@ function cleanUp (url, cache, checksumCache) {
  *
  * Also initiates 'cleanUp' for changed '/' resource.
  */
-function cacheIfSuccessful (response, checksumRequest, checksumResponse, url, cache, checksumCache, urlObj, event) {
+function cacheIfSuccessful(response, checksumRequest, checksumResponse, url, cache, checksumCache, urlObj, event) {
     // Cache response if it is successful; 'checksumResponse' is successful at this stage.
     if (isResponseSuccessful(response)) {
         // IMPORTANT: Clone the response. We need to clone it so we have two streams.
@@ -146,7 +146,7 @@ function cacheIfSuccessful (response, checksumRequest, checksumResponse, url, ca
  * 
  * @param response 
  */
-function getTextFrom (response) {
+function getTextFrom(response) {
     if (isResponseSuccessful(response)) {
         return response.clone().text(); // perform cloning here to leave original 'response' stream unaffected
     } else {
