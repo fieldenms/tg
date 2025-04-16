@@ -8,7 +8,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
-import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -26,6 +25,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
+
 
 /**
  * This class is the base class to enhance with criteria and resultant properties.
@@ -77,16 +77,10 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private CentreContextHolder centreContextHolder;
     private DeviceProfile device;
     private Class<? extends MiWithConfigurationSupport<?>> miType;
-    
-    /**
-     * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
-     *
-     * @param valueMatcherFactory
-     */
-    @SuppressWarnings("rawtypes")
+
     @Inject
-    protected EnhancedCentreEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IDates dates) {
-        super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider, dates);
+    protected EnhancedCentreEntityQueryCriteria(final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IDates dates) {
+        super(generatedEntityController, serialiser, controllerProvider, dates);
     }
 
     /**

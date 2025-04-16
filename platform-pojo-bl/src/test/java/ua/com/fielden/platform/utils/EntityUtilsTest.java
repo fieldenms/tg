@@ -10,7 +10,8 @@ import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.domain.metadata.DomainExplorer;
-import ua.com.fielden.platform.entity.*;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.UserDefinableHelp;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
@@ -21,8 +22,11 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.*;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test_entities.ChildEntity;
+import ua.com.fielden.platform.test_entities.Entity;
+import ua.com.fielden.platform.test_entities.EntityExt;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -46,7 +50,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 public class EntityUtilsTest {
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
@@ -189,7 +193,7 @@ public class EntityUtilsTest {
 
     @Test
     public void non_persistent_and_non_synthetic_and_non_union_entities_are_recognised_as_such() {
-        assertFalse(isPersistedEntityType(Entity.class));
+        assertFalse(isPersistentEntityType(Entity.class));
         assertFalse(isSyntheticEntityType(Entity.class));
         assertFalse(isSyntheticBasedOnPersistentEntityType(Entity.class));
         assertFalse(isUnionEntityType(Entity.class));
@@ -197,7 +201,7 @@ public class EntityUtilsTest {
 
     @Test
     public void union_entity_is_recognised_as_such() {
-        assertFalse(isPersistedEntityType(UnionEntity.class));
+        assertFalse(isPersistentEntityType(UnionEntity.class));
         assertFalse(isSyntheticEntityType(UnionEntity.class));
         assertFalse(isSyntheticBasedOnPersistentEntityType(UnionEntity.class));
         assertTrue(isUnionEntityType(UnionEntity.class));
@@ -205,7 +209,7 @@ public class EntityUtilsTest {
 
     @Test
     public void persistent_entity_is_recognised_as_such() {
-        assertTrue(isPersistedEntityType(TgAuthor.class));
+        assertTrue(isPersistentEntityType(TgAuthor.class));
         assertFalse(isSyntheticEntityType(TgAuthor.class));
         assertFalse(isSyntheticBasedOnPersistentEntityType(TgAuthor.class));
         assertFalse(isUnionEntityType(TgAuthor.class));
@@ -215,7 +219,7 @@ public class EntityUtilsTest {
     public void generated_entity_based_on_persistent_entity_is_recognised_as_persistent() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAuthor.class);
         
-        assertTrue(isPersistedEntityType(newType));
+        assertTrue(isPersistentEntityType(newType));
         assertFalse(isSyntheticEntityType(newType));
         assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -225,7 +229,7 @@ public class EntityUtilsTest {
     public void generated_entity_with_nested_regeneration_based_on_persistent_entity_is_recognised_as_persistent() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAuthor.class, ThreadLocalRandom.current().nextInt(2, 7));
         
-        assertTrue(isPersistedEntityType(newType));
+        assertTrue(isPersistentEntityType(newType));
         assertFalse(isSyntheticEntityType(newType));
         assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -233,7 +237,7 @@ public class EntityUtilsTest {
 
     @Test
     public void synthetic_entity_is_recognised_as_such() {
-        assertFalse(isPersistedEntityType(TgAverageFuelUsage.class));
+        assertFalse(isPersistentEntityType(TgAverageFuelUsage.class));
         assertTrue(isSyntheticEntityType(TgAverageFuelUsage.class));
         assertFalse(isSyntheticBasedOnPersistentEntityType(TgAverageFuelUsage.class));
         assertFalse(isUnionEntityType(TgAverageFuelUsage.class));
@@ -243,7 +247,7 @@ public class EntityUtilsTest {
     public void generated_entity_based_on_synthetic_entity_is_recognised_as_synthetic() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAverageFuelUsage.class);
         
-        assertFalse(isPersistedEntityType(newType));
+        assertFalse(isPersistentEntityType(newType));
         assertTrue(isSyntheticEntityType(newType));
         assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -253,7 +257,7 @@ public class EntityUtilsTest {
     public void generated_entity_with_nested_regeneration_based_on_synthetic_entity_is_recognised_as_synthetic() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgAverageFuelUsage.class, ThreadLocalRandom.current().nextInt(2, 7));
         
-        assertFalse(isPersistedEntityType(newType));
+        assertFalse(isPersistentEntityType(newType));
         assertTrue(isSyntheticEntityType(newType));
         assertFalse(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -261,7 +265,7 @@ public class EntityUtilsTest {
 
     @Test
     public void synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() {
-        assertFalse(isPersistedEntityType(TgReVehicleModel.class));
+        assertFalse(isPersistentEntityType(TgReVehicleModel.class));
         assertTrue(isSyntheticEntityType(TgReVehicleModel.class));
         assertTrue(isSyntheticBasedOnPersistentEntityType(TgReVehicleModel.class));
         assertFalse(isUnionEntityType(TgReVehicleModel.class));
@@ -271,7 +275,7 @@ public class EntityUtilsTest {
     public void generated_entity_based_on_synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgReVehicleModel.class);
        
-        assertFalse(isPersistedEntityType(newType));
+        assertFalse(isPersistentEntityType(newType));
         assertTrue(isSyntheticEntityType(newType));
         assertTrue(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -281,7 +285,7 @@ public class EntityUtilsTest {
     public void generated_entity_with_nested_regeneration_based_on_synthetic_entity_derived_from_persisten_entity_is_recognised_as_synthetic_and_as_synthetic_based_on_persistent_entity_type() throws ClassNotFoundException {
         final Class<? extends AbstractEntity<?>> newType = genNewTypeWithAggregateCalcPropBasedOn(TgReVehicleModel.class, ThreadLocalRandom.current().nextInt(2, 7));
        
-        assertFalse(isPersistedEntityType(newType));
+        assertFalse(isPersistentEntityType(newType));
         assertTrue(isSyntheticEntityType(newType));
         assertTrue(isSyntheticBasedOnPersistentEntityType(newType));
         assertFalse(isUnionEntityType(newType));
@@ -289,7 +293,7 @@ public class EntityUtilsTest {
 
     @Test
     public void null_does_not_belong_to_any_of_entity_type_classiciations() {
-        assertFalse(isPersistedEntityType(null));
+        assertFalse(isPersistentEntityType(null));
         assertFalse(isSyntheticEntityType(null));
         assertFalse(isSyntheticBasedOnPersistentEntityType(null));
         assertFalse(isUnionEntityType(null));
@@ -310,8 +314,18 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void isIntrospectionDenied_returns_true_for_properties_annotated_with_DenyIntrospection() {
+        assertTrue(isIntrospectionDenied(TgWagon.class, TgWagon.Property.internalNumber));
+    }
+
+    @Test
     public void isIntrospectionDenied_returns_false_for_entity_types_not_annotated_with_DenyIntrospection() {
         assertFalse(isIntrospectionDenied(Entity.class));
+    }
+
+    @Test
+    public void isIntrospectionDenied_returns_false_for_properties_not_annotated_with_DenyIntrospection() {
+        assertFalse(isIntrospectionDenied(TgWagon.class, TgWagon.Property.serialNo));
     }
 
     @Test
@@ -336,7 +350,7 @@ public class EntityUtilsTest {
 
     @Test(expected = NoSuchElementException.class)
     public void coalesce_throws_exception_if_all_values_are_null_and_gracefully_handles_null_for_array_argument() {
-        coalesce(null, null, null /*this is an array argument*/);
+        coalesce(null, null, (Object[]) null /* this is an array argument */);
     }
 
     @Test
@@ -642,6 +656,41 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void splitPropPath_fails_if_path_contains_empty_property_names() {
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath(".person"));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("..person"));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person..desc"));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person..desc."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.desc."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("person.desc.."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath(""));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath("."));
+        assertThrows(IllegalArgumentException.class, () -> splitPropPath(".."));
+    }
+
+    @Test
+    public void splitPropPath_splits_a_dot_notated_path_into_a_list_of_simple_property_names() {
+        assertEquals(List.of("person", "desc"), splitPropPath("person.desc"));
+        assertEquals(List.of("person", "vehicle", "desc"), splitPropPath("person.vehicle.desc"));
+    }
+
+    @Test
+    public void splitPropPath_returns_a_single_element_list_given_a_simple_property_name() {
+        assertEquals(List.of("person"), splitPropPath("person"));
+    }
+
+    @Test
+    public void laxSplitPropPath_allows_empty_names_in_a_path() {
+        assertEquals(List.of(""), laxSplitPropPath(""));
+        assertEquals(List.of(), laxSplitPropPath("."));
+        assertEquals(List.of("", "person"), laxSplitPropPath(".person"));
+        assertEquals(List.of("person"), laxSplitPropPath("person."));
+        assertEquals(List.of("person", "", "desc"), laxSplitPropPath("person..desc"));
+    }
+
+    @Test
     public void findFirstPersistentTypeInHierarchyFor_a_persistent_type_returns_that_type() {
         final var maybePersistentType = EntityUtils.findFirstPersistentTypeInHierarchyFor(Attachment.class);
         assertTrue(maybePersistentType.isPresent());
@@ -659,6 +708,14 @@ public class EntityUtilsTest {
     public void findFirstPersistentTypeInHierarchyFor_an_entity_with_no_persistent_type_in_its_hierarhcy_returns_empty_result() {
         final var maybePersistentType = EntityUtils.findFirstPersistentTypeInHierarchyFor(Entity.class);
         assertFalse(maybePersistentType.isPresent());
+    }
+
+    @Test
+    public void entityTypeHierachy_includes_all_parent_entity_types_starting_from_the_most_specific() {
+        assertEquals(List.of(TgReVehicleModel.class, TgVehicleModel.class, AbstractEntity.class),
+                     entityTypeHierarchy(TgReVehicleModel.class, true).toList());
+        assertEquals(List.of(TgReVehicleModel.class, TgVehicleModel.class),
+                     entityTypeHierarchy(TgReVehicleModel.class, false).toList());
     }
 
     /**

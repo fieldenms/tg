@@ -22,8 +22,8 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.CircularChild;
 import ua.com.fielden.platform.reflection.asm.impl.entities.CircularParent;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingEnhanced;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -37,7 +37,7 @@ public class DynamicEntityTypePropertiesAdditionAndModificationTest {
     private static final NewProperty<Money> np1 = NewProperty.create("newTestProperty", Money.class, "New test property",
             "New test property description", calculated);
 
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 

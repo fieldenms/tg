@@ -21,7 +21,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
@@ -148,11 +148,11 @@ public class PropertyTypeDeterminatorTest {
     }
 
     @Test
-    public void test_isDotNotation() {
-        assertTrue("proerty1.property2.property3 should be dot-notation", PropertyTypeDeterminator.isDotNotation("proerty1.property2.property3"));
-        assertTrue("getProperty1().property2.getProperty3() should also be a dot-notation", PropertyTypeDeterminator.isDotNotation("getProperty1().property2.getProperty3()"));
-        assertFalse("getProperty1()property2getProperty3() shuldn't be a dot-notation", PropertyTypeDeterminator.isDotNotation("getProperty1()property2getProperty3()"));
-        assertFalse("proerty1property2property3 shouldn't be a dot-notaton", PropertyTypeDeterminator.isDotNotation("proerty1property2property3"));
+    public void test_isDotExpression() {
+        assertTrue("proerty1.property2.property3 should be dot-notation", PropertyTypeDeterminator.isDotExpression("proerty1.property2.property3"));
+        assertTrue("getProperty1().property2.getProperty3() should also be a dot-notation", PropertyTypeDeterminator.isDotExpression("getProperty1().property2.getProperty3()"));
+        assertFalse("getProperty1()property2getProperty3() shuldn't be a dot-notation", PropertyTypeDeterminator.isDotExpression("getProperty1()property2getProperty3()"));
+        assertFalse("proerty1property2property3 shouldn't be a dot-notaton", PropertyTypeDeterminator.isDotExpression("proerty1property2property3"));
     }
 
     @Test
@@ -167,13 +167,13 @@ public class PropertyTypeDeterminatorTest {
             penultAndLast = PropertyTypeDeterminator.penultAndLast("property3");
             fail("property3 is not dot-notation therefore RuntimeException should be thrown");
         } catch (final ReflectionException ex) {
-            assertEquals("Should be dot-notation.", ex.getMessage());
+            assertEquals("A dot-expression is expected.", ex.getMessage());
         }
         try {
             penultAndLast = PropertyTypeDeterminator.penultAndLast("getProperty3()");
-            fail("getProperty3() is not dot-notation therefore RuntimeException should be thrown");
+            fail("getProperty3() is not dot-expression therefore RuntimeException should be thrown");
         } catch (final ReflectionException ex) {
-            assertEquals("Should be dot-notation.", ex.getMessage());
+            assertEquals("A dot-expression is expected.", ex.getMessage());
         }
     }
 
@@ -302,7 +302,7 @@ public class PropertyTypeDeterminatorTest {
     public void properties_of_non_numeric_typs_are_not_recognized_as_numeric() {
         assertFalse(isNumeric(Entity.class, "propertyDescriptor"));
         assertFalse(isNumeric(Entity.class, "monitoring"));
-        assertFalse(isNumeric(Entity.class, "doubles"));
+        assertFalse(isNumeric(Entity.class, "bigDecimals"));
     }
 
     @Test

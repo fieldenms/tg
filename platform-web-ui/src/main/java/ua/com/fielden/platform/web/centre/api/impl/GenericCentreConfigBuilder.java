@@ -69,7 +69,7 @@ public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends Res
     }
 
     @Override
-    public ISelectionCritKindSelector<T> addCrit(final String propName) {
+    public ISelectionCritKindSelector<T> addCrit(final CharSequence propName) {
         return new TopLevelActionsBuilder<T>(builder).addCrit(propName);
     }
 

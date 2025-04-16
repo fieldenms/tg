@@ -1,16 +1,19 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
+
+import java.util.Objects;
 
 public class Prop3 extends AbstractSingleOperand3 {
 
     /**
-     * Ordinarily property name, but in case of union-type property this name contains a subproperty of the union type (e.g., "location.workshop").
-     * If component types were to be supported, then it could also include lower level component attribute name (e.g., "cost.amount").
+     * In most cases a simple property name.
+     * In case of a property declared in a union entity type -- path to a subproperty of the union type (e.g., {@code location.workshop}).
+     * In case of a component-typed property -- path to a component subproperty (e.g., {@code richText.coreText}).
      */
     public final String name;
 
@@ -26,7 +29,7 @@ public class Prop3 extends AbstractSingleOperand3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         return source.column(name);
     }
 
@@ -41,20 +44,18 @@ public class Prop3 extends AbstractSingleOperand3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof Prop3)) {
-            return false;
-        }
-
-        final Prop3 other = (Prop3) obj;
-
-        return Objects.equals(name, other.name) && Objects.equals(source, other.source);
+        return this == obj
+               || obj instanceof Prop3 that
+                  && Objects.equals(name, that.name)
+                  && Objects.equals(source, that.source)
+                  && super.equals(that);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("name", name)
+                .add("source", source);
+    }
+
 }

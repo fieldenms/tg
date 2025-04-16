@@ -24,7 +24,7 @@ import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCac
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 /**
  * Unit tests to ensure JSON-based entity deserialisation using JACKSON engine.
@@ -34,7 +34,7 @@ import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
  */
 public class EntityDeserialisationWithJacksonTest {
     private static final Injector injector = new ApplicationInjectorFactory()
-        .add(new CommonTestEntityModuleWithPropertyFactory())
+        .add(new CommonEntityTestIocModuleWithPropertyFactory())
         .getInjector();
     private static final ISerialiser jacksonDeserialiser = createSerialiserWithJackson(
         new FactoryForTestingEntities(injector.getInstance(EntityFactory.class), new Date()).getFactory(),

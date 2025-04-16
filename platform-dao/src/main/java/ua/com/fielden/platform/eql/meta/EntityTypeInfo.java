@@ -1,28 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
-import static java.lang.String.format;
-import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.produceUnionEntityModels;
-import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTENT;
-import static ua.com.fielden.platform.eql.meta.EntityCategory.PURE;
-import static ua.com.fielden.platform.eql.meta.EntityCategory.QUERY_BASED;
-import static ua.com.fielden.platform.eql.meta.EntityCategory.UNION;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import com.google.common.collect.ImmutableList;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
@@ -31,6 +9,22 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.produceUnionEntityModels;
+import static ua.com.fielden.platform.eql.meta.EntityCategory.*;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * Contains core entity type level metadata.
@@ -50,7 +44,7 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
     public final List<EntityResultQueryModel<ET>> entityModels;
 
     private EntityTypeInfo(final Class<ET> entityType) {
-        if (isPersistedEntityType(entityType)) {
+        if (isPersistentEntityType(entityType)) {
             tableName = getTableClause(entityType);
             category = PERSISTENT;
             entityModels = ImmutableList.of();

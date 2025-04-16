@@ -10,7 +10,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.web.utils.PropertyConflict;
 
 import static org.junit.Assert.*;
@@ -24,7 +24,7 @@ import static ua.com.fielden.platform.serialisation.api.impl.Serialiser.createSe
  * @author TG Team
  */
 public class ResultSerialisationWithJacksonTest {
-    private final Module module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Module module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private final ISerialiser serialiser = createSerialiserWithJackson(factory, new ProvidedSerialisationClassProvider(), new SerialisationTypeEncoder(), new IdOnlyProxiedEntityTypeCacheForTests());

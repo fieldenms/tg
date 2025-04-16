@@ -6,43 +6,44 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IRoundFunctionTo;
 
 abstract class RoundFunctionArgument<T, ET extends AbstractEntity<?>> //
-		extends ExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> //
-		implements IRoundFunctionArgument<T, ET> {
+        extends ExprOperand<IRoundFunctionTo<T>, IExprOperand0<IRoundFunctionTo<T>, ET>, ET> //
+        implements IRoundFunctionArgument<T, ET> {
 
-    protected RoundFunctionArgument(final Tokens tokens) {
-        super(tokens);
+    protected RoundFunctionArgument(final EqlSentenceBuilder builder) {
+        super(builder);
     }
-    
-	protected abstract T nextForRoundFunctionArgument(final Tokens tokens);
 
-	@Override
-	protected IExprOperand0<IRoundFunctionTo<T>, ET> nextForExprOperand(final Tokens tokens) {
-		return new ExprOperand0<IRoundFunctionTo<T>, ET>(tokens) {
+    protected abstract T nextForRoundFunctionArgument(final EqlSentenceBuilder builder);
 
-			@Override
-			protected IRoundFunctionTo<T> nextForExprOperand0(final Tokens tokens) {
-				return new RoundFunctionTo<T>(tokens) {
+    @Override
+    protected IExprOperand0<IRoundFunctionTo<T>, ET> nextForExprOperand(final EqlSentenceBuilder builder) {
+        return new ExprOperand0<IRoundFunctionTo<T>, ET>(builder) {
 
-					@Override
-					protected T nextForRoundFunctionTo(final Tokens tokens) {
-						return RoundFunctionArgument.this.nextForRoundFunctionArgument(tokens);
-					}
+            @Override
+            protected IRoundFunctionTo<T> nextForExprOperand0(final EqlSentenceBuilder builder) {
+                return new RoundFunctionTo<T>(builder) {
 
-				};
-			}
+                    @Override
+                    protected T nextForRoundFunctionTo(final EqlSentenceBuilder builder) {
+                        return RoundFunctionArgument.this.nextForRoundFunctionArgument(builder);
+                    }
 
-		};
-	}
+                };
+            }
 
-	@Override
-	protected IRoundFunctionTo<T> nextForSingleOperand(final Tokens tokens) {
-		return new RoundFunctionTo<T>(tokens) {
+        };
+    }
 
-			@Override
-			protected T nextForRoundFunctionTo(final Tokens tokens) {
-				return RoundFunctionArgument.this.nextForRoundFunctionArgument(tokens);
-			}
+    @Override
+    protected IRoundFunctionTo<T> nextForSingleOperand(final EqlSentenceBuilder builder) {
+        return new RoundFunctionTo<T>(builder) {
 
-		};
-	}
+            @Override
+            protected T nextForRoundFunctionTo(final EqlSentenceBuilder builder) {
+                return RoundFunctionArgument.this.nextForRoundFunctionArgument(builder);
+            }
+
+        };
+    }
+
 }

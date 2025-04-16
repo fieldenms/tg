@@ -11,6 +11,8 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPath;
+
 /**
  * Tree structure that holds the properties to fetch.
  *
@@ -32,9 +34,8 @@ public class DynamicEntityTree<T extends AbstractEntity<?>> {
     public DynamicEntityTree(final Set<String> fetchProperties, final Class<T> rootType) {
         root = new DynamicEntityTreeNode(rootType.getSimpleName(), rootType);
         for (final String property : fetchProperties) {
-            final String[] splited = property.split(Reflector.DOT_SPLITTER);
             DynamicEntityTreeNode currentNode = root;
-            for (final String splitString : splited) {
+            for (final String splitString : laxSplitPropPath(property)) {
                 if (!StringUtils.isEmpty(splitString)) {
                     DynamicEntityTreeNode childNode = currentNode.getChild(splitString);
                     if (childNode == null) {

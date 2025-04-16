@@ -9,10 +9,12 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.utils.TypeSet;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -29,6 +31,7 @@ import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 
 /**
@@ -56,6 +59,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 new PropertySetterVerifier(procEnv),
                 new CollectionalPropertyVerifier(procEnv),
                 new PropertyTypeVerifier(procEnv),
+                new RichTextPropertyVerifier(procEnv),
                 new UnionEntityTypedKeyVerifier(procEnv));
     }
 
@@ -250,7 +254,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
      * Acceptable property types:
      * <ol>
      *   <li>Ordinary (aka primitive) types: {@link Long}, {@link Integer}, {@link BigDecimal}, {@link Date}, {@link String}, {@code boolean}.
-     *   <li>Custom platform types: {@link Money}, {@link Colour}, {@link Hyperlink}.
+     *   <li>Custom platform types: {@link Money}, {@link Colour}, {@link Hyperlink}, {@link RichText}.
      *   <li>Entity types:
      *   <ol>
      *      <li>Any registered domain entity (at the time of writing, this means an entity, registered in an
@@ -266,14 +270,14 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
      * </ol>
      */
     static class PropertyTypeVerifier extends AbstractEntityVerifier {
-        static final List<Class<?>> ORDINARY_TYPES = List.of(String.class, Long.class, Integer.class, BigDecimal.class, Date.class, boolean.class);
+        static final TypeSet ORDINARY_TYPES = TypeSet.ofClasses(String.class, Long.class, Integer.class, BigDecimal.class, Date.class, boolean.class);
         // includes boxed boolean
-        static final List<Class<?>> ORDINARY_TYPE_ARGS = List.of(String.class, Long.class, Integer.class, BigDecimal.class, Date.class, Boolean.class);
-        static final List<Class<?>> PLATFORM_TYPES = List.of(Money.class, Colour.class, Hyperlink.class);
-        static final List<Class<?>> BINARY_TYPES = List.of(byte[].class);
+        static final TypeSet ORDINARY_TYPE_ARGS = TypeSet.ofClasses(String.class, Long.class, Integer.class, BigDecimal.class, Date.class, Boolean.class);
+        static final TypeSet PLATFORM_TYPES = TypeSet.ofClasses(Money.class, Colour.class, Hyperlink.class, RichText.class);
+        static final TypeSet BINARY_TYPES = TypeSet.ofClasses(byte[].class);
+        static final TypeSet SPECIAL_ENTITY_TYPES = TypeSet.ofClasses(PropertyDescriptor.class);
+        static final TypeSet PLATFORM_ENTITY_TYPES = TypeSet.ofClasses(PlatformDomainTypes.types);
         static final List<Class<?>> SPECIAL_COLLECTION_TYPES = List.of(Map.class);
-        static final List<Class<?>> SPECIAL_ENTITY_TYPES = List.of(PropertyDescriptor.class);
-        static final List<Class<?>> PLATFORM_ENTITY_TYPES = new ArrayList<>(PlatformDomainTypes.types);
 
         protected PropertyTypeVerifier(final ProcessingEnvironment processingEnv) {
             super(processingEnv);
@@ -297,16 +301,20 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         }
 
         private static final String MSG_SUPPORTED_TYPES =
-                Stream.of(ORDINARY_TYPES, PLATFORM_TYPES, BINARY_TYPES, SPECIAL_COLLECTION_TYPES, SPECIAL_ENTITY_TYPES)
-                        .flatMap(list -> list.stream().map(Class::getSimpleName))
+                Stream.concat(Stream.of(ORDINARY_TYPES, PLATFORM_TYPES, BINARY_TYPES, SPECIAL_ENTITY_TYPES).flatMap(TypeSet::streamTypeNames),
+                              SPECIAL_COLLECTION_TYPES.stream().map(Class::getSimpleName))
+                        .map(name -> {
+                            final var simpleName = substringAfterLast(name, '.');
+                            return simpleName.isEmpty() ? name : simpleName;
+                        })
                         .collect(Collectors.joining(", "));
 
         private boolean isSpecialCollectionType(final TypeMirror t) {
             return SPECIAL_COLLECTION_TYPES.stream().anyMatch(cls -> entityFinder.isSubtype(t, cls));
         }
 
-        private boolean isAnyOf(final TypeMirror t, final List<Class<?>> classes) {
-            return classes.stream().anyMatch(cls -> entityFinder.isSameType(t, cls));
+        private boolean isAnyOf(final TypeMirror t, final TypeSet set) {
+            return set.contains(t);
         }
 
         @Override
@@ -405,6 +413,48 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 this.registeredEntities = $ -> result;
                 return result;
             };
+        }
+    }
+
+    /**
+     * Verifies properties with type {@link RichText}:
+     * <ol>
+     *   <li> Cannot be a part of entity key, i.e., a composite key member.
+     * </ol>
+     */
+    static class RichTextPropertyVerifier extends AbstractEntityVerifier {
+
+        protected RichTextPropertyVerifier(final ProcessingEnvironment processingEnv) {
+            super(processingEnv);
+        }
+
+        @Override
+        protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
+            return roundEnv.findViolatingDeclaredProperties(new PropertyVerifier(entityFinder));
+        }
+
+        private class PropertyVerifier extends AbstractPropertyElementVerifier {
+            PropertyVerifier(final EntityFinder entityFinder) {
+                super(entityFinder);
+            }
+
+            @Override
+            public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
+                if (!elementFinder.isSameType(property.getType(), RichText.class)) {
+                    return Optional.empty();
+                }
+
+                if (entityFinder.isKeyMember(property)) {
+                    return of(new ViolatingElement(property.element(), Kind.ERROR,
+                                                   errKeyMemberRichText(getSimpleName(entity.element()), getSimpleName(property.element()))));
+                }
+
+                return Optional.empty();
+            }
+        }
+
+        public static String errKeyMemberRichText(final String entity, final String property) {
+            return "RichText property [%s] cannot be used as a key member.".formatted(entity + "." + property);
         }
     }
 

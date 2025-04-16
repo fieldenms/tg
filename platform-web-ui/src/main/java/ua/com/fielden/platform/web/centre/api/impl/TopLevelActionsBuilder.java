@@ -1,43 +1,14 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.lang.String.format;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
-import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dCentreScroll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1iVisibleRowsCount;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1jFitBehaviour;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1kRowHeight;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderDynamicPropsAction;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
-import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.api.resultset.*;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.IAlsoCentreTopLevelActions;
@@ -45,6 +16,13 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup0;
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+
+import static java.lang.String.format;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -93,21 +71,21 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public ISelectionCritKindSelector<T> addCrit(final String propName) {
+    public ISelectionCritKindSelector<T> addCrit(final CharSequence propName) {
         if (StringUtils.isEmpty(propName)) {
             throw new EntityCentreConfigurationException("Property name should not be empty.");
         }
 
-        if (!"this".equals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
+        if (!"this".contentEquals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
             throw new EntityCentreConfigurationException(format("Property expression [%s] is not valid for entity [%s].", propName, builder.getEntityType().getSimpleName()));
         }
 
-        if (builder.selectionCriteria.contains(propName)) {
+        if (builder.selectionCriteria.contains(propName.toString())) {
             throw new EntityCentreConfigurationException(format("Property [%s] has been already added to the selection critera for entity [%s].", propName, builder.getEntityType().getSimpleName()));
         }
 
-        builder.currSelectionCrit = Optional.of(propName);
-        builder.selectionCriteria.add(propName);
+        builder.currSelectionCrit = Optional.of(propName.toString());
+        builder.selectionCriteria.add(propName.toString());
         return new SelectionCriteriaBuilder<>(builder, this);
     }
 
@@ -173,13 +151,13 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
 
     @Deprecated
     @Override
-    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
+    public IResultSetBuilder3Ordering<T> addProp(final CharSequence propName) {
         return new ResultSetBuilder<>(builder).addProp(propName, true);
     }
 
     @Override
-    public IResultSetBuilder3Ordering<T> addProp(final IConvertableToPath prop, final boolean presentByDefault) {
-        return new ResultSetBuilder<>(builder).addProp(prop.toPath(), presentByDefault);
+    public IResultSetBuilder3Ordering<T> addProp(final CharSequence prop, final boolean presentByDefault) {
+        return new ResultSetBuilder<>(builder).addProp(prop, presentByDefault);
     }
 
     @Override
@@ -198,17 +176,17 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
     }
 
     @Override
-    public IResultSetBuilderDynamicPropsAction<T> addProps(final IConvertableToPath propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
+    public IResultSetBuilderDynamicPropsAction<T> addProps(final CharSequence propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<T, Optional<CentreContext<T, ?>>> entityPreProcessor, final BiFunction<T, Optional<CentreContext<T, ?>>, Map> renderingHintsProvider, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, renderingHintsProvider, contextConfig);
     }
 
     @Override
-    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final CharSequence propName) {
         return new ResultSetBuilder<>(builder).addEditableProp(propName);
     }
 

@@ -1,26 +1,21 @@
 package ua.com.fielden.platform.eql.stage1.conditions;
 
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
 import ua.com.fielden.platform.eql.stage1.queries.SubQueryForExists1;
 import ua.com.fielden.platform.eql.stage2.conditions.ExistencePredicate2;
+import ua.com.fielden.platform.utils.ToString;
+
+import java.util.Set;
 
 /**
  * A predicate for SQL's EXISTS / NOT EXISTS statement.
  *
  * @author TG Team
  */
-public class ExistencePredicate1 implements ICondition1<ExistencePredicate2> {
-    private final boolean negated;
-    private final SubQueryForExists1 subQuery;
-
-    public ExistencePredicate1(final boolean negated, final SubQueryForExists1 subQuery) {
-        this.negated = negated;
-        this.subQuery = subQuery;
-    }
+public record ExistencePredicate1 (boolean negated, SubQueryForExists1 subQuery)
+        implements ICondition1<ExistencePredicate2>, ToString.IFormattable
+{
 
     @Override
     public ExistencePredicate2 transform(final TransformationContextFromStage1To2 context) {
@@ -33,26 +28,16 @@ public class ExistencePredicate1 implements ICondition1<ExistencePredicate2> {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (negated ? 1231 : 1237);
-        result = prime * result + subQuery.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines());
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof ExistencePredicate1)) {
-            return false;
-        }
-
-        final ExistencePredicate1 other = (ExistencePredicate1) obj;
-
-        return Objects.equals(negated, other.negated) && Objects.equals(subQuery, other.subQuery);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .add("negated", negated)
+                .add("subQuery", subQuery)
+                .$();
     }
+
 }

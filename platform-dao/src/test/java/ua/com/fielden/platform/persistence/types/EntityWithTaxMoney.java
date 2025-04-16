@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountUserType;
+import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountType;
 
 /**
  * This is a test entity, which is currently used for testing of db operations on simple tax sensitive {@link Money} instances.
@@ -27,7 +27,7 @@ public class EntityWithTaxMoney extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo("MONEY")
-    @PersistentType(userType = IMoneyWithTaxAmountUserType.class)
+    @PersistentType(userType = IMoneyWithTaxAmountType.class)
     private Money money;
 
     protected EntityWithTaxMoney() {

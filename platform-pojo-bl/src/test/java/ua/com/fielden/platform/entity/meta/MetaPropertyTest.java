@@ -1,25 +1,21 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
+import com.google.inject.Injector;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.entities.EntityWithBce;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -30,7 +26,7 @@ import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
  *
  */
 public class MetaPropertyTest {
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private EntityWithBce entity;
@@ -128,6 +124,36 @@ public class MetaPropertyTest {
         entity.setPropRequired(null);
         assertFalse(entity.getProperty("propRequired").isValid());
         assertEquals(Finder.findFieldByName(entity.getType(), "propRequired").getAnnotation(Required.class).value(), entity.getProperty("propRequired").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void properties_that_are_required_by_definition_cannot_be_made_not_required_at_runtime() {
+        final var mp = entity.getProperty("propRequired");
+        assertTrue(mp.isRequiredByDefinition());
+
+        assertThatThrownBy(() -> mp.setRequired(false))
+                .isInstanceOf(EntityDefinitionException.class)
+                .hasMessage("Property [propRequired] in entity [EntityWithBce] is declared as required and cannot have this constraint relaxed.");
+    }
+
+    @Test
+    public void properties_that_are_required_by_definition_are_identified_as_both_required_and_required_by_definition() {
+        final var mp = entity.getProperty("propRequired");
+        assertTrue(mp.isRequired());
+        assertTrue(mp.isRequiredByDefinition());
+    }
+
+    @Test
+    public void properties_that_are_not_required_by_defintion_but_made_required_at_runtime_are_identified_as_required_but_not_as_required_by_definition() {
+        final var mp = entity.getProperty("property2");
+        // assert pre-conditions
+        assertFalse(mp.isRequired());
+        assertFalse(mp.isRequiredByDefinition());
+
+        mp.setRequired(true);
+
+        assertTrue(mp.isRequired());
+        assertFalse(mp.isRequiredByDefinition());
     }
 
     @Test

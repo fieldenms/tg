@@ -1,9 +1,6 @@
 package ua.com.fielden.platform.entity;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -36,7 +33,7 @@ public class SecurityTokenTreeNodeEntity extends AbstractEntity<String> {
 
     @IsProperty(SecurityTokenTreeNodeEntity.class)
     @Title(value = "Children", desc = "Desc")
-    private List<SecurityTokenTreeNodeEntity> children = new ArrayList<>();
+    private final Set<SecurityTokenTreeNodeEntity> children = new TreeSet<>();
 
     @Observable
     public SecurityTokenTreeNodeEntity setTitle(final String title) {
@@ -55,8 +52,8 @@ public class SecurityTokenTreeNodeEntity extends AbstractEntity<String> {
         return this;
     }
 
-    public List<SecurityTokenTreeNodeEntity> getChildren() {
-        return Collections.unmodifiableList(children);
+    public Set<SecurityTokenTreeNodeEntity> getChildren() {
+        return Collections.unmodifiableSet(children);
     }
 
     @Observable

@@ -37,8 +37,8 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.meta.EntityMetadata;
+import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 
 public class DataMigrator {
@@ -70,7 +70,7 @@ public class DataMigrator {
             }
         }
 
-        final List<CompiledRetriever> retrieversJobs = generateRetrieversJobs(retrievers, injector.getInstance(DomainMetadata.class).eqlDomainMetadata);
+        final List<CompiledRetriever> retrieversJobs = generateRetrieversJobs(retrievers, injector.getInstance(IDomainMetadata.class));
 
         final Connection legacyConn = injector.getInstance(Connection.class);
         if (!skipValidations) {
@@ -105,7 +105,8 @@ public class DataMigrator {
         }
     }
 
-    private static List<CompiledRetriever> generateRetrieversJobs(final List<IRetriever<? extends AbstractEntity<?>>> retrievers, final EqlDomainMetadata eqlDmd) {
+    private static List<CompiledRetriever> generateRetrieversJobs(final List<IRetriever<? extends AbstractEntity<?>>> retrievers,
+                                                                  final IDomainMetadata domainMetadata) {
         final var result = new ArrayList<CompiledRetriever>();
         for (final var retriever : retrievers) {
             try {
@@ -116,8 +117,9 @@ public class DataMigrator {
                     retResultFieldsIndices.put(propPath, index);
                     index = index + 1;
                 }
-                final var emd = eqlDmd.entityPropsMetadata().get(retriever.type());
-                final var md = generateEntityMd(emd.typeInfo.tableName, emd.props());
+                final var emd = domainMetadata.forEntity(retriever.type()).asPersistent()
+                        .orElseThrow(() -> new DataMigrationException("Unable to generate a retriever job for entity: [%s].".formatted(retriever.type())));
+                final var md = generateEntityMd(emd.data().tableName(), emd.properties(), domainMetadata);
 
                 if (retriever.isUpdater()) {
                     result.add(CompiledRetriever.forUpdate(retriever, legacySql, new TargetDataUpdate(retriever.type(), retResultFieldsIndices, md), md));

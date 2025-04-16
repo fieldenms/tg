@@ -54,7 +54,7 @@ public class UserAndRoleAssociationWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
-                .withDimensions(mkDim(360, 240, Unit.PX))
+                .withDimensions(mkDim(380, 240, Unit.PX))
                 .done();
 
         return new EntityMaster<>(UserAndRoleAssociation.class, UserAndRoleAssociationProducer.class, masterConfig, injector);

@@ -1,14 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
@@ -16,6 +7,12 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.Concat3;
+import ua.com.fielden.platform.utils.ToString;
+
+import java.util.*;
+
+import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.eql.meta.PropType.STRING_PROP_TYPE;
 
 public class Concat2 extends AbstractFunction2<Concat3> {
 
@@ -62,16 +59,14 @@ public class Concat2 extends AbstractFunction2<Concat3> {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-    
-        if (!(obj instanceof Concat2)) {
-            return false;
-        }
-        
-        final Concat2 other = (Concat2) obj;
-        
-        return Objects.equals(operands, other.operands);
+        return this == obj
+               || obj instanceof Concat2 that
+                  && Objects.equals(operands, that.operands);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString).add("operands", operands);
+    }
+
 }
