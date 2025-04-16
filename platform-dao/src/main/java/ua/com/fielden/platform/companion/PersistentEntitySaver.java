@@ -54,6 +54,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
@@ -61,6 +62,7 @@ import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.model.IFillModel.emptyFillModel;
@@ -555,17 +557,20 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         return shouldProcessAsActivatable;
     }
 
-    /**
-     * Determines whether automatic conflict resolution between two entities of the same type is possible.
-     * This predicate is true if and only if all dirty properties of {@code entity} support automatic conflict resolution
-     * and the value of each dirty property of {@code entity} is {@linkplain EntityUtils#isConflicting(Object, Object, Object) non-conflicting}
-     * with the value of the same property in {@code persistedEntity}.
-     *
-     * @see MapEntityTo#autoConflictResolution()
-     * @see MapTo#autoConflictResolution()
-     */
+    /// Determines whether automatic conflict resolution between two entities of the same type is possible.
+    /// This predicate is `true` iff all dirty properties of `entity` support automatic conflict resolution,
+    /// and the value of each such property does not conflict with the same property of `persistedEntity`.
+    /// The meaning of "conflict" has one common and one special case:
+    /// 1. *Common case:* [EntityUtils#isConflicting] is used to identify a conflict for all properties and entities except property `active` for an activatable entity.
+    /// 2. *Special case:* property `active` for an activatable entity is compared directly with the value of `active` in `persistentEntity`, and only if the dirty value is `false`.
+    ///    This is required to avoid situations where an entity is being deactivated, and someone is creating an active reference to that instance concurrently.
+    ///    Additionally, the condition `persistedEntity.refCount != 0` ensures that deactivation of a stale instance does not fail solely because the `entity` is stale.
+    ///
+    /// @see MapEntityTo#autoConflictResolution()
+    /// @see MapTo#autoConflictResolution()
+    ///
     private boolean canResolveConflict(final T entity, final T persistedEntity) {
-        if (!AnnotationReflector.getAnnotation(entity.getClass(), MapEntityTo.class).autoConflictResolution()) {
+        if (!requireNonNull(AnnotationReflector.getAnnotation(entity.getClass(), MapEntityTo.class)).autoConflictResolution()) {
             return false;
         }
         // Comparison of property values is most likely to trigger lazy loading if `persistedEntity` is a Hibernate proxy
@@ -578,7 +583,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final Object oldValue = prop.getOriginalValue();
             final Object newValue = prop.getValue();
             final Object persistedValue = persistedEntity.get(name);
-            if (EntityUtils.isConflicting(newValue, oldValue, persistedValue)) {
+            if (EntityUtils.isConflicting(newValue, oldValue, persistedValue) ||
+                entity instanceof ActivatableAbstractEntity<?> && prop.getName().equals(ACTIVE) &&
+                Boolean.FALSE.equals(newValue) && Boolean.TRUE.equals(persistedValue) &&
+                Integer.valueOf(0).compareTo(persistedEntity.get(REF_COUNT)) != 0)
+            {
                 return false;
             }
         }
