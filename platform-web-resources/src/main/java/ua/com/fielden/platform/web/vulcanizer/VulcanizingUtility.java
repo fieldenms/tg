@@ -20,6 +20,7 @@ import java.util.Properties;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 import static java.io.File.pathSeparator;
 import static java.lang.String.format;
 import static java.lang.System.arraycopy;
@@ -191,6 +192,7 @@ public class VulcanizingUtility {
             final Map<String, String> checksums = generateChecksums(allExternalResources.toArray(new String[0]));
             try {
                 final ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.enable(INDENT_OUTPUT);
                 objectMapper.writeValue(new File(mobileAndDesktopAppSpecificPath + prefix + "checksums.json"), checksums);
             } catch (final IOException ex) {
                 final String msg = "Could not write checksum.json";
