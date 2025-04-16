@@ -18,6 +18,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOpti
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SequencedSet;
 
 /**
  * Represent a contract for Web UI configuring.
@@ -198,9 +199,10 @@ public interface IWebUiConfig extends IMenuRetriever {
     Optional<String> checksum(final String resourceURI);
 
     /**
-     * Loads list of '/resources/*' paths for deployment mode of an application.
+     * Returns a set of resource paths for deployment mode of an application.
+     * All these resources are cached through a Service Worker on a client.
      */
-    String resourcesList();
+    SequencedSet<String> deploymentResourcePaths();
 
     /**
      * Returns true if server and client applications operate in the same time-zone, otherwise false.

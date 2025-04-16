@@ -51,7 +51,7 @@ import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -65,8 +65,10 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
 import static ua.com.fielden.platform.web.minijs.JsImport.extractImportStatements;
+import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
+import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.FILE_APP_LOGIN_INITIATE_RESET_HTML;
 import static ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions.ALL_OFF;
 
 /**
@@ -101,7 +103,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      */
     private final List<String> resourcePaths;
     private final Workflows workflow;
-    private final Map<String, String> checksums;
+    private final SequencedMap<String, String> checksums;
     private final boolean independentTimeZone;
     private final MasterActionOptions masterActionOptions;
 
@@ -391,10 +393,14 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public String resourcesList() {
+    public SequencedSet<String> deploymentResourcePaths() {
         return checksums.keySet().stream()
-            .filter(path -> path.startsWith("/resources/"))
-            .collect(joining("|"));
+            .map(path -> switch (path) {
+                case FILE_APP_INDEX_HTML -> AppIndexResource.BINDING_PATH;
+                case FILE_APP_LOGIN_INITIATE_RESET_HTML -> LoginInitiateResetResource.BINDING_PATH;
+                default -> path;
+            })
+            .collect(toCollection(LinkedHashSet::new));
     }
 
     @Override

@@ -34,6 +34,8 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.cypher.Checksum.sha256;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
+import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.FILE_APP_LOGIN_INITIATE_RESET_HTML;
 
 /**
  * A set of utilities to facilitate Web UI application vulcanization.
@@ -146,20 +148,20 @@ public class VulcanizingUtility {
 
             LOGGER.info(format("\tGenerating checksums..."));
             final List<String> allExternalResources = listOf(
-                "/app/tg-app-index.html",
+                FILE_APP_INDEX_HTML, // '/', see AppIndexResource.BINDING_PATH
                 "/resources/startup-resources-vulcanized.js",
                 "/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js",
                 "/resources/polymer/web-animations-js/web-animations-next-lite.min.js",
                 "/resources/manifest.webmanifest",
                 "/resources/icons/tg-icon192x192.png",
                 "/resources/icons/tg-icon144x144.png",
-                // Other page trees (logout.html, login.html, login-initiate-reset.html, login-initiated-reset.html).
+                // Other page trees (logout.html, login.html, login-initiate-reset.html ('/forgotten'), login-initiated-reset.html).
                 // Please note that login.html cannot go through service worker caching due to the need to redirect to index.html when authenticator appears.
                 // And logout.html cannot go through service worker to support request redirection during Single Log-Out lifecycle.
                 "/resources/zxcvbn/zxcvbn.js",
                 "/resources/login-startup-resources-vulcanized.js",
                 "/resources/icons/tg-icon.png",
-                "/app/login-initiate-reset.html",
+                FILE_APP_LOGIN_INITIATE_RESET_HTML, // '/forgotten', see LoginInitiateResetResource.BINDING_PATH
                 "/resources/login-initiated-reset.html",
                 "/resources/graphiql/graphiql.min.css",
                 "/resources/graphiql/react.production.min.js",

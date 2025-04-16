@@ -93,7 +93,7 @@ function cleanUp(url, cache, checksumCache) {
                     // ... and filter out those not present on a server;
                     requests.filter(request => {
                         const pathName = createURL(request.url).pathname;
-                        return pathName.startsWith('/resources/') && !serverResources.has(pathName);
+                        return !serverResources.has(pathName);
                     })
                     .map(request => request.url)
                     // Remove found entries from both caches.
