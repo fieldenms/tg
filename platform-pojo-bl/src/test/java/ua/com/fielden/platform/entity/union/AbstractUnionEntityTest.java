@@ -14,13 +14,12 @@ import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityThree;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 
-import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.meta.MetaProperty.ERR_REQUIRED;
@@ -34,7 +33,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDe
  *
  */
 public class AbstractUnionEntityTest {
-    final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
+    final Injector injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).getInjector();
     final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
     @Test

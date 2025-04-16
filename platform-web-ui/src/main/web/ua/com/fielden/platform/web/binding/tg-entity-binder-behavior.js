@@ -1,7 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
-import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { resultMessages, openLink } from '/resources/reflection/tg-polymer-utils.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -422,8 +422,7 @@ export const TgEntityBinderBehavior = {
                                         attachment.title.toLowerCase().startsWith('ftps://') ||
                                         attachment.title.toLowerCase().startsWith('mailto:');
                 if (openAsHyperLink === true) {
-                    const win = window.open(attachment.title, '_blank');
-                    win.focus();
+                    openLink(attachment.title);
                 } else {
                     const self = this;
                     const url = '/download-attachment/' + attachment.id + '/' + attachment.sha1;

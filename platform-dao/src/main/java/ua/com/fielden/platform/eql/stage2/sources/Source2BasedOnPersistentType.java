@@ -1,16 +1,15 @@
 package ua.com.fielden.platform.eql.stage2.sources;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptySet;
-
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
+
+import java.util.Set;
+
+import static java.util.Collections.emptySet;
 
 public class Source2BasedOnPersistentType extends AbstractSource2 implements ISource2<Source3BasedOnTable> {
 
@@ -40,11 +39,6 @@ public class Source2BasedOnPersistentType extends AbstractSource2 implements ISo
     }
 
     @Override
-    public String toString() {
-        return format("type = [%s], ID = [%s], alias = [%s]", sourceType().getSimpleName(), id, (alias != null ? alias : ""));
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
@@ -55,4 +49,10 @@ public class Source2BasedOnPersistentType extends AbstractSource2 implements ISo
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof Source2BasedOnPersistentType;
     }
+
+    @Override
+    public String toStringCompact() {
+        return toString();
+    }
+
 }

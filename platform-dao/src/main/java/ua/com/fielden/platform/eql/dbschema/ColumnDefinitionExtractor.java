@@ -1,35 +1,10 @@
 package ua.com.fielden.platform.eql.dbschema;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
-import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-
-import java.lang.reflect.Field;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
+import com.google.common.collect.ImmutableMap;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -37,9 +12,31 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
+import ua.com.fielden.platform.persistence.types.HibernateTypeMappings;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
+import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.jdbcSqlTypeFor;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.utils.CollectionUtil.first;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * This class is responsible for generating instances of {@link ColumnDefinition} based on the entity property definition. This information then can be used for generation of table DDL.
@@ -48,30 +45,30 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class ColumnDefinitionExtractor {
-    private final HibernateTypeDeterminer hibernateTypeDeterminer;
     private static final IsProperty defaultIsPropertyAnnotation = new IsPropertyAnnotation().newInstance();
+    private final HibernateTypeDeterminer hibernateTypeDeterminer;
+    private final Dialect dialect;
     
-    public ColumnDefinitionExtractor(final Injector hibTypesInjector, final Map<Class<?>, Object> hibTypesDefaults) {
-        this.hibernateTypeDeterminer = new HibernateTypeDeterminer(hibTypesInjector, hibTypesDefaults);
+    public ColumnDefinitionExtractor(final HibernateTypeMappings hibernateTypeMappings, final Dialect dialect) {
+        this.hibernateTypeDeterminer = new HibernateTypeDeterminer(hibernateTypeMappings);
+        this.dialect = dialect;
     }
 
     /**
-     * Generates column definition for the provided entity property.
+     * Generates a column definition for the specified property.
+     * The returned value is a mapping between a property path and its column definition.
      * <p>
-     * In the majority of cases the resultant set would contain a single instance. 
-     * However, in case of custom user types consisting of more than one field such as {@link Money} the resultant set would contain column definitions for each field.
-     * <p>
-     * Also properties of union types result in multiple column definitions -- one per each property in the union type.
-     * 
-     * @param propName
-     * @param propType
-     * @param isProperty
-     * @param mapTo
-     * @param persistedType
-     * @param required
-     * @return
+     * The structure of the returned map depend on the type of the specified property.
+     * <ul>
+     *   <li> If the property is component-typed, the map contains entries for each component, with each key representing a full path to the component
+     *        (e.g., the set of keys for property {@code note : RichText} is {@code {note.coreText, note.formattedText}}).
+     *   <li> If the property is union-typed, the map contains entries for each union member, with each key representing a full path to the member
+     *        (e.g., the set of keys for union-typed property {@code location : Location}, where union members are {@code workshop, station},
+     *        is {@code {location.workshop, location.station}}).
+     *   <li> Otherwise, the map contains a single entry, with the key equal to the specified property's name.
+     * </ul>
      */
-    public Set<ColumnDefinition> extractFromProperty(
+    public Map<String, ColumnDefinition> extractFromProperty(
             final String propName, 
             final Class<?> propType, 
             final IsProperty isProperty, 
@@ -79,73 +76,116 @@ public class ColumnDefinitionExtractor {
             final PersistentType persistedType, 
             final boolean required, 
             final boolean unique, 
-            final Optional<Integer> compositeKeyMemberOrder) {
-
-        final Set<ColumnDefinition> result = new LinkedHashSet<>();
+            final Optional<Integer> compositeKeyMemberOrder)
+    {
         final String columnName = nameClause(propName, mapTo.value());
-        final Object hibTypeConverter = hibernateTypeDeterminer.getHibernateType(propType, persistedType);
+        final Object hibType = hibernateTypeDeterminer.getHibernateType(propType, persistedType);
         final int length = isProperty.length();
         final int precision = isProperty.precision();
         final int scale = isProperty.scale();
-        
+
         if (isUnionEntityType(propType)) {
-            for (final Field subpropField : unionProperties((Class<? extends AbstractUnionEntity>) propType)) {
-                final MapTo mapToUnionSubprop = getAnnotation(subpropField, MapTo.class);
-                if (mapToUnionSubprop == null) {
-                    throw new DbSchemaException(format("Property [%s] in union entity type [%s] is not annotated MapTo.", subpropField.getName(), propType)); 
-                }
+            return unionProperties((Class<? extends AbstractUnionEntity>) propType).stream()
+                    .collect(toImmutableMap(
+                            sField -> propName + '.' + sField,
+                            sField -> {
+                                final MapTo sMapTo = getAnnotation(sField, MapTo.class);
+                                if (sMapTo == null) {
+                                    throw new DbSchemaException(format("Property [%s] in union entity type [%s] is not annotated MapTo.", sField.getName(), propType));
+                                }
 
-                final IsProperty isPropertyUnionSubprop = getAnnotation(subpropField, IsProperty.class);
-                if (isPropertyUnionSubprop == null) {
-                    throw new DbSchemaException(format("Property [%s] in union entity type [%s] is not annotated IsProperty.", subpropField.getName(), propType)); 
-                }
-                
-                final String unionPropColumnName = columnName + "_" + (isEmpty(mapToUnionSubprop.value()) ? subpropField.getName().toUpperCase() : mapToUnionSubprop.value());
-                result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, true, unionPropColumnName, subpropField.getType(), jdbcSqlTypeFor((Type) hibTypeConverter), isPropertyUnionSubprop.length(), isPropertyUnionSubprop.scale(), isPropertyUnionSubprop.precision(), mapToUnionSubprop.defaultValue()));
-            }
+                                final IsProperty sIsProperty = getAnnotation(sField, IsProperty.class);
+                                if (sIsProperty == null) {
+                                    throw new DbSchemaException(format("Property [%s] in union entity type [%s] is not annotated IsProperty.", sField.getName(), propType));
+                                }
+
+                                final String sColumnName = columnName + "_" + (isEmpty(sMapTo.value()) ? sField.getName().toUpperCase() : sMapTo.value());
+                                return new ColumnDefinition(unique, compositeKeyMemberOrder, true, sColumnName,
+                                                            sField.getType(), jdbcSqlTypeFor((Type) hibType),
+                                                            sIsProperty.length(), sIsProperty.scale(), sIsProperty.precision(),
+                                                            sMapTo.defaultValue(), false, dialect);
+                            }));
         } else {
-            if (hibTypeConverter instanceof Type) {
-                result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required), columnName, propType, jdbcSqlTypeFor((Type) hibTypeConverter), length, scale, precision, mapTo.defaultValue()));
-            } else if (hibTypeConverter instanceof UserType) {
-                result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required), columnName, propType, jdbcSqlTypeFor((UserType) hibTypeConverter), length, scale, precision, mapTo.defaultValue()));
-            } else if (hibTypeConverter instanceof CompositeUserType) {
-                final CompositeUserType compositeUserType = (CompositeUserType) hibTypeConverter;
-                final List<Pair<String, Integer>> subprops = jdbcSqlTypeFor(compositeUserType);
-                for (final Pair<String, Integer> pair : subprops) {
-                    final String parentColumn = columnName;
-                    final Field subpropField = findFieldByName(compositeUserType.returnedClass(), pair.getKey());
-                    final MapTo subpropMapTo = getAnnotation(subpropField, MapTo.class);
-                    final IsProperty subpropIsProperty = getAnnotation(subpropField, IsProperty.class);
-                    final String subpropColumnNameSuggestion = subpropMapTo.value();
-                    final int subpropLength = subpropIsProperty.length();
+            if (hibType instanceof Type t) {
+                return ImmutableMap.of(propName,
+                                       new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
+                                                            columnName, propType,
+                                                            jdbcSqlTypeFor(t),
+                                                            length, scale, precision, mapTo.defaultValue(), false, dialect));
+            } else if (hibType instanceof UserType t) {
+                return ImmutableMap.of(propName,
+                                       new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
+                                                            columnName, propType,
+                                                            jdbcSqlTypeFor(t),
+                                                            length, scale, precision, mapTo.defaultValue(), false, dialect));
+            } else if (hibType instanceof CompositeUserType compositeUserType) {
+                final List<Pair<String, Integer>> subProps = jdbcSqlTypeFor(compositeUserType);
+                return subProps.stream().collect(
+                        toImmutableMap(pair -> {
+                                           final var subPropName = pair.getKey();
+                                           return propName + '.' + subPropName;
+                                       },
+                                       pair -> {
+                                           final String parentColumn = columnName;
+                                           final var sName = pair.getKey();
+                                           final var sType = compositeUserType.returnedClass();
+                                           final Field sField = findFieldByName(sType, sName);
+                                           final MapTo sMapTo = getAnnotation(sField, MapTo.class);
+                                           final IsProperty sIsProperty = getAnnotation(sField, IsProperty.class);
+                                           final String sColumnNameSuggestion = sMapTo.value();
+                                           final Object sHibType = hibernateTypeDeterminer.getHibernateType(sField.getType(),
+                                                                                                            getAnnotation(sField, PersistentType.class));
+                                           final var sSqlType = switch (sHibType) {
+                                               case UserType t -> jdbcSqlTypeFor(t);
+                                               case Type t -> jdbcSqlTypeFor(t);
+                                               default -> throw new DbSchemaException("Property [%s] has unsupported Hibernate type: %s".formatted(
+                                                       "%s.%s".formatted(propType.getTypeName(), sName),
+                                                       sHibType));
+                                           };
 
-                    // properties of type Money need special handling as the precision and scale for Money.amount can be overridden
-                    final int subpropPrecision;
-                    if (Money.class.isAssignableFrom(compositeUserType.returnedClass()) && "amount".equals(subpropField.getName()) && precision != IsProperty.DEFAULT_PRECISION) {
-                        subpropPrecision = precision; 
-                    } else {
-                        subpropPrecision = subpropIsProperty.precision();
-                    }
-                    
-                    final int subpropScale;
-                    if (Money.class.isAssignableFrom(compositeUserType.returnedClass()) && "amount".equals(subpropField.getName()) && scale != IsProperty.DEFAULT_SCALE) {
-                        subpropScale = scale; 
-                    } else {
-                        subpropScale = subpropIsProperty.scale();
-                    }
-                    
-                    
-                    final String subpropColumnName = subprops.size() == 1 ? parentColumn
-                            : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(subpropColumnNameSuggestion) ? pair.getKey().toUpperCase() : subpropColumnNameSuggestion));
+                                           final int sLength;
+                                           if (RichText.class.isAssignableFrom(propType) && RichText.SEARCH_TEXT.equals(sField.getName())) {
+                                               sLength = isProperty.length();
+                                           } else {
+                                               sLength = sIsProperty.length();
+                                           }
 
-                    result.add(new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required), subpropColumnName, subpropField.getType(), pair.getValue(), subpropLength, subpropScale, subpropPrecision, subpropMapTo.defaultValue()));
-                }
+                                           // properties of type Money need special handling as the precision and scale for Money.amount can be overridden
+                                           final int sPrecision;
+                                           if (Money.class.isAssignableFrom(sType) && "amount".equals(sField.getName()) && precision != IsProperty.DEFAULT_PRECISION) {
+                                               sPrecision = precision;
+                                           } else {
+                                               sPrecision = sIsProperty.precision();
+                                           }
+
+                                           final int sScale;
+                                           if (Money.class.isAssignableFrom(sType) && "amount".equals(sField.getName()) && scale != IsProperty.DEFAULT_SCALE) {
+                                               sScale = scale;
+                                           } else {
+                                               sScale = sIsProperty.scale();
+                                           }
+
+
+                                           final String sColumnName = subProps.size() == 1 ? parentColumn
+                                                   : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(sColumnNameSuggestion) ? sName.toUpperCase() : sColumnNameSuggestion));
+
+                                           final boolean sRequiresIndex;
+                                           if (RichText.class.isAssignableFrom(propType) && RichText.SEARCH_TEXT.equals(sField.getName())) {
+                                               sRequiresIndex = true;
+                                           } else {
+                                               sRequiresIndex = false;
+                                           }
+
+                                           return new ColumnDefinition(unique, compositeKeyMemberOrder, isNullable(propType, required),
+                                                                       sColumnName, sField.getType(), sSqlType,
+                                                                       sLength, sScale, sPrecision,
+                                                                       sMapTo.defaultValue(), sRequiresIndex, dialect);
+                                       })
+                );
             } else {
-                throw new DbSchemaException(format("Unexpected hibernate type converter [%s] for property [%s] of type [%s].", hibTypeConverter, propName, propType));
+                throw new DbSchemaException(format("Unexpected Hibernate type [%s] for property [%s.%s].", hibType, propType.getTypeName(), propName));
             }
         }
-
-        return result;
     }
 
     private boolean isNullable(final Class<?> propType, final boolean required) {
@@ -154,12 +194,14 @@ public class ColumnDefinitionExtractor {
     
     public ColumnDefinition extractVersionProperty() {
         final Field versionField = Finder.getFieldByName(AbstractEntity.class, VERSION);
-        return extractFromProperty(versionField.getName(), versionField.getType(), defaultIsPropertyAnnotation, getAnnotation(versionField, MapTo.class), null, true, false, empty()).iterator().next();
+        final var columns = extractFromProperty(versionField.getName(), versionField.getType(), defaultIsPropertyAnnotation, getAnnotation(versionField, MapTo.class), null, true, false, empty());
+        return first(columns.values()).orElseThrow();
     }
 
     public ColumnDefinition extractIdProperty() {
         final Field idField = Finder.getFieldByName(AbstractEntity.class, ID);
-        return extractFromProperty(idField.getName(), idField.getType(), defaultIsPropertyAnnotation, getAnnotation(idField, MapTo.class), null, true, false, empty()).iterator().next();
+        final var columns =  extractFromProperty(idField.getName(), idField.getType(), defaultIsPropertyAnnotation, getAnnotation(idField, MapTo.class), null, true, false, empty());
+        return first(columns.values()).orElseThrow();
     }
 
     public Optional<ColumnDefinition> extractSimpleKeyProperty(final Class<? extends AbstractEntity<?>> entityType) {
@@ -167,7 +209,8 @@ public class ColumnDefinitionExtractor {
             return empty();
         }
         final Field keyField = Finder.getFieldByName(AbstractEntity.class, KEY);
-        return of(extractFromProperty(keyField.getName(), getKeyType(entityType), getAnnotation(keyField, IsProperty.class), getAnnotation(keyField, MapTo.class), null, true, true, empty()).iterator().next());
+        final var columns = extractFromProperty(keyField.getName(), getKeyType(entityType), getAnnotation(keyField, IsProperty.class), getAnnotation(keyField, MapTo.class), null, true, true, empty());
+        return of(first(columns.values()).orElseThrow());
     }
     
     private String nameClause(final String propName, final String columnNameSuggestion) {

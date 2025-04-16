@@ -54,11 +54,9 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-start;
             font-size: small;
-            padding: 6px;
             margin: 0px;
-            overflow: auto;
+            overflow: hidden;
             -webkit-overflow-scrolling: touch;
-            text-overflow: ellipsis;
             border-top: 1px solid #e3e3e3;
             min-height: 24px;
         }
@@ -87,6 +85,16 @@ const template = html`
 
         paper-item:focus {
             background-color: #E1F5FE;
+        }
+
+        .item-scroll-container {
+            width: 100%;
+            overflow: auto;
+        }
+
+        .item-container {
+            padding: 6px;
+            width: fit-content;
         }
 
         .additional-prop {
@@ -423,6 +431,9 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      * Obtains a value of the specified by name property for the passed in entity.
      */
     _propValueByName (entity, propName) {
+        if (entity.get(propName) !== null && entity.get(propName).hasOwnProperty('coreText')) {
+            return entity.get(propName).coreText;
+        }
         return this.reflector.tg_toString(entity.get(propName), entity.type(), propName);
     }
 
@@ -498,7 +509,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 const id = this._makeId(index);
                 const paperItem = this.shadowRoot.querySelector("#" + id);
                 if (paperItem) {
-                    paperItem.innerHTML = html;
+                    paperItem.innerHTML = `<div class="item-scroll-container"><div class="item-container">${html}</div></div>`;
                 }
             }
         }.bind(this));

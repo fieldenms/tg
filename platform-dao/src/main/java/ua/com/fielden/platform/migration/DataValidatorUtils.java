@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.migration;
 
-import static java.util.stream.Collectors.joining;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,11 +12,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.types.tuples.T3;
-import ua.com.fielden.platform.utils.CollectionUtil;
-import ua.com.fielden.platform.utils.EntityUtils;
+import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 public class DataValidatorUtils {
 
@@ -32,7 +32,7 @@ public class DataValidatorUtils {
             for (final PropInfo pi : retriever.getContainers()) {
                 final var pmd = retriever.md.props().stream().filter(p -> p.name().equals(pi.propName())).findFirst().get();
                 if (pmd.required()) {
-                    final List<String> leafProps = EntityUtils.isPersistedEntityType(pi.propType()) ? pmd.leafProps() : CollectionUtil.listOf(pmd.name());
+                    final List<String> leafProps = isPersistentEntityType(pi.propType()) ? pmd.leafProps() : CollectionUtil.listOf(pmd.name());
                     final var cond = leafProps.stream().map(s -> "R. \"" + s + "\" IS NULL").collect(Collectors.joining(" AND "));
                     final var sql = "SELECT COUNT(*) FROM (" + retrieverSql + ") R WHERE " + cond;
                     result.add(T3.t3(retriever.retriever.getClass().getSimpleName(), pi.propName() + ":" + pi.propType().getSimpleName(), sql));
@@ -50,7 +50,7 @@ public class DataValidatorUtils {
         for (final CompiledRetriever retriever : retrieversJobs) {
             final var retrieverSql = RetrieverSqlProducer.getSqlWithoutOrdering(retriever.retriever);
             for (final PropInfo pi : retriever.getContainers()) {
-                if (EntityUtils.isPersistedEntityType(pi.propType())) {
+                if (isPersistentEntityType(pi.propType())) {
                     final List<String> keyProps = MigrationUtils.keyPaths((Class<? extends AbstractEntity>) pi.propType());
                     final List<String> leafProps = retriever.md.props().stream().filter(p -> p.name().equals(pi.propName())).findFirst().get().leafProps();
                     final var domainRets = entityTypeRetrievers.get(pi.propType());

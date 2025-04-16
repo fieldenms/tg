@@ -96,7 +96,7 @@ public class KeyMemberChangeValidator extends AbstractBeforeChangeEventHandler<O
 
     private static String makeEntryMsg(final String s1, final String s2, final T2<Integer, Integer> lengths) {
         final String padStr = "\u00A0";
-        return format("<tt>%s\u00A0%s</tt>",
+        return format("<span style='font-family:monospace'>%s\u00A0%s</span>",
                 rightPad(s1, lengths._1 + 2, padStr),
                 rightPad(s2, lengths._2 + 2, padStr));
     }

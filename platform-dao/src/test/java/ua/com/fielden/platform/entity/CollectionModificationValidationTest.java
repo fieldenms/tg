@@ -1,10 +1,27 @@
 package ua.com.fielden.platform.entity;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
+import org.apache.logging.log4j.Logger;
+import org.junit.Test;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
+import ua.com.fielden.platform.security.tokens.CompoundModuleToken;
+import ua.com.fielden.platform.security.tokens.attachment.*;
+import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenMain_MenuItem_CanAccess_Token;
+import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token;
+import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token;
+import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.open_compound_master.OpenTgCompoundEntityMasterAction_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.*;
+import ua.com.fielden.platform.security.tokens.persistent.*;
+import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.user.*;
+import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
+import ua.com.fielden.platform.security.user.*;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.web.centre.CentreContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,86 +29,9 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.function.Function;
 
-import org.apache.logging.log4j.Logger;
-import org.junit.Test;
-
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
-import ua.com.fielden.platform.security.tokens.CompoundModuleToken;
-import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenMain_MenuItem_CanAccess_Token;
-import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token;
-import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token;
-import ua.com.fielden.platform.security.tokens.open_compound_master.OpenTgCompoundEntityMasterAction_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleDetailMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleDetailUnpersistedMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgCollectionalSerialisationParentMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgCompoundEntityDetailMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgDeletionTestEntityMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityForColourMasterMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityWithPropertyDependencyMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityWithTimeZoneDatesMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEntityForTrippleDecAnalysisMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEntityMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentCompositeEntityMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentEntityWithPropertiesMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityDetail_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntity_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntity_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent._CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent._CanRead_Token;
-import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.ReUser_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.ReUser_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRolesUpdater_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
-import ua.com.fielden.platform.security.user.SecurityTokenInfo;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
-import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterProducer;
-import ua.com.fielden.platform.security.user.UserRolesUpdater;
-import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
-import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-import ua.com.fielden.platform.web.centre.CentreContext;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 
 /**
  * This test case is intended to check correctness of existing collection modification validation logic.
@@ -405,6 +345,19 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             createTokenInfo.apply(TgGeneratedEntityMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentCompositeEntityMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentEntityWithPropertiesMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextProp_CanRead_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextProp_CanSave_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextProp_CanReadModel_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextPropMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextRef_CanRead_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextRef_CanSave_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextRef_CanReadModel_Token.class),
+            createTokenInfo.apply(TgEntityWithRichTextRefMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgNote_CanRead_Token.class),
+            createTokenInfo.apply(TgNote_CanSave_Token.class),
+            createTokenInfo.apply(TgNote_CanReadModel_Token.class),
+            createTokenInfo.apply(TgNoteMaster_CanOpen_Token.class),
+            createTokenInfo.apply(PersistentEntityInfo_CanExecute_Token.class),
 
             compoundModule, tgComoundEntity_CanDelete, tgCompoundEntity_CanSave, tgCompoundEntityChild_CanDelete, tgCompoundEntityChild_CanSave, tgCompoundEntityDetail_CanSave, openTgCompoundEntityMasterAction_CanOpen,
             tgCompoundEntityMaster_OpenMain_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess

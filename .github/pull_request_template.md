@@ -30,7 +30,7 @@ This section should be completed with reference to section [Preparing PR](https:
 
 - [ ] Established security practices have been followed, including the existence and attribution of security tokens.
 
-- [ ] If there are database schema changes (e.g., domain metadata entities changed their structure), an SQL script has been written and tested to update the database schema in a non-destructive way (to allow for blue/green deployments).
+- [ ] If there are database schema changes (e.g., domain entities changed their structure), an SQL script has been written and tested to update the database schema in a non-destructive way (to allow for blue/green deployments).
 
 - [ ] If there are destructive schema changes (e.g., removal of an entity or property), a second SQL script has been written to be applied to the database in the future once the release has been fully accepted.
 
@@ -101,7 +101,7 @@ This section should be completed with reference to section [Performing PR review
 - [ ] Ensure that changes are documented for the end-user (a software engineer in the case of TG, or an application user in the case of TG-based applications).
 
 - [ ] If there are significant changes (described above), special attention has been paid to them.
-      Marked the task items in section "Significant changes" as completed to indicated that corresponding changes have been reviewed, improved if necessary, and approved.
+      Marked the task items in section "Significant changes" as completed to indicate that corresponding changes have been reviewed, improved if necessary, and approved.
 
 - [ ] The issue or issues addressed by the pull request are associated with the relevant release milestone.
 
@@ -113,5 +113,5 @@ This section should be completed with reference to section [Performing PR review
 
 - [ ] The `In progress` label has been removed from the pull request.
 
-- [ ] The `Pull request` label has been removed from the pull request.
+- [ ] The `Pull request` label has been removed from the issue.
 

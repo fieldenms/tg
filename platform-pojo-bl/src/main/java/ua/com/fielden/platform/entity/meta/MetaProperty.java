@@ -1,13 +1,5 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static java.lang.String.format;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -21,6 +13,15 @@ import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import static java.lang.String.format;
 
 /**
  * A base class for a concept of meta-data about an entity property. Hence, meta-property.
@@ -162,6 +163,21 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [setDomainValidationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
+    /**
+     * Returns the first validation result from a validator associated with the specified annotation.
+     * Validation failures are considered first.
+     * If there are no validation results, an empty optional is returned.
+     * <p>
+     * Most validation annotations are associated with a single validator.
+     * But some, such as {@link ValidationAnnotation#BEFORE_CHANGE} may have more than one validator associated with it.
+     */
+    public Optional<Result> findValidationResult(final ValidationAnnotation va) {
+        throw new StrictProxyException(format("Invalid call [findValidationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
+    /**
+     * Equivalent to {@link #findValidationResult(ValidationAnnotation)}, but fails if there are no validation results.
+     */
     public Result getValidationResult(final ValidationAnnotation va) {
         throw new StrictProxyException(format("Invalid call [getValidationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
@@ -370,6 +386,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public boolean isRequired() {
         throw new StrictProxyException(format("Invalid call [isRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
+    public boolean isRequiredByDefinition() {
+        throw new StrictProxyException(format("Invalid call [isRequiredByDefinition] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
     public MetaProperty<T> setRequired(final boolean required) {

@@ -6,7 +6,7 @@
     <parent>
         <groupId>fielden</groupId>
         <artifactId>platform-parent</artifactId>
-        <version>1.9.0</version>
+        <version>2.0.0</version>
     </parent>
 
     <name>Trident Genesis Platform Microbenckmarks</name>
@@ -41,6 +41,12 @@
             <version>${project.version}</version>
             <type>test-jar</type>
         </dependency>
+        <dependency>
+            <groupId>fielden</groupId>
+            <artifactId>platform-pojo-bl</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+        </dependency>
         <!-- other dependencies -->
         <!-- Java Microbenchmark Harness -->
         <!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core -->
@@ -57,7 +63,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <version>${posgresql.version}</version>
+          <scope>runtime</scope>
+        </dependency>
     </dependencies>
+
     <build>
         <resources>
             <resource>
@@ -73,7 +86,9 @@
                 </excludes>
             </resource>
         </resources>
+
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -109,6 +124,18 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- disable maven-enforcer-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+
         </plugins>
+
     </build>
 </project>

@@ -1,9 +1,8 @@
-import '/resources/polymer/@polymer/polymer/lib/elements/custom-style.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
 import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
-import { _featureType, createStyleModule } from '/resources/gis/tg-gis-utils.js';
+import { _featureType, appendStylesTo } from '/resources/gis/tg-gis-utils.js';
 import { BaseLayers } from '/resources/gis/tg-base-layers.js';
 import { EntityStyling } from '/resources/gis/tg-entity-styling.js';
 import { MarkerFactory, tgIconFactoryStylesName } from '/resources/gis/tg-marker-factory.js';
@@ -15,6 +14,7 @@ import '/resources/gis/leaflet/subgroup/leaflet-subgroup-lib.js';
 import { TgReflector, _isEntity } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
+import { createStyleModule } from '/resources/polymer/lib/tg-style-utils.js';
 
 const tgGisComponentStyles = `
     .leaflet-container {
@@ -69,7 +69,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     this._reflector = new TgReflector();
     this._appConfig = new TgAppConfig();
 
-    this.appendStyles(tgMap, 
+    appendStylesTo(tgMap,
         leafletStylesName,
 
         tgGisComponentStylesName,
@@ -110,7 +110,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
      */
     self.restorePrevEntityAndWasPopupOpen = (prevEntity, wasPopupOpen) => {
         if (_isEntity(prevEntity)) { // if there was previously selected layer (with or without popup) and corresponding entity was found
-            const foundEntity = this._entities.find(entity => this._reflector.equalsEx(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
+            const foundEntity = this._entities.find(entity => this._reflector.equalsExInHierarchy(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
             if (foundEntity) {
                 const _select = this._select;
                 const foundLayerId = _select.getLayerIdByEntity(foundEntity); // find leaflet layer id of the new corresponding layer (if present)
@@ -338,14 +338,6 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
 
 GisComponent.prototype.featureType = _featureType;
 
-GisComponent.prototype.appendStyles = function (tgMap, ...styleModuleNames) {
-    const styleWrapper = document.createElement('custom-style');
-    const style = document.createElement('style');
-    style.setAttribute('include', styleModuleNames.join(' '));
-    styleWrapper.appendChild(style);
-    tgMap.shadowRoot.appendChild(styleWrapper);
-};
-
 /**
  * Creates overlays of domain-specific objects to be displayed on map.
  * User can tick/untick overlays by their names in right top corner's button.
@@ -462,7 +454,7 @@ GisComponent.prototype.clearAll = function () {
  */
 GisComponent.prototype.promoteNewOrUpdatedEntities = function (newOrUpdatedEntities) {
     this.traverseEntities(newOrUpdatedEntities, null /* the parent for top-level entities is null */, (entity, parentFeature) => {
-        const indexToUpdate = this._entities.findIndex(prevEntity => this._reflector.equalsEx(entity, prevEntity));
+        const indexToUpdate = this._entities.findIndex(prevEntity => this._reflector.equalsExInHierarchy(entity, prevEntity));
         if (indexToUpdate >= 0) {
             const prevLayerId = this._entities[indexToUpdate].properties.layerId;
             // found prev entity could probably have no corresponding leaflet layer -- need to check this

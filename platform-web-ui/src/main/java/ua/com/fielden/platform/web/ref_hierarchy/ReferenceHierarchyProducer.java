@@ -43,7 +43,7 @@ public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext
             // we need to be smart about getting the type as it may be a synthetic entity that represents a persistent entity
             // and so, we really need to handle this case here
             final Class<? extends AbstractEntity<?>> entityType;
-            if (isPersistedEntityType(referenceEntity.getType())) {
+            if (isPersistentEntityType(referenceEntity.getType())) {
                 entityType = referenceEntity.getType();
                 action.setRefEntityType(entityType.getName());
             } else if (isSyntheticBasedOnPersistentEntityType(referenceEntity.getType())) {

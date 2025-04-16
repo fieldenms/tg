@@ -1,5 +1,6 @@
-import {FullCalendar} from '/resources/components/fullcalendar/fullcalendar-component.js';
-import '/resources/components/fullcalendar/fullcalendar-style.js';
+import { FullCalendar, momentTimezonePlugin } from '/resources/polymer/lib/fullcalendar-lib.js';
+import moment from '/resources/polymer/lib/moment-lib.js';
+import { now } from '/resources/reflection/tg-date-utils.js';
 import '/resources/components/tg-dropdown-switch.js';
 import '/resources/layout/tg-flex-layout.js';
 import '/resources/images/tg-icons.js';
@@ -18,7 +19,7 @@ import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/c
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 const template = html`
-    <style include='fullcalendar-style iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning'>
+    <style include='iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning'>
         :host {
             width: 100%;
             height: 100%;
@@ -187,7 +188,7 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
         this._mobileToolbarLayout = [['justified', 'center', [], []], ['select:pos=center']];
 
         // configures calendar
-        this._calendar = new FullCalendar.Calendar(this.$.calendarContainer, {
+        const config = {
             initialView: 'dayGridMonth',
             headerToolbar: false,
             datesSet: (dataInfo) => {
@@ -211,7 +212,13 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
             },
             height: 'auto',
             firstDay: this._appConfig.firstDayOfWeek
-          });
+        };
+        if (moment.defaultZone) {
+            config.plugins = [ momentTimezonePlugin ];
+            config.timeZone = moment.defaultZone.name;
+            config.now = () => now().toDate().toISOString(); // Return in ISO 8601 string format, as per default implementation
+        }
+        this._calendar = new FullCalendar(this.$.calendarContainer, config);
           this._calendar.render();
           this.currentView = 'dayGridMonth';
           //Initialising edit action
@@ -260,12 +267,14 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
     _prev() {
         if (this._calendar) {
             this._calendar.prev();
+            this.notifyResize();
         }
     }
 
     _next() {
         if (this._calendar) {
             this._calendar.next();
+            this.notifyResize();
         }
     }
 

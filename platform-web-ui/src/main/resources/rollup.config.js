@@ -1,6 +1,7 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
+import css from 'rollup-plugin-import-css';
 
 const unprocessedFiles = [
     // Separate testing dependency -- we also tree shake it because placed under '@polymer/' umbrella.
@@ -18,7 +19,9 @@ export default {
 
         // Our other libraries.
         'node_modules/lib/antlr-lib.js',
+        'node_modules/lib/fullcalendar-lib.js',
         'node_modules/lib/moment-lib.js',
+        'node_modules/lib/toastui-editor-lib.js',
 
         // Polymer import files, that we are using through function imports, are listed here.
         // They can not be added to 'build-polymer.js' because we would need to somehow use those functions there for them to be not tree-shaken.
@@ -50,6 +53,7 @@ export default {
         commonjs({ // plugin to convert CommonJS modules to ES modules (see 'moment' and 'moment-timezone')
             exclude: [ ...unprocessedFiles ]
         }),
+        css(), // plugin to be able to import CSS files (see '@toast-ui/editor')
         json() // plugin to be able to import JSON files (see 'moment-timezone')
     ]
 };

@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedP
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.EXPRESSION;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isCollectionOrInCollectionHierarchy;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.parentCollection;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.MAX_LENGTH;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -157,7 +158,6 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
      * This is to be used for performance-friendly copying of {@link DomainTreeEnhancer} without unnecessary parsing of {@link CalculatedProperty#getContextualExpression()},
      * which is costly operation.
      *
-     * @param calculatedProperty
      * @param enhancer -- {@link DomainTreeEnhancer} instance to be associated with copied instance
      */
     public CalculatedProperty copy(final IDomainTreeEnhancer enhancer) {
@@ -217,9 +217,8 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     protected void inferMetaInformation() {
         try {
             this.ast = createAst(contextualExpression);
-        } catch (final Exception e) {
-            e.printStackTrace();
-            throw new Result("The calculated property correctness should be verified earlier! Please check validation logic..", e);
+        } catch (final Exception ex) {
+            throw new Result("The calculated property correctness should be verified earlier! Please check validation logic..", ex);
         }
         this.resultType = ast.getType();
 
@@ -299,7 +298,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
      * @return
      */
     protected static String above(final String contextPath) {
-        return PropertyTypeDeterminator.isDotNotation(contextPath) ? PropertyTypeDeterminator.penultAndLast(contextPath).getKey() : "";
+        return PropertyTypeDeterminator.isDotExpression(contextPath) ? PropertyTypeDeterminator.penultAndLast(contextPath).getKey() : "";
     }
 
     @Override

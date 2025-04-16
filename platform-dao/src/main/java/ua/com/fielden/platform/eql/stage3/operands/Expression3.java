@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import static java.util.stream.Collectors.joining;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.PropType;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.utils.ToString;
 
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.meta.PropType;
+import static java.util.stream.Collectors.joining;
 
 public class Expression3 extends AbstractSingleOperand3 {
 
@@ -24,8 +26,13 @@ public class Expression3 extends AbstractSingleOperand3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion) {
-        return isSingleOperandExpression() ? firstOperand.sql(dbVersion) : "(" + firstOperand.sql(dbVersion) + otherOperands.stream().map(co -> co.sql(dbVersion)).collect(joining()) +")";
+    public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        return isSingleOperandExpression()
+                ? firstOperand.sql(metadata, dbVersion)
+                : "("
+                  + firstOperand.sql(metadata, dbVersion)
+                  + otherOperands.stream().map(co -> co.sql(metadata, dbVersion)).collect(joining())
+                  + ")";
     }
 
     @Override
@@ -39,20 +46,18 @@ public class Expression3 extends AbstractSingleOperand3 {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof Expression3)) {
-            return false;
-        }
-
-        final Expression3 other = (Expression3) obj;
-
-        return Objects.equals(firstOperand, other.firstOperand) && Objects.equals(otherOperands, other.otherOperands);
+        return this == obj
+               || obj instanceof Expression3 that
+                  && Objects.equals(firstOperand, that.firstOperand)
+                  && Objects.equals(otherOperands, that.otherOperands)
+                  && super.equals(that);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("first", firstOperand)
+                .add("rest", otherOperands);
+    }
+
 }

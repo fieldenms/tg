@@ -340,3 +340,78 @@ const _userName = function () {
 export const localStorageKey = function (subject) {
     return `${_userName()}_${subject}`;
 };
+
+/**
+ * Creates simple dummy entity to bind it to entity master
+ */
+export const createDummyBindingEntity = function (customPropObject, propDefinition) {
+    const reflector = new TgReflector();
+    const fullEntityType = reflector.getEntityPrototype();
+    fullEntityType.compoundOpenerType = () => null;
+
+    const fullEntity = reflector.newEntityEmpty();
+
+    fullEntity.get = prop => {
+        if (prop === '') { // empty property name means 'entity itself'
+            return fullEntity;
+        }
+        return fullEntity[prop];
+    };
+    fullEntity._type = fullEntityType;
+    fullEntity.id = -1;
+    fullEntity.version = 0;
+    Object.keys(customPropObject).forEach(key => {
+        fullEntity[key] = customPropObject[key].value;
+    });
+    
+    const bindingView = reflector.newEntityEmpty();
+    bindingView['id'] = -1;
+    bindingView['version'] = 0;
+    bindingView['@@touchedProps'] = {
+        names: [],
+        values: [],
+        counts: []
+    };
+    bindingView['@@origin'] = fullEntity;
+    Object.keys(customPropObject).forEach(key => {
+        bindingView[key] = customPropObject[key].value;
+        bindingView[`@${key}_editable`] = customPropObject[key].editable;
+    });
+    bindingView.get = prop => {
+        if (prop === '') { // empty property name means 'entity itself'
+            return bindingView;
+        }
+        return bindingView[prop];
+    };
+    const bindingViewType = reflector.getEntityPrototype();
+    bindingViewType.prop = propDefinition;
+    bindingView._type = bindingViewType;
+    return bindingView;
+};
+
+/**
+ * Loads a specified resource into new or existing browsing context (see https://developer.mozilla.org/en-US/docs/Web/API/Window/open).
+ * Logs an error in case if resource opening was blocked by popup blocker or some other problem prevented it.
+ *
+ * Unspecified 'target' means '_blank' i.e. most likely to be opened in a new tab (or window with special user options).
+ */
+export const openLink = function (url, target, windowFeatures) {
+    const newWindow = window.open(url, target, windowFeatures);
+    if (newWindow) {
+        // Always prevent tabnapping.
+        // I.e. prevent ability by new tab / window to rewrite 'location' of original tab / window through 'opener' property.
+        newWindow.opener = null;
+
+        if (newWindow.focus) {
+            // Create an asynchronous request to bring to view a newly opened window / tab.
+            // In most cases this will work without 'focus()' call.
+            // However, tapping on original tab / window may prevent this behaviour.
+            newWindow.focus();
+        }
+    } else {
+        // The window wasn't allowed to open.
+        // This is likely caused by built-in or external popup blockers.
+        // Log this to both server and user.
+        throw new Error(`Link [${url}] blocked. Target: [${target}], windowFeatures: [${windowFeatures}].`);
+    }
+};

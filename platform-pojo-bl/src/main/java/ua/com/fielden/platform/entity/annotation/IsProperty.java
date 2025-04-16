@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity.annotation;
 
+import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.RichText;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -83,18 +87,21 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface IsProperty {
-    public static final String DEFAULT_LINK_PROPERTY = "----dummy-property----";
-    public static final int DEFAULT_LENGTH = 0;
-    public static final int DEFAULT_PRECISION = -1;
-    public static final int DEFAULT_SCALE = -1;
-    public static final boolean DEFAULT_TRAILING_ZEROS = true;
-    public static final String DEFAULT_DISPLAY_AS = "";
+    String DEFAULT_LINK_PROPERTY = "----dummy-property----";
+    int DEFAULT_LENGTH = 0;
+    int MAX_LENGTH = Integer.MAX_VALUE;
+    int DEFAULT_PRECISION = -1;
+    int DEFAULT_SCALE = -1;
+    boolean DEFAULT_TRAILING_ZEROS = true;
+    String DEFAULT_DISPLAY_AS = "";
 
 
     /**
      * This setting should be used to identify a type parameter of the property type. For example, it could indicate an element type for collectional properties.
      */
     Class<?> value() default Void.class;
+    // keep these in sync, as the field cannot be used in place of the class literal
+    Class<?> DEFAULT_VALUE = Void.class;
 
     /**
      * This setting makes sense only in case of collection property, which elements are entities. It should be used (and not missed!) to specify a property by which this collection
@@ -132,13 +139,14 @@ public @interface IsProperty {
      * Length indicates the maximum length of a value for a <code>String</code> property.
      * This value can be used for validation, but in and of itself, this value is only an indicator of a maximum length.
      * <p>
-     * Value {@code 0} indicates "undetermined" length, which may have context-dependent interpretation.
+     * Value `0` indicates "undetermined" length, which may have context-dependent interpretation.
      * For example, a database schema generator may use its own default length in such cases.
      * <p>
-     * If length of value {@code Integer.MAX_VALUE} is specified for properties of type {@code String}, the DDL generation tool would pick the most appropriate data type to represent long text.
-     * For example, for PostgreSQL type {@code text} and for SQL Server type {@code varchar(max)} would be used.
+     * If the length of value `Integer.MAX_VALUE` (also `MAX_LENGTH`) is specified for properties of type `String`, the DDL generation tool would pick the most appropriate data type to represent long text.
+     * For example, for PostgreSQL type `text` and for SQL Server type `varchar(max)` would be used.
      * <p>
-     * Also, length can be combined with pre-condition {@code MaxLengthValidator} to enforce the length integrity constraint on properties of type {@code String}.
+     * Also, the length value can affect pre-condition {@link MaxLengthValidator} to enforce the length integrity constraint on properties of types {@link String}, {@link Hyperlink}, and {@link RichText}.
+     * Please refer to {@link MaxLengthValidator} for more details and supported property types.
      */
     int length() default DEFAULT_LENGTH;
 

@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import org.junit.Ignore;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 
@@ -9,7 +7,6 @@ import ua.com.fielden.platform.entity.annotation.*;
 @KeyTitle(TgVehicleMake.KEY_TITLE)
 @MapEntityTo
 @DescTitle(TgVehicleMake.DESC_TITLE)
-@Ignore
 @CompanionObject(ITgVehicleMake.class)
 public class TgVehicleMake extends AbstractEntity<String> {
 

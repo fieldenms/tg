@@ -1,81 +1,97 @@
 package ua.com.fielden.platform.eql.stage2.conditions;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.operands.Value2;
 import ua.com.fielden.platform.eql.stage3.conditions.LikePredicate3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.utils.ToString;
 
-public class LikePredicate2 implements ICondition2<LikePredicate3> {
-    public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
-    public final ISingleOperand2<? extends ISingleOperand3> rightOperand;
-    public final LikeOptions options;
+import java.util.HashSet;
+import java.util.Set;
 
-    public LikePredicate2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final ISingleOperand2<? extends ISingleOperand3> rightOperand, final LikeOptions options) {
-        this.leftOperand = leftOperand;
-        this.rightOperand = rightOperand;
-        this.options = options;
-    }
+import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.utils.CollectionUtil.concat;
+
+public record LikePredicate2 (ISingleOperand2<? extends ISingleOperand3> matchOperand,
+                              ISingleOperand2<? extends ISingleOperand3> patternOperand,
+                              LikeOptions options)
+        implements ICondition2<LikePredicate3>, ToString.IFormattable
+{
 
     @Override
     public boolean ignore() {
-        return leftOperand.ignore() || rightOperand.ignore();
+        return matchOperand.ignore() || patternOperand.ignore();
     }
 
     @Override
     public TransformationResultFromStage2To3<LikePredicate3> transform(final TransformationContextFromStage2To3 context) {
-        final TransformationResultFromStage2To3<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
-        final TransformationResultFromStage2To3<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResultFromStage2To3<>(new LikePredicate3(leftOperandTr.item, rightOperandTr.item, options), rightOperandTr.updatedContext);
+        // Escaping of the pattern operand has to be performed at this stage, before the operand is transformed.
+        // When a Value2, representing a string, is transformed into Value3, it is subject to parameter substitution,
+        // which results in the underlying string being stored externally (in a map of parameters).
+        // Therefore, such strings need to be escaped now, before they are "externalised".
+        // Pattern operands other than literal strings are also escaped, but in stage 3 (see LikePredicate3).
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> matchOperandTr = matchOperand.transform(
+                context);
+        final TransformationResultFromStage2To3<? extends ISingleOperand3> patternOperandTr = escapeLiteralString(patternOperand, context.dbVersion())
+                .transform(matchOperandTr.updatedContext);
+        return new TransformationResultFromStage2To3<>(
+                new LikePredicate3(matchOperandTr.item, patternOperandTr.item, options), patternOperandTr.updatedContext);
     }
 
     @Override
     public Set<Prop2> collectProps() {
         final Set<Prop2> result = new HashSet<>();
-        result.addAll(leftOperand.collectProps());
-        result.addAll(rightOperand.collectProps());
+        result.addAll(matchOperand.collectProps());
+        result.addAll(patternOperand.collectProps());
         return result;
     }
 
     @Override
     public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
-        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
-        result.addAll(leftOperand.collectEntityTypes());
-        result.addAll(rightOperand.collectEntityTypes());
-        return result;
+        return concat(HashSet::new, matchOperand.collectEntityTypes(), patternOperand.collectEntityTypes());
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + leftOperand.hashCode();
-        result = prime * result + options.hashCode();
-        result = prime * result + rightOperand.hashCode();
-        return result;
+    public String toString() {
+        return toString(ToString.separateLines());
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof LikePredicate2)) {
-            return false;
-        }
-
-        final LikePredicate2 other = (LikePredicate2) obj;
-
-        return Objects.equals(leftOperand, other.leftOperand) &&
-                Objects.equals(rightOperand, other.rightOperand) &&
-                Objects.equals(options, other.options);
+    public String toString(final ToString.IFormat format) {
+        return format.toString(this)
+                .addIf("options", options, opts -> opts != LikeOptions.DEFAULT_OPTIONS)
+                .add("match", matchOperand)
+                .add("pattern", patternOperand)
+                .$();
     }
+
+    /**
+     * Escapes the specified operand if it is a literal string.
+     */
+    private ISingleOperand2<? extends ISingleOperand3> escapeLiteralString(
+            final ISingleOperand2<?> operand,
+            final DbVersion dbVersion)
+    {
+        return switch (operand) {
+            case Value2 value -> value.map(v -> v instanceof String s ? escapeSqlString(s, dbVersion) : v);
+            default -> operand;
+        };
+    }
+
+    private String escapeSqlString(final String string, final DbVersion dbVersion) {
+        return switch (dbVersion) {
+            case MSSQL -> StringUtils.replaceEach(string, MSSQL.searchList.toArray(new String[]{}), MSSQL.replacementList.toArray(new String[]{}));
+            case POSTGRESQL -> StringUtils.replaceEach(string, POSTGRESQL.searchList.toArray(new String[]{}), POSTGRESQL.replacementList.toArray(new String[]{}));
+            default -> string;
+        };
+    }
+
 }

@@ -15,8 +15,8 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.entities.EntityForReadOnlyTesting;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
 
@@ -28,7 +28,7 @@ import ua.com.fielden.platform.types.either.Left;
  *
  */
 public class MetaPropertyReadonlyTestCase {
-    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private final EntityTestIocModuleWithPropertyFactory module = new CommonEntityTestIocModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private EntityForReadOnlyTesting entity;
@@ -65,13 +65,13 @@ public class MetaPropertyReadonlyTestCase {
         assertNull(entity.getReadonlyIntProp());
         final Either<Exception, EntityForReadOnlyTesting> res1 = Try(() -> entity.setReadonlyIntProp(42));
         assertTrue(res1 instanceof Left);
-        assertEquals(NOT_EDITABLE_REASON, ((Left<Exception, EntityForReadOnlyTesting>) res1).value.getMessage());
+        assertEquals(NOT_EDITABLE_REASON, ((Left<Exception, EntityForReadOnlyTesting>) res1).value().getMessage());
         assertNull(entity.getReadonlyIntProp());
         
         assertNull(entity.getIntProp());
         final Either<Exception, EntityForReadOnlyTesting> res2 = Try(() -> entity.setIntProp(42));
         assertTrue(res2 instanceof Left);
-        assertEquals(NOT_EDITABLE_REASON, ((Left<Exception, EntityForReadOnlyTesting>) res2).value.getMessage());
+        assertEquals(NOT_EDITABLE_REASON, ((Left<Exception, EntityForReadOnlyTesting>) res2).value().getMessage());
         assertNull(entity.getIntProp());
     }
 

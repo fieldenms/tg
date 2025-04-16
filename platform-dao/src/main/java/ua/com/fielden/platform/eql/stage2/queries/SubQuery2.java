@@ -1,23 +1,49 @@
 package ua.com.fielden.platform.eql.stage2.queries;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContextFromStage2To3;
 import ua.com.fielden.platform.eql.stage2.TransformationResultFromStage2To3;
+import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+import ua.com.fielden.platform.eql.stage2.sundries.GroupBys2;
+import ua.com.fielden.platform.eql.stage2.sundries.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
+import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
+import ua.com.fielden.platform.utils.ToString;
+
+import java.util.Objects;
+import java.util.Optional;
 
 public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuery3> {
     public final boolean isRefetchOnly;
     public final PropType type;
 
-    public SubQuery2(final QueryComponents2 queryComponents, final PropType type, final boolean isRefetchOnly) {
-        super(queryComponents, type.javaType());
+    private SubQuery2(
+            final Optional<IJoinNode2<? extends IJoinNode3>> maybeJoinRoot,
+            final Conditions2 whereConditions,
+            final Yields2 yields,
+            final GroupBys2 groups,
+            final OrderBys2 orderings,
+            final PropType type,
+            final boolean isRefetchOnly)
+    {
+        super(maybeJoinRoot, whereConditions, yields, groups, orderings, type.javaType());
         this.isRefetchOnly = isRefetchOnly;
         this.type = type;
+    }
+
+    public SubQuery2(final QueryComponents2 queryComponents, final PropType type, final boolean isRefetchOnly) {
+        this(queryComponents.maybeJoinRoot(),
+             queryComponents.whereConditions(),
+             queryComponents.yields(),
+             queryComponents.groups(),
+             queryComponents.orderings(),
+             type,
+             isRefetchOnly);
     }
 
     @Override
@@ -42,6 +68,11 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
     }
 
     @Override
+    public SubQuery2 setOrderings(final OrderBys2 orderings) {
+        return new SubQuery2(maybeJoinRoot, whereConditions, yields, groups, orderings, type, isRefetchOnly);
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
@@ -52,20 +83,18 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof SubQuery2)) {
-            return false;
-        }
-
-        final SubQuery2 other = (SubQuery2) obj;
-
-        return Objects.equals(type, other.type) && (isRefetchOnly == other.isRefetchOnly);
+        return this == obj
+               || obj instanceof SubQuery2 that
+                  && Objects.equals(type, that.type)
+                  && (isRefetchOnly == that.isRefetchOnly)
+                  && super.equals(that);
     }
+
+    @Override
+    protected ToString addToString(final ToString toString) {
+        return super.addToString(toString)
+                .add("refetchOnly", isRefetchOnly)
+                .add("type", type);
+    }
+
 }
