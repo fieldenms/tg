@@ -1,11 +1,6 @@
 package ua.com.fielden.platform.web.security;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.security.session.Authenticator.fromString;
-import static ua.com.fielden.platform.web.resources.webui.LoginResource.BINDING_PATH;
-
-import java.util.Optional;
-
+import com.google.inject.Injector;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,9 +11,6 @@ import org.restlet.Response;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Method;
 import org.restlet.data.Status;
-
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
@@ -26,6 +18,13 @@ import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.sse.SseUtils;
+
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.security.session.Authenticator.fromString;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.CHECKSUM_URL_SUFFIX;
+import static ua.com.fielden.platform.web.resources.webui.LoginResource.BINDING_PATH;
 
 /**
  * This is a guard that is based on the new TG authentication scheme, developed as part of the Web UI initiative. It it used to restrict access to sensitive web resources.
@@ -127,7 +126,7 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
     protected void redirectGetToLoginOrForbid(final Request request, final Response response) {
         // GET requests can be redirected to the login resource, which takes care of both RSO and SSO workflows.
         // Need to forbid requests from SW containing "?checksum=true", which is specifically used to redirect to /login from the client side.
-        if (Method.GET.equals(request.getMethod()) && !request.getResourceRef().toString().contains("?checksum=true")) {
+        if (Method.GET.equals(request.getMethod()) && !request.getResourceRef().toString().contains(CHECKSUM_URL_SUFFIX)) {
             response.redirectTemporary(BINDING_PATH);
         } else {
             forbid(response);
