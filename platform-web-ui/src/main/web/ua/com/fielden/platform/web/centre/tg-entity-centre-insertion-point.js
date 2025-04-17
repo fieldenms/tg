@@ -1197,7 +1197,12 @@ Polymer({
     },
 
     _clearLocalStorage: function (event) {
-        if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
+        if (!this._lastResizerTap) {
+            this._lastResizerTap = -1;
+        }
+        const now = new Date().getTime();
+        const interval = now - this._lastResizerTap;
+        if (interval <= 500) {
             if (this.detachedView) {
                 this._removeProp(ST.DETACHED_VIEW_WIDTH);
                 this._removeProp(ST.DETACHED_VIEW_HEIGHT);
@@ -1209,6 +1214,7 @@ Polymer({
             this._setDimension();
             this._setPosition();
         }
+        this._lastResizerTap = new Date().getTime();
     }
 
     /********************************************************************************************/
