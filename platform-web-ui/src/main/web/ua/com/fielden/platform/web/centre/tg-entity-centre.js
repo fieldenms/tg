@@ -287,7 +287,7 @@ const template = html`
             <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical" hidden$="[[!leftInsertionPointPresent]]" scroll-container$="[[!centreScroll]]">
                 <slot id="leftInsertionPointContent" name="left-insertion-point"></slot>
             </div>
-            <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
+            <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_tearDownEvent" on-track="_changeLeftInsertionPointSize">
                 <div class="arrow-left" tooltip-text="Collapse" on-tap="_collapseLeftInsertionPoint"></div>
                 <div class="arrow-right" tooltip-text="Expand" on-tap="_expandLeftInsertionPoint"></div>
             </div>
@@ -296,7 +296,7 @@ const template = html`
                 <slot id="customEgiSlot" name="custom-egi"></slot>
                 <slot id="bottomInsertionPointContent" name="bottom-insertion-point"></slot>
             </div>
-            <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeRightInsertionPointSize">
+            <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_tearDownEvent" on-track="_changeRightInsertionPointSize">
                 <div class="arrow-left" tooltip-text="Expand" on-tap="_expandRightInsertionPoint"></div>
                 <div class="arrow-right" tooltip-text="Collapse" on-tap="_collapseRightInsertionPoint"></div>
             </div>
@@ -636,14 +636,8 @@ Polymer({
         this.notifyResize();
     },
 
-    _makeCentreUnselectable: function (e) {
-        this.$.centreResultContainer.classList.toggle("noselect", true);
-        document.body.style["cursor"] = "col-resize";
-    },
-
-    _makeCentreSelectable: function (e) {
-        this.$.centreResultContainer.classList.toggle("noselect", false);
-        document.body.style["cursor"] = "";
+    _tearDownEvent: function (e) {
+        tearDownEvent(e);
     },
 
     _changeLeftInsertionPointSize: function (e) {
