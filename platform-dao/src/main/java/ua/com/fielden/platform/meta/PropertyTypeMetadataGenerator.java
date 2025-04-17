@@ -53,9 +53,13 @@ final class PropertyTypeMetadataGenerator {
     }
 
     private Optional<PropertyTypeMetadata.Entity> asEntity(final Type type) {
-        return rawClass(type)
-                .filter(EntityUtils::isEntityType)
-                .map(klass -> new EntityPropertyTypeMetadata((Class<? extends AbstractEntity<?>>) klass));
+        return switch (type) {
+            case Class<?> klass when EntityUtils.isEntityType(klass)
+                    -> Optional.of(new EntityPropertyTypeMetadata((Class<? extends AbstractEntity<?>>) klass));
+            case ParameterizedType paramType when EntityUtils.isEntityType((Class<?>) paramType.getRawType())
+                    -> Optional.of(new ParameterizedEntityPropertyTypeMetadata(paramType));
+            default -> Optional.empty();
+        };
     }
 
     private Optional<PropertyTypeMetadata.Component> asComponent(final Type type) {

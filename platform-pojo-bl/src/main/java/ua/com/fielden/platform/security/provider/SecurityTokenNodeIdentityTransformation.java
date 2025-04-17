@@ -5,7 +5,7 @@ import java.util.SortedSet;
 /**
  * This is the default implementation for {@link ISecurityTokenNodeTransformation}, which does not apply any transformations.    
  *
- * @author TG Air
+ * @author TG Team
  */
 public class SecurityTokenNodeIdentityTransformation implements ISecurityTokenNodeTransformation {
 
