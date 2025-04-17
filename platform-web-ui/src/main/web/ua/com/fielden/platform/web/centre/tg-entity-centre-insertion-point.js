@@ -195,7 +195,7 @@ const template = html`
             <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
     </div>
-    <iron-icon id="resizer" style$="[[_getResizerStyle(detachedView)]]" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" tooltip-text$="[[_resizeButtonTooltip(detachedView)]]"></iron-icon>
+    <iron-icon id="resizer" style$="[[_getResizerStyle(detachedView)]]" hidden$="[[_resizingDisabled(minimised, maximised, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" on-down="_preventMouseDownEvent" tooltip-text$="[[_resizeButtonTooltip(detachedView)]]"></iron-icon>
     <tg-toast id="toaster"></tg-toast>
 `;
 
@@ -725,21 +725,10 @@ Polymer({
     },
 
     /**
-     * Makes parent entity centre, that contains this IP and all other IPs, unselectable and with pointer-events:none. Useful during D'n'D process to avoid selection, tooltips etc.
+     * Prevents event from propagating further to disable text selection on mouse move.
      */
-    _makeCentreUnselectable: function () {
-        if (this.contextRetriever) {
-            this.contextRetriever()._dom()._makeCentreUnselectable();
-        }
-    },
-
-    /**
-     * Makes parent entity centre, that contains this IP and all other IPs, selectable after it was not. Useful after D'n'D process finished.
-     */
-    _makeCentreSelectable: function () {
-        if (this.contextRetriever) {
-            this.contextRetriever()._dom()._makeCentreSelectable();
-        }
+    _preventMouseDownEvent: function (e) {
+        tearDownEvent(e);
     },
 
     /**

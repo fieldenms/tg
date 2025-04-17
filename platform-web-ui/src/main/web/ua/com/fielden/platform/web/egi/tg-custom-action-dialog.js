@@ -186,7 +186,7 @@ const template = html`
             <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
         </div>
         <div class="relative layout horizontal justified center">
-            <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
+            <div id="navigationBar" hidden$="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
                 <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
                 <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
                 <span style="white-space: nowrap;">[[_sequentialEditText]]</span>
@@ -195,17 +195,17 @@ const template = html`
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
-                <paper-icon-button hidden="[[!_mainEntityType]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+                <paper-icon-button hidden$="[[!_mainEntityType]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
-                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
+                <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button maximise-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseStateAndStore" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
+                <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button maximise-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseStateAndStore" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
 
                 <!-- close/next buttons -->
-                <paper-icon-button id="closeButton" hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
-                <paper-icon-button id="skipNext" hidden="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
+                <paper-icon-button id="closeButton" hidden$="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
+                <paper-icon-button id="skipNext" hidden$="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
             <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
         </div>
