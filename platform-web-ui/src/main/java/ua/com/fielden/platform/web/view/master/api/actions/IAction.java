@@ -15,6 +15,11 @@ import static java.util.Set.of;
  * @author TG Team
  */
 public interface IAction {
+    /// Warning for [#build()] method of a typical [JsCode] concatenation usage.\
+    /// May be dangerous for [IAction]s with defined [#importStatements()].
+    String WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS = "2.1.0. Don't use this for JsCode concatenation; use andThen(...) instead.";
+
+    /// Builds actual [JsCode] for this JavaScript action.
     JsCode build();
 
     default Set<JsImport> importStatements() {

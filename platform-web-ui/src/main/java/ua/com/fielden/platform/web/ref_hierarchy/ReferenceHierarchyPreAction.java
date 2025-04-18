@@ -22,6 +22,7 @@ public record ReferenceHierarchyPreAction(boolean useMasterEntity) implements IP
         return of(namedImport("TgReflector", "/app/tg-reflector"));
     }
 
+    @Deprecated(since = WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS)
     @Override
     public JsCode build() {
         return jsCode("""

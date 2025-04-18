@@ -35,6 +35,7 @@ public class OpenLinkPostAction implements IPostAction {
         return of(namedImport("openLink", "reflection/tg-polymer-utils"));
     }
 
+    @Deprecated(since = WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS)
     @Override
     public JsCode build() {
         return jsCode("openLink(functionalEntity.get('%s'));".formatted(property.toPath()));

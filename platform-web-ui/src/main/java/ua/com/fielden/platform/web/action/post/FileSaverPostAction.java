@@ -28,6 +28,7 @@ public class FileSaverPostAction implements IPostAction {
         return of(namedImport("saveAs", "polymer/lib/file-saver-lib"));
     }
 
+    @Deprecated(since = WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS)
     @Override
     public JsCode build() {
         final JsCode jsCode = new JsCode(

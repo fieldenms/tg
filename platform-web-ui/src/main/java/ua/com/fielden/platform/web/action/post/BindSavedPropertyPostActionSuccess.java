@@ -32,6 +32,7 @@ public class BindSavedPropertyPostActionSuccess implements IPostAction {
         this.property = requireNonNull(property);
     }
 
+    @Deprecated(since = WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS)
     @Override
     public JsCode build() {
         return createPostAction(false, property);
