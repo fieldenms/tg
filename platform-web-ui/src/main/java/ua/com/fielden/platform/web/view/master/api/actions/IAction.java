@@ -9,11 +9,11 @@ import java.util.Set;
 
 import static java.util.Set.of;
 
-/**
- * Common ancestor for {@link IPreAction} and {@link IPostAction}.
- *
- * @author TG Team
- */
+/// An abstraction for a piece of JavaScript code through [#build()] method.
+/// May be used as a lambda `() -> jsCode("...")` function for convenience.
+///
+/// Common ancestor for [IPreAction] and [IPostAction].
+/// @author TG Team
 public interface IAction {
     /// Warning for [#build()] method of a typical [JsCode] concatenation usage.\
     /// May be dangerous for [IAction]s with defined [#importStatements()].
@@ -22,8 +22,9 @@ public interface IAction {
     /// Builds actual [JsCode] for this JavaScript action.
     JsCode build();
 
+    /// A set of [JsImport]s, required for this JavaScript action.
     default Set<JsImport> importStatements() {
         return of();
-    };
+    }
 
 }

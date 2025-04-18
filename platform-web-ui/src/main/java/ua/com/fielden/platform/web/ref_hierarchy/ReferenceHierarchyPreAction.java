@@ -10,11 +10,9 @@ import static java.util.Set.of;
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 
-/**
- * Common {@link IPreAction} for reference hierarchy action.
- *
- * @author TG Team
- */
+/// Common [IPreAction] for [ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy] action.
+///
+/// @author TG Team
 public record ReferenceHierarchyPreAction(boolean useMasterEntity) implements IPreAction {
 
     @Override
@@ -33,7 +31,7 @@ public record ReferenceHierarchyPreAction(boolean useMasterEntity) implements IP
             } else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {
                 entity = self.$.egi.getSelectedEntities()[0];
             } else if (action.requireMasterEntity === "true") {
-                if(%s) {
+                if (%s) {
                     entity = action.parentElement.entity['@@origin'];
                 } else {
                     const value = reflector.tg_getFullValue(action.parentElement.entity, action.parentElement.propertyName);
@@ -43,8 +41,9 @@ public record ReferenceHierarchyPreAction(boolean useMasterEntity) implements IP
             if (entity) {
                 action.shortDesc = reflector.getType(entity.constructor.prototype.type.call(entity).notEnhancedFullClassName()).entityTitle();
             }
-            """.formatted(this.useMasterEntity)
-        );
+        """.formatted(
+            this.useMasterEntity
+        ));
     }
 
 }
