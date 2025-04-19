@@ -1,0 +1,1 @@
+export { saveAs } from 'file-saver/dist/FileSaver'; // use explicit file instead of 'file-saver' to avoid minified version

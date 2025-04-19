@@ -17,7 +17,6 @@ import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -33,6 +32,7 @@ import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.sse.EventSourceDispatchingEmitter;
@@ -48,20 +48,27 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
+import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
+import static ua.com.fielden.platform.web.minijs.JsImport.extractImportStatements;
+import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
+import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.FILE_APP_LOGIN_INITIATE_RESET_HTML;
 import static ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions.ALL_OFF;
 
 /**
@@ -96,7 +103,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      */
     private final List<String> resourcePaths;
     private final Workflows workflow;
-    private final Map<String, String> checksums;
+    private final SequencedMap<String, String> checksums;
     private final boolean independentTimeZone;
     private final MasterActionOptions masterActionOptions;
 
@@ -270,9 +277,17 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return webUiBuilder.genWebUiPrefComponent();
     }
 
+    private SortedSet<JsImport> mainMenuActionImports() {
+        final var combinedImports = new TreeSet<JsImport>();
+        extendAndValidateCombinedImports(combinedImports, desktopMainMenuConfig.mainMenuActionImports());
+        extendAndValidateCombinedImports(combinedImports, mobileMainMenuConfig.mainMenuActionImports());
+        return combinedImports;
+    }
+
     @Override
     public final String genMainWebUIComponent() {
-        final String mainWebUiComponent = ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js");
+        final String mainWebUiComponent = requireNonNull(getText("ua/com/fielden/platform/web/app/tg-app-template.js"))
+            .replace("@mainMenuActionImports", extractImportStatements(mainMenuActionImports(), of("mainMenuActionImports")));
         if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
             return mainWebUiComponent.replace("//@use-empty-console.log", "console.log = () => {};\n");
         } else {
@@ -375,6 +390,17 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public Optional<String> checksum(final String resourceURI) {
         return ofNullable(checksums.get(resourceURI));
+    }
+
+    @Override
+    public SequencedSet<String> deploymentResourcePaths() {
+        return checksums.keySet().stream()
+            .map(path -> switch (path) {
+                case FILE_APP_INDEX_HTML -> AppIndexResource.BINDING_PATH;
+                case FILE_APP_LOGIN_INITIATE_RESET_HTML -> LoginInitiateResetResource.BINDING_PATH;
+                default -> path;
+            })
+            .collect(toCollection(LinkedHashSet::new));
     }
 
     @Override

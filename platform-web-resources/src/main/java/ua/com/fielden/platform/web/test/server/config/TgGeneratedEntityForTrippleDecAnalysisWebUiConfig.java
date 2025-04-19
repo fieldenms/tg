@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.test.server.config;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.IContextDecomposer.decompose;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
+import static ua.com.fielden.platform.web.action.pre.PreActions.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;

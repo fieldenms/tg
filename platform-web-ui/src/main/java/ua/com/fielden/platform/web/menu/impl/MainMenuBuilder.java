@@ -12,6 +12,9 @@ import ua.com.fielden.platform.web.menu.IModuleConfig;
 import ua.com.fielden.platform.web.menu.layout.IMenuLayoutConfig0;
 import ua.com.fielden.platform.web.menu.layout.impl.LayoutConfig;
 import ua.com.fielden.platform.web.menu.module.impl.ModuleConfig;
+import ua.com.fielden.platform.web.minijs.JsImport;
+
+import java.util.Set;
 
 /**
  * An implementation of {@link IMainMenuBuilderWithLayout} contract, which serves both as the main menu builder and the representation of the final main menu configuration.
@@ -55,4 +58,9 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout {
                 setWhenTablet(tileLayout.getLayout(Device.TABLET, null).get()).
                 setWhenMobile(tileLayout.getLayout(Device.MOBILE, null).get());
     }
+
+    public Set<JsImport> mainMenuActionImports() {
+        return mainMenu.actionImports();
+    }
+
 }

@@ -1,16 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.join;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -18,9 +7,21 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.actions.IAction;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.*;
+import static org.apache.commons.lang3.StringUtils.join;
 
 /**
  * The implementation for functional entity actions (DOM element).
@@ -403,4 +404,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public void setForMaster(final boolean forMaster) {
         this.forMaster = forMaster;
     }
+
+    public Set<JsImport> actionImports() {
+        return entityActionConfig.importStatements().collect(toSet());
+    }
+
 }
