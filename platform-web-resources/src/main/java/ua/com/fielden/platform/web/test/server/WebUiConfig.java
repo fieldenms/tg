@@ -30,9 +30,6 @@ import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
-import ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionError;
-import ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionSuccess;
-import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -95,8 +92,9 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
+import static ua.com.fielden.platform.web.action.post.PostActions.*;
+import static ua.com.fielden.platform.web.action.pre.PreActions.okCancel;
+import static ua.com.fielden.platform.web.action.pre.PreActions.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
 import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
@@ -652,8 +650,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(action(MakeCompletedAction.class)
                         .withContext(context().withMasterEntity().build())
                         // .postActionSuccess(() -> new JsCode(new BindSavedPropertyPostActionSuccess("masterEntity").build().toString() + "self.publishCloseForcibly();")) // use this for additional manual testing of forced closing
-                        .postActionSuccess(new BindSavedPropertyPostActionSuccess(masterEntity))
-                        .postActionError(new BindSavedPropertyPostActionError(masterEntity))
+                        .postActionSuccess(bindSavedProperty(masterEntity))
+                        .postActionError(bindSavedPropertyError(masterEntity))
                         .shortDesc("Complete")
                         .longDesc("Complete this entity.")
                         .build()
@@ -1505,7 +1503,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         action(ExportAction.class).
                                 withContext(context().withSelectionCrit().withSelectedEntities().build())
                                 .preAction(yesNo("Would you like to proceed with data export?"))
-                                .postActionSuccess(new FileSaverPostAction())
+                                .postActionSuccess(saveFile())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
                                 .build()
@@ -1519,7 +1517,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                                         context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
                                         .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
                                                 context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
-                                .postActionSuccess(new FileSaverPostAction())
+                                .postActionSuccess(saveFile())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
                                 .withNoParentCentreRefresh()

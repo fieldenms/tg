@@ -21,7 +21,7 @@ public class BindSavedPropertyPostActionSuccess implements IPostAction {
     private final IConvertableToPath property;
 
     /// Creates [BindSavedPropertyPostActionSuccess] with `property` indicating where master entity resides.
-    public BindSavedPropertyPostActionSuccess(final IConvertableToPath property) {
+    BindSavedPropertyPostActionSuccess(final IConvertableToPath property) {
         this.property = requireNonNull(property);
     }
 

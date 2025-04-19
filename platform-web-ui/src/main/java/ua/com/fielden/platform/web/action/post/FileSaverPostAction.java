@@ -19,6 +19,9 @@ import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 /// @author TG Team
 public class FileSaverPostAction implements IPostAction {
 
+    /// Creates {@link FileSaverPostAction}.
+    FileSaverPostAction() {}
+
     @Override
     public Set<JsImport> importStatements() {
         return of(namedImport("saveAs", "polymer/lib/file-saver-lib"));

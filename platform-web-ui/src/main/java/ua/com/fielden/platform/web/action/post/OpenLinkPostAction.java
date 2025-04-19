@@ -23,8 +23,8 @@ import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 public class OpenLinkPostAction implements IPostAction {
     private final IConvertableToPath property;
 
-    /// Create [OpenLinkPostAction] for `property` containing a link to open.
-    public OpenLinkPostAction(final IConvertableToPath property) {
+    /// Creates [OpenLinkPostAction] for `property` containing a link to open.
+    OpenLinkPostAction(final IConvertableToPath property) {
         this.property = requireNonNull(property);
     }
 

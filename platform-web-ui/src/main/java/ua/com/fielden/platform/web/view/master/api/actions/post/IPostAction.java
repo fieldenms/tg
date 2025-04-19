@@ -5,7 +5,9 @@ import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.actions.IAction;
 
 import java.util.Set;
+import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 
 /**
@@ -16,18 +18,25 @@ import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
  * @author TG Team
  *
  */
-public interface IPostAction extends IAction {
+public interface IPostAction extends IAction<IPostAction> {
 
-    default IPostAction andThen(final JsCode code) {
+    @Override
+    default IPostAction andThen(final IPostAction thatAction) {
         return new IPostAction() {
             @Override
             public Set<JsImport> importStatements() {
-                return IPostAction.this.importStatements();
+                return Stream.concat(
+                    IPostAction.this.importStatements().stream(),
+                    thatAction.importStatements().stream()
+                ).collect(toUnmodifiableSet());
             }
 
             @Override
             public JsCode build() {
-                return jsCode(IPostAction.this.build() + code.toString());
+                return jsCode(
+                    IPostAction.this.build().toString()
+                    + thatAction.build().toString()
+                );
             }
         };
     }
