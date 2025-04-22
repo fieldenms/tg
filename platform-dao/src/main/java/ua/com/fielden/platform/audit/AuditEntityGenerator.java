@@ -681,7 +681,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         // "changedProps" property
         final var synAuditPropClassName = ClassName.get(synAuditEntityClassName.packageName(), synAuditEntityClassName.simpleName() + "_Prop");
         addPropertyTo(propertyBuilder(AbstractSynAuditEntity.CHANGED_PROPS, ParameterizedTypeName.get(ClassName.get(Set.class), synAuditPropClassName))
-                              .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of the audit event."))
+                              .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of the audited event."))
                               .addAnnotation(javaPoet.getAnnotation(DenyIntrospection.class))
                               .initializer("new $T<>()", ClassName.get(HashSet.class))
                               .build(),
@@ -690,7 +690,7 @@ final class AuditEntityGenerator implements IAuditEntityGenerator {
         // "changedPropsCrit" property
         addPropertyTo(propertyBuilder(AbstractSynAuditEntity.CHANGED_PROPS_CRIT,
                                       ParameterizedTypeName.get(ClassName.get(PropertyDescriptor.class), synAuditEntityClassName))
-                              .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of the audit event."))
+                              .addAnnotation(AnnotationSpecs.title("Changed Properties", "Properties changed as part of the audited event."))
                               .addAnnotation(AnnotationSpecs.critOnly(CritOnly.Type.MULTI))
                               .addAnnotation(javaPoet.getAnnotation(DenyIntrospection.class))
                               .build(),

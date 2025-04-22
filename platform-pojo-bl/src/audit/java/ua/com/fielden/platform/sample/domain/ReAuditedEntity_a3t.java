@@ -46,7 +46,7 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
 
   @Title(
       value = "Changed Properties",
-      desc = "Properties changed as part of the audit event."
+      desc = "Properties changed as part of the audited event."
   )
   @DenyIntrospection
   @IsProperty(ReAuditedEntity_a3t_Prop.class)
@@ -54,7 +54,7 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
 
   @Title(
       value = "Changed Properties",
-      desc = "Properties changed as part of the audit event."
+      desc = "Properties changed as part of the audited event."
   )
   @CritOnly(CritOnly.Type.MULTI)
   @DenyIntrospection

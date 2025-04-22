@@ -46,7 +46,7 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
 
   @Title(
       value = "Changed Properties",
-      desc = "Properties changed as part of the audit event."
+      desc = "Properties changed as part of the audited event."
   )
   @DenyIntrospection
   @IsProperty(ReTgVehicle_a3t_Prop.class)
@@ -54,7 +54,7 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
 
   @Title(
       value = "Changed Properties",
-      desc = "Properties changed as part of the audit event."
+      desc = "Properties changed as part of the audited event."
   )
   @CritOnly(CritOnly.Type.MULTI)
   @DenyIntrospection
