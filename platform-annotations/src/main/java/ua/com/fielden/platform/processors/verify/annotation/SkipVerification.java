@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 import java.lang.annotation.Retention;
@@ -15,7 +14,7 @@ import javax.lang.model.element.Element;
  * @author TG Team
  */
 @Retention(SOURCE)
-@Target({FIELD, TYPE})
+@Target({FIELD, TYPE, METHOD})
 public @interface SkipVerification {
 
     public static record Factory() {
