@@ -2,7 +2,6 @@ package ua.com.fielden.platform.audit;
 
 import com.google.common.collect.ImmutableSet;
 import jakarta.inject.Inject;
-import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.audit.exceptions.AuditingModeException;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -29,7 +28,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
@@ -51,12 +49,9 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         implements IEntityAuditor<E>
 {
 
-    private static final Logger LOGGER = getLogger();
-
     private static final String ERR_AUDIT_PROPERTY_UNEXPECTED_NAME = "Audit-property [%s.%s] has unexpected name.";
     static final String ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED = "Only persisted instances can be audited.";
     static final String ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED = "Only non-dirty instances can be audited.";
-    static final String ERR_ONLY_VALID_INSTANCES_CAN_BE_AUDITED = "Only valid instances can be audited. %s [%s] was invalid.";
 
     private static final int AUDIT_PROP_BATCH_SIZE = 100;
 
@@ -142,10 +137,18 @@ public abstract class CommonAuditEntityDao<E extends AbstractEntity<?>>
         if (auditedEntity.isDirty()) {
             throw cannotBeAuditedFailure(auditedEntity, ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED);
         }
-        if (!auditedEntity.isValid().isSuccessful()) {
-            LOGGER.error(ERR_ONLY_VALID_INSTANCES_CAN_BE_AUDITED.formatted(auditedEntity.getType().getSimpleName(), auditedEntity), auditedEntity.isValid());
-            throw auditedEntity.isValid();
-        }
+
+        // NOTE: It is possible for a persisted entity to become invalid upon retrieval from a persistent store
+        //       (e.g., due to complex business logic in property definers), which may occur when an entity is refetched after being saved.
+        //       We cannot meaningfully distinguish such edge cases from truly invalid states.
+        //       However, as this method should only be used within the save operation, truly invalid states should never occur,
+        //       since only valid instances can be saved.
+        //       Therefore, we can skip the assertion about the audited entity validity.
+        //       The working principle is "that which was persisted is valid and can be audited".
+        //
+        // if (!auditedEntity.isValid().isSuccessful()) {
+        //     throw auditedEntity.isValid();
+        // }
 
         final var anyAuditedPropertyDirty = auditedPropertyNames().stream().anyMatch(dirtyProperties::contains);
 

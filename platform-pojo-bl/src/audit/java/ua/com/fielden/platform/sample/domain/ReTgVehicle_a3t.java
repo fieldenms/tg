@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-03-25 16:16:54 EET
+// Generation timestamp: 2025-04-22 12:36:51 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -39,6 +40,7 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
       value = "Tg Vehicle",
       desc = "The audited Tg Vehicle."
   )
+  @DenyIntrospection
   @IsProperty
   private TgVehicle auditedEntity;
 
@@ -46,6 +48,7 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
       value = "Changed Properties",
       desc = "Properties changed as part of the audit event."
   )
+  @DenyIntrospection
   @IsProperty(ReTgVehicle_a3t_Prop.class)
   private final Set<ReTgVehicle_a3t_Prop> changedProps = new HashSet<>();
 
@@ -54,6 +57,7 @@ public class ReTgVehicle_a3t extends AbstractSynAuditEntity<TgVehicle> {
       desc = "Properties changed as part of the audit event."
   )
   @CritOnly(CritOnly.Type.MULTI)
+  @DenyIntrospection
   @IsProperty(ReTgVehicle_a3t.class)
   private PropertyDescriptor<ReTgVehicle_a3t> changedPropsCrit;
 

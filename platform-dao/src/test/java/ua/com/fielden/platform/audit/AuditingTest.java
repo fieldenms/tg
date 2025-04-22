@@ -5,6 +5,7 @@ import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Test;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
@@ -22,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.audit.AbstractSynAuditEntity.CHANGED_PROPS;
-import static ua.com.fielden.platform.audit.CommonAuditEntityDao.*;
+import static ua.com.fielden.platform.audit.CommonAuditEntityDao.ERR_ONLY_NON_DIRTY_INSTANCES_CAN_BE_AUDITED;
+import static ua.com.fielden.platform.audit.CommonAuditEntityDao.ERR_ONLY_PERSISTED_INSTANCES_CAN_BE_AUDITED;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
@@ -263,13 +265,17 @@ public class AuditingTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void invalid_entities_cannot_be_audited() {
+    public void invalid_entities_can_be_audited() {
         final ISynAuditEntityDao<AuditedEntity> coAudit = co(auditTypeFinder.navigate(AuditedEntity.class).synAuditEntityType());
 
-        final var entity = save(new_(AuditedEntity.class, "A"));
-        entity.getProperty(AuditedEntity.Property.str2).setRequired(true);
-        assertThatThrownBy(() -> audit(coAudit, entity, generateTransactionGuid(), Set.of(KEY)))
-                .hasMessageContaining(ERR_ONLY_VALID_INSTANCES_CAN_BE_AUDITED);
+        final var newEntity = new_(AuditedEntity.class, "A").setInvalidate(true);
+        newEntity.getProperty(AuditedEntity.Property.invalidate).setDomainValidationResult(Result.successful());
+        final var savedEntity = save(newEntity);
+        assertFalse(savedEntity.isValid().isSuccessful());
+
+        assertThat(coAudit.getAudits(savedEntity))
+                .hasSize(1)
+                .element(0).satisfies(audit0 -> a3t_assertions.assertThat(audit0).isAuditFor(savedEntity));
     }
 
     /// Performs the auditing operation in a session, as described in [IEntityAuditor#audit(AbstractEntity, String, Collection)].

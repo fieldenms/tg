@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-04-07 17:00:50 EEST
+// Generation timestamp: 2025-04-22 12:36:51 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -35,13 +35,13 @@ import ua.com.fielden.platform.types.RichText;
 @DenyIntrospection
 public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   @IsProperty
-  @MapTo("A3T_STR2")
+  @MapTo("A3T_INVALIDATE")
   @Final
   @Title(
-      value = "Str 2",
-      desc = "[Str 2] at the time of the audited event."
+      value = "Invalidate",
+      desc = "[Invalidate] at the time of the audited event."
   )
-  private String a3t_str2;
+  private boolean a3t_invalidate;
 
   @IsProperty
   @MapTo("A3T_RICHTEXT")
@@ -51,6 +51,15 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
       desc = "[Rich Text] at the time of the audited event."
   )
   private RichText a3t_richText;
+
+  @IsProperty
+  @MapTo("A3T_STR2")
+  @Final
+  @Title(
+      value = "Str 2",
+      desc = "[Str 2] at the time of the audited event."
+  )
+  private String a3t_str2;
 
   @IsProperty
   @MapTo("A3T_UNION")
@@ -65,18 +74,18 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   @IsProperty
   @InactiveAuditProperty
   @Title(
-      value = "Str 1",
-      desc = "Non-existing property."
+      value = "Str 1 [removed]",
+      desc = "[Str 1] at the time of the audited event."
   )
   private String a3t_str1;
 
-  public String getA3t_str2() {
-    return this.a3t_str2;
+  public boolean isA3t_invalidate() {
+    return this.a3t_invalidate;
   }
 
   @Observable
-  public AuditedEntity_a3t_2 setA3t_str2(final String a3t_str2) {
-    this.a3t_str2 = a3t_str2;
+  public AuditedEntity_a3t_2 setA3t_invalidate(final boolean a3t_invalidate) {
+    this.a3t_invalidate = a3t_invalidate;
     return this;
   }
 
@@ -87,6 +96,16 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   @Observable
   public AuditedEntity_a3t_2 setA3t_richText(final RichText a3t_richText) {
     this.a3t_richText = a3t_richText;
+    return this;
+  }
+
+  public String getA3t_str2() {
+    return this.a3t_str2;
+  }
+
+  @Observable
+  public AuditedEntity_a3t_2 setA3t_str2(final String a3t_str2) {
+    this.a3t_str2 = a3t_str2;
     return this;
   }
 

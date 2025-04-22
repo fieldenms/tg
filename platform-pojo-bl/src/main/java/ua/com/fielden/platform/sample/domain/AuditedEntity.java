@@ -3,6 +3,7 @@ package ua.com.fielden.platform.sample.domain;
 import ua.com.fielden.platform.audit.Audited;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.types.RichText;
 
@@ -19,7 +20,7 @@ import java.util.Date;
 public class AuditedEntity extends AbstractPersistentEntity<String> {
 
     public enum Property implements IConvertableToPath {
-        date1, bool1, str2, richText, union;
+        date1, bool1, str2, richText, union, invalidate;
 
         @Override
         public String toPath() {
@@ -46,6 +47,24 @@ public class AuditedEntity extends AbstractPersistentEntity<String> {
     @IsProperty
     @MapTo
     private UnionEntity union;
+
+    // Indicates whether this instance should be made invalid.
+    // The invalidation logic is implemented in the definer.
+    // This models a real-world scenario of a persisted entity becoming invalid upon retrieval from a persistent store.
+    @IsProperty
+    @MapTo
+    @AfterChange(AuditedEntityInvalidateDefiner.class)
+    private boolean invalidate;
+
+    public boolean getInvalidate() {
+        return invalidate;
+    }
+
+    @Observable
+    public AuditedEntity setInvalidate(final boolean invalidate) {
+        this.invalidate = invalidate;
+        return this;
+    }
 
     public UnionEntity getUnion() {
         return union;

@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-04-07 17:00:50 EEST
+// Generation timestamp: 2025-04-22 12:36:51 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionIsGenerated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -39,6 +40,7 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
       value = "Audited Entity",
       desc = "The audited Audited Entity."
   )
+  @DenyIntrospection
   @IsProperty
   private AuditedEntity auditedEntity;
 
@@ -46,6 +48,7 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
       value = "Changed Properties",
       desc = "Properties changed as part of the audit event."
   )
+  @DenyIntrospection
   @IsProperty(ReAuditedEntity_a3t_Prop.class)
   private final Set<ReAuditedEntity_a3t_Prop> changedProps = new HashSet<>();
 
@@ -54,15 +57,16 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
       desc = "Properties changed as part of the audit event."
   )
   @CritOnly(CritOnly.Type.MULTI)
+  @DenyIntrospection
   @IsProperty(ReAuditedEntity_a3t.class)
   private PropertyDescriptor<ReAuditedEntity_a3t> changedPropsCrit;
 
   @Title(
-      value = "Str 2",
-      desc = "[Str 2] at the time of the audited event."
+      value = "Invalidate",
+      desc = "[Invalidate] at the time of the audited event."
   )
   @IsProperty
-  private String a3t_str2;
+  private boolean a3t_invalidate;
 
   @Title(
       value = "Rich Text",
@@ -70,6 +74,13 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   )
   @IsProperty
   private RichText a3t_richText;
+
+  @Title(
+      value = "Str 2",
+      desc = "[Str 2] at the time of the audited event."
+  )
+  @IsProperty
+  private String a3t_str2;
 
   @Title(
       value = "Union Entity",
@@ -100,7 +111,7 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   private boolean a3t_bool1;
 
   @Title(
-      value = "Str 1",
+      value = "Str 1 [removed]",
       desc = "[Str 1] at the time of the audited event."
   )
   @InactiveAuditProperty
@@ -139,13 +150,13 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
     return this;
   }
 
-  public String getA3t_str2() {
-    return this.a3t_str2;
+  public boolean isA3t_invalidate() {
+    return this.a3t_invalidate;
   }
 
   @Observable
-  public ReAuditedEntity_a3t setA3t_str2(final String a3t_str2) {
-    this.a3t_str2 = a3t_str2;
+  public ReAuditedEntity_a3t setA3t_invalidate(final boolean a3t_invalidate) {
+    this.a3t_invalidate = a3t_invalidate;
     return this;
   }
 
@@ -156,6 +167,16 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   @Observable
   public ReAuditedEntity_a3t setA3t_richText(final RichText a3t_richText) {
     this.a3t_richText = a3t_richText;
+    return this;
+  }
+
+  public String getA3t_str2() {
+    return this.a3t_str2;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_str2(final String a3t_str2) {
+    this.a3t_str2 = a3t_str2;
     return this;
   }
 
