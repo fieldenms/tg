@@ -19,6 +19,8 @@ import java.util.Date;
  * This association, however, is implicit -- it is not modelled via a collectional property.
  * Instead, the union of such associations is explicitly modelled by corresponding
  * {@linkplain AbstractSynAuditEntity synthetic audit-entity} and {@linkplain AbstractSynAuditProp audit-prop} types.
+ * <p>
+ * Values of property {@link #auditedTransactionGuid} may have special meaning (see the property's documentation).
  *
  * @param <E>  type of the audited entity
  */
@@ -80,6 +82,7 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     @Required
     private User user;
 
+    /// The value may be either a transaction GUID or one of the [reserved values][ReservedTransactionGuid].
     @IsProperty
     @Title(value = "Audit Transaction ID", desc = "A unique identifier of the transaction for the audited event.")
     @MapTo
@@ -148,6 +151,19 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
     public AbstractAuditEntity<E> setAuditedVersion(final Long auditedVersion) {
         this.auditedVersion = auditedVersion;
         return this;
+    }
+
+    /// Special values for property [#auditedTransactionGuid].
+    public enum ReservedTransactionGuid {
+
+        /// Indicates that an audit record was imported during data migration, and the data did not contain a transaction GUID.
+        MIGRATED ("MIGRATED");
+
+        public final String value;
+
+        ReservedTransactionGuid(final String value) {
+            this.value = value;
+        }
     }
 
 }
