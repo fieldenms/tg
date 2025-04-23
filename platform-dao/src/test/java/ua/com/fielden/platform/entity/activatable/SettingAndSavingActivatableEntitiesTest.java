@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
@@ -432,6 +433,19 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         assertFalse(mpActive.isValid());
         assertEquals("Property [Category] in Tg System [Sys] references inactive Tg Category [InactiveCat].",
                      mpActive.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void stale_entity_can_be_deactivated() {
+        final var cat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
+        assertTrue(cat7.isActive());
+        final var cat7_1 = save(cat7.setDesc(cat7.getDesc() + " some change."));
+        assertThat(cat7.getVersion()).isLessThan(cat7_1.getVersion());
+        assertThat(cat7_1.getRefCount()).isEqualTo(0);
+
+        // deactivate stale instance
+        final var cat7_2 = save(cat7.setActive(false));
+        assertFalse(cat7_2.isActive());
     }
 
     @Override

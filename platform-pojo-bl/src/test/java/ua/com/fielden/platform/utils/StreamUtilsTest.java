@@ -368,6 +368,11 @@ public class StreamUtilsTest {
                      enumerate(Stream.of("a", "b"), 4, (x, i) -> "%s:%s".formatted(i, x)).toList());
     }
 
+    @Test
+    public void enumerate_constructs_an_empty_stream_given_an_empty_stream() {
+        assertTrue(enumerate(Stream.of(), (v, i) -> "").toList().isEmpty());
+    }
+
     public void transpose_returns_MxN_matrix_given_NxM_matrix() {
         final var matrix = List.of(List.of(1, 2), List.of(3, 4), List.of(5, 6));
         assertEquals(
@@ -439,23 +444,6 @@ public class StreamUtilsTest {
         assertOptEquals(false, areAllEqual(IntStream.of(n, m)));
         assertOptEquals(false, areAllEqual(IntStream.of(m, n, m + 1)));
         assertOptEquals(false, areAllEqual(IntStream.of(m, m, n)));
-    }
-
-    @Test
-    public void enumerated_constructs_a_stream_that_starts_from_the_given_number() {
-        List<String> result = enumerated(Stream.of("a", "b"), 97, (i, value) -> i + ":" + value).toList();
-        assertEquals(List.of("97:a", "98:b"), result);
-    }
-
-    @Test
-    public void enumerated_constructs_a_stream_that_starts_from_0_by_default() {
-        List<String> result = enumerated(Stream.of("a", "b"), (i, value) -> i + ":" + value).toList();
-        assertEquals(List.of("0:a", "1:b"), result);
-    }
-
-    @Test
-    public void enumerated_constructs_an_empty_stream_given_an_empty_stream() {
-        assertTrue(enumerated(Stream.of(), (i, v) -> "").toList().isEmpty());
     }
 
 }

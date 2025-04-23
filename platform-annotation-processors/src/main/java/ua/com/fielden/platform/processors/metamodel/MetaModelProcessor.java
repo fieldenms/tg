@@ -23,6 +23,7 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.utils.Pair;
 
+import javax.annotation.Nonnull;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -562,6 +563,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                 .addMethod(MethodSpec.methodBuilder("toPath")
                         .addModifiers(Modifier.PUBLIC)
                         .addAnnotation(Override.class)
+                        .addAnnotation(Nonnull.class)
                         .returns(String.class)
                         .addStatement("return this.path.isEmpty() ? this.alias : this.path")
                         .build())
