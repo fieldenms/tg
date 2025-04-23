@@ -37,15 +37,15 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.collections4.CollectionUtils.disjunction;
 
-/**
- * Searches for all available security tokens in the application based on the provided path and package name.
- * The result is presented as a tree-like structure containing all tokens with correctly determined association between them.
- * <p>
- * <b>A fundamental assumption:</b> simple class names uniquely identify security tokens and entities!
- *
- * @author TG Team
- *
- */
+/// Tokens are accumulated from the following sources:
+/// - The location of security tokens given by application properties `tokens.path` and `tokens.package` is scanned.
+/// - Tokens for synthetic audit-entity types are dynamically generated in package `${tokens.package}.audit`.
+///   Also see [#templatesForAuditedType(Class)].
+///
+/// **A fundamental assumption:** simple class names uniquely identify security tokens and entities.
+///
+/// @author TG Team
+///
 @Singleton
 public class SecurityTokenProvider implements ISecurityTokenProvider {
 
@@ -145,10 +145,11 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             final AuditingMode auditingMode,
             final IApplicationDomainProvider appDomain,
             final IAuditTypeFinder auditTypeFinder,
-            final ISecurityTokenGenerator generator)
+            final ISecurityTokenGenerator generator,
+            final @Named("tokens.package") String tokensPkgName)
     {
         if (auditingMode == AuditingMode.ENABLED) {
-            registerAuditTokens(appDomain, auditTypeFinder, generator);
+            registerAuditTokens(appDomain, auditTypeFinder, generator, tokensPkgName);
         }
 
         if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
@@ -160,15 +161,21 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     private void registerAuditTokens(
             final IApplicationDomainProvider appDomain,
             final IAuditTypeFinder auditTypeFinder,
-            final ISecurityTokenGenerator generator)
+            final ISecurityTokenGenerator generator,
+            final String tokensPkgName)
     {
+        final var auditTokensPkgName = tokensPkgName + ".audit";
+
         appDomain.entityTypes().stream()
                 .filter(AuditUtils::isAudited)
                 .flatMap(ty -> {
                     final var synAuditEntityType = auditTypeFinder.navigate(ty).synAuditEntityType();
                     return templatesForAuditedType(ty)
                             .stream()
-                            .map(template -> generator.generateToken(synAuditEntityType, template, Optional.of(AuditModuleToken.class)));
+                            .map(template -> generator.generateToken(synAuditEntityType,
+                                                                     template,
+                                                                     Optional.of(auditTokensPkgName),
+                                                                     Optional.of(AuditModuleToken.class)));
                 })
                 .forEach(tok -> {
                     tokenClassesByName.put(tok.getName(), tok);

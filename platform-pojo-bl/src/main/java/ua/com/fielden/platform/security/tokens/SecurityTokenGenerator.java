@@ -23,13 +23,14 @@ final class SecurityTokenGenerator implements ISecurityTokenGenerator {
     public Class<? extends ISecurityToken> generateToken(
             final Class<? extends AbstractEntity<?>> entityType,
             final Template template,
+            final Optional<String> maybePkgName,
             final Optional<Class<? extends ISecurityToken>> maybeParentType)
     {
         final var baseType = PropertyTypeDeterminator.baseEntityType(entityType);
 
         final var entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(baseType);
 
-        final var tokenFqn = Stream.of(baseType.getPackageName(), template.forClassName().formatted(entityType.getSimpleName()))
+        final var tokenFqn = Stream.of(maybePkgName.orElseGet(baseType::getPackageName), template.forClassName().formatted(entityType.getSimpleName()))
                 .filter(not(String::isEmpty))
                 .collect(Collectors.joining("."));
 
