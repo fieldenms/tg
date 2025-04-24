@@ -40,6 +40,8 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EXPORT_EMBEDDED_CENTRE_ACTION;
+import static ua.com.fielden.platform.web.test.server.config.StandardScrollingConfigs.standardEmbeddedScrollingConfig;
+import static ua.com.fielden.platform.web.test.server.config.StandardScrollingConfigs.standardStandaloneScrollingConfig;
 
 final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
 
@@ -99,11 +101,10 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addTopAction(standardSortAction).also()
                 .addTopAction(standardExportAction)
 
-                .addCrit(USER).asMulti().autocompleter(User.class)
-                .also().addCrit(AUDITED_VERSION).asRange().integer()
-                .also().addCrit(AUDIT_DATE).asRange().date()
-                .also().addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType))
-                ;
+                .addCrit(AUDIT_DATE).asRange().dateTime().also()
+                .addCrit(USER).asMulti().autocompleter(User.class).also()
+                .addCrit(AUDITED_VERSION).asRange().integer().also()
+                .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType));
 
         for (final var prop : auditProperties) {
             final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
@@ -114,13 +115,14 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .setLayoutFor(DESKTOP, empty(), layout)
                 .setLayoutFor(TABLET, empty(), layout)
                 .setLayoutFor(MOBILE, empty(), layout)
+                .withScrollingConfig(standardEmbeddedScrollingConfig(3))
 
                 // Order by version, which resembles entity history more accurately than audit date.
-                .addProp(AUDITED_VERSION).order(1).desc().minWidth(60)
-                .also().addProp(AUDIT_DATE).minWidth(140)
-                .also().addProp(USER).minWidth(60)
-                .also().addProp(CHANGED_PROPS).minWidth(120)
-                    .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching audit records.");
+                .addProp(AUDITED_VERSION).order(1).desc().minWidth(50)
+                    .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching audit records.").also()
+                .addProp(AUDIT_DATE).minWidth(150).also()
+                .addProp(USER).minWidth(80).also()
+                .addProp(CHANGED_PROPS).minWidth(120);
 
         for (final var prop : auditProperties) {
             centreBuilder2 = centreBuilder2.also().addProp(prop.name());
@@ -154,11 +156,10 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .addTopAction(standardSortAction)
 
                 .addCrit(AUDITED_ENTITY).asMulti().autocompleter(auditedType).also()
-                .addCrit(AUDITED_VERSION).asRange().integer().also()
                 .addCrit(AUDIT_DATE).asRange().dateTime().also()
-                // TODO: Autocompletion can be improved by using only audit-properties.
-                .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType)).also()
-                .addCrit(USER).asMulti().autocompleter(User.class);
+                .addCrit(USER).asMulti().autocompleter(User.class).also()
+                .addCrit(AUDITED_VERSION).asRange().integer().also()
+                .addCrit(CHANGED_PROPS_CRIT).asMulti().autocompleter(pdTypeFor(synAuditType));
 
         for (final var prop : auditProperties) {
             final var result = addAuditPropertyAsCrit(centreBuilder1.also(), prop);
@@ -169,14 +170,15 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .setLayoutFor(DESKTOP, empty(), layout)
                 .setLayoutFor(TABLET, empty(), layout)
                 .setLayoutFor(MOBILE, empty(), layout)
+                .withScrollingConfig(standardStandaloneScrollingConfig(3))
 
-                .addProp(AUDITED_ENTITY)
+                .addProp(AUDIT_DATE).order(1).desc().minWidth(150)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching audit records.").also()
-                .addProp(AUDITED_VERSION).minWidth(60).also()
                 // Order by audit date, since this is a top-level centre that includes all audit records.
                 // Moreover, there is no standalone index for auditedVersion to make such an ordering performant.
-                .addProp(AUDIT_DATE).order(1).desc().minWidth(140).also()
-                .addProp(USER).minWidth(60).also()
+                .addProp(AUDITED_ENTITY).order(2).desc().minWidth(140).also()
+                .addProp(USER).minWidth(80).also()
+                .addProp(AUDITED_VERSION).minWidth(50).also()
                 .addProp(CHANGED_PROPS).minWidth(120);
 
         for (final var prop : auditProperties) {
