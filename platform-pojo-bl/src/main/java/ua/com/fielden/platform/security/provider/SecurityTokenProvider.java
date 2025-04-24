@@ -29,6 +29,7 @@ import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
@@ -168,26 +169,34 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
 
         appDomain.entityTypes().stream()
                 .filter(AuditUtils::isAudited)
-                .flatMap(ty -> {
-                    final var synAuditEntityType = auditTypeFinder.navigate(ty).synAuditEntityType();
-                    return templatesForAuditedType(ty)
-                            .stream()
-                            .map(template -> generator.generateToken(synAuditEntityType,
-                                                                     template,
-                                                                     Optional.of(auditTokensPkgName),
-                                                                     Optional.of(AuditModuleToken.class)));
-                })
+                .flatMap(ty -> tokensForAuditTypes(ty, auditTypeFinder, generator, auditTokensPkgName))
                 .forEach(tok -> {
                     tokenClassesByName.put(tok.getName(), tok);
                     tokenClassesBySimpleName.put(tok.getSimpleName(), tok);
                 });
     }
 
-    /**
-     * Given an audited entity type, specifies the kinds of tokens that should be generated.
-     */
-    protected Set<Template> templatesForAuditedType(final Class<? extends AbstractEntity<?>> type) {
-        return Set.of(Template.READ, Template.READ_MODEL);
+    /// Provides tokens for audit types corresponding to an audited type.
+    /// This method generates [Template#READ] and [Template#READ_MODEL] tokens for each audit type.
+    ///
+    /// @param auditedType  the audited type whose audit types should be considered
+    /// @param generator  token generator that should be used to generate audit tokens
+    /// @param auditTokensPkgName  the destination package for audit tokens
+    ///
+    protected Stream<? extends Class<? extends ISecurityToken>> tokensForAuditTypes(
+            final Class<? extends AbstractEntity<?>> auditedType,
+            final IAuditTypeFinder auditTypeFinder,
+            final ISecurityTokenGenerator generator,
+            final String auditTokensPkgName)
+    {
+        final var navigator = auditTypeFinder.navigate(auditedType);
+        return navigator.allAuditTypes()
+                .stream()
+                .flatMap(auditType -> Stream.of(Template.READ, Template.READ_MODEL)
+                        .map(templ -> generator.generateToken(auditType,
+                                                              templ,
+                                                              Optional.of(auditTokensPkgName),
+                                                              Optional.of(AuditModuleToken.class))));
     }
 
     @Override
