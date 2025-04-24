@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.test_utils.CollectionTestUtils.assertEqualByContents;
@@ -148,7 +149,9 @@ public class UserAndRoleAndTokenAssociationTestCase extends AbstractDaoTestCase 
     public void security_associations_can_be_retrieved() {
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
         final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.getAllEntities(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).model());
-        assertEquals("Incorrect number of security token/role associations.", 101, associations.size());
+        assertThat(associations)
+                .describedAs(() -> "Incorrect number of security token/role associations.")
+                .hasSize(117);
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEqualByContents(Set.of(UNIT_TEST_ROLE, "ROLE1", "ROLE2"),
                               roles.stream().map(SecurityRoleAssociation::getRole).map(UserRole::getKey).collect(toImmutableSet()));;
