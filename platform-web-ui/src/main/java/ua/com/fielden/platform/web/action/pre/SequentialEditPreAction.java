@@ -96,7 +96,7 @@ public class SequentialEditPreAction implements IPreAction {
                 self.seqEditCancelPostal = postal.subscribe({
                     channel: self.uuid,
                     topic: 'refresh.post.success',
-                    callback: cancelEditing"
+                    callback: cancelEditing
                 }).defer();
             }
         """);

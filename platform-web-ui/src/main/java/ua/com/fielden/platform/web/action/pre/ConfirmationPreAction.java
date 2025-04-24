@@ -44,7 +44,7 @@ public class ConfirmationPreAction implements IPreAction {
     @Override
     public JsCode build() {
         return jsCode("""
-            return self.confirm('%s', [%s])
+            return self.confirm('%s', [%s]);
         """.formatted(
             message,
             StringUtils.join(buttons, ",")
