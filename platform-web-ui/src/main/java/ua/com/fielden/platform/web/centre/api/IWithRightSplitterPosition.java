@@ -4,7 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsWithCustomLayout;
 
 /**
- * A contract for defining right splitter position in insertion points.
+ * A contract for defining right splitter position within entity centre view.
  *
  * @author TG Team
  *

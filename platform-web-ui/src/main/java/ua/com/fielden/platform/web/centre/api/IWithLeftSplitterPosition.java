@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.centre.api;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * A contract for defining left splitter position in insertion points.
+ * A contract for defining left splitter position within entity centre view.
  *
  * @author TG Team
  *

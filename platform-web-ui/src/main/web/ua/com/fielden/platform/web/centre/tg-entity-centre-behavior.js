@@ -13,7 +13,7 @@ import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 
 /**
- * Insertion point manager that is local for entity centre to manage detached or maximised insertion points.
+ * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
  */
 class EntityCentreInsertionPointManager {
 
@@ -22,7 +22,7 @@ class EntityCentreInsertionPointManager {
     }
 
     /**
-     * Adds new insertion point to manager and assigns the specified z-index or brings to front newly added insertion point.
+     * Adds a new insertion point to the manager and either assigns the specified z-index or brings the newly added insertion point to the front.
      * 
      * @param {Object} insertionPoint - insertion point to manage
      */
@@ -38,7 +38,7 @@ class EntityCentreInsertionPointManager {
     }
 
     /**
-     * Removes insertion point from manager.
+     * Removes the specified insertion point from the manager.
      * 
      * @param {Object} insertionPoint - insertion point to stop manage
      */
