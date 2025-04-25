@@ -15,18 +15,19 @@ import '/resources/components/tg-toast.js';
 import '/resources/images/tg-icons.js';
 import '/resources/components/postal-lib.js';
 
-import {IronOverlayBehavior, IronOverlayBehaviorImpl} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
+import { IronOverlayBehavior, IronOverlayBehaviorImpl } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import { IronOverlayManager } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-manager.js';
-import {IronA11yKeysBehavior} from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js';
+import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
+import { IronFitBehavior } from '/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js';
 
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgReflector } from '/app/tg-reflector.js';
-import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
-import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
+import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
+import { TgBackButtonBehavior } from '/resources/views/tg-back-button-behavior.js'
 import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
@@ -218,7 +219,7 @@ const template = html`
             <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
         </div>
     </div>
-    <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-down="_handleResizeDown" on-track="resizeDialog" tooltip-text="Drag to resize<br>Double tap to reset dimensions" on-tap="resetDimensions"></iron-icon>
+    <iron-icon id="resizer" hidden$=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-down="_handleResizeDown" on-track="resizeDialog" tooltip-text="Drag to resize<br>Double tap to reset dimensions" on-tap="resetDimensions"></iron-icon>
     <tg-toast id="toaster"></tg-toast>`;
 
 template.setAttribute('strip-whitespace', '');
@@ -267,7 +268,8 @@ Polymer({
         TgTooltipBehavior,
         TgBackButtonBehavior,
         TgElementSelectorBehavior,
-        TgResizableMovableBehavior
+        TgResizableMovableBehavior,
+        TgDoubleTapHandlerBehavior
     ],
 
     listeners: {
@@ -577,6 +579,12 @@ Polymer({
         this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
         //Add tg-screen-resolution-changed event listener to reset dialog dimension and position if resolution changes
         window.addEventListener('tg-screen-resolution-changed', this._handleResolutionChanged.bind(this));
+        //Create double tap handle for resizer icon
+        this.resetDimensions = this._createDoubleTapHandler("_lastResizerTap", (e) => {
+            this._removePersistedPositionAndDimensions()
+            this.refit();
+            this.notifyResizeWithoutItselfAndAncestors();
+        });
     },
 
     attached: function() {
@@ -871,14 +879,6 @@ Polymer({
             }
         }
         tearDownEvent(event);
-    },
-
-    resetDimensions: function (event) {
-        if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
-            this._removePersistedPositionAndDimensions()
-            this.refit();
-            this.notifyResizeWithoutItselfAndAncestors();
-        }
     },
 
     _removePersistedPositionAndDimensions: function () {

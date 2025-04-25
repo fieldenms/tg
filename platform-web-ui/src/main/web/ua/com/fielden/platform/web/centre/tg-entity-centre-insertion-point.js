@@ -16,6 +16,7 @@ import '/resources/images/tg-icons.js';
 import '/resources/components/tg-toast.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
@@ -221,7 +222,8 @@ Polymer({
         TgTooltipBehavior,
         TgShortcutProcessingBehavior,
         TgElementSelectorBehavior,
-        TgResizableMovableBehavior
+        TgResizableMovableBehavior,
+        TgDoubleTapHandlerBehavior
     ],
 
     properties: {
@@ -476,6 +478,18 @@ Polymer({
         // 'z-index' management related settings:
         const clickEvent = isTouchEnabled() ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
+        this._clearLocalStorage = this._createDoubleTapHandler("_lastResizerTap", (e) => {
+            if (this.detachedView) {
+                this._removeProp(ST.DETACHED_VIEW_WIDTH);
+                this._removeProp(ST.DETACHED_VIEW_HEIGHT);
+                this._removeProp(ST.POS_X);
+                this._removeProp(ST.POS_Y);
+            } else {
+                this._removeProp(ST.ATTACHED_HEIGHT);
+            }
+            this._setDimension();
+            this._setPosition();
+        });
         // Add title bar event to identify whether element is draggable or not.
         //  Use 'useCapture = true' (capturing phase, not bubbling, see https://www.quirksmode.org/js/events_order.html) as a parameter to ensure event dispatching before
         //   1. the start-drag event on parent centre element (tg-entity-centre._startDrag => this.$.centreResultContainer.on-dragstart) and
@@ -1194,28 +1208,6 @@ Polymer({
 
     _removeProp: function (key) {
         localStorage.removeItem(this._generateKey(key));
-    },
-
-    _clearLocalStorage: function (event) {
-        if (!this._lastResizerTap) {
-            this._lastResizerTap = -1;
-        }
-        const now = new Date().getTime();
-        const interval = now - this._lastResizerTap;
-        if (interval <= 500) {
-            if (this.detachedView) {
-                this._removeProp(ST.DETACHED_VIEW_WIDTH);
-                this._removeProp(ST.DETACHED_VIEW_HEIGHT);
-                this._removeProp(ST.POS_X);
-                this._removeProp(ST.POS_Y);
-            } else {
-                this._removeProp(ST.ATTACHED_HEIGHT);
-            }
-            this._setDimension();
-            this._setPosition();
-        }
-        this._lastResizerTap = new Date().getTime();
     }
-
     /********************************************************************************************/
 });
