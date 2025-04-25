@@ -44,9 +44,9 @@ const ST = {
 
     DETACHED_VIEW_WIDTH: 'detachedWidth',
     DETACHED_VIEW_HEIGHT: 'detachedHeight',
-    POS_X: "posX",
-    POS_Y: "posY",
-    ZORDER: "zOrder",
+    DETACHED_POS_X: "detachedPosX",
+    DETACHED_POS_Y: "detachedPosY",
+    DETACHED_ZORDER: "detachedZOrder",
 
     ATTACHED_HEIGHT: 'attachedHeight'
 };
@@ -161,7 +161,6 @@ const template = html`
             bottom: 0;
             right: 0;
             --iron-icon-fill-color: var(--paper-grey-600);
-            pointer-events: auto; /* required to override pointer-events:none from noselect class of parent entity centre, set on mouse-down for resizing events; otherwise double tap (reset dim/pos) will not work due to child relationship from parent centre */
         }
 
         .lock-layer {
@@ -464,7 +463,7 @@ Polymer({
         // Initialise properties from tg-resizable-movable-behavior:
         this.minimumWidth = 60 /* reasonable minimum width of text */ + (8 * 2) /* padding left+right */ + (24 * 3) /* three buttons width */;
         this.persistSize = () => this._savePair(ST.DETACHED_VIEW_WIDTH, this.style.width, ST.DETACHED_VIEW_HEIGHT, this.style.height);
-        this.persistPosition = () => this._savePair(ST.POS_X, this.style.left, ST.POS_Y, this.style.top);
+        this.persistPosition = () => this._savePair(ST.DETACHED_POS_X, this.style.left, ST.DETACHED_POS_Y, this.style.top);
         this.allowMove = () => this._titleBarDraggable !== 'true' && !this.maximised && this.detachedView;
     },
 
@@ -482,8 +481,8 @@ Polymer({
             if (this.detachedView) {
                 this._removeProp(ST.DETACHED_VIEW_WIDTH);
                 this._removeProp(ST.DETACHED_VIEW_HEIGHT);
-                this._removeProp(ST.POS_X);
-                this._removeProp(ST.POS_Y);
+                this._removeProp(ST.DETACHED_POS_X);
+                this._removeProp(ST.DETACHED_POS_Y);
             } else {
                 this._removeProp(ST.ATTACHED_HEIGHT);
             }
@@ -807,10 +806,10 @@ Polymer({
     setZOrder: function (zOrder) {
         if (zOrder <= 0 ) {
             this.style.removeProperty("z-index");
-            this._removeProp(ST.ZORDER);
+            this._removeProp(ST.DETACHED_ZORDER);
         } else {
             this.style.zIndex = zOrder;
-            this._saveProp(ST.ZORDER, this.style.zIndex);
+            this._saveProp(ST.DETACHED_ZORDER, this.style.zIndex);
         }
     },
 
@@ -872,7 +871,7 @@ Polymer({
      */
     _makeDetached: function () {
         this._preferredSize = this._preferredSize || this._getPrefDimForDetachedView();
-        const zOrder = this._getProp(ST.ZORDER);
+        const zOrder = this._getProp(ST.DETACHED_ZORDER);
         if (zOrder) {
             this.contextRetriever().insertionPointManager.add(this, +zOrder);
         } else {
@@ -1048,7 +1047,7 @@ Polymer({
         if (this.detachedView) {
             this.style.position = "fixed";
             if (!this.maximised) {
-                let posToApply = this._getPair(ST.POS_X, ST.POS_Y);
+                let posToApply = this._getPair(ST.DETACHED_POS_X, ST.DETACHED_POS_Y);
                 if (posToApply) {
                     this.style.left = posToApply[0];
                     this.style.top = posToApply[1];
