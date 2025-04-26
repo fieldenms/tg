@@ -20,20 +20,19 @@ import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 public class BindSavedPropertyPostActionSuccess implements IPostAction {
     private final IConvertableToPath property;
 
-    /// Creates [BindSavedPropertyPostActionSuccess] with `property` indicating where master entity resides.
     BindSavedPropertyPostActionSuccess(final IConvertableToPath property) {
         this.property = requireNonNull(property);
+    }
+
+    @Override
+    public Set<JsImport> importStatements() {
+        return of(namedImport("getParentAnd", "reflection/tg-polymer-utils"));
     }
 
     @Deprecated(since = WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS)
     @Override
     public JsCode build() {
         return createPostAction(false, property);
-    }
-
-    @Override
-    public Set<JsImport> importStatements() {
-        return of(namedImport("getParentAnd", "reflection/tg-polymer-utils"));
     }
 
     /// Creates [IPostAction]. For `erroneous` one we also attach `'functionalEntity.exceptionOccurred()'` to the master entity.
