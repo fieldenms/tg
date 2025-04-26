@@ -25,23 +25,14 @@ public class FileSaverPostAction implements IPostAction {
 
     @Override
     public Set<JsImport> importStatements() {
-        return of(namedImport("saveAs", "polymer/lib/file-saver-lib"));
+        return of(namedImport("saveFile", "centre/actions/tg-save-file"));
     }
 
     @Deprecated(since = WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS)
     @Override
     public JsCode build() {
         return jsCode("""
-            const byteCharacters = atob(functionalEntity.data);
-            const byteNumbers = new Uint8Array(byteCharacters.length);
-            for (let index = 0; index < byteCharacters.length; index++) {
-                 byteNumbers[index] = byteCharacters.charCodeAt(index);
-            }
-            const data = new Blob([byteNumbers], {type: functionalEntity.mime});
-            saveAs(data, functionalEntity.fileName);
-            if (self.$.egi && self.$.egi.clearPageSelection) {
-                self.$.egi.clearPageSelection();
-            }
+            saveFile(functionalEntity, self);
         """);
     }
 
