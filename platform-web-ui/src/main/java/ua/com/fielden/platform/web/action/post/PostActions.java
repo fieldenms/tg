@@ -10,12 +10,12 @@ public interface PostActions {
 
     /// Creates [IPostAction] that binds saved `property` value to parent Entity Master.
     static IPostAction bindSavedProperty(final IConvertableToPath property) {
-        return new BindSavedPropertyPostActionSuccess(property);
+        return new BindSavedPropertyPostAction(property, false);
     }
 
     /// Creates [IPostAction]`Error` that binds saved `property` value to parent Entity Master.
     static IPostAction bindSavedPropertyError(final IConvertableToPath property) {
-        return new BindSavedPropertyPostActionError(property);
+        return new BindSavedPropertyPostAction(property, true);
     }
 
     /// Creates [IPostAction] that should be used for saving data to a local file.

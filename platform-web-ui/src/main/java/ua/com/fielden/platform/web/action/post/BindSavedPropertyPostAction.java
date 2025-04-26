@@ -10,29 +10,37 @@ import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Set.of;
-import static ua.com.fielden.platform.web.action.post.BindSavedPropertyPostActionSuccess.createPostAction;
+import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 
 /// In case if functional entity saves its master entity, it is necessary to bind saved instance to its respective entity master.
-/// Use this [IPostAction] in [IEntityActionBuilder2#postActionError(IPostAction)] call.
+/// Use this [IPostAction] in [IEntityActionBuilder2#postActionSuccess(IPostAction)] call.
+/// Or in [IEntityActionBuilder2#postActionError(IPostAction)] call.
 ///
 /// @author TG Team
-public class BindSavedPropertyPostActionError implements IPostAction {
+public class BindSavedPropertyPostAction implements IPostAction {
     private final IConvertableToPath property;
+    private final boolean erroneous;
 
-    BindSavedPropertyPostActionError(final IConvertableToPath property) {
+    BindSavedPropertyPostAction(final IConvertableToPath property, final boolean erroneous) {
         this.property = requireNonNull(property);
+        this.erroneous = erroneous;
     }
 
     @Override
     public Set<JsImport> importStatements() {
-        return of(namedImport("getParentAnd", "reflection/tg-polymer-utils"));
+        return of(namedImport("bindSavedProperty", "master/actions/tg-bind-saved-property"));
     }
 
     @Deprecated(since = WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS)
     @Override
     public JsCode build() {
-        return createPostAction(true, property);
+        return jsCode("""
+            bindSavedProperty(functionalEntity, '%s', self, %s);
+        """.formatted(
+            property.toPath(),
+            erroneous
+        ));
     }
 
 }
