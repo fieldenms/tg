@@ -405,6 +405,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         this.forMaster = forMaster;
     }
 
+    /// [JsImport]s for currently configured action.
     public Set<JsImport> actionImports() {
         return entityActionConfig.importStatements().collect(toSet());
     }

@@ -6,20 +6,22 @@ import ua.com.fielden.platform.web.view.master.api.actions.IAction;
 
 /// Represents standard JS code to be used in centre with generators that support _modified data regeneration_ prompt.
 ///
-/// Use it through [EntityCentre#injectCustomCodeOnAttach(JsCode)] passing <code>new ForceCentreRegenerationPostAction(...).build()</code> into it.
+/// Use it through [EntityCentre#injectCustomCodeOnAttach(JsCode)] passing `new ForceCentreRegenerationPostAction(...).build()` into it.
 ///
-/// Please note, that corresponding generator should return <code>Result.failure(forceRegenerationExceptionMessage)</code> (to be used with this standard post action)
-/// when user tries to regenerate already modified data.
+/// Corresponding generator should return `Result.failure(forceRegenerationExceptionMessage)`.
+/// This is the case where the user tries to regenerate already modified data.
 ///
 /// @author TG Team
 public class GuardCentreRegenerationAction implements IAction<GuardCentreRegenerationAction> {
     private final String forceRegenerationExceptionMessage;
     private final String confirmationQuestion;
 
-    /// Creates standard [GuardCentreRegenerationAction] with custom <code>confirmationQuestion</code> and <code>forceRegenerationExceptionMessage</code>.
+    /// Creates standard [GuardCentreRegenerationAction] with custom `confirmationQuestion` and `forceRegenerationExceptionMessage`.
     ///
-    /// @param forceRegenerationExceptionMessage -- exception message while trying to regenerate already modified data (this appears as toast)
-    /// @param confirmationQuestion -- this appears as dialog's message (to confirm or reject data regeneration) and is provided with 'Yes' and 'No' buttons
+    /// @param forceRegenerationExceptionMessage exception message while trying to regenerate already modified data;
+    ///     this appears as toast
+    /// @param confirmationQuestion this appears as dialog's message (to confirm or reject data regeneration);
+    ///     it is provided with 'Yes' and 'No' buttons
     public GuardCentreRegenerationAction(final String forceRegenerationExceptionMessage, final String confirmationQuestion) {
         this.forceRegenerationExceptionMessage = forceRegenerationExceptionMessage;
         this.confirmationQuestion = confirmationQuestion;
@@ -41,7 +43,8 @@ public class GuardCentreRegenerationAction implements IAction<GuardCentreRegener
                 }).bind(self);
             }
         """.formatted(
-            forceRegenerationExceptionMessage, confirmationQuestion
+            forceRegenerationExceptionMessage,
+            confirmationQuestion
         ));
     }
 

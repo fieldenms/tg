@@ -81,6 +81,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
         return insertionPointActionElement.render().clazz("insertion-point-action").attr("hidden", null);
     }
 
+    /// [JsImport]s for currently configured insertion point action.
     public Set<JsImport> actionImports() {
         return insertionPointActionElement.actionImports();
     }

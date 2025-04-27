@@ -59,6 +59,7 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout {
                 setWhenMobile(tileLayout.getLayout(Device.MOBILE, null).get());
     }
 
+    /// [JsImport]s for currently configured main menu actions.
     public Set<JsImport> mainMenuActionImports() {
         return mainMenu.actionImports();
     }

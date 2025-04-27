@@ -56,6 +56,7 @@ public class WebMainMenu {
         return new JsCode(null);
     }
 
+    /// [JsImport]s for currently configured actions from all modules.
     public Set<JsImport> actionImports() {
         return modules.stream()
             .flatMap(module -> module.getActions().stream().flatMap(EntityActionConfig::importStatements))

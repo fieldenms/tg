@@ -321,11 +321,17 @@ public final class EntityActionConfig {
         return true;
     }
 
+    /// Combined action [JsImport]s from all pre/postActions.
     public Stream<JsImport> importStatements() {
-        return of(importStatements(preAction), importStatements(successPostAction), importStatements(errorPostAction))
-            .flatMap(s -> s);
+        return of(
+            importStatements(preAction),
+            importStatements(successPostAction),
+            importStatements(errorPostAction)
+        ).flatMap(s -> s);
     }
 
+    /// [Stream] of [JsImport]s for optional [IAction] descendant.
+    /// Returns empty [Stream] of `actionOpt` is empty.
     public Stream<JsImport> importStatements(final Optional<? extends IAction> actionOpt) {
         return actionOpt
             .map(action -> action.importStatements().stream())
