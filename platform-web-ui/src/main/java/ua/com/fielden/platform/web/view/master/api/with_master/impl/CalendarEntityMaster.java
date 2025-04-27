@@ -9,19 +9,17 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.minijs.CombinedJsImports;
 import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.TreeSet;
 
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
-import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
-import static ua.com.fielden.platform.web.minijs.JsImport.extractImportStatements;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
@@ -66,7 +64,7 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
 
         this.editAction = editAction;
 
-        final SortedSet<JsImport> actionImports = new TreeSet<>();
+        final SortedSet<JsImport> actionImports = new CombinedJsImports();
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add(calendarComponentUri);
 
@@ -87,7 +85,7 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
 
         final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(editAction, 0);
         importPaths.add(el.importPath());
-        extendAndValidateCombinedImports(actionImports, el.actionImports());
+        actionImports.addAll(el.actionImports());
         calendar.add(el.render().attr("hidden", true).clazz("primary-action").attr("slot", "calendar-action"));
         final String editActionObjectString = el.createActionObject();
 
@@ -97,7 +95,7 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(importPaths)
                     + "\nimport { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n"
-                    + extractImportStatements(actionImports, empty())
+                    + actionImports
                 )
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", calendar.toString())

@@ -14,8 +14,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.SortedSet;
 
-import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
-
 /**
  * {@link IRenderable} and {@link IImportable} element that represents multiple action element and it is renderable into tg-egi-multi-action component instance.
  *
@@ -65,7 +63,7 @@ public class FunctionalMultiActionElement implements IRenderable, IImportable {
         final StringBuilder actionsObjects = new StringBuilder();
         for(final FunctionalActionElement el: actionElements) {
             importPaths.add(el.importPath());
-            extendAndValidateCombinedImports(actionImports, el.actionImports());
+            actionImports.addAll(el.actionImports());
             actionsObjects.append(prefix + el.createActionObject());
         }
         final int prefixLength = prefix.length();

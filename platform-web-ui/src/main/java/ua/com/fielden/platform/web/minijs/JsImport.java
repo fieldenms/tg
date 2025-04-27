@@ -4,15 +4,11 @@ import ua.com.fielden.platform.web.minijs.exceptions.JsCodeException;
 
 import java.util.Comparator;
 import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
 
-import static java.lang.String.join;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static java.util.stream.Collectors.toSet;
 
 /**
  * An abstraction for JavaScript imports covering named imports (including aliased) and default imports.
@@ -75,29 +71,18 @@ public record JsImport(String name, String path, Optional<String> alias) impleme
         return namedImport(name, path, alias().orElse(name()));
     }
 
+    /// Generates [String] JavaScript code, assuming that this [JsImport] is in aliased form ([#alias()] is present).
+    public String genAliasedCode() {
+        return "import { %s as %s } from '%s.js';".formatted(
+            name(),
+            alias().get(), // always present
+            (path().startsWith("/") ? "" : "/resources/") + path() // support "full" and short paths ('/app/...' vs 'reflection/...')
+        );
+    }
+
     @Override
     public int compareTo(final JsImport other) {
         return ALIASED_FORM_COMPARATOR.compare(this, other);
-    }
-
-    private static Set<JsImport> convertJsImportsToAliasedForm(final Set<JsImport> jsImports) {
-        return jsImports.stream().map(JsImport::convertToAliasedForm).collect(toSet());
-    }
-
-    public static SortedSet<JsImport> extendAndValidateCombinedImports(final SortedSet<JsImport> combinedImports, final Set<JsImport> jsImports) {
-        combinedImports.addAll(convertJsImportsToAliasedForm(jsImports));
-        if (combinedImports.stream().map(JsImport::alias).distinct().toList().size() < combinedImports.size()) {
-            throw new JsCodeException("Action import names are in conflict.\n%s".formatted(combinedImports));
-        }
-        return combinedImports;
-    }
-
-    public static String extractImportStatements(final SortedSet<JsImport> combinedImports, final Optional<String> importObjectNameOpt) {
-        return combinedImports.isEmpty() ? ""
-            : "\n" + join("\n", combinedImports.stream().map(jsImport -> "import { %s as %s } from '%s.js';".formatted(jsImport.name(), jsImport.alias().get(), (jsImport.path().startsWith("/") ? "" : "/resources/") + jsImport.path())).toList())
-            + importObjectNameOpt.map(importObjectName ->
-                "\n" + "const %s = {%s};".formatted(importObjectName, join(",", combinedImports.stream().map(jsImport -> jsImport.alias().get()).map(alias -> "%s: %s".formatted(alias, alias)).toList()))
-            ).orElse("");
     }
 
 }

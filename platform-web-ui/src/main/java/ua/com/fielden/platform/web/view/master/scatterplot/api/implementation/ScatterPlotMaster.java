@@ -14,6 +14,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.minijs.CombinedJsImports;
 import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
@@ -29,8 +30,6 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
-import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
-import static ua.com.fielden.platform.web.minijs.JsImport.extractImportStatements;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
@@ -55,14 +54,12 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
     public ScatterPlotMaster(final ScatterPlotMasterBuilder<T> scatterPlotMasterBuilder) {
         this.action = scatterPlotMasterBuilder.getAction();
 
-        final SortedSet<JsImport> actionImports = new TreeSet<>();
+        final SortedSet<JsImport> actionImports = new CombinedJsImports();
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         final Optional<Pair<String, DomElement>> actionPair = generateAction(importPaths, actionImports, scatterPlotMasterBuilder.getAction());
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/scatter-plot/tg-scatter-plot-master-template.js")
-                .replace(IMPORTS, createImports(importPaths)
-                    + extractImportStatements(actionImports, empty())
-                )
+                .replace(IMPORTS, createImports(importPaths) + actionImports)
                 .replace(ENTITY_TYPE, flattenedNameOf(scatterPlotMasterBuilder.getEntityType()))
                 .replace("<!--@tg-entity-master-content-->", actionPair.map(a -> a.getValue().toString()).orElse(""))
                 .replace("//generatedPrimaryActions", actionPair.map(a -> a.getKey().toString()).orElse(""))
@@ -83,7 +80,7 @@ public class ScatterPlotMaster<T extends AbstractEntity<?>> implements IMaster<T
         if (action != null) {
             final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(action, 0);
             importPaths.add(el.importPath());
-            extendAndValidateCombinedImports(actionImports, el.actionImports());
+            actionImports.addAll(el.actionImports());
             return of(new Pair<>(el.createActionObject(), el.render().clazz("chart-action").attr("hidden", true)));
         }
         return empty();

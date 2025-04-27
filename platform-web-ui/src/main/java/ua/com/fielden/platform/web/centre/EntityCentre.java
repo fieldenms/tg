@@ -73,6 +73,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnEleme
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.minijs.CombinedJsImports;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.sse.IEventSource;
@@ -114,7 +115,6 @@ import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.RunAutom
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectView;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
-import static ua.com.fielden.platform.web.minijs.JsImport.*;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
@@ -951,7 +951,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private IRenderable createRenderableRepresentation(final ICentreDomainTreeManagerAndEnhancer centre) {
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        final SortedSet<JsImport> actionImports = new TreeSet<>();
+        final SortedSet<JsImport> actionImports = new CombinedJsImports();
         importPaths.add("master/tg-entity-master");
 
         logger.debug("Initiating layout...");
@@ -1030,7 +1030,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
             column.getActions().forEach(action -> {
                 importPaths.add(action.importPath());
-                extendAndValidateCombinedImports(actionImports, action.actionImports());
+                actionImports.addAll(action.actionImports());
                 propActionsObject.append(prefix + createActionObject(action));
             });
             egiColumns.add(column.render());
@@ -1064,7 +1064,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             final DomElement groupElement = createActionGroupDom(i);
             for (final FunctionalActionElement el : actionGroups.get(i)) {
                 importPaths.add(el.importPath());
-                extendAndValidateCombinedImports(actionImports, el.actionImports());
+                actionImports.addAll(el.actionImports());
                 groupElement.add(el.render());
                 functionalActionsObjects.append(prefix + createActionObject(el));
             }
@@ -1095,7 +1095,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         for (int actionIndex = 0; actionIndex < frontActions.size(); actionIndex++) {
             final FunctionalActionElement actionElement = new FunctionalActionElement(frontActions.get(actionIndex), actionIndex, FunctionalActionKind.FRONT);
             importPaths.add(actionElement.importPath());
-            extendAndValidateCombinedImports(actionImports, actionElement.actionImports());
+            actionImports.addAll(actionElement.actionImports());
             frontActionsDom.add(actionElement.render());
             frontActionsObjects.append(prefix + createActionObject(actionElement));
         }
@@ -1110,7 +1110,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         for (int actionIndex = 0; actionIndex < shareActions.size(); actionIndex++) {
             final FunctionalActionElement actionElement = new FunctionalActionElement(shareActions.get(actionIndex), actionIndex, FunctionalActionKind.SHARE);
             importPaths.add(actionElement.importPath());
-            extendAndValidateCombinedImports(actionImports, actionElement.actionImports());
+            actionImports.addAll(actionElement.actionImports());
             shareActionsDom.add(actionElement.render());
             shareActionsObjects.append(prefix + createActionObject(actionElement));
         }
@@ -1145,7 +1145,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final StringBuilder insertionPointActionsObjects = new StringBuilder();
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
             importPaths.addAll(el.importPaths());
-            extendAndValidateCombinedImports(actionImports, el.actionImports());
+            actionImports.addAll(el.actionImports());
             insertionPointActionsDom.add(el.renderInsertionPointAction());
             insertionPointActionsObjects.append(prefix + el.code());
         }
@@ -1222,7 +1222,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.js");
         logger.debug("Replacing some parts...");
         final String entityCentreStr = text.
-                replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse("") + extractImportStatements(actionImports, empty())).
+                replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse("") + actionImports).
                 replace(EGI_LAYOUT, gridLayoutConfig.getKey()).
                 replace(FULL_ENTITY_TYPE, entityType.getName()).
                 replace(MI_TYPE, flattenedNameOf(miType)).
@@ -1311,7 +1311,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             for (final EntityActionConfig actionConfig: el.getActions()) {
                 final FunctionalActionElement funcAction = new FunctionalActionElement(actionConfig, alternativeViewActionOrder.getAndIncrement(), FunctionalActionKind.TOP_LEVEL);
                 importPaths.add(funcAction.importPath());
-                extendAndValidateCombinedImports(actionImports, funcAction.actionImports());
+                actionImports.addAll(funcAction.actionImports());
                 domContainer.add(funcAction.render());
                 functionalActionsObjects.append(",\n" + createActionObject(funcAction));
             }

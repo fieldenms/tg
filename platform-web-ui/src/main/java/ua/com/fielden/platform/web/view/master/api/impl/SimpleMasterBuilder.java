@@ -17,6 +17,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.minijs.CombinedJsImports;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -45,8 +46,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
-import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
-import static ua.com.fielden.platform.web.minijs.JsImport.extractImportStatements;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
@@ -214,7 +213,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     @Override
     public IMaster<T> done() {
-        final SortedSet<JsImport> actionImports = new TreeSet<>();
+        final SortedSet<JsImport> actionImports = new CombinedJsImports();
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
 
         final AtomicInteger funcActionSeq = new AtomicInteger(0); // used for both entity and property level functional actions
@@ -240,7 +239,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                         shortcuts.append(actionConfig.shortcut.get() + " ");
                     }
                     importPaths.add(el.importPath());
-                    extendAndValidateCombinedImports(actionImports, el.actionImports());
+                    actionImports.addAll(el.actionImports());
                     widgetElement.add(el.render().attr("slot", "property-action").clazz("property-action-icon"));
                     primaryActionObjects.append(prefix + el.createActionObject());
                 });
@@ -271,7 +270,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                     shortcuts.append(config.shortcut.get() + " ");
                 }
                 importPaths.add(el.importPath());
-                extendAndValidateCombinedImports(actionImports, el.actionImports());
+                actionImports.addAll(el.actionImports());
                 actionContainer.add(el.render().clazz("primary-action"));
                 primaryActionObjects.append(prefix + el.createActionObject());
             }
@@ -291,7 +290,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final String dimensionsString = prefDimBuilder.toString();
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse("") + extractImportStatements(actionImports, empty()))
+                .replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse("") + actionImports)
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString()) // TODO should contain prop actions
                 .replace("//@ready-callback",

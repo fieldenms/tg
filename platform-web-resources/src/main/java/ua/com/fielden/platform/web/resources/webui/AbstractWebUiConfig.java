@@ -31,8 +31,8 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
+import ua.com.fielden.platform.web.minijs.CombinedJsImports;
 import ua.com.fielden.platform.web.minijs.JsCode;
-import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.sse.EventSourceDispatchingEmitter;
@@ -63,8 +63,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
-import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
-import static ua.com.fielden.platform.web.minijs.JsImport.extractImportStatements;
 import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
@@ -277,17 +275,18 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return webUiBuilder.genWebUiPrefComponent();
     }
 
-    private SortedSet<JsImport> mainMenuActionImports() {
-        final var combinedImports = new TreeSet<JsImport>();
-        extendAndValidateCombinedImports(combinedImports, desktopMainMenuConfig.mainMenuActionImports());
-        extendAndValidateCombinedImports(combinedImports, mobileMainMenuConfig.mainMenuActionImports());
+    /// [CombinedJsImports] from main menu actions on both desktop / mobile configurations.
+    private CombinedJsImports mainMenuActionImports() {
+        final var combinedImports = new CombinedJsImports();
+        combinedImports.addAll(desktopMainMenuConfig.mainMenuActionImports());
+        combinedImports.addAll(mobileMainMenuConfig.mainMenuActionImports());
         return combinedImports;
     }
 
     @Override
     public final String genMainWebUIComponent() {
         final String mainWebUiComponent = requireNonNull(getText("ua/com/fielden/platform/web/app/tg-app-template.js"))
-            .replace("@mainMenuActionImports", extractImportStatements(mainMenuActionImports(), of("mainMenuActionImports")));
+            .replace("@mainMenuActionImports", mainMenuActionImports().toStringWith("mainMenuActionImports"));
         if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
             return mainWebUiComponent.replace("//@use-empty-console.log", "console.log = () => {};\n");
         } else {

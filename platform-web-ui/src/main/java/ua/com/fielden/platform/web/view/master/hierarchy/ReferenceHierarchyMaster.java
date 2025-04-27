@@ -11,6 +11,7 @@ import ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.minijs.CombinedJsImports;
 import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -20,8 +21,6 @@ import java.util.*;
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.minijs.JsImport.extendAndValidateCombinedImports;
-import static ua.com.fielden.platform.web.minijs.JsImport.extractImportStatements;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
@@ -38,7 +37,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
     private final IRenderable renderable;
 
     public ReferenceHierarchyMaster () {
-        final SortedSet<JsImport> actionImports = new TreeSet<>();
+        final SortedSet<JsImport> actionImports = new CombinedJsImports();
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("components/tg-reference-hierarchy");
         importPaths.add("editors/tg-singleline-text-editor");
@@ -96,7 +95,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
         for (int actionIdx = 0; actionIdx < this.actions.size(); actionIdx++) {
             final EntityActionConfig action = this.actions.get(actionIdx);
             final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(action, actionIdx);
-            extendAndValidateCombinedImports(actionImports, el.actionImports());
+            actionImports.addAll(el.actionImports());
             importPaths.add(el.importPath());
             referenceHierarchyDom.add(el.render().attr("hidden", null).clazz("primary-action").attr("slot", "reference-hierarchy-action"));
             customActionObjects.append(prefix + el.createActionObject());
@@ -109,7 +108,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(importPaths)
                     + "\nimport { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n"
-                    + extractImportStatements(actionImports, empty())
+                    + actionImports
                 )
                 .replace(ENTITY_TYPE, flattenedNameOf(ReferenceHierarchy.class))
                 .replace("<!--@tg-entity-master-content-->", referenceHierarchyDom.toString())
