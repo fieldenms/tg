@@ -34,7 +34,7 @@ public record JsImport(String name, String path, Optional<String> alias) impleme
         if (requireNonNull(path).isBlank()) {
             throw new JsCodeException(ERR_JAVA_SCRIPT_IMPORT_PATH_IS_BLANK.formatted(path));
         }
-        if (DEFAULT.equals(name) && alias.isPresent()) {
+        if (DEFAULT.equals(name) && alias.isEmpty()) {
             throw new JsCodeException(ERR_JAVA_SCRIPT_DEFAULT_IMPORT_ALIAS_IS_NOT_PROVIDED);
         }
         if (alias.isPresent() && alias.get().isBlank()) {
