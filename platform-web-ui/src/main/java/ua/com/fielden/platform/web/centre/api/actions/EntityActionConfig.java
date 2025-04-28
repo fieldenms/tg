@@ -7,6 +7,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.actions.IAction;
+import ua.com.fielden.platform.web.view.master.api.actions.IComposableAction;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
@@ -330,9 +331,9 @@ public final class EntityActionConfig {
         ).flatMap(s -> s);
     }
 
-    /// [Stream] of [JsImport]s for optional [IAction] descendant.
+    /// [Stream] of [JsImport]s for optional [IComposableAction] descendant.
     /// Returns empty [Stream] of `actionOpt` is empty.
-    public Stream<JsImport> importStatements(final Optional<? extends IAction> actionOpt) {
+    public Stream<JsImport> importStatements(final Optional<? extends IComposableAction> actionOpt) {
         return actionOpt
             .map(action -> action.importStatements().stream())
             .orElseGet(Stream::empty);

@@ -12,7 +12,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.IAction;
 /// This is the case where the user tries to regenerate already modified data.
 ///
 /// @author TG Team
-public class GuardCentreRegenerationAction implements IAction<GuardCentreRegenerationAction> {
+public class GuardCentreRegenerationAction implements IAction {
     private final String forceRegenerationExceptionMessage;
     private final String confirmationQuestion;
 
@@ -46,11 +46,6 @@ public class GuardCentreRegenerationAction implements IAction<GuardCentreRegener
             forceRegenerationExceptionMessage,
             confirmationQuestion
         ));
-    }
-
-    @Override
-    public GuardCentreRegenerationAction andThen(GuardCentreRegenerationAction thatAction) {
-        throw new UnsupportedOperationException("Method [andThen] is unsupported.");
     }
 
 }
