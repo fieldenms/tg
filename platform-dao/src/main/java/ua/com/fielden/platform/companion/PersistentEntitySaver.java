@@ -655,8 +655,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     // need to update refCount for the activatable entity
                     final ActivatableAbstractEntity<?> value = (ActivatableAbstractEntity<?>) prop.getValue();
                     final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) session.load(value.getType(), value.getId(), UPGRADE);
-                    // the returned value could already be inactive due to some concurrent modification.
-                    // therefore, it is critical to ensure that the property of the current entity being saved can still accept the obtained value if it is inactive.
+                    // If the referenced instance is not active (e.g. due to concurrent deactivation), then referencing is no longer relevant,
+                    // and an exception should be thrown.
                     if (!persistedEntity.isActive()) {
                         final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
                         final String persistedEntityTitle = getEntityTitleAndDesc(persistedEntity.getType()).getKey();
