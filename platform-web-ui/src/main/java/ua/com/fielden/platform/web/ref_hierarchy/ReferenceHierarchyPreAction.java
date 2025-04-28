@@ -42,7 +42,7 @@ public record ReferenceHierarchyPreAction(boolean useMasterEntity) implements IP
                 action.shortDesc = reflector.getType(entity.constructor.prototype.type.call(entity).notEnhancedFullClassName()).entityTitle();
             }
         """.formatted(
-            this.useMasterEntity
+            useMasterEntity
         ));
     }
 

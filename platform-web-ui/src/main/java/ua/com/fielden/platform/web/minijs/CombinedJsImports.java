@@ -14,6 +14,7 @@ import static org.apache.tika.utils.StringUtils.isBlank;
 ///
 /// @author TG Team
 public class CombinedJsImports extends TreeSet<JsImport> {
+    private static final String ERR_ACTION_IMPORT_NAMES_ARE_IN_CONFLICT = "Action import names are in conflict.\n%s";
 
     /// Overridden to validate [CombinedJsImports] on naming conflicts.
     ///
@@ -24,7 +25,7 @@ public class CombinedJsImports extends TreeSet<JsImport> {
     public boolean addAll(final Collection<? extends JsImport> jsImports) {
         final var changed = super.addAll(jsImports.stream().map(JsImport::convertToAliasedForm).collect(toSet()));
         if (stream().map(JsImport::alias).distinct().toList().size() < size()) {
-            throw new JsCodeException("Action import names are in conflict.\n%s".formatted(this));
+            throw new JsCodeException(ERR_ACTION_IMPORT_NAMES_ARE_IN_CONFLICT.formatted(this));
         }
         return changed;
     }

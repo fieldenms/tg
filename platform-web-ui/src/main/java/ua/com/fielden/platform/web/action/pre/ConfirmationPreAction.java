@@ -9,7 +9,7 @@ import java.util.List;
 import static org.apache.commons.lang3.StringUtils.join;
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 
-/// A standard confirmation [IPreAction], that allows proceeding / rejecting the whole action through simple Ok / Cancel dialog.
+/// A standard confirmation [IPreAction] that allows proceeding / rejecting the whole action through simple dialog.
 ///
 /// @author TG Team
 public class ConfirmationPreAction implements IPreAction {

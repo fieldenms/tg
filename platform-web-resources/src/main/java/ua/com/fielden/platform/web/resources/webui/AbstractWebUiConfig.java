@@ -82,6 +82,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
     private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default configurations for [%s]-typed centres (caching)...";
+    /// Name for a constant in generated `tg-app-template` containing imports from main menu actions.
+    private static final String MAIN_MENU_ACTION_IMPORTS = "mainMenuActionImports";
 
     private final String title;
     private final Optional<String> ideaUri;
@@ -286,7 +288,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final String genMainWebUIComponent() {
         final String mainWebUiComponent = requireNonNull(getText("ua/com/fielden/platform/web/app/tg-app-template.js"))
-            .replace("@mainMenuActionImports", mainMenuActionImports().toStringWith("mainMenuActionImports"));
+            .replace("@%s".formatted(MAIN_MENU_ACTION_IMPORTS), mainMenuActionImports().toStringWith(MAIN_MENU_ACTION_IMPORTS));
         if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
             return mainWebUiComponent.replace("//@use-empty-console.log", "console.log = () => {};\n");
         } else {
@@ -395,6 +397,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public SequencedSet<String> deploymentResourcePaths() {
         return checksums.keySet().stream()
             .map(path -> switch (path) {
+                // Only two deployment resources are generated and have special binding paths.
+                // See `VulcanizingUtility.vulcanize` for full list.
+                // All generated paths start with `/app/...`, but only two of them is outside main vulcanised file.
                 case FILE_APP_INDEX_HTML -> AppIndexResource.BINDING_PATH;
                 case FILE_APP_LOGIN_INITIATE_RESET_HTML -> LoginInitiateResetResource.BINDING_PATH;
                 default -> path;

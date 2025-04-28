@@ -14,8 +14,8 @@ import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 
 /// In case if functional entity saves its master entity, it is necessary to bind saved instance to its respective entity master.
-/// Use this [IPostAction] in [IEntityActionBuilder2#postActionSuccess(IPostAction)] call.
-/// Or in [IEntityActionBuilder2#postActionError(IPostAction)] call.
+/// For this purpose, use this [IPostAction] in [IEntityActionBuilder2#postActionSuccess(IPostAction)] call.
+/// Or in [IEntityActionBuilder2#postActionError(IPostAction)] call with `erroneous == true` parameter.
 ///
 /// @author TG Team
 public class BindSavedPropertyPostAction implements IPostAction {

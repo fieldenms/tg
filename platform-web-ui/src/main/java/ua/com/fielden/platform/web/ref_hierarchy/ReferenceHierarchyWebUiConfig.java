@@ -10,6 +10,7 @@ import ua.com.fielden.platform.web.view.master.hierarchy.ReferenceHierarchyMaste
 
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.web.action.pre.PreActions.referenceHierarchy;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
@@ -42,7 +43,7 @@ public class ReferenceHierarchyWebUiConfig {
     public static EntityActionConfig mkAction() {
         return action(ReferenceHierarchy.class)
             .withContext(context().withSelectedEntities().build())
-            .preAction(new ReferenceHierarchyPreAction(false))
+            .preAction(referenceHierarchy(false))
             .icon("tg-reference-hierarchy:hierarchy")
             .shortDesc("Reference Hierarchy")
             .longDesc("Opens Reference Hierarchy")
@@ -58,7 +59,7 @@ public class ReferenceHierarchyWebUiConfig {
     public static EntityActionConfig mkPropAction() {
         return action(ReferenceHierarchy.class)
                 .withContext(context().withMasterEntity().build())
-                .preAction(new ReferenceHierarchyPreAction(false))
+                .preAction(referenceHierarchy(false))
                 .icon("tg-reference-hierarchy:hierarchy")
                 .shortDesc("Reference Hierarchy")
                 .longDesc("Opens Reference Hierarchy")
@@ -84,7 +85,7 @@ public class ReferenceHierarchyWebUiConfig {
         }).build();
         return action(ReferenceHierarchy.class)
                 .withContext(contextConfig)
-                .preAction(new ReferenceHierarchyPreAction(true))
+                .preAction(referenceHierarchy(true))
                 .icon("tg-reference-hierarchy:hierarchy")
                 .shortDesc("Reference Hierarchy")
                 .longDesc("Opens Reference Hierarchy")
@@ -102,7 +103,7 @@ public class ReferenceHierarchyWebUiConfig {
         }
         return action(ReferenceHierarchy.class)
             .withContext(ccConfig)
-            .preAction(new ReferenceHierarchyPreAction(false))
+            .preAction(referenceHierarchy(false))
             .icon("tg-reference-hierarchy:hierarchy")
             .shortDesc("Reference Hierarchy")
             .longDesc("Opens Reference Hierarchy")

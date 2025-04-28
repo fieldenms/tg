@@ -2,12 +2,9 @@ package ua.com.fielden.platform.web.minijs.exceptions;
 
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 
-/**
- * A runtime exception that indicates erroneous situation pertaining to JavaScript code.
- *
- * @author TG Team
- *
- */
+/// A runtime exception that indicates erroneous situation pertaining to JavaScript code.
+///
+/// @author TG Team
 public class JsCodeException extends AbstractPlatformRuntimeException {
 
     public JsCodeException(final String msg) {

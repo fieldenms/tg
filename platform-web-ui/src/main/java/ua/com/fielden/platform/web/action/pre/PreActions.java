@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.action.pre;
 
+import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyPreAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.ConfirmationButtons.*;
@@ -29,6 +30,13 @@ public interface PreActions {
     /// @param navigationType type description to inform user what type of entity is currently opened and is navigating
     static IPreAction entityNavigation(final String navigationType) {
         return new EntityNavigationPreAction(navigationType);
+    }
+
+    /// Creates [IPreAction] for Reference Hierarchy action.
+    ///
+    /// @param useMasterEntity indicates whether master entity should be used for processing
+    static IPreAction referenceHierarchy(final boolean useMasterEntity) {
+        return new ReferenceHierarchyPreAction(useMasterEntity);
     }
 
 }

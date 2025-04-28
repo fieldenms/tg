@@ -78,6 +78,8 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
+import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
+import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -1296,15 +1298,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
-    /**
-     * Generates DOM for alternative view actions. Also updates action's order, import path and action object.
-     *
-     * @param el
-     * @param importPaths
-     * @param functionalActionsObjects
-     * @param alternativeViewActionOrder
-     * @return
-     */
+    /// Generates DOM, JavaScript objects and import statements for alternative view actions.
+    /// Updates action's order number (`alternativeViewActionOrder`) during building.
+    ///
+    /// @param importPaths unnamed imports for alternative view actions DOM (usually only `tg-ui-action`)
+    /// @param actionImports named or default {@link JsImport}s from {@link IPreAction}s / {@link IPostAction}s
     private Optional<DomElement> alternativeViewActions(final InsertionPointBuilder el, final LinkedHashSet<String> importPaths, final SortedSet<JsImport> actionImports, final StringBuilder functionalActionsObjects, final AtomicInteger alternativeViewActionOrder) {
         if (!el.getActions().isEmpty()) {
             final DomElement domContainer = new DomContainer();

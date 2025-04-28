@@ -18,7 +18,7 @@ import static java.util.Set.of;
 public interface IComposableAction<ACTION extends IComposableAction> extends IAction {
     /// Warning for [#build()] method of a typical [JsCode] concatenation usage.\
     /// May be dangerous for [IComposableAction]s with defined [#importStatements()].
-    String WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS = "2.1.0. Don't use this for JsCode concatenation; use andThen(...) instead.";
+    String WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS = "3.0.0. Don't use this for JsCode concatenation; use andThen(...) instead.";
 
     /// A set of [JsImport]s, required for this JavaScript action.
     default Set<JsImport> importStatements() {

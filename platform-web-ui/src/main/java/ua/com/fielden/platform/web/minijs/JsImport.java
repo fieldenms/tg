@@ -10,12 +10,9 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
-/**
- * An abstraction for JavaScript imports covering named imports (including aliased) and default imports.
- *
- * @author TG Team
- *
- */
+/// An abstraction for JavaScript imports covering named imports (including aliased) and default imports.
+///
+/// @author TG Team
 public record JsImport(String name, String path, Optional<String> alias) implements Comparable<JsImport> {
     private static final String DEFAULT = "default"; // reserved JavaScript word for default imports
     private static final String ERR_JAVA_SCRIPT_IMPORT_NAME_IS_BLANK = "JavaScript import statement name [%s] is blank. Should either be [%s] or actual named export identifier from [%s] module.";
@@ -42,31 +39,23 @@ public record JsImport(String name, String path, Optional<String> alias) impleme
         }
     }
 
-    /**
-     * Creates a named {@link JsImport} importing concrete {@code name} from a {@code path} module.
-     */
+    /// Creates a named [JsImport] importing concrete `name` from a `path` module.
     public static JsImport namedImport(final String name, final String path) {
         return new JsImport(name, path, empty());
     }
 
-    /**
-     * Creates a named {@link JsImport} importing concrete {@code name} with an {@code alias} from a {@code path} module.
-     */
+    /// Creates a named [JsImport] importing concrete `name` with an `alias` from a `path` module.
     public static JsImport namedImport(final String name, final String path, final String alias) {
         return new JsImport(name, path, of(alias));
     }
 
-    /**
-     * Creates default {@link JsImport} with an {@code alias} from a {@code path} module.
-     */
+    /// Creates default [JsImport] with an `alias` from a `path` module.
     public static JsImport defaultImport(final String alias, final String path) {
         return new JsImport("default", path, of(alias));
     }
 
-    /**
-     * Converts import statement to single aliased form being able to analyse in a relation to others:<br>
-     * {@code import {exportedName|default as exportedName|myIdentifier} from 'path';}
-     */
+    /// Converts import statement to single aliased form being able to analyse in a relation to others:
+    /// `import{exportedName|default as exportedName|myIdentifier}from 'path';`
     public JsImport convertToAliasedForm() {
         return namedImport(name, path, alias().orElse(name()));
     }
