@@ -448,13 +448,22 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // also need increment refCount for a newly referenced activatable
             final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.load(prop.getType(), ((AbstractEntity<?>) value).getId(), UPGRADE);
             if (!areEqual(entity, persistedValue)) { // avoid counting self-references
-                // now let's check if the entity itself is an active activatable
-                // as this influences the decision to increment refCount for the newly referenced activatable
-                // because, if it's not then there is no reason to increment refCout for the referenced instance
-                // in other words, inactive entity does not count as an active referencer
+                // Now let's check if the entity itself is an active activatable instance.
+                // This influences the decision to increment `refCount` for the newly referenced activatable.
+                // Otherwise, there is no reason to increment `refCount` for the referenced instance.
+                // In other words, an inactive entity does not count as an active referencer.
                 if (entity.<Boolean>get(ACTIVE)) {
-                    persistedValue.setIgnoreEditableState(true);
-                    session.update(persistedValue.incRefCount());
+                    // If the referenced instance is not active (e.g. due to concurrent deactivation), then referencing is no longer relevant,
+                    // and an exception should be thrown.
+                    if (!persistedValue.isActive()) {
+                        final String persistedEntityTitle = getEntityTitleAndDesc(persistedEntity.getType()).getKey();
+                        final String persistedValueTitle = getEntityTitleAndDesc(persistedValue.getType()).getKey();
+                        throw new EntityCompanionException("%s [%s] has a reference to already inactive %s [%s].".formatted(persistedEntityTitle, persistedEntity, persistedValueTitle, persistedValue));
+                    }
+                    else {
+                        persistedValue.setIgnoreEditableState(true);
+                        session.update(persistedValue.incRefCount());
+                    }
                 }
             }
 
