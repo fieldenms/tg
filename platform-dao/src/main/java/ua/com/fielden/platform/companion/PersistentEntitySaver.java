@@ -658,18 +658,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     // the returned value could already be inactive due to some concurrent modification.
                     // therefore, it is critical to ensure that the property of the current entity being saved can still accept the obtained value if it is inactive.
                     if (!persistedEntity.isActive()) {
-                        prop.setValue(persistedEntity, true);
+                        final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
+                        final String persistedEntityTitle = getEntityTitleAndDesc(persistedEntity.getType()).getKey();
+                        throw new EntityCompanionException("%s [%s] has a reference to already inactive %s [%s].".formatted(entityTitle, entity, persistedEntityTitle, persistedEntity));
 
-                        final Result res = prop.getFirstFailure();
-                        if (res != null) {
-                            session.detach(persistedEntity);
-                            // the last invalid value would now be set to persistedEntity, which is proxied by Hibernate and cannot be serialised
-                            // this is why we need to reset the last invalid value to the re-fetched value, which is effectively being revalidated
-                            final IEntityDao co = coFinder.find(value.getType(), true /* uninstrumented */);
-                            final ActivatableAbstractEntity<?> refetchedValue = (ActivatableAbstractEntity<?>) co.findById(value.getId(), FetchModelReconstructor.reconstruct(value));
-                            prop.setLastInvalidValue(refetchedValue);
-                            throw res;
-                        }
                     }
                     persistedEntity.setIgnoreEditableState(true);
                     session.update(persistedEntity.incRefCount());

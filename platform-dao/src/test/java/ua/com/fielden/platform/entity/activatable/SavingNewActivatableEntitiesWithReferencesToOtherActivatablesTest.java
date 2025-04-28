@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -77,8 +78,8 @@ public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest e
         try {
             save(newCat1);
             fail("Should have failed due to unsuccessful revalidation of property parent.");
-        } catch (final Result ex) {
-            assertEquals("Tg Category [Cat1] exists, but is not active.", ex.getMessage());
+        } catch (final EntityCompanionException ex) {
+            assertEquals("Tg Category [NEW1] has a reference to already inactive Tg Category [Cat1].", ex.getMessage());
         }
     }
 

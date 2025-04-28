@@ -219,8 +219,8 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         try {
             save(sys3);
             fail("An attempt to save successfully associated, but alread inactive activatable should fail.");
-        } catch (final Result ex) {
-            assertEquals("Tg Category [Cat7] exists, but is not active.", ex.getMessage());
+        } catch (final EntityCompanionException ex) {
+            assertEquals("Tg System [Sys3] has a reference to already inactive Tg Category [Cat7].", ex.getMessage());
         }
     }
 
