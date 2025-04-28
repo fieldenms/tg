@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.activatable;
 import org.junit.Test;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgPerson;
@@ -210,18 +209,17 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
 
     @Test
     public void concurrent_referencing_by_new_entity_of_activatable_that_has_just_became_inactive_is_prevented() {
-        final TgCategory cat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
-        final TgSystem sys3 = new_(TgSystem.class, "Sys3").setActive(true).setFirstCategory(cat7);
+        final var cat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
+        assertTrue(cat7.isActive());
 
-        // let's make concurrent deactivation of just referenced cat7
-        save(cat7.setActive(false));
+        final var sys3 = new_(TgSystem.class, "Sys3").setActive(true).setFirstCategory(cat7);
 
-        try {
-            save(sys3);
-            fail("An attempt to save successfully associated, but alread inactive activatable should fail.");
-        } catch (final Result ex) {
-            assertEquals("Tg Category [Cat7] exists, but is not active.", ex.getMessage());
-        }
+        // Concurrent deactivation of Cat7 just referenced by Sys3.
+        save(co$(TgCategory.class).findByEntityAndFetch(fetchAll(TgCategory.class), cat7)
+                     .setActive(false));
+
+        assertThatThrownBy(() -> save(sys3))
+                .hasMessage("Tg System [Sys3] has a reference to already inactive Tg Category [Cat7].");
     }
 
     @Test
