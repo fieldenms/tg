@@ -1,18 +1,6 @@
 package ua.com.fielden.platform.entity.activatable;
 
-import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.assertj.core.api.Assertions.*;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
@@ -21,12 +9,15 @@ import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase {
 
@@ -218,7 +209,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
 
 
     @Test
-    public void concurrent_referencing_of_activatable_that_has_just_became_inactive_is_prevented() {
+    public void concurrent_referencing_by_new_entity_of_activatable_that_has_just_became_inactive_is_prevented() {
         final TgCategory cat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
         final TgSystem sys3 = new_(TgSystem.class, "Sys3").setActive(true).setFirstCategory(cat7);
 
@@ -231,6 +222,22 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         } catch (final Result ex) {
             assertEquals("Tg Category [Cat7] exists, but is not active.", ex.getMessage());
         }
+    }
+
+    @Test
+    public void concurrent_referencing_by_persisted_entity_of_activatable_that_has_just_became_inactive_is_prevented() {
+        final var cat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
+        assertTrue(cat7.isActive());
+
+        final var sys3 = save(new_(TgSystem.class, "Sys3").setActive(true))
+                .setFirstCategory(cat7);
+
+        save(co$(TgCategory.class)
+                     .findByEntityAndFetch(fetchAll(TgCategory.class), cat7)
+                     .setActive(false));
+
+        assertThatThrownBy(() -> save(sys3))
+                .hasMessage("Tg System [Sys3] has a reference to already inactive Tg Category [Cat7].");
     }
 
     @Test
