@@ -44,6 +44,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
+import javax.annotation.Nullable;
 import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -402,16 +403,15 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                   entityFetchOption.map(fetch -> findById.find(persistedEntity.getId(), fetch, fillModel.get())).orElse(persistedEntity));
     }
 
-    /**
-     * Handles dirty activatable property in a special way that manages refCount of its current and previous values, but only if the entity being saving is an activatable that does
-     * not fall into the category of those with type that governs deactivatable dependency of the entity being saved.
-     *
-     * @param entity
-     * @param persistedEntity
-     * @param prop
-     * @param value
-     * @param session
-     */
+    /// Handles dirty activatable property in a special way that manages refCount of its current and previous values,
+    /// but only if the entity being saving is an activatable that does not fall into the category of those with type
+    /// that governs deactivatable dependency of the entity being saved.
+    ///
+    /// @param entity  the activatable entity being saved
+    /// @param persistedEntity  persisted version (Hibernate proxy) of the entity being saved
+    /// @param prop  the dirty property whose type is an activatable entity
+    /// @param value  the new value assigned to the property in `entity`
+    /// @param session  the current session
     private void handleDirtyActivatableProperty(final T entity, final T persistedEntity, final MetaProperty<?> prop, final Object value, final Session session) {
         final String propName = prop.getName();
         // dirty activatable handling only needs to be performed if the current and persisted values are different
@@ -420,31 +420,17 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         if (equalsEx(value, persistedEntity.get(propName))) {
             return;
         }
-        // if value is null then an activatable entity has been dereferenced and its refCount needs to be decremented
-        // but only if the dereferenced value is an active activatable and the entity being saved is not being made active -- thus previously it was not counted as a reference
+        // If the new value is `null`, an activatable entity has been dereferenced and its `refCount` may need to be decremented.
         if (value == null) {
-            final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
-            final boolean beingActivated = activeProp.isDirty() && activeProp.getValue();
-            // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
-            // original property value should not be null, otherwise property would not become dirty by assigning null
-            final ActivatableAbstractEntity<?> origValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getOriginalValue();
-            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.load(prop.getType(), origValue.getId(), UPGRADE);
-            // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
-            if (!beingActivated && persistedValue.isActive() && !areEqual(entity, persistedValue)) { // avoid counting self-references
-                persistedValue.setIgnoreEditableState(true);
-                session.update(persistedValue.decRefCount());
-            }
-
-            // assign null as the property value to actually dereference activatable
+            // Original property value should not be null, otherwise property would not become dirty by assigning null.
+            decRefCount(entity, persistedEntity, prop, (ActivatableAbstractEntity<?>) prop.getOriginalValue(), session);
+            // Assign null as the property value to actually dereference the activatable.
             persistedEntity.set(propName, null);
-        } else { // otherwise, there could be either referencing (i.e. before property was null) or a reference change (i.e. from one value to some other)
-            // need to process previous property value
-            final AbstractEntity<?> origValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getOriginalValue();
-            if (origValue != null && !areEqual(entity, origValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
-                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.load(prop.getType(), origValue.getId(), UPGRADE);
-                persistedValue.setIgnoreEditableState(true);
-                session.update(persistedValue.decRefCount());
-            }
+        }
+        // Otherwise, `entity` began referencing `value`, and may have dereferenced the previous value if it was not `null`.
+        else {
+            decRefCount(entity, persistedEntity, prop, (ActivatableAbstractEntity<?>) prop.getOriginalValue(), session);
+
             // also need increment refCount for a newly referenced activatable
             final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.load(prop.getType(), ((AbstractEntity<?>) value).getId(), UPGRADE);
             if (!areEqual(entity, persistedValue)) { // avoid counting self-references
@@ -469,6 +455,37 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
             // assign updated activatable as the property value
             persistedEntity.set(propName, persistedValue);
+        }
+    }
+
+    /// Decrements the [ActivatableAbstractEntity#refCount] of an activatable entity assigned to a property of another activatable entity.
+    ///
+    /// `refCount` is decremented if and only if:
+    /// * `entity` was active (was made inactive) or remains active (active status was not changed);
+    /// * and `persistedEntity` is active (otherwise, a concurrent update deactivated it and took care of decrementing `refCount`);
+    /// * and the persisted version of `value` is active;
+    /// * and `value` is not equal to the entity being saved (is not a self-reference).
+    ///
+    /// @param entity  the referencing entity, activatable
+    /// @param persistedEntity  the persisted version of `entity`
+    /// @param mp  the property representing the activatable entity whose `refCount` should be decremented
+    /// @param value  the value of the property (not necessarily the current value, may be the original value)
+    /// @param session  the current session
+    private static <T extends AbstractEntity<?>> void decRefCount(
+            final T entity,
+            final T persistedEntity,
+            final MetaProperty<?> mp,
+            final @Nullable ActivatableAbstractEntity<?> value,
+            final Session session)
+    {
+        if (value != null) {
+            final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
+            final boolean wasActive = activeProp.isDirty() ? activeProp.getOriginalValue() : activeProp.getValue();
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.load(mp.getType(), value.getId(), UPGRADE);
+            if (wasActive && persistedEntity.<Boolean>get(ACTIVE) && persistedValue.isActive() && !areEqual(entity, persistedValue)) {
+                persistedValue.setIgnoreEditableState(true);
+                session.update(persistedValue.decRefCount());
+            }
         }
     }
 
