@@ -431,16 +431,16 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         else {
             decRefCount(entity, persistedEntity, prop, (ActivatableAbstractEntity<?>) prop.getOriginalValue(), session);
 
-            // also need increment refCount for a newly referenced activatable
+            // The newly referenced activatable `value` needs to have its `refCount` incremented if:
+            // * `entity` is active;
+            // * and `value` is not a self-reference to `entity`;
+            // * and, if `entity` was concurrently modified, then its persisted version is still active.
+            //   If `entity` is concurrently deactivated, then it no longer affects `refCount` of `value`;
+            // * and the persisted version of `value` is active.
+            //   If `value` is concurrently deactivated, then we are in error -- active `entity` cannot reference inactive `value`.
             final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.load(prop.getType(), ((AbstractEntity<?>) value).getId(), UPGRADE);
-            if (!areEqual(entity, persistedValue)) { // avoid counting self-references
-                // Now let's check if the entity itself is an active activatable instance.
-                // This influences the decision to increment `refCount` for the newly referenced activatable.
-                // Otherwise, there is no reason to increment `refCount` for the referenced instance.
-                // In other words, an inactive entity does not count as an active referencer.
-                if (entity.<Boolean>get(ACTIVE)) {
-                    // If the referenced instance is not active (e.g. due to concurrent deactivation), then referencing is no longer relevant,
-                    // and an exception should be thrown.
+            if (!areEqual(entity, persistedValue)) {
+                if (entity.<Boolean>get(ACTIVE) && (persistedEntity.getVersion() <= entity.getVersion() || persistedEntity.<Boolean>get(ACTIVE))) {
                     if (!persistedValue.isActive()) {
                         final String persistedEntityTitle = getEntityTitleAndDesc(persistedEntity.getType()).getKey();
                         final String persistedValueTitle = getEntityTitleAndDesc(persistedValue.getType()).getKey();
