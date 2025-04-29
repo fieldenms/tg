@@ -347,6 +347,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             throw new EntityCompanionException(format("%s %s [%s] could not be saved.", ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES, getEntityTitleAndDesc(entityType).getKey(), entity));
         }
 
+        // From this point on, until `session.flush()`, if the persisted version of `entity` is modified
+        // (i.e., `persistedEntity.version` is no longer the actual persisted version),
+        // then `session.flush()` will fail with StaleObjectException.
+        // This may happen if and only if there is a concurrent update to the entity during this interval.
+
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
@@ -675,6 +680,18 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 if (prop.getValue() != null) {
                     // need to update refCount for the activatable entity
                     final ActivatableAbstractEntity<?> value = (ActivatableAbstractEntity<?>) prop.getValue();
+
+                    // `UPGRADE` is not strictly necessary to ensure the safety of concurrent updates to `refCount`.
+                    // With `UPGRADE`, `session.load()` will block if there is another transaction (in another thread) that runs this same code until it reaches `session.clear()`.
+                    // This ensures that `session.load()` always returns the latest persisted state.
+                    // Without `UPGRADE`, two transactions (in two threads) can obtain the result of `session.load` concurrently, as it will not block.
+                    // Nevertheless, in such case only the first thread that calls `session.flush()` will successfully modify the persistent state,
+                    // while the other one will fail with StaleObjectException.
+                    // To sum up:
+                    // * With `UPGRADE`: safe concurrent updates, blocking.
+                    // * Without `UPGRADE`: safe concurrent updates, non-blocking, but may throw an exception.
+                    // We should use `UPGRADE` if users would rather wait a little instead of seeing an error.
+                    // The wait time should be insignificant, and, moreover, concurrent modifications are rare in general.
                     final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) session.load(value.getType(), value.getId(), UPGRADE);
                     // the returned value could already be inactive due to some concurrent modification.
                     // therefore, it is critical to ensure that the property of the current entity being saved can still accept the obtained value if it is inactive.
@@ -683,6 +700,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
                         final Result res = prop.getFirstFailure();
                         if (res != null) {
+                            // TODO: Why is this necessary? Introduced in b9647bdeeee6ec3064ef8d3e0d4e4575615c0fd5
+                            // It has not been observed to have any effect here.
                             session.detach(persistedEntity);
                             // the last invalid value would now be set to persistedEntity, which is proxied by Hibernate and cannot be serialised
                             // this is why we need to reset the last invalid value to the re-fetched value, which is effectively being revalidated
