@@ -350,6 +350,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
+        // Need to record the persisted active status before `persistedEntity` is modified.
+        final @Nullable Boolean persistedIsActive = entity instanceof ActivatableAbstractEntity ? persistedEntity.get(ACTIVE) : null;
+
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
         // the easiest way to do that is to load entity by id using the current session
@@ -371,7 +374,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // handle ref counts of non-dirty activatable properties
         if (entity instanceof ActivatableAbstractEntity) {
-            handleNonDirtyActivatableIfNecessary(entity, persistedEntity, session);
+            handleNonDirtyActivatableIfNecessary(entity, persistedEntity, Objects.requireNonNull(persistedIsActive), session);
         }
 
         // perform meta-data assignment to capture the information about this modification
@@ -489,18 +492,19 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
     }
 
-    /**
-     * In case an entity is activatable and has just been activated or deactivated, it is also necessary to make sure that all previously referenced activatables, which did not fall
-     * into the dirty category and are active, get their refCount increment or decremented accordingly.
-     *
-     * @param entity
-     * @param persistedEntity
-     * @param session
-     */
-    private void handleNonDirtyActivatableIfNecessary(final T entity, final T persistedEntity, final Session session) {
+    /// Processes `refCount`s of activatable entities that are among non-dirty properties of `entity`.
+    ///
+    /// Under ordinary conditions, where no concurrent modifications take place:
+    /// * If `entity` was deactivated, `refCount`s are decremented and [deactivatable dependencies][DeactivatableDependencies] are deactivated.
+    /// * If `entity` was activated, `refCount`s are incremented.
+    ///
+    /// If `entity` was concurrently modified, then these actions will be taken if and only if the persisted active status
+    /// is different from the active status in `entity`.
+    /// Otherwise, if persisted active status matches that of `entity`, then no action needs to be taken as all that work
+    /// would have already been done during the concurrent modification.
+    private void handleNonDirtyActivatableIfNecessary(final T entity, final T persistedEntity, final boolean persistedIsActive, final Session session) {
         final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
-        // was activatable entity just activated?
-        if (activeProp.isDirty()) {
+        if (activeProp.isDirty() && !entity.get(ACTIVE).equals(persistedIsActive)) {
             // let's collect activatable not dirty properties from entity to check them for activity and also to increment their refCount
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(Field::getName).collect(Collectors.toSet());
             for (final T2<String, Class<ActivatableAbstractEntity<?>>> propNameAndType : collectActivatableNotDirtyProperties(entity, keyMembers)) {
@@ -531,7 +535,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
 
             // separately need to perform deactivation of deactivatable dependencies in case where the entity being saved is deactivated
-            if (!activeProp.getValue()) {
+            if (!activeProp.getValue() && !entity.get(ACTIVE).equals(persistedIsActive)) {
                 final List<? extends ActivatableAbstractEntity<?>> deactivatables = findActiveDeactivatableDependencies((ActivatableAbstractEntity<?>) entity, coFinder);
                 for (final ActivatableAbstractEntity<?> deactivatable : deactivatables) {
                     deactivatable.set(ACTIVE, false);
