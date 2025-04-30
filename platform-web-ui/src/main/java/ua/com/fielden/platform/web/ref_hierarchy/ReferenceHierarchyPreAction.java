@@ -17,30 +17,14 @@ public record ReferenceHierarchyPreAction(boolean useMasterEntity) implements IP
 
     @Override
     public Set<JsImport> importStatements() {
-        return of(namedImport("TgReflector", "/app/tg-reflector"));
+        return of(namedImport("referenceHierarchy", "centre/actions/tg-reference-hierarchy"));
     }
 
     @Deprecated(since = WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS)
     @Override
     public JsCode build() {
         return jsCode("""
-            const reflector = new TgReflector();
-            let entity = null;
-            if (action.requireSelectedEntities === 'ONE') {
-                entity = action.currentEntity();
-            } else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {
-                entity = self.$.egi.getSelectedEntities()[0];
-            } else if (action.requireMasterEntity === "true") {
-                if (%s) {
-                    entity = action.parentElement.entity['@@origin'];
-                } else {
-                    const value = reflector.tg_getFullValue(action.parentElement.entity, action.parentElement.propertyName);
-                    entity = reflector.isEntity(value) ? value : action.parentElement.entity['@@origin'];
-                }
-            }
-            if (entity) {
-                action.shortDesc = reflector.getType(entity.constructor.prototype.type.call(entity).notEnhancedFullClassName()).entityTitle();
-            }
+            referenceHierarchy(action, self, %s);
         """.formatted(
             useMasterEntity
         ));
