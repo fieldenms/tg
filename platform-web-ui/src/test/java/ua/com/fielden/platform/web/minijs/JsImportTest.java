@@ -31,9 +31,9 @@ public class JsImportTest {
 
     @Test
     public void default_import_with_alias_can_be_created() {
-        final var jsImport = defaultImport("antlr4", "/resources/polymer/lib/antlr-lib.js");
+        final var jsImport = defaultImport("antlr4", "polymer/lib/antlr-lib");
         assertEquals("default", jsImport.name());
-        assertEquals("/resources/polymer/lib/antlr-lib.js", jsImport.path());
+        assertEquals("polymer/lib/antlr-lib", jsImport.path());
         assertEquals(of("antlr4"), jsImport.alias());
     }
 
@@ -57,8 +57,8 @@ public class JsImportTest {
 
     @Test
     public void default_import_without_alias_can_not_be_created() {
-        // defaultImport("antlr4", "/resources/polymer/lib/antlr-lib.js") should be used instead.
-        final var ex = assertThrows(JsCodeException.class, () -> namedImport("default", "/resources/polymer/lib/antlr-lib.js"));
+        // defaultImport("antlr4", "polymer/lib/antlr-lib") should be used instead.
+        final var ex = assertThrows(JsCodeException.class, () -> namedImport("default", "polymer/lib/antlr-lib"));
         assertEquals(ERR_JAVA_SCRIPT_DEFAULT_IMPORT_ALIAS_IS_NOT_PROVIDED, ex.getMessage());
     }
 

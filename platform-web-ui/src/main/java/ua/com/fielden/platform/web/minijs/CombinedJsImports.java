@@ -2,19 +2,17 @@ package ua.com.fielden.platform.web.minijs;
 
 import ua.com.fielden.platform.web.minijs.exceptions.JsCodeException;
 
-import java.util.Collection;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import static java.lang.String.join;
-import static java.util.stream.Collectors.toSet;
 import static org.apache.tika.utils.StringUtils.isBlank;
 
 /// A [SortedSet] of [JsImport]s with name conflict validation and ability to convert to code [String]s.
 ///
 /// @author TG Team
 public class CombinedJsImports extends TreeSet<JsImport> {
-    private static final String ERR_ACTION_IMPORT_NAMES_ARE_IN_CONFLICT = "Action import names are in conflict.\n%s";
+    static final String ERR_ACTION_IMPORT_NAMES_ARE_IN_CONFLICT = "Action import names are in conflict.\n%s";
 
     /// Overridden to validate [CombinedJsImports] on naming conflicts.
     ///
@@ -22,8 +20,8 @@ public class CombinedJsImports extends TreeSet<JsImport> {
     /// To validate on naming conflicts, all `jsImports` should be converted to aliased form and only then added to set.
     /// Sorting will be done using [JsImport#ALIASED_FORM_COMPARATOR].
     @Override
-    public boolean addAll(final Collection<? extends JsImport> jsImports) {
-        final var changed = super.addAll(jsImports.stream().map(JsImport::convertToAliasedForm).collect(toSet()));
+    public boolean add(final JsImport jsImport) {
+        final var changed = super.add(jsImport.convertToAliasedForm());
         if (stream().map(JsImport::alias).distinct().toList().size() < size()) {
             throw new JsCodeException(ERR_ACTION_IMPORT_NAMES_ARE_IN_CONFLICT.formatted(this));
         }
