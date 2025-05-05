@@ -657,6 +657,46 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         }
     }
 
+    @Test
+    public void when_a_new_entity_A_begins_referencing_entity_B_refCount_of_B_is_incremented_for_each_reference_from_A() {
+        final var catA = save(new_(TgCategory.class, "A").setActive(true));
+        final var sysA = save(new_(TgSystem.class, "A").setActive(true).setCategory(catA).setFirstCategory(catA));
+        final var coCategory = co$(TgCategory.class);
+        assertEquals(Integer.valueOf(2), coCategory.findByKey("A").getRefCount());
+    }
+
+    @Test
+    public void when_a_modified_entity_A_begins_referencing_entity_B_refCount_of_B_is_incremented_for_each_reference_from_A() {
+        final var catA = save(new_(TgCategory.class, "A").setActive(true));
+        final var sysA = save(save(new_(TgSystem.class, "A").setActive(true))
+                                      .setCategory(catA).setFirstCategory(catA));
+        final var coCategory = co$(TgCategory.class);
+        assertEquals(Integer.valueOf(2), coCategory.findByKey("A").getRefCount());
+    }
+
+    @Test
+    public void when_entity_A_is_activated_refCount_of_B_is_incremented_for_each_reference_from_A() {
+        final var coCategory = co$(TgCategory.class);
+
+        final var catA = save(new_(TgCategory.class, "A").setActive(true));
+        final var sysA = save(new_(TgSystem.class, "A").setActive(false).setCategory(catA).setFirstCategory(catA));
+        assertEquals(Integer.valueOf(0), coCategory.findByKey("A").getRefCount());
+        save(sysA.setActive(true));
+        assertEquals(Integer.valueOf(2), coCategory.findByKey("A").getRefCount());
+    }
+
+    @Test
+    public void when_entity_A_is_deactivated_refCount_of_B_is_decremented_for_each_reference_from_A() {
+        final var coCategory = co$(TgCategory.class);
+
+        final var catA = save(new_(TgCategory.class, "A").setActive(true));
+        save(new_(TgCategory.class, "X").setActive(true).setParent(catA));
+        final var sysA = save(new_(TgSystem.class, "A").setActive(true).setCategory(catA).setFirstCategory(catA));
+        assertEquals(Integer.valueOf(3), coCategory.findByKey("A").getRefCount());
+        save(sysA.setActive(false));
+        assertEquals(Integer.valueOf(1), coCategory.findByKey("A").getRefCount());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
