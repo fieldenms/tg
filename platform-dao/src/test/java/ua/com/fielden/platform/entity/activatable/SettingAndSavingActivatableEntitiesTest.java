@@ -19,6 +19,10 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
 public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase {
 
@@ -56,9 +60,10 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
             co$(TgCategory.class).save(cat4);
             fail("Should have failed");
         } catch (final EntityCompanionException ex) {
+            final var categoryTitle = TitlesDescsGetter.getEntityTitleAndDesc(TgCategory.class).getKey();
             final TgCategory cat4Full = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
-            assertEquals(format("Tg Category [%s] has a reference to already inactive Tg Category [%s].", cat4Full, cat4Full.getParent()),
-                    ex.getMessage());
+            assertEquals(format(ERR_INACTIVE_REFERENCES, getTitleAndDesc("parent", TgCategory.class).getKey(), categoryTitle, cat4Full, categoryTitle, cat4Full.getParent()),
+                         ex.getMessage());
         }
     }
 
@@ -285,7 +290,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
                      .setActive(false));
 
         assertThatThrownBy(() -> save(sys3))
-                .hasMessage("Tg System [Sys3] has a reference to already inactive Tg Category [Cat7].");
+                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(TgCategory.class).getKey(), cat7));
     }
 
     @Test

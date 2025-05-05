@@ -32,6 +32,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.FillModelBuilder;
 import ua.com.fielden.platform.entity.query.model.IFillModel;
+import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -67,11 +68,15 @@ import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.model.IFillModel.emptyFillModel;
+import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
@@ -450,10 +455,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             if (!areEqual(entity, persistedValue)) {
                 if (entity.<Boolean>get(ACTIVE) && (persistedEntity.getVersion() <= entity.getVersion() || persistedEntity.<Boolean>get(ACTIVE))) {
                     if (!persistedValue.isActive()) {
-                        final String persistedEntityTitle = getEntityTitleAndDesc(persistedEntity.getType()).getKey();
-                        final String persistedValueTitle = getEntityTitleAndDesc(persistedValue.getType()).getKey();
                         session.detach(persistedValue);
-                        throw new EntityCompanionException("%s [%s] has a reference to already inactive %s [%s].".formatted(persistedEntityTitle, persistedEntity, persistedValueTitle, persistedValue));
+                        throw mkInactiveReferenceFailure(prop, persistedValue);
                     }
                     else {
                         persistedValue.setIgnoreEditableState(true);
@@ -517,9 +520,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // let's collect activatable not dirty properties from entity to check them for activity and also to increment their refCount
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(Field::getName).collect(Collectors.toSet());
             for (final T2<String, Class<ActivatableAbstractEntity<?>>> propNameAndType : collectActivatableNotDirtyProperties(entity, keyMembers)) {
+                final var propName = propNameAndType._1;
                 // get value from a persisted version of entity, which is loaded by Hibernate
                 // if a corresponding property is proxied due to an insufficient fetch model, its value is retrieved lazily by Hibernate
-                final AbstractEntity<?> value = persistedEntity.get(propNameAndType._1);
+                final AbstractEntity<?> value = persistedEntity.get(propName);
                 if (value != null) { // if there is actually some value
                     // load activatable value
                     final ActivatableAbstractEntity<?> persistedValue = session.load(propNameAndType._2, value.getId(), UPGRADE);
@@ -530,10 +534,12 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     if (!areEqual(entity, persistedValue)) {
                         if (activeProp.getValue()) { // is entity being activated?
                             if (!persistedValue.isActive()) { // if activatable is not active then this is an error
-                                final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
-                                final String persistedValueTitle = getEntityTitleAndDesc(propNameAndType._2).getKey();
                                 session.detach(persistedValue);
-                                throw new EntityCompanionException(format("%s [%s] has a reference to already inactive %s [%s].", entityTitle, entity, persistedValueTitle, persistedValue));
+                                // This property may be proxied, thus we cannot use `mkInactiveReferenceFailure`.
+                                final var entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
+                                final var propTitle = getTitleAndDesc(propName, entity.getType()).getKey();
+                                final var valueEntityTitle = getEntityTitleAndDesc(value.getType()).getKey();
+                                throw new EntityCompanionException(format(ERR_INACTIVE_REFERENCES, propTitle, entityTitle, entity, valueEntityTitle, persistedValue));
                             } else { // otherwise, increment refCount
                                 session.update(persistedValue.incRefCount());
                             }
@@ -703,24 +709,12 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     // * Without `UPGRADE`: safe concurrent updates, non-blocking, but may throw an exception.
                     // We should use `UPGRADE` if users would rather wait a little instead of seeing an error.
                     // The wait time should be insignificant, and, moreover, concurrent modifications are rare in general.
-                    final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) session.load(value.getType(), value.getId(), UPGRADE);
-                    // the returned value could already be inactive due to some concurrent modification.
-                    // therefore, it is critical to ensure that the property of the current entity being saved can still accept the obtained value if it is inactive.
+                    final ActivatableAbstractEntity<?> persistedEntity = (ActivatableAbstractEntity<?>) session.load(value.getType(), value.getId(), UPGRADE);
+                    // If the referenced instance is not active (e.g. due to concurrent deactivation), then referencing is no longer relevant,
+                    // and we are in error.
                     if (!persistedEntity.isActive()) {
-                        prop.setValue(persistedEntity, true);
-
-                        final Result res = prop.getFirstFailure();
-                        if (res != null) {
-                            // TODO: Why is this necessary? Introduced in b9647bdeeee6ec3064ef8d3e0d4e4575615c0fd5
-                            // It has not been observed to have any effect here.
-                            session.detach(persistedEntity);
-                            // the last invalid value would now be set to persistedEntity, which is proxied by Hibernate and cannot be serialised
-                            // this is why we need to reset the last invalid value to the re-fetched value, which is effectively being revalidated
-                            final IEntityDao co = coFinder.find(value.getType(), true /* uninstrumented */);
-                            final ActivatableAbstractEntity<?> refetchedValue = (ActivatableAbstractEntity<?>) co.findById(value.getId(), FetchModelReconstructor.reconstruct(value));
-                            prop.setLastInvalidValue(refetchedValue);
-                            throw res;
-                        }
+                        session.detach(persistedEntity);
+                        throw mkInactiveReferenceFailure(prop, persistedEntity);
                     }
                     persistedEntity.setIgnoreEditableState(true);
                     session.update(persistedEntity.incRefCount());
@@ -745,6 +739,23 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         
         return t2(newEntityId,
                   entityFetchOption.map(fetch -> findById.find(newEntityId, fetch, fillModel.get())).orElse(entity));
+    }
+
+    /// Creates a failed validation result based on [EntityExistsValidator#ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE]
+    /// with `referencedEntity` in the role of the inactive entity.
+    /// This result is then associated with `mp` via [MetaProperty#setEntityExistsValidationResult(Result)], which fits into the standard validation lifecycle
+    /// (if this result becomes outdated, it will be correctly replaced during revalidation).
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private Result mkInactiveReferenceFailure(final MetaProperty mp, final ActivatableAbstractEntity<?> referencedEntity) {
+        final var result = failure(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(referencedEntity.getType()).getKey(), referencedEntity));
+        mp.setEntityExistsValidationResult(result);
+        // `persistedEntity` may be proxied by Hibernate and cannot be serialised, hence cannot be set as the last invalid value.
+        // For this reason we use a refetched instance.
+        // NOTE: Sometimes `persistedEntity` itself is not proxied, but its contents are (values of entity-typed properties).
+        final IEntityDao co = coFinder.find(referencedEntity.getType(), true /* uninstrumented */);
+        final var refetched = co.findById(referencedEntity.getId(), FetchModelReconstructor.reconstruct(referencedEntity));
+        mp.setLastInvalidValue(refetched);
+        return result;
     }
 
     /**
