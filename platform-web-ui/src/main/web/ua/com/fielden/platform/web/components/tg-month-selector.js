@@ -5,7 +5,6 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/app/tg-app-config.js';
 
 import {_momentTz} from '/resources/reflection/tg-date-utils.js'
-import {DOUBLE_TAP_INTERVAL} from '/resources/components/tg-double-tap-handler-behavior.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -87,7 +86,7 @@ const template = html`
             <template is="dom-repeat" items="[[weeks]]" as="week">
                 <div class="layout horizontal center-justified">
                     <template is="dom-repeat" items="[[week]]" as="day">
-                        <div on-tap="_selectDay" class$="[[_calcDayClass(day, month, year, selectedDay, selectedMonth, selectedYear)]]"><span>[[_absolute(day)]]</span>
+                        <div on-tap="_selectDay" on-dblclick="_acceptDate" class$="[[_calcDayClass(day, month, year, selectedDay, selectedMonth, selectedYear)]]"><span>[[_absolute(day)]]</span>
                         </div>
                     </template>
                 </div>
@@ -243,19 +242,12 @@ const template = html`
          * Selects the date.
          */
         _selectDay: function (event, detail, el) {
-            var yearMonthDay = { year: this.year, month: this.month, day: 1 };
+            const yearMonthDay = { year: this.year, month: this.month, day: 1 };
             this.selectedDate = _momentTz(yearMonthDay, this.timeZone).add(event.model.day.monthIncrementor, 'M').date(Math.abs(event.model.day.day)).valueOf();
-            if (!this._daySelectTap) {
-                this._daySelectTap = -1;
-            }
-            const now = new Date().getTime();
-            const interval = now - this._daySelectTap;
-            
-            if (interval < DOUBLE_TAP_INTERVAL) {
-                this.fire("tg-accept-date");
-            }
+        },
 
-            this._daySelectTap = new Date().getTime();
+        _acceptDate: function (e) {
+            this.fire("tg-accept-date");
         },
 
         /**
