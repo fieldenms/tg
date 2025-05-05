@@ -212,11 +212,11 @@ const template = html`<iron-iconset-svg name='tg-icons' size='24'>
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number9" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
     <text x="7" y="19" style="font-size:13pt;">9</text>
-</svg><svg id="playlist-remove" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 10H2v2h9z" style="stroke-width:.86602539"/><path d="M14 6H2v2h12zM18.414 15l2.829-2.828-1.415-1.415L17 13.586l-2.828-2.829-1.415 1.415L15.586 15l-2.829 2.828 1.415 1.415L17 16.414l2.828 2.829 1.415-1.415z"/><path d="M2 16h9v-2H2Z" style="stroke-width:1.06066012"/></svg>
+</svg><svg id="pin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2Z"/></svg><svg id="playlist-remove" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 10H2v2h9z" style="stroke-width:.86602539"/><path d="M14 6H2v2h12zM18.414 15l2.829-2.828-1.415-1.415L17 13.586l-2.828-2.829-1.415 1.415L15.586 15l-2.829 2.828 1.415 1.415L17 16.414l2.828 2.829 1.415-1.415z"/><path d="M2 16h9v-2H2Z" style="stroke-width:1.06066012"/></svg>
 <path id="resize-bottom-right" d="M22,22H20V20H22V22M22,18H20V16H22V18M18,22H16V20H18V22M18,18H16V16H18V18M14,22H12V20H14V22M22,14H20V12H22V14Z" /> <!-- resize-bottom-right from https://materialdesignicons.com/ -->
 
 <path id="share" d="M21,12L14,5V9C7,10 4,15 3,20C5.5,16.5 9,14.9 14,14.9V19L21,12Z" /> <!-- share from https://materialdesignicons.com/ -->
-<svg id="week" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="24" height="24" viewBox="0 0 24 24"><path d="M21 4H3C2.45 4 2 4.45 2 5V19C2 19.55 2.45 20 3 20H21C21.55 20 22 19.55 22 19V5C22 4.45 21.55 4 21 4M8 18H4V6H8V18M14 18H10V6H14V18M20 18H16V6H20V18Z" /></svg></defs> 
+<svg id="unpin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 5.27 3.28 4 20 20.72 18.73 22l-5.93-5.93V22h-1.6v-6H6v-2l2-2v-.73l-6-6M16 12l2 2v2h-.18L8 6.18V4H7V2h10v2h-1v8Z"/></svg><svg id="week" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="24" height="24" viewBox="0 0 24 24"><path d="M21 4H3C2.45 4 2 4.45 2 5V19C2 19.55 2.45 20 3 20H21C21.55 20 22 19.55 22 19V5C22 4.45 21.55 4 21 4M8 18H4V6H8V18M14 18H10V6H14V18M20 18H16V6H20V18Z" /></svg></defs> 
  </svg> 
  </iron-iconset-svg>`;
 document.head.appendChild(template.content);
