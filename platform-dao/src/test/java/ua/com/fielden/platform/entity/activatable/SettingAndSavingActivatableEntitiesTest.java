@@ -125,7 +125,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void activating_entity_that_gets_its_active_activatable_property_dereferenced_decrements_ref_counts_of_the_dereferenced_entity() {
+    public void activating_entity_A_and_dereferencing_entity_B_does_not_affect_refCount_of_B() {
         final TgCategory cat3 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat3");
         final TgCategory oldParent = cat3.getParent();
         assertEquals(Integer.valueOf(0), cat3.getRefCount());
@@ -141,12 +141,14 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivating_entity_leads_to_decrementing_of_the_referenced_activatables() {
-        final TgCategory cat2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat2");
+    public void deactivation_of_an_entity_decrements_refCount_of_referenced_active_entities() {
+        final var cat2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat2");
         assertTrue(cat2.isActive());
-        final TgCategory oldParent = cat2.getParent();
+        final var oldParent = cat2.getParent();
+        assertTrue(oldParent.isActive());
+        assertThat(oldParent.getRefCount()).isPositive();
 
-        final TgCategory savedCat2 = save(cat2.setActive(false));
+        final var savedCat2 = save(cat2.setActive(false));
         assertFalse(savedCat2.isActive());
         assertEquals(oldParent.getRefCount() - 1, savedCat2.getParent().getRefCount() + 0);
     }
@@ -243,7 +245,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivation_with_simultaneous_derefernesing_of_active_actiavatables_is_supported() {
+    public void deactivation_with_simultaneous_dereferencing_of_active_activatables_decrements_refCount_of_dereferenced_active_activatables() {
         final TgCategory cat2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat2");
         final TgCategory cat1 = cat2.getParent();
         final TgCategory savedCat2 = save(cat2.setParent(null).setActive(false));
