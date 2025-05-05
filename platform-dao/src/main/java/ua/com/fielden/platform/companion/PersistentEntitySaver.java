@@ -452,6 +452,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     if (!persistedValue.isActive()) {
                         final String persistedEntityTitle = getEntityTitleAndDesc(persistedEntity.getType()).getKey();
                         final String persistedValueTitle = getEntityTitleAndDesc(persistedValue.getType()).getKey();
+                        session.detach(persistedValue);
                         throw new EntityCompanionException("%s [%s] has a reference to already inactive %s [%s].".formatted(persistedEntityTitle, persistedEntity, persistedValueTitle, persistedValue));
                     }
                     else {
@@ -494,6 +495,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 persistedValue.setIgnoreEditableState(true);
                 session.update(persistedValue.decRefCount());
             }
+            else {
+                session.detach(persistedValue);
+            }
         }
     }
 
@@ -528,6 +532,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                             if (!persistedValue.isActive()) { // if activatable is not active then this is an error
                                 final String entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
                                 final String persistedValueTitle = getEntityTitleAndDesc(propNameAndType._2).getKey();
+                                session.detach(persistedValue);
                                 throw new EntityCompanionException(format("%s [%s] has a reference to already inactive %s [%s].", entityTitle, entity, persistedValueTitle, persistedValue));
                             } else { // otherwise, increment refCount
                                 session.update(persistedValue.incRefCount());
@@ -535,6 +540,12 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                         } else if (persistedValue.isActive()) { // is entity being deactivated, but is referencing an active activatable?
                             session.update(persistedValue.decRefCount());
                         }
+                        else {
+                            session.detach(persistedValue);
+                        }
+                    }
+                    else {
+                        session.detach(persistedValue);
                     }
                 }
             }
