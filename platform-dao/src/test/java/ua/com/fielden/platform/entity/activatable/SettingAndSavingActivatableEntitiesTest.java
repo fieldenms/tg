@@ -34,37 +34,39 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         final MetaProperty<Boolean> activeProperty = cat1.getProperty("active");
 
         assertFalse(activeProperty.isValid());
-        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey();
+        final String entityTitle = getEntityTitleAndDesc(cat1.getType()).getKey();
         assertTrue(activeProperty.getFirstFailure().getMessage().startsWith(format("%s [%s] has %s active dependencies", entityTitle, cat1, 2)));
     }
 
     @Test
-    public void making_inactive_activatable_entity_referencing_inactive_activatables_active_again_does_not_pass_property_validation() {
-        final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
+    public void activating_an_entity_that_references_inactive_entities_does_not_pass_validation() {
+        final var cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
+        assertFalse(cat4.isActive());
         assertFalse(cat4.getParent().isActive());
 
         cat4.setActive(true);
 
         assertNotNull(cat4.getProperty(ACTIVE).getFirstFailure());
-        assertEquals("Property [Selfy] in Tg Category [Cat4] references inactive Tg Category [Cat3].", 
-                cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
+        assertEquals("Property [Selfy] in Tg Category [Cat4] references inactive Tg Category [Cat3].",
+                     cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
     }
 
     @Test
-    public void inactive_activatable_entity_referencing_inactive_activatables_with_attempt_to_become_active_again_cannot_be_save() {
-        final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class).without("parent"), "Cat4");
+    public void activating_an_entity_that_references_inactive_entities_referenced_via_proxied_properties_passes_validation_but_save_fails() {
+        final var cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class).without("parent"), "Cat4");
+        assertFalse(cat4.isActive());
+        assertThat(cat4.getPropertyIfNotProxy("parent")).isEmpty();
         cat4.setActive(true);
         assertTrue(cat4.isValid().isSuccessful());
 
-        try {
-            co$(TgCategory.class).save(cat4);
-            fail("Should have failed");
-        } catch (final EntityCompanionException ex) {
-            final var categoryTitle = TitlesDescsGetter.getEntityTitleAndDesc(TgCategory.class).getKey();
-            final TgCategory cat4Full = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
-            assertEquals(format(ERR_INACTIVE_REFERENCES, getTitleAndDesc("parent", TgCategory.class).getKey(), categoryTitle, cat4Full, categoryTitle, cat4Full.getParent()),
-                         ex.getMessage());
-        }
+        assertThatThrownBy(() -> co$(TgCategory.class).save(cat4))
+                .isInstanceOf(EntityCompanionException.class)
+                .satisfies(ex -> {
+                    final var categoryTitle = TitlesDescsGetter.getEntityTitleAndDesc(TgCategory.class).getKey();
+                    final var cat4Full = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
+                    assertEquals(format(ERR_INACTIVE_REFERENCES, getTitleAndDesc("parent", TgCategory.class).getKey(), categoryTitle, cat4Full, categoryTitle, cat4Full.getParent()),
+                                 ex.getMessage());
+                });
     }
 
     @Test
