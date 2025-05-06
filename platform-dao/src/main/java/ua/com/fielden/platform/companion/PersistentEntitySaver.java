@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
+import org.hibernate.StaleStateException;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -93,6 +94,8 @@ import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDe
 public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements IEntityActuator<T> {
     public static final String ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES = "Could not resolve conflicting changes.";
     public static final String ERR_OPTIMISTIC_LOCK = "%s [%s] was updated or deleted by another user. Please try saving again.";
+    public static final String ERR_CONFLICTING_CONCURRENT_CHANGE = "There was a conflicting change by another user. Please try saving again.";
+    // private static final String ERR_
 
     private final Supplier<Session> session;
     private final Supplier<String> transactionGuid;
@@ -384,7 +387,15 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // handle ref counts of non-dirty activatable properties
         if (entity instanceof ActivatableAbstractEntity) {
-            handleNonDirtyActivatableIfNecessary(entity, persistedEntity, Objects.requireNonNull(persistedIsActive), session);
+            try {
+                handleNonDirtyActivatableIfNecessary(entity, persistedEntity, Objects.requireNonNull(persistedIsActive), session);
+            } catch (final StaleStateException ex) {
+                // StaleStateException may occur when a stale object is loaded from a session (via `session.load`).
+                // For example, two entities concurrently begin referencing some other entity, thereby incrementing its `refCount` concurrently.
+                // The exception occurs when a thread loads the modified entity for the second time, after its concurrent modification
+                // (the first time it must have been loaded before its modification).
+                throw new EntityCompanionException(ERR_CONFLICTING_CONCURRENT_CHANGE, ex);
+            }
         }
 
         // perform meta-data assignment to capture the information about this modification
