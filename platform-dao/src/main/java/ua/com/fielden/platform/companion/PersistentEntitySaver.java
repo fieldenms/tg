@@ -82,6 +82,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.MiscUtilities.optional;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
 /**
@@ -364,7 +365,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
         // Need to record the persisted active status before `persistedEntity` is modified.
-        final @Nullable Boolean persistedIsActive = entity instanceof ActivatableAbstractEntity ? persistedEntity.get(ACTIVE) : null;
+        final Optional<Boolean> persistedIsActive = entity instanceof ActivatableAbstractEntity ? optional(persistedEntity.get(ACTIVE)) : Optional.empty();
 
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
@@ -388,7 +389,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // handle ref counts of non-dirty activatable properties
         if (entity instanceof ActivatableAbstractEntity) {
             try {
-                handleNonDirtyActivatableIfNecessary(entity, persistedEntity, Objects.requireNonNull(persistedIsActive), session);
+                handleNonDirtyActivatableIfNecessary(entity, persistedEntity, persistedIsActive.get(), session);
             } catch (final StaleStateException ex) {
                 // StaleStateException may occur when a stale object is loaded from a session (via `session.load`).
                 // For example, two entities concurrently begin referencing some other entity, thereby incrementing its `refCount` concurrently.
