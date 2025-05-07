@@ -7,6 +7,9 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.audit.AuditingMode;
+import ua.com.fielden.platform.audit.IAuditTypeFinder;
+import ua.com.fielden.platform.audit.ISynAuditEntityDao;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
@@ -43,6 +46,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.Lazy;
 
 import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Field;
@@ -59,6 +63,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
+import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -75,6 +80,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.Lazy.lazySupplier;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
 /**
@@ -99,12 +105,14 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     private final IEntityFetcher entityFetcher;
     private final IUserProvider userProvider;
     private final Supplier<DateTime> now;
-    
+
     private final BiConsumer<T, Set<String>> processAfterSaveEvent;
     private final Consumer<MetaProperty<?>> assignBeforeSave;
 
     private final FindEntityById<T> findById;
     private final Function<EntityResultQueryModel<T>, Boolean> entityExists;
+    private final boolean audited;
+    private final Lazy<Auditor<T>> lazyAuditor;
 
     private Boolean targetEntityTypeHasValidateOverridden;
     
@@ -126,7 +134,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final IUserProvider userProvider,
             final IUniversalConstants universalConstants,
             final ICompanionObjectFinder coFinder,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final IAuditTypeFinder auditTypeFinder,
+            final AuditingMode auditingMode)
     {
         this.session = session;
         this.transactionGuid = transactionGuid;
@@ -143,6 +153,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.now = universalConstants::now;
         this.coFinder = coFinder;
         this.domainMetadata = domainMetadata;
+        this.audited = auditingMode == AuditingMode.ENABLED && isAudited(entityType);
+        this.lazyAuditor = lazySupplier(() -> makeAuditor(entityType, audited, auditTypeFinder, coFinder));
     }
 
     @ImplementedBy(FactoryImpl.class)
@@ -228,6 +240,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return propName;
         }).collect(toSet());
 
+        // Auditing requires an audited entity to be refetched so that audit records can be created.
+        final boolean reallySkipRefetching = skipRefetching && !audited;
+
         final T2<Long, T> savedEntityAndId;
         // let's try to save entity
         try {
@@ -240,19 +255,52 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // entity is valid, and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                savedEntityAndId = saveNewEntity(entity, skipRefetching, maybeFetch, fillModel, session.get());
+                savedEntityAndId = saveNewEntity(entity, reallySkipRefetching, maybeFetch, fillModel, session.get());
             } else { // so, this is a modified entity
-                savedEntityAndId = saveModifiedEntity(entity, skipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
+                savedEntityAndId = saveModifiedEntity(entity, reallySkipRefetching, maybeFetch, fillModel, entityMetadata, session.get());
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
         }
 
         final T savedEntity = savedEntityAndId._2;
+
         // this call never throws any exceptions
         processAfterSaveEvent.accept(savedEntity, dirtyPropNames);
 
+        // Auditing
+        lazyAuditor.get().audit(savedEntity, transactionGuid.get(), dirtyPropNames);
+
         return savedEntityAndId;
+    }
+
+    /**
+     * Performs the auditing function if auditing is enabled and the entity type is audited.
+     * Otherwise, has no effect.
+     * <p>
+     * The benefit of this abstraction over plain code statements is performance: the initialisation phase will occur only once.
+     */
+    @FunctionalInterface
+    private interface Auditor<E extends AbstractEntity<?>> {
+
+        void audit(final E entity, final String transactionGuid, Collection<String> dirtyProperties);
+
+    }
+
+    private static <E extends AbstractEntity<?>> Auditor<E> makeAuditor(
+            final Class<E> entityType,
+            final boolean audited,
+            final IAuditTypeFinder auditTypeFinder,
+            final ICompanionObjectFinder coFinder)
+    {
+        if (audited) {
+            // Performance benefit: the companion is created only once.
+            final ISynAuditEntityDao<E> coSynAudit = coFinder.find(auditTypeFinder.navigate(entityType).synAuditEntityType());
+            return coSynAudit::audit;
+        }
+        else {
+            return (entity, transactionGuid, dirtyProperties) -> {};
+        }
     }
 
     /**
@@ -790,6 +838,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         private final IUniversalConstants universalConstants;
         private final ICompanionObjectFinder coFinder;
         private final IDomainMetadata domainMetadata;
+        private final IAuditTypeFinder auditTypeFinder;
+        private final AuditingMode auditingMode;
 
         @Inject
         FactoryImpl(final IDbVersionProvider dbVersionProvider,
@@ -797,13 +847,18 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     final IUserProvider userProvider,
                     final IUniversalConstants universalConstants,
                     final ICompanionObjectFinder coFinder,
-                    final IDomainMetadata domainMetadata) {
+                    final IDomainMetadata domainMetadata,
+                    final IAuditTypeFinder auditTypeFinder,
+                    final AuditingMode auditingMode)
+        {
             this.dbVersionProvider = dbVersionProvider;
             this.entityFetcher = entityFetcher;
             this.userProvider = userProvider;
             this.universalConstants = universalConstants;
             this.coFinder = coFinder;
             this.domainMetadata = domainMetadata;
+            this.auditTypeFinder = auditTypeFinder;
+            this.auditingMode = auditingMode;
         }
 
         public <E extends AbstractEntity<?>> PersistentEntitySaver<E> create(
@@ -820,7 +875,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             return new PersistentEntitySaver<>(session, transactionGuid, entityType, keyType, processAfterSaveEvent,
                                                assignBeforeSave, findById, entityExists, logger,
                                                dbVersionProvider, entityFetcher, userProvider, universalConstants,
-                                               coFinder, domainMetadata);
+                                               coFinder, domainMetadata, auditTypeFinder, auditingMode);
         }
     }
 
