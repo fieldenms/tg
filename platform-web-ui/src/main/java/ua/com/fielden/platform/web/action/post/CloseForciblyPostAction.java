@@ -10,7 +10,7 @@ import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 /// @author TG Team
 public class CloseForciblyPostAction implements IPostAction {
 
-    CloseForciblyPostAction() {}
+    protected CloseForciblyPostAction() {}
 
     @Override
     public JsCode build() {

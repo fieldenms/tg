@@ -16,7 +16,7 @@ import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 /// @author TG Team
 public class SequentialEditPreAction implements IPreAction {
 
-    SequentialEditPreAction() {}
+    protected SequentialEditPreAction() {}
 
     @Override
     public Set<JsImport> importStatements() {

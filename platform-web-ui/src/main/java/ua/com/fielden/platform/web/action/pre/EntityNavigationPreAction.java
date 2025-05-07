@@ -10,9 +10,9 @@ import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 ///
 /// @author TG Team
 public class EntityNavigationPreAction implements IPreAction {
-    private final String navigationType;
+    protected final String navigationType;
 
-    EntityNavigationPreAction(final String navigationType) {
+    protected EntityNavigationPreAction(final String navigationType) {
         this.navigationType = navigationType;
     }
 

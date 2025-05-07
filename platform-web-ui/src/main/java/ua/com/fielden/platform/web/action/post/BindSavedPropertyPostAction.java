@@ -19,10 +19,10 @@ import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 ///
 /// @author TG Team
 public class BindSavedPropertyPostAction implements IPostAction {
-    private final IConvertableToPath property;
-    private final boolean erroneous;
+    protected final IConvertableToPath property;
+    protected final boolean erroneous;
 
-    BindSavedPropertyPostAction(final IConvertableToPath property, final boolean erroneous) {
+    protected BindSavedPropertyPostAction(final IConvertableToPath property, final boolean erroneous) {
         this.property = requireNonNull(property);
         this.erroneous = erroneous;
     }

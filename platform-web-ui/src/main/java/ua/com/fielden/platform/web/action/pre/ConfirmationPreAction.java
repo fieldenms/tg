@@ -13,23 +13,23 @@ import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
 ///
 /// @author TG Team
 public class ConfirmationPreAction implements IPreAction {
-    private final String message;
-    private final List<String> buttons = new ArrayList<>();
+    protected final String message;
+    protected final List<String> buttons = new ArrayList<>();
 
-    enum ConfirmationButtons {
+    protected enum ConfirmationButtons {
         YES("{name:'Yes', confirm:true, autofocus:true}"),
         NO("{name:'No'}"),
         OK("{name:'Ok', confirm:true, autofocus:true}"),
         CANCEL("{name:'Cancel'}");
 
-        private final String code;
+        public final String code;
 
         ConfirmationButtons(final String code) {
             this.code = code;
         }
     }
 
-    ConfirmationPreAction(final String message, final ConfirmationButtons... buttons) {
+    protected ConfirmationPreAction(final String message, final ConfirmationButtons... buttons) {
         this.message = message;
         for (final ConfirmationButtons button : buttons) {
             this.buttons.add(button.code);

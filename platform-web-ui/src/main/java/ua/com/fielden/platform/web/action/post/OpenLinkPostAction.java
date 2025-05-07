@@ -21,9 +21,9 @@ import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 ///
 /// @author TG Team
 public class OpenLinkPostAction implements IPostAction {
-    private final IConvertableToPath property;
+    protected final IConvertableToPath property;
 
-    OpenLinkPostAction(final IConvertableToPath property) {
+    protected OpenLinkPostAction(final IConvertableToPath property) {
         this.property = requireNonNull(property);
     }
 

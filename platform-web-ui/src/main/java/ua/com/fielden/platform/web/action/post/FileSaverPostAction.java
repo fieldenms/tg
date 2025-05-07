@@ -21,7 +21,7 @@ import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
 /// @author TG Team
 public class FileSaverPostAction implements IPostAction {
 
-    FileSaverPostAction() {}
+    protected FileSaverPostAction() {}
 
     @Override
     public Set<JsImport> importStatements() {
