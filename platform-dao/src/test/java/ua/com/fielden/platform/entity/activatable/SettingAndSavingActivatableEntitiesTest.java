@@ -16,7 +16,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
 public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase {
 
@@ -28,36 +33,39 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         final MetaProperty<Boolean> activeProperty = cat1.getProperty("active");
 
         assertFalse(activeProperty.isValid());
-        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey();
+        final String entityTitle = getEntityTitleAndDesc(cat1.getType()).getKey();
         assertTrue(activeProperty.getFirstFailure().getMessage().startsWith(format("%s [%s] has %s active dependencies", entityTitle, cat1, 2)));
     }
 
     @Test
-    public void making_inactive_activatable_entity_referencing_inactive_activatables_active_again_does_not_pass_property_validation() {
-        final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
+    public void activating_an_entity_that_references_inactive_entities_does_not_pass_validation() {
+        final var cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
+        assertFalse(cat4.isActive());
         assertFalse(cat4.getParent().isActive());
 
         cat4.setActive(true);
 
         assertNotNull(cat4.getProperty(ACTIVE).getFirstFailure());
-        assertEquals("Property [Selfy] in Tg Category [Cat4] references inactive Tg Category [Cat3].", 
-                cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
+        assertEquals("Property [Selfy] in Tg Category [Cat4] references inactive Tg Category [Cat3].",
+                     cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
     }
 
     @Test
-    public void inactive_activatable_entity_referencing_inactive_activatables_with_attempt_to_become_active_again_cannot_be_save() {
-        final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class).without("parent"), "Cat4");
+    public void activating_an_entity_that_references_inactive_entities_referenced_via_proxied_properties_passes_validation_but_save_fails() {
+        final var cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class).without("parent"), "Cat4");
+        assertFalse(cat4.isActive());
+        assertThat(cat4.getPropertyIfNotProxy("parent")).isEmpty();
         cat4.setActive(true);
         assertTrue(cat4.isValid().isSuccessful());
 
-        try {
-            co$(TgCategory.class).save(cat4);
-            fail("Should have failed");
-        } catch (final EntityCompanionException ex) {
-            final TgCategory cat4Full = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
-            assertEquals(format("Tg Category [%s] has a reference to already inactive Tg Category [%s].", cat4Full, cat4Full.getParent()),
-                    ex.getMessage());
-        }
+        assertThatThrownBy(() -> co$(TgCategory.class).save(cat4))
+                .isInstanceOf(EntityCompanionException.class)
+                .satisfies(ex -> {
+                    final var categoryTitle = TitlesDescsGetter.getEntityTitleAndDesc(TgCategory.class).getKey();
+                    final var cat4Full = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
+                    assertEquals(format(ERR_INACTIVE_REFERENCES, getTitleAndDesc("parent", TgCategory.class).getKey(), categoryTitle, cat4Full, categoryTitle, cat4Full.getParent()),
+                                 ex.getMessage());
+                });
     }
 
     @Test
@@ -123,7 +131,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void activating_entity_that_gets_its_active_activatable_property_dereferenced_decrements_ref_counts_of_the_dereferenced_entity() {
+    public void activating_entity_A_and_dereferencing_entity_B_does_not_affect_refCount_of_B() {
         final TgCategory cat3 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat3");
         final TgCategory oldParent = cat3.getParent();
         assertEquals(Integer.valueOf(0), cat3.getRefCount());
@@ -139,14 +147,61 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivating_entity_leads_to_decrementing_of_the_referenced_activatables() {
-        final TgCategory cat2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat2");
+    public void deactivation_of_an_entity_decrements_refCount_of_referenced_active_entities() {
+        final var cat2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat2");
         assertTrue(cat2.isActive());
-        final TgCategory oldParent = cat2.getParent();
+        final var oldParent = cat2.getParent();
+        assertTrue(oldParent.isActive());
+        assertThat(oldParent.getRefCount()).isPositive();
 
-        final TgCategory savedCat2 = save(cat2.setActive(false));
+        final var savedCat2 = save(cat2.setActive(false));
         assertFalse(savedCat2.isActive());
         assertEquals(oldParent.getRefCount() - 1, savedCat2.getParent().getRefCount() + 0);
+    }
+
+    @Test
+    public void concurrent_deactivation_of_the_same_entity_decrements_refCount_of_referenced_active_entities_only_once() {
+        final var coCategory = co$(TgCategory.class);
+
+        {
+            final var catA = save(new_(TgCategory.class, "A").setActive(true));
+            save(new_(TgCategory.class, "B").setActive(true).setParent(catA));
+            save(new_(TgCategory.class, "C").setActive(true).setParent(catA));
+        }
+
+        final var catA = coCategory.findByKey("A");
+        assertEquals(Integer.valueOf(2), catA.getRefCount());
+
+        final var catB_1 = coCategory.findByKey("B").setActive(false);
+        final var catB_2 = coCategory.findByKey("B").setActive(false);
+
+        save(catB_1);
+        assertEquals(catA.getRefCount() - 1, coCategory.findByKey("A").getRefCount() + 0);
+
+        save(catB_2);
+        assertEquals(catA.getRefCount() - 1, coCategory.findByKey("A").getRefCount() + 0);
+    }
+
+    @Test
+    public void concurrent_activation_of_the_same_entity_increments_refCount_of_referenced_active_entities_only_once() {
+        final var coCategory = co$(TgCategory.class);
+
+        {
+            final var catA = save(new_(TgCategory.class, "A").setActive(true));
+            save(new_(TgCategory.class, "B").setActive(false).setParent(catA));
+        }
+
+        final var catA = coCategory.findByKey("A");
+        assertEquals(Integer.valueOf(0), catA.getRefCount());
+
+        final var catB_1 = coCategory.findByKey("B").setActive(true);
+        final var catB_2 = coCategory.findByKey("B").setActive(true);
+
+        save(catB_1);
+        assertEquals(catA.getRefCount() + 1, coCategory.findByKey("A").getRefCount() + 0);
+
+        save(catB_2);
+        assertEquals(catA.getRefCount() + 1, coCategory.findByKey("A").getRefCount() + 0);
     }
 
     @Test
@@ -196,7 +251,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     }
 
     @Test
-    public void deactivation_with_simultaneous_derefernesing_of_active_actiavatables_is_supported() {
+    public void deactivation_with_simultaneous_dereferencing_of_active_activatables_decrements_refCount_of_dereferenced_active_activatables() {
         final TgCategory cat2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat2");
         final TgCategory cat1 = cat2.getParent();
         final TgCategory savedCat2 = save(cat2.setParent(null).setActive(false));
@@ -235,7 +290,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
                      .setActive(false));
 
         assertThatThrownBy(() -> save(sys3))
-                .hasMessage("Tg System [Sys3] has a reference to already inactive Tg Category [Cat7].");
+                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(TgCategory.class).getKey(), cat7));
     }
 
     @Test
@@ -451,6 +506,202 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         // deactivate stale instance
         final var cat7_2 = save(cat7.setActive(false));
         assertFalse(cat7_2.isActive());
+    }
+
+    @Test
+    public void refCount_of_referenced_active_entity_remains_unchanged_after_inactive_entity_dereferences_it_and_new_value_is_null() {
+        final var coCategory = co$(TgCategory.class);
+
+        {
+            final var catA = save(new_(TgCategory.class, "A").setActive(true));
+            save(new_(TgCategory.class, "B").setActive(true).setParent(catA));
+            save(new_(TgCategory.class, "C").setActive(false).setParent(catA));
+        }
+
+        {
+            final var catA = coCategory.findByKey("A");
+            assertTrue(catA.isActive());
+            assertThat(1).isEqualTo(catA.getRefCount());
+        }
+
+        save(coCategory.findByKey("C").setParent(null));
+
+        {
+            final var catA = coCategory.findByKey("A");
+            assertTrue(catA.isActive());
+            assertThat(1).isEqualTo(catA.getRefCount());
+        }
+    }
+
+    @Test
+    public void refCount_of_referenced_active_entity_remains_unchanged_after_inactive_entity_dereferences_it_and_new_value_is_not_null() {
+        final var coCategory = co$(TgCategory.class);
+
+        {
+            final var catA = save(new_(TgCategory.class, "A").setActive(true));
+            save(new_(TgCategory.class, "B").setActive(true).setParent(catA));
+            save(new_(TgCategory.class, "C").setActive(false).setParent(catA));
+        }
+
+        {
+            final var catA = coCategory.findByKey("A");
+            assertTrue(catA.isActive());
+            assertThat(1).isEqualTo(catA.getRefCount());
+        }
+
+        save(coCategory.findByKeyAndFetch(fetch(TgCategory.class).with("parent"), "C")
+                     .setParent(coCategory.findByKey("B")));
+
+        {
+            final var catA = coCategory.findByKey("A");
+            assertTrue(catA.isActive());
+            assertThat(1).isEqualTo(catA.getRefCount());
+        }
+    }
+
+    @Test
+    public void dereferencing_with_concurrent_deactivation_of_the_referencing_entity_decrements_refCount_only_once_when_new_value_is_null() {
+        final var coCategory = co$(TgCategory.class);
+
+        {
+            final var catA = save(new_(TgCategory.class, "A").setActive(true));
+            save(new_(TgCategory.class, "B").setActive(true).setParent(catA));
+            save(new_(TgCategory.class, "C").setActive(true).setParent(catA));
+        }
+
+        {
+            final var catA = coCategory.findByKey("A");
+            assertTrue(catA.isActive());
+            assertThat(2).isEqualTo(catA.getRefCount());
+        }
+
+        final var catB_1 = coCategory.findByKey("B").setActive(false);
+        final var catB_2 = coCategory.findByKey("B").setParent(null);
+
+        {
+            final var catB_1_saved = save(catB_1);
+            assertFalse(catB_1_saved.isActive());
+            final var catA = coCategory.findByKey("A");
+            assertTrue(catA.isActive());
+            assertThat(1).isEqualTo(catA.getRefCount());
+            assertEquals(catB_1_saved.getParent(), catA);
+        }
+
+        {
+            final var catB_2_saved = save(catB_2);
+            assertFalse(catB_2_saved.isActive());
+            assertNull(catB_2_saved.getParent());
+            final var catA = coCategory.findByKey("A");
+            assertTrue(catA.isActive());
+            assertThat(1).isEqualTo(catA.getRefCount());
+        }
+    }
+
+    @Test
+    public void dereferencing_with_concurrent_deactivation_of_the_referencing_entity_decrements_refCount_only_once_when_new_value_is_not_null() {
+        final var coCategory = co$(TgCategory.class);
+
+        final TgCategory catC;
+        {
+            final var catA = save(new_(TgCategory.class, "A").setActive(true));
+            save(new_(TgCategory.class, "B").setActive(true).setParent(catA));
+            catC = save(new_(TgCategory.class, "C").setActive(true).setParent(catA));
+        }
+
+        {
+            final var catA = coCategory.findByKey("A");
+            assertTrue(catA.isActive());
+            assertThat(2).isEqualTo(catA.getRefCount());
+        }
+
+        final var catB_1 = coCategory.findByKey("B").setActive(false);
+        final var catB_2 = coCategory.findByKeyAndFetch(fetch(TgCategory.class).with("parent"), "B")
+                .setParent(catC);
+
+        {
+            final var catB_1_saved = save(catB_1);
+            assertFalse(catB_1_saved.isActive());
+            final var catA = coCategory.findByKey("A");
+            assertTrue(catA.isActive());
+            assertThat(1).isEqualTo(catA.getRefCount());
+            assertEquals(catB_1_saved.getParent(), catA);
+        }
+
+        {
+            final var catB_2_saved = save(catB_2);
+            assertFalse(catB_2_saved.isActive());
+            assertEquals(catC, catB_2_saved.getParent());
+            final var catA = coCategory.findByKey("A");
+            assertTrue(catA.isActive());
+            assertThat(1).isEqualTo(catA.getRefCount());
+        }
+    }
+
+    @Test
+    public void if_entity_B_is_concurrently_deactivated_before_it_begins_referencing_entity_A_then_refCount_of_A_is_not_affected() {
+        final var coCategory = co$(TgCategory.class);
+
+        final var catA = save(new_(TgCategory.class, "A").setActive(true));
+        save(new_(TgCategory.class, "B").setActive(true));
+
+        final var catB_1 = coCategory.findByKey("B").setActive(false);
+        final var catB_2 = coCategory.findByKeyAndFetch(fetchAll(TgCategory.class).with("parent"), "B")
+                .setParent(coCategory.findByKey("A"));
+
+        {
+            final var catB_1_saved = save(catB_1);
+            assertFalse(catB_1_saved.isActive());
+            assertNull(catB_1_saved.getParent());
+        }
+
+        {
+            final var catB_2_saved = save(catB_2);
+            assertFalse(catB_2_saved.isActive());
+            final var catA_v1 = coCategory.findByKey("A");
+            assertEquals(catA_v1, catB_2_saved.getParent());
+            assertTrue(catA_v1.isActive());
+            assertEquals(catA.getRefCount(), catA_v1.getRefCount());
+        }
+    }
+
+    @Test
+    public void when_a_new_entity_A_begins_referencing_entity_B_refCount_of_B_is_incremented_for_each_reference_from_A() {
+        final var catA = save(new_(TgCategory.class, "A").setActive(true));
+        final var sysA = save(new_(TgSystem.class, "A").setActive(true).setCategory(catA).setFirstCategory(catA));
+        final var coCategory = co$(TgCategory.class);
+        assertEquals(Integer.valueOf(2), coCategory.findByKey("A").getRefCount());
+    }
+
+    @Test
+    public void when_a_modified_entity_A_begins_referencing_entity_B_refCount_of_B_is_incremented_for_each_reference_from_A() {
+        final var catA = save(new_(TgCategory.class, "A").setActive(true));
+        final var sysA = save(save(new_(TgSystem.class, "A").setActive(true))
+                                      .setCategory(catA).setFirstCategory(catA));
+        final var coCategory = co$(TgCategory.class);
+        assertEquals(Integer.valueOf(2), coCategory.findByKey("A").getRefCount());
+    }
+
+    @Test
+    public void when_entity_A_is_activated_refCount_of_B_is_incremented_for_each_reference_from_A() {
+        final var coCategory = co$(TgCategory.class);
+
+        final var catA = save(new_(TgCategory.class, "A").setActive(true));
+        final var sysA = save(new_(TgSystem.class, "A").setActive(false).setCategory(catA).setFirstCategory(catA));
+        assertEquals(Integer.valueOf(0), coCategory.findByKey("A").getRefCount());
+        save(sysA.setActive(true));
+        assertEquals(Integer.valueOf(2), coCategory.findByKey("A").getRefCount());
+    }
+
+    @Test
+    public void when_entity_A_is_deactivated_refCount_of_B_is_decremented_for_each_reference_from_A() {
+        final var coCategory = co$(TgCategory.class);
+
+        final var catA = save(new_(TgCategory.class, "A").setActive(true));
+        save(new_(TgCategory.class, "X").setActive(true).setParent(catA));
+        final var sysA = save(new_(TgSystem.class, "A").setActive(true).setCategory(catA).setFirstCategory(catA));
+        assertEquals(Integer.valueOf(3), coCategory.findByKey("A").getRefCount());
+        save(sysA.setActive(false));
+        assertEquals(Integer.valueOf(1), coCategory.findByKey("A").getRefCount());
     }
 
     @Override
