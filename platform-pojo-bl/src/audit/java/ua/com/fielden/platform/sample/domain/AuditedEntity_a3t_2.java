@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-04-22 12:36:51 EEST
+// Generation timestamp: 2025-05-07 11:15:11 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -27,31 +27,13 @@ import ua.com.fielden.platform.types.RichText;
 )
 @MapEntityTo
 @CompanionIsGenerated
-@EntityTitle("Audited Entity Audit")
+@EntityTitle("Audited Entity Audit 2")
 @SkipVerification
 @SkipEntityRegistration
 @WithoutMetaModel
 @KeyType(DynamicEntityKey.class)
 @DenyIntrospection
 public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
-  @IsProperty
-  @MapTo("A3T_INVALIDATE")
-  @Final
-  @Title(
-      value = "Invalidate",
-      desc = "[Invalidate] at the time of the audited event."
-  )
-  private boolean a3t_invalidate;
-
-  @IsProperty
-  @MapTo("A3T_RICHTEXT")
-  @Final
-  @Title(
-      value = "Rich Text",
-      desc = "[Rich Text] at the time of the audited event."
-  )
-  private RichText a3t_richText;
-
   @IsProperty
   @MapTo("A3T_STR2")
   @Final
@@ -72,32 +54,30 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   private UnionEntity a3t_union;
 
   @IsProperty
+  @MapTo("A3T_RICHTEXT")
+  @Final
+  @Title(
+      value = "Rich Text",
+      desc = "[Rich Text] at the time of the audited event."
+  )
+  private RichText a3t_richText;
+
+  @IsProperty
+  @MapTo("A3T_INVALIDATE")
+  @Final
+  @Title(
+      value = "Invalidate",
+      desc = "[Invalidate] at the time of the audited event."
+  )
+  private boolean a3t_invalidate;
+
+  @IsProperty
   @InactiveAuditProperty
   @Title(
       value = "Str 1 [removed]",
       desc = "[Str 1] at the time of the audited event."
   )
   private String a3t_str1;
-
-  public boolean isA3t_invalidate() {
-    return this.a3t_invalidate;
-  }
-
-  @Observable
-  public AuditedEntity_a3t_2 setA3t_invalidate(final boolean a3t_invalidate) {
-    this.a3t_invalidate = a3t_invalidate;
-    return this;
-  }
-
-  public RichText getA3t_richText() {
-    return this.a3t_richText;
-  }
-
-  @Observable
-  public AuditedEntity_a3t_2 setA3t_richText(final RichText a3t_richText) {
-    this.a3t_richText = a3t_richText;
-    return this;
-  }
 
   public String getA3t_str2() {
     return this.a3t_str2;
@@ -116,6 +96,26 @@ public class AuditedEntity_a3t_2 extends AuditedEntity_a3t_1 {
   @Observable
   public AuditedEntity_a3t_2 setA3t_union(final UnionEntity a3t_union) {
     this.a3t_union = a3t_union;
+    return this;
+  }
+
+  public RichText getA3t_richText() {
+    return this.a3t_richText;
+  }
+
+  @Observable
+  public AuditedEntity_a3t_2 setA3t_richText(final RichText a3t_richText) {
+    this.a3t_richText = a3t_richText;
+    return this;
+  }
+
+  public boolean isA3t_invalidate() {
+    return this.a3t_invalidate;
+  }
+
+  @Observable
+  public AuditedEntity_a3t_2 setA3t_invalidate(final boolean a3t_invalidate) {
+    this.a3t_invalidate = a3t_invalidate;
     return this;
   }
 

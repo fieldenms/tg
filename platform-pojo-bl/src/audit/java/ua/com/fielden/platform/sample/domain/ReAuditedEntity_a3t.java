@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-04-22 12:36:51 EEST
+// Generation timestamp: 2025-05-07 11:15:11 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -62,20 +62,6 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   private PropertyDescriptor<ReAuditedEntity_a3t> changedPropsCrit;
 
   @Title(
-      value = "Invalidate",
-      desc = "[Invalidate] at the time of the audited event."
-  )
-  @IsProperty
-  private boolean a3t_invalidate;
-
-  @Title(
-      value = "Rich Text",
-      desc = "[Rich Text] at the time of the audited event."
-  )
-  @IsProperty
-  private RichText a3t_richText;
-
-  @Title(
       value = "Str 2",
       desc = "[Str 2] at the time of the audited event."
   )
@@ -88,6 +74,20 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   )
   @IsProperty
   private UnionEntity a3t_union;
+
+  @Title(
+      value = "Rich Text",
+      desc = "[Rich Text] at the time of the audited event."
+  )
+  @IsProperty
+  private RichText a3t_richText;
+
+  @Title(
+      value = "Invalidate",
+      desc = "[Invalidate] at the time of the audited event."
+  )
+  @IsProperty
+  private boolean a3t_invalidate;
 
   @Title(
       value = "Key",
@@ -150,26 +150,6 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
     return this;
   }
 
-  public boolean isA3t_invalidate() {
-    return this.a3t_invalidate;
-  }
-
-  @Observable
-  public ReAuditedEntity_a3t setA3t_invalidate(final boolean a3t_invalidate) {
-    this.a3t_invalidate = a3t_invalidate;
-    return this;
-  }
-
-  public RichText getA3t_richText() {
-    return this.a3t_richText;
-  }
-
-  @Observable
-  public ReAuditedEntity_a3t setA3t_richText(final RichText a3t_richText) {
-    this.a3t_richText = a3t_richText;
-    return this;
-  }
-
   public String getA3t_str2() {
     return this.a3t_str2;
   }
@@ -187,6 +167,26 @@ public class ReAuditedEntity_a3t extends AbstractSynAuditEntity<AuditedEntity> {
   @Observable
   public ReAuditedEntity_a3t setA3t_union(final UnionEntity a3t_union) {
     this.a3t_union = a3t_union;
+    return this;
+  }
+
+  public RichText getA3t_richText() {
+    return this.a3t_richText;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_richText(final RichText a3t_richText) {
+    this.a3t_richText = a3t_richText;
+    return this;
+  }
+
+  public boolean isA3t_invalidate() {
+    return this.a3t_invalidate;
+  }
+
+  @Observable
+  public ReAuditedEntity_a3t setA3t_invalidate(final boolean a3t_invalidate) {
+    this.a3t_invalidate = a3t_invalidate;
     return this;
   }
 

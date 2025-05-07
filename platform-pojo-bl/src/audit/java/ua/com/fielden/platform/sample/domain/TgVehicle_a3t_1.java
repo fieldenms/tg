@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-03-25 16:16:54 EET
+// Generation timestamp: 2025-05-07 11:15:11 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import java.lang.String;
@@ -31,7 +31,7 @@ import ua.com.fielden.platform.types.Money;
 )
 @MapEntityTo
 @CompanionIsGenerated
-@EntityTitle("Tg Vehicle Audit")
+@EntityTitle("Tg Vehicle Audit 1")
 @SkipVerification
 @SkipEntityRegistration
 @WithoutMetaModel
