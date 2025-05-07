@@ -1,33 +1,26 @@
 package ua.com.fielden.platform.web.test.server.config;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.test.server.config.StandardActionsStyles.STANDARD_ACTION_COLOUR;
-import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
-
-import java.util.Optional;
-import java.util.function.BiFunction;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityEditAction;
-import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.action.exceptions.ActionConfigurationException;
-import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
-import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
-import ua.com.fielden.platform.web.action.pre.SequentialEditPreAction;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
+
+import java.util.Optional;
+import java.util.function.BiFunction;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.web.action.post.PostActions.saveFile;
+import static ua.com.fielden.platform.web.action.pre.PreActions.*;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.test.server.config.StandardActionsStyles.STANDARD_ACTION_COLOUR;
+import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 
 /**
  * Enumeration of standard UI action configurations that can be uniformly used throughout Web UI configuration for different entities.
@@ -179,7 +172,7 @@ public enum StandardActions {
 
             return action(EntityEditAction.class)
                     .withContext(contextConfig.build())
-                    .preAction(new EntityNavigationPreAction(entityTitle))
+                    .preAction(entityNavigation(entityTitle))
                     .icon(iconName.orElse("editor:mode-edit"))
                     .withStyle(iconStyle.orElse(STANDARD_ACTION_COLOUR))
                     .shortDesc(format("Edit %s", entityTitle))
@@ -238,7 +231,7 @@ public enum StandardActions {
 
             return action(EntityEditAction.class)
                     .withContext(contextConfig.build())
-                    .preAction(new SequentialEditPreAction())
+                    .preAction(sequentialEdit())
                     .icon(iconName.orElse("editor:mode-edit"))
                     .withStyle(iconStyle.orElse(STANDARD_ACTION_COLOUR))
                     .shortDesc(format("Edit %s", entityTitle))
@@ -351,7 +344,7 @@ public enum StandardActions {
 
             return action(EntityExportAction.class)
                     .withContext(contextConfig.build())
-                    .postActionSuccess(new FileSaverPostAction())
+                    .postActionSuccess(saveFile())
                     .icon(iconName.orElse("icons:save"))
                     .withStyle(iconStyle.orElse(STANDARD_ACTION_COLOUR))
                     .shortDesc(desc)
@@ -407,7 +400,7 @@ public enum StandardActions {
 
             return action(EntityExportAction.class)
                     .withContext(contextConfig.build())
-                    .postActionSuccess(new FileSaverPostAction())
+                    .postActionSuccess(saveFile())
                     .icon(iconName.orElse("icons:save"))
                     .withStyle(iconStyle.orElse(STANDARD_ACTION_COLOUR))
                     .shortDesc(desc)
