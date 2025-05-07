@@ -274,7 +274,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
                      .setActive(false));
 
         assertThatThrownBy(() -> save(sys3))
-                .hasMessage("Tg System [Sys3] has a reference to already inactive Tg Category [Cat7].");
+                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(TgCategory.class).getKey(), cat7));
     }
 
     @Test
