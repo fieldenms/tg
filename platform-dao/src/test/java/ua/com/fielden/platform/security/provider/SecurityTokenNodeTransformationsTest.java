@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.security.provider;
 
 import org.junit.Test;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.security.ISecurityToken;
 
 import java.util.Set;
 import java.util.SortedSet;
 
 import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.security.provider.SecurityTokenNodeTransformations.ERR_TOKEN_NOT_IN_TREE;
 
 public class SecurityTokenNodeTransformationsTest {
 
@@ -77,6 +80,16 @@ public class SecurityTokenNodeTransformationsTest {
         final var expected = mkTokenTree(Expected.class);
         final var transformed = SecurityTokenNodeTransformations.setParentOf(In.A2_2.class, In.B1.class).transform(tree);
         assertTreeEquals(expected, transformed);
+    }
+
+    @Test
+    public void specified_parent_must_be_present_in_the_tree() {
+        class AuxToken implements ISecurityToken {}
+
+        final var tree = mkTokenTree(In.class);
+        assertThatThrownBy(() -> SecurityTokenNodeTransformations.setParentOf(In.A2_2.class, AuxToken.class).transform(tree))
+                .isInstanceOf(InvalidStateException.class)
+                .hasMessage(ERR_TOKEN_NOT_IN_TREE.formatted(AuxToken.class.getTypeName()));
     }
 
     private static SortedSet<SecurityTokenNode> mkTokenTree(final Class<?> testClass) {
