@@ -15,9 +15,22 @@ import static com.google.common.collect.ImmutableSortedSet.toImmutableSortedSet;
 import static java.util.Comparator.naturalOrder;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
+/// Provides a set of primitives for implementing transformations on security token trees.
+///
+/// #### Implementation
+///
+/// All token trees are treated as immutable data structures.
+/// Each [SecurityTokenNode], by definition, has a reference to its parent and also its children.
+/// To modify a node (e.g., to remove one of its children), a new tree object needs to be created,
+/// in which the whole branch containing the node being modified will be replaced.
+/// The "whole branch" includes: the node itself, all of its ancestors, and all of its children (recursively).
+///
+/// This implementation is based on *staging* -- the transformation is divided into 2 stages:
+/// 1. A data structure describing the operations to be performed on a tree is built. See [Op].
+/// 2. The operations are applied to an input tree.
+///
+/// @see ISecurityTokenNodeTransformation
 public final class SecurityTokenNodeTransformations {
-
-    static final String ERR_TOKEN_NOT_IN_TREE = "Token [%s] is not in the tree.";
 
     /// Creates a transformer that relocates token `child` under token `parent`.
     /// If `child` does not exist in a tree, it will be created as a leaf node under `parent`.
@@ -29,6 +42,9 @@ public final class SecurityTokenNodeTransformations {
     /// Generalisation of [#setParentOf(Class, Class)].
     ///
     public static ISecurityTokenNodeTransformation setParentOf(final Iterable<Class<? extends ISecurityToken>> children, final Class<? extends ISecurityToken> parent) {
+        // This implementation can be optimised to perform a single traversal of the tree.
+        // A list of Operations needs to be built for `children`, and all of them should be applied at the same time at each level of a tree.
+        // Conflicting operations should be handled as well.
         return tree -> foldLeft(Streams.stream(children),
                                 tree,
                                 (acc, child) -> move(acc,
@@ -39,6 +55,8 @@ public final class SecurityTokenNodeTransformations {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Implementation
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    static final String ERR_TOKEN_NOT_IN_TREE = "Token [%s] is not in the tree.";
 
     private static SortedSet<SecurityTokenNode> move(final SortedSet<SecurityTokenNode> tree, final SecurityTokenNode node, final SecurityTokenNode newParent) {
         if (node.getSuperTokenNode() == newParent) {
@@ -65,6 +83,7 @@ public final class SecurityTokenNodeTransformations {
     }
 
     /// Applies `operation` to a token tree represented by top-level nodes in `tree`.
+    ///
     private static SortedSet<SecurityTokenNode> operateTree(final SortedSet<SecurityTokenNode> tree, final Op operation) {
         return switch (operation) {
             case Op.Add(var addF) -> ImmutableSetUtils.insert(tree, addF.apply(null));
@@ -76,7 +95,7 @@ public final class SecurityTokenNodeTransformations {
                                     .collect(toImmutableSortedSet(naturalOrder()));
             case Op.Update(var token, var updateOp) -> {
                 if (tree.stream().noneMatch(node -> node.getToken() == token)) {
-                    throw new InvalidStateException(ERR_TOKEN_NOT_IN_TREE.formatted(token.getTypeName()));
+                    throw noSuchToken(token);
                 }
                 else {
                     yield tree.stream()
@@ -90,6 +109,7 @@ public final class SecurityTokenNodeTransformations {
     /// Applies `operation` to `node`.
     ///
     /// @param maybeParentNode  the parent of `node`; empty if `node` is a top-level node
+    ///
     private static SecurityTokenNode operateNode(final SecurityTokenNode node, final Op operation, final Optional<SecurityTokenNode> maybeParentNode) {
         return switch (operation) {
             case Op.Add(var addF) -> {
@@ -100,7 +120,7 @@ public final class SecurityTokenNodeTransformations {
             }
             case Op.Remove(var token) -> {
                 if (node.getSubTokenNode(token) == null) {
-                    throw new InvalidStateException(ERR_TOKEN_NOT_IN_TREE.formatted(token.getTypeName()));
+                    throw noSuchToken(token);
                 }
 
                 final var newNode = new SecurityTokenNode(node.getToken(), maybeParentNode.orElse(null));
@@ -112,7 +132,7 @@ public final class SecurityTokenNodeTransformations {
             }
             case Op.Update(var token, var updateOp) -> {
                 if (node.getSubTokenNode(token) == null) {
-                    throw new InvalidStateException(ERR_TOKEN_NOT_IN_TREE.formatted(token.getTypeName()));
+                    throw noSuchToken(token);
                 }
 
                 final var newNode = new SecurityTokenNode(node.getToken(), maybeParentNode.orElse(null));
@@ -130,7 +150,7 @@ public final class SecurityTokenNodeTransformations {
     }
 
     private static SecurityTokenNode getTokenNode(final SortedSet<SecurityTokenNode> tree, final Class<? extends ISecurityToken> token) {
-        return findTokenNode(tree, token).orElseThrow(() -> noSuchToken(token, tree));
+        return findTokenNode(tree, token).orElseThrow(() -> noSuchToken(token));
     }
 
     private static Optional<SecurityTokenNode> findTokenNode(final SortedSet<SecurityTokenNode> tree, final Class<? extends ISecurityToken> token) {
@@ -146,18 +166,38 @@ public final class SecurityTokenNodeTransformations {
         return Stream.concat(Stream.of(node), node.getSubTokenNodes().stream().flatMap(SecurityTokenNodeTransformations::flatten));
     }
 
-    private static RuntimeException noSuchToken(final Class<? extends ISecurityToken> first, final SortedSet<SecurityTokenNode> tree) {
-        return new InvalidStateException(ERR_TOKEN_NOT_IN_TREE.formatted(first.getTypeName()));
+    private static RuntimeException noSuchToken(final Class<? extends ISecurityToken> token) {
+        return new InvalidStateException(ERR_TOKEN_NOT_IN_TREE.formatted(token.getTypeName()));
     }
 
+    /// Describes an operation to be performed on a node.
+    ///
     private sealed interface Op {
+
+        /// Adds a node to the children of another node.
+        ///
+        /// @param add  when applied to node `X`, produces node `Y` such that `parent(Y) = X`
+        ///
         record Add (Function<SecurityTokenNode, SecurityTokenNode> add) implements Op {}
+
+        /// Removes a node from the children of another node.
+        ///
+        /// @param token  the sub-node corresponding to this token should be removed
+        ///
         record Remove (Class<? extends ISecurityToken> token) implements Op {}
+
+        /// Updates a node by applying an operation to one of its children.
+        ///
+        /// @param token  the node corresponding to this token should be updated
+        /// @param updateOp  an operation that should be applied to the node identified by `token`
+        ///
         record Update (Class<? extends ISecurityToken> token, Op updateOp) implements Op {}
+
     }
 
     /// Returns a new node that is equal to `node` but whose parent node is `parent`.
     /// The whole sub-tree rooted at `node` is recreated in the resulting node.
+    ///
     private static SecurityTokenNode updateParent(final SecurityTokenNode node, final SecurityTokenNode parent) {
         if (node.getSuperTokenNode() == parent) {
             return node;
