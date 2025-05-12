@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.utils.ImmutableSetUtils;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -31,6 +32,18 @@ import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 ///
 /// @see ISecurityTokenNodeTransformation
 public final class SecurityTokenNodeTransformations {
+
+    /// Returns a transformation that combines all specified transformations via function composition.
+    ///
+    public static ISecurityTokenNodeTransformation compose(final ISecurityTokenNodeTransformation... transformations) {
+        return compose(Arrays.asList(transformations));
+    }
+
+    /// Returns a transformation that combines all specified transformations via function composition.
+    ///
+    public static ISecurityTokenNodeTransformation compose(final Iterable<ISecurityTokenNodeTransformation> transformations) {
+        return tree -> foldLeft(transformations, tree, (acc, tran) -> tran.transform(acc));
+    }
 
     /// Creates a transformer that relocates token `child` under token `parent`.
     /// If `child` does not exist in a tree, it will be created as a leaf node under `parent`.

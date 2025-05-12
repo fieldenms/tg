@@ -308,17 +308,18 @@ public class StreamUtils {
         return foldLeft_(stream.iterator(), z, fn);
     }
 
-    /**
-     * Helper function that actually performs folding.
-     *
-     * @param iter
-     * @param z
-     * @param fn
-     * @return
-     */
+    /// Equivalent to [#foldLeft(BaseStream, Object, BiFunction)].
+    ///
+    public static <A, B> B foldLeft(final Iterable<A> iterable,
+                                    final B z,
+                                    final BiFunction<? super B, ? super A, B> fn) {
+        return foldLeft_(iterable.iterator(), z, fn);
+    }
+
     private static <A, B> B foldLeft_(final Iterator<A> iter,
                                       final B z,
-                                      final BiFunction<? super B, ? super A, B> fn) {
+                                      final BiFunction<? super B, ? super A, B> fn)
+    {
         if (!iter.hasNext()) {
             return z;
         }
