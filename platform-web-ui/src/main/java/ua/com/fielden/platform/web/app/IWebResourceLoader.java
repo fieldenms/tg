@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.app;
 
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.SequencedSet;
 
 /**
  * The contract for loading resources by their URIs.
@@ -47,5 +48,11 @@ public interface IWebResourceLoader {
      * @return
      */
     Optional<String> checksum(final String resourceUri);
-    
+
+    /**
+     * Returns a set of resource paths for deployment mode of an application.
+     * All these resources are cached through a Service Worker on a client.
+     */
+    SequencedSet<String> deploymentResourcePaths();
+
 }
