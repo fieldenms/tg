@@ -540,9 +540,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     final ActivatableAbstractEntity<?> persistedValue = session.load(propType, value.getId(), UPGRADE);
                     persistedValue.setIgnoreEditableState(true);
                     // Update `refCount` if the referenced entity is active and is not a self-reference.
-                    // If the entity being saved is active, but references an inactive entity, we have an erronous situation
-                    // and should prevent the activation of the entity being saved.
                     if (!areEqual(entity, persistedValue)) {
+                        // If the entity being saved is active and references an inactive entity, then we have an erroneous situation
+                        // and should prevent the activation of the entity being saved.
                         if (entity.get(ACTIVE)) {
                             if (!persistedValue.isActive()) {
                                 session.detach(persistedValue);
@@ -550,7 +550,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                                 final var entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
                                 final var propTitle = getTitleAndDesc(propName, entity.getType()).getKey();
                                 final var valueEntityTitle = getEntityTitleAndDesc(value.getType()).getKey();
-                                throw new EntityCompanionException(format(ERR_INACTIVE_REFERENCES, propTitle, entityTitle, entity, valueEntityTitle, persistedValue));
+                                throw new EntityCompanionException(ERR_INACTIVE_REFERENCES.formatted(propTitle, entityTitle, entity, valueEntityTitle, persistedValue));
                             }
                             else {
                                 session.update(persistedValue.incRefCount());
@@ -699,17 +699,20 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableDirtyProperties) {
                 final var value = prop.getValue();
                 if (value != null) {
-                    // `UPGRADE` is not strictly necessary to ensure the safety of concurrent updates to `refCount`.
-                    // With `UPGRADE`, `session.load()` will block if there is another transaction (in another thread) that runs this same code until it reaches `session.clear()`.
-                    // This ensures that `session.load()` always returns the latest persisted state.
-                    // Without `UPGRADE`, two transactions (in two threads) can obtain the result of `session.load` concurrently, as it will not block.
-                    // Nevertheless, in such case only the first thread that calls `session.flush()` will successfully modify the persistent state,
-                    // while the other one will fail with StaleObjectException.
-                    // To sum up:
-                    // * With `UPGRADE`: safe concurrent updates, blocking.
-                    // * Without `UPGRADE`: safe concurrent updates, non-blocking, but may throw an exception.
-                    // We should use `UPGRADE` if users would rather wait a little instead of seeing an error.
-                    // The wait time should be insignificant, and, moreover, concurrent modifications are rare in general.
+                    // The use of `UPGRADE` is not strictly required for safe concurrent updates to `refCount`.
+                    // However, with `UPGRADE`, `session.load()` acquires a pessimistic lock on the record,
+                    // blocking other transactions from modifying it until the current transaction completes (commit or rollback).
+                    // This guarantees that `session.load()` returns the most up-to-date persisted state.
+                    //
+                    // Without `UPGRADE`, multiple transactions can call `session.load()` concurrently without blocking.
+                    // In this case, the first transaction to commit successfully updates the persistent state,
+                    // while any concurrent transaction attempting to commit a conflicting change will fail with a `StaleObjectException`.
+                    //
+                    // Summary:
+                    // * With `UPGRADE`: safe concurrent updates with blocking (pessimistic locking).
+                    // * Without `UPGRADE`: safe concurrent updates without blocking (optimistic locking), but with a risk of rollback on conflict.
+                    //
+                    // We prefer using `UPGRADE` in this context to reduce the likelihood of rollbacks in potentially complex transactions caused by concurrent updates to `refCount`.
                     final var persistedEntity = (ActivatableAbstractEntity<?>) session.load(value.getType(), value.getId(), UPGRADE);
                     // If the referenced instance is not active (e.g. due to concurrent deactivation), then referencing is no longer relevant,
                     // and we are in error.
@@ -723,8 +726,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
         }
 
-        // depending on whether the current entity represents a one-2-one association or not, it may require a new ID
-        // in case of one-2-one association, the value of ID is derived from its key's ID and does not need to be generated
+        // Depending on whether the current entity represents a one-2-one association or not, it may require a new ID.
+        // In the case of one-2-one association, the value of ID is derived from its key's ID and does not need to be generated.
         final boolean isOne2OneAssociation = AbstractEntity.class.isAssignableFrom(entity.getKeyType());
         final Long newEntityId = isOne2OneAssociation ? ((AbstractEntity<?>) entity.getKey()).getId() : nextIdValue(ID_SEQUENCE_NAME, session);
         try {
@@ -733,8 +736,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             session.flush(); // force saving to DB
             session.clear();
         } finally {
-            // reset the value of ID to null for the passed-in entity to avoid any possible confusion stemming from the fact that entity became "persisted"
-            // this is relevant for all entities, including one-2-one associations
+            // Reset the value of ID to null for the passed-in entity to avoid any possible confusion stemming from the fact that `entity` became persisted.
+            // This is relevant for all entities, including one-2-one associations.
             entity.set(ID, null);
         }
         
