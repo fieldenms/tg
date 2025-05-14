@@ -86,7 +86,7 @@ const template = html`
             <template is="dom-repeat" items="[[weeks]]" as="week">
                 <div class="layout horizontal center-justified">
                     <template is="dom-repeat" items="[[week]]" as="day">
-                        <div on-tap="_selectDay" class$="[[_calcDayClass(day, month, year, selectedDay, selectedMonth, selectedYear)]]"><span>[[_absolute(day)]]</span>
+                        <div on-tap="_selectDay" on-dblclick="_acceptDate" class$="[[_calcDayClass(day, month, year, selectedDay, selectedMonth, selectedYear)]]"><span>[[_absolute(day)]]</span>
                         </div>
                     </template>
                 </div>
@@ -242,11 +242,12 @@ const template = html`
          * Selects the date.
          */
         _selectDay: function (event, detail, el) {
-            var yearMonthDay = { year: this.year, month: this.month, day: 1 };
+            const yearMonthDay = { year: this.year, month: this.month, day: 1 };
             this.selectedDate = _momentTz(yearMonthDay, this.timeZone).add(event.model.day.monthIncrementor, 'M').date(Math.abs(event.model.day.day)).valueOf();
-            if (event.detail.sourceEvent.detail > 1) {
-                this.fire("tg-accept-date");
-            }
+        },
+
+        _acceptDate: function (e) {
+            this.fire("tg-accept-date");
         },
 
         /**

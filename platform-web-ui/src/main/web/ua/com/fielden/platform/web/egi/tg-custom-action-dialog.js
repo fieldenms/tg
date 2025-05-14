@@ -15,22 +15,24 @@ import '/resources/components/tg-toast.js';
 import '/resources/images/tg-icons.js';
 import '/resources/components/postal-lib.js';
 
-import {IronOverlayBehavior, IronOverlayBehaviorImpl} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
+import { IronOverlayBehavior, IronOverlayBehaviorImpl } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 import { IronOverlayManager } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-manager.js';
-import {IronA11yKeysBehavior} from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js';
+import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
+import { IronFitBehavior } from '/resources/polymer/@polymer/iron-fit-behavior/iron-fit-behavior.js';
 
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { TgReflector } from '/app/tg-reflector.js';
-import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
-import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
-import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey } from '/resources/reflection/tg-polymer-utils.js';
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
+import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
+import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
+import { TgBackButtonBehavior } from '/resources/views/tg-back-button-behavior.js'
+import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs, localStorageKey, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
+import { TgResizableMovableBehavior } from '/resources/components/tg-resizable-movable-behavior.js';
 
 const ST_WIDTH = '_width';
 const ST_HEIGHT = '_height';
@@ -177,7 +179,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
+    <div id="titleBar" class="title-bar layout horizontal justified center" on-track="moveComponent">
         <paper-icon-button id="menuToggler" hidden icon="menu" tooltip-text="Menu" on-tap="_toggleMenu"></paper-icon-button>
         <div class="title-text layout horizontal center flex">
             <span class="static-title truncate">[[staticTitle]]</span>
@@ -185,7 +187,7 @@ const template = html`
             <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
         </div>
         <div class="relative layout horizontal justified center">
-            <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
+            <div id="navigationBar" hidden$="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
                 <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
                 <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigationButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
                 <span style="white-space: nowrap;">[[_sequentialEditText]]</span>
@@ -194,17 +196,17 @@ const template = html`
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
-                <paper-icon-button hidden="[[!_mainEntityType]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+                <paper-icon-button hidden$="[[!_mainEntityType]]" class="default-button title-bar-button share-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
-                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
+                <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button collapse-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button maximise-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseStateAndStore" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
+                <paper-icon-button hidden$="[[mobile]]" class="default-button title-bar-button maximise-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseStateAndStore" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
 
                 <!-- close/next buttons -->
-                <paper-icon-button id="closeButton" hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
-                <paper-icon-button id="skipNext" hidden="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
+                <paper-icon-button id="closeButton" hidden$="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
+                <paper-icon-button id="skipNext" hidden$="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
             <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
         </div>
@@ -217,7 +219,7 @@ const template = html`
             <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
         </div>
     </div>
-    <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-down="_handleResizeDown" on-track="resizeDialog" tooltip-text="Drag to resize<br>Double tap to reset dimensions" on-tap="resetDimensions"></iron-icon>
+    <iron-icon id="resizer" hidden$=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-down="_handleResizeDown" on-track="resizeDialog" tooltip-text="Drag to resize<br>Double tap to reset dimensions" on-tap="resetDimensions"></iron-icon>
     <tg-toast id="toaster"></tg-toast>`;
 
 template.setAttribute('strip-whitespace', '');
@@ -265,7 +267,9 @@ Polymer({
         TgFocusRestorationBehavior,
         TgTooltipBehavior,
         TgBackButtonBehavior,
-        TgElementSelectorBehavior
+        TgElementSelectorBehavior,
+        TgResizableMovableBehavior,
+        TgDoubleTapHandlerBehavior
     ],
 
     listeners: {
@@ -554,6 +558,11 @@ Polymer({
 
         this._setIsRunning(false);
 
+        // initialise properties from tg-resizable-movable-behavior
+        this.minimumWidth = 60 /* reasonable minimum width of text */ + (16 * 2) /* padding left+right */ + (22 * 3) /* three buttons width */;
+        this.persistSize = () => this._saveCustomDim(this.style.width, this.style.height);
+        this.persistPosition = () => this._saveCustomPosition(this.style.top, this.style.left);
+        this.allowMove = () => this._maximised === false;
     },
 
     ready: function() {
@@ -570,17 +579,23 @@ Polymer({
         this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
         //Add tg-screen-resolution-changed event listener to reset dialog dimension and position if resolution changes
         window.addEventListener('tg-screen-resolution-changed', this._handleResolutionChanged.bind(this));
+        //Create double tap handle for resizer icon
+        this.resetDimensions = this._createDoubleTapHandler("_lastResizerTap", (e) => {
+            this._removePersistedPositionAndDimensions()
+            this.refit();
+            this.notifyResizeWithoutItselfAndAncestors();
+        });
     },
 
     attached: function() {
-        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = isTouchEnabled() ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
         this.addEventListener('focus', this._onCaptureFocus, true);
         this.addEventListener('keydown', this._onCaptureKeyDown);
     },
 
     detached: function() {
-        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = isTouchEnabled() ? 'touchstart' : 'mousedown';
         this.removeEventListener(clickEvent, this._onCaptureClick, true);
         this.removeEventListener('focus', this._onCaptureFocus, true);
         this.removeEventListener('keydown', this._onCaptureKeyDown);
@@ -850,27 +865,13 @@ Polymer({
      * Dialog resizing handler assigned to resizing button in bottom right corner of the dialog.
      */
     resizeDialog: function(event) {
-        const target = event.target || event.srcElement;
-        if (target === this.$.resizer) {
+        if (event.target === this.$.resizer) {
             switch (event.detail.state) {
                 case 'start':
                     document.styleSheets[0].insertRule('* { cursor: nwse-resize !important; }', 0); // override custom cursors in all application with resizing cursor
                     break;
                 case 'track':
-                    const resizedHeight = this.offsetHeight + event.detail.ddy;
-                    const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */ ;
-                    if (heightNeedsResize) {
-                        this.style.height = resizedHeight + 'px';
-                    }
-                    const resizedWidth = this.offsetWidth + event.detail.ddx;
-                    const widthNeedsResize = resizedWidth >= 60 /* reasonable minimum width of text */ + (16 * 2) /* padding left+right */ + (22 * 3) /* three buttons width */
-                    if (widthNeedsResize) {
-                        this.style.width = resizedWidth + 'px';
-                    }
-                    if (heightNeedsResize || widthNeedsResize) {
-                        this._saveCustomDim(this.style.width, this.style.height);
-                        this.notifyResize();
-                    }
+                    this.resizeComponent(event);
                     break;
                 case 'end':
                     document.styleSheets[0].deleteRule(0);
@@ -878,14 +879,6 @@ Polymer({
             }
         }
         tearDownEvent(event);
-    },
-
-    resetDimensions: function (event) {
-        if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
-            this._removePersistedPositionAndDimensions()
-            this.refit();
-            this.notifyResizeWithoutItselfAndAncestors();
-        }
     },
 
     _removePersistedPositionAndDimensions: function () {
@@ -1015,39 +1008,6 @@ Polymer({
                 appearedAndFunc.drawer.drawer.align = 'right';
             }
         }
-    },
-
-    _moveDialog: function(e) {
-        var target = e.target || e.srcElement;
-        if (target === this.$.titleBar && this._maximised === false) {
-            switch (e.detail.state) {
-                case 'start':
-                    this.$.titleBar.style.cursor = 'move';
-                    this._windowHeight = window.innerHeight;
-                    this._windowWidth = window.innerWidth;
-                    break;
-                case 'track':
-                    const _titleBarDimensions = this.$.titleBar.getBoundingClientRect();
-                    const leftNeedsChange = _titleBarDimensions.right + e.detail.ddx >= 44 && _titleBarDimensions.left + e.detail.ddx <= this._windowWidth - 44;
-                    if (leftNeedsChange) {
-                        this.style.left = _titleBarDimensions.left + e.detail.ddx + 'px';
-                    }
-                    const topNeedsChange = _titleBarDimensions.top + e.detail.ddy >= 0 && _titleBarDimensions.bottom + e.detail.ddy <= this._windowHeight;
-                    if (topNeedsChange) {
-                        this.style.top = _titleBarDimensions.top + e.detail.ddy + 'px';
-                    }
-                    if (leftNeedsChange || topNeedsChange) {
-                        this._saveCustomPosition(
-                            topNeedsChange ? this.style.top : _titleBarDimensions.top + "px", 
-                            leftNeedsChange ? this.style.left : _titleBarDimensions.left + "px");
-                    }
-                    break;
-                case 'end':
-                    this.$.titleBar.style.removeProperty('cursor');
-                    break;
-            }
-        }
-        tearDownEvent(event);
     },
 
     _closeDialogAndIndicateActionCompletion: function() {
