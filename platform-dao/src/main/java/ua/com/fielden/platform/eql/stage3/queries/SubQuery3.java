@@ -18,7 +18,7 @@ import static ua.com.fielden.platform.utils.ToString.separateLines;
 public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
 
     private static final Logger LOGGER = getLogger();
-    public static final String ERR_SUBQUERY_MUST_YIELD_ONLY_ONE_VALUE = "Subquery must yield only 1 value but yields %s.";
+    public static final String ERR_SUBQUERY_MUST_YIELD_ONLY_ONE_VALUE = "A scalar subquery must yield only 1 value but yields %s.";
 
     private final PropType type;
     
