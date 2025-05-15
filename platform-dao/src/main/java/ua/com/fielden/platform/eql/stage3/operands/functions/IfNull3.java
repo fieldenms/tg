@@ -5,8 +5,12 @@ import ua.com.fielden.platform.eql.meta.PropType;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.queries.SubQuery3;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.persistence.HibernateHelpers;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
+import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
+import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.NO_EXPECTED_TYPE;
 
 public class IfNull3 extends TwoOperandsFunction3 {
 
@@ -16,6 +20,20 @@ public class IfNull3 extends TwoOperandsFunction3 {
 
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
+        final String operand1Sql;
+        final String operand2Sql;
+        // We need to help PostgreSQL with type inference by inserting explicit casts if one of the operands has unknown type.
+        // See Issue #2213.
+        if (dbVersion == POSTGRESQL && (operand1.type().isNull() ^ operand2.type().isNull()) || (operand1.type() == NO_EXPECTED_TYPE ^ operand2.type() == NO_EXPECTED_TYPE)) {
+            final var resultType = operand1.type().isNull() || operand1.type() == NO_EXPECTED_TYPE ? operand2.type() : operand1.type();
+            final var dialect = HibernateHelpers.getDialect(dbVersion);
+            operand1Sql = POSTGRESQL.castSql(operand1.sql(metadata, dbVersion), sqlCastTypeName(resultType.hibType(), dialect));
+            operand2Sql = POSTGRESQL.castSql(operand2.sql(metadata, dbVersion), sqlCastTypeName(resultType.hibType(), dialect));
+        } else {
+            operand1Sql = operand1.sql(metadata, dbVersion);
+            operand2Sql = operand2.sql(metadata, dbVersion);
+        }
+
         if (operand1 instanceof SubQuery3) {
             // This optimisation ensures that the first argument to COALESCE is computed only once.
             // See Issue #2394 for more details.
@@ -28,10 +46,10 @@ public class IfNull3 extends TwoOperandsFunction3 {
             // which would demand significant refactoring effort.
             interface $ { String QUERY_ALIAS ="EQL_Q12778210642", COLUMN_ALIAS = "EQL_C51037967375"; }
             return format("(SELECT COALESCE(%1$s.%2$s, %3$s) FROM (SELECT (%4$s) AS %2$s) AS %1$s)",
-                          $.QUERY_ALIAS, $.COLUMN_ALIAS, operand2.sql(metadata, dbVersion), operand1.sql(metadata, dbVersion));
+                          $.QUERY_ALIAS, $.COLUMN_ALIAS, operand2Sql, operand1Sql);
         }
         else {
-            return format("COALESCE(%s, %s)", operand1.sql(metadata, dbVersion), operand2.sql(metadata, dbVersion));
+            return format("COALESCE(%s, %s)", operand1Sql, operand2Sql);
         }
     }
 
