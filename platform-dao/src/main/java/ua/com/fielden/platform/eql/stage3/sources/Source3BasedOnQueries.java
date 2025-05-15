@@ -61,7 +61,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
     @Override
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         if (dbVersion == POSTGRESQL) {
-            // 1. Issue #2313 - PostgreSQL requires explicit type casts
+            // 1. Issue #2213 - PostgreSQL requires explicit type casts
             // 2. a SELECT with an ORDER BY inside a UNION must be enclosed in parentheses, although this inner ordering
             // is not guaranteed to have an effect on the results of UNION
             // https://www.postgresql.org/docs/16/sql-select.html#SQL-UNION
