@@ -20,8 +20,9 @@ import java.util.Objects;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
-import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.NO_EXPECTED_TYPE;
-import static ua.com.fielden.platform.utils.StreamUtils.*;
+import static ua.com.fielden.platform.eql.meta.PropType.NULL_TYPE;
+import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
+import static ua.com.fielden.platform.utils.StreamUtils.transpose;
 
 /**
  * A query source formed by concatenating results of its underlying queries.
@@ -86,7 +87,7 @@ public class Source3BasedOnQueries extends AbstractSource3 {
         // in each column of the result set find the first value with non-NULL type; assume that all values in the same
         // column are compatible with each other in terms of their types
         return transpose(models, q -> q.yields.getYields().stream())
-                .map(column -> column.stream().map(Yield3::type).filter(PropType::isNotNull).findFirst().orElse(NO_EXPECTED_TYPE))
+                .map(column -> column.stream().map(Yield3::type).filter(PropType::isNotNull).findFirst().orElse(NULL_TYPE))
                 .toList();
     }
 

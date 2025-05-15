@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.NO_EXPECTED_TYPE;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
 public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
@@ -39,8 +38,7 @@ public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
             throw exception;
         }
 
-        final PropType expectedType = Objects.requireNonNullElse(type, NO_EXPECTED_TYPE);
-        return "(" + super.sql(metadata, dbVersion, List.of(expectedType)) + ")";
+        return "(" + super.sql(metadata, dbVersion, List.of(type)) + ")";
     }
     
     @Override

@@ -10,7 +10,6 @@ import ua.com.fielden.platform.persistence.HibernateHelpers;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.eql.dbschema.HibernateToJdbcSqlTypeCorrespondence.sqlCastTypeName;
-import static ua.com.fielden.platform.eql.stage3.sundries.Yield3.NO_EXPECTED_TYPE;
 
 public class IfNull3 extends TwoOperandsFunction3 {
 
@@ -24,8 +23,8 @@ public class IfNull3 extends TwoOperandsFunction3 {
         final String operand2Sql;
         // We need to help PostgreSQL with type inference by inserting explicit casts if one of the operands has unknown type.
         // See Issue #2213.
-        if (dbVersion == POSTGRESQL && (operand1.type().isNull() ^ operand2.type().isNull()) || (operand1.type() == NO_EXPECTED_TYPE ^ operand2.type() == NO_EXPECTED_TYPE)) {
-            final var resultType = operand1.type().isNull() || operand1.type() == NO_EXPECTED_TYPE ? operand2.type() : operand1.type();
+        if (dbVersion == POSTGRESQL && (operand1.type().isNull() ^ operand2.type().isNull())) {
+            final var resultType = operand1.type().isNull() ? operand2.type() : operand1.type();
             final var dialect = HibernateHelpers.getDialect(dbVersion);
             operand1Sql = POSTGRESQL.castSql(operand1.sql(metadata, dbVersion), sqlCastTypeName(resultType.hibType(), dialect));
             operand2Sql = POSTGRESQL.castSql(operand2.sql(metadata, dbVersion), sqlCastTypeName(resultType.hibType(), dialect));
