@@ -14,7 +14,7 @@
 
     <properties>
         <restlet.version>2.4.4</restlet.version>
-        <jetty.version>9.4.56.v20240826</jetty.version>
+        <jetty.version>9.4.57.v20241219</jetty.version>
     </properties>
 
     <dependencies>
@@ -154,7 +154,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>${posgresql.version}</version>
+            <version>${postgresql.version}</version>
             <scope>provided</scope>
         </dependency>
         <!--
@@ -162,7 +162,7 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>10.2.1.jre17</version>
+            <version>${mssql.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
