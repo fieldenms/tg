@@ -12,6 +12,8 @@ import java.util.List;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.NO_OFFSET;
 import static ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3.isSubQuery;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
 public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implements ToString.IFormattable {
 
@@ -30,7 +32,30 @@ public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implem
     }
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final AbstractQuery3 enclosingQuery) {
-        final var modelsStr = models.stream().map(o -> o.sql(metadata, dbVersion)).collect(joining(", "));
+        // Deduplicate the order-by list to ensure compatibility with SQL Server.
+        // We do this by comparing the SQL for each item.
+        // This is by far the simplest solution.
+        // Its drawbacks are:
+        // 1. Inability to test the deduplication by EQL AST comparison.
+        // 2. Expressions with side-effects are not respected.
+        //    Currently, EQL does not support any expressions with side-effects (e.g., a function that generates a random number),
+        //    so this is not a problem.
+        //
+        // An alternative approach is to consider each item as an AST node, and compare their types and structure,
+        // which requires a lot of additional complexity for a thorough solution (a comparison for each type of node).
+        //
+        // There is one rare case that is not taken into account here.
+        // SQL Server requires that an expression from the select list and its alias cannot be present in an order-by list at the same time.
+        // E.g., `SELECT name AS c FROM t ORDER BY name, c` is an invalid query.
+        //
+        // See Issue #2429.
+        final var modelsStr = distinct(models.stream()
+                                               .map(m -> t2(m.mapExpression(operand -> operand.sql(metadata, dbVersion),
+                                                                            Yield3::column),
+                                                            m.isDesc())),
+                                       t2 -> t2._1)
+                .map(t2 -> t2.map((sql, desc) -> sql + (desc ? " DESC" : " ASC")))
+                .collect(joining(", "));
 
         final var sb = new StringBuilder();
 
