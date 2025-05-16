@@ -15,20 +15,20 @@ import static ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3.isSubQue
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
-public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implements ToString.IFormattable {
+public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implements ToString.IFormattable {
 
-    public OrderBys3(final List<OrderBy3> models) {
-        this(models, Limit.all(), NO_OFFSET);
+    public OrderBys3(final List<OrderBy3> list) {
+        this(list, Limit.all(), NO_OFFSET);
     }
 
-    public OrderBys3(final List<OrderBy3> models, final Limit limit, final long offset) {
-        this.models = ImmutableList.copyOf(models);
+    public OrderBys3(final List<OrderBy3> list, final Limit limit, final long offset) {
+        this.list = ImmutableList.copyOf(list);
         this.limit = limit;
         this.offset = offset;
     }
 
     public boolean isEmpty() {
-        return models.isEmpty();
+        return list.isEmpty();
     }
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final AbstractQuery3 enclosingQuery) {
@@ -49,11 +49,11 @@ public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implem
         // E.g., `SELECT name AS c FROM t ORDER BY name, c` is an invalid query.
         //
         // See Issue #2429.
-        final var modelsStr = distinct(models.stream()
-                                               .map(m -> t2(m.mapExpression(operand -> operand.sql(metadata, dbVersion),
-                                                                            Yield3::column),
-                                                            m.isDesc())),
-                                       t2 -> t2._1)
+        final var listSql = distinct(list.stream()
+                                             .map(m -> t2(m.mapExpression(operand -> operand.sql(metadata, dbVersion),
+                                                                          Yield3::column),
+                                                          m.isDesc())),
+                                     t2 -> t2._1)
                 .map(t2 -> t2.map((sql, desc) -> sql + (desc ? " DESC" : " ASC")))
                 .collect(joining(", "));
 
@@ -62,7 +62,7 @@ public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implem
         switch (dbVersion) {
             // PostgreSQL supports shorter syntax (MySQL too)
             case POSTGRESQL, MYSQL -> {
-                sb.append(modelsStr);
+                sb.append(listSql);
                 if (limit instanceof Limit.Count(long count)) {
                     sb.append(" LIMIT ").append(count).append(' ');
                 }
@@ -71,7 +71,7 @@ public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implem
                 }
             }
             case MSSQL -> {
-                sb.append(modelsStr);
+                sb.append(listSql);
                 // 1. Limit (FETCH) can only appear after OFFSET, so there needs to be OFFSET if there is FETCH.
                 // 2. If this is a subquery, then OFFSET must be specified, even if it is zero.
                 // SQL Server will reject ORDER BY in a subquery without OFFSET or TOP.
@@ -85,7 +85,7 @@ public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implem
             // OFFSET and FETCH FIRST from SQL standard
             // Supported by: MSSQL
             default -> {
-                sb.append(modelsStr);
+                sb.append(listSql);
                 // limit (FETCH) can only appear after OFFSET, so we need offset if we have limit
                 if (offset != NO_OFFSET || limit instanceof Limit.Count) {
                     sb.append(" OFFSET ").append(offset).append(" ROWS ");
@@ -109,7 +109,7 @@ public record OrderBys3 (List<OrderBy3> models, Limit limit, long offset) implem
         return format.toString(this)
                 .add("limit", limit)
                 .add("offset", offset)
-                .add("models", models)
+                .add("list", list)
                 .$();
     }
 
