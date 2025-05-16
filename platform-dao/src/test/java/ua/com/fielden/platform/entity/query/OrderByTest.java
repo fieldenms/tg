@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
-import ua.com.fielden.platform.eql.stage0.OrderingModelConflictException;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
@@ -329,6 +328,78 @@ public class OrderByTest extends AbstractDaoTestCase {
             assertEquals(TEST_DATA_KEY_PREFIX + (index + 1), entities.get(index).getKey());
         }
     }
+
+    @Test
+    public void an_order_by_list_may_contain_duplicates_01() {
+        final var query = select(TgPersonName.class)
+                .orderBy().prop("key").asc()
+                .val(1).asc()
+                .prop("key").desc()
+                .model();
+
+        final var expected = allEntities();
+        final var actual = co$(TgPersonName.class).getAllEntities(QueryExecutionModel.from(query).model());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void an_order_by_list_may_contain_duplicates_02() {
+        final var query = select(TgPersonName.class)
+                .orderBy().prop("key").asc()
+                .val(1).asc()
+                .val(1).desc()
+                .model();
+
+        final var expected = allEntities();
+        final var actual = co$(TgPersonName.class).getAllEntities(QueryExecutionModel.from(query).model());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void an_order_by_list_may_contain_duplicates_03() {
+        final var expr = expr().val(1).add().prop("id").model();
+        final var query = select(TgPersonName.class)
+                .orderBy().prop("key").asc()
+                .expr(expr).asc()
+                .expr(expr).asc()
+                .model();
+
+        final var expected = allEntities();
+        final var actual = co$(TgPersonName.class).getAllEntities(from(query).model());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void an_order_by_list_may_contain_duplicates_04() {
+        final var query = select(TgPersonName.class)
+                .orderBy().prop("key").asc()
+                .concat().prop("key").with().val("!").end().asc()
+                .concat().prop("key").with().val("!").end().asc()
+                .model();
+
+        final var expected = allEntities();
+        final var actual = co$(TgPersonName.class).getAllEntities(from(query).model());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void an_order_by_list_may_contain_duplicates_05() {
+        final var query = select(TgPersonName.class)
+                .orderBy().prop("key").asc()
+                .model(select().yield().val(1).modelAsPrimitive()).asc()
+                .model(select().yield().val(1).modelAsPrimitive()).desc()
+                .model(select().yield().val(1).modelAsPrimitive()).asc()
+                .prop("key").desc()
+                .model();
+
+        final var expected = allEntities();
+        final var actual = co$(TgPersonName.class).getAllEntities(from(query).model());
+        assertEquals(expected, actual);
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Utilities
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     /**
      * A helper method to retrieve all test entities in the specific order.
