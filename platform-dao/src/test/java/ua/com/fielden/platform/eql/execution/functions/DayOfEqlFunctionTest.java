@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.eql.execution.functions;
 
 import static java.lang.Integer.valueOf;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.eql.execution.AbstractEqlExecutionTestCase;
@@ -51,4 +53,12 @@ public class DayOfEqlFunctionTest extends AbstractEqlExecutionTestCase {
         final var qry = select(TeNamedValuesVector.class).yield().caseWhen().val(11).eq().dayOf().prop("dateAndTimeOf20010911084640").then().val(1).end().as(RESULT).modelAsAggregate();
         assertEquals(valueOf(1), retrieveResult(qry));
     }
+
+    @Test
+    @Ignore // FIXME: this test fails under both SQL Server and PostgreSQL, returning 7 instead of 29
+    public void dates_before_1753_are_supported() {
+        final var qry = select().yield().dayOf().val(date("1400-05-29 03:40:04")).as(RESULT).modelAsAggregate();
+        assertThat(retrieveResult(qry)).isEqualTo(29);
+    }
+
 }
