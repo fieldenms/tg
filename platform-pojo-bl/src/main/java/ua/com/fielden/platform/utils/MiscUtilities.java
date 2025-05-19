@@ -6,10 +6,7 @@ import ua.com.fielden.platform.types.either.Either;
 
 import javax.swing.filechooser.FileFilter;
 import java.io.*;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -209,5 +206,12 @@ public class MiscUtilities {
         final var msg = "Expected value of type [%s], but was: [%s] of type [%s].";
         return Either.left(new InvalidArgumentException(msg.formatted(type.getTypeName(), value, value.getClass().getTypeName())));
     }
+
+    public static Optional<Boolean> optional(final boolean value) {
+        return value ? OPTIONAL_TRUE : OPTIONAL_FALSE;
+    }
+
+    private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(Boolean.FALSE);
+    private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(Boolean.TRUE);
 
 }

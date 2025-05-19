@@ -1,4 +1,5 @@
-<!-- The pull request title should consist of the word "Issue", a space, #issue number, space, dash (-), space, then the issue title. -->
+<!-- The pull request title should consist of the word "Issue", a space, #issue number, space, dash (-), space, then the issue title (without the incident number). -->
+<!-- For example: Issue #510 - Unticking "Emergency Stock?" does not trigger applicable recalculation in progress -->
 
 Resolve #nnn <!-- replace with the issue number, in case of several issues addressed by a PR, list them all -->
 
@@ -8,7 +9,8 @@ This section should be completed with reference to section [Preparing PR](https:
 
 <!-- Delete any items that are not applicable. -->
 
-- [ ] Converted PR to draft while it is being prepared by tapping the "Convert to draft" link beneath the "Reviewers" section.
+- [ ] Create the pull request as a draft by tapping the dropdown arrow on the 'Create pull request' button under the pull request description (below the text box where this description is being edited) and changing the default `Create pull request` to `Draft pull request`.
+      Or, if the pull request has already been created, convert it to draft by tapping the "Convert to draft" link beneath the "Reviewers" section.
 
 - [ ] A self-review of all changes has been completed, and the changes are in sync with the issue requirements.
 
@@ -20,11 +22,11 @@ This section should be completed with reference to section [Preparing PR](https:
 
 - [ ] Developer documentation (e.g., comments, Javadoc), have been provided where required.
 
-- [ ] New Java tests have been written or existing adjusted, if required, to cover the new functionality.
+- [ ] New Java tests have been written or existing tests adjusted, if required, to cover the new functionality.
 
 - [ ] All existing and new Java tests pass successfully by running them with Maven.
 
-- [ ] New Web tests have been written or existing adjusted, if required, to cover the new functionality.
+- [ ] New Web tests have been written or existing tests adjusted, if required, to cover the new functionality.
 
 - [ ] All existing and new Web tests pass successfully.
 
@@ -43,7 +45,7 @@ This section should be completed with reference to section [Preparing PR](https:
 - [ ] The latest changes from the base branch have already been merged into this feature branch (and tested).
 
 - [ ] Added a change overview to the issue description or as a wiki page, referenced in the issue description.
-      Some issue might be very descriptive and server in place of a wiki page.
+      Some issues might be very descriptive and serve in place of a wiki page.
       In such cases consider adding label `Wiki like` to the issue.
 
 - [ ] Changes subject to performance considerations have been evaluated, and tested against production-size data if applicable.
@@ -56,7 +58,7 @@ This section should be completed with reference to section [Preparing PR](https:
 
 - [ ] The `Pull request` label has been added to the issue.
 
-- [ ] Made PR ready for review by tapping the "Ready for review" button below the list of commits on the PR page.
+- [ ] The pull request has been made ready for review by tapping the "Ready for review" button below the list of commits on the pull request page.
 
 ## Additional details
 

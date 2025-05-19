@@ -5,6 +5,7 @@ import ua.com.fielden.platform.error.Result;
 
 import static graphql.Assert.assertFalse;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.error.Result.*;
 
 public class RichTextHtmlSanitisationTest {
 
@@ -167,6 +168,17 @@ public class RichTextHtmlSanitisationTest {
     public void attribute_target_in_element_a_is_allowed() {
         assertSanitizationSuccess("the <a target='_blank' href='https://example.org'> example </a> site");
     }
+
+    @Test
+    public void extended_Result_message_is_allowed() {
+        assertSanitizationSuccess(informativeEx("problem", "extra details").getMessage());
+        assertSanitizationSuccess(warningEx("problem", "extra details").getMessage());
+        assertSanitizationSuccess(failureEx("problem", "extra details").getMessage());
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Utilities
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     private void assertSanitizationFailure(final String input) {
         assertFalse(RichTextSanitiser.sanitiseHtml(input).isSuccessful());
