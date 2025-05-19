@@ -1,6 +1,6 @@
 import { createPlugin } from '../core/index.js';
 import { DayTableSlicer, TableRows, TableDateProfileGenerator, buildDayTableModel, buildDayTableRenderRange } from '../daygrid/internal.js';
-import { be as DateComponent, z as memoize, a5 as getUniqueDomId, bK as DayHeader, bx as formatIsoMonthStr, ct as ViewContainer, E as isPropsEqual, d as createDuration, x as createFormatter, cw as injectStyles, o as intersectRanges } from '../core/internal-common.js';
+import { bc as DateComponent, z as memoize, a3 as getUniqueDomId, bI as DayHeader, bv as formatIsoMonthStr, cq as ViewContainer, E as isPropsEqual, d as createDuration, x as createFormatter, ct as injectStyles, o as intersectRanges } from '../core/internal-common.js';
 import { createElement as y, createRef as d } from '../../preact/dist/preact.module.js';
 
 class SingleMonth extends DateComponent {
