@@ -12,10 +12,18 @@ import java.util.List;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.eql.stage1.sundries.OrderBys1.NO_OFFSET;
 import static ua.com.fielden.platform.eql.stage3.queries.AbstractQuery3.isSubQuery;
+import static ua.com.fielden.platform.eql.stage3.sundries.OrderBy3.ASC;
+import static ua.com.fielden.platform.eql.stage3.sundries.OrderBy3.DESC;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.StreamUtils.distinct;
 
 public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implements ToString.IFormattable {
+
+    private static final String LIMIT = " LIMIT ";
+    private static final String OFFSET = " OFFSET ";
+    private static final String ROWS = " ROWS ";
+    private static final String FETCH_FIRST = " FETCH FIRST ";
+    private static final String ROWS_ONLY = " ROWS ONLY ";
 
     public OrderBys3(final List<OrderBy3> list) {
         this(list, Limit.all(), NO_OFFSET);
@@ -45,16 +53,15 @@ public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implemen
         // which requires a lot of additional complexity for a thorough solution (a comparison for each type of node).
         //
         // There is one rare case that is not taken into account here.
-        // SQL Server requires that an expression from the select list and its alias cannot be present in an order-by list at the same time.
+        // SQL Server requires an expression from the select list, and its alias cannot be present in an order-by list at the same time.
         // E.g., `SELECT name AS c FROM t ORDER BY name, c` is an invalid query.
         //
         // See Issue #2429.
         final var listSql = distinct(list.stream()
-                                             .map(m -> t2(m.mapExpression(operand -> operand.sql(metadata, dbVersion),
-                                                                          Yield3::column),
-                                                          m.isDesc())),
+                                         .map(m -> t2(m.mapExpression(operand -> operand.sql(metadata, dbVersion), Yield3::column),
+                                                      m.isDesc())),
                                      t2 -> t2._1)
-                .map(t2 -> t2.map((sql, desc) -> sql + (desc ? " DESC" : " ASC")))
+                .map(t2 -> t2.map((sql, desc) -> sql + (desc ? DESC : ASC)))
                 .collect(joining(", "));
 
         final var sb = new StringBuilder();
@@ -64,10 +71,10 @@ public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implemen
             case POSTGRESQL, MYSQL -> {
                 sb.append(listSql);
                 if (limit instanceof Limit.Count(long count)) {
-                    sb.append(" LIMIT ").append(count).append(' ');
+                    sb.append(LIMIT).append(count).append(' ');
                 }
                 if (offset != NO_OFFSET) {
-                    sb.append(" OFFSET ").append(offset).append(' ');
+                    sb.append(OFFSET).append(offset).append(' ');
                 }
             }
             case MSSQL -> {
@@ -76,9 +83,9 @@ public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implemen
                 // 2. If this is a subquery, then OFFSET must be specified, even if it is zero.
                 // SQL Server will reject ORDER BY in a subquery without OFFSET or TOP.
                 if (offset != NO_OFFSET || limit instanceof Limit.Count || isSubQuery(enclosingQuery)) {
-                    sb.append(" OFFSET ").append(offset).append(" ROWS ");
+                    sb.append(OFFSET).append(offset).append(ROWS);
                     if (limit instanceof Limit.Count(long count)) {
-                        sb.append(" FETCH FIRST ").append(count).append(" ROWS ONLY ");
+                        sb.append(FETCH_FIRST).append(count).append(ROWS_ONLY);
                     }
                 }
             }
@@ -86,12 +93,12 @@ public record OrderBys3 (List<OrderBy3> list, Limit limit, long offset) implemen
             // Supported by: MSSQL
             default -> {
                 sb.append(listSql);
-                // limit (FETCH) can only appear after OFFSET, so we need offset if we have limit
+                // limit (FETCH) can only appear after OFFSET, so we need offset if we have a limit
                 if (offset != NO_OFFSET || limit instanceof Limit.Count) {
-                    sb.append(" OFFSET ").append(offset).append(" ROWS ");
+                    sb.append(OFFSET).append(offset).append(ROWS);
                 }
                 if (limit instanceof Limit.Count(long count)) {
-                    sb.append(" FETCH FIRST ").append(count).append(" ROWS ONLY ");
+                    sb.append(FETCH_FIRST).append(count).append(ROWS_ONLY);
                 }
             }
         }

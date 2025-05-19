@@ -9,6 +9,9 @@ import java.util.function.Function;
 
 public record OrderBy3 (ISingleOperand3 operand, Yield3 yield, boolean isDesc) implements ToString.IFormattable {
 
+    public static final String DESC = " DESC";
+    public static final String ASC = " ASC";
+
     public OrderBy3(final ISingleOperand3 operand, final boolean isDesc) {
         this(operand, null, isDesc);
     }
@@ -18,7 +21,7 @@ public record OrderBy3 (ISingleOperand3 operand, Yield3 yield, boolean isDesc) i
     }
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
-        return (operand != null ? operand.sql(metadata, dbVersion) : yield.column()) + (isDesc ? " DESC" : " ASC");
+        return (operand != null ? operand.sql(metadata, dbVersion) : yield.column()) + (isDesc ? DESC : ASC);
     }
 
     <T> T mapExpression(final Function<ISingleOperand3, T> operandFn, final Function<Yield3, T> yieldFn) {
