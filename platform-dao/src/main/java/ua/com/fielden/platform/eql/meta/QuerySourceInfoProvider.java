@@ -89,10 +89,16 @@ public class QuerySourceInfoProvider {
 
     private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder;
     private final IDomainMetadata domainMetadata;
+    private final ISyntheticModelProvider synModelProvider;
 
     @Inject
-    public QuerySourceInfoProvider(final IDomainMetadata domainMetadata, final IDomainMetadataUtils domainMetadataUtils) {
+    public QuerySourceInfoProvider(
+            final IDomainMetadata domainMetadata,
+            final IDomainMetadataUtils domainMetadataUtils,
+            final ISyntheticModelProvider synModelProvider)
+    {
         this.domainMetadata = domainMetadata;
+        this.synModelProvider = synModelProvider;
 
         // Declared query source infos are created for all entities.
         declaredQuerySourceInfoMap = domainMetadataUtils.registeredEntities()
@@ -120,7 +126,10 @@ public class QuerySourceInfoProvider {
         seModels = domainMetadataUtils.registeredEntities()
                 .map(EntityMetadata::asSynthetic).flatMap(Optional::stream)
                 .collect(toConcurrentMap(EntityMetadata::javaType,
-                                         em -> em.data().models().stream().map(QUERY_MODEL_TO_STAGE_1_TRANSFORMER::generateAsUncorrelatedSourceQuery).toList()));
+                                         em -> synModelProvider.getModels(em.javaType())
+                                                 .stream()
+                                                 .map(QUERY_MODEL_TO_STAGE_1_TRANSFORMER::generateAsUncorrelatedSourceQuery)
+                                                 .toList()));
         // Compute dependencies between synthetic entities.
         final var seDependencies = mapValues(seModels,
                                              (type, queries) -> queries.stream()
@@ -300,7 +309,7 @@ public class QuerySourceInfoProvider {
                         final var propTpi = new QuerySourceItemForComponentType<>(name, ct.javaType(), hibType);
                         for (final PropertyMetadata spm : pmUtils.subProperties(pm)) {
                             propTpi.addSubitem(
-                                    new QuerySourceItemForPrimType<>(spm.name(), (Class<?>) spm.type().javaType(),
+                                    new QuerySourceItemForPrimType<>(spm.name(), spm.type().javaType(),
                                                                      spm.hibType(),
                                                                      spm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null)));
                         }
@@ -348,7 +357,7 @@ public class QuerySourceInfoProvider {
     }
     // where
     private QuerySourceItemForPrimType<?> mkPrim(final PropertyMetadata pm) {
-        return new QuerySourceItemForPrimType<>(pm.name(), (Class<?>) pm.type().javaType(), pm.hibType(),
+        return new QuerySourceItemForPrimType<>(pm.name(), pm.type().javaType(), pm.hibType(),
                                                 pm.asCalculated().map(QuerySourceInfoProvider::toCalcPropInfo).orElse(null));
     }
 
@@ -430,10 +439,10 @@ public class QuerySourceInfoProvider {
         } else {
             // This branch is intended to be executed by platform tests, allowing to use entity types without registering them in the application domain.
             LOGGER.warn(() -> WARN_GENERATING_MODELS_FOR_SYNTHETIC_ENTITY_MAY_AFFECT_PERFORMANCE.formatted(entityType.getSimpleName()));
-            final var entityMetadata = domainMetadata.forEntity(entityType);
-            return entityMetadata.asSynthetic()
-                    .map(em -> em.data().models().stream().map(QUERY_MODEL_TO_STAGE_1_TRANSFORMER::generateAsUncorrelatedSourceQuery).collect(toImmutableList()))
-                    .orElseThrow(() -> new EqlMetadataGenerationException(ERR_EXPECTED_SYNTHETIC_ENTITY.formatted(entityMetadata)));
+            return synModelProvider.getModels(entityType)
+                    .stream()
+                    .map(QUERY_MODEL_TO_STAGE_1_TRANSFORMER::generateAsUncorrelatedSourceQuery)
+                    .collect(toImmutableList());
         }
     }
 

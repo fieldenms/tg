@@ -35,7 +35,7 @@ public class MigrationUtils {
                         final var leafs = pmUtils.isPropEntityType(ppm, EntityMetadata::isPersistent)
                                 ? keyPaths(ppm, domainMetadata)
                                 : List.of(pm.name());
-                        yield Stream.of(new PropMd(ppm.name(), (Class<?>) ppm.type().javaType(), ppm.data().column().name,
+                        yield Stream.of(new PropMd(ppm.name(), ppm.type().javaType(), ppm.data().column().name,
                                                    ppm.is(REQUIRED), pm.hibType() instanceof IUtcDateTimeType, leafs));
                     }
                     default -> {
@@ -46,7 +46,7 @@ public class MigrationUtils {
                                     final var leafs = pmUtils.isPropEntityType(spm, EntityMetadata::isPersistent)
                                             ? keyPaths(spm, domainMetadata).stream().map(s -> pm.name() + "." + s).toList()
                                             : List.of(pm.name() + "." + spm.name());
-                                    return new PropMd(pm.name() + "." + spm.name(), (Class<?>) spm.type().javaType(),
+                                    return new PropMd(pm.name() + "." + spm.name(), spm.type().javaType(),
                                                       spm.data().column().name, required,
                                                       spm.hibType() instanceof IUtcDateTimeType, leafs);
                                 });

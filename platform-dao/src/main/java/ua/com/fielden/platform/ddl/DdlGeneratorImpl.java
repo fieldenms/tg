@@ -42,7 +42,7 @@ class DdlGeneratorImpl implements IDdlGenerator {
     }
 
     @Override
-    public List<String> generateDatabaseDdl(final Dialect dialect, final Collection<Class<? extends AbstractEntity<?>>> types) {
+    public List<String> generateDatabaseDdl(final Dialect dialect, final Collection<? extends Class<? extends AbstractEntity<?>>> types) {
         return generateDatabaseDdl_(dialect, types.stream());
     }
 

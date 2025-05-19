@@ -14,6 +14,8 @@ public final class PropertyMetadataKeys {
      */
     public static final KCompositeKeyMember KEY_MEMBER = KCompositeKeyMember.INSTANCE;
 
+    public static final KAuditProperty AUDIT_PROPERTY = KAuditProperty.INSTANCE;
+
     private PropertyMetadataKeys() {}
 
     private static <V> AnyKey<V> mkAnyKey(final String name) {
@@ -41,6 +43,15 @@ public final class PropertyMetadataKeys {
         private KCompositeKeyMember() {
             super("Key Member");
         }
+    }
+
+    public static final class KAuditProperty extends AnyKeyImpl<KAuditProperty.Data> {
+        private static final KAuditProperty INSTANCE = new KAuditProperty();
+        private KAuditProperty() {
+            super("Audit Property");
+        }
+
+        public record Data (boolean active) {}
     }
 
 }
