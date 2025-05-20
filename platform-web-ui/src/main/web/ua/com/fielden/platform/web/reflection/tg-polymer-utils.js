@@ -295,6 +295,24 @@ export const isIPhoneOs = function () {
     return window.navigator.userAgent.includes('iPhone OS');
 };
 
+/**
+ * Determines whether device's browser supports touch events.
+ * This is different from whether the device has a touchscreen. However, if true, it means that device has touchscreen in most cases.
+ *
+ * There are some devices without 'ontouchstart', but may have window.TouchEvent (e.g. Leaflet checks this).
+ * Other devices without 'ontouchstart' may have navigator.[m/msM]axTouchPoints > 0 and that will indicate the presence of touch support.
+ * But still, `'ontouchstart' in window` check provides a good balance and works in Android smartphones and iOs/iPadIs devices.
+ * Also, Polymer 3 iron-overlay-manager and our insertion points / custom action dialogs use this check for assigning onCaptureClick events to bring overlay to front.
+ *
+ * Note: it may be desirable to move fully to Pointer Events instead of Mouse / Touch events.
+ * They are now fully supported almost everywhere (https://caniuse.com/pointer).
+ *
+ * @see #2313 Touch devices: Drag and Drop (https://github.com/fieldenms/tg/issues/2323)
+ */
+export const isTouchEnabled = function () {
+    return 'ontouchstart' in window;
+};
+
 export const doWhenDimentionsAttainedAnd = function (self, conditionFun, doFun, time) {
     conditionFun.bind(self);
     doFun.bind(self);
@@ -332,13 +350,22 @@ const _userName = function () {
 };
 
 /**
- * Returns generated key for local storage and specified subject to save and retrieve data.
+ * Returns generated key for local storage to save and retrieve data.
  * 
- * @param {String} subject - subject that should be appended to user name to create key for local storage data.
- * @returns 
+ * @param {String} subject - subject that identifies concrete type of custom data to be persisted (e.g. *_...Person_1920x1200_height, *_...MiWorkBoardMain_leftSplitterPosition etc.)
  */
 export const localStorageKey = function (subject) {
     return `${_userName()}_${subject}`;
+};
+
+/**
+ * Returns entity centre generated key for local storage to save and retrieve data.
+ *
+ * @param {String} miType - menu item type of the centre
+ * @param {String} subject - subject that identifies concrete type of custom data to be persisted (e.g. *_...MiWorkBoardMain_topInsertionPointOrder, *_...MiWorkBoardMain_leftSplitterPosition etc.)
+ */
+export const localStorageKeyForCentre = function (miType, subject) {
+    return localStorageKey(`${miType}_${subject}`);
 };
 
 /**
