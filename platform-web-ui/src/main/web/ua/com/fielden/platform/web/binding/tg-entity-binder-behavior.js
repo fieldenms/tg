@@ -586,13 +586,16 @@ export const TgEntityBinderBehavior = {
                     // (if the entity was not modified -- _validate(holder) will start the error recovery process)
                     slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
                     // '_validationPromise' can be aborted (see 'abortValidationIfAny') and this is okay.
-                    // Catch handler is used to prevent 'Uncaught (in promise)' errors.
-                    // But we should also reject the outer promise; otherwise we will end-up with endless 'lastValidationAttemptPromise'.
-                    // This disrupts its usage after erroneous validation: copy / edit autocompleter title actions will hang.
+                    // The outer promise must resolve if '_validationPromise' resolves.
+                    // But we should also reject the outer promise on '_validationPromise' rejection.
+                    // Otherwise we will end-up with endless 'lastValidationAttemptPromise'.
+                    // And this will disrupt its usage after erroneous validation: copy / edit entity editor title actions will hang.
                     // The same will happen for other actions, like criteria SAVE (see 'lastValidationAttemptPromise' usage).
-                    slf._validationPromise.then(res => resolve(res)).catch(e => reject(e));
+                    // So, resolve(slf._validationPromise) call will ensure proper resolve / reject for outer promise.
+                    resolve(slf._validationPromise);
                 }, 50);
             }).catch(error => {
+                // One of the reasons for catch handler is to prevent 'Uncaught (in promise)' errors.
                 if (error.error && error.error.message && 'Request aborted.' === error.error.message) {
                     // Skip this error from <iron-request>.
                     // This means that 'lastValidationAttemptPromise' promise will be fulfilled.
