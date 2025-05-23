@@ -563,7 +563,7 @@ export const TgEntityBinderBehavior = {
 
         // callbacks, that will be bound by editor child elements:
         self.validate = (function () {
-            this.lastValidationAttemptPromise =  new Promise((resolve, reject) => {
+            this.lastValidationAttemptPromise = new Promise((resolve, reject) => {
                 const slf = this;
                 slf._validationCounter += 1;
                 console.log('validate initiated (', slf._validationCounter, ')');
@@ -585,8 +585,22 @@ export const TgEntityBinderBehavior = {
                     // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
                     // (if the entity was not modified -- _validate(holder) will start the error recovery process)
                     slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
-                    slf._validationPromise.then(res => resolve(res)).catch(e => {}); // _validationPromise can be aborted (see abortValidationIfAny) and this is okay; catch handler is used to prevent 'Uncaught (in promise)' errors
+                    // '_validationPromise' can be aborted (see 'abortValidationIfAny') and this is okay.
+                    // Catch handler is used to prevent 'Uncaught (in promise)' errors.
+                    // But we should also reject the outer promise; otherwise we will end-up with endless 'lastValidationAttemptPromise'.
+                    // This disrupts its usage after erroneous validation: copy / edit autocompleter title actions will hang.
+                    // The same will happen for other actions, like criteria SAVE (see 'lastValidationAttemptPromise' usage).
+                    slf._validationPromise.then(res => resolve(res)).catch(e => reject(e));
                 }, 50);
+            }).catch(error => {
+                if (error.error && error.error.message && 'Request aborted.' === error.error.message) {
+                    // Skip this error from <iron-request>.
+                    // This means that 'lastValidationAttemptPromise' promise will be fulfilled.
+                } else {
+                    console.error('Error in lastValidationAttemptPromise: ', error);
+                    // Ensure 'lastValidationAttemptPromise' rejection on error.
+                    throw error;
+                }
             });
         }).bind(self);
 

@@ -566,7 +566,13 @@ Polymer({
                         const lastValidationAttemptPromise = self.lastValidationAttemptPromise();
                         if (lastValidationAttemptPromise !== null) {
                             console.warn("Saving is chained to the last validation attempt promise...", lastValidationAttemptPromise);
-                            return resolve(lastValidationAttemptPromise);
+                            // Don't reject on rejected 'lastValidationAttemptPromise'.
+                            // We should allow SAVE even after validation with connection lost / server (or other) error.
+                            // Otherwise it would look like broken SAVE action.
+                            // Also log more console information.
+                            return resolve(lastValidationAttemptPromise.catch(error => {
+                                console.error('Error in lastValidationAttemptPromise: ', error);
+                            }));
                         }
                         return resolve();
                     }, 50);
