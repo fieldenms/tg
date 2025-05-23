@@ -66,6 +66,7 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isCollectional;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFromCriteriaType;
 import static ua.com.fielden.platform.types.RichText.VALIDATION_RESULT;
@@ -409,7 +410,18 @@ public class EntityResourceUtils {
             performAction.run();
         } else {
             final Object staleOriginalValue = calculateStaleOriginalValue.get();
-            final Object freshValue = entity.get(name);
+            final Object freshValue0 = entity.get(name);
+            final Object freshValue;
+            if (freshValue0 == null) {
+                freshValue = null;
+            } else {
+                if (isEntityType(determinePropertyType(type, name)) && isCollectional(type, name)) {
+                    freshValue = ((Collection) freshValue0).stream().filter(ent -> ent != null).map(Object::toString).toList();
+                } else {
+                    freshValue = freshValue0;
+                }
+            };
+
             final Object staleNewValue = calculateStaleNewValue.get();
             if (!isCriteriaEntity && EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
                 // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
@@ -598,9 +610,9 @@ public class EntityResourceUtils {
         final Class<?> propertyType = determinePropertyType(type, propertyName);
 
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
-        if (EntityUtils.isEntityType(propertyType)) {
-            if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
-                throw new UnsupportedOperationException(format("Unsupported conversion to [%s + %s] from reflected value [%s]. Entity-typed collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
+        if (isEntityType(propertyType)) {
+            if (isCollectional(type, propertyName)) {
+                return reflectedValue;
             }
 
             final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
@@ -621,7 +633,7 @@ public class EntityResourceUtils {
                 }
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
-        } else if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
+        } else if (isCollectional(type, propertyName)) {
             final Class<?> collectionType = Finder.findFieldByName(type, propertyName).getType();
             final boolean isSet = Set.class.isAssignableFrom(collectionType);
             final boolean isList = List.class.isAssignableFrom(collectionType);
