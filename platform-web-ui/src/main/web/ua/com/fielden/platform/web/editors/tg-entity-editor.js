@@ -225,7 +225,7 @@ export class TgEntityEditor extends TgEditor {
             },
 
             /**
-             * Promise that starts on validate() call of the host master and fullfils iff this validation attempt gets successfully resolved.
+             * Promise that starts on validate() call of the host master and fulfils iff this validation attempt gets successfully resolved.
              * 
              * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
              * However, 'lastValidationAttemptPromise' property gets replaced in this case.

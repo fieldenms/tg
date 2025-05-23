@@ -306,7 +306,7 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         * Promise that starts on validate() call and fulfils iff this validation attempt gets successfully resolved.
          * 
          * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
          * However, 'lastValidationAttemptPromise' property gets replaced in this case.
