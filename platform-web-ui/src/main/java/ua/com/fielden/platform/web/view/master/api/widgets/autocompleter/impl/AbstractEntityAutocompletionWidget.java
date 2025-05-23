@@ -1,5 +1,16 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl;
 
+import org.apache.commons.lang3.StringUtils;
+import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+
+import java.lang.reflect.Field;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.joining;
@@ -7,18 +18,6 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
-
-import java.lang.reflect.Field;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
-
-import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
  *
@@ -108,6 +107,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         attrs.put("process-response", "[[_processResponse]]");
         attrs.put("process-error", "[[_processError]]");
         attrs.put("post-searched-default-error", "[[_postSearchedDefaultError]]");
+        attrs.put("last-validation-attempt-promise", "[[lastValidationAttemptPromise]]");
         return attrs;
     }
 
