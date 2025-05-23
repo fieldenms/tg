@@ -162,6 +162,16 @@ function skipHistoryAction (overlay) {
     return typeof overlay.skipHistoryAction === 'function' && overlay.skipHistoryAction();
 }
 
+/**
+ * Determines whether link is etarnal to this application or not.
+ * 
+ * @param {String} url - A URL string to check
+ * @returns 
+ */
+function isExternal(url) {
+  return new URL(url).hostname !== window.location.hostname;
+}
+
 Polymer({
 
     _template: template,
@@ -642,6 +652,9 @@ Polymer({
 
         //Add resize listener that checks whether screen resolution changed
         window.addEventListener('resize', this._checkResolution.bind(this));
+
+        //Add click event listener to handle click on links
+        window.addEventListener('click', this._checkURL);
     },
 
     attached: function () {
@@ -719,6 +732,18 @@ Polymer({
             screenWidth = window.screen.availWidth;
             screenHeight = window.screen.availHeight;
             window.dispatchEvent(new CustomEvent('tg-screen-resolution-changed', {bubbles: true, composed: true, detail: {width: screenWidth, height: screenHeight}}));
+        }
+    },
+
+    /**
+     * Check whther clciked url takes to the resource outside this application. If it is the case then ask user to confirm this action or reject. 
+     * 
+     * @param {Event} e - click event
+     */
+    _checkURL: function (e) {
+        const bottomNode = e.composedPath()[0];
+        if (bottomNode && bottomNode.tagName && bottomNode.tagName === 'A'/*link*/ && isExternal(bottomNode.getAttribute('href'))) {
+            tearDownEvent(e);
         }
     },
     
