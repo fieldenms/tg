@@ -302,7 +302,7 @@ public class EntityResourceUtils {
                 return valueToBeApplied;
             }, () -> {
                 return applyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
-            }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+            }, type, name, entity, isEntityStale, isCriteriaEntity);
         } else {
             // in case where no application is needed (unmodified untouched) the value should be validated only
             validateAnd(() -> {
@@ -313,7 +313,7 @@ public class EntityResourceUtils {
                         : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), optActiveProp, coFinder);
             }, () -> {
                 return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
-            }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+            }, type, name, entity, isEntityStale, isCriteriaEntity);
         }
     }
 
@@ -402,8 +402,7 @@ public class EntityResourceUtils {
             final Supplier<Object> calculateStaleNewValue,
             final Supplier<Object> calculateStaleOriginalValue,
             final Class<M> type, final String name,
-            final Map<String, Object> valAndOrigVal,
-            final M entity, final ICompanionObjectFinder coFinder,
+            final M entity,
             final boolean isEntityStale, final boolean isCriteriaEntity)
     {
         if (!isEntityStale) {
