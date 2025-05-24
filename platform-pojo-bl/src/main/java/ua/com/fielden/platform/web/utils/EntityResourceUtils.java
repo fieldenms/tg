@@ -410,18 +410,14 @@ public class EntityResourceUtils {
             performAction.run();
         } else {
             final Object staleOriginalValue = calculateStaleOriginalValue.get();
-            final Object freshValue0 = entity.get(name);
-            final Object freshValue;
-            if (freshValue0 == null) {
-                freshValue = null;
-            } else {
-                if (isEntityType(determinePropertyType(type, name)) && isCollectional(type, name)) {
-                    freshValue = ((Collection) freshValue0).stream().filter(ent -> ent != null).map(Object::toString).toList();
-                } else {
-                    freshValue = freshValue0;
-                }
-            };
-
+            final Object rawFreshValue = entity.get(name);
+            // In case of non-null (instanceof covers this) entity-typed collectional property ...
+            final Object freshValue = rawFreshValue instanceof Collection<?> freshCollection && isEntityType(determinePropertyType(type, name))
+                // ... convert to a simplified List<String> to conform with 'staleOriginalValue' / 'staleNewValue'.
+                // See 'tg-entity-binder-behavior._extractModifiedPropertiesHolder.convert' function for more details.
+                // Also allow 'null' values because there are no restrictions on them.
+                ? freshCollection.stream().map(ent -> Objects.toString(ent, null)).toList()
+                : rawFreshValue;
             final Object staleNewValue = calculateStaleNewValue.get();
             if (!isCriteriaEntity && EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
                 // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
