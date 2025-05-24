@@ -90,6 +90,88 @@
 
 				centre.retrieve();
 			});
+
+			test('editing through EntityEditAction embedded master (with collectional properties) works even with a conflict', function (done) {
+				const old_postRun = centre._postRun;
+
+				centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+					old_postRun(criteriaEntity, newBindingEntity, result);
+
+					assert.strictEqual(result.resultEntities.length, 1, 'The count of resultant entities for the centre should be 1.');
+					const entity = result.resultEntities[0];
+
+					const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
+					editAction.currentEntity = () => entity;
+					const value = editAction._run();
+
+					editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+						console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+
+						const outerMaster = editAction._masterReferenceForTesting;
+						const innerMaster = outerMaster.shadowRoot.querySelector('tg-tgcollectionalserialisationparent-master');
+						const loader = outerMaster.$.loader;
+
+						outerMaster.addEventListener('after-load', function (event) {
+							const embeddedMaster = event.detail;
+
+							const edProperty = embeddedMaster.$.editor_4_desc;
+							let firstTime = true;
+
+							embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
+							    if (firstTime) {
+									assert.strictEqual(edProperty._editingValue, 'validate + conflict', "_editingValue should be 'IS'.");
+									assert.strictEqual(edProperty._commValue, 'validate + conflict', "_commValue should be 'IS'.");
+									assert.strictEqual(edProperty._acceptedValue, 'validate + conflict', "_acceptedValue should be 'IS'.");
+
+									assert.strictEqual(validatedEntity.get("desc"), 'validate + conflict', "'property' value should be 'IS' after modification.");
+									assert.strictEqual(bindingEntity.get("desc"), 'validate + conflict', "Binding 'property' value should be 'IS' after modification.");
+
+									edProperty._editingValue = 'validate + conflict + changed';
+									edProperty.commit();
+
+									firstTime = false;
+								} else {
+									assert.strictEqual(edProperty._editingValue, 'validate + conflict + changed');
+									assert.strictEqual(edProperty._commValue, 'validate + conflict + changed');
+									assert.strictEqual(edProperty._acceptedValue, 'validate + conflict + changed');
+
+									assert.isOk(validatedEntity.prop('desc').validationResult());
+									assert.isOk(validatedEntity.prop('desc').validationResult().message);
+									assert.isTrue(validatedEntity.prop('desc').validationResult().message.startsWith('This property has been recently changed. Please either edit the value back to'));
+
+									assert.strictEqual(bindingEntity.get('desc'), 'validate + conflict + changed');
+									assert.isOk(bindingEntity['@desc_error']);
+									assert.isOk(bindingEntity['@desc_error'].message);
+									assert.isTrue(bindingEntity['@desc_error'].message.startsWith('This property has been recently changed. Please either edit the value back to'));
+
+									assert.isNotOk(bindingEntity['@collProp_error']);
+									assert.isNotOk(bindingEntity['@collProp_warning']);
+
+									done();
+								}
+							};
+
+							embeddedMaster.async(function () { // need to place this on async to facilitate VALIDATE tg-action postActionError proper overriding
+								embeddedMaster._postValidatedDefaultError = function (errorResult) {
+									throw new Error('Validation has failed. Error: ' + errorResult.message);
+								};
+							});
+
+							embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+								edProperty._editingValue = 'validate + conflict';
+								edProperty.commit();
+							};
+						});
+					}
+				};
+
+				centre.postRetrieved = function (entity, bindingEntity, customObject) {
+					centre.run();
+				};
+
+				centre.retrieve();
+			});
+
 		});
     </script>
 
