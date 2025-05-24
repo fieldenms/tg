@@ -12,13 +12,14 @@ import java.util.Set;
 import static ua.com.fielden.platform.error.Result.successful;
 
 public class TgCollectionalSerialisationParentDescValidator implements IBeforeChangeEventHandler<String> {
+    private static final String VALUE_FOR_CONFLICT = "validate + conflict";
 
     @Inject
     private ITgCollectionalSerialisationParent companion;
 
     @Override
     public Result handle(MetaProperty<String> property, String newValue, Set<Annotation> mutatorAnnotations) {
-        if ("validate + conflict".equals(newValue)) {
+        if (VALUE_FOR_CONFLICT.equals(newValue)) {
             final var entity = property.<TgCollectionalSerialisationParent>getEntity();
             // Imitate concurrently edited and saved situation.
             companion.save(companion
