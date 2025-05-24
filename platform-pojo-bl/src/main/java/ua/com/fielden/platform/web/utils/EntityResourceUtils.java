@@ -418,10 +418,10 @@ public class EntityResourceUtils {
                 ? freshCollection.stream().map(ent -> Objects.toString(ent, null)).toList()
                 : rawFreshValue;
             final Object staleNewValue = calculateStaleNewValue.get();
-            if (!isCriteriaEntity && EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
+            if (!isCriteriaEntity && isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
                 // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
                 // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
-                if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
+                if (equalsEx(staleNewValue, staleOriginalValue)) {
                     logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
                     entity.getProperty(name).setDomainValidationResult(Result.warning(entity, WARN_CONFLICT));
                 } else {
