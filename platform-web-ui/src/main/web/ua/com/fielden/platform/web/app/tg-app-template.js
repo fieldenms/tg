@@ -29,7 +29,7 @@ import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp, isExternalURL, checkLinkAndOpen} from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 let screenWidth = window.screen.availWidth;
@@ -160,16 +160,6 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
  */
 function skipHistoryAction (overlay) {
     return typeof overlay.skipHistoryAction === 'function' && overlay.skipHistoryAction();
-}
-
-/**
- * Determines whether link is etarnal to this application or not.
- * 
- * @param {String} url - A URL string to check
- * @returns 
- */
-function isExternal(url) {
-  return new URL(url).hostname !== window.location.hostname;
 }
 
 Polymer({
@@ -654,7 +644,7 @@ Polymer({
         window.addEventListener('resize', this._checkResolution.bind(this));
 
         //Add click event listener to handle click on links
-        window.addEventListener('click', this._checkURL);
+        window.addEventListener('click', this._checkURL.bind(this));
     },
 
     attached: function () {
@@ -742,8 +732,10 @@ Polymer({
      */
     _checkURL: function (e) {
         const bottomNode = e.composedPath()[0];
-        if (bottomNode && bottomNode.tagName && bottomNode.tagName === 'A'/*link*/ && isExternal(bottomNode.getAttribute('href'))) {
+        if (bottomNode && bottomNode.tagName && bottomNode.tagName === 'A'/*link*/ && isExternalURL(bottomNode.getAttribute('href'))) {
             tearDownEvent(e);
+            const link = bottomNode.getAttribute('href');
+            checkLinkAndOpen(link, this._masterDom().$.confirmationDialog);
         }
     },
     

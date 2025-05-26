@@ -415,3 +415,42 @@ export const openLink = function (url, target, windowFeatures) {
         throw new Error(`Link [${url}] blocked. Target: [${target}], windowFeatures: [${windowFeatures}].`);
     }
 };
+
+/**
+ * Determines whether link is etarnal to this application or not.
+ * 
+ * @param {String} url - A URL string to check
+ * @returns 
+ */
+export function isExternalURL(url) {
+    return new URL(url).hostname !== window.location.hostname;
+}
+
+/**
+ * Displays a confirmation dialog asking whether the link should be opened, and saves additional settings to avoid showing this message again for the same link or host.
+ * 
+ * @param {String} url - url text of the link to check.
+ * @param {Object} confirmationDialog  - the TgConfirmationDailog object that should be used to display message whether to open link
+ * @param {String} target target attribute for that is passed to openLink finction
+ * @param {Object} windowFeatures - window feature object that is passed to openLink function
+ */
+export const checkLinkAndOpen = function (url, confirmationDialog, target, windowFeatures) {
+    const hostName = new URL(url).hostname;
+    if (localStorage.getItem(hostName) === null && localStorage.getItem(url) === null) {
+        const options = ["Don't show this again for this link", "Don't show this again for this site"];
+        confirmationDialog.showConfirmationDialog(`The link ${url} is taking you to another site. Are you sure you want to continue?`,
+                    [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true }],
+                    {single: true, options})
+            .then(opt => {
+                if (opt[options[0]]) {
+                    localStorage.setItem(url, "true");
+                }
+                if (opt[options[1]]) {
+                    localStorage.setItem(hostName, "true");
+                }
+                openLink(url, target, windowFeatures);
+            });
+    } else {
+        openLink(url, target, windowFeatures);
+    }
+}

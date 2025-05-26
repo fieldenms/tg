@@ -3,6 +3,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
+import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js';
 import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
 import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
@@ -22,6 +23,17 @@ const confirmationDialogStyle = html`
             .confirm-dialog paper-button:hover {
                 background: var(--paper-light-blue-50);
             }
+            paper-dialog-scrollable {
+                @apply --layout-vertical;
+            }
+            #opts {
+                @apply --layout-vertical;
+            }
+            paper-checkbox {
+                margin-bottom: 15px;
+                --paper-checkbox-checked-color: var(--paper-light-blue-700);
+                --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            }
         </style>
     </custom-style>`;
 confirmationDialogStyle.setAttribute('style', 'display: none;');
@@ -38,8 +50,13 @@ dialogModel.innerHTML = `
             on-iron-overlay-canceled="rejectDialog"
             on-iron-overlay-opened="dialogOpened"
             on-iron-overlay-closed="dialogClosed">
-            <paper-dialog-scrollable>
-                <p id="msgPar" style="padding: 10px;white-space: break-spaces;"></p>
+            <paper-dialog-scrollable style="padding: 10px;">
+                <div id="msgPar" style="white-space:break-spaces;"></div>
+                <div id="opts" style="padding-top: 15px;" hidden$="[[!options]]">
+                    <template is="dom-repeat" items="[[options]]">
+                        <paper-checkbox checked="[[item.checked]]" on-change="_optionChanged">[[item.msg]]</paper-checkbox>
+                    </template>
+                </div>
             </paper-dialog-scrollable>
             <div class="buttons">
                 <template is="dom-repeat" items="[[buttons]]">
@@ -70,39 +87,43 @@ dialogModel.dialogClosed = function (e) {
 
 document.body.appendChild(dialogModel);
 
-Polymer({
-    _template: html``,
-
+export const TgConfirmationDialog = Polymer({
     is: 'tg-confirmation-dialog',
 
     behaviors: [TgFocusRestorationBehavior],
 
-    showConfirmationDialog: function (message, buttons) {
+    showConfirmationDialog: function (message, buttons, options) {
         this.persistActiveElement();
         if (this._lastPromise) {
             this._lastPromise = this._lastPromise.then(
-                value => this._showConfirmationDialog(message, buttons),
-                reason => this._showConfirmationDialog(message, buttons));
+                value => this._showConfirmationDialog(message, buttons, options),
+                reason => this._showConfirmationDialog(message, buttons, options));
         } else {
-            this._lastPromise = this._showConfirmationDialog(message, buttons);
+            this._lastPromise = this._showConfirmationDialog(message, buttons, options);
         }
         return this._lastPromise;
     },
 
-    _showConfirmationDialog: function (message, buttons) {
+    _showConfirmationDialog: function (message, buttons, options) {
         const self = this;
         const restoreActiveElement = function () {
             self.async(function () {
                 self.restoreActiveElement();
             }, 1);
         };
+        const getOptions = function (opts) {
+            const obj = {};
+            opts.forEach(opt => obj[opt.msg] = opt.checked);
+            return obj;
+        }
         return new Promise(function (resolve, reject) {
 
             dialogModel._onCaptureKeyDown = function (e) {
                 // ensures on-Enter closing even if no button is focused, i.e. tapped on dialog somewhere or even outside dialog
                 if (e.keyCode === 13) {
                     dialogModel.$.confirmDialog.close();
-                    resolve("ENTER");
+                    dialogModel.options
+                    resolve(dialogModel.options ? getOptions(dialogModel.options): "ENTER");
                     restoreActiveElement();
                 }
             }
@@ -131,7 +152,7 @@ Polymer({
             dialogModel._action = function (e) {
                 const button = e.model.item;
                 if (button.confirm) {
-                    resolve(button.name);
+                    resolve(dialogModel.options ? getOptions(dialogModel.options) : button.name);
                 } else {
                     reject(new ExpectedError(button.name));
                 }
@@ -144,6 +165,27 @@ Polymer({
                 dialogModel.$.msgPar.innerHTML = message;
             }
             dialogModel.buttons = buttons;
+
+            if (options) {
+                dialogModel.options = options.options.map(option => {
+                    return {checked: false, msg: option};
+                });
+                dialogModel._optionChanged = function (e) {
+                    const index = e.model.index;
+                    const target = e.target || e.srcElement;
+                    dialogModel.set(`options.${index}.checked`, target.checked);
+                    if (options.single && target.checked) {
+                        dialogModel.options.forEach((opt, idx) => {
+                            if (idx !== index) {
+                                dialogModel.set(`options.${idx}.checked`, false);
+                            }
+                        });
+                    }
+                }.bind(dialogModel);
+            } else {
+                dialogModel.options = null;
+            }
+
             dialogModel.showDialog();
         });
     }
