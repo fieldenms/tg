@@ -16,6 +16,11 @@ import { ExpectedError } from '/resources/components/tg-global-error-handler.js'
 const confirmationDialogStyle = html`
     <custom-style>
         <style>
+            .title {
+                font-size: 1.5rem;
+                font-weight: bold;
+                padding: 0 34px;
+            }
             .confirm-dialog paper-button {
                 color: var(--paper-light-blue-500);
                 --paper-button-flat-focus-color: var(--paper-light-blue-50);
@@ -50,8 +55,9 @@ dialogModel.innerHTML = `
             on-iron-overlay-canceled="rejectDialog"
             on-iron-overlay-opened="dialogOpened"
             on-iron-overlay-closed="dialogClosed">
+            <div class="title" hidden$="[[!title]]">[[title]]</div>
             <paper-dialog-scrollable style="padding: 10px;">
-                <div id="msgPar" style="white-space:break-spaces;"></div>
+                <div id="msgPar"></div>
                 <div id="opts" style="padding-top: 15px;" hidden$="[[!options]]">
                     <template is="dom-repeat" items="[[options]]">
                         <paper-checkbox checked="[[item.checked]]" on-change="_optionChanged">[[item.msg]]</paper-checkbox>
@@ -60,7 +66,7 @@ dialogModel.innerHTML = `
             </paper-dialog-scrollable>
             <div class="buttons">
                 <template is="dom-repeat" items="[[buttons]]">
-                    <paper-button dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>
+                    <paper-button style$="[[item.style]]"dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>
                 </template>
             </div>
         </paper-dialog>
@@ -92,19 +98,19 @@ export const TgConfirmationDialog = Polymer({
 
     behaviors: [TgFocusRestorationBehavior],
 
-    showConfirmationDialog: function (message, buttons, options) {
+    showConfirmationDialog: function (message, buttons, options, title) {
         this.persistActiveElement();
         if (this._lastPromise) {
             this._lastPromise = this._lastPromise.then(
-                value => this._showConfirmationDialog(message, buttons, options),
-                reason => this._showConfirmationDialog(message, buttons, options));
+                value => this._showConfirmationDialog(message, buttons, options, title),
+                reason => this._showConfirmationDialog(message, buttons, options, title));
         } else {
-            this._lastPromise = this._showConfirmationDialog(message, buttons, options);
+            this._lastPromise = this._showConfirmationDialog(message, buttons, options, title);
         }
         return this._lastPromise;
     },
 
-    _showConfirmationDialog: function (message, buttons, options) {
+    _showConfirmationDialog: function (message, buttons, options, title) {
         const self = this;
         const restoreActiveElement = function () {
             self.async(function () {
@@ -159,11 +165,14 @@ export const TgConfirmationDialog = Polymer({
                 restoreActiveElement();
             };
 
+            dialogModel.title = title;
+
             if (containsRestrictedTags(message) === true) {
                 dialogModel.$.msgPar.textContent = message;
             } else {
                 dialogModel.$.msgPar.innerHTML = message;
             }
+            
             dialogModel.buttons = buttons;
 
             if (options) {
