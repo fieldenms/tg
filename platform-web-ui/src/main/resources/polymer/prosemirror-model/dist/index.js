@@ -2833,7 +2833,7 @@ class ParseContext {
                 value = value.replace(/\r\n?/g, "\n");
             }
             if (value)
-                this.insertNode(this.parser.schema.text(value), marks);
+                this.insertNode(this.parser.schema.text(value), marks, !/\S/.test(value));
             this.findInText(dom);
         }
         else {
@@ -2897,7 +2897,7 @@ class ParseContext {
     ignoreFallback(dom, marks) {
         // Ignored BR nodes should at least create an inline context
         if (dom.nodeName == "BR" && (!this.top.type || !this.top.type.inlineContent))
-            this.findPlace(this.parser.schema.text("-"), marks);
+            this.findPlace(this.parser.schema.text("-"), marks, true);
     }
     // Run any style parser associated with the node's styles. Either
     // return an updated array of marks, or null to indicate some of the
@@ -2945,7 +2945,7 @@ class ParseContext {
                     marks = inner;
                 }
             }
-            else if (!this.insertNode(nodeType.create(rule.attrs), marks)) {
+            else if (!this.insertNode(nodeType.create(rule.attrs), marks, dom.nodeName == "BR")) {
                 this.leafFallback(dom, marks);
             }
         }
@@ -2962,7 +2962,7 @@ class ParseContext {
         }
         else if (rule.getContent) {
             this.findInside(dom);
-            rule.getContent(dom, this.parser.schema).forEach(node => this.insertNode(node, marks));
+            rule.getContent(dom, this.parser.schema).forEach(node => this.insertNode(node, marks, false));
         }
         else {
             let contentDOM = dom;
@@ -2993,19 +2993,22 @@ class ParseContext {
     // Try to find a way to fit the given node type into the current
     // context. May add intermediate wrappers and/or leave non-solid
     // nodes that we're in.
-    findPlace(node, marks) {
+    findPlace(node, marks, cautious) {
         let route, sync;
-        for (let depth = this.open; depth >= 0; depth--) {
+        for (let depth = this.open, penalty = 0; depth >= 0; depth--) {
             let cx = this.nodes[depth];
             let found = cx.findWrapping(node);
-            if (found && (!route || route.length > found.length)) {
+            if (found && (!route || route.length > found.length + penalty)) {
                 route = found;
                 sync = cx;
                 if (!found.length)
                     break;
             }
-            if (cx.solid)
-                break;
+            if (cx.solid) {
+                if (cautious)
+                    break;
+                penalty += 2;
+            }
         }
         if (!route)
             return null;
@@ -3015,13 +3018,13 @@ class ParseContext {
         return marks;
     }
     // Try to insert the given node, adjusting the context when needed.
-    insertNode(node, marks) {
+    insertNode(node, marks, cautious) {
         if (node.isInline && this.needsBlock && !this.top.type) {
             let block = this.textblockFromContext();
             if (block)
                 marks = this.enterInner(block, null, marks);
         }
-        let innerMarks = this.findPlace(node, marks);
+        let innerMarks = this.findPlace(node, marks, cautious);
         if (innerMarks) {
             this.closeExtra();
             let top = this.top;
@@ -3039,7 +3042,7 @@ class ParseContext {
     // Try to start a node of the given type, adjusting the context when
     // necessary.
     enter(type, attrs, marks, preserveWS) {
-        let innerMarks = this.findPlace(type.create(attrs), marks);
+        let innerMarks = this.findPlace(type.create(attrs), marks, false);
         if (innerMarks)
             innerMarks = this.enterInner(type, attrs, marks, true, preserveWS);
         return innerMarks;

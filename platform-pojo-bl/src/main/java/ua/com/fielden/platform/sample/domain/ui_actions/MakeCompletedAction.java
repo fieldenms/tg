@@ -1,17 +1,14 @@
 package ua.com.fielden.platform.sample.domain.ui_actions;
 
-import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.NoKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.utils.Pair;
+
+import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 /**
  * Functional entity to make {@link TgPersistentEntityWithProperties} entity completed and save.
@@ -32,6 +29,15 @@ public class MakeCompletedAction extends AbstractFunctionalEntityWithCentreConte
 
     public MakeCompletedAction() {
         setKey(NO_KEY);
+    }
+
+    public enum Property implements IConvertableToPath {
+        masterEntity;
+
+        @Override
+        public String toPath() {
+            return name();
+        }
     }
 
     @IsProperty
