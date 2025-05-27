@@ -52,24 +52,61 @@ export const TgViewWithHelpBehavior = {
     _helpMouseDownEventHandler: function (e) {
         if (e.button == 0 || e.type.startsWith("touch")) {
             e.preventDefault();
-            this._helpActionLongPress = false;
-            this._helpActionTimer = setTimeout(() => {
-                this._helpActionLongPress = true;
+
+            // Start 'long press' action timer:
+            this._helpActionTimer = setTimeout(() => { // assigns positive integer id into _helpActionTimer, hence it can be simply checked like `if (this._helpActionTimer) {...}`
+                // Remove 'long press' action timer (it is already cleared here):
+                delete this._helpActionTimer;
+
+                // Perform 'long press' action:
                 this.getOpenHelpMasterAction().chosenProperty = "showMaster";
                 this.getOpenHelpMasterAction()._run();
             }, 1000);
+
+            const button = e.composedPath().find(element => element.tagName === 'PAPER-ICON-BUTTON');
+            if (button && !button._helpMouseLeaveEventHandler) {
+                // Assign mouseleave listener to prevent 'long press' action if mouse pointer has been moved outside the button.
+                //  The same is applicable for touch devices.
+                //  Small finger movement will prevent 'long press' from actioning.
+                //  But it does not impede intentional 'long press' behavior.
+                button._helpMouseLeaveEventHandler = this._helpMouseLeaveEventHandler.bind(this);
+                ['mouseleave', 'touchmove'].forEach(type => button.addEventListener(type, button._helpMouseLeaveEventHandler));
+            }
         }
+    },
+
+    /**
+     * Listener for Help button to prevent 'long press' action outside the button.
+     */
+    _helpMouseLeaveEventHandler: function (e) {
+        if (e.button == 0 || e.type.startsWith("touch")) {
+            e.preventDefault();
+
+            if (this._helpActionTimer) {
+                this._cancelLongPress();
+            }
+        }
+    },
+
+    /**
+     * Cancels existing active non-empty 'long press' timer.
+     */
+    _cancelLongPress: function () {
+        clearTimeout(this._helpActionTimer);
+        delete this._helpActionTimer;
     },
 
     _helpMouseUpEventHandler: function (e) {
         if (e.button == 0 || e.type.startsWith("touch")) {
             e.preventDefault();
-            //Clear timer to to remain the mouse key press as short.
+
+            // Check whether 'long press' timer is still in progress.
+            // If not -- do nothing, because 1) action started outside, but ended on a button OR 2) 'long press' action has already been performed after a timer.
             if (this._helpActionTimer) {
-                clearTimeout(this._helpActionTimer);
-            }
-            //If there was long touch or long mouse button press then skip it otherwise decide what to do 
-            if (!this._helpActionLongPress) {
+                // Cancel 'long press' action:
+                this._cancelLongPress();
+
+                // Perform 'short press' action:
                 //Init action props.
                 this.getOpenHelpMasterAction()._openLinkInAnotherWindow = true;
                 this.getOpenHelpMasterAction().chosenProperty = null;
@@ -82,11 +119,8 @@ export const TgViewWithHelpBehavior = {
                     }
                 }
                 //Run action
-                this.getOpenHelpMasterAction()._run(); 
+                this.getOpenHelpMasterAction()._run();
             }
-            //Reset action type and timer;
-            this._helpActionLongPress = false;
-            this._helpActionTimer = null;
         }
     },
 
