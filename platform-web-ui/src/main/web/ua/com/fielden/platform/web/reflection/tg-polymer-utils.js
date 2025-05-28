@@ -1,5 +1,14 @@
 import { TgReflector } from '/app/tg-reflector.js';
+import { TgAppConfig } from '/app/tg-app-config.js';
+
+import {TgConfirmationDialog} from '/resources/components/tg-confirmation-dialog.js';
+
+import moment from '/resources/polymer/lib/moment-lib.js';
+
 import '/resources/polymer/@polymer/paper-styles/color.js';
+
+let appConfig;
+let confirmationDialog;
 
 /**
  * Generates the unique identifier.
@@ -431,23 +440,34 @@ export function isExternalURL(url) {
  * Displays a confirmation dialog asking whether the link should be opened, and saves additional settings to avoid showing this message again for the same link or host.
  * 
  * @param {String} url - url text of the link to check.
- * @param {Object} confirmationDialog  - the TgConfirmationDailog object that should be used to display message whether to open link
  * @param {String} target target attribute for that is passed to openLink finction
  * @param {Object} windowFeatures - window feature object that is passed to openLink function
  */
-export const checkLinkAndOpen = function (url, confirmationDialog, target, windowFeatures) {
+export const checkLinkAndOpen = function (url, target, windowFeatures) {
     const hostName = new URL(url).hostname;
-    if (localStorage.getItem(hostName) === null && localStorage.getItem(url) === null) {
+    appConfig = appConfig || new TgAppConfig();
+    confirmationDialog = confirmationDialog || new TgConfirmationDialog();
+    
+    const isAllowedSite = function() {
+        return appConfig.allowedSites.indexOf(hostName) >= 0;
+    }
+
+    const wasAcceptedByUser = function () {
+        return (localStorage.getItem(url) !== null && moment().diff(moment(localStorage.getItem(url)), 'days') < appConfig.daysUntilSitePermissionExpires) ||
+                (localStorage.getItem(hostName) !== null && moment().diff(moment(localStorage.getItem(hostName)), 'days') < appConfig.daysUntilSitePermissionExpires);
+    }
+    
+    if (!isAllowedSite() && !wasAcceptedByUser()) {
         const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br>
                         <pre style="line-break:anywhere;max-width:500px;white-space:normal;color:-webkit-link;text-decoration:underline;">${url}</pre>`
         const options = ["Don't show this again for this link", "Don't show this again for this site"];
         const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, style: "color:var(--google-red-500);" }];
         confirmationDialog.showConfirmationDialog(text, buttons, {single: true, options}, "Double-check this link").then(opt => {
             if (opt[options[0]]) {
-                localStorage.setItem(url, "true");
+                localStorage.setItem(url, new Date());
             }
             if (opt[options[1]]) {
-                localStorage.setItem(hostName, "true");
+                localStorage.setItem(hostName, new Date());
             }
             openLink(url, target, windowFeatures);
         });

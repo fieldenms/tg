@@ -219,4 +219,18 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     List<EntityActionConfig> centreConfigShareActions();
+
+    /**
+     * Retrieves the list of allowed sites that can be accessed without additional checks.
+     *
+     * @return
+     */
+    List<String> allowedSites();
+
+    /**
+     * Returns the number of days during which a user-allowed site can be accessed without additional checks.
+     *
+     * @return
+     */
+    int daysUntilSitePermissionExpires();
 }
