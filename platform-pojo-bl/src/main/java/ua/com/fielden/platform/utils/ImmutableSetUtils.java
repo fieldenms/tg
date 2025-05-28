@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.utils;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.util.Set;
+import java.util.SortedSet;
 
 /**
  * Utilities for immutable {@linkplain Set sets}.
@@ -31,6 +33,27 @@ public final class ImmutableSetUtils {
         }
         else {
             return ImmutableSet.<Y>builderWithExpectedSize(size + 1)
+                    .addAll(xs)
+                    .add(y)
+                    .build();
+        }
+    }
+
+    /**
+     * Returns an immutable set that is the result of {@code union(xs, Set.of(y))};
+     *
+     * @param xs  must not contain null elements
+     * @param y  must not be null
+     */
+    public static <X extends Y, Y extends Comparable<Y>> SortedSet<Y> insert(final SortedSet</*@Nonnull*/ X> xs, final /*@Nonnull*/ Y y) {
+        if (xs.isEmpty()) {
+            return ImmutableSortedSet.of(y);
+        }
+        else if (xs instanceof ImmutableSortedSet<X> set && set.contains(y)) {
+            return (SortedSet<Y>) set;
+        }
+        else {
+            return ImmutableSortedSet.<Y>naturalOrder()
                     .addAll(xs)
                     .add(y)
                     .build();
