@@ -847,20 +847,26 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
      * 
      * All non-dot-notated properties are converted here.
      * 
-     * Also, the method converts root properties for dot-notated properties. This is necessary to guarantee that root property value, assigned in a definer of another property,
-     * would not get lost on subsequent validation/saving cycles. Such loss was happening in cases were a value, from which root property was defined, got removed as part of some domain logic (e.g., a definer).
-     * The method implements an automatic conversion to include cases where a root property is not on the master and not in 'isNecessaryForConversion' list.
+     * Also, the method converts root properties for dot-notated properties.
+     * This is necessary to guarantee that root property value, assigned in a definer of another property,
+     * would not get lost on subsequent validation/saving cycles.
+     * Such loss was happening in cases were a value, from which root property was defined,
+     *   got removed as part of some domain logic (e.g., a definer).
+     * The method implements an automatic conversion to include cases
+     *   where a root property is not on the master and not in 'isNecessaryForConversion' list.
+     *
+     * @param customFullEntity -- custom full entity as a source of property value to be converted (either current or original)
      */
-    _convertPropertyValue (bindingEntity, property, original) {
+    _convertPropertyValue (bindingEntity, property, original, customFullEntity) {
         if (!this.reflector().isDotNotated(property)) {
-            const fullEntity = this.reflector().tg_getFullEntity(bindingEntity);
+            const fullEntity = customFullEntity || this.reflector().tg_getFullEntity(bindingEntity);
             if (original) {
                 this.reflector().tg_convertOriginalPropertyValue(bindingEntity, property, fullEntity);
             } else {
                 this.reflector().tg_convertPropertyValue(bindingEntity, property, fullEntity, this.previousModifiedPropertiesHolder);
             }
         } else {
-            this._convertPropertyValue(bindingEntity, property.substring(0, property.lastIndexOf('.')), original);
+            this._convertPropertyValue(bindingEntity, property.substring(0, property.lastIndexOf('.')), original, customFullEntity);
         }
     }
 
