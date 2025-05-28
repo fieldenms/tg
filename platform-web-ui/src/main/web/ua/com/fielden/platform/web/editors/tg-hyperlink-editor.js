@@ -7,7 +7,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
-import { openLink } from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -72,7 +72,7 @@ export class TgHyperlinkEditor extends TgEditor {
      */
     _openLink () {
         if (this._acceptedValue) {
-            openLink(this._acceptedValue.value);
+            checkLinkAndOpen(this._acceptedValue.value);
         }
     }
 

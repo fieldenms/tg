@@ -27,7 +27,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
 import { TgAppAnimationBehavior } from '/resources/views/tg-app-animation-behavior.js'; 
-import { isMobileApp, isIPhoneOs, openLink } from '/resources/reflection/tg-polymer-utils.js';
+import { isMobileApp, isIPhoneOs, checkLinkAndOpen } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -286,7 +286,7 @@ Polymer({
     },
     _showIdeas: function (e) {
         if (this.ideaUri && (!e.detail.sourceEvent.detail || e.detail.sourceEvent.detail < 2)) {
-            openLink(this.ideaUri);
+            checkLinkAndOpen(this.ideaUri);
         }
     },
     _logout: function (e) {

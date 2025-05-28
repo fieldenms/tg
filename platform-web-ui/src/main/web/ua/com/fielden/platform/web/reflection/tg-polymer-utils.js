@@ -405,7 +405,7 @@ export const createDummyBindingEntity = function (customPropObject, propDefiniti
  *
  * Unspecified 'target' means '_blank' i.e. most likely to be opened in a new tab (or window with special user options).
  */
-export const openLink = function (url, target, windowFeatures) {
+const openLink = function (url, target, windowFeatures) {
     const newWindow = window.open(url, target, windowFeatures);
     if (newWindow) {
         // Always prevent tabnapping.
