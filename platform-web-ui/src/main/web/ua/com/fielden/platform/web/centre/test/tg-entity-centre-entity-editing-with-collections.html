@@ -170,7 +170,7 @@
                 centre.retrieve();
             });
 
-            test('editing through EntityEditAction embedded master (with collectional properties) works even with a conflict and collection change', function (done) {
+            test('editing through EntityEditAction embedded master (with collectional properties) works even with a conflict and collection change and continues working on subsequent validations', function (done) {
                 const old_postRun = centre._postRun;
 
                 centre._postRun = function (criteriaEntity, newBindingEntity, result) {
@@ -188,10 +188,10 @@
                             const embeddedMaster = event.detail;
 
                             const edProperty = embeddedMaster.$.editor_4_desc;
-                            let firstTime = true;
+                            let count = 1;
 
                             embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
-                                if (firstTime) {
+                                if (count === 1) {
                                     assert.strictEqual(edProperty._editingValue, VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE);
                                     assert.strictEqual(edProperty._commValue, VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE);
                                     assert.strictEqual(edProperty._acceptedValue, VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE);
@@ -202,8 +202,8 @@
                                     edProperty._editingValue = FURTHER_VALUE;
                                     edProperty.commit();
 
-                                    firstTime = false;
-                                } else {
+                                    count++;
+                                } else if (count === 2) {
                                     assert.strictEqual(edProperty._editingValue, FURTHER_VALUE);
                                     assert.strictEqual(edProperty._commValue, FURTHER_VALUE);
                                     assert.strictEqual(edProperty._acceptedValue, FURTHER_VALUE);
@@ -220,6 +220,27 @@
                                     assert.isNotOk(bindingEntity['@collProp_error']);
                                     assert.isOk(bindingEntity['@collProp_warning']);
                                     assert.strictEqual(bindingEntity['@collProp_warning'].message, 'This property has been recently changed.');
+
+                                    edProperty._editingValue = FURTHER_VALUE + ' additional change';
+                                    edProperty.commit();
+
+                                    count++;
+                                } else {
+                                    assert.strictEqual(edProperty._editingValue, FURTHER_VALUE + ' additional change');
+                                    assert.strictEqual(edProperty._commValue, FURTHER_VALUE + ' additional change');
+                                    assert.strictEqual(edProperty._acceptedValue, FURTHER_VALUE + ' additional change');
+
+                                    assert.isOk(validatedEntity.prop('desc').validationResult());
+                                    assert.isOk(validatedEntity.prop('desc').validationResult().message);
+                                    assert.isTrue(validatedEntity.prop('desc').validationResult().message.startsWith('This property has been recently changed. Please either edit the value back to'));
+
+                                    assert.strictEqual(bindingEntity.get('desc'), FURTHER_VALUE + ' additional change');
+                                    assert.isOk(bindingEntity['@desc_error']);
+                                    assert.isOk(bindingEntity['@desc_error'].message);
+                                    assert.isTrue(bindingEntity['@desc_error'].message.startsWith('This property has been recently changed. Please either edit the value back to'));
+
+                                    assert.isNotOk(bindingEntity['@collProp_error']);
+                                    assert.isNotOk(bindingEntity['@collProp_warning']);
 
                                     done();
                                 }
