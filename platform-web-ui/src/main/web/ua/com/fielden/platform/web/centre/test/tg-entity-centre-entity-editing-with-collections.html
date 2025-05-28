@@ -92,11 +92,11 @@
 			});
 
             const VALUE_FOR_CONFLICT = 'validate + conflict';
-            const FURTHER_VALUE = VALUE_FOR_CONFLICT + ' + changed';
-            const VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE = VALUE_FOR_CONFLICT + ' + collection';
 
             test('editing through EntityEditAction embedded master (with collectional properties) works even with a conflict', function (done) {
                 const old_postRun = centre._postRun;
+
+                const FURTHER_VALUE = VALUE_FOR_CONFLICT + ' + changed';
 
                 centre._postRun = function (criteriaEntity, newBindingEntity, result) {
                     old_postRun(criteriaEntity, newBindingEntity, result);
@@ -173,6 +173,10 @@
             test('editing through EntityEditAction embedded master (with collectional properties) works even with a conflict and collection change and continues working on subsequent validations', function (done) {
                 const old_postRun = centre._postRun;
 
+                const VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE = VALUE_FOR_CONFLICT + ' + collection';
+                const FURTHER_VALUE = VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE + ' + changed';
+                const EVEN_FURTHER_VALUE = FURTHER_VALUE + ' + additional change';
+
                 centre._postRun = function (criteriaEntity, newBindingEntity, result) {
                     old_postRun(criteriaEntity, newBindingEntity, result);
 
@@ -221,20 +225,20 @@
                                     assert.isOk(bindingEntity['@collProp_warning']);
                                     assert.strictEqual(bindingEntity['@collProp_warning'].message, 'This property has been recently changed.');
 
-                                    edProperty._editingValue = FURTHER_VALUE + ' additional change';
+                                    edProperty._editingValue = EVEN_FURTHER_VALUE;
                                     edProperty.commit();
 
                                     count++;
                                 } else {
-                                    assert.strictEqual(edProperty._editingValue, FURTHER_VALUE + ' additional change');
-                                    assert.strictEqual(edProperty._commValue, FURTHER_VALUE + ' additional change');
-                                    assert.strictEqual(edProperty._acceptedValue, FURTHER_VALUE + ' additional change');
+                                    assert.strictEqual(edProperty._editingValue, EVEN_FURTHER_VALUE);
+                                    assert.strictEqual(edProperty._commValue, EVEN_FURTHER_VALUE);
+                                    assert.strictEqual(edProperty._acceptedValue, EVEN_FURTHER_VALUE);
 
                                     assert.isOk(validatedEntity.prop('desc').validationResult());
                                     assert.isOk(validatedEntity.prop('desc').validationResult().message);
                                     assert.isTrue(validatedEntity.prop('desc').validationResult().message.startsWith('This property has been recently changed. Please either edit the value back to'));
 
-                                    assert.strictEqual(bindingEntity.get('desc'), FURTHER_VALUE + ' additional change');
+                                    assert.strictEqual(bindingEntity.get('desc'), EVEN_FURTHER_VALUE);
                                     assert.isOk(bindingEntity['@desc_error']);
                                     assert.isOk(bindingEntity['@desc_error'].message);
                                     assert.isTrue(bindingEntity['@desc_error'].message.startsWith('This property has been recently changed. Please either edit the value back to'));
