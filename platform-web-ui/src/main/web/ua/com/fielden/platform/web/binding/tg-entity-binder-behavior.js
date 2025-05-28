@@ -918,7 +918,7 @@ export const TgEntityBinderBehavior = {
             //   that do not contain fully-fledged entities, but rather string representations of those.
             // This is because modifHolder deserialises as simple LinkedHashMap on server.
             // And inner values will not be deserialised as entities but rather as simple Java bean objects.
-            // Also, we do not support conversion of array of entities on the server side.
+            // Also, we do support limited conversion of arrays of entities on the server side (only for conflicting warning).
             // Such properties are immutable from client-side editor perspective
             //   (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions).
             const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;
