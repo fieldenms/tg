@@ -1,18 +1,13 @@
 package ua.com.fielden.platform.sample.domain;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
 
 /** 
  * Master entity object.
@@ -32,6 +27,22 @@ public class TgCollectionalSerialisationParent extends AbstractEntity<String> {
     @Title(value = "Collectional prop", desc = "Collectional prop")
     private Set<TgCollectionalSerialisationChild> collProp = new HashSet<TgCollectionalSerialisationChild>();
 
+    @IsProperty(length = 255)
+    @MapTo
+    @Title("Desc")
+    @BeforeChange(@Handler(TgCollectionalSerialisationParentDescValidator.class))
+    private String desc;
+
+    @Observable
+    public TgCollectionalSerialisationParent setDesc(final String desc) {
+        this.desc = desc;
+        return this;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
     @Observable
     protected TgCollectionalSerialisationParent setCollProp(final Set<TgCollectionalSerialisationChild> collProp) {
         this.collProp.clear();
@@ -42,11 +53,5 @@ public class TgCollectionalSerialisationParent extends AbstractEntity<String> {
     public Set<TgCollectionalSerialisationChild> getCollProp() {
         return Collections.unmodifiableSet(collProp);
     }
-    
-    @Override
-    @Observable
-    public TgCollectionalSerialisationParent setDesc(final String desc) {
-        super.setDesc(desc);
-        return this;
-    }
+
 }

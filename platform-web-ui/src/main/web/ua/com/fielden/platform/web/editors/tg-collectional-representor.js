@@ -94,6 +94,30 @@ export class TgCollectionalRepresentor extends TgEditor {
         }
         return '';
     }
+
+    /**
+     * Handler for converting original property value for this editor.
+     * Overridden to use `_currBindingEntity['@@origin']` as a source for original values.
+     */
+    _originalEntityChanged (newValue, oldValue) {
+        if (this.reflector().isEntity(newValue)) {
+            // Lazy conversion of original property value performs here.
+            // Previously it was done for all properties inside `tg-entity-binder-behavior`.
+
+            // However, as a source for original values we specify `@@origin` (full entity) from `this.entity`, not `originalEntity`.
+            // This is because collectional representer does not modify collections and is special.
+            // Converted values for it on server are List<String> and we can't set List<String> into entity-typed collection.
+            // The only case where modifHolder contains 'val' (and thus forced to be applied) is in:
+            //   1. conflicting situation (on non-collectional) prop,
+            //   2. coupled with actual collection change (with `This property has been recently changed.` message there).
+            // But this is only because `@@origin` (full entity) for `originalEntity` takes from `previousOriginalBindingEntity`.
+            // See `tg-entity-binder-behavior._extractOriginalBindingView` for more details.
+            // That's why we override this behaviour and take newest full entity (as if there were no conflicting errors).
+            // See also `tg-entity-binder-behavior._postEntityReceived` and how `isEntityStale` is calculated.
+            this._convertPropertyValue(newValue, this.propertyName, true /* original? */, this.reflector().tg_getFullEntity(this.entity));
+        }
+    }
+
 }
 
 customElements.define('tg-collectional-representor', TgCollectionalRepresentor);

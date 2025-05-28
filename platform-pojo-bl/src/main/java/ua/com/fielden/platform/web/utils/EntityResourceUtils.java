@@ -66,6 +66,7 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isCollectional;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.decodeOriginalTypeFromCriteriaType;
 import static ua.com.fielden.platform.types.RichText.VALIDATION_RESULT;
@@ -301,7 +302,7 @@ public class EntityResourceUtils {
                 return valueToBeApplied;
             }, () -> {
                 return applyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
-            }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+            }, type, name, entity, isEntityStale, isCriteriaEntity);
         } else {
             // in case where no application is needed (unmodified untouched) the value should be validated only
             validateAnd(() -> {
@@ -312,7 +313,7 @@ public class EntityResourceUtils {
                         : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), optActiveProp, coFinder);
             }, () -> {
                 return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, coFinder);
-            }, type, name, valAndOrigVal, entity, coFinder, isEntityStale, isCriteriaEntity);
+            }, type, name, entity, isEntityStale, isCriteriaEntity);
         }
     }
 
@@ -401,20 +402,26 @@ public class EntityResourceUtils {
             final Supplier<Object> calculateStaleNewValue,
             final Supplier<Object> calculateStaleOriginalValue,
             final Class<M> type, final String name,
-            final Map<String, Object> valAndOrigVal,
-            final M entity, final ICompanionObjectFinder coFinder,
+            final M entity,
             final boolean isEntityStale, final boolean isCriteriaEntity)
     {
         if (!isEntityStale) {
             performAction.run();
         } else {
             final Object staleOriginalValue = calculateStaleOriginalValue.get();
-            final Object freshValue = entity.get(name);
+            final Object rawFreshValue = entity.get(name);
+            // In case of non-null (instanceof covers this) entity-typed collectional property ...
+            final Object freshValue = rawFreshValue instanceof Collection<?> freshCollection && isEntityType(determinePropertyType(type, name))
+                // ... convert to a simplified List<String> to conform with 'staleOriginalValue' / 'staleNewValue'.
+                // See 'tg-entity-binder-behavior._extractModifiedPropertiesHolder.convert' function for more details.
+                // Also allow 'null' values because there are no restrictions on them.
+                ? freshCollection.stream().map(ent -> Objects.toString(ent, null)).toList()
+                : rawFreshValue;
             final Object staleNewValue = calculateStaleNewValue.get();
-            if (!isCriteriaEntity && EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
+            if (!isCriteriaEntity && isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
                 // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
                 // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
-                if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
+                if (equalsEx(staleNewValue, staleOriginalValue)) {
                     logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
                     entity.getProperty(name).setDomainValidationResult(Result.warning(entity, WARN_CONFLICT));
                 } else {
@@ -598,9 +605,9 @@ public class EntityResourceUtils {
         final Class<?> propertyType = determinePropertyType(type, propertyName);
 
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
-        if (EntityUtils.isEntityType(propertyType)) {
-            if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
-                throw new UnsupportedOperationException(format("Unsupported conversion to [%s + %s] from reflected value [%s]. Entity-typed collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
+        if (isEntityType(propertyType)) {
+            if (isCollectional(type, propertyName)) {
+                return reflectedValue;
             }
 
             final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
@@ -621,7 +628,7 @@ public class EntityResourceUtils {
                 }
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
-        } else if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
+        } else if (isCollectional(type, propertyName)) {
             final Class<?> collectionType = Finder.findFieldByName(type, propertyName).getType();
             final boolean isSet = Set.class.isAssignableFrom(collectionType);
             final boolean isList = List.class.isAssignableFrom(collectionType);

@@ -614,7 +614,7 @@ const TgEntityCentreBehaviorImpl = {
         _resetAutocompleterState: Function,
 
         /**
-         * Function that returns Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         * Function that returns Promise that starts on validate() call and fulfils iff this validation attempt gets successfully resolved.
          *
          * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
          * However, repeated invocation of this function will return new Promise in this case.
