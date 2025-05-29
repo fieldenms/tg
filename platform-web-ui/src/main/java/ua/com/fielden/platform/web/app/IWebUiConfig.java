@@ -225,7 +225,7 @@ public interface IWebUiConfig extends IMenuRetriever {
      *
      * @return
      */
-    List<String> allowedSites();
+    List<String> siteAllowlist();
 
     /**
      * Returns the number of days during which a user-allowed site can be accessed without additional checks.

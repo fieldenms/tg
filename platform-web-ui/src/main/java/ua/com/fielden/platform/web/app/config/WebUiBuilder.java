@@ -223,7 +223,7 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
                 replace("@masterActionOptions", "\"" + webUiConfig.masterActionOptions() + "\"").
-                replace("@allowedSites", format("[%s]", CollectionUtil.toString(webUiConfig.allowedSites(), ", "))).
+                replace("@allowedSites", format("[%s]", CollectionUtil.toString(webUiConfig.siteAllowlist(), ", "))).
                 replace("@daysUntilSitePermissionExpires", Integer.toString(webUiConfig.daysUntilSitePermissionExpires()));
     }
 

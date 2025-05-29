@@ -102,7 +102,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Map<String, String> checksums;
     private final boolean independentTimeZone;
     private final MasterActionOptions masterActionOptions;
-    private final List<String> allowedSites;
+    private final List<String> siteAllowlist;
     private final int daysUntilSitePermissionExpires;
 
     /**
@@ -127,14 +127,14 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             final boolean independentTimeZone,
             final Optional<MasterActionOptions> masterActionOptions,
             final Optional<String> ideaUri,
-            final Optional<String> allowedSites,
+            final Optional<String> siteAllowlist,
             final Optional<String> optionalExpiryDays)
     {
         this.title = title;
         this.ideaUri = ideaUri.map(uri -> validateIdeaUri(uri).getInstanceOrElseThrow());
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
-        this.allowedSites = allowedSites.map(sites -> stream(sites.trim().split("\\s*,\\s*"))
+        this.siteAllowlist = siteAllowlist.map(sites -> stream(sites.trim().split("\\s*,\\s*"))
                 .map(site -> site.startsWith("\"|\'") ? site : ("\"" + site + "\""))
                 .collect(toList())).orElse(List.of());
         this.daysUntilSitePermissionExpires = optionalExpiryDays.map(Integer::parseInt).orElse(DEFAULT_SITE_PERMISSION_EXPIRY_DAYS);
@@ -171,7 +171,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     /**
-     * The same as {@link #AbstractWebUiConfig}, but without {@code allowedSites} and {@code optionalExpiryDays}.
+     * The same as {@link #AbstractWebUiConfig}, but without {@code siteAllowlist} and {@code optionalExpiryDays}.
      */
     public AbstractWebUiConfig(
             final String title,
@@ -412,8 +412,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public List<String> allowedSites() {
-        return this.allowedSites;
+    public List<String> siteAllowlist() {
+        return this.siteAllowlist;
     }
 
     @Override
