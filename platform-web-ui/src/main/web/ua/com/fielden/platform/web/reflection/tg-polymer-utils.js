@@ -427,21 +427,22 @@ const openLink = function (url, target, windowFeatures) {
 };
 
 /**
- * Determines whether link is etarnal to this application or not.
+ * Determines whether a given URL points to an external site relative to the current application.
  * 
- * @param {String} url - A URL string to check
- * @returns 
+ * @param {string} url - The URL to check.
+ * @returns {boolean} `true` if the URL is external, `false` otherwise.
  */
 export function isExternalURL(url) {
     return new URL(url).hostname !== window.location.hostname;
 }
 
 /**
- * Displays a confirmation dialog asking whether the link should be opened, and saves additional settings to avoid showing this message again for the same link or host.
+ * Displays a confirmation dialog before opening a potentially external link.
+ * If the user accepts, their choice can be remembered to skip the dialog in the future for the same URL or host.
  * 
- * @param {String} url - url text of the link to check.
- * @param {String} target target attribute for that is passed to openLink finction
- * @param {Object} windowFeatures - window feature object that is passed to openLink function
+ * @param {String} url - the URL to open.
+ * @param {String} target - the `target` attribute used when opening the link (e.g., "_blank").
+ * @param {Object} windowFeatures - optional features passed to `window.open()` when opening the link.
  */
 export const checkLinkAndOpen = function (url, target, windowFeatures) {
     const dateFormate = 'YYYY MM DD';
@@ -450,7 +451,7 @@ export const checkLinkAndOpen = function (url, target, windowFeatures) {
     confirmationDialog = confirmationDialog || new TgConfirmationDialog();
     
     const isAllowedSite = function() {
-        return appConfig.allowedSites.indexOf(hostName) >= 0;
+        return appConfig.siteAllowlist.indexOf(hostName) >= 0;
     }
 
     const wasAcceptedByUser = function () {

@@ -79,7 +79,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
     private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default configurations for [%s]-typed centres (caching)...";
-    private static final int DEFAULT_SITE_PERMISSION_EXPIRY_DAYS = 183;
+    private static final int DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS = 183;
 
     private final String title;
     private final Optional<String> ideaUri;
@@ -127,17 +127,17 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             final boolean independentTimeZone,
             final Optional<MasterActionOptions> masterActionOptions,
             final Optional<String> ideaUri,
-            final Optional<String> siteAllowlist,
+            final Optional<String> optionalSiteAllowlist,
             final Optional<String> optionalExpiryDays)
     {
         this.title = title;
         this.ideaUri = ideaUri.map(uri -> validateIdeaUri(uri).getInstanceOrElseThrow());
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
-        this.siteAllowlist = siteAllowlist.map(sites -> stream(sites.trim().split("\\s*,\\s*"))
+        this.siteAllowlist = optionalSiteAllowlist.map(sites -> stream(sites.trim().split("\\s*,\\s*"))
                 .map(site -> site.startsWith("\"|\'") ? site : ("\"" + site + "\""))
                 .collect(toList())).orElse(List.of());
-        this.daysUntilSitePermissionExpires = optionalExpiryDays.map(Integer::parseInt).orElse(DEFAULT_SITE_PERMISSION_EXPIRY_DAYS);
+        this.daysUntilSitePermissionExpires = optionalExpiryDays.map(Integer::parseInt).orElse(DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS);
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
         Runtime.getRuntime().addShutdownHook(new Thread() {

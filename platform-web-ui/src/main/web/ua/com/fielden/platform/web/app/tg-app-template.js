@@ -734,8 +734,7 @@ Polymer({
         const bottomNode = e.composedPath()[0];
         if (bottomNode && bottomNode.tagName && bottomNode.tagName === 'A'/*link*/ && isExternalURL(bottomNode.getAttribute('href'))) {
             tearDownEvent(e);
-            const link = bottomNode.getAttribute('href');
-            checkLinkAndOpen(link);
+            checkLinkAndOpen(bottomNode.getAttribute('href'));
         }
     },
     

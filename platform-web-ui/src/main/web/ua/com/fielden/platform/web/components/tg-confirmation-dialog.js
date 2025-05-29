@@ -135,7 +135,6 @@ export const TgConfirmationDialog = Polymer({
                 // ensures on-Enter closing even if no button is focused, i.e. tapped on dialog somewhere or even outside dialog
                 if (e.keyCode === 13) {
                     dialogModel.$.confirmDialog.close();
-                    dialogModel.options
                     resolve(dialogModel.options ? getOptions(dialogModel.options): "ENTER");
                     restoreActiveElement();
                 }
