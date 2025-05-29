@@ -28,6 +28,13 @@ const confirmationDialogStyle = html`
             .confirm-dialog paper-button:hover {
                 background: var(--paper-light-blue-50);
             }
+            .confirm-dialog paper-button.red {
+                color: var(--google-red-500);
+                --paper-button-flat-focus-color: var(--google-red-100);
+            }
+            .confirm-dialog paper-button.red:hover {
+                background: var(--google-red-100);
+            }
             paper-dialog-scrollable {
                 @apply --layout-vertical;
             }
@@ -66,7 +73,7 @@ dialogModel.innerHTML = `
             </paper-dialog-scrollable>
             <div class="buttons">
                 <template is="dom-repeat" items="[[buttons]]">
-                    <paper-button style$="[[item.style]]"dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>
+                    <paper-button class$="[[item.classes]] "style$="[[item.style]]"dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>
                 </template>
             </div>
         </paper-dialog>
