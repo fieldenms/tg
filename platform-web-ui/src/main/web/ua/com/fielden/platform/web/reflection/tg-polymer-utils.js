@@ -444,6 +444,7 @@ export function isExternalURL(url) {
  * @param {Object} windowFeatures - window feature object that is passed to openLink function
  */
 export const checkLinkAndOpen = function (url, target, windowFeatures) {
+    const dateFormate = 'YYYY MM DD';
     const hostName = new URL(url).hostname;
     appConfig = appConfig || new TgAppConfig();
     confirmationDialog = confirmationDialog || new TgConfirmationDialog();
@@ -453,8 +454,8 @@ export const checkLinkAndOpen = function (url, target, windowFeatures) {
     }
 
     const wasAcceptedByUser = function () {
-        return (localStorage.getItem(url) !== null && moment().diff(moment(localStorage.getItem(url)), 'days') < appConfig.daysUntilSitePermissionExpires) ||
-                (localStorage.getItem(hostName) !== null && moment().diff(moment(localStorage.getItem(hostName)), 'days') < appConfig.daysUntilSitePermissionExpires);
+        return (localStorage.getItem(localStorageKey(url)) !== null && moment().diff(moment(localStorage.getItem(localStorageKey(url)), dateFormate), 'days') < appConfig.daysUntilSitePermissionExpires) ||
+                (localStorage.getItem(localStorageKey(hostName)) !== null && moment().diff(moment(localStorage.getItem(localStorageKey(hostName)), dateFormate), 'days') < appConfig.daysUntilSitePermissionExpires);
     }
     
     if (!isAllowedSite() && !wasAcceptedByUser()) {
@@ -464,10 +465,10 @@ export const checkLinkAndOpen = function (url, target, windowFeatures) {
         const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, classes: "red" }];
         confirmationDialog.showConfirmationDialog(text, buttons, {single: true, options}, "Double-check this link").then(opt => {
             if (opt[options[0]]) {
-                localStorage.setItem(url, new Date());
+                localStorage.setItem(localStorageKey(url), moment().format(dateFormate));
             }
             if (opt[options[1]]) {
-                localStorage.setItem(hostName, new Date());
+                localStorage.setItem(localStorageKey(hostName), moment().format(dateFormate));
             }
             openLink(url, target, windowFeatures);
         });
