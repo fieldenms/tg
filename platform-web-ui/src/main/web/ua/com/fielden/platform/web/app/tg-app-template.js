@@ -727,15 +727,16 @@ Polymer({
     },
 
     /**
-     * Check whther clciked url takes to the resource outside this application. If it is the case then ask user to confirm this action or reject. 
+     * Check whether the clicked URL leads to a resource outside the application. If it does, prompt the user to confirm or reject the action.
      * 
      * @param {Event} e - click event
      */
     _checkURL: function (e) {
-        const bottomNode = e.composedPath()[0];
-        if (bottomNode && bottomNode.tagName && bottomNode.tagName === 'A'/*link*/ && isExternalURL(bottomNode.getAttribute('href'))) {
+        const linkNode = e.composedPath().find(n => n.tagName && n.tagName === 'A' && isExternalURL(n.getAttribute('href')));
+
+        if (linkNode) {
             tearDownEvent(e);
-            checkLinkAndOpen(bottomNode.getAttribute('href'));
+            checkLinkAndOpen(linkNode.getAttribute('href'));
         }
     },
     
