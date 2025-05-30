@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages, openLink } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
@@ -1392,19 +1392,15 @@ Polymer({
         const entityIndex = this.findEntityIndex(entity);
         const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
         if (!column.runAction(this._currentEntity(entity), actionIndex)) {
-            // if the clicked property is a hyperlink and there was no custom action associted with it
-            // then let's open the linked resources
-            if (this.isHyperlinkProp(entity, column) === true) {
-                const url = this.getBindedValue(entity, column);
-                openLink(url);
-            } else {
+            // The hyperlink column is handled either by the standard browser logic or opened using tg-link-opener.
+            if (!this.isHyperlinkProp(entity, column) === true) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
                 } else if (this.hasDefaultAction(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
-            } 
+            }
         }
     },
 
