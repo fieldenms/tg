@@ -1,7 +1,8 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
-import { resultMessages, checkLinkAndOpen } from '/resources/reflection/tg-polymer-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 export const TgEntityBinderBehavior = {
 

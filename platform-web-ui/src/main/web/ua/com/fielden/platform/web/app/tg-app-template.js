@@ -29,7 +29,8 @@ import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp, isExternalURL, checkLinkAndOpen} from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { isExternalURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 let screenWidth = window.screen.availWidth;

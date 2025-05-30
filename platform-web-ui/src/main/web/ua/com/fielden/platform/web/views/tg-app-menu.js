@@ -27,7 +27,8 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { NeonAnimatableBehavior } from '/resources/polymer/@polymer/neon-animation/neon-animatable-behavior.js';
 
 import { TgAppAnimationBehavior } from '/resources/views/tg-app-animation-behavior.js'; 
-import { isMobileApp, isIPhoneOs, checkLinkAndOpen } from '/resources/reflection/tg-polymer-utils.js';
+import { isMobileApp, isIPhoneOs} from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 const template = html`
     <style>

@@ -30,7 +30,8 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages, checkLinkAndOpen } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;

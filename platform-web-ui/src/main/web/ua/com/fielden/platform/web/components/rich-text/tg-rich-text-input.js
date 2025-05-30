@@ -6,7 +6,8 @@ import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys
 import { IronOverlayManager } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-manager.js';
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, isMobileApp, checkLinkAndOpen } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 import Editor from '/resources/polymer/lib/toastui-editor-lib.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';

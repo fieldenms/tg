@@ -1,5 +1,5 @@
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
-import { checkLinkAndOpen } from '/resources/reflection/tg-polymer-utils.js'
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 const augmentCentreUuid = function (uuid) {
     return `${uuid}_help`
