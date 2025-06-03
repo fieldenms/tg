@@ -43,7 +43,11 @@ const openLink = function (url, target, windowFeatures) {
  * @returns {boolean} `true` if the URL is external, `false` otherwise.
  */
 export function isExternalURL(url) {
-    return new URL(url).hostname !== window.location.hostname;
+    try {
+        return new URL(url).hostname !== window.location.hostname
+    } catch (e) {
+        return false;
+    }
 }
 
 /**
