@@ -31,6 +31,7 @@ import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
@@ -916,7 +917,9 @@ Polymer({
         _openDropDown: Function,
 
         //Double tap related
-        _tapOnce: Boolean
+        _tapOnce: Boolean,
+        //Used to identify whether user clicked a link or not. This is needed to open link after user didn't make double click. 
+        _clickedLink: Object
     },
 
     behaviors: [TgEgiDataRetrievalBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
@@ -1358,7 +1361,7 @@ Polymer({
         });
     },
 
-    tap: function (entityIndex, entity, index, column) {
+    tap: function (entityIndex, entity, index, column, event) {
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
@@ -1369,6 +1372,7 @@ Polymer({
             }
         } else if (this.master && this.master.editors.length > 0 && this.canOpenMaster()) {
             this._tapOnce = true;
+            this._clickedLink = event.detail.sourceEvent.composedPath().find(n => n.tagName && n.tagName === 'A');
             this.async(() => {
                 if (this._tapOnce) {
                     this._tapColumn(entity, column);
@@ -1378,6 +1382,7 @@ Polymer({
         } else {
             this._tapColumn(entity, column);
         }
+        tearDownEvent(event.detail.sourceEvent);
     },
 
     /**
@@ -1391,9 +1396,16 @@ Polymer({
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
         const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
-        if (!column.runAction(this._currentEntity(entity), actionIndex)) {
-            // The hyperlink column is handled either by the standard browser logic or opened using tg-link-opener.
-            if (!this.isHyperlinkProp(entity, column) === true) {
+        if (!this.isHyperlinkProp(entity, column) && this._clickedLink) {
+            const targetAttr = this._clickedLink.getAttribute("target");
+            checkLinkAndOpen(this._clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
+        } else if (!column.runAction(this._currentEntity(entity), actionIndex)) {
+            // if the clicked property is a hyperlink and there was no custom action associted with it
+            // then let's open the linked resources
+            if (this.isHyperlinkProp(entity, column) === true) {
+                const url = this.getBindedValue(entity, column);
+                checkLinkAndOpen(url);
+            } else {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
@@ -1530,11 +1542,11 @@ Polymer({
     },
 
     _tapFixedAction: function (e, detail) {
-        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index], e);
     },
 
     _tapAction: function (e, detail) {
-        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index], e);
     },
 
     _columnDomChanged: function (addedColumns, removedColumns) {
