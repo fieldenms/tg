@@ -918,8 +918,6 @@ Polymer({
 
         //Double tap related
         _tapOnce: Boolean,
-        //Used to identify whether user clicked a link or not. This is needed to open link after user didn't make double click. 
-        _clickedLink: Object
     },
 
     behaviors: [TgEgiDataRetrievalBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
@@ -1362,6 +1360,8 @@ Polymer({
     },
 
     tap: function (entityIndex, entity, index, column, event) {
+        //Used to identify whether user clicked a link or not. This is needed to open link after user didn't make double click.
+        const clickedLink = event.detail.sourceEvent.composedPath().find(n => n.tagName && n.tagName === 'A');
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
@@ -1372,15 +1372,14 @@ Polymer({
             }
         } else if (this.master && this.master.editors.length > 0 && this.canOpenMaster()) {
             this._tapOnce = true;
-            this._clickedLink = event.detail.sourceEvent.composedPath().find(n => n.tagName && n.tagName === 'A');
             this.async(() => {
                 if (this._tapOnce) {
-                    this._tapColumn(entity, column);
+                    this._tapColumn(entity, column, clickedLink);
                 }
                 delete this._tapOnce;
             }, 400);
         } else {
-            this._tapColumn(entity, column);
+            this._tapColumn(entity, column, clickedLink);
         }
         tearDownEvent(event.detail.sourceEvent);
     },
@@ -1389,23 +1388,18 @@ Polymer({
      * Initiates corresponding 'tg-ui-action' (if present) with concrete function representing current entity.
      * Opens hyperlink or attachment if 'tg-ui-action' is not present.
      */
-    _tapColumn: function (entity, column) {
+    _tapColumn: function (entity, column, clickedLink) {
         // 'this._currentEntity(entity)' returns closure with 'entity' tapped.
         // This closure returns either 'entity' or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
         const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
-        if (!this.isHyperlinkProp(entity, column) && this._clickedLink) {
-            const targetAttr = this._clickedLink.getAttribute("target");
-            checkLinkAndOpen(this._clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
+        if (clickedLink) {
+            const targetAttr = clickedLink.getAttribute("target");
+            checkLinkAndOpen(clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
         } else if (!column.runAction(this._currentEntity(entity), actionIndex)) {
-            // if the clicked property is a hyperlink and there was no custom action associted with it
-            // then let's open the linked resources
-            if (this.isHyperlinkProp(entity, column) === true) {
-                const url = this.getBindedValue(entity, column);
-                checkLinkAndOpen(url);
-            } else {
+            if (this.isHyperlinkProp(entity, column) === false) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
