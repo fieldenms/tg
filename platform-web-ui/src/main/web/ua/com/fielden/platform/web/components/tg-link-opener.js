@@ -86,7 +86,7 @@ export const checkLinkAndOpen = function (url, target, windowFeatures) {
             if (opt[options[1]]) {
                 localStorage.setItem(localStorageKey(hostName), moment().format(dateFormat));
             }
-            openLink(url, target, windowFeatures);
+                openLink(url, "_blank", windowFeatures);
         });
     } else {
         openLink(url, target, windowFeatures);
