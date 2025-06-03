@@ -76,8 +76,7 @@ export const checkLinkAndOpen = function (url, target, windowFeatures) {
         };
 
         if (isExternalURL(url) && !isAllowedSite() && !wasAcceptedByUser()) {
-            const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br>
-                        <pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${url}</pre>`;
+            const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br><pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${url}</pre>`;
             const options = ["Don't show this again for this link", "Don't show this again for this site"];
             const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, classes: "red" }];
 

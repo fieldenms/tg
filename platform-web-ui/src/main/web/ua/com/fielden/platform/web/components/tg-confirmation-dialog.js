@@ -64,7 +64,7 @@ dialogModel.innerHTML = `
             on-iron-overlay-closed="dialogClosed">
             <div class="title" hidden$="[[!title]]">[[title]]</div>
             <paper-dialog-scrollable style="padding: 10px;">
-                <div id="msgPar"></div>
+                <div id="msgPar" style="white-space:break-spaces"></div>
                 <div id="opts" style="padding-top: 15px;" hidden$="[[!options]]">
                     <template is="dom-repeat" items="[[options]]">
                         <paper-checkbox checked="[[item.checked]]" on-change="_optionChanged">[[item.msg]]</paper-checkbox>
