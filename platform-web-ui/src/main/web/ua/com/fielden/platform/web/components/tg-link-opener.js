@@ -60,35 +60,38 @@ export function isExternalURL(url) {
  */
 export const checkLinkAndOpen = function (url, target, windowFeatures) {
     const dateFormat = 'YYYY MM DD';
-    const hostName = new URL(url).hostname;
+    const urlInstance = URL.parse(url);
+    if (urlInstance) {
+        const hostName = urlInstance.hostname;
 
-    const isAllowedSite = () => appConfig.siteAllowlist.includes(hostName);
+        const isAllowedSite = () => appConfig.siteAllowlist.includes(hostName);
 
-    const wasAcceptedByUser = () => {
-        const now = moment();
-        const isRecent = (key) =>
-            localStorage.getItem(key) &&
-            now.diff(moment(localStorage.getItem(key), dateFormat), 'days') < appConfig.daysUntilSitePermissionExpires;
+        const wasAcceptedByUser = () => {
+            const now = moment();
+            const isRecent = (key) =>
+                localStorage.getItem(key) &&
+                now.diff(moment(localStorage.getItem(key), dateFormat), 'days') < appConfig.daysUntilSitePermissionExpires;
 
-        return isRecent(localStorageKey(url)) || isRecent(localStorageKey(hostName));
-    };
+            return isRecent(localStorageKey(url)) || isRecent(localStorageKey(hostName));
+        };
 
-    if (isExternalURL(url) && !isAllowedSite() && !wasAcceptedByUser()) {
-        const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br>
-                      <pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${url}</pre>`;
-        const options = ["Don't show this again for this link", "Don't show this again for this site"];
-        const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, classes: "red" }];
+        if (isExternalURL(url) && !isAllowedSite() && !wasAcceptedByUser()) {
+            const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br>
+                        <pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${url}</pre>`;
+            const options = ["Don't show this again for this link", "Don't show this again for this site"];
+            const buttons = [{ name: 'Cancel' }, { name: 'Continue', confirm: true, autofocus: true, classes: "red" }];
 
-        confirmationDialog.showConfirmationDialog(text, buttons, { single: true, options }, "Double-check this link").then(opt => {
-            if (opt[options[0]]) {
-                localStorage.setItem(localStorageKey(url), moment().format(dateFormat));
-            }
-            if (opt[options[1]]) {
-                localStorage.setItem(localStorageKey(hostName), moment().format(dateFormat));
-            }
+            confirmationDialog.showConfirmationDialog(text, buttons, { single: true, options }, "Double-check this link").then(opt => {
+                if (opt[options[0]]) {
+                    localStorage.setItem(localStorageKey(url), moment().format(dateFormat));
+                }
+                if (opt[options[1]]) {
+                    localStorage.setItem(localStorageKey(hostName), moment().format(dateFormat));
+                }
                 openLink(url, "_blank", windowFeatures);
-        });
-    } else {
-        openLink(url, target, windowFeatures);
+            });
+        } else {
+            openLink(url, target, windowFeatures);
+        }
     }
 }
