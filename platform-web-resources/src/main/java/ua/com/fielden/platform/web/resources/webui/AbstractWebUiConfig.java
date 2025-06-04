@@ -135,7 +135,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
         this.siteAllowlist = optionalSiteAllowlist.map(sites -> stream(sites.trim().split("\\s*,\\s*"))
-                .map(site -> site.startsWith("\"|\'") ? site : ("\"" + site + "\""))
+                .map(site -> "/" + site.toLowerCase().replaceAll("\"|\'", "").replace(".", "\\.").replace("*", ".*") + "/") //generates javascript RegEx
                 .collect(toList())).orElse(List.of());
         this.daysUntilSitePermissionExpires = optionalExpiryDays.map(Integer::parseInt).orElse(DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS);
         this.webUiBuilder = new WebUiBuilder(this);

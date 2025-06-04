@@ -64,7 +64,7 @@ export const checkLinkAndOpen = function (url, target, windowFeatures) {
     if (urlInstance) {
         const hostName = urlInstance.hostname;
 
-        const isAllowedSite = () => appConfig.siteAllowlist.includes(hostName);
+        const isAllowedSite = () => appConfig.siteAllowlist.find(pattern => pattern.test(hostName));
 
         const wasAcceptedByUser = () => {
             const now = moment();
