@@ -119,6 +119,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param independentTimeZone  if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
      * @param masterActionOptions  determines what options are available for master's save and cancel actions.
      * @param ideaUri  an optional idea page URI.
+     * @param optionalSiteAllowlist a list of external site patterns (*) with comma separator to be excluded from checking during opening
+     * @param optionalExpiryDays custom number of days to expire accepted sites / links (half a year is the default)
      */
     public AbstractWebUiConfig(
             final String title,

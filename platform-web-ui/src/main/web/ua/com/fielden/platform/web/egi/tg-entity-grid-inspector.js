@@ -917,7 +917,7 @@ Polymer({
         _openDropDown: Function,
 
         //Double tap related
-        _tapOnce: Boolean,
+        _tapOnce: Boolean
     },
 
     behaviors: [TgEgiDataRetrievalBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],

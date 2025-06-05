@@ -73,7 +73,7 @@ dialogModel.innerHTML = `
             </paper-dialog-scrollable>
             <div class="buttons">
                 <template is="dom-repeat" items="[[buttons]]">
-                    <paper-button class$="[[item.classes]] "style$="[[item.style]]"dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>
+                    <paper-button class$="[[item.classes]]" style$="[[item.style]]" dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>
                 </template>
             </div>
         </paper-dialog>
