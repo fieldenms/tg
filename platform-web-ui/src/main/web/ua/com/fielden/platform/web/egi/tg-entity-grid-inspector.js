@@ -30,7 +30,8 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages, openLink } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
@@ -1358,7 +1359,9 @@ Polymer({
         });
     },
 
-    tap: function (entityIndex, entity, index, column) {
+    tap: function (entityIndex, entity, index, column, event) {
+        //Used to identify whether user clicked a link or not. This is needed to open link after user didn't make double click.
+        const clickedLink = event.detail.sourceEvent && event.detail.sourceEvent.composedPath && event.detail.sourceEvent.composedPath().find(n => n.tagName && n.tagName === 'A');
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
@@ -1371,40 +1374,39 @@ Polymer({
             this._tapOnce = true;
             this.async(() => {
                 if (this._tapOnce) {
-                    this._tapColumn(entity, column);
+                    this._tapColumn(entity, column, clickedLink);
                 }
                 delete this._tapOnce;
             }, 400);
         } else {
-            this._tapColumn(entity, column);
+            this._tapColumn(entity, column, clickedLink);
         }
+        tearDownEvent(event.detail.sourceEvent);
     },
 
     /**
      * Initiates corresponding 'tg-ui-action' (if present) with concrete function representing current entity.
      * Opens hyperlink or attachment if 'tg-ui-action' is not present.
      */
-    _tapColumn: function (entity, column) {
+    _tapColumn: function (entity, column, clickedLink) {
         // 'this._currentEntity(entity)' returns closure with 'entity' tapped.
         // This closure returns either 'entity' or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
         const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
-        if (!column.runAction(this._currentEntity(entity), actionIndex)) {
-            // if the clicked property is a hyperlink and there was no custom action associted with it
-            // then let's open the linked resources
-            if (this.isHyperlinkProp(entity, column) === true) {
-                const url = this.getBindedValue(entity, column);
-                openLink(url);
-            } else {
+        if (clickedLink) {
+            const targetAttr = clickedLink.getAttribute("target");
+            checkLinkAndOpen(clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
+        } else if (!column.runAction(this._currentEntity(entity), actionIndex)) {
+            if (this.isHyperlinkProp(entity, column) === false) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
                 } else if (this.hasDefaultAction(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
-            } 
+            }
         }
     },
 
@@ -1534,11 +1536,11 @@ Polymer({
     },
 
     _tapFixedAction: function (e, detail) {
-        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index], e);
     },
 
     _tapAction: function (e, detail) {
-        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index], e);
     },
 
     _columnDomChanged: function (addedColumns, removedColumns) {

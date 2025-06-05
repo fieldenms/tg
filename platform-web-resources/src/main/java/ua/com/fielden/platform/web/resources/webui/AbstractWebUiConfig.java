@@ -48,8 +48,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -77,6 +79,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
     private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default configurations for [%s]-typed centres (caching)...";
+    private static final int DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS = 183;
 
     private final String title;
     private final Optional<String> ideaUri;
@@ -99,6 +102,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Map<String, String> checksums;
     private final boolean independentTimeZone;
     private final MasterActionOptions masterActionOptions;
+    private final List<String> siteAllowlist;
+    private final int daysUntilSitePermissionExpires;
 
     /**
      * Holds the map between embedded entity centres' menu item types and [entity centre, entity master] pair.
@@ -114,6 +119,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param independentTimeZone  if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
      * @param masterActionOptions  determines what options are available for master's save and cancel actions.
      * @param ideaUri  an optional idea page URI.
+     * @param optionalSiteAllowlist a list of external site patterns (*) with comma separator to be excluded from checking during opening
+     * @param optionalExpiryDays custom number of days to expire accepted sites / links (half a year is the default)
      */
     public AbstractWebUiConfig(
             final String title,
@@ -121,12 +128,18 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             final String[] externalResourcePaths,
             final boolean independentTimeZone,
             final Optional<MasterActionOptions> masterActionOptions,
-            final Optional<String> ideaUri)
+            final Optional<String> ideaUri,
+            final Optional<String> optionalSiteAllowlist,
+            final Optional<String> optionalExpiryDays)
     {
         this.title = title;
         this.ideaUri = ideaUri.map(uri -> validateIdeaUri(uri).getInstanceOrElseThrow());
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
+        this.siteAllowlist = optionalSiteAllowlist.map(sites -> stream(sites.trim().split("\\s*,\\s*"))
+                .map(site -> "/" + site.toLowerCase().replaceAll("\"|\'", "").replace(".", "\\.").replace("*", ".*") + "/") //generates javascript RegEx
+                .collect(toList())).orElse(List.of());
+        this.daysUntilSitePermissionExpires = optionalExpiryDays.map(Integer::parseInt).orElse(DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS);
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -146,8 +159,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.workflow = workflow;
 
         final LinkedHashSet<String> allResourcePaths = new LinkedHashSet<>();
-        allResourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
-        allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
+        allResourcePaths.addAll(asList("", "ua/com/fielden/platform/web/"));
+        allResourcePaths.addAll(asList(externalResourcePaths));
         this.resourcePaths = new ArrayList<>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);
 
@@ -160,6 +173,19 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     /**
+     * The same as {@link #AbstractWebUiConfig}, but without {@code siteAllowlist} and {@code optionalExpiryDays}.
+     */
+    public AbstractWebUiConfig(
+            final String title,
+            final Workflows workflow,
+            final String[] externalResourcePaths,
+            final boolean independentTimeZone,
+            final Optional<MasterActionOptions> masterActionOptions,
+            final Optional<String> ideaUri) {
+        this(title, workflow, externalResourcePaths, independentTimeZone, masterActionOptions, ideaUri, Optional.empty(), Optional.empty());
+    }
+
+    /**
      * The same as {@link #AbstractWebUiConfig}, but without {@code ideaUri}.
      */
     public AbstractWebUiConfig(
@@ -168,7 +194,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             final String[] externalResourcePaths,
             final boolean independentTimeZone,
             final Optional<MasterActionOptions> masterActionOptions) {
-        this(title, workflow, externalResourcePaths, independentTimeZone, masterActionOptions, Optional.empty());
+        this(title, workflow, externalResourcePaths, independentTimeZone, masterActionOptions, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     /**
@@ -385,6 +411,16 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public MasterActionOptions masterActionOptions() {
         return masterActionOptions;
+    }
+
+    @Override
+    public List<String> siteAllowlist() {
+        return this.siteAllowlist;
+    }
+
+    @Override
+    public int daysUntilSitePermissionExpires() {
+        return this.daysUntilSitePermissionExpires;
     }
 
     /**
