@@ -1361,7 +1361,7 @@ Polymer({
 
     tap: function (entityIndex, entity, index, column, event) {
         //Used to identify whether user clicked a link or not. This is needed to open link after user didn't make double click.
-        const clickedLink = event.detail.sourceEvent.composedPath().find(n => n.tagName && n.tagName === 'A');
+        const clickedLink = event.detail.sourceEvent && event.detail.sourceEvent.composedPath && event.detail.sourceEvent.composedPath().find(n => n.tagName && n.tagName === 'A');
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
