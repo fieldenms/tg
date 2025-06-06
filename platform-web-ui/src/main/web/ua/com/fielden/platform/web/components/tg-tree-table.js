@@ -35,20 +35,6 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-flex;
         }
-        .noselect {
-            -webkit-touch-callout: none;
-            /* iOS Safari */
-            -webkit-user-select: none;
-            /* Safari */
-            -khtml-user-select: none;
-            /* Konqueror HTML */
-            -moz-user-select: none;
-            /* Firefox */
-            -ms-user-select: none;
-            /* Internet Explorer/Edge */
-            user-select: none;
-            /* Non-prefixed version, currently supported by Chrome and Opera */
-        }
         .resizing-box {
             position: absolute;
             top: 0;
@@ -238,12 +224,12 @@ const template = html`
     <div id="scrollableContainer" on-scroll="_handleScrollEvent">
         <div id="baseContainer">
             <div id="header" show-top-shadow$="[[_showTopShadow]]" class="table-header-row sticky-container stick-top z-index-1"  on-touchmove="_handleTouchMove">
-                <div class="table-cell sticky-container stick-top-left z-index-2" fixed show-left-shadow$="[[_showLeftShadow]]" style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor)]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                <div class="table-cell sticky-container stick-top-left z-index-2" fixed show-left-shadow$="[[_showLeftShadow]]" style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor)]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                     <div class="truncate table-header-column-title" vertical$="[[hierarchyColumn.vertical]]">[[hierarchyColumn.columnTitle]]</div>
                     <div class="resizing-box"></div>
                 </div>
                 <template is="dom-repeat" items="[[regularColumns]]">
-                    <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor)]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                    <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor)]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                         <div class="truncate table-header-column-title" vertical$="[[item.vertical]]">[[item.columnTitle]]</div>
                         <div class="resizing-box"></div>
                     </div>
@@ -459,20 +445,19 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         this.toggle(e.model.index);
     }
 
-    _makeTreeTableUnselectable (e) {
+    _setUpCursor (e) {
+        tearDownEvent(e);
         if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", true);
             console.log("set resizing action");
         }
-        this.$.baseContainer.classList.toggle("noselect", true);
         document.body.style["cursor"] = "col-resize";
     }
 
-    _makeTreeTableSelectable (e) {
+    _resetCursor (e) {
         if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", false);
         }
-        this.$.baseContainer.classList.toggle("noselect", false);
         document.body.style["cursor"] = "";
     }
 
