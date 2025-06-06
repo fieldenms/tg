@@ -419,6 +419,18 @@ public final class CollectionUtil {
                         entry -> valueMapper.apply(entry.getKey(), entry.getValue())));
     }
 
+    /**
+     * Returns a sublist, backed by the specified list, that excludes {@code n} rightmost elements.
+     */
+    public static <X> List<X> dropRight(final List<X> xs, final int n) {
+        if (n >= xs.size()) {
+            return ImmutableList.of();
+        }
+        else {
+            return xs.subList(0, xs.size() - n);
+        }
+    }
+
     public static final class CollectionBuilder<C extends Collection<E>, E> {
         private final C collection;
 

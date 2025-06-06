@@ -23,7 +23,7 @@ import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
-import ua.com.fielden.platform.processors.test_utils.CompilationResult;
+import ua.com.fielden.platform.test_utils.compile.CompilationResult;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.test_utils.Message;
 import ua.com.fielden.platform.processors.verify.test_utils.MessagePrintingVerifier;

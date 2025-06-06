@@ -26,6 +26,7 @@ import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
+import ua.com.fielden.platform.security.provider.SecurityTestIocModule;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
@@ -47,12 +48,15 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
 
     private static final Logger LOGGER = LogManager.getLogger(PlatformTestServerIocModule.class);
 
+    private final Properties props;
+
     public PlatformTestServerIocModule(
             final IApplicationDomainProvider applicationDomainProvider,
             final List<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Properties props)
     {
         super(applicationDomainProvider, domainEntityTypes, props);
+        this.props = props;
     }
 
     @Override
@@ -68,6 +72,8 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class);
+
+        install(new SecurityTestIocModule());
     }
 
     @Override
@@ -97,6 +103,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(ITgCategory.class).to(TgCategoryDao.class);
         bind(ITgCategoryAttachment.class).to(TgCategoryAttachmentDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
+        bind(AuditedEntityCo.class).to(AuditedEntityDao.class);
         bind(TgReVehicleWithHighPriceCo.class).to(TgReVehicleWithHighPriceDao.class);
         bind(TeNamedValuesVectorCo.class).to(TeNamedValuesVectorDao.class);
         bind(TeProductPriceCo.class).to(TeProductPriceDao.class);
