@@ -48,7 +48,6 @@ const additionalTemplate = html`
         }
         iron-list {
             overflow: auto;
-            -webkit-overflow-scrolling: touch;
         }
         .item-disabled {
             pointer-events: none;

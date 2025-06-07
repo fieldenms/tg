@@ -149,7 +149,6 @@ const template = html`
         }
         iron-pages {
             overflow: auto;
-            -webkit-overflow-scrolling: touch;
             position: absolute;
             top: 0px;
             left: 0px;
