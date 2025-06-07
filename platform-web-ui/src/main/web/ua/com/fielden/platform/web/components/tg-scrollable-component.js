@@ -4,7 +4,6 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
-import { isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -15,9 +14,6 @@ const template = html`
         #scrollablePanel {
             overflow: auto;
             @apply --tg-scrollable-layout;
-        }
-        .webkit-scroll-inertia {
-            -webkit-overflow-scrolling: touch;
         }
         #shadowContainer {
             @apply --layout-fit;
@@ -56,18 +52,6 @@ Polymer({
 
     _resizeEventListener: function (event, details) {
         this._contentScrolled();
-
-        if (isMobileApp() && isIPhoneOs()) { // TODO perhaps MacOs webkit browsers are also affected, then it needs to be fixed here too
-            // In webkit-based browsers we use '-webkit-overflow-scrolling: touch' css fix to enable scroll inertia (all other browsers implement that natively).
-            // However, this causes completely broken scrolling in cases where inner content changes its sizes.
-            // Specifically the size change should be following: at the beginng the content becomes small and non-scrollable and then, again, big and scrollable.
-            // See this post http://patrickmuff.ch/blog/2014/10/01/how-we-fixed-the-webkit-overflow-scrolling-touch-bug-on-ios/ and its comments for more information.
-            // Also this post http://jstn.name/bug-fix-for-overflow-scrolling-on-orientation-change/ helps too.
-            this.$.scrollablePanel.classList.remove('webkit-scroll-inertia');
-            this.async(function () {
-                this.$.scrollablePanel.classList.add('webkit-scroll-inertia');
-            }.bind(this), 200); // need magic async and wait at least 200 ms (this works on iOs 11.3 Safari 11.0)
-        }
     },
 
     _contentScrolled: function (e) {

@@ -37,7 +37,6 @@ const pickerStyle = html`
             .date-picker {
                 line-height: normal;
                 overflow: auto;
-                -webkit-overflow-scrolling: touch;
             }
         </style>
     </custom-style>`;

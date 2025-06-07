@@ -18,7 +18,6 @@ const template = html`
             display: block;
             background: white;
             overflow: auto; /* this is to make host scorable when needed */
-            -webkit-overflow-scrolling: touch;
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
         }
         .menu-item {
