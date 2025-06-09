@@ -39,6 +39,7 @@
         <module>platform-web-ui</module>
         <module>platform-benchmark</module>
         <module>platform-eql-grammar</module>
+        <module>platform-metrics</module>
     </modules>
 
     <dependencies>
