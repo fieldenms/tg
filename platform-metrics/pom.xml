@@ -21,6 +21,7 @@
 
   <modules>
     <module>platform-metrics-core</module>
+    <module>platform-metrics-web-server</module>
   </modules>
 
   <properties>
