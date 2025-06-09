@@ -13,7 +13,6 @@
     <name>Trident Genesis Platform Web Resources</name>
 
     <properties>
-        <restlet.version>2.5.1</restlet.version>
         <jetty.version>9.4.57.v20241219</jetty.version>
     </properties>
 
