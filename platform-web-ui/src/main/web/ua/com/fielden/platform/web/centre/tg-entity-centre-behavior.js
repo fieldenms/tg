@@ -10,7 +10,6 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
-import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 
 /**
  * A local insertion point manager for the entity centre to manage detached or maximized insertion points.
