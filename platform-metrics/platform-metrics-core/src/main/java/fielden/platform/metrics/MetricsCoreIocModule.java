@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
+import jakarta.inject.Singleton;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 
@@ -40,6 +41,7 @@ public final class MetricsCoreIocModule extends AbstractPlatformIocModule {
     /// Otherwise, binds a noop registry.
     ///
     @Provides
+    @Singleton
     MeterRegistry meterRegistry(final MetricsConfig config) {
         return switch (config.mode()) {
             case ENABLED -> new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);

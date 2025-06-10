@@ -3,6 +3,7 @@ package fielden.platform.metrics.web_server;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
 import fielden.platform.metrics.MetricsConfig;
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 
@@ -27,6 +28,7 @@ public class MetricsAuthenticationIocModule extends AbstractPlatformIocModule {
     ///
     @Provides
     @Named(TG_METRICS_API_KEY)
+    @Singleton
     Optional<String> apiKey(final MetricsConfig config) {
         return switch (config.mode()) {
             case DISABLED -> Optional.empty();

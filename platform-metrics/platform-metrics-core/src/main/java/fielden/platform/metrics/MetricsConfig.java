@@ -1,5 +1,6 @@
 package fielden.platform.metrics;
 
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.parser.IValueParser;
 
 import java.util.Properties;
@@ -12,6 +13,7 @@ import static ua.com.fielden.platform.parser.IValueParser.propertyParser;
 /// @param mode  optional (default: [Mode#DISABLED]).
 ///              All parts of the metrics API should document their behaviour with respect to the mode.
 ///
+@Singleton
 public record MetricsConfig (Mode mode) {
 
     public static final String PROPERTY_MODE = "metrics.mode";
