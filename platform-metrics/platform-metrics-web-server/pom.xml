@@ -26,6 +26,12 @@
     </dependency>
 
     <dependency>
+      <groupId>fielden</groupId>
+      <artifactId>platform-web-resources</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.restlet</groupId>
       <artifactId>org.restlet</artifactId>
       <version>${restlet.version}</version>
