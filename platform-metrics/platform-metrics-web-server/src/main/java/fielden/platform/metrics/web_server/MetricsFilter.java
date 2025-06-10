@@ -1,5 +1,6 @@
 package fielden.platform.metrics.web_server;
 
+import fielden.platform.metrics.MetricsConfig;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import jakarta.inject.Inject;
@@ -11,20 +12,31 @@ import org.restlet.routing.Filter;
 
 /// Executes around a request, capturing metrics.
 ///
+/// If metrics are disabled, simply lets all requests through without capturing any metrics.
+///
 public class MetricsFilter extends Filter {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String WARN_ERROR_IN_METRICS = "Suppressed an error that occured in the metrics subsystem.";
 
     private final MeterRegistry meterRegistry;
+    private final MetricsConfig metricsConfig;
 
     @Inject
-    private MetricsFilter(final MeterRegistry meterRegistry) {
+    private MetricsFilter(final MeterRegistry meterRegistry, final MetricsConfig metricsConfig) {
         this.meterRegistry = meterRegistry;
+        this.metricsConfig = metricsConfig;
     }
 
     @Override
     protected int doHandle(final Request request, final Response response) {
+        return switch (metricsConfig.mode()) {
+            case ENABLED -> doHandleWithMetrics(request, response);
+            case DISABLED -> super.doHandle(request, response);
+        };
+    }
+
+    private int doHandleWithMetrics(final Request request, final Response response) {
         // Do not let errors that pertain to metrics inerrupt processing of the request.
 
         Timer.Sample sample;

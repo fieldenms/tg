@@ -20,6 +20,8 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 ///
 /// Requires the [MeterRegistry] to be a [PrometheusMeterRegistry].
 ///
+/// Metrics must be enabled for this class to be used.
+///
 public class MetricsResource extends AbstractWebResource {
 
     private static final String CONTENT_TYPE_OPENMETRICS = "application/openmetrics-text";

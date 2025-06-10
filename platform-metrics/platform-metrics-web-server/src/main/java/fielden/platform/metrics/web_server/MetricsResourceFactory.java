@@ -1,5 +1,6 @@
 package fielden.platform.metrics.web_server;
 
+import fielden.platform.metrics.MetricsConfig;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import jakarta.inject.Inject;
@@ -12,7 +13,11 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
+import static fielden.platform.metrics.MetricsConfig.Mode.ENABLED;
+
 /// Factory for [MetricsResource].
+///
+/// Metrics must be enabled for this class to be used.
 ///
 public class MetricsResourceFactory extends Restlet {
 
@@ -26,8 +31,10 @@ public class MetricsResourceFactory extends Restlet {
             final RestServerUtil restUtil,
             final IDeviceProvider deviceProvider,
             final IDates dates,
-            final MeterRegistry meterRegistry)
+            final MeterRegistry meterRegistry,
+            final MetricsConfig metricsConfig)
     {
+        metricsConfig.assertMode(ENABLED);
         this.restUtil = restUtil;
         this.deviceProvider = deviceProvider;
         this.dates = dates;

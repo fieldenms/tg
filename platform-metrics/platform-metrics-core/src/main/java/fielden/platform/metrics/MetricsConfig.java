@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.parser.IValueParser.propertyParser;
 /// Configuration of the metrics system.
 ///
 /// @param mode  optional (default: [Mode#DISABLED]).
+///              All parts of the metrics API should document their behaviour with respect to the mode.
 ///
 public record MetricsConfig (Mode mode) {
 
@@ -21,6 +22,15 @@ public record MetricsConfig (Mode mode) {
     }
 
     public enum Mode { ENABLED, DISABLED }
+
+    public Mode assertMode(final Mode expected) {
+        if (!mode.equals(expected)) {
+            throw new MetricsException("Metrics mode must be [%s], but was [%s].".formatted(expected, mode));
+        }
+        else {
+            return mode;
+        }
+    }
 
 
     private static final IValueParser<Properties, Mode> modeParser = propertyParser(PROPERTY_MODE, enumIgnoreCaseParser(Mode.values()), Mode.DISABLED);

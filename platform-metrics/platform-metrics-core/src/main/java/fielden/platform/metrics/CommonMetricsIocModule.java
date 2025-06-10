@@ -14,6 +14,8 @@ import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
 ///
 /// [MetricsCoreIocModule] is a required dependency.
 ///
+/// If metrics are disabled, no meters will be registered.
+///
 public final class CommonMetricsIocModule extends AbstractPlatformIocModule {
 
     @Override
@@ -22,7 +24,11 @@ public final class CommonMetricsIocModule extends AbstractPlatformIocModule {
     }
 
     @Inject
-    static void registerMetrics(final MeterRegistry meterRegistry) {
+    static void registerMetrics(final MetricsConfig config, final MeterRegistry meterRegistry) {
+        if (config.mode() == MetricsConfig.Mode.DISABLED) {
+            return;
+        }
+
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new JvmGcMetrics().bindTo(meterRegistry);
         new JvmMemoryMetrics().bindTo(meterRegistry);
