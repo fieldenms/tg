@@ -1043,6 +1043,18 @@ Polymer({
                 persistedIps.forEach(tagName => resetCustomSettings(this.miType, tagName));
                 // Remove all IP orders from each container and splitter positions too.
                 this.resetCustomSettingsForInsertionPoints();
+
+                const firstIp = ips[0];
+                if (firstIp) {
+                    this.async(() => {
+                        firstIp.$.toaster.text = 'Layout was defaulted.';
+                        firstIp.$.toaster.hasMore = true;
+                        firstIp.$.toaster.msgText = `Layout was defaulted due to some views being removed.<br><br><b>${[...removedIps]}</b>`;
+                        firstIp.$.toaster.showProgress = false;
+                        firstIp.$.toaster.isCritical = true;
+                        firstIp.$.toaster.show();
+                    }, 1);
+                }
             }
         }
     },
