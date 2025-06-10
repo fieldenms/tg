@@ -149,7 +149,6 @@ const template = html`
         }
         iron-pages {
             overflow: auto;
-            -webkit-overflow-scrolling: touch;
             position: absolute;
             top: 0px;
             left: 0px;
@@ -269,7 +268,7 @@ const template = html`
             <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical" hidden$="[[!leftInsertionPointPresent]]" scroll-container$="[[!centreScroll]]">
                 <slot id="leftInsertionPointContent" name="left-insertion-point"></slot>
             </div>
-            <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_tearDownEvent" on-track="_changeLeftInsertionPointSize">
+            <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeLeftInsertionPointSize">
                 <div class="arrow-left" tooltip-text="Collapse" on-tap="_collapseLeftInsertionPoint"></div>
                 <div class="arrow-right" tooltip-text="Expand" on-tap="_expandLeftInsertionPoint"></div>
             </div>
@@ -278,7 +277,7 @@ const template = html`
                 <slot id="customEgiSlot" name="custom-egi"></slot>
                 <slot id="bottomInsertionPointContent" name="bottom-insertion-point"></slot>
             </div>
-            <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_tearDownEvent" on-track="_changeRightInsertionPointSize">
+            <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeRightInsertionPointSize">
                 <div class="arrow-left" tooltip-text="Expand" on-tap="_expandRightInsertionPoint"></div>
                 <div class="arrow-right" tooltip-text="Collapse" on-tap="_collapseRightInsertionPoint"></div>
             </div>
@@ -618,8 +617,13 @@ Polymer({
         this.notifyResize();
     },
 
-    _tearDownEvent: function (e) {
+    _setUpCursor: function (e) {
         tearDownEvent(e);
+        document.body.style["cursor"] = "col-resize";
+    },
+
+    _resetCursor: function (e) {
+        document.body.style["cursor"] = "";
     },
 
     _changeLeftInsertionPointSize: function (e) {
@@ -1005,27 +1009,41 @@ Polymer({
     },
 
     _restoreInsertionPointOrder: function() {
-        const containers = [this.$.topInsertionPointContent.assignedNodes()[0],
-                            this.$.leftInsertionPointContent.assignedNodes()[0],
-                            this.$.bottomInsertionPointContent.assignedNodes()[0],
-                            this.$.rightInsertionPointContent.assignedNodes()[0]];
         const keys = [this._generateKey(ST.TOP_INSERTION_POINT_ORDER),
                       this._generateKey(ST.LEFT_INSERTION_POINT_ORDER),
                       this._generateKey(ST.BOTTOM_INSERTION_POINT_ORDER),
                       this._generateKey(ST.RIGHT_INSERTION_POINT_ORDER)];
-        const ips = [...this.querySelectorAll("tg-entity-centre-insertion-point")];
         const ipOrders = keys.map(key => JSON.parse(localStorage.getItem(key) || "[]"));
         const persistedIps = new Set(ipOrders.flat());
-        const dslIps = new Set(ips.map(ip => ip.functionalMasterTagName));
-        const removedIps = persistedIps.difference(dslIps);
-        if (removedIps.size === 0 && (persistedIps.size === 0 || dslIps.isSubsetOf(persistedIps))) { // all previously persisted insertion points in custom layout exist in Centre DSL list of IPs and vice versa
-            keys.forEach((key, i) => {
-                this._restoreOrderForContainer(containers[i], ipOrders[i], ips);
-            });
-        } else { // some IP(s) has added / disappeared to / from Centre DSL -- fallback to the layout as per Centre DSL
-            ips.forEach(ip => resetCustomSettings(this.miType, ip.functionalMasterTagName)); // remove all settings from each and every insertion points first; ip contextRetriever() is not bound yet, so need to use this.miType explicitly
-            removedIps.forEach(tagName => resetCustomSettings(this.miType, tagName)); // remove all settings (this user only) from IP(s), that has disappeared from Centre DSL
-            this.resetCustomSettingsForInsertionPoints(); // then remove all IP orders from each container and splitter positions too
+        // There are some persisted IP orders in local storage iff user has changed the order in at least one container.
+        // In this case orders are stored for all containers and will always be restored as a whole since the first change.
+        // Only proceed with restoring in case if `persistedIps` is not empty.
+        // Otherwise, IPs are already in correct placements from generated Entity Centre source configuration.
+        if (persistedIps.size > 0) {
+            const ips = [...this.querySelectorAll("tg-entity-centre-insertion-point")];
+            const dslIps = new Set(ips.map(ip => ip.functionalMasterTagName));
+            // If all previously persisted insertion points in custom layout exist in Centre DSL list of IPs and vice versa
+            //   (effectively meaning that nothing was added / removed to / from DSL IPs, i.e. persistedIps === dslIps as sets).
+            if (persistedIps.isSubsetOf(dslIps) && dslIps.isSubsetOf(persistedIps)) {
+                // Iterate through all persisted container orders and restore.
+                const containers = [this.$.topInsertionPointContent.assignedNodes()[0],
+                                    this.$.leftInsertionPointContent.assignedNodes()[0],
+                                    this.$.bottomInsertionPointContent.assignedNodes()[0],
+                                    this.$.rightInsertionPointContent.assignedNodes()[0]];
+                keys.forEach((key, i) => {
+                    this._restoreOrderForContainer(containers[i], ipOrders[i], ips);
+                });
+            }
+            // Otherwise, some IP(s) has been added / removed to / from Centre DSL.
+            else {
+                // Fallback to the layout as per Centre DSL.
+                // For this, remove all settings from each currently persisted insertion points.
+                // These IPs may include those, removed from DSL config (garbage).
+                // And these IPs DO NOT include those, added to DSL config (no custom settings exist for them).
+                persistedIps.forEach(tagName => resetCustomSettings(this.miType, tagName));
+                // Remove all IP orders from each container and splitter positions too.
+                this.resetCustomSettingsForInsertionPoints();
+            }
         }
     },
 
