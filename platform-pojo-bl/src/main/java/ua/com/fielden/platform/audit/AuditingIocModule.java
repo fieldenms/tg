@@ -6,7 +6,6 @@ import com.google.inject.Provides;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import jakarta.inject.Singleton;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 import ua.com.fielden.platform.ioc.AbstractPlatformIocModule;
@@ -19,6 +18,7 @@ import java.util.Optional;
 
 import static com.google.inject.multibindings.OptionalBinder.newOptionalBinder;
 import static java.util.function.Predicate.not;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.parser.IValueParser.enumIgnoreCaseParser;
 import static ua.com.fielden.platform.parser.IValueParser.optPropertyParser;
 import static ua.com.fielden.platform.utils.MiscUtilities.mkProperties;
@@ -63,6 +63,8 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
 
     private static final AuditingMode DEFAULT_AUDITING_MODE = AuditingMode.ENABLED;
 
+    private static final Logger LOGGER = getLogger();
+
     @Override
     protected void configure() {
         super.configure();
@@ -71,7 +73,7 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
         newOptionalBinder(binder(), Key.get(String.class, Names.named(AUDIT_PATH)));
         newOptionalBinder(binder(), Key.get(String.class, Names.named(AUDIT_MODE)));
 
-        requestStaticInjection(LogAuditingMode.class);
+        requestStaticInjection(AuditingIocModule.class);
     }
 
     @Provides
@@ -110,14 +112,9 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
                 .orElse(DEFAULT_AUDITING_MODE);
     }
 
-    private static class LogAuditingMode {
-
-        private static final Logger LOGGER = LogManager.getLogger();
-
-        @Inject
-        static void run(final AuditingMode auditingMode) {
-            LOGGER.info(() -> "Active auditing mode: %s".formatted(auditingMode));
-        }
+    @Inject
+    static void logAuditingMode(final AuditingMode auditingMode) {
+        LOGGER.info(() -> "Active auditing mode: %s".formatted(auditingMode));
     }
 
 }
