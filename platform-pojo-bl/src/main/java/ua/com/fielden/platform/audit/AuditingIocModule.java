@@ -46,7 +46,6 @@ public final class AuditingIocModule extends AbstractPlatformIocModule {
     public static final String AUDIT_PATH = "audit.path";
     // We could support audit path as a system property, but that would require other IoC modules to use OptionalBinder to bind an audit path.
     // More details can be found in the documentation of OptionalBinder.
-    // The reason that audit.mode
 
     /// System and application property that specifies the auditing mode.
     ///
