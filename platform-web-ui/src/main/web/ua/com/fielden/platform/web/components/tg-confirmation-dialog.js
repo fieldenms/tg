@@ -90,14 +90,6 @@ dialogModel.showDialog = function () {
     }, 1);
 }
 
-dialogModel.dialogOpened = function (e) {
-    document.addEventListener('keydown', this._onCaptureKeyDown, true);
-}
-
-dialogModel.dialogClosed = function (e) {
-    document.removeEventListener('keydown', this._onCaptureKeyDown, true);
-}
-
 document.body.appendChild(dialogModel);
 
 export const TgConfirmationDialog = Polymer({
@@ -130,15 +122,6 @@ export const TgConfirmationDialog = Polymer({
             return obj;
         }
         return new Promise(function (resolve, reject) {
-
-            dialogModel._onCaptureKeyDown = function (e) {
-                // ensures on-Enter closing even if no button is focused, i.e. tapped on dialog somewhere or even outside dialog
-                if (e.keyCode === 13) {
-                    dialogModel.$.confirmDialog.close();
-                    resolve(dialogModel.options ? getOptions(dialogModel.options): "ENTER");
-                    restoreActiveElement();
-                }
-            }
 
             /**
              * Rejects confirmation dialog promise and restores previously active element.
