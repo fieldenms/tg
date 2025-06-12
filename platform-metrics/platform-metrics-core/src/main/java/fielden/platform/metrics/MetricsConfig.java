@@ -10,7 +10,8 @@ import static ua.com.fielden.platform.parser.IValueParser.propertyParser;
 
 /// Configuration of the metrics system.
 ///
-/// @param mode  optional (default: [Mode#DISABLED]).
+/// @param mode  Optional (default: [Mode#DISABLED]).
+///              Specified through application property [#PROPERTY_MODE], case-insensitive.
 ///              All parts of the metrics API should document their behaviour with respect to the mode.
 ///
 @Singleton
