@@ -14,6 +14,15 @@ import org.restlet.routing.Filter;
 ///
 /// If metrics are disabled, simply lets all requests through without capturing any metrics.
 ///
+/// The following metrics are captured for each request:
+///
+/// 1. * Name: `http.server.request`
+///    * Type: [Timer]
+///    * Tags:
+///      * `path` -- the path component of a URI.
+///      * `method` -- HTTP method name.
+///      * `status` -- HTTP response status code.
+///
 public class MetricsFilter extends Filter {
 
     private static final Logger LOGGER = LogManager.getLogger();
