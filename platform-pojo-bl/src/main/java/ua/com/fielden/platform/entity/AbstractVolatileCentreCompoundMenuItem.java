@@ -1,13 +1,15 @@
 package ua.com.fielden.platform.entity;
 
-import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 
 ///
-/// Functional entity that represents an entity master with a generic audit entity centre.
+/// Functional entity for an entity master with an entity centre that can be changed by server side logic.
 ///
-@EntityTitle("Menu Item for Audit Entity Centre")
-@CompanionObject(FunctionalEntityForAuditCentreCompoundMenuItemCo.class)
-public class FunctionalEntityForAuditCentreCompoundMenuItem extends AbstractFunctionalEntityForCompoundMenuItem<AbstractEntity<?>> {
+@EntityTitle("Compound Menu Item for Volatile Entity Centre")
+public abstract class AbstractVolatileCentreCompoundMenuItem<T extends AbstractEntity<?>> extends AbstractFunctionalEntityForCompoundMenuItem<T> {
 
     @IsProperty
     @Title(value = "Menu Item Type", desc = "Entity Centre Menu Item Type")
@@ -26,7 +28,7 @@ public class FunctionalEntityForAuditCentreCompoundMenuItem extends AbstractFunc
     }
 
     @Observable
-    public FunctionalEntityForAuditCentreCompoundMenuItem setEventSourceClass(final String eventSourceClass) {
+    public AbstractVolatileCentreCompoundMenuItem setEventSourceClass(final String eventSourceClass) {
         this.eventSourceClass = eventSourceClass;
         return this;
     }
@@ -35,7 +37,7 @@ public class FunctionalEntityForAuditCentreCompoundMenuItem extends AbstractFunc
     }
 
     @Observable
-    public FunctionalEntityForAuditCentreCompoundMenuItem setShouldEnforcePostSaveRefresh(final boolean shouldEnforcePostSaveRefresh) {
+    public AbstractVolatileCentreCompoundMenuItem setShouldEnforcePostSaveRefresh(final boolean shouldEnforcePostSaveRefresh) {
         this.shouldEnforcePostSaveRefresh = shouldEnforcePostSaveRefresh;
         return this;
     }
@@ -44,7 +46,7 @@ public class FunctionalEntityForAuditCentreCompoundMenuItem extends AbstractFunc
     }
 
     @Observable
-    public FunctionalEntityForAuditCentreCompoundMenuItem setMenuItemType(final String menuItemType) {
+    public AbstractVolatileCentreCompoundMenuItem setMenuItemType(final String menuItemType) {
         this.menuItemType = menuItemType;
         return this;
     }
