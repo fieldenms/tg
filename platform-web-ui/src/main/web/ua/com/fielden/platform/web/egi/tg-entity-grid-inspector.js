@@ -111,20 +111,6 @@ const template = html`
         #bottom_left_egi, #bottom_egi, #bottom_right_egi {
             align-self: end;
         }
-        .noselect {
-            -webkit-touch-callout: none;
-            /* iOS Safari */
-            -webkit-user-select: none;
-            /* Safari */
-            -khtml-user-select: none;
-            /* Konqueror HTML */
-            -moz-user-select: none;
-            /* Firefox */
-            -ms-user-select: none;
-            /* Internet Explorer/Edge */
-            user-select: none;
-            /* Non-prefixed version, currently supported by Chrome and Opera */
-        }
         .resizing-box {
             position: absolute;
             top: 0;
@@ -453,7 +439,7 @@ const template = html`
                             <!--Primary action stub header goes here-->
                         </div>
                         <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
-                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
@@ -476,7 +462,7 @@ const template = html`
                             <!--Primary action stub header goes here-->
                         </div>
                         <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
@@ -1777,20 +1763,19 @@ Polymer({
         this._columnResizingObject = null;
     },
 
-    _makeEgiUnselectable: function (e) {
+    _setUpCursor: function (e) {
+        tearDownEvent(e);
         if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", true);
             console.log("set resizing action");
         }
-        this.$.baseContainer.classList.toggle("noselect", true);
         document.body.style["cursor"] = "col-resize";
     },
 
-    _makeEgiSelectable: function (e) {
+    _resetCursor: function (e) {
         if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", false);
         }
-        this.$.baseContainer.classList.toggle("noselect", false);
         document.body.style["cursor"] = "";
     },
 

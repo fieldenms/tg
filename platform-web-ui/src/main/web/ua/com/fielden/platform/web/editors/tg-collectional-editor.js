@@ -28,20 +28,6 @@ const additionalTemplate = html`
         .main-container {
             @apply --layout-flex;
         }
-        .noselect {
-            -webkit-touch-callout: none;
-            /* iOS Safari */
-            -webkit-user-select: none;
-            /* Safari */
-            -khtml-user-select: none;
-            /* Konqueror HTML */
-            -moz-user-select: none;
-            /* Firefox */
-            -ms-user-select: none;
-            /* Internet Explorer/Edge */
-            user-select: none;
-            /* Non-prefixed version, currently supported by Chrome and Opera */
-        }
         .search-controls-wrapper {
             @apply --layout-horizontal;
             @apply --layout-center;
@@ -174,7 +160,7 @@ const customInputTemplate = html`
                 <div class$="[[_computedItemClass(_disabled)]]" collectional-index$="[[index]]">
                     <div class="dummy-box fit" hidden$="[[!_isDummyBoxVisible(item, _draggingItem)]]"></div>
                     <div tabindex="0" class$="[[_computedClass(selected, item, _draggingItem)]]" style$="[[_computeItemStyle(_forReview, _draggingItem, canReorderItems)]]" on-tap="_selectionHandler">
-                        <iron-icon class="resizing-box" on-down="_makeListUnselectable" on-up="_makeListSelectable" on-track="_changeItemOrder" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
+                        <iron-icon class="resizing-box" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeItemOrder" on-tap="_preventSelection" hidden$="[[!canReorderItems]]" icon="tg-icons:dragVertical" style$="[[_computeStyleForResizingBox(selected)]]" on-touchstart="_disableScrolling" on-touchmove="_disableScrolling"></iron-icon>
                         <div class="title" tooltip-text$="[[_calcItemTooltip(item)]]" style$="[[_computeTitleStyle(canReorderItems)]]">
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
                             <div class$="[[_computedDescriptionClass(item)]]" hidden$="[[!_calcItemText(item, descriptionPropertyName)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
@@ -963,13 +949,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         return currentElement ? +currentElement.getAttribute("collectional-index") : -1;
     }
     
-    _makeListUnselectable () {
-        this.$.input.classList.toggle("noselect", true);
+    _setUpCursor (e) {
+        tearDownEvent(e);
         document.body.style["cursor"] = "-webkit-grabbing";
     }
     
-    _makeListSelectable () {
-        this.$.input.classList.toggle("noselect", false);
+    _resetCursor () {
         document.body.style["cursor"] = '';
     }
 
