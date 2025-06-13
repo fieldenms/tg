@@ -28,7 +28,7 @@ public class StartSecureJetty {
     private static final Logger logger = getLogger(StartSecureJetty.class);
 
     public static void main(final String[] args) throws Exception {
-        final String fileName = "src/main/resources/application-PostgreSql-vlad.properties";
+        final String fileName = "src/main/resources/application.properties";
 
         final Properties props = new Properties();
         try (final InputStream st = new FileInputStream(fileName)) {
