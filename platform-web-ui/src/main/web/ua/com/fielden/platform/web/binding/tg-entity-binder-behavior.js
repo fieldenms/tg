@@ -914,14 +914,14 @@ export const TgEntityBinderBehavior = {
             modPropHolder['version'] = bindingEntity['version'];
             modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch/tg_convertPropertyValue for more details of how it can be mutated)
             
-            // Function that converts arrays of entities to array of strings or otherwise return the same (or equal) value.
-            // This is needed to provide modifHolder with flatten 'val' and 'origVal' arrays,
-            //   that do not contain fully-fledged entities, but rather string representations of those.
-            // This is because modifHolder deserialises as simple LinkedHashMap on server.
-            // And inner values will not be deserialised as entities but rather as simple Java bean objects.
-            // Also, we do support limited conversion of arrays of entities on the server side (only for conflicting warning).
+            // Function that converts an array of entities to an array of strings, and returns the same (or equal) value otherwise.
+            // This is needed to provide `modifHolder` with flattened `val` and `origVal` arrays that do not contain
+            // fully-fledged entities, but rather their string representations.
+            // This is because `modifHolder` deserialises as a simple Map on the server, and inner values will not be
+            // deserialised as entities, but rather as simple Java bean objects.
+            // Also, we do support limited conversion of arrays of entities on the server (only for conflicting warning).
             // Such properties are immutable from client-side editor perspective
-            //   (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions).
+            // (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions).
             const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;
             
             bindingEntity.traverseProperties(function (propertyName) {

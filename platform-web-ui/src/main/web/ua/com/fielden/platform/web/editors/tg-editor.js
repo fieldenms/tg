@@ -843,19 +843,18 @@ export class TgEditor extends GestureEventListeners(PolymerElement) {
     }
 
     /**
-     * Converts 'property' value (original if 'original' === true or current otherwise).
-     * 
+     * Converts the value of `property` and assigns the result to `bindingEntity[property]`.
+     *
      * All non-dot-notated properties are converted here.
      * 
-     * Also, the method converts root properties for dot-notated properties.
-     * This is necessary to guarantee that root property value, assigned in a definer of another property,
-     * would not get lost on subsequent validation/saving cycles.
-     * Such loss was happening in cases were a value, from which root property was defined,
-     *   got removed as part of some domain logic (e.g., a definer).
-     * The method implements an automatic conversion to include cases
-     *   where a root property is not on the master and not in 'isNecessaryForConversion' list.
+     * Also, this method converts root properties for dot-notated properties.
+     * This is necessary to guarantee that a root property value, assigned in a definer of another property,
+     * will not get lost on subsequent validation/saving cycles.
+     * Such loss was happening when a value, from which root property was defined, got removed as part of some domain logic (e.g., a definer).
+     * This method implements an automatic conversion to include cases where a root property is not on the master and not in the 'isNecessaryForConversion' list.
      *
-     * @param customFullEntity -- custom full entity as a source of property value to be converted (either current or original)
+     * @param original -- whether to use the original value of `property` or the current one
+     * @param customFullEntity -- if specified, then `property` is read from this entity
      */
     _convertPropertyValue (bindingEntity, property, original, customFullEntity) {
         if (!this.reflector().isDotNotated(property)) {
