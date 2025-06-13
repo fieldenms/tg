@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @DescTitle("Description")
 @CompanionObject(IEntityOne.class)
 @MapEntityTo
-public class EntityOne extends AbstractEntity<String> {
+public non-sealed class EntityOne extends AbstractEntity<String> implements UnionEntity.U {
 
     @IsProperty
     @MapTo

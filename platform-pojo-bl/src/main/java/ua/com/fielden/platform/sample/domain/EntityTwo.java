@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 @DescTitle("Description")
 @CompanionObject(IEntityTwo.class)
 @MapEntityTo
-public class EntityTwo extends AbstractEntity<Integer> {
+public non-sealed class EntityTwo extends AbstractEntity<Integer> implements UnionEntity.U {
 
     @IsProperty
     @MapTo

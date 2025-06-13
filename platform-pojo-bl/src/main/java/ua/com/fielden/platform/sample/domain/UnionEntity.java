@@ -12,6 +12,12 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(IUnionEntity.class)
 public class UnionEntity extends AbstractUnionEntity {
 
+    public sealed interface U permits EntityOne, EntityTwo {}
+
+    public U value() {
+        return (U) activeEntity();
+    }
+
     @Title(value = "Prop One", desc = "Desc")
     @IsProperty
     @MapTo
