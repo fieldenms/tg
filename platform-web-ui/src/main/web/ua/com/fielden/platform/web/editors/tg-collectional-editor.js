@@ -48,7 +48,6 @@ const additionalTemplate = html`
         }
         iron-list {
             overflow: auto;
-            -webkit-overflow-scrolling: touch;
         }
         .item-disabled {
             pointer-events: none;
@@ -989,7 +988,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
      _allSelectionChanged (e) {
-        const target = e.target || e.srcElement;
+        const target = e.target;
         this.selectAll(target.checked);
         this._selectedAll = target.checked;            
     }

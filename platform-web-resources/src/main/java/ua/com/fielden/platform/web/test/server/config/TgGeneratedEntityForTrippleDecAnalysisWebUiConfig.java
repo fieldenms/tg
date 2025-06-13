@@ -1,33 +1,13 @@
 package ua.com.fielden.platform.web.test.server.config;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.IContextDecomposer.decompose;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
-import static ua.com.fielden.platform.web.test.server.config.StandardActionsStyles.STANDARD_ACTION_COLOUR;
-import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
-import static ua.com.fielden.platform.web.view.master.chart.decker.api.LabelOrientation.VERTICAL;
-
-import java.util.Optional;
-
 import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.IContextDecomposer;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysis;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisDao;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisInsertionPoint;
-import ua.com.fielden.platform.sample.domain.TgOpenTrippleDecDetails;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.producers.TgGeneratedEntityForTrippleDecAnalysisInsertionPointProducer;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntityForTrippleDecAnalysis;
@@ -52,6 +32,21 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.impl.ChartDeckerMasterBuilder;
+
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.IContextDecomposer.decompose;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
+import static ua.com.fielden.platform.web.test.server.config.StandardActionsStyles.STANDARD_ACTION_COLOUR;
+import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
+import static ua.com.fielden.platform.web.view.master.chart.decker.api.LabelOrientation.VERTICAL;
 /**
  * {@link TgGeneratedEntityForTrippleDecAnalysis} Web UI configuration.
  *
@@ -231,7 +226,6 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                 .addInsertionPoint(
                         action(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
                              .withContext(context().withSelectionCrit().build())
-                             .icon("stub")
                              .shortDesc("Triple decker analysis")
                              .prefDimForView(mkDim("'auto'", "'770px'"))
                              .withNoParentCentreRefresh()
