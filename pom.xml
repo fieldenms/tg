@@ -27,6 +27,7 @@
         <HikariCP.version>6.3.0</HikariCP.version>
         <javapoet.version>1.13.0</javapoet.version>
         <antlr.version>4.13.2</antlr.version>
+        <restlet.version>2.5.1</restlet.version>
     </properties>
 
     <modules>
@@ -39,6 +40,7 @@
         <module>platform-web-ui</module>
         <module>platform-benchmark</module>
         <module>platform-eql-grammar</module>
+        <module>platform-metrics</module>
     </modules>
 
     <dependencies>
