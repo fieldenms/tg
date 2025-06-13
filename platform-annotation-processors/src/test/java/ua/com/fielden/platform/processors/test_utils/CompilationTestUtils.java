@@ -2,6 +2,8 @@ package ua.com.fielden.platform.processors.test_utils;
 
 import com.squareup.javapoet.JavaFile;
 import org.apache.commons.io.FileUtils;
+import ua.com.fielden.platform.test_utils.compile.Compilation;
+import ua.com.fielden.platform.test_utils.compile.CompilationResult;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.*;
@@ -17,7 +19,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
+import static ua.com.fielden.platform.test_utils.compile.InMemoryJavaFileObjects.createJavaSource;
 
 /**
  * A collection of test utilities to assist in working with {@link Compilation} and {@link CompilationResult}.

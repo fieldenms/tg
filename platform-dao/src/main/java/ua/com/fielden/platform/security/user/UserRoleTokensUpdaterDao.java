@@ -89,12 +89,7 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
     }
 
     private Class<? extends ISecurityToken> loadToken(final String name) {
-        final Class<? extends ISecurityToken> token;
-        try {
-            token = (Class<? extends ISecurityToken>) Class.forName(name);
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(new IllegalStateException(String.format("Security token [%s] could not be found.", name)));
-        }
-        return token;
+        return securityTokenProvider.getTokenByName(name)
+                .orElseThrow(() -> Result.failure(new IllegalStateException(String.format("Security token [%s] could not be found.", name))));
     }
 }

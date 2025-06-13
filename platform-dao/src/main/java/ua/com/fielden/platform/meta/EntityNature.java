@@ -2,6 +2,7 @@ package ua.com.fielden.platform.meta;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.meta.ISyntheticModelProvider;
 
 import java.util.List;
 
@@ -66,14 +67,16 @@ public sealed interface EntityNature {
      * Represents an entity underpinned by one or more EQL models to retrieve the data from a database.
      * In a way, entities of this nature are analogous to database views.
      * <p>
-     * The data in this case is a list of EQL models that define a synthetic entity.
+     * No data is associated with this nature.
+     *
+     * @see ISyntheticModelProvider
      */
     final class Synthetic implements EntityNature {
-        public static Data data(final List<? extends EntityResultQueryModel<?>> models) {
-            return new Data(models);
-        }
+        public static final Synthetic.Data NO_DATA = new Synthetic.Data();
 
-        public record Data(List<? extends EntityResultQueryModel<?>> models) implements EntityNature.Data<Synthetic> {}
+        public static final class Data implements EntityNature.Data<Synthetic> {
+            private Data() {}
+        }
 
         @Override
         public String toString() {
