@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.entity;
 
-import ua.com.fielden.platform.entity.annotation.EntityTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
+
+import static java.lang.String.format;
 
 ///
 /// Functional entity for an entity master with an entity centre that can be changed by server side logic.
@@ -14,6 +13,18 @@ public abstract class AbstractVolatileCentreCompoundMenuItem<T extends AbstractE
     @IsProperty
     @Title(value = "Menu Item Type", desc = "Entity Centre Menu Item Type")
     private String menuItemType;
+
+    private Class<? extends AbstractEntity<?>> menuItemTypeAsClass;
+
+    @IsProperty
+    @MapTo
+    @Title("Import URI")
+    private String importUri;
+
+    @IsProperty
+    @MapTo
+    @Title("Element Name")
+    private String elementName;
 
     @IsProperty
     @Title(value = "Should Force Post Save Refresh?", desc="Indicates whether the centre should be refreshed after a successful save of the entity master")
@@ -49,5 +60,37 @@ public abstract class AbstractVolatileCentreCompoundMenuItem<T extends AbstractE
     public AbstractVolatileCentreCompoundMenuItem setMenuItemType(final String menuItemType) {
         this.menuItemType = menuItemType;
         return this;
+    }
+
+    @Observable
+    public AbstractVolatileCentreCompoundMenuItem setElementName(final String elementName) {
+        this.elementName = elementName;
+        return this;
+    }
+
+    public String getElementName() {
+        return elementName;
+    }
+
+    @Observable
+    protected AbstractVolatileCentreCompoundMenuItem setImportUri(final String importUri) {
+        this.importUri = importUri;
+        return this;
+    }
+
+    public String getImportUri() {
+        return importUri;
+    }
+
+    public AbstractVolatileCentreCompoundMenuItem setMenuItemTypeForCentre(final Class<? extends AbstractEntity<?>> menuItemTypeAsClass) {
+        this.menuItemTypeAsClass = menuItemTypeAsClass;
+        setMenuItemType(menuItemTypeAsClass.getName());
+        setImportUri(format("/centre_ui/%s", menuItemTypeAsClass.getName()));
+        setElementName(format("tg-%s-centre", menuItemTypeAsClass.getSimpleName()));
+        return this;
+    }
+
+    public Class<? extends AbstractEntity<?>> getMenuItemTypeAsClass() {
+        return menuItemTypeAsClass;
     }
 }

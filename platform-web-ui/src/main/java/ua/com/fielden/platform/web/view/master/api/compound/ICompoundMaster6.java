@@ -6,18 +6,17 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 public interface ICompoundMaster6<T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> {
-    /**
-     * Specify the instance of unregistered embedded master that will be a view for this menu item.
-     *
-     * @param embeddedMaster
-     * @return
-     */
+
+    /// Specify the instance of unregistered embedded master that will be a view for this menu item.
+    /// @param embeddedMaster
+    /// @return
     ICompoundMaster7<T, F> withView(final EntityMaster<?> embeddedMaster);
-    /**
-     * Specify the instance of unregistered embedded centre that will be a view for this menu item.
-     *
-     * @param embeddedCentre
-     * @return
-     */
+
+    ///Specify the instance of unregistered embedded centre that will be a view for this menu item.
+    /// @param embeddedCentre
+    /// @return
     ICompoundMaster7<T, F> withView(final EntityCentre<?> embeddedCentre);
+
+    /// Specifies the volatile embedded centre as a view for this menu item.
+    ICompoundMaster7<T, F> withVolatileCenter();
 }
