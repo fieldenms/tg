@@ -14,6 +14,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
+import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
@@ -51,7 +52,6 @@ import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
@@ -136,23 +136,22 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.ideaUri = ideaUri.map(uri -> validateIdeaUri(uri).getInstanceOrElseThrow());
         this.independentTimeZone = independentTimeZone;
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
-        this.siteAllowlist = optionalSiteAllowlist.map(sites -> stream(sites.trim().split("\\s*,\\s*"))
-                .map(site -> "/" + site.toLowerCase().replaceAll("\"|\'", "").replace(".", "\\.").replace("*", ".*") + "/") //generates javascript RegEx
-                .collect(toList())).orElse(List.of());
-        this.daysUntilSitePermissionExpires = optionalExpiryDays.map(Integer::parseInt).orElse(DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS);
+        this.siteAllowlist = TryWrapper.Try( () -> optionalSiteAllowlist.map(sites -> stream(sites.trim().split("\\s*,\\s*"))
+                                                   .map(site -> "/" + site.toLowerCase().replaceAll("[\"']", "").replace(".", "\\.").replace("*", ".*") + "/") //generates javascript RegEx
+                                                   .toList()).orElse(List.of()))
+                             .orElseThrow(ex -> new InvalidUiConfigException("Could not parse value for 'siteAllowlist': %s".formatted(ex.getMessage())));
+        this.daysUntilSitePermissionExpires = TryWrapper.Try( () -> optionalExpiryDays.map(Integer::parseInt).orElse(DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS) )
+                                              .orElseThrow(ex -> new InvalidUiConfigException("Could not parse value for 'daysUntilSitePermissionExpires': %s".formatted(ex.getMessage())));
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    logger.info("Closing Event Source Dispatching Emitter with all registered emitters...");
-                    dispatchingEmitter.close();
-                } catch (final Exception ex) {
-                    logger.error("Closing Event Source Dispatching Emitter encountered an error.", ex);
-                }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                logger.info("Closing Event Source Dispatching Emitter with all registered emitters...");
+                dispatchingEmitter.close();
+            } catch (final Exception ex) {
+                logger.error("Closing Event Source Dispatching Emitter encountered an error.", ex);
             }
-        });
+        }));
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
 
