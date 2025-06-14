@@ -112,11 +112,6 @@ public abstract class AbstractWebUiResources extends Application {
         guardedRouter.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(webResourceLoader, deviceProvider, dates));
         guardedRouter.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(webResourceLoader, deviceProvider, dates));
 
-        // serialisation testing resource
-        guardedRouter.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
-        // For egi example TODO remove later.
-        guardedRouter.attach("/test/egi", new EgiExampleResourceFactory(injector));
-
         //Attache client side error logger resource
         guardedRouter.attach("/error", new WebClientErrorLoggerResourceFactory(injector));
 
