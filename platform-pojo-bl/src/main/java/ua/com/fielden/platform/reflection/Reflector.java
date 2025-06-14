@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.Finder.isOne2Many_or_One2One_association;
 import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -595,7 +596,7 @@ public final class Reflector {
                       (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
                       (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
                       (name.equals(AbstractEntity.DESC) && AnnotationReflector.isAnnotationPresent(entity.getType(), DescTitle.class)) ||
-                      (Finder.isOne2One_association(entity.getType(), name))
+                      isOne2Many_or_One2One_association(entity.getType(), name)
                   );
     }
     

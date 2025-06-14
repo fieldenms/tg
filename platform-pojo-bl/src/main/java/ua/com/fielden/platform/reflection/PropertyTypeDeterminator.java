@@ -17,7 +17,6 @@ import java.lang.reflect.*;
 import java.util.Map;
 import java.util.Optional;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -141,7 +140,7 @@ public class PropertyTypeDeterminator {
     /**
      * If the field is a collectional property, returns the type of collection elements, otherwise returns {@link Object}.
      */
-    private static Class<?> determineElementClass(final Field field) {
+    public static Class<?> determineElementClass(final Field field) {
         return field.getGenericType() instanceof ParameterizedType paramType
                 ? classFrom(paramType.getActualTypeArguments()[0])
                 : Object.class;
