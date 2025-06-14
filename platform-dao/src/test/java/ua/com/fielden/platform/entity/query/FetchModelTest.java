@@ -705,6 +705,79 @@ public class FetchModelTest extends AbstractDaoTestCase {
                               Set.of(DESC));
     }
 
+    /*----------------------------------------------------------------------------
+     | Fetching of collectional properties.
+     -----------------------------------------------------------------------------*/
+
+    @Test
+    public void collection_is_excluded_if_unspecified() {
+        _collection_is_excluded_if_unspecified(NONE);
+        _collection_is_excluded_if_unspecified(ID_ONLY);
+        _collection_is_excluded_if_unspecified(ID_AND_VERSION);
+        _collection_is_excluded_if_unspecified(KEY_AND_DESC);
+        _collection_is_excluded_if_unspecified(DEFAULT);
+        _collection_is_excluded_if_unspecified(ALL);
+        _collection_is_excluded_if_unspecified(ALL_INCL_CALC);
+    }
+
+    private void _collection_is_excluded_if_unspecified(final FetchCategory category) {
+        final var entityMetadata = domainMetadata.forEntity(TgCollectionalSerialisationParent.class);
+        assertTrue(entityMetadata.property("collProp").isPlain());
+        assertTrue(entityMetadata.property("collProp").type().isCollectional());
+
+        final fetch<TgCollectionalSerialisationParent> fetch = new fetch<>(TgCollectionalSerialisationParent.class, category);
+        final IRetrievalModel<TgCollectionalSerialisationParent> fetchModel = produceRetrievalModel(fetch);
+
+        assertPropsAreNotFetched(fetchModel, Set.of("collProp"));
+        assertPropsAreProxied(fetchModel, Set.of("collProp"));
+    }
+
+    @Test
+    public void collection_is_included_if_specified() {
+        _collection_is_included_if_specified(NONE);
+        _collection_is_included_if_specified(ID_ONLY);
+        _collection_is_included_if_specified(ID_AND_VERSION);
+        _collection_is_included_if_specified(KEY_AND_DESC);
+        _collection_is_included_if_specified(DEFAULT);
+        _collection_is_included_if_specified(ALL);
+        _collection_is_included_if_specified(ALL_INCL_CALC);
+    }
+
+    private void _collection_is_included_if_specified(final FetchCategory category) {
+        final var entityMetadata = domainMetadata.forEntity(TgCollectionalSerialisationParent.class);
+        assertTrue(entityMetadata.property("collProp").isPlain());
+        assertTrue(entityMetadata.property("collProp").type().isCollectional());
+
+        final fetch<TgCollectionalSerialisationParent> fetch = new fetch<>(TgCollectionalSerialisationParent.class, category).with("collProp");
+        final IRetrievalModel<TgCollectionalSerialisationParent> fetchModel = produceRetrievalModel(fetch);
+
+        assertPropsAreFetched(fetchModel, Set.of("collProp"));
+        assertPropsAreNotProxied(fetchModel, Set.of("collProp"));
+    }
+
+    @Test
+    public void collection_is_included_if_specified_with_submodel() {
+        _collection_is_included_if_specified_with_submodel(NONE);
+        _collection_is_included_if_specified_with_submodel(ID_ONLY);
+        _collection_is_included_if_specified_with_submodel(ID_AND_VERSION);
+        _collection_is_included_if_specified_with_submodel(KEY_AND_DESC);
+        _collection_is_included_if_specified_with_submodel(DEFAULT);
+        _collection_is_included_if_specified_with_submodel(ALL);
+        _collection_is_included_if_specified_with_submodel(ALL_INCL_CALC);
+    }
+
+    private void _collection_is_included_if_specified_with_submodel(final FetchCategory category) {
+        final var entityMetadata = domainMetadata.forEntity(TgCollectionalSerialisationParent.class);
+        assertTrue(entityMetadata.property("collProp").isPlain());
+        assertTrue(entityMetadata.property("collProp").type().isCollectional());
+
+        final fetch<TgCollectionalSerialisationParent> fetch = new fetch<>(TgCollectionalSerialisationParent.class, category).with("collProp", fetch(TgCollectionalSerialisationChild.class));
+        final IRetrievalModel<TgCollectionalSerialisationParent> fetchModel = produceRetrievalModel(fetch);
+
+        assertPropsAreFetched(fetchModel, Set.of("collProp"));
+        assertPropsAreNotProxied(fetchModel, Set.of("collProp"));
+    }
+
     @Override
     protected void populateDomain() {}
 

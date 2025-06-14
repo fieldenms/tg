@@ -346,11 +346,9 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                                 if (propMetadata.isCritOnly()) {
                                     return false;
                                 }
-                                else if (propMetadata.type().isCollectional()) {
-                                    return false;
-                                }
                                 // Proxying of plain properties makes sense only for synthetic entities.
-                                else if (propMetadata.isPlain() && !entityMetadata.isSynthetic()) {
+                                // And collectional properties (plain transient) should also be proxied for non-synthetic entities.
+                                else if (propMetadata.isPlain() && !propMetadata.type().isCollectional() && !entityMetadata.isSynthetic()) {
                                     return false;
                                 }
                                 // Non-persistent key is never proxied.
