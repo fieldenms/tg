@@ -60,7 +60,7 @@ function processURL(url) {
             return {hostname: urlInstance.hostname};
         }
     } catch (e) {
-        console.log(e);
+        console.error(e);
         return null;
     }
 }
