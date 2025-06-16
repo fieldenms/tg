@@ -4,6 +4,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.error.Result;
 
 import static graphql.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.error.Result.*;
 
@@ -198,6 +199,14 @@ public class RichTextHtmlSanitisationTest {
         assertSanitizationFailure("John Doe <john.doe@gmail.com onload='boom'> wrote:");
         assertSanitizationFailure("John Doe <john.doe@gmail.com hidden> wrote:");
         assertSanitizationFailure("John Doe <john.doe@gmail.com hidden onclick='boom'> wrote:");
+    }
+
+    @Test
+    public void email_address_may_be_absent_or_escaped_in_sanitised_output() {
+        final var sanitiser = new RichTextSanitiser();
+        assertEquals("John Doe  wrote:", sanitiser.sanitise("John Doe <john.doe@gmail.com> wrote:"));
+        assertEquals("John Doe  wrote:", sanitiser.sanitise("John Doe <john.doe@gmail.com > wrote:"));
+        assertEquals("John Doe &lt; john.doe&#64;gmail.com&gt; wrote:", sanitiser.sanitise("John Doe < john.doe@gmail.com> wrote:"));
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
