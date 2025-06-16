@@ -15,7 +15,7 @@ const confirmationDialog = new TgConfirmationDialog();
  *
  * Unspecified 'target' means '_blank' i.e. most likely to be opened in a new tab (or window with special user options).
  */
-const openLink = function (url, target, windowFeatures) {
+function openLink(url, target, windowFeatures) {
     const newWindow = window.open(url, target, windowFeatures);
     if (newWindow) {
         // Always prevent tabnapping.
@@ -36,6 +36,26 @@ const openLink = function (url, target, windowFeatures) {
     }
 };
 
+function processURL(url) {
+    try {
+        const urlInstance = new URL(url);
+        if (urlInstance.protocol === "mailto:") {
+            const mail = urlInstance.pathname;
+            const mailParts = mail.split('@');
+            if (mailParts.length === 2) {
+                return {hostname: mailParts[1]};
+            } else {
+                throw new Error(`Mail ${urlInstance.pathname} is incorrect`);
+            }
+        } else {
+            return {hostname: urlInstance.hostname};
+        }
+    } catch (e) {
+        console.log(e);
+        return null;
+    }
+}
+
 /**
  * Determines whether a given URL points to an external site relative to the current application.
  * 
@@ -44,7 +64,7 @@ const openLink = function (url, target, windowFeatures) {
  */
 export function isExternalURL(url) {
     try {
-        return new URL(url).hostname !== window.location.hostname
+        return processURL(url).hostname !== window.location.hostname
     } catch (e) {
         return false;
     }
@@ -58,9 +78,9 @@ export function isExternalURL(url) {
  * @param {String} target - the `target` attribute used when opening the link (e.g., "_blank").
  * @param {Object} windowFeatures - optional features passed to `window.open()` when opening the link.
  */
-export const checkLinkAndOpen = function (url, target, windowFeatures) {
+export function checkLinkAndOpen(url, target, windowFeatures) {
     const dateFormat = 'YYYY MM DD';
-    const urlInstance = URL.parse(url);
+    const urlInstance = processURL(url);
     if (urlInstance) {
         const hostName = urlInstance.hostname;
 
