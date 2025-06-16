@@ -149,7 +149,7 @@ public final class RichTextSanitiser {
         }
     }
 
-    public String sanitise(final String input) {
+    String sanitise(final String input) {
         return listener.sanitise(POLICY_FACTORY, input);
     }
 
