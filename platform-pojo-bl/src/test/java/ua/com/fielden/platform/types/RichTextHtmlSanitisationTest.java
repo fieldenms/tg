@@ -176,6 +176,30 @@ public class RichTextHtmlSanitisationTest {
         assertSanitizationSuccess(failureEx("problem", "extra details").getMessage());
     }
 
+    @Test
+    public void valid_email_address_is_allowed() {
+        assertSanitizationSuccess("John Doe <john.doe@gmail.com> wrote:");
+        assertSanitizationSuccess("John Doe < john.doe@gmail.com> wrote:");
+        assertSanitizationSuccess("John Doe < john.doe@gmail.com > wrote:");
+        assertSanitizationSuccess("John Doe <j@j> wrote:");
+    }
+
+    @Test
+    public void malformed_email_address_is_disallowed() {
+        assertSanitizationFailure("John Doe <john.doe@> wrote:");
+        assertSanitizationFailure("John Doe <john doe@gmail.com> wrote:");
+        // These are allowed because they are not recognised as HTML elements by the OWASP sanitiser.
+        // assertSanitizationFailure("John Doe <@> wrote:");
+        // assertSanitizationFailure("John Doe <@gmail.com> wrote:");
+    }
+
+    @Test
+    public void email_address_with_attributes_is_disallowed() {
+        assertSanitizationFailure("John Doe <john.doe@gmail.com onload='boom'> wrote:");
+        assertSanitizationFailure("John Doe <john.doe@gmail.com hidden> wrote:");
+        assertSanitizationFailure("John Doe <john.doe@gmail.com hidden onclick='boom'> wrote:");
+    }
+
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Utilities
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

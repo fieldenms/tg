@@ -20,9 +20,11 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
+import static org.owasp.html.HtmlStreamEventProcessor.Processors.compose;
 import static org.owasp.html.Sanitizers.BLOCKS;
 import static org.owasp.html.Sanitizers.IMAGES;
 import static ua.com.fielden.platform.error.Result.*;
+import static ua.com.fielden.platform.property.validator.EmailValidator.isValidEmailAddress;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 // NOTE: Consider replacing the OWASP sanitiser by jsoup sanitiser (https://jsoup.org/cookbook/cleaning-html/safelist-sanitiser).
@@ -429,6 +431,19 @@ public final class RichTextSanitiser {
                 .toFactory();
     }
 
+    /// A pre-processor that detects HTML elements whose name is a valid email address and whose set of tags is empty.
+    /// Such elements are not processed further whatsoever, effectively disabling their sanitisation.
+    ///
+    private static final HtmlStreamEventProcessor allowEmailAddress = sink -> new HtmlStreamEventReceiverWrapper(sink) {
+        @Override
+        public void openTag(final String elementName, final List<String> attrs) {
+            if (attrs.isEmpty() && isValidEmailAddress(elementName)) {}
+            else {
+                super.openTag(elementName, attrs);
+            }
+        }
+    };
+
     private static final PolicyFactory POLICY_FACTORY =
             IMAGES.and(BLOCKS)
             .and(allowTables())
@@ -441,7 +456,9 @@ public final class RichTextSanitiser {
             .and(allowCommonElements())
             .and(allowToastUi())
             .and(allowTgElements())
-            .and(new HtmlPolicyBuilder().withPreprocessor(StyleAttributeProcessor.INSTANCE).toFactory())
+            .and(new HtmlPolicyBuilder()
+                         .withPreprocessor(compose(StyleAttributeProcessor.INSTANCE, allowEmailAddress))
+                         .toFactory())
             ;
 
     /**
