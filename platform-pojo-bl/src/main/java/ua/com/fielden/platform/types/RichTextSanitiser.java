@@ -432,7 +432,8 @@ public final class RichTextSanitiser {
     }
 
     /// A pre-processor that detects HTML elements whose name is a valid email address and whose set of tags is empty.
-    /// Such elements are not processed further whatsoever, effectively disabling their sanitisation.
+    /// Such elements are not processed further whatsoever, effectively disabling their sanitisation, which also means
+    /// that they will be absent in the sanitiser's output.
     ///
     private static final HtmlStreamEventProcessor allowEmailAddress = sink -> new HtmlStreamEventReceiverWrapper(sink) {
         @Override
