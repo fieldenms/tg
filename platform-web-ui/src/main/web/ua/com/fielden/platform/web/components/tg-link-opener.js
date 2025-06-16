@@ -36,6 +36,15 @@ function openLink(url, target, windowFeatures) {
     }
 };
 
+/**
+ * Parses the given URL string and returns an object containing only the hostname property.
+ * Returns null if the URL string is invalid.
+ *
+ * This function is necessary because the URL class cannot parse URLs with the 'mailto:' protocol.
+ *
+ * @param {string} url - The URL string to process.
+ * @returns {{ hostname: string } | null} An object with the hostname property, or null if the URL is invalid.
+ */
 function processURL(url) {
     try {
         const urlInstance = new URL(url);
