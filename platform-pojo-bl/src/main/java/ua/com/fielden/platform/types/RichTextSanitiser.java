@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
-import static org.owasp.html.HtmlStreamEventProcessor.Processors.compose;
 import static org.owasp.html.Sanitizers.BLOCKS;
 import static org.owasp.html.Sanitizers.IMAGES;
 import static ua.com.fielden.platform.error.Result.*;
@@ -150,7 +149,32 @@ public final class RichTextSanitiser {
     }
 
     public String sanitise(final String input) {
-        return listener.sanitise(POLICY_FACTORY, input);
+        // A pre-processor that detects HTML elements whose name is a valid email address and whose set of tags is empty.
+        // Such elements are not processed further whatsoever, effectively disabling their sanitisation, which also means
+        // that they will be absent in the sanitiser's output.
+        final HtmlStreamEventProcessor allowEmailAddress = sink -> new HtmlStreamEventReceiverWrapper(sink) {
+            @Override
+            public void openTag(final String elementName, final List<String> attrs) {
+                if (attrs.isEmpty() && isValidEmailAddress(elementName)) {
+                    // skip email tags without attributes as safe
+                } else {
+                    super.openTag(elementName, attrs);
+                }
+            }
+
+            @Override
+            public void closeTag(String elementName) {
+                if (isValidEmailAddress(elementName)) {
+                    // closing email tags are considered unsafe
+                    violations.add(elementName);
+                } else {
+                    super.closeTag(elementName);
+                }
+            }
+        };
+
+        final var policy = POLICY_FACTORY.and(new HtmlPolicyBuilder().withPreprocessor(allowEmailAddress).toFactory());
+        return listener.sanitise(policy, input);
     }
 
     public List<String> violations() {
@@ -431,19 +455,6 @@ public final class RichTextSanitiser {
                 .toFactory();
     }
 
-    /// A pre-processor that detects HTML elements whose name is a valid email address and whose set of tags is empty.
-    /// Such elements are not processed further whatsoever, effectively disabling their sanitisation.
-    ///
-    private static final HtmlStreamEventProcessor allowEmailAddress = sink -> new HtmlStreamEventReceiverWrapper(sink) {
-        @Override
-        public void openTag(final String elementName, final List<String> attrs) {
-            if (attrs.isEmpty() && isValidEmailAddress(elementName)) {}
-            else {
-                super.openTag(elementName, attrs);
-            }
-        }
-    };
-
     private static final PolicyFactory POLICY_FACTORY =
             IMAGES.and(BLOCKS)
             .and(allowTables())
@@ -456,10 +467,7 @@ public final class RichTextSanitiser {
             .and(allowCommonElements())
             .and(allowToastUi())
             .and(allowTgElements())
-            .and(new HtmlPolicyBuilder()
-                         .withPreprocessor(compose(StyleAttributeProcessor.INSTANCE, allowEmailAddress))
-                         .toFactory())
-            ;
+            .and(new HtmlPolicyBuilder().withPreprocessor(StyleAttributeProcessor.INSTANCE).toFactory());
 
     /**
      * A visitor of {@link HtmlInline} nodes and any {@link Text} nodes following them.

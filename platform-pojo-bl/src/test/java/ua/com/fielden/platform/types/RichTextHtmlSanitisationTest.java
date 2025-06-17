@@ -198,6 +198,13 @@ public class RichTextHtmlSanitisationTest {
         assertSanitizationFailure("John Doe <john.doe@gmail.com onload='boom'> wrote:");
         assertSanitizationFailure("John Doe <john.doe@gmail.com hidden> wrote:");
         assertSanitizationFailure("John Doe <john.doe@gmail.com hidden onclick='boom'> wrote:");
+        assertSanitizationFailure("John Doe <john.doe@gmail .com> wrote:");
+    }
+
+    @Test
+    public void email_address_with_closing_tag_is_disallowed() {
+        assertSanitizationFailure("John Doe </john.doe@gmail.com> wrote:");
+        assertSanitizationFailure("John Doe <john.doe@gmail.com>some text</john.doe@gmail.com> wrote:");
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
