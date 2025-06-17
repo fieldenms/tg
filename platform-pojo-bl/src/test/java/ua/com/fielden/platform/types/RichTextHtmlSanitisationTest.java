@@ -3,7 +3,7 @@ package ua.com.fielden.platform.types;
 import org.junit.Test;
 import ua.com.fielden.platform.error.Result;
 
-import static graphql.Assert.assertFalse;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.error.Result.*;
 
