@@ -69,6 +69,28 @@ abort_release() {
   exit 1
 }
 
+
+##########################################
+####### Pre-release verification #########
+##########################################
+
+warn "Please make sure the following parameters are suitable for the release:
+
+       RELEASE_VERSION=${RELEASE_VERSION}
+       NEXT_DEVELOPMENT_VERSION=${NEXT_DEVELOPMENT_VERSION}
+       DATABASE_URI_PREFIX=${DATABASE_URI_PREFIX}
+       FORK_COUNT=${FORK_COUNT}
+       BASE_BRANCH=${BASE_BRANCH}
+      "
+read -r -p "Shall we proceed? [y/N] " answer
+if [[ "$answer" =~ ^[Yy]$ ]]; then
+    echo "Proceeding..."
+else
+    echo "Aborted."
+    exit 1
+fi
+
+
 ###########################
 ####### Releasing #########
 ###########################
@@ -101,7 +123,7 @@ fi
 
 success "Deployed ${RELEASE_VERSION}."
 
-read -r -s -p $'Press ENTER to merge the release branch into ${BASE_BRANCH} (local)...'
+read -r -s -p "Press ENTER to merge the release branch into ${BASE_BRANCH} (local)..."
 
 info "Merge release branch back into ${BASE_BRANCH}"
 git checkout ${BASE_BRANCH} && git pull origin ${BASE_BRANCH} && \
@@ -114,15 +136,14 @@ mvn versions:set -DnewVersion=${NEXT_DEVELOPMENT_VERSION} -DprocessAllModules=tr
 info "Commit the changes"
 git add pom.xml **/pom.xml && git commit -m "Update versions to ${NEXT_DEVELOPMENT_VERSION}" || { error "Failed to commit next development version changes"; abort_release; }
 
-read -r -s -p $'Press ENTER to delete the release branch...'
+read -r -s -p "Press ENTER to delete the release branch..."
 
 info "Delete the release branch ${RELEASE_VERSION}"
 git branch -d release-${RELEASE_VERSION} || { error "Failed to delete the release branch"; exit 1; }
 
-read -r -s -p $'Press ENTER to push changes to remote - make sure your have the privileges for that...'
+read -r -s -p "Press ENTER to push changes to remote - make sure your have the privileges for that..."
 
 info "Push changes to remote - ${BASE_BRANCH}, master, and tags."
 git push origin ${BASE_BRANCH} && git push origin master && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
 
 success "Successfully released ${RELEASE_VERSION}"
-
