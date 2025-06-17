@@ -54,13 +54,13 @@ function processURL(url) {
             if (mailParts.length === 2) {
                 return {hostname: mailParts[1]};
             } else {
-                throw new Error(`Mail ${urlInstance.pathname} is incorrect`);
+                throw new Error(`Invalid e-mail address: [${mail}].`);
             }
         } else {
             return {hostname: urlInstance.hostname};
         }
     } catch (e) {
-        console.error(e);
+        console.error(`URL: [${url}].`, e);
         return null;
     }
 }
