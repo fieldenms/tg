@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Ensure all parameters are provided
-if [ "$#" -ne 4 ]; then
-    echo "Usage: $0 <release-version> <next-development-version> <database-uri-prefix> <fork-count>"
+if [ "$#" -ne 5 ]; then
+    echo "Usage: $0 <release-version> <next-development-version> <database-uri-prefix> <fork-count> <base-branch>"
     exit 1
 fi
 
@@ -10,6 +10,7 @@ RELEASE_VERSION=$1
 NEXT_DEVELOPMENT_VERSION=$2
 DATABASE_URI_PREFIX=$3
 FORK_COUNT=$4
+BASE_BRANCH=$5
 
 ###########################
 ###### Definitions ########
@@ -61,7 +62,7 @@ info() {
 # Function to abort release process
 abort_release() {
   error "Aborting release process."
-  git checkout develop
+  git checkout ${BASE_BRANCH}
   git branch -D release-${RELEASE_VERSION}
   # a tag may or may not be created at this stage, but just in case we need to try to delete it
   git tag -d ${RELEASE_VERSION}
@@ -73,7 +74,7 @@ abort_release() {
 ###########################
 
 info "Fetch latest changes"
-git checkout develop && git pull origin develop || { error "Failed to fetch latest changes"; exit 1; }
+git checkout ${BASE_BRANCH} && git pull origin ${BASE_BRANCH} || { error "Failed to fetch latest changes"; exit 1; }
 
 info "Start the release branch"
 git checkout -b release-${RELEASE_VERSION} || { error "Failed to create release branch"; exit 1; }
@@ -100,11 +101,11 @@ fi
 
 success "Deployed ${RELEASE_VERSION}."
 
-read -r -s -p $'Press ENTER to merge the release branch into develop (local)...'
+read -r -s -p $'Press ENTER to merge the release branch into ${BASE_BRANCH} (local)...'
 
-info "Merge release branch back into develop"
-git checkout develop && git pull origin develop && \
-    git merge --no-ff release-${RELEASE_VERSION} || { error "Failed to merge release branch back into develop"; abort_release; }
+info "Merge release branch back into ${BASE_BRANCH}"
+git checkout ${BASE_BRANCH} && git pull origin ${BASE_BRANCH} && \
+    git merge --no-ff release-${RELEASE_VERSION} || { error "Failed to merge release branch back into ${BASE_BRANCH}"; abort_release; }
 
 info "Update version to next development version ${NEXT_DEVELOPMENT_VERSION}"
 mvn versions:set -DnewVersion=${NEXT_DEVELOPMENT_VERSION} -DprocessAllModules=true -DgenerateBackupPoms=false && \
@@ -120,8 +121,8 @@ git branch -d release-${RELEASE_VERSION} || { error "Failed to delete the releas
 
 read -r -s -p $'Press ENTER to push changes to remote - make sure your have the privileges for that...'
 
-info "Push changes to remote - develop, master, and tags."
-git push origin develop && git push origin master && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
+info "Push changes to remote - ${BASE_BRANCH}, master, and tags."
+git push origin ${BASE_BRANCH} && git push origin master && git push origin --tags || { error "Failed to push changes to remote"; exit 1; }
 
 success "Successfully released ${RELEASE_VERSION}"
 
