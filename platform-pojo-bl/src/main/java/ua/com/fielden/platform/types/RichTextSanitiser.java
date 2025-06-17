@@ -148,7 +148,7 @@ public final class RichTextSanitiser {
         }
     }
 
-    public String sanitise(final String input) {
+    String sanitise(final String input) {
         // A pre-processor that detects HTML elements whose name is a valid email address and whose set of tags is empty.
         // Such elements are not processed further whatsoever, effectively disabling their sanitisation, which also means
         // that they will be absent in the sanitiser's output.
