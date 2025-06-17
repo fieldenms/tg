@@ -9,11 +9,11 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 
-@KeyType(Integer.class)
+@KeyType(String.class)
 @DescTitle("Description")
 @CompanionObject(IEntityTwo.class)
 @MapEntityTo
-public class EntityTwo extends AbstractEntity<Integer> {
+public class EntityTwo extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo

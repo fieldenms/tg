@@ -105,12 +105,12 @@ public class AbstractUnionEntityTest {
         } catch (final Exception e) {
             fail("There shouldn't be any exception");
         }
-        assertEquals("Incorrect number of common methods", 4, list.size());
+        assertEquals("Incorrect number of common methods", 6, list.size());
         assertTrue("List of common methods must contain the getPropertyOne method name", list.contains("getStringProperty"));
         assertTrue("List of common methods must contain the getDesc method name", list.contains("getDesc"));
 
-        assertFalse("List of common methods must contain the getKey method name", list.contains("getKey"));
-        assertFalse("List of common methods must contain the setKey method name", list.contains("setKey"));
+        assertTrue("List of common methods must contain the getKey method name", list.contains("getKey"));
+        assertTrue("List of common methods must contain the setKey method name", list.contains("setKey"));
         assertTrue("List of common methods must contain the setPropertyOne method name", list.contains("setStringProperty"));
         assertTrue("List of common methods must contain the setDesc method name", list.contains("setDesc"));
     }
@@ -154,7 +154,7 @@ public class AbstractUnionEntityTest {
                          ex.getMessage());
         }
         try {
-            unionEntity.setPropertyTwo(factory.newEntity(EntityTwo.class, 1L, 12));
+            unionEntity.setPropertyTwo(factory.newEntity(EntityTwo.class, 1L, "A"));
             fail("Should not be able to set active property more than once.");
         } catch (final EntityException ex) {
             assertEquals("Invalid attempt to set property [propertyTwo] as active for union entity [UnionEntity] with active property [propertyOne].",
@@ -209,7 +209,7 @@ public class AbstractUnionEntityTest {
     @Test
     public void union_entities_with_same_key_representations_but_different_active_properties_arent_equal() {
         final UnionEntity unionEntity1 = factory.newEntity(UnionEntity.class).setPropertyOne(factory.newEntity(EntityOne.class, 1L, "1"));
-        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyTwo(factory.newEntity(EntityTwo.class, 2L, 1));
+        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyTwo(factory.newEntity(EntityTwo.class, 2L, "1"));
         assertNotEquals(unionEntity1, unionEntity2);
     }
 
@@ -219,7 +219,7 @@ public class AbstractUnionEntityTest {
     @Test
     public void union_entities_with_same_key_representations_and_same_ids_but_different_active_properties_arent_equal() {
         final UnionEntity unionEntity1 = factory.newEntity(UnionEntity.class).setPropertyOne(factory.newEntity(EntityOne.class, 1L, "1"));
-        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyTwo(factory.newEntity(EntityTwo.class, 1L, 1));
+        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyTwo(factory.newEntity(EntityTwo.class, 1L, "1"));
         assertNotEquals(unionEntity1, unionEntity2);
     }
 
@@ -262,7 +262,7 @@ public class AbstractUnionEntityTest {
         final UnionEntity unionEntity = factory.newEntity(UnionEntity.class);
         unionEntity.setUnionProperty(propOneValue);
 
-        final EntityTwo propTwoValue = factory.newEntity(EntityTwo.class, 2L, 1);
+        final EntityTwo propTwoValue = factory.newEntity(EntityTwo.class, 2L, "1");
         try {
             unionEntity.setUnionProperty(propTwoValue);
         } catch (final EntityException ex) {
