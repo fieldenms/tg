@@ -67,8 +67,9 @@ public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends Abstra
     }
 
     @Override
-    public ICompoundMaster7<T, F> withVolatileCenter() {
-        
+    public ICompoundMaster7<T, F> withPolymorphicCenter() {
+        builder.register(miPolymorphicCentre(currentMenuItemType, injector));
+        menuItems.add(miAction(currentMenuItemType, currentIcon, currentShortDesc, currentLongDesc));
         return this;
     }
 

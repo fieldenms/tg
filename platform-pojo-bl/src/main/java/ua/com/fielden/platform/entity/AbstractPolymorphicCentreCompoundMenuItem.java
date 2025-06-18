@@ -7,8 +7,8 @@ import static java.lang.String.format;
 ///
 /// Functional entity for an entity master with an entity centre that can be changed by server side logic.
 ///
-@EntityTitle("Compound Menu Item for Volatile Entity Centre")
-public abstract class AbstractVolatileCentreCompoundMenuItem<T extends AbstractEntity<?>> extends AbstractFunctionalEntityForCompoundMenuItem<T> {
+@EntityTitle("Compound Menu Item for Polymorphic Entity Centre")
+public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends AbstractEntity<?>> extends AbstractFunctionalEntityForCompoundMenuItem<T> {
 
     @IsProperty
     @Title(value = "Menu Item Type", desc = "Entity Centre Menu Item Type")
@@ -39,7 +39,7 @@ public abstract class AbstractVolatileCentreCompoundMenuItem<T extends AbstractE
     }
 
     @Observable
-    public AbstractVolatileCentreCompoundMenuItem setEventSourceClass(final String eventSourceClass) {
+    public AbstractPolymorphicCentreCompoundMenuItem setEventSourceClass(final String eventSourceClass) {
         this.eventSourceClass = eventSourceClass;
         return this;
     }
@@ -48,7 +48,7 @@ public abstract class AbstractVolatileCentreCompoundMenuItem<T extends AbstractE
     }
 
     @Observable
-    public AbstractVolatileCentreCompoundMenuItem setShouldEnforcePostSaveRefresh(final boolean shouldEnforcePostSaveRefresh) {
+    public AbstractPolymorphicCentreCompoundMenuItem setShouldEnforcePostSaveRefresh(final boolean shouldEnforcePostSaveRefresh) {
         this.shouldEnforcePostSaveRefresh = shouldEnforcePostSaveRefresh;
         return this;
     }
@@ -57,13 +57,13 @@ public abstract class AbstractVolatileCentreCompoundMenuItem<T extends AbstractE
     }
 
     @Observable
-    public AbstractVolatileCentreCompoundMenuItem setMenuItemType(final String menuItemType) {
+    public AbstractPolymorphicCentreCompoundMenuItem setMenuItemType(final String menuItemType) {
         this.menuItemType = menuItemType;
         return this;
     }
 
     @Observable
-    public AbstractVolatileCentreCompoundMenuItem setElementName(final String elementName) {
+    public AbstractPolymorphicCentreCompoundMenuItem setElementName(final String elementName) {
         this.elementName = elementName;
         return this;
     }
@@ -73,7 +73,7 @@ public abstract class AbstractVolatileCentreCompoundMenuItem<T extends AbstractE
     }
 
     @Observable
-    protected AbstractVolatileCentreCompoundMenuItem setImportUri(final String importUri) {
+    protected AbstractPolymorphicCentreCompoundMenuItem setImportUri(final String importUri) {
         this.importUri = importUri;
         return this;
     }
@@ -82,7 +82,7 @@ public abstract class AbstractVolatileCentreCompoundMenuItem<T extends AbstractE
         return importUri;
     }
 
-    public AbstractVolatileCentreCompoundMenuItem setMenuItemTypeForCentre(final Class<? extends AbstractEntity<?>> menuItemTypeAsClass) {
+    public AbstractPolymorphicCentreCompoundMenuItem setMenuItemTypeForCentre(final Class<? extends AbstractEntity<?>> menuItemTypeAsClass) {
         this.menuItemTypeAsClass = menuItemTypeAsClass;
         setMenuItemType(menuItemTypeAsClass.getName());
         setImportUri(format("/centre_ui/%s", menuItemTypeAsClass.getName()));

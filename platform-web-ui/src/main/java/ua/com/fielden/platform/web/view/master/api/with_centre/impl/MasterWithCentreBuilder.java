@@ -1,11 +1,5 @@
 package ua.com.fielden.platform.web.view.master.api.with_centre.impl;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-
-import java.util.Optional;
-
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -14,6 +8,12 @@ import ua.com.fielden.platform.web.view.master.api.IMasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
 import ua.com.fielden.platform.web.view.master.api.with_centre.IMasterWithCentre0;
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
+
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 public class MasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentreContext<?>> implements IMasterWithCentreBuilder<T>, IMasterWithCentre0<T>, IComplete<T> {
 
@@ -42,7 +42,11 @@ public class MasterWithCentreBuilder<T extends AbstractFunctionalEntityWithCentr
 
     @Override
     public IMaster<T> done() {
-        return new MasterWithCentre<>(type, saveOnActivate, entityCentre, customCode, customCodeOnAttach, customImports);
+        if (entityCentre != null) {
+            return new MasterWithCentre<>(type, saveOnActivate, entityCentre, customCode, customCodeOnAttach, customImports);
+        } else {
+            return new MasterWithPolymorphicCentre<>(type, saveOnActivate, customCode, customCodeOnAttach, customImports);
+        }
     }
     
     

@@ -18,5 +18,5 @@ public interface ICompoundMaster6<T extends AbstractEntity<?>, F extends Abstrac
     ICompoundMaster7<T, F> withView(final EntityCentre<?> embeddedCentre);
 
     /// Specifies the volatile embedded centre as a view for this menu item.
-    ICompoundMaster7<T, F> withVolatileCenter();
+    ICompoundMaster7<T, F> withPolymorphicCenter();
 }
