@@ -1,5 +1,5 @@
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
-import { openLink } from '/resources/reflection/tg-polymer-utils.js'
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 const augmentCentreUuid = function (uuid) {
     return `${uuid}_help`
@@ -134,9 +134,9 @@ export const TgViewWithHelpBehavior = {
     _postOpenHelpMasterAction: function (potentiallySavedOrNewEntity, action, master) {
         if (!action.chosenProperty) {
             if (this.getOpenHelpMasterAction()._openLinkInAnotherWindow) {
-                openLink(potentiallySavedOrNewEntity.get("help").value, "_blank", "fullscreen=yes,scrollbars=yes,location=yes,resizable=yes");
+                checkLinkAndOpen(potentiallySavedOrNewEntity.get("help").value, "_blank", "fullscreen=yes,scrollbars=yes,location=yes,resizable=yes");
             } else {
-                openLink(potentiallySavedOrNewEntity.get("help").value);
+                checkLinkAndOpen(potentiallySavedOrNewEntity.get("help").value);
             }
         }
     },

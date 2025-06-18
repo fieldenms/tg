@@ -372,7 +372,7 @@ Polymer({
             notify: true
         },
         /**
-         * Function that returns Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         * Function that returns Promise that starts on validate() call and fulfils iff this validation attempt gets successfully resolved.
          *
          * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
          * However, repeated invocation of this function will return new Promise in this case.
@@ -548,7 +548,7 @@ Polymer({
                         //   otherwise -- saving process will simply start immediately.
                         // We do not try to abort other validation processes except last at this stage;
                         //   this abortion is performed during validation process triggering.
-                        // In most cases, lastValidationAttemptPromise will not be empty, but often it will be old fullfilled promise;
+                        // In most cases, lastValidationAttemptPromise will not be empty, but often it will be old fulfilled promise;
                         //   this will lead to immediate saving.
                         // Rarely, currently taken lastValidationAttemptPromise may never be completed (and thus saving will be halted).
                         //   This is possible if validation was triggered fast (in 50 millis debouncing time) since last validation and after current saving process.
@@ -556,7 +556,13 @@ Polymer({
                         const lastValidationAttemptPromise = self.lastValidationAttemptPromise();
                         if (lastValidationAttemptPromise !== null) {
                             console.warn("Saving is chained to the last validation attempt promise...", lastValidationAttemptPromise);
-                            return resolve(lastValidationAttemptPromise);
+                            // Don't reject on rejected 'lastValidationAttemptPromise'.
+                            // We should allow SAVE even after validation with connection lost / server (or other) error.
+                            // Otherwise it would look like broken SAVE action.
+                            // Also log more console information.
+                            return resolve(lastValidationAttemptPromise.catch(error => {
+                                console.error('Error in lastValidationAttemptPromise: ', error);
+                            }));
                         }
                         return resolve();
                     }, 50);
