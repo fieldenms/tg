@@ -126,4 +126,33 @@ export function checkLinkAndOpen(url, target, windowFeatures) {
             openLink(url, target, windowFeatures);
         }
     }
+    // Handle broken link otherwise.
+    else {
+        // It should be handled exactly as it is handled by the browser for regular <a> tags.
+        // I.e. it is handled as if a broken url was appended to current origin (and with necessary encodings etc.).
+        // To see the actual link, just hover over it and it will be shown in the bottom of the page.
+        // One example of regular <a> tags handling is in a dialog for copied string values (`Copied!` toast MORE button).
+        const brokenUrl = createBrokenUrl(url);
+        if (brokenUrl) {
+            openLink(brokenUrl.href, target, windowFeatures);
+        }
+    }
+}
+
+/**
+ * Creates a "broken" URL instance from `brokenUrlString`.
+ * This is exactly how browser treats broken links - it opens them in a context of current site (origin)
+ *   (and it includes necessary encodings etc.)
+ *
+ * @param {String} brokenUrlString - the broken URL string.
+ */
+function createBrokenUrl(brokenUrlString) {
+    try {
+        return new URL(brokenUrlString, document.location.origin);
+    }
+    // Still catch an error - it should not appear though.
+    catch (error) {
+        console.error(`URL: [${url}].`, error);
+        return null;
+    }
 }
