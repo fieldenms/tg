@@ -54,8 +54,7 @@ class TgSecurityCheckbox extends PolymerElement {
     
     _stateChanged (e) {
         if (this.entity && this.column) {
-            const target = e.target || e.srcElement;
-            this.column.check(this.entity.entity, this.propertyName, target.checked);
+            this.column.check(this.entity.entity, this.propertyName, e.target.checked);
         }
     }
 }

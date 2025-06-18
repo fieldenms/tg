@@ -3,9 +3,11 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/components/rich-text/tg-rich-text-input.js';
 
 import { html } from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
+import { GestureEventListeners } from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
+import { TgDoubleTapHandlerBehavior } from '/resources/components/tg-double-tap-handler-behavior.js';
 import { tearDownEvent, localStorageKey, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
@@ -63,7 +65,7 @@ const customInputTemplate = html`
     <iron-icon id="resizer" icon="tg-icons:resize-bottom-right" on-tap="_resetHeight" on-down="_makeInputUnselectable" on-up="_makeInputSelectable" on-track="_resizeInput" tooltip-text="Drag to resize<br>Double tap to reset height" hidden$="[[autoResize]]"></iron-icon>`;
 const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
-export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
+export class TgRichTextEditor extends mixinBehaviors([TgDoubleTapHandlerBehavior], GestureEventListeners(TgEditor)) {
 
     static get template() { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
@@ -128,6 +130,14 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
                 observer: "_lastOpenedEntityChanged"
             }
         }
+    }
+
+    ready() {
+        super.ready();
+        this._resetHeight = this._createDoubleTapHandler("_lastResizerTap", (e) => {
+            localStorage.removeItem(this._generateKey());
+            this.$.input.height = this.height;
+        });
     }
 
     disconnectedCallback() {
@@ -237,13 +247,6 @@ export class TgRichTextEditor extends GestureEventListeners(TgEditor) {
         tearDownEvent(e);
         if (document.styleSheets.length > 0 && document.styleSheets[0].cssRules.length > 0) {
             document.styleSheets[0].deleteRule(0);
-        }
-    }
-
-    _resetHeight(e) {
-        if (e.detail.sourceEvent.detail && e.detail.sourceEvent.detail === 2) {
-            localStorage.removeItem(this._generateKey());
-            this.$.input.height = this.height;
         }
     }
 
