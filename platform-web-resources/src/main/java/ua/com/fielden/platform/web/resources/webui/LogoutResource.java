@@ -10,6 +10,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.ISsoSessionController;
+import ua.com.fielden.platform.security.session.ISsoSessionController.Tokens;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUser;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import java.util.Optional;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.restlet.data.MediaType.TEXT_HTML;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extractAuthenticator;
@@ -76,31 +78,42 @@ public class LogoutResource extends AbstractWebResource {
         try {
             // Logout might be initiated from a TG-based app or from a front-channel logout process by OP (e.g. Microsoft Office 365 portal).
             // In the case of front-channel request, `sid` is expected as the request parameter.
+            // However, some OPs do not send `sid`, such as Okta, where the front-channel logout is still evolving.
             // In the case of TG-based app request, a corresponding `sid` needs to be identified from the current session.
             final String sid = getQueryValue("sid");
             logger.debug(() -> format("LOGOUT sid (if any): [%s]", sid));
-            coUserSession.clearAllWithSid(sid);
+            if (!isEmpty(sid)) {
+                coUserSession.clearAllWithSid(sid);
+            }
             // check if there is a valid authenticator
             // if there is then the logout request is authentic and should be honored
             final Optional<Authenticator> oAuth = extractAuthenticator(getRequest());
+            final Optional<Tokens> maybeTokens;
             if (oAuth.isPresent()) {
                 final Authenticator auth = oAuth.get();
                 userProvider.setUsername(auth.username, coUser);
                 final Optional<UserSession> maybeSession = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
                 if (maybeSession.isPresent()) {
+                    // Deletes sessions from cache and database.
                     final UserSession session = maybeSession.get();
+                    // Get tokens by `sid` before the records are deleted.
+                    maybeTokens = ssoSessionController.tokens(session.getSid());
                     coUserSession.clearAllWithSid(session.getSid());
                     coUserSession.clearSession(session);
+                } else {
+                    maybeTokens = Optional.empty();
                 }
                 // let's use this opportunity to clear expired sessions for the user
                 coUserSession.clearExpired(userProvider.getUser());
+            } else {
+                maybeTokens = Optional.empty();
             }
 
             // In cases where Single Sign/Log-Out (SLO) is supported, and the logout request arrived with a session authenticator present,
             // it is necessary to initiate SLO redirection to OP.
             if (maybeSsoRedirectUriSignOut.isPresent() && oAuth.isPresent()) {
                 final String baseSignOutUrl = maybeSsoRedirectUriSignOut.get();
-                final var signOutUrl = ssoSessionController.tokens(sid).map(tokens -> baseSignOutUrl + "&id_token_hint=" + tokens.idToken()).orElse(baseSignOutUrl);
+                final var signOutUrl = maybeTokens.map(tokens -> baseSignOutUrl + "&id_token_hint=" + tokens.idToken()).orElse(baseSignOutUrl);
                 getResponse().redirectSeeOther(signOutUrl);
                 return new EmptyRepresentation();
             }
