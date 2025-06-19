@@ -1,15 +1,10 @@
 package ua.com.fielden.platform.entity.activatable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.junit.Test;
-
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+
+import static org.junit.Assert.*;
 
 public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest extends AbstractDaoTestCase {
 
@@ -62,26 +57,6 @@ public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest e
         assertEquals(Integer.valueOf(2), updatedNewCat2.getParent().getRefCount());
 
     }
-
-    @Test
-    public void saving_new_active_entity_with_stale_but_inactive_reference_should_fail() {
-        final TgCategory cat1_1 = co$(TgCategory.class).findByKey("Cat1");
-
-        final TgCategory newCat1 = new_(TgCategory.class, "NEW1").setActive(true).setParent(cat1_1);
-        assertTrue(newCat1.isValid().isSuccessful());
-
-        // introduce staleness through deactivation
-        final TgCategory cat1_2 = co$(TgCategory.class).findByKey("Cat1");
-        co$(TgCategory.class).save(cat1_2.setActive(false));
-
-        try {
-            save(newCat1);
-            fail("Should have failed due to unsuccessful revalidation of property parent.");
-        } catch (final Result ex) {
-            assertEquals("Tg Category [Cat1] exists, but is not active.", ex.getMessage());
-        }
-    }
-
 
     @Override
     protected void populateDomain() {

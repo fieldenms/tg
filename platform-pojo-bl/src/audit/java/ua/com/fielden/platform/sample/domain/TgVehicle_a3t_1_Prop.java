@@ -1,4 +1,4 @@
-// Generation timestamp: 2025-03-25 16:16:54 EET
+// Generation timestamp: 2025-05-07 11:15:11 EEST
 package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.annotations.appdomain.SkipEntityRegistration;
@@ -22,7 +22,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 
-@EntityTitle("Tg Vehicle Audit Changed Property")
+@EntityTitle("Tg Vehicle Audit 1 Changed Property")
 @KeyTitle("Tg Vehicle Audit and Changed Property")
 @MapEntityTo
 @AuditFor(

@@ -379,6 +379,12 @@ public final class RichTextSanitiser {
                 .toFactory();
     }
 
+    private static PolicyFactory allowTgElements() {
+        return new HtmlPolicyBuilder()
+                .allowElements("extended") // Used in Result.
+                .toFactory();
+    }
+
     private static PolicyFactory allowStyles() {
         // Extend the default CSS schema with additional safe properties.
         final var cssSchema = CssSchema.withProperties(Set.of("display"));
@@ -434,6 +440,7 @@ public final class RichTextSanitiser {
             .and(allowLinks())
             .and(allowCommonElements())
             .and(allowToastUi())
+            .and(allowTgElements())
             .and(new HtmlPolicyBuilder().withPreprocessor(StyleAttributeProcessor.INSTANCE).toFactory())
             ;
 
