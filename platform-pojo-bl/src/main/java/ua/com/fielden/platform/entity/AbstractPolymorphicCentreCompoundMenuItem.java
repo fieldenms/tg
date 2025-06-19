@@ -4,7 +4,6 @@ import ua.com.fielden.platform.entity.annotation.*;
 
 import static java.lang.String.format;
 
-///
 /// Functional entity for an entity master with an entity centre that can be changed by server side logic.
 ///
 @EntityTitle("Compound Menu Item for Polymorphic Entity Centre")

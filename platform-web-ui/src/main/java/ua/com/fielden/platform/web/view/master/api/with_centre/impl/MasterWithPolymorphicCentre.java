@@ -13,12 +13,13 @@ public class MasterWithPolymorphicCentre<T extends AbstractEntity<?>> extends Ab
 
     @Override
     protected String getAttributes() {
-        return "{" +
-                "   embedded: true," +
-                "   uuid: this.uuid," +
-                "   enforcePostSaveRefresh: this._currBindingEntity.shouldEnforcePostSaveRefresh," +
-                "   eventSourceClass: this._currBindingEntity.eventSourceClass" +
-                "};";
+        return """
+                {
+                    embedded: true,
+                    uuid: this.uuid,
+                    enforcePostSaveRefresh: this._currBindingEntity.shouldEnforcePostSaveRefresh,
+                    eventSourceClass: this._currBindingEntity.eventSourceClass
+                };""";
     }
 
     @Override

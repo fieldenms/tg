@@ -13,7 +13,6 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 import java.util.Optional;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
@@ -49,44 +48,46 @@ public abstract class AbstractMasterWithCentre<T extends AbstractEntity<?>> impl
                     .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n" + customImports.map(ci -> ci.toString()).orElse(""))
                     .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                     .replace("<!--@tg-entity-master-content-->",
-                            format(""
-                                            + "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
-                                            + "    import='%s' "
-                                            + "    element-name='%s'>"
-                                            + "</tg-element-loader>",
-                                    getImportUri(), getElementName()))
+                            """
+                            <tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity'
+                                import='%s'
+                                element-name='%s'>
+                            </tg-element-loader>
+                            """.formatted(getImportUri(), getElementName()))
                     .replace("//@ready-callback",
-                            "self.masterWithCentre = true;\n" +
-                                    "self.classList.remove('canLeave');\n" +
-                                    "self._focusEmbededView = function () {\n" +
-                                    "    if (this.wasLoaded() && this.$.loader.loadedElement.focusView) {\n" +
-                                    "        this.$.loader.loadedElement.focusView();\n" +
-                                    "    }\n" +
-                                    "}.bind(self);\n" +
-                                    "self._hasEmbededView = function () {\n" +
-                                    "    return true;\n" +
-                                    "}.bind(self);\n"+
-                                    "self.wasLoaded = function () {\n" +
-                                    "    if (this.$.loader.loadedElement) {\n" +
-                                    "        return this.$.loader.loadedElement.wasLoaded();\n" +
-                                    "    }\n" +
-                                    "    return false;\n" +
-                                    "}.bind(self);\n" +
-                                    "self._focusNextEmbededView = function (e) {\n" +
-                                    "    if (this.wasLoaded() && this.$.loader.loadedElement.focusNextView) {\n" +
-                                    "        this.$.loader.loadedElement.focusNextView(e);\n" +
-                                    "    }\n" +
-                                    "}.bind(self);\n" +
-                                    "self._focusPreviousEmbededView = function (e) {\n" +
-                                    "    if (this.wasLoaded() && this.$.loader.loadedElement.focusPreviousView) {\n" +
-                                    "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
-                                    "    }\n" +
-                                    "}.bind(self);\n")
+                            """
+                            self.masterWithCentre = true;
+                            self.classList.remove('canLeave');
+                            self._focusEmbededView = function () {
+                                if (this.wasLoaded() && this.$.loader.loadedElement.focusView) {
+                                    this.$.loader.loadedElement.focusView();
+                                }
+                            }.bind(self);
+                            self._hasEmbededView = function () {
+                                return true;
+                            }.bind(self);
+                            self.wasLoaded = function () {
+                                if (this.$.loader.loadedElement) {
+                                    return this.$.loader.loadedElement.wasLoaded();
+                                }
+                                return false;
+                            }.bind(self);
+                            self._focusNextEmbededView = function (e) {
+                                if (this.wasLoaded() && this.$.loader.loadedElement.focusNextView) {
+                                    this.$.loader.loadedElement.focusNextView(e);
+                                }
+                            }.bind(self);
+                            self._focusPreviousEmbededView = function (e) {
+                                if (this.wasLoaded() && this.$.loader.loadedElement.focusPreviousView) {
+                                    this.$.loader.loadedElement.focusPreviousView(e);
+                                }
+                            }.bind(self);
+                            """)
                     .replace("//@attached-callback",
-                            format(""
-                                            + "self.$.loader.attrs = %s;\n"
-                                            + "self.registerCentreRefreshRedirector();\n",
-                                    getAttributes()))
+                            """
+                            self.$.loader.attrs = %s;
+                            self.registerCentreRefreshRedirector();
+                            """.formatted(getAttributes()))
                     .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))
                     .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.map(code -> code.toString()).orElse(""))
                     .replace("@prefDim", "null")

@@ -7,7 +7,6 @@ import ua.com.fielden.platform.utils.Pair;
 
 import java.util.Date;
 
-///
 /// An action-entity that is used to retrieve and represent a persistent versioning information about an entity that extends [AbstractPersistentEntity].
 /// The actual data retrieval is implemented in [PersistentEntityInfoProducer].
 ///

@@ -4,7 +4,6 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 
-///
 /// Open Action for Compound {@link PersistentEntityInfo} master.
 ///
 @KeyType(PersistentEntityInfo.class)

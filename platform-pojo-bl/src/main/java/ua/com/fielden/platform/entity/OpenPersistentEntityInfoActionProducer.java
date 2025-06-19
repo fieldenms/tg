@@ -6,12 +6,8 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.open_compound_master.OpenPersistentEntityInfoAction_CanOpen_Token;
 
-/**
- * A producer for new instances of entity {@link OpenPersistentEntityInfoAction}.
- *
- * @author TG Air Team
- *
- */
+/// A producer for new instances of entity {@link OpenPersistentEntityInfoAction}.
+///
 public class OpenPersistentEntityInfoActionProducer extends AbstractProducerForOpenEntityMasterAction<PersistentEntityInfo, OpenPersistentEntityInfoAction> {
 
     @Inject

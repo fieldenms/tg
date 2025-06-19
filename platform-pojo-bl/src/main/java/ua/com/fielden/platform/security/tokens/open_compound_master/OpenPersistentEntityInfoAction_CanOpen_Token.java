@@ -5,8 +5,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.Template;
 
-///
-///A security token for entity {@link OpenPersistentEntityInfoAction} to guard MASTER_OPEN.
+/// A security token for entity {@link OpenPersistentEntityInfoAction} to guard MASTER_OPEN.
 ///
 public class OpenPersistentEntityInfoAction_CanOpen_Token implements ISecurityToken {
     private final static String ENTITY_TITLE = TitlesDescsGetter.getEntityTitleAndDesc(OpenPersistentEntityInfoAction.class).getKey();
