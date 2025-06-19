@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2;
+package ua.com.fielden.platform.eql.stage1.queries;
 
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceItemForEntityType;
@@ -14,7 +14,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
 
-public class KeyPropertyExpander {
+final class KeyPropertyExpander {
 
     private KeyPropertyExpander() {}
 
