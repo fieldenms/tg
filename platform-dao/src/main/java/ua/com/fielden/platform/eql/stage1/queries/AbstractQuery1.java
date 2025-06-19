@@ -28,8 +28,8 @@ import java.util.stream.Stream;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Arrays.asList;
 import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
-import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
-import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
+import static ua.com.fielden.platform.eql.stage2.KeyPropertyExpander.expand;
+import static ua.com.fielden.platform.eql.stage2.KeyPropertyExpander.isExpandable;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.EMPTY_CONDITIONS;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.conditions;
 import static ua.com.fielden.platform.eql.stage2.sundries.GroupBys2.EMPTY_GROUP_BYS;
@@ -191,7 +191,7 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
         final var yieldsMap = yields.getYieldsMap();
         if (yieldsMap.containsKey(orderBy.yieldName())) {
             final var yield = yieldsMap.get(orderBy.yieldName());
-            if (yield.operand() instanceof Prop2 yieldedProp && needsExtraction(yieldedProp.lastPart(), yieldedProp.penultPart())) {
+            if (yield.operand() instanceof Prop2 yieldedProp && isExpandable(yieldedProp.lastPart(), yieldedProp.penultPart())) {
                 return transformOrderByOperand(yieldedProp, orderBy.isDesc());
             }
             else {
@@ -210,13 +210,13 @@ public abstract class AbstractQuery1 implements ToString.IFormattable {
 
     private static Stream<OrderBy2> transformOrderByOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
         return operand instanceof Prop2 prop
-                ? extract(prop).map(expProp -> new OrderBy2(expProp, isDesc))
+                ? expand(prop).map(expProp -> new OrderBy2(expProp, isDesc))
                 : Stream.of(new OrderBy2(operand, isDesc));
     }
 
     private static Stream<GroupBy2> enhanceGroupBy(final GroupBy2 groupBy) {
         return groupBy.operand() instanceof Prop2 prop
-                ? extract(prop).map(GroupBy2::new)
+                ? expand(prop).map(GroupBy2::new)
                 : Stream.of(groupBy);
     }
 

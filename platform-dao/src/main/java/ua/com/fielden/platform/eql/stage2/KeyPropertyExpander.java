@@ -14,15 +14,15 @@ import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
 
-public class KeyPropertyExtractor {
+public class KeyPropertyExpander {
 
-    private KeyPropertyExtractor() {}
+    private KeyPropertyExpander() {}
 
     /// If `prop` represents a path that ends with `key`, the result is a stream of paths, each of which replaces `key` by a specific key member.
     /// Otherwise, the result is a stream that contains only `prop`.
     ///
-    public static Stream<Prop2> extract(final Prop2 prop) {
-        if (needsExtraction(prop.lastPart(), prop.penultPart())) {
+    public static Stream<Prop2> expand(final Prop2 prop) {
+        if (isExpandable(prop.lastPart(), prop.penultPart())) {
             final int pathSize = prop.getPath().size();
             final var querySourceInfo = pathSize == 1
                     ? prop.source.querySourceInfo()
@@ -39,7 +39,7 @@ public class KeyPropertyExtractor {
         }
     }
 
-    public static boolean needsExtraction(final AbstractQuerySourceItem<?> lastItem, final Optional<AbstractQuerySourceItem<?>> maybePenultItem) {
+    public static boolean isExpandable(final AbstractQuerySourceItem<?> lastItem, final Optional<AbstractQuerySourceItem<?>> maybePenultItem) {
         // TODO Support extraction of key members in union entities.
         //      For now, we ignore union entities, and the effect is that `union.key` will be used -- a string representation --
         //      instead of having access to each key member individually.
