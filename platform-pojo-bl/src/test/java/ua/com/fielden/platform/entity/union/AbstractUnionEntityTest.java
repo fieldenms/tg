@@ -6,7 +6,6 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
@@ -20,6 +19,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.meta.MetaProperty.ERR_REQUIRED;
@@ -84,17 +84,13 @@ public class AbstractUnionEntityTest {
     @Test
     public void commonProperties_identifies_all_common_properties_amongst_union_properties() {
         final Set<String> commonProps = AbstractUnionEntity.commonProperties(UnionEntity.class);
-        assertEquals("Incorrect number of common properties.", 2, commonProps.size());
-        assertTrue(commonProps.contains("desc"));
-        assertTrue(commonProps.contains("stringProperty"));
+        assertEquals(Set.of("desc", "stringProperty", "key"), commonProps);
     }
 
     @Test
     public void unionProperties_identifies_all_union_properties() {
-        final List<Field> unionPropertiesList = AbstractUnionEntity.unionProperties(UnionEntity.class);
-        assertEquals(2, unionPropertiesList.size());
-        assertTrue(Finder.getFieldNames(unionPropertiesList).contains("propertyOne"));
-        assertTrue(Finder.getFieldNames(unionPropertiesList).contains("propertyTwo"));
+        final List<Field> unionProperties = AbstractUnionEntity.unionProperties(UnionEntity.class);
+        assertEquals(Set.of("propertyOne", "propertyTwo"), unionProperties.stream().map(Field::getName).collect(toSet()));
     }
 
     @Test
