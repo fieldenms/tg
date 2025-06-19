@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.meta.MetaProperty.ERR_REQUIRED;
@@ -95,20 +96,10 @@ public class AbstractUnionEntityTest {
 
     @Test
     public void commonMethods_idenfities_getters_and_setters_for_all_common_properties() {
-        List<String> list = null;
-        try {
-            list = AbstractUnionEntity.commonMethodNames(UnionEntity.class);
-        } catch (final Exception e) {
-            fail("There shouldn't be any exception");
-        }
-        assertEquals("Incorrect number of common methods", 6, list.size());
-        assertTrue("List of common methods must contain the getPropertyOne method name", list.contains("getStringProperty"));
-        assertTrue("List of common methods must contain the getDesc method name", list.contains("getDesc"));
-
-        assertTrue("List of common methods must contain the getKey method name", list.contains("getKey"));
-        assertTrue("List of common methods must contain the setKey method name", list.contains("setKey"));
-        assertTrue("List of common methods must contain the setPropertyOne method name", list.contains("setStringProperty"));
-        assertTrue("List of common methods must contain the setDesc method name", list.contains("setDesc"));
+        assertThat(AbstractUnionEntity.commonMethodNames(UnionEntity.class))
+                .containsExactlyInAnyOrder("getStringProperty", "setStringProperty",
+                                           "getDesc", "setDesc",
+                                           "getKey", "setKey");
     }
 
     @Test
