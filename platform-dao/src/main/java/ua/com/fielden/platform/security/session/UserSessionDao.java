@@ -1,34 +1,12 @@
 package ua.com.fielden.platform.security.session;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.security.session.Authenticator.fromString;
-import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
-
-import java.security.SignatureException;
-import java.sql.PreparedStatement;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-
-import org.apache.logging.log4j.Logger;
+import com.google.common.cache.Cache;
+import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-
-import com.google.common.cache.Cache;
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -43,6 +21,24 @@ import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+
+import java.security.SignatureException;
+import java.sql.PreparedStatement;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.toList;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.security.session.Authenticator.fromString;
+import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
 
 /**
  * DAO implementation for companion object {@link IUserSession}.
@@ -178,16 +174,16 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
 
     @Override
     public int clearAllWithSid(final String sid) {
-        // if sid is empty there is nothing to compare to, simply return
+        // If `sid` is empty, no session can be identified for clearing/invalidation.
         if (StringUtils.isEmpty(sid)) {
             return 0;
         }
 
-        // first delete from the database in a separate transaction
+        // Delete user sessions and SSO sessions from the database in a separate transaction.
         final int count = deleteSessionsBySid(sid);
-        logger.info(format("SSO sessions deleted [%s] for sid [%s].", count, sid));
+        logger.info(() -> "User sessions deleted [%s] for sid [%s].".formatted(count, sid));
 
-        // then delete all matching sessions from cache
+        // Delete all matching user sessions from cache.
         final List<String> keys = cache.asMap().entrySet().stream().filter(p -> sid.equals(p.getValue().getSid())).map(Map.Entry::getKey).collect(toList());
         cache.invalidateAll(keys);
 
@@ -203,10 +199,18 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      */
     @SessionRequired(allowNestedScope = false)
     protected int deleteSessionsBySid(final String sid) {
+        // First, try invalidating SSO sessions, but do not fail in case exceptions as this is a less critical part.
+        try {
+            ssoSessionController.invalidate(sid);
+        } catch (final Exception ex) {
+            logger.error(() -> "Could not delete SSO sessions for sid [%s].".formatted(sid), ex);
+        }
+
+        // Second, but more importantly, invalidate user sessions.
         try {
             return this.defaultBatchDelete(select(UserSession.class).where().prop("sid").eq().val(sid).model());
         } catch (final Exception ex) {
-            logger.error(format("Could not delete sessions by sid [%s].", sid), ex);
+            logger.error(() -> "Could not delete user sessions by sid [%s].".formatted(sid), ex);
             return 0;
         }
     }
@@ -392,7 +396,6 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             final Result ssoRefreshed = ssoSessionController.refresh(session.getSid());
             if (!ssoRefreshed.isSuccessful()) {
                 clearAllWithSid(session.getSid());
-                ssoSessionController.invalidate(session.getSid());
                 return empty();
             }
 
