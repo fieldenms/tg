@@ -9,6 +9,9 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 const appConfig = new TgAppConfig();
 const confirmationDialog = new TgConfirmationDialog();
 
+const MAILTO_PROTOCOL = 'mailto:';
+const SUPPORTED_PROTOCOLS = ['https:', 'http:', 'ftp:', 'ftps:', MAILTO_PROTOCOL];
+
 /**
  * Loads a specified resource into new or existing browsing context (see https://developer.mozilla.org/en-US/docs/Web/API/Window/open).
  * Logs an error in case if resource opening was blocked by popup blocker or some other problem prevented it.
@@ -37,30 +40,46 @@ function openLink(url, target, windowFeatures) {
 };
 
 /**
- * Parses the given URL string and returns an object containing only the hostname property.
+ * Processes the given `urlString` and returns an object containing URL and hostname property.
  * Returns null if the URL string is invalid.
  *
- * This function is necessary because the URL class cannot parse URLs with the 'mailto:' protocol.
+ * This function validates URLs with 'mailto:' protocol.
+ * Invalid email addresses are treated as internal and we let browser to handle them.
+ *
+ * The same is for unsupported protocols (e.g. file:).
+ * Browser is rather strict with all such protocols in context of existing app.
  *
  * @param {string} url - The URL string to process.
- * @returns {{ hostname: string } | null} An object with the hostname property, or null if the URL is invalid.
+ * @returns {{ url: URL, hostname: string } | null} An object with the { url; hostname} properties, or null if the URL is invalid.
  */
-function processURL(url) {
+export function processURL(urlString) {
     try {
-        const urlInstance = new URL(url);
-        if (urlInstance.protocol === "mailto:") {
+        const urlInstance = createUrl(urlString);
+        if (!urlInstance) {
+            return null;
+        }
+        // Determine hostname from email address for 'mailto:' URL.
+        else if (urlInstance.protocol === MAILTO_PROTOCOL) {
             const mail = urlInstance.pathname;
             const mailParts = mail.split('@');
             if (mailParts.length === 2) {
-                return {hostname: mailParts[1]};
+                return { url: urlInstance, hostname: mailParts[1] };
             } else {
-                throw new Error(`Invalid e-mail address: [${mail}].`);
+                console.error(`URL: [${urlString}].`, new Error(`Invalid e-mail address: [${mail}].`));
+                return { url: urlInstance, hostname: window.location.hostname };
             }
-        } else {
-            return {hostname: urlInstance.hostname};
+        }
+        // Supported protocol URLs are hadled as is; and they can contain broken links with our origin prepended.
+        else if (SUPPORTED_PROTOCOLS.includes(urlInstance.protocol)) {
+            return { url: urlInstance, hostname: urlInstance.hostname };
+        }
+        // Unsupported protocol URLs are treated as internal and are handled consistently as browser would do.
+        else {
+            console.error(`URL: [${urlString}].`, new Error('One of http, https, ftp, ftps or mailto hyperlink protocols is expected.'));
+            return { url: urlInstance, hostname: window.location.hostname };
         }
     } catch (e) {
-        console.error(`URL: [${url}].`, e);
+        console.error(`URL: [${urlString}].`, e);
         return null;
     }
 }
@@ -68,43 +87,37 @@ function processURL(url) {
 /**
  * Determines whether a given URL points to an external site relative to the current application.
  * 
- * @param {string} url - The URL to check.
+ * @param {Object} urlAndHostname - an object with hostname to compare; or empty object if representing broken link (https://[xyz]/).
  * @returns {boolean} `true` if the URL is external, `false` otherwise.
  */
-export function isExternalURL(url) {
-    try {
-        return processURL(url).hostname !== window.location.hostname
-    } catch (e) {
-        return false;
-    }
+export function isExternalURL(urlAndHostname) {
+    return urlAndHostname && urlAndHostname.hostname !== window.location.hostname;
 }
 
 /**
  * Displays a confirmation dialog before opening a potentially external link.
  * If the user accepts, their choice can be remembered to skip the dialog in the future for the same URL or host.
  * 
- * @param {String} url - the URL to open.
+ * @param {String} urlString - the URL string to be processed before opening.
  * @param {String} target - the `target` attribute used when opening the link (e.g., "_blank").
  * @param {Object} windowFeatures - optional features passed to `window.open()` when opening the link.
  */
-export function checkLinkAndOpen(url, target, windowFeatures) {
+export function checkLinkAndOpen(urlString, target, windowFeatures) {
     const dateFormat = 'YYYY MM DD';
-    const urlInstance = processURL(url);
-    if (urlInstance) {
-        const hostName = urlInstance.hostname;
+    const urlAndHostname = processURL(urlString);
+    if (urlAndHostname) {
+        const url = urlAndHostname.url.href;
+        if (isExternalURL(urlAndHostname)) {
+            const hostName = urlAndHostname.hostname;
+            const isAllowedSite = () => appConfig.siteAllowlist.find(pattern => pattern.test(hostName));
+            const wasAcceptedByUser = () => {
+                const now = moment();
+                const isRecent = (key) =>
+                    localStorage.getItem(key) &&
+                    now.diff(moment(localStorage.getItem(key), dateFormat), 'days') < appConfig.daysUntilSitePermissionExpires;
 
-        const isAllowedSite = () => appConfig.siteAllowlist.find(pattern => pattern.test(hostName));
-
-        const wasAcceptedByUser = () => {
-            const now = moment();
-            const isRecent = (key) =>
-                localStorage.getItem(key) &&
-                now.diff(moment(localStorage.getItem(key), dateFormat), 'days') < appConfig.daysUntilSitePermissionExpires;
-
-            return isRecent(localStorageKey(url)) || isRecent(localStorageKey(hostName));
-        };
-
-        if (isExternalURL(url)) {
+                return isRecent(localStorageKey(url)) || isRecent(localStorageKey(hostName));
+            };
             if (!isAllowedSite() && !wasAcceptedByUser()) {
                 const text = `The link is taking you to another site.<br>Are you sure you would like to continue?<br><pre style="line-break:anywhere;max-width:500px;white-space:normal;color:var(--paper-light-blue-500);">${url}</pre>`;
                 const options = ["Don't show this again for this link", "Don't show this again for this site"];
@@ -126,33 +139,24 @@ export function checkLinkAndOpen(url, target, windowFeatures) {
             openLink(url, target, windowFeatures);
         }
     }
-    // Handle broken link otherwise.
-    else {
-        // It should be handled exactly as it is handled by the browser for regular <a> tags.
-        // I.e. it is handled as if a broken url was appended to current origin (and with necessary encodings etc.).
-        // To see the actual link, just hover over it and it will be shown in the bottom of the page.
-        // One example of regular <a> tags handling is in a dialog for copied string values (`Copied!` toast MORE button).
-        const brokenUrl = createBrokenUrl(url);
-        if (brokenUrl) {
-            openLink(brokenUrl.href, target, windowFeatures);
-        }
-    }
 }
 
 /**
- * Creates a "broken" URL instance from `brokenUrlString`.
- * This is exactly how browser treats broken links - it opens them in a context of current site (origin)
- *   (and it includes necessary encodings etc.)
+ * Creates URL instance from `urlString` in context of our origin (e.g. https://tgdev.com).
  *
- * @param {String} brokenUrlString - the broken URL string.
+ * Broken links will be appended to our origin exactly as how browser does it during opening.
+ * I.e. it opens them in a context of current site (origin) with all necessary encodings etc.
+ *
+ * Links with proper protocol (e.g. https:, mailto: or file:) are left "as is".
+ * Links like `#/Work%20Activities/Work%20Activity` will be appended to our origin (as broken ones) and become actionable.
  */
-function createBrokenUrl(brokenUrlString) {
+function createUrl(urlString) {
     try {
-        return new URL(brokenUrlString, document.location.origin);
+        return new URL(urlString, window.location.origin);
     }
-    // Still catch an error - it should not appear though.
+    // Still catch an error - it should rarely appear though (e.g. `https://[xyz]/`).
     catch (error) {
-        console.error(`URL: [${url}].`, error);
+        console.error(`URL: [${urlString}].`, error);
         return null;
     }
 }
