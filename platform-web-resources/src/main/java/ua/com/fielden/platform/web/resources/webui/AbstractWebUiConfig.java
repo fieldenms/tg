@@ -218,6 +218,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
         final EntityMaster<UserDefinableHelp> userDefinableHelpMaster = StandardMastersWebUiConfig.createUserDefinableHelpMaster(injector());
         final EntityMaster<PersistentEntityInfo> persistentEntityInfoMaster = StandardMastersWebUiConfig.createPersistentEntityInfoMaster(injector());
+        final EntityMaster<OpenPersistentEntityInfoAction> persistentEntityInfoCompoundMaster = StandardMastersWebUiConfig.createPersistentEntityInfoCompoundMaster(injector(), webUiBuilder, persistentEntityInfoMaster);
 
         AcknowledgeWarningsWebUiConfig.register(injector(), configApp()); // generic TG functionality for warnings acknowledgement
 
@@ -234,6 +235,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(userMenuAssociatorWebUiConfig.master)
         .addMaster(userDefinableHelpMaster)
         .addMaster(persistentEntityInfoMaster)
+        .addMaster(persistentEntityInfoCompoundMaster)
         // centre configuration management
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdaterMaster)
         .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdaterMaster)

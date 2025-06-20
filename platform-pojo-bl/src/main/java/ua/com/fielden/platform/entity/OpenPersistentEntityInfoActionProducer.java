@@ -18,6 +18,15 @@ public class OpenPersistentEntityInfoActionProducer extends AbstractProducerForO
     @Override
     @Authorise(OpenPersistentEntityInfoAction_CanOpen_Token.class)
     protected OpenPersistentEntityInfoAction provideDefaultValues(final OpenPersistentEntityInfoAction openAction) {
-        return super.provideDefaultValues(openAction);
+        if (currentEntityNotEmpty()) {
+            final AbstractEntity<?> currEntity = currentEntity();
+            PersistentEntityInfoCo infoEntityCo = co(PersistentEntityInfo.class);
+            openAction.setKey(infoEntityCo.initEntityWith(currEntity, infoEntityCo.new_()));
+            return openAction;
+        }
+        // This happens when the entity master gets closed.
+        else {
+            return super.provideDefaultValues(openAction);
+        }
     }
 }

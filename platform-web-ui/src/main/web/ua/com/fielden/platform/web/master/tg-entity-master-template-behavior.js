@@ -38,9 +38,19 @@ const TgEntityMasterTemplateBehaviorImpl = {
         };
 
         self._tgOpenPersistentEntityInfoMasterAttrs = {
-            entityType: "ua.com.fielden.platform.entity.PersistentEntityInfo", 
+            entityType: "ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction", 
             currentState: 'EDIT', 
-            centreUuid: self.uuid
+            centreUuid: self.uuid,
+            prefDim: {
+                width: function() {
+                    return 1048
+                },
+                height: function() {
+                    return 610
+                },
+                widthUnit: 'px',
+                heightUnit: 'px'
+            }
         };
 
         self._currentEntityForPersistentEntityInfo = function() {
