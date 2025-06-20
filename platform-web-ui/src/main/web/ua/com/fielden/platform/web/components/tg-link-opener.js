@@ -9,8 +9,12 @@ import '/resources/polymer/@polymer/paper-styles/color.js';
 const appConfig = new TgAppConfig();
 const confirmationDialog = new TgConfirmationDialog();
 
-const MAILTO_PROTOCOL = 'mailto:';
-const SUPPORTED_PROTOCOLS = ['https:', 'http:', 'ftp:', 'ftps:', MAILTO_PROTOCOL];
+// 'mailto:' protocol, which is supported in TG links.
+export const MAILTO_PROTOCOL = 'mailto:';
+// Protocols, which are supported in TG links (besides mailto: above).
+export const SUPPORTED_PROTOCOLS = ['https:', 'http:', 'ftp:', 'ftps:'];
+// An error indicating unsupported protocol usage in links.
+export const ERR_UNSUPPORTED_PROTOCOL = 'One of http, https, ftp, ftps or mailto hyperlink protocols is expected.';
 
 /**
  * Loads a specified resource into new or existing browsing context (see https://developer.mozilla.org/en-US/docs/Web/API/Window/open).
@@ -75,7 +79,7 @@ export function processURL(urlString) {
         }
         // Unsupported protocol URLs are treated as internal and are handled consistently as browser would do.
         else {
-            console.error(`URL: [${urlString}].`, new Error('One of http, https, ftp, ftps or mailto hyperlink protocols is expected.'));
+            console.error(`URL: [${urlString}].`, new Error(ERR_UNSUPPORTED_PROTOCOL));
             return { url: urlInstance, hostname: window.location.hostname };
         }
     } catch (e) {
