@@ -347,7 +347,7 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
     
     @Test
-    public void curren_user_has_no_sensitive_information_retrieved_by_default() {
+    public void current_user_has_no_sensitive_information_retrieved_by_default() {
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUsername(up.getUser().getKey(), co$(User.class)); // refresh the user
 
@@ -358,7 +358,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertFalse(currUser.getProperty("active").isProxy());
         assertFalse(currUser.getProperty("base").isProxy());
         assertFalse(currUser.getProperty("basedOnUser").isProxy());
-        assertFalse(currUser.getProperty("roles").isProxy());
+        assertTrue(currUser.getProperty("roles").isProxy());
     }
 
     @Test
