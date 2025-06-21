@@ -1,34 +1,12 @@
 package ua.com.fielden.platform.security.session;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.security.session.Authenticator.fromString;
-import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
-
-import java.security.SignatureException;
-import java.sql.PreparedStatement;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-
-import org.apache.logging.log4j.Logger;
+import com.google.common.cache.Cache;
+import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-
-import com.google.common.cache.Cache;
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -43,6 +21,24 @@ import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+
+import java.security.SignatureException;
+import java.sql.PreparedStatement;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.toList;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.security.session.Authenticator.fromString;
+import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
 
 /**
  * DAO implementation for companion object {@link IUserSession}.
@@ -275,7 +271,11 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      */
     @Override
     //@SessionRequired -- db session should not be used here
-    public Optional<UserSession> currentSession(final User user, final String authenticator, final boolean shouldConsiderTheftScenario, final boolean skipRegeneration) {
+    public Optional<UserSession> currentSession(final User user0, final String authenticator, final boolean shouldConsiderTheftScenario, final boolean skipRegeneration) {
+        final var user = new User();
+        user.set("id", user0.getId());
+        user.setKey(user0.getKey());
+
         // reconstruct authenticator from string and then proceed with its validation
         // in case of validation failure, no reason should be provided to the outside as this could reveal too much information to a potential adversary
         final Authenticator auth = fromString(authenticator);
@@ -441,7 +441,11 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
 
     @Override
     @SessionRequired
-    public UserSession newSession(final User user, final boolean isDeviceTrusted, final String sid) {
+    public UserSession newSession(final User user0, final boolean isDeviceTrusted, final String sid) {
+        final var user = new User();
+        user.set("id", user0.getId());
+        user.setKey(user0.getKey());
+
         return newSessionToReplaceOld(user, isDeviceTrusted, empty(), sid);
     }
 
