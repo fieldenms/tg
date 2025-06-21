@@ -17,8 +17,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.util.List;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class IdOnlyProxiedEntityTypeCacheTest extends AbstractDaoTestCase {
 
@@ -27,11 +26,14 @@ public class IdOnlyProxiedEntityTypeCacheTest extends AbstractDaoTestCase {
     private final TestDomainMetadata domainMetadata = TestDomainMetadata.wrap(getInstance(IDomainMetadata.class));
 
     @Test
-    public void collectional_properties_are_not_proxied() {
+    public void collectional_properties_are_proxied() {
         final var proxiedType = getIdOnlyProxiedTypeFor(TgWagon.class);
         assertNotNull(proxiedType);
         domainMetadata.forProperty(TgWagon.class, "slots").type().assertCollectional();
-        assertNotProxied(entityFactory.newEntity(proxiedType), "slots");
+        final var entity = entityFactory.newEntity(proxiedType);
+        final var propName = "slots";
+        assertTrue("[%s.%s] should be proxied.".formatted(entity.getType().getSimpleName(), propName),
+                entity.proxiedPropertyNames().contains(propName));
     }
 
     @Test
