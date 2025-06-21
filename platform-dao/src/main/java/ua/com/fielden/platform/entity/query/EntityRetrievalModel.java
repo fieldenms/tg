@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -346,8 +347,14 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                                 if (propMetadata.isCritOnly()) {
                                     return false;
                                 }
+                                // Collectional properties (plain transient) should be proxied for non-synthetic entities.
+                                // Largely it means they are persistent (but also unions).
+                                // However, we should exclude "collectional updater" functional entities, that may be persistent.
+                                // One such example is UserRolesUpdater.
+                                else if (propMetadata.isPlain() && propMetadata.type().isCollectional() && !entityMetadata.isSynthetic() && AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(entityMetadata.javaType())) {
+                                    return false;
+                                }
                                 // Proxying of plain properties makes sense only for synthetic entities.
-                                // And collectional properties (plain transient) should also be proxied for non-synthetic entities.
                                 else if (propMetadata.isPlain() && !propMetadata.type().isCollectional() && !entityMetadata.isSynthetic()) {
                                     return false;
                                 }
