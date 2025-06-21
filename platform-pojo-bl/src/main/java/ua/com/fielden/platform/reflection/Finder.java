@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -21,10 +20,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -39,6 +35,7 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyTypeWithCorrectTypeParameters;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -973,7 +970,7 @@ public class Finder {
         }
 
         // first check for a link property amongst key members
-        final Pair<Integer, String> keyPair = lookForLinkProperty(masterType, getKeyMembers(propType));
+        final Pair<Integer, String> keyPair = lookForLinkProperty(masterType, propType, getKeyMembers(propType));
         final Integer matchingKeyMemembersCount = keyPair.getKey(); // the number of matched fields that are key members
         final String keylinkProperty = keyPair.getValue(); // the matched key member name
         // check if a key member was found
@@ -989,12 +986,17 @@ public class Finder {
     }
 
     /** A helper function to assist in checking field for a potential linkProperty role match. */
-    private static Pair<Integer, String> lookForLinkProperty(final Class<?> masterType, final List<Field> fieldsToCheck) {
+    private static Pair<Integer, String> lookForLinkProperty(final Class<?> masterType, final Class<? extends AbstractEntity<?>> propType, final List<Field> fieldsToCheck) {
         String linkProperty = null;
         int count = 0;
         for (final Field field : fieldsToCheck) {
-            final Class<?> fieldType = DynamicEntityClassLoader.getOriginalType(field.getType());
-            if (fieldType.isAssignableFrom(masterType)) {
+            // `field.getType()` may return Comparable for types such as `extends AbstractEntity<String>`.
+            // We should determine real key types to avoid false positive linkProperty determination.
+            final Type realKeyType = determinePropertyTypeWithCorrectTypeParameters(propType, field.getName());
+            // Don't consider any other than `Class` `Type`s (ParameterizedType and others).
+            // This is because we are interested only to compare it with `masterType`, which is a `Class`.
+            final Class<?> fieldType = realKeyType instanceof Class ? DynamicEntityClassLoader.getOriginalType((Class<?>) realKeyType) : null;
+            if (fieldType != null && fieldType.isAssignableFrom(masterType)) {
                 linkProperty = field.getName();
                 count++;
             }
