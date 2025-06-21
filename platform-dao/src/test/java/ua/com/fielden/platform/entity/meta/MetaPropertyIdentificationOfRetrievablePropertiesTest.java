@@ -1,42 +1,21 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.CREATED_BY;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.CREATED_DATE;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.CREATED_TRANSACTION_GUID;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_DATE;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import org.junit.Test;
+import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.types.Money;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
-
-import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.sample.domain.TgFuelType;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-import ua.com.fielden.platform.types.Money;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 /**
  * A test case for testing essential {@link MetaProperty} functionality from perspective of a persisted entity.
@@ -90,13 +69,13 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
     }
 
     @Test
-    public void identifycation_of_retrievable_properties_for_entity_with_calcualted_props() {
+    public void retrievable_properties_for_entity_with_calculated_props_contain_these_calculated_properties() {
         final TgVehicle veh = co$(TgVehicle.class).findByKeyAndFetch(fetchAll(TgVehicle.class), "CAR2");
 
         final List<MetaProperty<?>> retrievableProps = veh.getProperties().values().stream()
                 .filter(p -> p.isRetrievable()).collect(Collectors.toList());
 
-        assertEquals(24, retrievableProps.size());
+        assertEquals(26, retrievableProps.size());
 
         final Set<String> names = retrievableProps.stream().map(p -> p.getName()).collect(Collectors.toSet());
         assertTrue(names.contains(KEY));
@@ -123,6 +102,8 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
         assertTrue(names.contains("calcModel"));
         assertTrue(names.contains("finDetails"));
         assertTrue(names.contains("maxReading"));
+        assertTrue(names.contains("fuelUsages"));
+        assertTrue(names.contains("vehicleFuelUsages"));
     }
 
     @Override
