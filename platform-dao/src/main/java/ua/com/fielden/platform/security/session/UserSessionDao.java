@@ -192,7 +192,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         try {
             ssoSessionController.invalidate(sid);
         } catch (final Exception ex) {
-            logger.error(() -> "Could not delete SSO sessions for sid [%s].".formatted(sid), ex);
+            logger.error(() -> "Could not invalidate SSO sessions for sid [%s].".formatted(sid), ex);
         }
 
         // Second, but more importantly, invalidate user sessions.
