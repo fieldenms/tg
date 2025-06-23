@@ -117,6 +117,7 @@ public class PlatformDomainTypes {
         types.add(PersistentEntityInfo.class);
         types.add(OpenPersistentEntityInfoAction.class);
         types.add(PersistentEntityInfoMaster_OpenMain_MenuItem.class);
+        types.add(AuditCompoundMenuItem.class);
 
         typesDependentOnWebUI.add(EntityExportAction.class);
         typesDependentOnWebUI.add(CentreConfigUpdater.class);
