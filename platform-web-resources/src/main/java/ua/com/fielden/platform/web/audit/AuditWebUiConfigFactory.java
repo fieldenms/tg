@@ -81,10 +81,6 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
         // Must exist
         final var synAuditType = auditTypeFinder.navigate(baseAuditedType).synAuditEntityType();
 
-        final var masterMiType = miTypeGenerator.generate(
-                "Mi%sMaster_%s".formatted(baseAuditedType.getSimpleName(), synAuditType.getSimpleName()),
-                synAuditType);
-
         final var auditProperties = domainMetadata.forEntity(synAuditType)
                 .properties()
                 .stream()
@@ -132,7 +128,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .setQueryEnhancer(AuditEntityQueryEnhancer.class, context().withMasterEntity().build())
                 .build();
 
-        return new EntityCentre<>(masterMiType, centre, injector);
+        return new EntityCentre<>(miTypeForEmbeddedCentre(auditedType), centre, injector);
     }
 
     private EntityCentre<?> createCentre(
@@ -227,6 +223,16 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                                      property.name(), property.type().genericJavaType().getTypeName()));
             return null;
         }
+    }
+
+    @Override
+    public Class<MiWithConfigurationSupport<?>> miTypeForEmbeddedCentre(final Class<? extends AbstractEntity<?>> auditedType) {
+        final var baseAuditedType = baseEntityType(auditedType);
+        final var synAuditType = auditTypeFinder.navigate(baseAuditedType).synAuditEntityType();
+        // TODO: The Mi naming convention should be captured in a standalone utility class.
+        final var miType = miTypeGenerator.generate("Mi%sMaster_%s".formatted(baseAuditedType.getSimpleName(), synAuditType.getSimpleName()),
+                                                    synAuditType);
+        return (Class) miType;
     }
 
 }
