@@ -51,7 +51,8 @@ public abstract class AbstractMasterWithCentre<T extends AbstractEntity<?>> impl
                             """
                             <tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity'
                                 import='%s'
-                                element-name='%s'>
+                                element-name='%s'
+                                attrs='[[_calcAttrs(_currBindingEntity)]]'>
                             </tg-element-loader>
                             """.formatted(getImportUri(), getElementName()))
                     .replace("//@ready-callback",
@@ -82,12 +83,13 @@ public abstract class AbstractMasterWithCentre<T extends AbstractEntity<?>> impl
                                     this.$.loader.loadedElement.focusPreviousView(e);
                                 }
                             }.bind(self);
-                            """)
-                    .replace("//@attached-callback",
-                            """
-                            self.$.loader.attrs = %s;
-                            self.registerCentreRefreshRedirector();
+                            self._calcAttrs = function (_currBindingEntity) {
+                                if (_currBindingEntity !== null) {
+                                    return %s;
+                                }
+                            }.bind(self);
                             """.formatted(getAttributes()))
+                    .replace("//@attached-callback","self.registerCentreRefreshRedirector();\n".formatted(getAttributes()))
                     .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))
                     .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.map(code -> code.toString()).orElse(""))
                     .replace("@prefDim", "null")

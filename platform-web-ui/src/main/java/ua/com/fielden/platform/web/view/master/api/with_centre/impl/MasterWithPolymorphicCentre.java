@@ -17,8 +17,8 @@ public class MasterWithPolymorphicCentre<T extends AbstractEntity<?>> extends Ab
                 {
                     embedded: true,
                     uuid: this.uuid,
-                    enforcePostSaveRefresh: this._currBindingEntity.shouldEnforcePostSaveRefresh,
-                    eventSourceClass: this._currBindingEntity.eventSourceClass
+                    enforcePostSaveRefresh: _currBindingEntity.shouldEnforcePostSaveRefresh,
+                    eventSourceClass: _currBindingEntity.eventSourceClass
                 };""";
     }
 

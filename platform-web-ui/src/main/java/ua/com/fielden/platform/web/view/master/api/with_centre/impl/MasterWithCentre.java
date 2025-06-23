@@ -25,25 +25,14 @@ public class MasterWithCentre<T extends AbstractEntity<?>> extends AbstractMaste
 
     @Override
     protected String getAttributes() {
-        final StringBuilder attrs = new StringBuilder();
-
-        //////////////////////////////////////////////////////////////////////////////////////
-        //// attributes should always be added with comma and space at the end, i.e. ", " ////
-        //// this suffix is used to remove the last comma, which prevents JSON conversion ////
-        //////////////////////////////////////////////////////////////////////////////////////
-        attrs.append("{");
-        attrs.append("\"embedded\": true, ");
-        if (embeddedCentre.shouldEnforcePostSaveRefresh()) {
-            attrs.append("\"enforcePostSaveRefresh\": true, ");
-        }
-        attrs.append(format("eventSourceClass: \"%s\",", embeddedCentre.eventSourceClass().map(clazz -> clazz.getName()).orElse("")));
-
-        // let's make sure that uuid is defined from the embedded centre, which is required
-        // for proper communication of the centre with related actions
-        attrs.append("\"uuid\": this.uuid, ");
-        attrs.append("}");
-
-        return attrs.toString().replace(", }", " }");
+        return """
+               {
+                    embedded: true,
+                    enforcePostSaveRefresh: %s,
+                    eventSourceClass: '%s',
+                    uuid: this.uuid
+               }
+               """.formatted(embeddedCentre.shouldEnforcePostSaveRefresh(), embeddedCentre.eventSourceClass().map(clazz -> clazz.getName()).orElse(""));
     }
 
     @Override
