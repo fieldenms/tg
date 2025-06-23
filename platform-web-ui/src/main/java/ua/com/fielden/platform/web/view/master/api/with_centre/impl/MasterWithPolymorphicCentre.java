@@ -24,12 +24,12 @@ public class MasterWithPolymorphicCentre<T extends AbstractEntity<?>> extends Ab
 
     @Override
     protected String getElementName() {
-        return "'[[_currBindingEntity.elementName]]'";
+        return "[[_currBindingEntity.elementName]]";
     }
 
     @Override
     protected String getImportUri() {
-        return "'[[_currBindingEntity.importUri]]'";
+        return "[[_currBindingEntity.importUri]]";
     }
 
 }
