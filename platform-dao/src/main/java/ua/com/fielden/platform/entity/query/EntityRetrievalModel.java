@@ -71,15 +71,6 @@ import static ua.com.fielden.platform.utils.ToString.separateLines;
  * <p>
  * Some categories deserve additional clarification:
  * <ol>
- *   <li> {@link FetchCategory#KEY_AND_DESC}
- *     <ul>
- *       <li> includes {@code key} without exploring it further (however, see the section on processing of {@code key});
- *     </ul>
- *   <li> {@link FetchCategory#DEFAULT}
- *     <ul>
- *       <li> if an entity has a simple entity-typed (but not a union) {@code key}, then it is explored further;
- *       <li> if an entity has a composite key, then all entity-typed (but not a union) key members are explored further;
- *     </ul>
  *   <li> {@link FetchCategory#ALL} - equivalent to {@link FetchCategory#DEFAULT},
  *        but without special handling of entity-typed keys and key members.
  * </ol>
@@ -386,15 +377,10 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour.
                 if (optPropMetadata.filter(it -> it.isCalculated() && !it.type().isComponent()).isPresent()) {} // skip
                 else {
-                    // FIXME: Union-entity typed keys or key members are not supported at this stage.
-                    //        However, there is nothing preventing such definitions, which leads to StackOverflowErrors during fetch model construction.
-                    //        To support such definitions, it would be necessary to take into account recursive definitions,
-                    //        where a key or key member that is of a union type may have a union-property of the same type as the enclosing entity.
-                    //        We would need to ensure that such union-properties are not explored to prevent StackOverflowErrors during fetch model construction.
-                    //        For now, let's simply skip the whole union-typed key and key-members from exploration.
+                    // Recursive key structures are not supported, and will lead to non-termination (see #2452).
+                    // TODO: Explore union members.
                     final boolean exploreEntities = optPropMetadata.isEmpty() ||
                                                     optPropMetadata.filter(it -> it.type().isEntity()
-                                                                                 && !propMetadataUtils.isPropEntityType(it, EntityMetadata::isUnion)
                                                                                  && (KEY.equals(it.name()) || it.has(KEY_MEMBER)))
                                                             .isPresent();
                     with(prop.name, !exploreEntities);
