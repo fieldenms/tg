@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.entity.query;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -12,6 +14,7 @@ import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.meta.*;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.utils.ToString;
 import ua.com.fielden.platform.utils.ToString.IFormat;
 
@@ -23,6 +26,7 @@ import java.util.stream.Stream;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -31,6 +35,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
+import static ua.com.fielden.platform.utils.CollectionUtil.concatList;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
@@ -99,6 +104,11 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     public static final String ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find property [%s] to be excluded from fetched properties of entity type [%s].";
     public static final String ERR_NON_EXISTING_PROPERTY = "Trying to fetch entity [%s] with non-existing property [%s].";
 
+    private static final String ERR_GRAPH_CYCLE = """
+      Graph cycle detected. Retrieval model cannot be constructed for an entity graph that contains cycles.
+      Retrieval models stack (first element is the top):
+      %s""";
+
     private final fetch<T> originalFetch;
     /** Indicates whether this fetch is the top-most (graph root) or a nested one (subgraph). */
     private final boolean topLevel;
@@ -113,14 +123,26 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         this(originalFetch, domainMetadata, qsip, true);
     }
 
-    EntityRetrievalModel(final fetch<T> originalFetch,
-                         final IDomainMetadata domainMetadata,
-                         final QuerySourceInfoProvider qsip,
-                         final boolean topLevel) {
+    EntityRetrievalModel(
+            final fetch<T> originalFetch,
+            final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider qsip,
+            final boolean topLevel)
+    {
+        this(originalFetch, domainMetadata, qsip, topLevel, ImmutableList.of(new StackElement(originalFetch)));
+    }
+
+    private EntityRetrievalModel(
+            final fetch<T> originalFetch,
+            final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider qsip,
+            final boolean topLevel,
+            final List<StackElement> stack)
+    {
         this.originalFetch = originalFetch;
         this.topLevel = topLevel;
 
-        final var builder = buildModel(originalFetch, domainMetadata, qsip);
+        final var builder = buildModel(originalFetch, domainMetadata, qsip, stack);
         this.primProps = unmodifiableSet(builder.primProps);
         this.entityProps = unmodifiableMap(builder.entityProps);
         this.proxiedProps = unmodifiableSet(builder.proxiedProps);
@@ -129,9 +151,10 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     private static <T extends AbstractEntity<?>> Builder buildModel(
             final fetch<T> originalFetch,
             final IDomainMetadata domainMetadata,
-            final QuerySourceInfoProvider qsip)
+            final QuerySourceInfoProvider qsip,
+            final List<StackElement> stack)
     {
-        final var builder = new Builder(originalFetch.getEntityType(), domainMetadata, qsip);
+        final var builder = new Builder(originalFetch.getEntityType(), domainMetadata, qsip, stack);
 
         switch (originalFetch.getFetchCategory()) {
             case ALL_INCL_CALC -> builder.includeAllFirstLevelPropsInclCalc();
@@ -266,6 +289,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         final EntityMetadata entityMetadata;
         final QuerySourceInfoProvider qsip;
         final QuerySourceInfo<?> querySourceInfo;
+        final List<StackElement> stack;
 
         // Mutable components that are being built
 
@@ -275,10 +299,12 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
         Builder(final Class<? extends AbstractEntity<?>> entityType,
                 final IDomainMetadata domainMetadata,
-                final QuerySourceInfoProvider qsip)
+                final QuerySourceInfoProvider qsip,
+                final List<StackElement> stack)
         {
             this.domainMetadata = domainMetadata;
             this.qsip = qsip;
+            this.stack = stack;
             this.querySourceInfo = qsip.getModelledQuerySourceInfo(entityType);
             this.entityType = entityType;
             this.entityMetadata = domainMetadata.forEntity(entityType);
@@ -496,6 +522,15 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
+            final var stackElement = new StackElement(propName, fetchModel);
+
+            if (stack.stream().anyMatch(elt -> elt.fetch().equals(fetchModel))) {
+                final var stackString = StreamUtils.prepend(stackElement, stack.stream())
+                        .map(elt -> "%s: %s".formatted(elt.property(), elt.fetch()))
+                        .collect(joining("\n"));
+                throw new EntityRetrievalModelException.GraphCycle(ERR_GRAPH_CYCLE.formatted(stackString));
+            }
+
             final PropertyMetadata pm = entityMetadata.property(propName);
 
             final var propType = unwrap(pm.type());
@@ -517,7 +552,9 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
             final var existingFetch = entityProps.get(propName);
             final var finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
-            entityProps.put(propName, new EntityRetrievalModel<>(finalFetch, domainMetadata, qsip, false));
+            final var model = new EntityRetrievalModel<>(finalFetch, domainMetadata, qsip, false, concatList(ImmutableList.of(stackElement), stack));
+
+            entityProps.put(propName, model);
         }
 
         private void without(final String propName) {
@@ -558,6 +595,12 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             return optPm;
         }
 
+    }
+
+    private record StackElement(String property, fetch<?> fetch) {
+        StackElement(fetch<?> fetch) {
+            this("#root", fetch);
+        }
     }
 
 }

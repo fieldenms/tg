@@ -4,6 +4,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -24,10 +25,8 @@ public class RetrievalModelRecursiveKeyTest extends AbstractDaoTestCase {
     @Test
     public void retrieval_model_that_includes_key_cannot_be_constructed_for_recursive_key_structure() {
         assertThat(List.of(ALL, ALL_INCL_CALC, KEY_AND_DESC, DEFAULT))
-                .allSatisfy(cat -> {
-                    assertThatThrownBy(() -> produceRetrievalModel(A.class, cat))
-                            .isInstanceOf(StackOverflowError.class);
-                });
+                .allSatisfy(cat -> assertThatThrownBy(() -> produceRetrievalModel(A.class, cat))
+                        .isInstanceOf(EntityRetrievalModelException.GraphCycle.class));
     }
 
     @Test

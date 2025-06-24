@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.test_entities.Circular_EntityWithCompositeKeyMemberUnionEntity;
@@ -627,33 +628,33 @@ public class FetchModelTest extends AbstractDaoTestCase {
     @Test
     public void strategy_ALL_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertThatThrownBy(() -> produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL))
-                .isInstanceOf(StackOverflowError.class);
+                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
         assertThatThrownBy(() -> produceRetrievalModel(Circular_UnionEntity.class, ALL))
-                .isInstanceOf(StackOverflowError.class);
+                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
     }
 
     @Test
     public void strategy_DEFAULT_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertThatThrownBy(() -> produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, DEFAULT))
-                .isInstanceOf(StackOverflowError.class);
+                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
         assertThatThrownBy(() -> produceRetrievalModel(Circular_UnionEntity.class, DEFAULT))
-                .isInstanceOf(StackOverflowError.class);
+                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
     }
 
     @Test
     public void strategy_ALL_INCL_CALC_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertThatThrownBy(() -> produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL_INCL_CALC))
-                .isInstanceOf(StackOverflowError.class);
+                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
         assertThatThrownBy(() -> produceRetrievalModel(Circular_UnionEntity.class, ALL_INCL_CALC))
-                .isInstanceOf(StackOverflowError.class);
+                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
     }
 
     @Test
     public void strategy_KEY_AND_DESC_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertThatThrownBy(() -> produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, KEY_AND_DESC))
-                .isInstanceOf(StackOverflowError.class);
+                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
         assertThatThrownBy(() -> produceRetrievalModel(Circular_UnionEntity.class, KEY_AND_DESC))
-                .isInstanceOf(StackOverflowError.class);
+                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
     }
 
     @Test
