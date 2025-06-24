@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
 import static java.lang.String.format;
 
@@ -13,7 +14,7 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
     @Title(value = "Menu Item Type", desc = "Entity Centre Menu Item Type")
     private String menuItemType;
 
-    private Class<? extends AbstractEntity<?>> menuItemTypeAsClass;
+    private Class<? extends MiWithConfigurationSupport<?>> menuItemTypeAsClass;
 
     @IsProperty
     @MapTo
@@ -81,7 +82,7 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
         return importUri;
     }
 
-    public AbstractPolymorphicCentreCompoundMenuItem setMenuItemTypeForCentre(final Class<? extends AbstractEntity<?>> menuItemTypeAsClass) {
+    public AbstractPolymorphicCentreCompoundMenuItem setMenuItemTypeForCentre(final Class<? extends MiWithConfigurationSupport<?>> menuItemTypeAsClass) {
         this.menuItemTypeAsClass = menuItemTypeAsClass;
         setMenuItemType(menuItemTypeAsClass.getName());
         setImportUri(format("/centre_ui/%s", menuItemTypeAsClass.getName()));
@@ -89,7 +90,7 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
         return this;
     }
 
-    public Class<? extends AbstractEntity<?>> getMenuItemTypeAsClass() {
+    public Class<? extends MiWithConfigurationSupport<?>> getMenuItemTypeAsClass() {
         return menuItemTypeAsClass;
     }
 }

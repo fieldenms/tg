@@ -27,6 +27,7 @@ public class PersistentEntityInfoDao extends CommonEntityDao<PersistentEntityInf
                     .with(AbstractPersistentEntity.LAST_UPDATED_BY)
                     .with(AbstractPersistentEntity.LAST_UPDATED_DATE));
             entity.setEntityId(entityWithInfo.getId())
+                    .setEntityType(entityCo.getEntityType().getName())
                     .setEntityVersion(entityWithInfo.getVersion())
                     .setCreatedBy(entityWithInfo.getCreatedBy())
                     .setCreatedDate(entityWithInfo.getCreatedDate())

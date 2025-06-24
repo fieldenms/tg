@@ -63,6 +63,20 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
     @Title("Entity Title")
     private String entityTitle;
 
+    @IsProperty
+    @Title(value = "Entity Type", desc = "Entity Type to Inspect")
+    private String entityType;
+
+    @Observable
+    public PersistentEntityInfo setEntityType(final String entityType) {
+        this.entityType = entityType;
+        return this;
+    }
+
+    public String getEntityType() {
+        return entityType;
+    }
+
     public String getEntityTitle() {
         return entityTitle;
     }
