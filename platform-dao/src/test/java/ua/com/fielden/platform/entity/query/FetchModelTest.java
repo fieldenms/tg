@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.query.test_entities.Circular_UnionEntity;
 import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithYieldId;
 import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithoutYieldId;
 import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
+import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.persistence.types.EntityWithRichText;
@@ -635,9 +636,8 @@ public class FetchModelTest extends AbstractDaoTestCase {
     public void strategy_DEFAULT_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
         assertThatThrownBy(() -> produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, DEFAULT))
                 .isInstanceOf(StackOverflowError.class);
-        // FIXME: Union members have ID_ONLY model. Expected: DEFAULT.
-        // assertThatThrownBy(() -> produceRetrievalModel(Circular_UnionEntity.class, DEFAULT))
-        //         .isInstanceOf(StackOverflowError.class);
+        assertThatThrownBy(() -> produceRetrievalModel(Circular_UnionEntity.class, DEFAULT))
+                .isInstanceOf(StackOverflowError.class);
     }
 
     @Test
@@ -694,6 +694,65 @@ public class FetchModelTest extends AbstractDaoTestCase {
         assertThat(List.of(ID_ONLY, ID_AND_VERSION, NONE))
                 .allSatisfy(cat -> assertPropsAreNotFetched(produceRetrievalModel(UnionEntityDetails.class, cat),
                                                             Set.of(UnionEntityDetails.Property.serial, UnionEntityDetails.Property.union)));
+    }
+
+    /*----------------------------------------------------------------------------
+     | Union members
+     -----------------------------------------------------------------------------*/
+
+    @Test
+    public void strategy_KEY_AND_DESC_union_members_are_included_with_DEFAULT_category() {
+        _union_members_are_included_with_DEFAULT_category(KEY_AND_DESC);
+    }
+
+    @Test
+    public void strategy_DEFAULT_union_members_are_included_with_DEFAULT_category() {
+        _union_members_are_included_with_DEFAULT_category(DEFAULT);
+    }
+
+    @Test
+    public void strategy_ALL_union_members_are_included_with_DEFAULT_category() {
+        _union_members_are_included_with_DEFAULT_category(ALL);
+    }
+
+    @Test
+    public void strategy_ALL_INCL_CALC_union_members_are_included_with_DEFAULT_category() {
+        _union_members_are_included_with_DEFAULT_category(ALL_INCL_CALC);
+    }
+
+    private void _union_members_are_included_with_DEFAULT_category(final FetchCategory category) {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        final var retrievalModel = produceRetrievalModel(UnionEntity.class, category);
+        assertThat(List.of(UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo))
+                .allSatisfy(prop -> assertThat(retrievalModel.getRetrievalModelOpt(prop))
+                        .get()
+                        .isInstanceOfSatisfying(EntityRetrievalModel.class,
+                                                it -> assertThat(it.getOriginalFetch())
+                                                        .extracting(fetch::getFetchCategory)
+                                                        .isEqualTo(DEFAULT)));
+    }
+
+    @Test
+    public void strategy_ID_ONLY_union_members_are_not_included() {
+        _union_members_are_not_included(ID_ONLY);
+    }
+
+    @Test
+    public void strategy_ID_AND_VERSION_union_members_are_not_included() {
+        _union_members_are_not_included(ID_AND_VERSION);
+    }
+
+    @Test
+    public void strategy_NONE_union_members_are_not_included() {
+        _union_members_are_not_included(NONE);
+    }
+
+    private void _union_members_are_not_included(final FetchCategory category) {
+        final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
+        assertThat(entityMetadata).matches(EntityMetadata::isUnion);
+        final var retrievalModel = produceRetrievalModel(UnionEntity.class, category);
+        assertPropsAreNotFetched(retrievalModel, Set.of(UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo));
     }
 
     /*----------------------------------------------------------------------------

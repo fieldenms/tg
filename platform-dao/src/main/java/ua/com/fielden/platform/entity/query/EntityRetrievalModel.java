@@ -378,11 +378,14 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 if (optPropMetadata.filter(it -> it.isCalculated() && !it.type().isComponent()).isPresent()) {} // skip
                 else {
                     // Recursive key structures are not supported, and will lead to non-termination (see #2452).
-                    // TODO: Explore union members.
-                    final boolean exploreEntities = optPropMetadata.isEmpty() ||
-                                                    optPropMetadata.filter(it -> it.type().isEntity()
-                                                                                 && (KEY.equals(it.name()) || it.has(KEY_MEMBER)))
-                                                            .isPresent();
+
+                    // Explore further if property is a union member or a key member.
+                    final boolean exploreEntities = optPropMetadata
+                            .map(propMetadata -> entityMetadata.isUnion() && propMetadata.type().isEntity()
+                                                 || KEY.equals(propMetadata.name())
+                                                 || propMetadata.has(KEY_MEMBER))
+                            .orElse(TRUE);
+
                     with(prop.name, !exploreEntities);
                 }
             });
