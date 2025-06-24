@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.utils;
 
 import jakarta.inject.Inject;
+import ua.com.fielden.platform.audit.AuditUtils;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AuditCompoundMenuItem;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.audit.IAuditWebUiConfigFactory;
@@ -18,7 +20,16 @@ public class AuditMenuItemInitializer implements IAuditMenuItemInitializer {
     }
 
     @Override
-    public AuditCompoundMenuItem init(final AuditCompoundMenuItem menuItem) {
-        return null;
+    public AuditCompoundMenuItem init(final Class<? extends AbstractEntity<?>> auditedType, final AuditCompoundMenuItem menuItem) {
+        if (AuditUtils.isAudited(auditedType)) {
+            var miType =  auditConfigFactory.miTypeForEmbeddedCentre(auditedType);
+            var embeddedCentre = webUiConfig.getEmbeddedCentres().get(miType);
+            if (embeddedCentre != null) {
+                menuItem.setMenuItemTypeForCentre(miType)
+                        .setShouldEnforcePostSaveRefresh(embeddedCentre._1.shouldEnforcePostSaveRefresh())
+                        .setEventSourceClass(embeddedCentre._1.eventSourceClass().map(Class::getName).orElse(""));
+            }
+        }
+        return menuItem;
     }
 }
