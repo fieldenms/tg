@@ -5,13 +5,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.util.List;
-import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -20,12 +16,12 @@ import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 
 /// This test covers the construction of retrieval models for entity types with recursive key structures.
 ///
-public class RetrievalModelRecursiveKeyTest extends AbstractDaoTestCase {
+public class RetrievalModelRecursiveKeyTest extends AbstractDaoTestCase implements IRetrievalModelTestUtils {
 
     @Test
     public void retrieval_model_that_includes_key_cannot_be_constructed_for_recursive_key_structure() {
         assertThat(List.of(ALL, ALL_INCL_CALC, KEY_AND_DESC, DEFAULT))
-                .allSatisfy(cat -> assertThatThrownBy(() -> produceRetrievalModel(A.class, cat))
+                .allSatisfy(cat -> assertThatThrownBy(() -> makeRetrievalModel(A.class, cat))
                         .isInstanceOf(EntityRetrievalModelException.GraphCycle.class));
     }
 
@@ -33,7 +29,7 @@ public class RetrievalModelRecursiveKeyTest extends AbstractDaoTestCase {
     public void retrieval_model_that_does_not_include_key_can_be_constructed_for_recursive_key_structure() {
         assertThat(List.of(ID_ONLY, ID_AND_VERSION, NONE))
                 .allSatisfy(cat -> {
-                    final var model = produceRetrievalModel(A.class, cat);
+                    final var model = makeRetrievalModel(A.class, cat);
                     assertThat(model).doesNotMatch(it -> it.containsProp(KEY));
                 });
     }
@@ -111,27 +107,6 @@ public class RetrievalModelRecursiveKeyTest extends AbstractDaoTestCase {
             this.number = number;
             return this;
         }
-    }
-
-
-    private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
-
-    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
-        return IRetrievalModel.createRetrievalModel(fetchModel,
-                                                    domainMetadata,
-                                                    getInstance(QuerySourceInfoProvider.class));
-    }
-
-    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final Class<T> entityType, final fetch.FetchCategory fetchCategory) {
-        return produceRetrievalModel(new fetch<T>(entityType, fetchCategory));
-    }
-
-    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(
-            final Class<T> entityType,
-            final fetch.FetchCategory fetchCategory,
-            final Function<? super fetch<T>, fetch<T>> finisher)
-    {
-        return produceRetrievalModel(finisher.apply(new fetch<T>(entityType, fetchCategory)));
     }
 
 }

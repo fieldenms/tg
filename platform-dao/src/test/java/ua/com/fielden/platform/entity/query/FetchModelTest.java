@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.query.test_entities.Circular_EntityWithCom
 import ua.com.fielden.platform.entity.query.test_entities.Circular_UnionEntity;
 import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithYieldId;
 import ua.com.fielden.platform.entity.query.test_entities.SynEntityWithoutYieldId;
-import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -22,7 +21,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -35,27 +33,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertNotEmpty;
 
-public class FetchModelTest extends AbstractDaoTestCase {
+public class FetchModelTest extends AbstractDaoTestCase implements IRetrievalModelTestUtils {
 
     private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
-
-    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
-        return IRetrievalModel.createRetrievalModel(fetchModel,
-                                                    domainMetadata,
-                                                    getInstance(QuerySourceInfoProvider.class));
-    }
-
-    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final Class<T> entityType, final FetchCategory fetchCategory) {
-        return produceRetrievalModel(new fetch<T>(entityType, fetchCategory));
-    }
-
-    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(
-            final Class<T> entityType,
-            final FetchCategory fetchCategory,
-            final Function<? super fetch<T>, fetch<T>> finisher)
-    {
-        return produceRetrievalModel(finisher.apply(new fetch<T>(entityType, fetchCategory)));
-    }
 
     private static <T extends AbstractEntity<?>> void assertPropsAreFetched(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> props) {
         for (final var propName : props) {
@@ -127,14 +107,14 @@ public class FetchModelTest extends AbstractDaoTestCase {
     }
 
     private void _composite_key_members_are_included_recursively(final FetchCategory category) {
-        final var fetchModel = produceRetrievalModel(TgAuthorship.class, category);
+        final var fetchModel = makeRetrievalModel(TgAuthorship.class, category);
         assertPropsAreFetched(fetchModel, Set.of("title", "author"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("author"), Set.of("name", "surname", "patronymic"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("author.name"), Set.of("key"));
     }
 
     private void _composite_key_members_are_not_included(final FetchCategory category) {
-        final var fetchModel = produceRetrievalModel(TgAuthorship.class, category);
+        final var fetchModel = makeRetrievalModel(TgAuthorship.class, category);
         assertPropsAreNotFetched(fetchModel, Set.of("author", "title"));
     }
 
@@ -177,7 +157,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
         final var entityType = TgFuelUsage.class;
         assertTrue(domainMetadata.forProperty(entityType, "key").type().isCompositeKey());
 
-        final var fetchModel = produceRetrievalModel(fetchNone(entityType).with("key"));
+        final var fetchModel = makeRetrievalModel(fetchNone(entityType).with("key"));
         assertPropsAreNotFetched(fetchModel, Set.of("key"));
     }
 
@@ -185,7 +165,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
             final Class<? extends AbstractEntity<DynamicEntityKey>> entityType,
             final FetchCategory category)
     {
-        final var fetchModel = produceRetrievalModel(entityType, category);
+        final var fetchModel = makeRetrievalModel(entityType, category);
         assertPropsAreNotFetched(fetchModel, Set.of("key"));
     }
 
@@ -200,10 +180,10 @@ public class FetchModelTest extends AbstractDaoTestCase {
                         TgVehicleFinDetails.class, category,
                         model -> assertThat(model)
                                 .usingEquals(FetchModelTest::areEqualByProperties)
-                                .isEqualTo(produceRetrievalModel(TgVehicle.class, KEY_AND_DESC))));
+                                .isEqualTo(makeRetrievalModel(TgVehicle.class, KEY_AND_DESC))));
 
         assertThat(List.of(ID_AND_VERSION, ID_ONLY))
-                .allSatisfy(category -> assertPropsAreNotFetched(produceRetrievalModel(TgVehicleFinDetails.class, category), Set.of(KEY)));
+                .allSatisfy(category -> assertPropsAreNotFetched(makeRetrievalModel(TgVehicleFinDetails.class, category), Set.of(KEY)));
     }
 
     private void _simple_entity_typed_key_is_implicitly_assigned_a_sub_fetch_model(
@@ -213,7 +193,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     {
         assertTrue(domainMetadata.forProperty(entityType, KEY).type().isEntity());
 
-        final var fetchModel = produceRetrievalModel(entityType, category);
+        final var fetchModel = makeRetrievalModel(entityType, category);
         assertPropsAreFetched(fetchModel, Set.of(KEY));
         assertSubFetchModel.accept(fetchModel.getRetrievalModel(KEY));
     }
@@ -256,7 +236,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
             final Class<? extends AbstractEntity<?>> entityType,
             final FetchCategory category)
     {
-        final var fetchModel = produceRetrievalModel(entityType, category);
+        final var fetchModel = makeRetrievalModel(entityType, category);
         domainMetadata.forEntity(entityType).properties().stream()
                 .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
                 .forEach(prop -> {
@@ -272,7 +252,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
             final Class<? extends AbstractEntity<?>> entityType,
             final FetchCategory category)
     {
-        final var fetchModel = produceRetrievalModel(entityType, category);
+        final var fetchModel = makeRetrievalModel(entityType, category);
         final var calculatedProps = domainMetadata.forEntity(entityType).properties().stream()
                 .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
                 // Composite key itself is never included. See the documentation of EntityRetrievalModel.
@@ -286,7 +266,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
             final Class<? extends AbstractEntity<?>> entityType,
             final FetchCategory category)
     {
-        final var fetchModel = produceRetrievalModel(entityType, category);
+        final var fetchModel = makeRetrievalModel(entityType, category);
         final var calculatedProps = domainMetadata.forEntity(entityType).properties().stream()
                 .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
                 .map(PropertyMetadata::name)
@@ -300,96 +280,96 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Test
     public void strategy_ALL_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, ALL), Set.of("id"));
+        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, ALL), Set.of("id"));
     }
 
     @Test
     public void strategy_ALL_INCL_CALC_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, ALL_INCL_CALC), Set.of("id"));
+        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, ALL_INCL_CALC), Set.of("id"));
     }
 
     @Test
     public void strategy_DEFAULT_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, DEFAULT), Set.of("id"));
+        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, DEFAULT), Set.of("id"));
     }
 
     @Test
     public void strategy_KEY_AND_DESC_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, KEY_AND_DESC), Set.of("id"));
+        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, KEY_AND_DESC), Set.of("id"));
     }
 
     @Test
     public void strategy_ID_ONLY_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, ID_ONLY), Set.of("id"));
+        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, ID_ONLY), Set.of("id"));
     }
 
     // ID_ONLY uncoditionally includes ID
     @Test
     public void strategy_ID_ONLY_id_is_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, ID_ONLY), Set.of("id"));
+        assertPropsAreFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, ID_ONLY), Set.of("id"));
     }
 
     @Test
     public void strategy_ID_AND_VERSION_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(produceRetrievalModel(SynEntityWithYieldId.class, ID_AND_VERSION), Set.of("id"));
+        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, ID_AND_VERSION), Set.of("id"));
     }
 
     @Test
     public void strategy_ALL_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreNotFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, ALL), Set.of("id"));
+        assertPropsAreNotFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, ALL), Set.of("id"));
     }
 
     @Test
     public void strategy_ALL_INCL_CALC_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreNotFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, ALL_INCL_CALC), Set.of("id"));
+        assertPropsAreNotFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, ALL_INCL_CALC), Set.of("id"));
     }
 
     @Test
     public void strategy_DEFAULT_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreNotFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, DEFAULT), Set.of("id"));
+        assertPropsAreNotFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, DEFAULT), Set.of("id"));
     }
 
     @Test
     public void strategy_KEY_AND_DESC_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreNotFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, KEY_AND_DESC), Set.of("id"));
+        assertPropsAreNotFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, KEY_AND_DESC), Set.of("id"));
     }
 
     @Test
     public void strategy_ID_AND_VERSION_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreNotFetched(produceRetrievalModel(SynEntityWithoutYieldId.class, ID_AND_VERSION), Set.of("id"));
+        assertPropsAreNotFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, ID_AND_VERSION), Set.of("id"));
     }
 
     // END SECTION
 
     @Test
     public void test_all_fetching_of_make() {
-        final IRetrievalModel<TgVehicleMake> fetchModel = produceRetrievalModel(TgVehicleMake.class, ALL);
+        final IRetrievalModel<TgVehicleMake> fetchModel = makeRetrievalModel(TgVehicleMake.class, ALL);
         assertPropsAreFetched(fetchModel, Set.of("key", "desc", "id", "version"));
     }
 
     @Test
     public void test_minimal_fetching_of_make() {
-        final IRetrievalModel<TgVehicleMake> fetchModel = produceRetrievalModel(TgVehicleMake.class, DEFAULT);
+        final IRetrievalModel<TgVehicleMake> fetchModel = makeRetrievalModel(TgVehicleMake.class, DEFAULT);
         assertPropsAreFetched(fetchModel, Set.of("key", "desc", "id", "version"));
     }
 
     @Test
     public void test_id_and_version_fetching_of_make() {
-        final IRetrievalModel<TgVehicleMake> fetchModel = produceRetrievalModel(TgVehicleMake.class, ID_AND_VERSION);
+        final IRetrievalModel<TgVehicleMake> fetchModel = makeRetrievalModel(TgVehicleMake.class, ID_AND_VERSION);
         assertPropsAreFetched(fetchModel, Set.of("id", "version"));
         assertPropsAreProxied(fetchModel, Set.of("key", "desc"));
     }
 
     @Test
     public void test_all_fetching_of_model() {
-        final IRetrievalModel<TgVehicleModel> fetchModel = produceRetrievalModel(TgVehicleModel.class, ALL);
+        final IRetrievalModel<TgVehicleModel> fetchModel = makeRetrievalModel(TgVehicleModel.class, ALL);
         assertPropsAreFetched(fetchModel, Set.of("key", "desc", "id", "version", "make"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("make"), Set.of("id", "version", "key", "desc"));
     }
 
     @Test
     public void test_minimal_fetching_of_model() {
-        final IRetrievalModel<TgVehicleModel> fetchModel = produceRetrievalModel(TgVehicleModel.class, DEFAULT);
+        final IRetrievalModel<TgVehicleModel> fetchModel = makeRetrievalModel(TgVehicleModel.class, DEFAULT);
         assertPropsAreFetched(fetchModel, Set.of("key", "desc", "id", "version", "make"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("make"), Set.of("id"));
         assertPropsAreProxied(fetchModel.getRetrievalModel("make"), Set.of("version", "key", "desc"));
@@ -397,14 +377,14 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Test
     public void test_id_and_version_fetching_of_model() {
-        final IRetrievalModel<TgVehicleModel> fetchModel = produceRetrievalModel(TgVehicleModel.class, ID_AND_VERSION);
+        final IRetrievalModel<TgVehicleModel> fetchModel = makeRetrievalModel(TgVehicleModel.class, ID_AND_VERSION);
         assertPropsAreFetched(fetchModel, Set.of("id", "version"));
         assertPropsAreProxied(fetchModel, Set.of("key", "desc", "make"));
     }
 
     @Test
     public void test_all_fetching_of_fuel_usage() {
-        final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, ALL);
+        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(TgFuelUsage.class, ALL);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "date", "qty", "fuelType"));
 
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
@@ -416,7 +396,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Test
     public void test_minimal_fetching_of_fuel_usage() {
-        final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, DEFAULT);
+        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(TgFuelUsage.class, DEFAULT);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "date", "qty"));
 
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
@@ -429,7 +409,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Test
     public void test_key_and_desc_fetching_of_fuel_usage() {
-        final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, KEY_AND_DESC);
+        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(TgFuelUsage.class, KEY_AND_DESC);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "date"));
 
         assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
@@ -441,7 +421,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Test
     public void test_id_and_version_fetching_of_fuel_usage() {
-        final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(TgFuelUsage.class, ID_AND_VERSION);
+        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(TgFuelUsage.class, ID_AND_VERSION);
         assertPropsAreFetched(fetchModel, Set.of("id", "version"));
         assertPropsAreProxied(fetchModel, Set.of("vehicle", "date", "fuelType", "qty"));
     }
@@ -449,7 +429,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     @Test
     public void test_id_and_version_fetching_of_fuel_usage_with_date_and_qty() {
         final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, ID_AND_VERSION).with("date").with("qty");
-        final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
+        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(fetch);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "date", "qty"));
         assertPropsAreProxied(fetchModel, Set.of("vehicle", "fuelType"));
     }
@@ -457,7 +437,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     @Test
     public void test_minimal_fetching_of_fuel_usage_without_date_and_qty() {
         final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, DEFAULT).without("date").without("qty");
-        final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
+        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(fetch);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "fuelType"));
         assertPropsAreProxied(fetchModel, Set.of("date", "qty"));
 
@@ -472,7 +452,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     @Test
     public void test_id_and_version_fetching_of_fuel_usage_with_vehicle() {
         final fetch<TgFuelUsage> fetch = new fetch<>(TgFuelUsage.class, ID_AND_VERSION).with("vehicle");
-        final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
+        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(fetch);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle"));
         assertPropsAreProxied(fetchModel, Set.of("qty", "date", "fuelType"));
 
@@ -483,7 +463,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Test
     public void test_all_fetching_of_bogie() {
-        final IRetrievalModel<TgBogie> fetchModel = produceRetrievalModel(TgBogie.class, ALL);
+        final IRetrievalModel<TgBogie> fetchModel = makeRetrievalModel(TgBogie.class, ALL);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "key", "desc", "location"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("location"), Set.of("workshop", "wagonSlot"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("location.workshop"),
@@ -500,7 +480,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Test
     public void test_virtual_composite_key_property() {
-        final IRetrievalModel<TgAuthor> fetchModel = produceRetrievalModel(TgAuthor.class, DEFAULT);
+        final IRetrievalModel<TgAuthor> fetchModel = makeRetrievalModel(TgAuthor.class, DEFAULT);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "name", "surname", "patronymic", "dob", "utcDob", "webpage"));
         assertPropsAreFetched(fetchModel.getRetrievalModel("name"), Set.of("id", "version", "key", "desc"));
         assertPropsAreNotFetched(fetchModel, Set.of("pseudonym", "honorarium", "honorarium.amount"));
@@ -508,7 +488,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Test
     public void strategy_DEFAULT_for_synthetic_entity() {
-        final IRetrievalModel<TgAverageFuelUsage> fetchModel = produceRetrievalModel(TgAverageFuelUsage.class, DEFAULT);
+        final IRetrievalModel<TgAverageFuelUsage> fetchModel = makeRetrievalModel(TgAverageFuelUsage.class, DEFAULT);
         assertPropsAreFetched(fetchModel, Set.of("key", "qty", "cost"));
         assertPropsAreNotFetched(fetchModel, Set.of("id", "version"));
     }
@@ -517,8 +497,8 @@ public class FetchModelTest extends AbstractDaoTestCase {
     public void fetch_only_works_with_union_entity_props() {
         final fetch<TgBogie> fetch1 = fetchOnly(TgBogie.class).with("id").with("key").with("location", fetchOnly(TgBogieLocation.class).with("workshop"));
         final fetch<TgBogie> fetch2 = fetch(TgBogie.class).with("location", fetchOnly(TgBogieLocation.class).with("workshop"));
-        final IRetrievalModel<TgBogie> fetchModel1 = produceRetrievalModel(fetch1);
-        final IRetrievalModel<TgBogie> fetchModel2 = produceRetrievalModel(fetch2);
+        final IRetrievalModel<TgBogie> fetchModel1 = makeRetrievalModel(fetch1);
+        final IRetrievalModel<TgBogie> fetchModel2 = makeRetrievalModel(fetch2);
         assertPropsAreFetched(fetchModel1, Set.of("location"));
         assertPropsAreFetched(fetchModel2, Set.of("location"));
     }
@@ -526,7 +506,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     @Test
     public void fetch_only_works() {
         final fetch<TgVehicle> fetch = fetchOnly(TgVehicle.class).with("key").with("station", fetchOnly(TgOrgUnit5.class));
-        final IRetrievalModel<TgVehicle> fetchModel = produceRetrievalModel(fetch);
+        final IRetrievalModel<TgVehicle> fetchModel = makeRetrievalModel(fetch);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "key", "station"));
         assertPropsAreProxied(fetchModel, Set.of("desc", "initDate", "replacedBy", "model", "price", "purchasePrice",
                                                  "active", "leased", "lastMeterReading"));
@@ -539,7 +519,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     @Test
     public void all_fetching_works() {
         final fetch<TgVehicle> fetch = fetchAll(TgVehicle.class).without("desc");
-        final IRetrievalModel<TgVehicle> fetchModel = produceRetrievalModel(fetch);
+        final IRetrievalModel<TgVehicle> fetchModel = makeRetrievalModel(fetch);
         assertPropsAreFetched(fetchModel, Set.of("id", "version", "key", "station", "initDate", "replacedBy", "model",
                                                  "price", "purchasePrice", "active", "leased", "lastMeterReading"));
         assertPropsAreProxied(fetchModel, Set.of("desc"));
@@ -549,21 +529,21 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Test
     public void fetch_id_only_works() {
-        final IRetrievalModel<TgAuthorship> fetchModel = produceRetrievalModel(TgAuthorship.class, ID_ONLY);
+        final IRetrievalModel<TgAuthorship> fetchModel = makeRetrievalModel(TgAuthorship.class, ID_ONLY);
         assertPropsAreFetched(fetchModel, Set.of("id"));
         assertPropsAreProxied(fetchModel, Set.of("version", "title", "author", "year"));
     }
 
     @Test
     public void fetch_id_only_works_for_union_entity_props() {
-        final IRetrievalModel<TgBogie> fetchModel = produceRetrievalModel(TgBogie.class, ID_ONLY);
+        final IRetrievalModel<TgBogie> fetchModel = makeRetrievalModel(TgBogie.class, ID_ONLY);
         assertPropsAreFetched(fetchModel, Set.of("id"));
         assertPropsAreProxied(fetchModel, Set.of("version", "key", "location"));
     }
 
     @Test
     public void fetch_composite_key_of_synthetic_entity() {
-        final IRetrievalModel<TgPublishedYearly> fetchModel = produceRetrievalModel(TgPublishedYearly.class, KEY_AND_DESC);
+        final IRetrievalModel<TgPublishedYearly> fetchModel = makeRetrievalModel(TgPublishedYearly.class, KEY_AND_DESC);
         assertPropsAreFetched(fetchModel, Set.of("author"));
         assertPropsAreProxied(fetchModel, Set.of("qty"));
 
@@ -582,13 +562,13 @@ public class FetchModelTest extends AbstractDaoTestCase {
     public void version_is_never_proxied_for_synthetic_based_on_persistent_entities() {
         final var entityType = TgReVehicleModel.class;
         assertTrue(EntityUtils.isSyntheticBasedOnPersistentEntityType(entityType));
-        assertPropsAreNotProxied(produceRetrievalModel(entityType, NONE), Set.of(VERSION));
-        assertPropsAreNotProxied(produceRetrievalModel(entityType, ID_ONLY), Set.of(VERSION));
-        assertPropsAreNotProxied(produceRetrievalModel(entityType, ID_AND_VERSION), Set.of(VERSION));
-        assertPropsAreNotProxied(produceRetrievalModel(entityType, DEFAULT), Set.of(VERSION));
-        assertPropsAreNotProxied(produceRetrievalModel(entityType, KEY_AND_DESC), Set.of(VERSION));
-        assertPropsAreNotProxied(produceRetrievalModel(entityType, ALL_INCL_CALC), Set.of(VERSION));
-        assertPropsAreNotProxied(produceRetrievalModel(entityType, ALL), Set.of(VERSION));
+        assertPropsAreNotProxied(makeRetrievalModel(entityType, NONE), Set.of(VERSION));
+        assertPropsAreNotProxied(makeRetrievalModel(entityType, ID_ONLY), Set.of(VERSION));
+        assertPropsAreNotProxied(makeRetrievalModel(entityType, ID_AND_VERSION), Set.of(VERSION));
+        assertPropsAreNotProxied(makeRetrievalModel(entityType, DEFAULT), Set.of(VERSION));
+        assertPropsAreNotProxied(makeRetrievalModel(entityType, KEY_AND_DESC), Set.of(VERSION));
+        assertPropsAreNotProxied(makeRetrievalModel(entityType, ALL_INCL_CALC), Set.of(VERSION));
+        assertPropsAreNotProxied(makeRetrievalModel(entityType, ALL), Set.of(VERSION));
     }
 
     @Test
@@ -602,7 +582,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
         assertNotEmpty(critOnlyPropNames);
 
         allFetchCategories()
-                .map(cat -> produceRetrievalModel(entityType, cat))
+                .map(cat -> makeRetrievalModel(entityType, cat))
                 .forEach(model -> assertPropsAreNotFetched(model, critOnlyPropNames));
     }
 
@@ -617,7 +597,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
         assertNotEmpty(critOnlyPropNames);
 
         allFetchCategories()
-                .map(cat -> produceRetrievalModel(entityType, cat, fetch -> fetch.with(critOnlyPropNames)))
+                .map(cat -> makeRetrievalModel(entityType, cat, fetch -> fetch.with(critOnlyPropNames)))
                 .forEach(model -> assertPropsAreFetched(model, critOnlyPropNames));
     }
 
@@ -627,57 +607,57 @@ public class FetchModelTest extends AbstractDaoTestCase {
 
     @Test
     public void strategy_ALL_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertThatThrownBy(() -> produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL))
+        assertThatThrownBy(() -> makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL))
                 .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-        assertThatThrownBy(() -> produceRetrievalModel(Circular_UnionEntity.class, ALL))
+        assertThatThrownBy(() -> makeRetrievalModel(Circular_UnionEntity.class, ALL))
                 .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
     }
 
     @Test
     public void strategy_DEFAULT_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertThatThrownBy(() -> produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, DEFAULT))
+        assertThatThrownBy(() -> makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, DEFAULT))
                 .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-        assertThatThrownBy(() -> produceRetrievalModel(Circular_UnionEntity.class, DEFAULT))
+        assertThatThrownBy(() -> makeRetrievalModel(Circular_UnionEntity.class, DEFAULT))
                 .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
     }
 
     @Test
     public void strategy_ALL_INCL_CALC_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertThatThrownBy(() -> produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL_INCL_CALC))
+        assertThatThrownBy(() -> makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL_INCL_CALC))
                 .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-        assertThatThrownBy(() -> produceRetrievalModel(Circular_UnionEntity.class, ALL_INCL_CALC))
+        assertThatThrownBy(() -> makeRetrievalModel(Circular_UnionEntity.class, ALL_INCL_CALC))
                 .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
     }
 
     @Test
     public void strategy_KEY_AND_DESC_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertThatThrownBy(() -> produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, KEY_AND_DESC))
+        assertThatThrownBy(() -> makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, KEY_AND_DESC))
                 .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-        assertThatThrownBy(() -> produceRetrievalModel(Circular_UnionEntity.class, KEY_AND_DESC))
+        assertThatThrownBy(() -> makeRetrievalModel(Circular_UnionEntity.class, KEY_AND_DESC))
                 .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
     }
 
     @Test
     public void strategy_ID_AND_VERSION_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertPropsAreNotFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_AND_VERSION),
+        assertPropsAreNotFetched(makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_AND_VERSION),
                 Set.of("union"));
-        assertPropsAreNotFetched(produceRetrievalModel(Circular_UnionEntity.class, ID_AND_VERSION),
+        assertPropsAreNotFetched(makeRetrievalModel(Circular_UnionEntity.class, ID_AND_VERSION),
                 Set.of("entity"));
     }
 
     @Test
     public void strategy_ID_ONLY_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertPropsAreNotFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_ONLY),
+        assertPropsAreNotFetched(makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_ONLY),
                 Set.of("union"));
-        assertPropsAreNotFetched(produceRetrievalModel(Circular_UnionEntity.class, ID_ONLY),
+        assertPropsAreNotFetched(makeRetrievalModel(Circular_UnionEntity.class, ID_ONLY),
                 Set.of("entity"));
     }
 
     @Test
     public void strategy_NONE_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertPropsAreNotFetched(produceRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, NONE),
+        assertPropsAreNotFetched(makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, NONE),
                 Set.of("union"));
-        assertPropsAreNotFetched(produceRetrievalModel(Circular_UnionEntity.class, NONE),
+        assertPropsAreNotFetched(makeRetrievalModel(Circular_UnionEntity.class, NONE),
                 Set.of("entity"));
     }
 
@@ -688,12 +668,12 @@ public class FetchModelTest extends AbstractDaoTestCase {
     @Test
     public void union_typed_key_members_are_included_if_key_is_included() {
         assertThat(List.of(ALL_INCL_CALC, ALL, DEFAULT, KEY_AND_DESC))
-                .allSatisfy(cat -> assertPropsAreFetched(produceRetrievalModel(UnionEntityDetails.class, cat),
+                .allSatisfy(cat -> assertPropsAreFetched(makeRetrievalModel(UnionEntityDetails.class, cat),
                                                          Set.of(UnionEntityDetails.Property.serial, UnionEntityDetails.Property.union)));
-        assertPropsAreFetched(produceRetrievalModel(fetchNone(UnionEntityDetails.class).with(KEY)),
+        assertPropsAreFetched(makeRetrievalModel(fetchNone(UnionEntityDetails.class).with(KEY)),
                               Set.of(UnionEntityDetails.Property.serial, UnionEntityDetails.Property.union));
         assertThat(List.of(ID_ONLY, ID_AND_VERSION, NONE))
-                .allSatisfy(cat -> assertPropsAreNotFetched(produceRetrievalModel(UnionEntityDetails.class, cat),
+                .allSatisfy(cat -> assertPropsAreNotFetched(makeRetrievalModel(UnionEntityDetails.class, cat),
                                                             Set.of(UnionEntityDetails.Property.serial, UnionEntityDetails.Property.union)));
     }
 
@@ -724,7 +704,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     private void _union_members_are_included_with_DEFAULT_category(final FetchCategory category) {
         final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
         assertThat(entityMetadata).matches(EntityMetadata::isUnion);
-        final var retrievalModel = produceRetrievalModel(UnionEntity.class, category);
+        final var retrievalModel = makeRetrievalModel(UnionEntity.class, category);
         assertThat(List.of(UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo))
                 .allSatisfy(prop -> assertThat(retrievalModel.getRetrievalModelOpt(prop))
                         .get()
@@ -752,7 +732,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
     private void _union_members_are_not_included(final FetchCategory category) {
         final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
         assertThat(entityMetadata).matches(EntityMetadata::isUnion);
-        final var retrievalModel = produceRetrievalModel(UnionEntity.class, category);
+        final var retrievalModel = makeRetrievalModel(UnionEntity.class, category);
         assertPropsAreNotFetched(retrievalModel, Set.of(UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo));
     }
 
@@ -779,7 +759,7 @@ public class FetchModelTest extends AbstractDaoTestCase {
         final var entityMetadata = domainMetadata.forEntity(EntityWithRichText.class);
         assertTrue(entityMetadata.hasProperty(DESC));
         assertTrue(entityMetadata.property(DESC).isCalculated());
-        assertPropsAreFetched(produceRetrievalModel(EntityWithRichText.class, category),
+        assertPropsAreFetched(makeRetrievalModel(EntityWithRichText.class, category),
                               Set.of(DESC));
     }
 
