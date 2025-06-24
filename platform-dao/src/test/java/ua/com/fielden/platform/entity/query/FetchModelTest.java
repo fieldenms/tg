@@ -37,36 +37,6 @@ public class FetchModelTest extends AbstractDaoTestCase implements IRetrievalMod
 
     private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
 
-    private static <T extends AbstractEntity<?>> void assertPropsAreFetched(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> props) {
-        for (final var propName : props) {
-            assertTrue(format("Property [%s] should be contained within fetch model:%n%s", propName, fetchModel), fetchModel.containsProp(propName.toString()));
-        }
-    }
-
-    private static <T extends AbstractEntity<?>> void assertPropsAreNotFetched(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> props) {
-        for (final var prop : props) {
-            assertFalse(format("Property [%s] should not be contained within fetch model:%n%s", prop, fetchModel),
-                        fetchModel.containsProp(prop.toString()));
-        }
-    }
-
-    private static <T extends AbstractEntity<?>> void assertPropsAreProxied(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> proxiedProps) {
-        for (final var propName : proxiedProps) {
-            assertTrue(format("Property [%s] should be proxied within fetch model:%n%s", propName, fetchModel), fetchModel.containsProxy(propName.toString()));
-        }
-    }
-
-    private static <T extends AbstractEntity<?>> void assertPropsAreNotProxied(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> props) {
-        for (final var prop : props) {
-            assertFalse(format("Property [%s] should not be proxied within fetch model:%n%s", prop, fetchModel),
-                        fetchModel.containsProxy(prop.toString()));
-        }
-    }
-
-    private static Stream<FetchCategory> allFetchCategories() {
-        return Arrays.stream(FetchCategory.values());
-    }
-
     /*----------------------------------------------------------------------------
      | Fetching of composite key members
      -----------------------------------------------------------------------------*/
@@ -794,6 +764,36 @@ public class FetchModelTest extends AbstractDaoTestCase implements IRetrievalMod
             }
             return true;
         }
+    }
+
+    private static <T extends AbstractEntity<?>> void assertPropsAreFetched(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> props) {
+        for (final var propName : props) {
+            assertTrue(format("Property [%s] should be contained within fetch model:%n%s", propName, fetchModel), fetchModel.containsProp(propName.toString()));
+        }
+    }
+
+    private static <T extends AbstractEntity<?>> void assertPropsAreNotFetched(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> props) {
+        for (final var prop : props) {
+            assertFalse(format("Property [%s] should not be contained within fetch model:%n%s", prop, fetchModel),
+                        fetchModel.containsProp(prop.toString()));
+        }
+    }
+
+    private static <T extends AbstractEntity<?>> void assertPropsAreProxied(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> proxiedProps) {
+        for (final var propName : proxiedProps) {
+            assertTrue(format("Property [%s] should be proxied within fetch model:%n%s", propName, fetchModel), fetchModel.containsProxy(propName.toString()));
+        }
+    }
+
+    private static <T extends AbstractEntity<?>> void assertPropsAreNotProxied(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> props) {
+        for (final var prop : props) {
+            assertFalse(format("Property [%s] should not be proxied within fetch model:%n%s", prop, fetchModel),
+                        fetchModel.containsProxy(prop.toString()));
+        }
+    }
+
+    private static Stream<FetchCategory> allFetchCategories() {
+        return Arrays.stream(FetchCategory.values());
     }
 
 }
