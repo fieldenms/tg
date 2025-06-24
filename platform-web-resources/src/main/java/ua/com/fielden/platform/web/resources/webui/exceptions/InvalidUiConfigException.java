@@ -2,14 +2,9 @@ package ua.com.fielden.platform.web.resources.webui.exceptions;
 
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 
-/**
- * Indicates a problem in Web UI client configuration.
- *
- * @author TG Team
- *
- */
+/// Indicates a problem in Web UI client configuration.
+///
 public class InvalidUiConfigException extends AbstractPlatformRuntimeException {
-    private static final long serialVersionUID = 1L;
 
     public InvalidUiConfigException(final String msg) {
         super(msg);
