@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.master.MasterInfo;
 
 import java.util.*;
@@ -47,6 +47,10 @@ public class EntityType extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Persistent with audit data?", desc = "Indicates whether the associated entity type represents a persistent entity with audit data.")
     private Boolean _persistentWithAudit;
+
+    @IsProperty
+    @Title(value = "Is audited?", desc = "Indicates whether the associated entity type is annotated with Audited annotation")
+    private Boolean _audited;
 
     @IsProperty
     @Title(value = "Should Display Description?", desc = "Indicates whether editors for values of this type should display values descriptions")
@@ -171,6 +175,16 @@ public class EntityType extends AbstractEntity<String> {
     @Observable
     public EntityType set_persistentWithAudit(final Boolean _persistentWithAudit) {
         this._persistentWithAudit = _persistentWithAudit;
+        return this;
+    }
+
+    public Boolean get_audited() {
+        return _audited;
+    }
+
+    @Observable
+    public EntityType set_audited(final Boolean _audited) {
+        this._audited = _audited;
         return this;
     }
 

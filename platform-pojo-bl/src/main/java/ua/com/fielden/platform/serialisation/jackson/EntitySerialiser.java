@@ -26,6 +26,7 @@ import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isInterface;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.audit.AuditUtils.isAudited;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.shortCollectionKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -94,6 +95,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         // let's inform the client of the type's persistence nature with audit data
         if (isPersistentWithAuditData(type)) {
             entityTypeInfo.set_persistentWithAudit(true);
+        }
+
+        // let's inform the client of the type's audited nature
+        if (isAudited(type)) {
+            entityTypeInfo.set_audited(true);
         }
 
         if (IContinuationData.class.isAssignableFrom(type)) {

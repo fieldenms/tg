@@ -37,19 +37,42 @@ const TgEntityMasterTemplateBehaviorImpl = {
             }
         };
 
-        self._tgOpenPersistentEntityInfoMasterAttrs = {
-            entityType: "ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction", 
-            currentState: 'EDIT', 
-            centreUuid: self.uuid,
-            prefDim: {
-                width: function() {
-                    return 1048
-                },
-                height: function() {
-                    return 610
-                },
-                widthUnit: 'px',
-                heightUnit: 'px'
+        self._getInfoMasterUri = function (_currEntity) {
+            if (_currEntity && _currEntity.type().isAudited()) {
+                return '/master_ui/ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction';
+            }
+            return '/master_ui/ua.com.fielden.platform.entity.PersistentEntityInfo';
+        }
+
+        self._getInfoMasterElementName = function (_currEntity) {
+            if (_currEntity && _currEntity.type().isAudited()) {
+                return 'tg-OpenPersistentEntityInfoAction-master';
+            }
+            return 'tg-PersistentEntityInfo-master'
+        }
+
+        self._getInfoMasterAttrs = function (_currEntity) {
+            if (_currEntity && _currEntity.type().isAudited()) {
+                return {
+                    entityType: "ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction", 
+                    currentState: 'EDIT', 
+                    centreUuid: self.uuid,
+                    prefDim: {
+                        width: function() {
+                            return 1048
+                        },
+                        height: function() {
+                            return 610
+                        },
+                        widthUnit: 'px',
+                        heightUnit: 'px'
+                    }
+                };
+            }
+            return {
+                entityType: "ua.com.fielden.platform.entity.PersistentEntityInfo", 
+                currentState: 'EDIT', 
+                centreUuid: self.uuid,
             }
         };
 
