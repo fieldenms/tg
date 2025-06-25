@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.query;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.entity.query.test_entities.Circular_EntityWithCompositeKeyMemberUnionEntity;
@@ -26,7 +25,6 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
@@ -495,59 +493,39 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
      -----------------------------------------------------------------------------*/
 
     @Test
-    public void strategy_ALL_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertThatThrownBy(() -> makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL))
-                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-        assertThatThrownBy(() -> makeRetrievalModel(Circular_UnionEntity.class, ALL))
-                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
+    public void retrieval_model_that_includes_key_for_recursive_composite_key_structure_with_union_typed_key_member_is_truncated() {
+        assertThat(List.of(ALL, ALL_INCL_CALC, KEY_AND_DESC))
+                .allSatisfy(cat -> assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, cat)
+                        .subModel("union", a -> a.contains("entity"))
+                        .subModel("union.entity", a -> a.contains("union"))
+                        .subModel("union.entity.union", a -> a.equalsModel(ID_ONLY)));
+
+        assertThat(List.of(DEFAULT))
+                .allSatisfy(cat -> assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, cat)
+                        .subModel("union", a -> a.contains("entity"))
+                        .subModel("union.entity", a -> a.equalsModel(ID_ONLY)));
+
+        assertThat(List.of(ALL))
+                .allSatisfy(cat -> assertRetrievalModel(Circular_UnionEntity.class, cat)
+                        .subModel("entity", a -> a.contains("union"))
+                        .subModel("entity.union", a -> a.equalsModel(ID_ONLY)));
+
+        assertThat(List.of(ALL_INCL_CALC, KEY_AND_DESC, DEFAULT))
+                .allSatisfy(cat -> assertRetrievalModel(Circular_UnionEntity.class, cat)
+                        .subModel("entity", a -> a.contains("union"))
+                        .subModel("entity.union", a -> a.contains("entity"))
+                        .subModel("entity.union.entity", a -> a.equalsModel(ID_ONLY)));
     }
 
     @Test
-    public void strategy_DEFAULT_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertThatThrownBy(() -> makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, DEFAULT))
-                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-        assertThatThrownBy(() -> makeRetrievalModel(Circular_UnionEntity.class, DEFAULT))
-                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-    }
+    public void retrieval_model_that_does_not_include_key_can_be_constructed_for_recursive_composite_key_structure_with_union_typed_key_member() {
+        assertThat(List.of(ID_ONLY, ID_AND_VERSION, NONE))
+                .allSatisfy(cat -> assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, cat)
+                        .notContains("union"));
 
-    @Test
-    public void strategy_ALL_INCL_CALC_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertThatThrownBy(() -> makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ALL_INCL_CALC))
-                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-        assertThatThrownBy(() -> makeRetrievalModel(Circular_UnionEntity.class, ALL_INCL_CALC))
-                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-    }
-
-    @Test
-    public void strategy_KEY_AND_DESC_cannot_be_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertThatThrownBy(() -> makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, KEY_AND_DESC))
-                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-        assertThatThrownBy(() -> makeRetrievalModel(Circular_UnionEntity.class, KEY_AND_DESC))
-                .isInstanceOf(EntityRetrievalModelException.GraphCycle.class);
-    }
-
-    @Test
-    public void strategy_ID_AND_VERSION_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_AND_VERSION)
-                .notContains("union");
-        assertRetrievalModel(Circular_UnionEntity.class, ID_AND_VERSION)
-                .notContains("entity");
-    }
-
-    @Test
-    public void strategy_ID_ONLY_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_ONLY)
-                .notContains("union");
-        assertRetrievalModel(Circular_UnionEntity.class, ID_ONLY)
-                .notContains("entity");
-    }
-
-    @Test
-    public void strategy_NONE_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, NONE)
-                .notContains("union");
-        assertRetrievalModel(Circular_UnionEntity.class, NONE)
-                .notContains("entity");
+        assertThat(List.of(ID_ONLY, ID_AND_VERSION, NONE))
+                .allSatisfy(cat -> assertRetrievalModel(Circular_UnionEntity.class, cat)
+                        .notContains("entity"));
     }
 
     /*----------------------------------------------------------------------------

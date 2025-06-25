@@ -4,13 +4,11 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.*;
-import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 
@@ -19,10 +17,17 @@ import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 public class RetrievalModelRecursiveKeyTest extends AbstractDaoTestCase implements IRetrievalModelTestUtils {
 
     @Test
-    public void retrieval_model_that_includes_key_cannot_be_constructed_for_recursive_key_structure() {
-        assertThat(List.of(ALL, ALL_INCL_CALC, KEY_AND_DESC, DEFAULT))
-                .allSatisfy(cat -> assertThatThrownBy(() -> makeRetrievalModel(A.class, cat))
-                        .isInstanceOf(EntityRetrievalModelException.GraphCycle.class));
+    public void retrieval_model_that_includes_key_for_recursive_key_structure_is_truncated() {
+        assertThat(List.of(ALL, ALL_INCL_CALC, KEY_AND_DESC))
+                .allSatisfy(cat -> assertRetrievalModel(A.class, cat)
+                        .subModel("b", a -> a.contains("a"))
+                        .subModel("b.a", a -> a.contains("b"))
+                        .subModel("b.a.b", a -> a.equalsModel(ID_ONLY)));
+
+        assertThat(List.of(DEFAULT))
+                .allSatisfy(cat -> assertRetrievalModel(A.class, cat)
+                        .subModel("b", a -> a.contains("a"))
+                        .subModel("b.a", a -> a.equalsModel(ID_ONLY)));
     }
 
     @Test

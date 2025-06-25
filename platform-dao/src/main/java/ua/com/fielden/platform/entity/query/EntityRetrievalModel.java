@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.entity.query;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -24,15 +24,18 @@ import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.joining;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
@@ -104,10 +107,12 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     public static final String ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find property [%s] to be excluded from fetched properties of entity type [%s].";
     public static final String ERR_NON_EXISTING_PROPERTY = "Trying to fetch entity [%s] with non-existing property [%s].";
 
-    private static final String ERR_GRAPH_CYCLE = """
-      Graph cycle detected. Retrieval model cannot be constructed for an entity graph that contains cycles.
+    private static final String WARN_GRAPH_CYCLE = """
+      Cycle detected in entity graph. Retrieval model will be truncated.
       Retrieval models stack (first element is the top):
       %s""";
+
+    private static final Logger LOGGER = getLogger();
 
     private final fetch<T> originalFetch;
     /** Indicates whether this fetch is the top-most (graph root) or a nested one (subgraph). */
@@ -524,11 +529,18 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
             final var stackElement = new StackElement(propName, fetchModel);
 
+            // If a cycle is detected, override `fetchModel` with an ID_ONLY one.
+            // This is a form of partial support for cycles.
             if (stack.stream().anyMatch(elt -> elt.fetch().equals(fetchModel))) {
-                final var stackString = StreamUtils.prepend(stackElement, stack.stream())
-                        .map(elt -> "%s: %s".formatted(elt.property(), elt.fetch()))
-                        .collect(joining("\n"));
-                throw new EntityRetrievalModelException.GraphCycle(ERR_GRAPH_CYCLE.formatted(stackString));
+                LOGGER.warn(() -> format(WARN_GRAPH_CYCLE,
+                                         StreamUtils.prepend(stackElement, stack.stream())
+                                                 .map(elt -> format("%s: (%s, %s)",
+                                                                    elt.property(),
+                                                                    elt.fetch().getEntityType().getSimpleName(),
+                                                                    elt.fetch().getFetchCategory()))
+                                                 .collect(joining("\n"))));
+                with(propName, new fetch<>(fetchModel.getEntityType(), ID_ONLY));
+                return;
             }
 
             final PropertyMetadata pm = entityMetadata.property(propName);
