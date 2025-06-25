@@ -30,7 +30,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
-import { isExternalURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
+import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 let screenWidth = window.screen.availWidth;
@@ -499,8 +499,7 @@ Polymer({
      * @param {Object} source 
      */
     _animationFinished: function (e, detail, source) {
-        const target = e.target || e.srcElement;
-        if (target === this.$.pages){
+        if (e.target === this.$.pages){
             this._selectedModule = this._routeData.moduleName;
             if (this._routeData.moduleName === 'master') {
                 this._selectedSubmodule = this._subroute.path;
@@ -732,7 +731,7 @@ Polymer({
      * @param {Event} e - click event
      */
     _checkURL: function (e) {
-        const linkNode = e.composedPath().find(n => n.tagName && n.tagName === 'A' && isExternalURL(n.getAttribute('href')));
+        const linkNode = e.composedPath().find(n => n.tagName && n.tagName === 'A' && isExternalURL(processURL(n.getAttribute('href'))));
 
         if (linkNode) {
             tearDownEvent(e);
