@@ -22,6 +22,7 @@ public class OpenPersistentEntityInfoActionProducer extends AbstractProducerForO
             final AbstractEntity<?> currEntity = currentEntity();
             PersistentEntityInfoCo infoEntityCo = co(PersistentEntityInfo.class);
             openAction.setKey(infoEntityCo.initEntityWith(currEntity, infoEntityCo.new_()));
+            openAction.setSectionTitle(openAction.getKey().getEntityTitle());
             return openAction;
         }
         // This happens when the entity master gets closed.
