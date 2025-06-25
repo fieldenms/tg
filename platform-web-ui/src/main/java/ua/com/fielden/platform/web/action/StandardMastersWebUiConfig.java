@@ -178,7 +178,7 @@ public class StandardMastersWebUiConfig {
                     .withView(mainMaster)
                 .also()
                 .addMenuItem(AuditCompoundMenuItem.class)
-                    .icon("icons:build")
+                    .icon("icons:view-module")
                     .shortDesc(AUDIT)
                     .longDesc("Audit data for persistent entity info")
                     .withPolymorphicCenter()
