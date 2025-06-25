@@ -390,6 +390,9 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
 
     @Test
     public void fetch_synthetic_one_to_one_entity() {
+        assertRetrievalModel(TgAverageFuelUsage.class, ALL_INCL_CALC)
+                .containsExactly(ID, KEY, "qty", "cost", "cost.amount")
+                .proxiesExactly();
         assertRetrievalModel(TgAverageFuelUsage.class, ALL)
                 // TODO: Should contain ID.
                 .containsExactly(KEY, "qty", "cost", "cost.amount")
