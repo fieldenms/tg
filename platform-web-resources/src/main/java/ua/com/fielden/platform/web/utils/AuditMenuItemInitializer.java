@@ -23,11 +23,11 @@ public class AuditMenuItemInitializer implements IAuditMenuItemInitializer {
     public AuditCompoundMenuItem init(final Class<? extends AbstractEntity<?>> auditedType, final AuditCompoundMenuItem menuItem) {
         if (AuditUtils.isAudited(auditedType)) {
             var miType =  auditConfigFactory.miTypeForEmbeddedCentre(auditedType);
-            var embeddedCentre = webUiConfig.getEmbeddedCentres().get(miType);
-            if (embeddedCentre != null) {
+            var centre = webUiConfig.getCentres().get(miType);
+            if (centre != null) {
                 menuItem.setMenuItemTypeForCentre(miType)
-                        .setShouldEnforcePostSaveRefresh(embeddedCentre._1.shouldEnforcePostSaveRefresh())
-                        .setEventSourceClass(embeddedCentre._1.eventSourceClass().map(Class::getName).orElse(""));
+                        .setShouldEnforcePostSaveRefresh(centre.shouldEnforcePostSaveRefresh())
+                        .setEventSourceClass(centre.eventSourceClass().map(Class::getName).orElse(""));
             }
         }
         return menuItem;
