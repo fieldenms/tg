@@ -18,18 +18,21 @@ import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import java.util.*;
-import java.util.function.BiPredicate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
+import static java.util.stream.Collectors.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertNotEmpty;
 
@@ -77,15 +80,15 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     }
 
     private void _composite_key_members_are_included_recursively(final FetchCategory category) {
-        final var fetchModel = makeRetrievalModel(TgAuthorship.class, category);
-        assertPropsAreFetched(fetchModel, Set.of("title", "author"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("author"), Set.of("name", "surname", "patronymic"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("author.name"), Set.of("key"));
+        assertRetrievalModel(TgAuthorship.class, category)
+                .contains("title", "author")
+                .subModel("author", a -> a.contains("name", "surname", "patronymic"))
+                .subModel("author.name", a -> a.contains("key"));
     }
 
     private void _composite_key_members_are_not_included(final FetchCategory category) {
-        final var fetchModel = makeRetrievalModel(TgAuthorship.class, category);
-        assertPropsAreNotFetched(fetchModel, Set.of("author", "title"));
+        assertRetrievalModel(TgAuthorship.class, category)
+                .notContains("author", "title");
     }
 
     /*----------------------------------------------------------------------------
@@ -127,16 +130,16 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
         final var entityType = TgFuelUsage.class;
         assertTrue(domainMetadata.forProperty(entityType, "key").type().isCompositeKey());
 
-        final var fetchModel = makeRetrievalModel(fetchNone(entityType).with("key"));
-        assertPropsAreNotFetched(fetchModel, Set.of("key"));
+        assertRetrievalModel(entityType, NONE, f -> f.with("key"))
+                .notContains("key");
     }
 
     private void _composite_key_itself_is_not_included(
             final Class<? extends AbstractEntity<DynamicEntityKey>> entityType,
             final FetchCategory category)
     {
-        final var fetchModel = makeRetrievalModel(entityType, category);
-        assertPropsAreNotFetched(fetchModel, Set.of("key"));
+        assertRetrievalModel(entityType, category)
+                .notContains("key");
     }
 
     /*----------------------------------------------------------------------------
@@ -147,25 +150,22 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     public void simple_entity_typed_key_is_implicitly_assigned_a_sub_fetch_model() {
         assertThat(List.of(ALL, ALL_INCL_CALC, DEFAULT, KEY_AND_DESC))
                 .allSatisfy(category -> _simple_entity_typed_key_is_implicitly_assigned_a_sub_fetch_model(
-                        TgVehicleFinDetails.class, category,
-                        model -> assertThat(model)
-                                .usingEquals(RetrievalModelTest::areEqualByProperties)
-                                .isEqualTo(makeRetrievalModel(TgVehicle.class, KEY_AND_DESC))));
+                        TgVehicleFinDetails.class, category, a -> a.equalsModel(KEY_AND_DESC)));
 
         assertThat(List.of(ID_AND_VERSION, ID_ONLY))
-                .allSatisfy(category -> assertPropsAreNotFetched(makeRetrievalModel(TgVehicleFinDetails.class, category), Set.of(KEY)));
+                .allSatisfy(category -> assertRetrievalModel(TgVehicleFinDetails.class, category).notContains(KEY));
     }
 
     private void _simple_entity_typed_key_is_implicitly_assigned_a_sub_fetch_model(
             final Class<? extends AbstractEntity<? extends AbstractEntity<?>>> entityType,
             final FetchCategory category,
-            final Consumer<? super IRetrievalModel<?>> assertSubFetchModel)
+            final Consumer<RetrievalModelAssert<IRetrievalModel<?>, ?>> assertSubModel)
     {
         assertTrue(domainMetadata.forProperty(entityType, KEY).type().isEntity());
 
-        final var fetchModel = makeRetrievalModel(entityType, category);
-        assertPropsAreFetched(fetchModel, Set.of(KEY));
-        assertSubFetchModel.accept(fetchModel.getRetrievalModel(KEY));
+        assertRetrievalModel(entityType, category)
+                .contains(KEY)
+                .subModel(KEY, assertSubModel);
     }
 
     /*----------------------------------------------------------------------------
@@ -206,42 +206,44 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
             final Class<? extends AbstractEntity<?>> entityType,
             final FetchCategory category)
     {
-        final var fetchModel = makeRetrievalModel(entityType, category);
-        domainMetadata.forEntity(entityType).properties().stream()
-                .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
-                .forEach(prop -> {
-                    if (prop.type().isComponent()) {
-                        assertPropsAreFetched(fetchModel, Set.of(prop.name()));
-                    } else {
-                        assertPropsAreNotFetched(fetchModel, Set.of(prop.name()));
-                    }
-                });
+        final var partitions = domainMetadata.forEntity(entityType)
+                .properties()
+                .stream()
+                .map(PropertyMetadata::asCalculated)
+                .flatMap(Optional::stream)
+                .collect(partitioningBy(prop -> prop.type().isComponent(),
+                                        mapping(PropertyMetadata::name, toList())));
+        final var componentTypedCalcProps = partitions.get(true);
+        final var otherTypedCalcProps = partitions.get(false);
+
+        assertRetrievalModel(entityType, category)
+                .contains(componentTypedCalcProps)
+                .notContains(otherTypedCalcProps);
     }
 
     private void _all_calculated_properties_are_included(
             final Class<? extends AbstractEntity<?>> entityType,
             final FetchCategory category)
     {
-        final var fetchModel = makeRetrievalModel(entityType, category);
         final var calculatedProps = domainMetadata.forEntity(entityType).properties().stream()
                 .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
                 // Composite key itself is never included. See the documentation of EntityRetrievalModel.
                 .filter(prop -> !prop.type().isCompositeKey())
                 .map(PropertyMetadata::name)
                 .toList();
-        assertPropsAreFetched(fetchModel, calculatedProps);
+        assertRetrievalModel(entityType, category)
+                .contains(calculatedProps);
     }
 
     private void _all_calculated_properties_are_excluded(
             final Class<? extends AbstractEntity<?>> entityType,
             final FetchCategory category)
     {
-        final var fetchModel = makeRetrievalModel(entityType, category);
         final var calculatedProps = domainMetadata.forEntity(entityType).properties().stream()
                 .map(PropertyMetadata::asCalculated).flatMap(Optional::stream)
                 .map(PropertyMetadata::name)
                 .toList();
-        assertPropsAreNotFetched(fetchModel, calculatedProps);
+        assertRetrievalModel(entityType, category).notContains(calculatedProps);
     }
 
     /*----------------------------------------------------------------------------
@@ -250,295 +252,194 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
 
     @Test
     public void strategy_ALL_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, ALL), Set.of("id"));
+        assertRetrievalModel(SynEntityWithYieldId.class, ALL).contains(ID);
     }
 
     @Test
     public void strategy_ALL_INCL_CALC_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, ALL_INCL_CALC), Set.of("id"));
+        assertRetrievalModel(SynEntityWithYieldId.class, ALL_INCL_CALC).contains("id");
     }
 
     @Test
     public void strategy_DEFAULT_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, DEFAULT), Set.of("id"));
+        assertRetrievalModel(SynEntityWithYieldId.class, DEFAULT).contains("id");
     }
 
     @Test
     public void strategy_KEY_AND_DESC_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, KEY_AND_DESC), Set.of("id"));
+        assertRetrievalModel(SynEntityWithYieldId.class, KEY_AND_DESC).contains("id");
     }
 
     @Test
     public void strategy_ID_ONLY_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, ID_ONLY), Set.of("id"));
+        assertRetrievalModel(SynEntityWithYieldId.class, ID_ONLY).contains("id");
     }
 
     // ID_ONLY uncoditionally includes ID
     @Test
     public void strategy_ID_ONLY_id_is_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, ID_ONLY), Set.of("id"));
+        assertRetrievalModel(SynEntityWithoutYieldId.class, ID_ONLY).contains("id");
     }
 
     @Test
     public void strategy_ID_AND_VERSION_id_is_included_if_synthetic_model_yields_into_it() {
-        assertPropsAreFetched(makeRetrievalModel(SynEntityWithYieldId.class, ID_AND_VERSION), Set.of("id"));
+        assertRetrievalModel(SynEntityWithYieldId.class, ID_AND_VERSION).contains("id");
     }
 
     @Test
     public void strategy_ALL_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreNotFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, ALL), Set.of("id"));
+        assertRetrievalModel(SynEntityWithoutYieldId.class, ALL).notContains("id");
     }
 
     @Test
     public void strategy_ALL_INCL_CALC_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreNotFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, ALL_INCL_CALC), Set.of("id"));
+        assertRetrievalModel(SynEntityWithoutYieldId.class, ALL_INCL_CALC).notContains("id");
     }
 
     @Test
     public void strategy_DEFAULT_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreNotFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, DEFAULT), Set.of("id"));
+        assertRetrievalModel(SynEntityWithoutYieldId.class, DEFAULT).notContains("id");
     }
 
     @Test
     public void strategy_KEY_AND_DESC_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreNotFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, KEY_AND_DESC), Set.of("id"));
+        assertRetrievalModel(SynEntityWithoutYieldId.class, KEY_AND_DESC).notContains("id");
     }
 
     @Test
     public void strategy_ID_AND_VERSION_id_is_not_included_if_synthetic_model_does_not_yield_into_it() {
-        assertPropsAreNotFetched(makeRetrievalModel(SynEntityWithoutYieldId.class, ID_AND_VERSION), Set.of("id"));
+        assertRetrievalModel(SynEntityWithoutYieldId.class, ID_AND_VERSION).notContains("id");
+    }
+
+    /*----------------------------------------------------------------------------
+     | Applying specific fetch categories to specific entity types
+     -----------------------------------------------------------------------------*/
+
+    @Test
+    public void fetch_TgVehicleMake() {
+        assertThat(List.of(ALL_INCL_CALC, ALL, DEFAULT, KEY_AND_DESC))
+                .allSatisfy(cat -> assertRetrievalModel(TgVehicleMake.class, cat)
+                        .containsExactly(KEY, DESC, ID, VERSION));
+        assertRetrievalModel(TgVehicleMake.class, ID_AND_VERSION)
+                .containsExactly(ID, VERSION)
+                .proxiesExactly(KEY, DESC);
+        assertRetrievalModel(TgVehicleMake.class, ID_ONLY)
+                .containsExactly(ID)
+                .proxiesExactly(KEY, DESC, VERSION);
+        assertRetrievalModel(TgVehicleMake.class, NONE)
+                .containsExactly()
+                .proxiesExactly(KEY, DESC, VERSION);
+    }
+
+    @Test
+    public void fetch_TgVehicleModel() {
+        assertRetrievalModel(TgVehicleModel.class, ALL_INCL_CALC)
+                .containsExactly(KEY, DESC, ID, VERSION, "make", "makeModelsCount")
+                .subModel("make", a -> a.equalsModel(DEFAULT));
+        assertRetrievalModel(TgVehicleModel.class, ALL)
+                .containsExactly(KEY, DESC, ID, VERSION, "make")
+                .subModel("make", a -> a.equalsModel(DEFAULT))
+                .proxiesExactly("makeModelsCount");
+        assertRetrievalModel(TgVehicleModel.class, DEFAULT)
+                .containsExactly(KEY, DESC, ID, VERSION, "make")
+                .subModel("make", a -> a.equalsModel(ID_ONLY))
+                .proxiesExactly("makeModelsCount");
+    }
+
+    @Test
+    public void fetch_TgFuelUsage() {
+        assertRetrievalModel(TgFuelUsage.class, ALL)
+                .containsExactly(ID, VERSION, "vehicle", "date", "qty", "pricePerLitre", "pricePerLitre.amount", "fuelType")
+                .subModel("vehicle", a -> a.equalsModel(DEFAULT))
+                .subModel("fuelType", a -> a.equalsModel(DEFAULT));
+        assertRetrievalModel(TgFuelUsage.class, DEFAULT)
+                .containsExactly(ID, VERSION, "vehicle", "date", "qty", "pricePerLitre", "pricePerLitre.amount", "fuelType")
+                .subModel("vehicle", a -> a.equalsModel(DEFAULT))
+                .subModel("fuelType", a -> a.equalsModel(ID_ONLY));
+        assertRetrievalModel(TgFuelUsage.class, KEY_AND_DESC)
+                .containsExactly(ID, VERSION, "vehicle", "date")
+                .proxiesExactly("qty", "pricePerLitre", "fuelType")
+                .subModel("vehicle", a -> a.equalsModel(DEFAULT));
+        assertRetrievalModel(TgFuelUsage.class, ID_AND_VERSION, f -> f.with("vehicle", "qty"))
+                .containsExactly(ID, VERSION, "vehicle", "qty")
+                .proxiesExactly("date", "pricePerLitre", "fuelType")
+                .subModel("vehicle", a -> a.equalsModel(DEFAULT));
+        assertRetrievalModel(TgFuelUsage.class, DEFAULT, f -> f.without("vehicle", "qty"))
+                .containsExactly(ID, VERSION, "date", "pricePerLitre", "pricePerLitre.amount", "fuelType")
+                .proxiesExactly("vehicle", "qty");
+    }
+
+    @Test
+    public void fetch_TgBogie() {
+        assertRetrievalModel(TgBogie.class, ALL)
+                .containsExactly(ID, VERSION, KEY, DESC,
+                                 LAST_UPDATED_DATE, LAST_UPDATED_BY, LAST_UPDATED_TRANSACTION_GUID,
+                                 CREATED_DATE, CREATED_BY, CREATED_TRANSACTION_GUID,
+                                 ACTIVE, REF_COUNT,
+                                 "location", "bogieClass")
+                .subModel("location", a -> a.containsExactly(DESC, "wagonSlot", "workshop"))
+                .subModel("location.wagonSlot", a -> a.equalsModel(DEFAULT))
+                .subModel("location.workshop", a -> a.equalsModel(DEFAULT))
+                .subModel("bogieClass", a -> a.equalsModel(DEFAULT));
+
+        assertRetrievalModel(TgBogie.class, ID_ONLY, f -> f.with("location", fetchNone(TgBogieLocation.class).with("wagonSlot")))
+                .containsExactly(ID, "location")
+                .subModel("location", a -> a.containsExactly("wagonSlot").proxiesExactly("workshop", "fuelType", "desc"))
+                .subModel("location.wagonSlot", a -> a.equalsModel(DEFAULT));
+    }
+
+    @Test
+    public void fetch_synthetic_one_to_one_entity() {
+        assertRetrievalModel(TgAverageFuelUsage.class, ALL)
+                // TODO: Should contain ID.
+                .containsExactly(KEY, "qty", "cost", "cost.amount")
+                .proxiesExactly();
+        assertRetrievalModel(TgAverageFuelUsage.class, DEFAULT)
+                // TODO: Should contain ID.
+                .containsExactly(KEY, "qty", "cost", "cost.amount")
+                .proxiesExactly();
+        assertRetrievalModel(TgAverageFuelUsage.class, KEY_AND_DESC)
+                .containsExactly(ID, KEY)
+                .proxiesExactly("qty", "cost");
+        assertRetrievalModel(TgAverageFuelUsage.class, ID_AND_VERSION)
+                .containsExactly(ID)
+                .proxiesExactly("qty", "cost");
+        assertRetrievalModel(TgAverageFuelUsage.class, ID_ONLY)
+                .containsExactly(ID)
+                .proxiesExactly("qty", "cost");
     }
 
     // END SECTION
 
     @Test
-    public void test_all_fetching_of_make() {
-        final IRetrievalModel<TgVehicleMake> fetchModel = makeRetrievalModel(TgVehicleMake.class, ALL);
-        assertPropsAreFetched(fetchModel, Set.of("key", "desc", "id", "version"));
+    public void ALL_includes_only_those_calculated_properties_that_have_component_type() {
+        assertRetrievalModel(TgVehicle.class, ALL)
+                .contains("sumOfPrices")
+                .proxies("lastFuelUsage", "constValueProp", "calc0", "calcModel");
     }
 
     @Test
-    public void test_minimal_fetching_of_make() {
-        final IRetrievalModel<TgVehicleMake> fetchModel = makeRetrievalModel(TgVehicleMake.class, DEFAULT);
-        assertPropsAreFetched(fetchModel, Set.of("key", "desc", "id", "version"));
-    }
-
-    @Test
-    public void test_id_and_version_fetching_of_make() {
-        final IRetrievalModel<TgVehicleMake> fetchModel = makeRetrievalModel(TgVehicleMake.class, ID_AND_VERSION);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version"));
-        assertPropsAreProxied(fetchModel, Set.of("key", "desc"));
-    }
-
-    @Test
-    public void test_all_fetching_of_model() {
-        final IRetrievalModel<TgVehicleModel> fetchModel = makeRetrievalModel(TgVehicleModel.class, ALL);
-        assertPropsAreFetched(fetchModel, Set.of("key", "desc", "id", "version", "make"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("make"), Set.of("id", "version", "key", "desc"));
-    }
-
-    @Test
-    public void test_minimal_fetching_of_model() {
-        final IRetrievalModel<TgVehicleModel> fetchModel = makeRetrievalModel(TgVehicleModel.class, DEFAULT);
-        assertPropsAreFetched(fetchModel, Set.of("key", "desc", "id", "version", "make"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("make"), Set.of("id"));
-        assertPropsAreProxied(fetchModel.getRetrievalModel("make"), Set.of("version", "key", "desc"));
-    }
-
-    @Test
-    public void test_id_and_version_fetching_of_model() {
-        final IRetrievalModel<TgVehicleModel> fetchModel = makeRetrievalModel(TgVehicleModel.class, ID_AND_VERSION);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version"));
-        assertPropsAreProxied(fetchModel, Set.of("key", "desc", "make"));
-    }
-
-    @Test
-    public void test_all_fetching_of_fuel_usage() {
-        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(TgFuelUsage.class, ALL);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "date", "qty", "fuelType"));
-
-        assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
-        assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
-
-        assertPropsAreFetched(fetchModel.getRetrievalModel("fuelType"), Set.of("id", "version", "key", "desc"));
-    }
-
-    @Test
-    public void test_minimal_fetching_of_fuel_usage() {
-        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(TgFuelUsage.class, DEFAULT);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "date", "qty"));
-
-        assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
-        assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
-
-        assertPropsAreFetched(fetchModel.getRetrievalModel("fuelType"), Set.of("id"));
-        assertPropsAreProxied(fetchModel.getRetrievalModel("fuelType"), Set.of("version", "key", "desc"));
-    }
-
-    @Test
-    public void test_key_and_desc_fetching_of_fuel_usage() {
-        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(TgFuelUsage.class, KEY_AND_DESC);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "date"));
-
-        assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
-        assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
-
-        assertPropsAreProxied(fetchModel, Set.of("qty", "fuelType"));
-    }
-
-    @Test
-    public void test_id_and_version_fetching_of_fuel_usage() {
-        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(TgFuelUsage.class, ID_AND_VERSION);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version"));
-        assertPropsAreProxied(fetchModel, Set.of("vehicle", "date", "fuelType", "qty"));
-    }
-
-    @Test
-    public void test_id_and_version_fetching_of_fuel_usage_with_date_and_qty() {
-        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, ID_AND_VERSION).with("date").with("qty");
-        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(fetch);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "date", "qty"));
-        assertPropsAreProxied(fetchModel, Set.of("vehicle", "fuelType"));
-    }
-
-    @Test
-    public void test_minimal_fetching_of_fuel_usage_without_date_and_qty() {
-        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, DEFAULT).without("date").without("qty");
-        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(fetch);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle", "fuelType"));
-        assertPropsAreProxied(fetchModel, Set.of("date", "qty"));
-
-        assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
-        assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
-
-        assertPropsAreFetched(fetchModel.getRetrievalModel("fuelType"), Set.of("id"));
-        assertPropsAreProxied(fetchModel.getRetrievalModel("fuelType"), Set.of("version", "key", "desc"));
-    }
-
-    @Test
-    public void test_id_and_version_fetching_of_fuel_usage_with_vehicle() {
-        final fetch<TgFuelUsage> fetch = new fetch<>(TgFuelUsage.class, ID_AND_VERSION).with("vehicle");
-        final IRetrievalModel<TgFuelUsage> fetchModel = makeRetrievalModel(fetch);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "vehicle"));
-        assertPropsAreProxied(fetchModel, Set.of("qty", "date", "fuelType"));
-
-        assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle"), Set.of("id", "version", "key", "desc", "model"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("vehicle.model"), Set.of("id"));
-        assertPropsAreProxied(fetchModel.getRetrievalModel("vehicle.model"), Set.of("version", "key", "desc"));
-    }
-
-    @Test
-    public void test_all_fetching_of_bogie() {
-        final IRetrievalModel<TgBogie> fetchModel = makeRetrievalModel(TgBogie.class, ALL);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "key", "desc", "location"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("location"), Set.of("workshop", "wagonSlot"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("location.workshop"),
-                              Set.of("id", "version", "key", "desc"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("location.wagonSlot"),
-                              Set.of("id", "version", "wagon", "position"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("location.wagonSlot.wagon"),
-                              Set.of("id", "version", "key", "desc", "serialNo", "wagonClass"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("location.wagonSlot.wagon.wagonClass"),
-                              Set.of("id"));
-        assertPropsAreProxied(fetchModel.getRetrievalModel("location.wagonSlot.wagon.wagonClass"),
-                              Set.of("version", "key", "desc", "numberOfBogies", "numberOfWheelsets", "tonnage"));
-    }
-
-    @Test
-    public void test_virtual_composite_key_property() {
-        final IRetrievalModel<TgAuthor> fetchModel = makeRetrievalModel(TgAuthor.class, DEFAULT);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "name", "surname", "patronymic", "dob", "utcDob", "webpage"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("name"), Set.of("id", "version", "key", "desc"));
-        assertPropsAreNotFetched(fetchModel, Set.of("pseudonym", "honorarium", "honorarium.amount"));
-    }
-
-    @Test
-    public void strategy_DEFAULT_for_synthetic_entity() {
-        final IRetrievalModel<TgAverageFuelUsage> fetchModel = makeRetrievalModel(TgAverageFuelUsage.class, DEFAULT);
-        assertPropsAreFetched(fetchModel, Set.of("key", "qty", "cost"));
-        assertPropsAreNotFetched(fetchModel, Set.of("id", "version"));
-    }
-
-    @Test
-    public void fetch_only_works_with_union_entity_props() {
-        final fetch<TgBogie> fetch1 = fetchOnly(TgBogie.class).with("id").with("key").with("location", fetchOnly(TgBogieLocation.class).with("workshop"));
-        final fetch<TgBogie> fetch2 = fetch(TgBogie.class).with("location", fetchOnly(TgBogieLocation.class).with("workshop"));
-        final IRetrievalModel<TgBogie> fetchModel1 = makeRetrievalModel(fetch1);
-        final IRetrievalModel<TgBogie> fetchModel2 = makeRetrievalModel(fetch2);
-        assertPropsAreFetched(fetchModel1, Set.of("location"));
-        assertPropsAreFetched(fetchModel2, Set.of("location"));
-    }
-
-    @Test
-    public void fetch_only_works() {
-        final fetch<TgVehicle> fetch = fetchOnly(TgVehicle.class).with("key").with("station", fetchOnly(TgOrgUnit5.class));
-        final IRetrievalModel<TgVehicle> fetchModel = makeRetrievalModel(fetch);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "key", "station"));
-        assertPropsAreProxied(fetchModel, Set.of("desc", "initDate", "replacedBy", "model", "price", "purchasePrice",
-                                                 "active", "leased", "lastMeterReading"));
-        assertPropsAreNotFetched(fetchModel, Set.of("lastFuelUsage", "constValueProp", "lastFuelUsageQty", "sumOfPrices"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("station"), Set.of("id", "version"));
-        assertPropsAreProxied(fetchModel.getRetrievalModel("station"), Set.of("parent", "name", "fuelType"));
-
-    }
-
-    @Test
-    public void all_fetching_works() {
-        final fetch<TgVehicle> fetch = fetchAll(TgVehicle.class).without("desc");
-        final IRetrievalModel<TgVehicle> fetchModel = makeRetrievalModel(fetch);
-        assertPropsAreFetched(fetchModel, Set.of("id", "version", "key", "station", "initDate", "replacedBy", "model",
-                                                 "price", "purchasePrice", "active", "leased", "lastMeterReading"));
-        assertPropsAreProxied(fetchModel, Set.of("desc"));
-        assertPropsAreNotFetched(fetchModel, Set.of("lastFuelUsage", "constValueProp", "lastFuelUsageQty"));
-        //assertFalse(fetchModel.containsProp("sumOfPrices")); //TOFIX
-    }
-
-    @Test
-    public void fetch_id_only_works() {
-        final IRetrievalModel<TgAuthorship> fetchModel = makeRetrievalModel(TgAuthorship.class, ID_ONLY);
-        assertPropsAreFetched(fetchModel, Set.of("id"));
-        assertPropsAreProxied(fetchModel, Set.of("version", "title", "author", "year"));
-    }
-
-    @Test
-    public void fetch_id_only_works_for_union_entity_props() {
-        final IRetrievalModel<TgBogie> fetchModel = makeRetrievalModel(TgBogie.class, ID_ONLY);
-        assertPropsAreFetched(fetchModel, Set.of("id"));
-        assertPropsAreProxied(fetchModel, Set.of("version", "key", "location"));
+    public void DEFAULT_includes_only_those_calculated_properties_that_have_component_type() {
+        assertRetrievalModel(TgVehicle.class, DEFAULT)
+                .contains("sumOfPrices")
+                .proxies("lastFuelUsage", "constValueProp", "calc0", "calcModel");
     }
 
     @Test
     public void fetch_composite_key_of_synthetic_entity() {
-        final IRetrievalModel<TgPublishedYearly> fetchModel = makeRetrievalModel(TgPublishedYearly.class, KEY_AND_DESC);
-        assertPropsAreFetched(fetchModel, Set.of("author"));
-        assertPropsAreProxied(fetchModel, Set.of("qty"));
-
-        assertPropsAreNotFetched(fetchModel, Set.of("id", "version"));
-        assertPropsAreNotProxied(fetchModel, Set.of("id"));
-
-        assertPropsAreFetched(fetchModel.getRetrievalModel("author"),
-                              Set.of("id", "version", "name", "surname", "patronymic", "dob", "utcDob", "webpage"));
-        assertPropsAreFetched(fetchModel.getRetrievalModel("author").getRetrievalModel("name"),
-                              Set.of("id", "version", "key", "desc"));
-        assertPropsAreNotFetched(fetchModel.getRetrievalModel("author"),
-                                 Set.of("pseudonym", "honorarium", "honorarium.amount"));
+        assertRetrievalModel(TgPublishedYearly.class, KEY_AND_DESC)
+                .containsExactly("author")
+                .proxiesExactly("qty")
+                .subModel("author", a -> a.equalsModel(DEFAULT));
     }
 
     @Test
     public void version_is_never_proxied_for_synthetic_based_on_persistent_entities() {
         final var entityType = TgReVehicleModel.class;
         assertTrue(EntityUtils.isSyntheticBasedOnPersistentEntityType(entityType));
-        assertPropsAreNotProxied(makeRetrievalModel(entityType, NONE), Set.of(VERSION));
-        assertPropsAreNotProxied(makeRetrievalModel(entityType, ID_ONLY), Set.of(VERSION));
-        assertPropsAreNotProxied(makeRetrievalModel(entityType, ID_AND_VERSION), Set.of(VERSION));
-        assertPropsAreNotProxied(makeRetrievalModel(entityType, DEFAULT), Set.of(VERSION));
-        assertPropsAreNotProxied(makeRetrievalModel(entityType, KEY_AND_DESC), Set.of(VERSION));
-        assertPropsAreNotProxied(makeRetrievalModel(entityType, ALL_INCL_CALC), Set.of(VERSION));
-        assertPropsAreNotProxied(makeRetrievalModel(entityType, ALL), Set.of(VERSION));
+        assertThat(allFetchCategories())
+                .allSatisfy(cat -> assertRetrievalModel(entityType, cat).notProxies(VERSION));
+        assertRetrievalModel(entityType, DEFAULT, f -> f.without(VERSION)).notProxies(VERSION);
     }
 
     @Test
@@ -551,9 +452,24 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                 .toList();
         assertNotEmpty(critOnlyPropNames);
 
-        allFetchCategories()
-                .map(cat -> makeRetrievalModel(entityType, cat))
-                .forEach(model -> assertPropsAreNotFetched(model, critOnlyPropNames));
+        assertThat(allFetchCategories())
+                .allSatisfy(cat -> assertRetrievalModel(entityType, cat)
+                        .notContains(critOnlyPropNames));
+    }
+
+    @Test
+    public void critOnly_properties_are_never_proxied() {
+        final var entityType = TgVehicle.class;
+        final var critOnlyPropNames = domainMetadata.forEntity(entityType).properties().stream()
+                .map(PropertyMetadata::asCritOnly)
+                .flatMap(Optional::stream)
+                .map(PropertyMetadata::name)
+                .toList();
+        assertNotEmpty(critOnlyPropNames);
+
+        assertThat(allFetchCategories())
+                .allSatisfy(cat -> assertRetrievalModel(entityType, cat)
+                        .notProxies(critOnlyPropNames));
     }
 
     @Test
@@ -566,9 +482,9 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
                 .toList();
         assertNotEmpty(critOnlyPropNames);
 
-        allFetchCategories()
-                .map(cat -> makeRetrievalModel(entityType, cat, fetch -> fetch.with(critOnlyPropNames)))
-                .forEach(model -> assertPropsAreFetched(model, critOnlyPropNames));
+        assertThat(allFetchCategories())
+                .allSatisfy(cat -> assertRetrievalModel(entityType, cat, f -> f.with(critOnlyPropNames))
+                        .contains(critOnlyPropNames));
     }
 
     /*----------------------------------------------------------------------------
@@ -609,26 +525,26 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
 
     @Test
     public void strategy_ID_AND_VERSION_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertPropsAreNotFetched(makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_AND_VERSION),
-                Set.of("union"));
-        assertPropsAreNotFetched(makeRetrievalModel(Circular_UnionEntity.class, ID_AND_VERSION),
-                Set.of("entity"));
+        assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_AND_VERSION)
+                .notContains("union");
+        assertRetrievalModel(Circular_UnionEntity.class, ID_AND_VERSION)
+                .notContains("entity");
     }
 
     @Test
     public void strategy_ID_ONLY_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertPropsAreNotFetched(makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_ONLY),
-                Set.of("union"));
-        assertPropsAreNotFetched(makeRetrievalModel(Circular_UnionEntity.class, ID_ONLY),
-                Set.of("entity"));
+        assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, ID_ONLY)
+                .notContains("union");
+        assertRetrievalModel(Circular_UnionEntity.class, ID_ONLY)
+                .notContains("entity");
     }
 
     @Test
     public void strategy_NONE_is_constructed_for_circular_relationship_between_entity_with_composite_key_and_union_entity() {
-        assertPropsAreNotFetched(makeRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, NONE),
-                Set.of("union"));
-        assertPropsAreNotFetched(makeRetrievalModel(Circular_UnionEntity.class, NONE),
-                Set.of("entity"));
+        assertRetrievalModel(Circular_EntityWithCompositeKeyMemberUnionEntity.class, NONE)
+                .notContains("union");
+        assertRetrievalModel(Circular_UnionEntity.class, NONE)
+                .notContains("entity");
     }
 
     /*----------------------------------------------------------------------------
@@ -638,13 +554,13 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     @Test
     public void union_typed_key_members_are_included_if_key_is_included() {
         assertThat(List.of(ALL_INCL_CALC, ALL, DEFAULT, KEY_AND_DESC))
-                .allSatisfy(cat -> assertPropsAreFetched(makeRetrievalModel(UnionEntityDetails.class, cat),
-                                                         Set.of(UnionEntityDetails.Property.serial, UnionEntityDetails.Property.union)));
-        assertPropsAreFetched(makeRetrievalModel(fetchNone(UnionEntityDetails.class).with(KEY)),
-                              Set.of(UnionEntityDetails.Property.serial, UnionEntityDetails.Property.union));
+                .allSatisfy(cat -> assertRetrievalModel(UnionEntityDetails.class, cat)
+                        .contains(UnionEntityDetails.Property.serial, UnionEntityDetails.Property.union));
+        assertRetrievalModel(UnionEntityDetails.class, NONE, f -> f.with(KEY))
+                .contains(UnionEntityDetails.Property.serial, UnionEntityDetails.Property.union);
         assertThat(List.of(ID_ONLY, ID_AND_VERSION, NONE))
-                .allSatisfy(cat -> assertPropsAreNotFetched(makeRetrievalModel(UnionEntityDetails.class, cat),
-                                                            Set.of(UnionEntityDetails.Property.serial, UnionEntityDetails.Property.union)));
+                .allSatisfy(cat -> assertRetrievalModel(UnionEntityDetails.class, cat)
+                        .proxies(UnionEntityDetails.Property.serial, UnionEntityDetails.Property.union));
     }
 
     /*----------------------------------------------------------------------------
@@ -702,8 +618,8 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     private void _union_members_are_not_included(final FetchCategory category) {
         final var entityMetadata = domainMetadata.forEntity(UnionEntity.class);
         assertThat(entityMetadata).matches(EntityMetadata::isUnion);
-        final var retrievalModel = makeRetrievalModel(UnionEntity.class, category);
-        assertPropsAreNotFetched(retrievalModel, Set.of(UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo));
+        assertRetrievalModel(UnionEntity.class, category)
+                .notContains(UnionEntity.Property.propertyOne, UnionEntity.Property.propertyTwo);
     }
 
     /*----------------------------------------------------------------------------
@@ -729,8 +645,8 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
         final var entityMetadata = domainMetadata.forEntity(EntityWithRichText.class);
         assertTrue(entityMetadata.hasProperty(DESC));
         assertTrue(entityMetadata.property(DESC).isCalculated());
-        assertPropsAreFetched(makeRetrievalModel(EntityWithRichText.class, category),
-                              Set.of(DESC));
+        assertRetrievalModel(EntityWithRichText.class, category)
+                .contains(DESC);
     }
 
     @Override
@@ -739,58 +655,6 @@ public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrieva
     /*----------------------------------------------------------------------------
      | Utilities
      -----------------------------------------------------------------------------*/
-
-    private static boolean areEqualByProperties(final IRetrievalModel<?> model1, final IRetrievalModel<?> model2) {
-        return model1.getPrimProps().equals(model2.getPrimProps())
-               && model1.getProxiedProps().equals(model2.getProxiedProps())
-               && areEqualByValues(model1.getRetrievalModels(), model2.getRetrievalModels(), RetrievalModelTest::areEqualByProperties);
-    }
-
-    private static <K, V1, V2> boolean areEqualByValues(
-            final Map<? extends K, V1> map1,
-            final Map<? extends K, V2> map2,
-            final BiPredicate<? super V1, ? super V2> predicate)
-    {
-        if (map1.size() != map2.size()) {
-            return false;
-        }
-        else {
-            for (final var entry : map1.entrySet()) {
-                final var val1 = entry.getValue();
-                final var val2 = map2.get(entry.getKey());
-                if (!predicate.test(val1, val2)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
-    private static <T extends AbstractEntity<?>> void assertPropsAreFetched(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> props) {
-        for (final var propName : props) {
-            assertTrue(format("Property [%s] should be contained within fetch model:%n%s", propName, fetchModel), fetchModel.containsProp(propName.toString()));
-        }
-    }
-
-    private static <T extends AbstractEntity<?>> void assertPropsAreNotFetched(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> props) {
-        for (final var prop : props) {
-            assertFalse(format("Property [%s] should not be contained within fetch model:%n%s", prop, fetchModel),
-                        fetchModel.containsProp(prop.toString()));
-        }
-    }
-
-    private static <T extends AbstractEntity<?>> void assertPropsAreProxied(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> proxiedProps) {
-        for (final var propName : proxiedProps) {
-            assertTrue(format("Property [%s] should be proxied within fetch model:%n%s", propName, fetchModel), fetchModel.containsProxy(propName.toString()));
-        }
-    }
-
-    private static <T extends AbstractEntity<?>> void assertPropsAreNotProxied(final IRetrievalModel<T> fetchModel, final Iterable<? extends CharSequence> props) {
-        for (final var prop : props) {
-            assertFalse(format("Property [%s] should not be proxied within fetch model:%n%s", prop, fetchModel),
-                        fetchModel.containsProxy(prop.toString()));
-        }
-    }
 
     private static Stream<FetchCategory> allFetchCategories() {
         return Arrays.stream(FetchCategory.values());

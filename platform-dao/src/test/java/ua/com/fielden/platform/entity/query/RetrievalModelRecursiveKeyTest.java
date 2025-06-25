@@ -28,10 +28,7 @@ public class RetrievalModelRecursiveKeyTest extends AbstractDaoTestCase implemen
     @Test
     public void retrieval_model_that_does_not_include_key_can_be_constructed_for_recursive_key_structure() {
         assertThat(List.of(ID_ONLY, ID_AND_VERSION, NONE))
-                .allSatisfy(cat -> {
-                    final var model = makeRetrievalModel(A.class, cat);
-                    assertThat(model).doesNotMatch(it -> it.containsProp(KEY));
-                });
+                .allSatisfy(cat -> assertRetrievalModel(A.class, cat).notContains(KEY));
     }
 
     @Override
