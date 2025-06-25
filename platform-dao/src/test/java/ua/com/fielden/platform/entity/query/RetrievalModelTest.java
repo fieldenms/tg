@@ -33,7 +33,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertNotEmpty;
 
-public class FetchModelTest extends AbstractDaoTestCase implements IRetrievalModelTestUtils {
+public class RetrievalModelTest extends AbstractDaoTestCase implements IRetrievalModelTestUtils {
 
     private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
 
@@ -149,7 +149,7 @@ public class FetchModelTest extends AbstractDaoTestCase implements IRetrievalMod
                 .allSatisfy(category -> _simple_entity_typed_key_is_implicitly_assigned_a_sub_fetch_model(
                         TgVehicleFinDetails.class, category,
                         model -> assertThat(model)
-                                .usingEquals(FetchModelTest::areEqualByProperties)
+                                .usingEquals(RetrievalModelTest::areEqualByProperties)
                                 .isEqualTo(makeRetrievalModel(TgVehicle.class, KEY_AND_DESC))));
 
         assertThat(List.of(ID_AND_VERSION, ID_ONLY))
@@ -743,7 +743,7 @@ public class FetchModelTest extends AbstractDaoTestCase implements IRetrievalMod
     private static boolean areEqualByProperties(final IRetrievalModel<?> model1, final IRetrievalModel<?> model2) {
         return model1.getPrimProps().equals(model2.getPrimProps())
                && model1.getProxiedProps().equals(model2.getProxiedProps())
-               && areEqualByValues(model1.getRetrievalModels(), model2.getRetrievalModels(), FetchModelTest::areEqualByProperties);
+               && areEqualByValues(model1.getRetrievalModels(), model2.getRetrievalModels(), RetrievalModelTest::areEqualByProperties);
     }
 
     private static <K, V1, V2> boolean areEqualByValues(
