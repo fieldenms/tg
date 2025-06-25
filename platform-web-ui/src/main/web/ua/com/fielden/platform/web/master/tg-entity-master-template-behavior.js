@@ -89,7 +89,9 @@ const TgEntityMasterTemplateBehaviorImpl = {
         };
 
         self._modifyAuditInfoFunctionalEntity = function (bindingEntity, master, action) {
-            master.fire('tg-dynamic-title-changed', bindingEntity["@@origin"]["entityTitle"]);
+            if (!master._hasEmbededView()) { //if given master has no embedded view then it is simple master (not compound master)
+                master.fire('tg-dynamic-title-changed', bindingEntity["@@origin"]["entityTitle"]);
+            }
         }
     },
 
