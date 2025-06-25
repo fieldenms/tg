@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
@@ -101,8 +101,7 @@ import static ua.com.fielden.platform.utils.ToString.separateLines;
  */
 public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T>, ToString.IFormattable {
 
-    public static final String ERR_UNKNOWN_FETCH_CATEGORY = "Unknown fetch category [%s].";
-    public static final String ERR_UNEXPECTED_PROPERTY_IN_RETRIEVAL_MODEL = "No property [%s] in retrieval model:%n%s";
+    public static final String ERR_NO_SUCH_PROPERTY_IN_MODEL = "No such property [%s] in retrieval model:%n%s";
     public static final String ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find entity-typed property [%s] to be excluded from fetched properties of entity type [%s].";
     public static final String ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find property [%s] to be excluded from fetched properties of entity type [%s].";
     public static final String ERR_NON_EXISTING_PROPERTY = "Trying to fetch entity [%s] with non-existing property [%s].";
@@ -169,7 +168,6 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             case ID_AND_VERSION -> builder.includeIdAndVersionOnly();
             case ID_ONLY -> builder.includeIdOnly();
             case NONE -> {}
-            default -> throw new IllegalStateException(ERR_UNKNOWN_FETCH_CATEGORY.formatted(originalFetch.getFetchCategory()));
         }
 
         for (final String propName : originalFetch.getExcludedProps()) {
@@ -214,7 +212,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     public IRetrievalModel<? extends AbstractEntity<?>> getRetrievalModel(final CharSequence path) {
         final var model = getRetrievalModelOrNull(path);
         if (model == null) {
-            throw new EqlException(ERR_UNEXPECTED_PROPERTY_IN_RETRIEVAL_MODEL.formatted(path, this));
+            throw new EntityRetrievalModelException(ERR_NO_SUCH_PROPERTY_IN_MODEL.formatted(path, this));
         }
         return model;
     }
@@ -547,7 +545,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
             final var propType = unwrap(pm.type());
             if (propType.javaType() != fetchModel.getEntityType()) {
-                throw new EqlException(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES.formatted(pm.type(), propName, entityType, fetchModel.getEntityType()));
+                throw new EntityRetrievalModelException(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES.formatted(pm.type(), propName, entityType, fetchModel.getEntityType()));
             }
 
             // TODO: The following code to extend a fetch model for union-typed properties to include their union-properties appears to be irrelevant.
@@ -575,12 +573,12 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             if (optPm.filter(pm -> pm.type().isEntity()).isPresent()) {
                 final var removalResult = entityProps.remove(propName);
                 if (removalResult == null) {
-                    throw new EqlException(ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH.formatted(propName, entityType.getSimpleName()));
+                    throw new EntityRetrievalModelException(ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH.formatted(propName, entityType.getSimpleName()));
                 }
             } else {
                 final var removalResult = primProps.remove(propName);
                 if (!removalResult) {
-                    throw new EqlException(ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH.formatted(propName, entityType.getSimpleName()));
+                    throw new EntityRetrievalModelException(ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH.formatted(propName, entityType.getSimpleName()));
                 }
             }
         }
@@ -602,7 +600,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 if (querySourceInfo.hasProp(propName)) {
                     return Optional.empty();
                 }
-                throw new EqlException(ERR_NON_EXISTING_PROPERTY.formatted(entityType.getSimpleName(), propName));
+                throw new EntityRetrievalModelException(ERR_NON_EXISTING_PROPERTY.formatted(entityType.getSimpleName(), propName));
             }
             return optPm;
         }
