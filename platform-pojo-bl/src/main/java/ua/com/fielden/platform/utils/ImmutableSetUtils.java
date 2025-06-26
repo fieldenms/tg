@@ -11,6 +11,7 @@ import java.util.Set;
  * <b>Null as set member is not permitted</b>.
  *
  * @see ImmutableMapUtils
+ * @see ImmutableListUtils
  */
 public final class ImmutableSetUtils {
 

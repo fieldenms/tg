@@ -340,6 +340,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY5").setRichTextProp(fromHtml("<p>Rich text for entity with RICH TEXT KEY5</p>")).setDesc("rich text desc 5"));
         save(new_(TgEntityWithRichTextProp.class, "RICH_TEXT_KEY6").setRichTextProp(fromHtml("hello world")).setDesc("rich text desc 6")); // deliberate value without paragraph tags to induce Toast UI transformation; used to test SAVE disablement
 
+        {
+            var one = save(new_(EntityOne.class, "ONE1"));
+            var two = save(new_(EntityTwo.class, "TWO1"));
+            save(new_composite(UnionEntityDetails.class, "001", new_(UnionEntity.class).setPropertyOne(one)));
+            save(new_composite(UnionEntityDetails.class, "002", new_(UnionEntity.class).setPropertyTwo(two)));
+        }
+
         try {
             final ISecurityTokenProvider provider = config.getInstance(ISecurityTokenProvider.class); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();

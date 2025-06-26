@@ -180,6 +180,8 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgInventoryBinCo.class).to(TgInventoryBinDao.class);
         bind(TgInventoryIssueCo.class).to(TgInventoryIssueDao.class);
 
+        bind(UnionEntityDetailsCo.class).to(UnionEntityDetailsDao.class);
+
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...
         //       this should really be corrected at some stage

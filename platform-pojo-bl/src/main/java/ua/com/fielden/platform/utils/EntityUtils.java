@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -1518,13 +1517,17 @@ public class EntityUtils {
         for (final Field keyMember : getKeyMembers(entityType)) {
             final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER + keyMember.getName()).orElse(keyMember.getName());
             final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(entityType, keyMember.getName());
-            if (!isPersistentEntityType(propType)) {
+            if (isPersistentEntityType(propType)) {
+                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) propType, pathToSubprop));
+            }
+            else if (isUnionEntityType(propType)) {
+                result.add(pathToSubprop + "." + KEY);
+            }
+            else {
                 // Let's explicitly expand money types property path with its single subproperty "amount".
                 // This will facilitate the usage of the keyPaths(..) method within KeyPropertyExtractor logic, which in its turn requires explicit "amount" to be specified.
                 final var enhancedPathToSubprop = propType.equals(Money.class) ? pathToSubprop + ".amount" : pathToSubprop;
                 result.add(enhancedPathToSubprop);
-            } else {
-                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) propType, pathToSubprop));
             }
         }
 

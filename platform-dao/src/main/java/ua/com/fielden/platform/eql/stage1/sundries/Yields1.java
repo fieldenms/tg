@@ -3,10 +3,12 @@ package ua.com.fielden.platform.eql.stage1.sundries;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
+import ua.com.fielden.platform.eql.stage2.sundries.Yield2;
 import ua.com.fielden.platform.eql.stage2.sundries.Yields2;
 import ua.com.fielden.platform.utils.ToString;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.toSet;
@@ -34,7 +36,12 @@ public record Yields1 (SortedMap<String, Yield1> yieldsMap) implements ToString.
     public Yields2 transform(final TransformationContextFromStage1To2 context) {
         return yieldsMap.isEmpty()
                ? Yields2.EMPTY_YIELDS
-               : new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).toList());
+               : new Yields2(transform(yieldsMap.values().stream(), context).toList());
+    }
+
+    private static Stream<Yield2> transform(final Stream<Yield1> yields, final TransformationContextFromStage1To2 context) {
+        return yields.flatMap(y -> ExpandUnionTypedPropYield1.INSTANCE.apply(y, context)
+                                       .orElseGet(() -> Stream.of(y.transform(context))));
     }
 
     public Collection<Yield1> getYields() {
