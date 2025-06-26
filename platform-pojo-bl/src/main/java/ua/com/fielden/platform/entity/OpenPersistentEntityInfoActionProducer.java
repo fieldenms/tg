@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.open_compound_master.OpenPersistentEntityInfoAction_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
 
 /// A producer for new instances of entity {@link OpenPersistentEntityInfoAction}.
 ///
@@ -16,7 +16,7 @@ public class OpenPersistentEntityInfoActionProducer extends AbstractProducerForO
     }
 
     @Override
-    @Authorise(OpenPersistentEntityInfoAction_CanOpen_Token.class)
+    @Authorise(PersistentEntityInfo_CanExecute_Token.class)
     protected OpenPersistentEntityInfoAction provideDefaultValues(final OpenPersistentEntityInfoAction openAction) {
         if (currentEntityNotEmpty()) {
             final AbstractEntity<?> currEntity = currentEntity();

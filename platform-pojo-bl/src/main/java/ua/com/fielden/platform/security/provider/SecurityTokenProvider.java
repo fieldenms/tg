@@ -16,10 +16,7 @@ import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.tokens.ISecurityTokenGenerator;
 import ua.com.fielden.platform.security.tokens.Template;
 import ua.com.fielden.platform.security.tokens.attachment.*;
-import ua.com.fielden.platform.security.tokens.compound_master_menu.AuditCompoundMenuItem_CanAccess_Token;
-import ua.com.fielden.platform.security.tokens.compound_master_menu.PersistentEntityInfoMaster_OpenMain_MenuItem_CanAccess_Token;
 import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.open_compound_master.OpenPersistentEntityInfoAction_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
@@ -129,9 +126,6 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 GraphiQL_CanExecute_Token.class,
                 UserDefinableHelp_CanSave_Token.class,
                 PersistentEntityInfo_CanExecute_Token.class,
-                OpenPersistentEntityInfoAction_CanOpen_Token.class,
-                PersistentEntityInfoMaster_OpenMain_MenuItem_CanAccess_Token.class,
-                AuditCompoundMenuItem_CanAccess_Token.class,
                 AuditModuleToken.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
         allTokens.addAll(platformLevelTokens);
