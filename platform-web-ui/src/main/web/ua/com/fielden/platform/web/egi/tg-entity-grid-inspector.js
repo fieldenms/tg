@@ -30,7 +30,8 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages, openLink } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
@@ -110,20 +111,6 @@ const template = html`
         }
         #bottom_left_egi, #bottom_egi, #bottom_right_egi {
             align-self: end;
-        }
-        .noselect {
-            -webkit-touch-callout: none;
-            /* iOS Safari */
-            -webkit-user-select: none;
-            /* Safari */
-            -khtml-user-select: none;
-            /* Konqueror HTML */
-            -moz-user-select: none;
-            /* Firefox */
-            -ms-user-select: none;
-            /* Internet Explorer/Edge */
-            user-select: none;
-            /* Non-prefixed version, currently supported by Chrome and Opera */
         }
         .resizing-box {
             position: absolute;
@@ -453,7 +440,7 @@ const template = html`
                             <!--Primary action stub header goes here-->
                         </div>
                         <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
-                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
@@ -476,7 +463,7 @@ const template = html`
                             <!--Primary action stub header goes here-->
                         </div>
                         <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_setUpCursor" on-up="_resetCursor" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
@@ -1358,7 +1345,9 @@ Polymer({
         });
     },
 
-    tap: function (entityIndex, entity, index, column) {
+    tap: function (entityIndex, entity, index, column, event) {
+        //Used to identify whether user clicked a link or not. This is needed to open link after user didn't make double click.
+        const clickedLink = event.detail.sourceEvent && event.detail.sourceEvent.composedPath && event.detail.sourceEvent.composedPath().find(n => n.tagName && n.tagName === 'A');
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
@@ -1371,40 +1360,39 @@ Polymer({
             this._tapOnce = true;
             this.async(() => {
                 if (this._tapOnce) {
-                    this._tapColumn(entity, column);
+                    this._tapColumn(entity, column, clickedLink);
                 }
                 delete this._tapOnce;
             }, 400);
         } else {
-            this._tapColumn(entity, column);
+            this._tapColumn(entity, column, clickedLink);
         }
+        tearDownEvent(event.detail.sourceEvent);
     },
 
     /**
      * Initiates corresponding 'tg-ui-action' (if present) with concrete function representing current entity.
      * Opens hyperlink or attachment if 'tg-ui-action' is not present.
      */
-    _tapColumn: function (entity, column) {
+    _tapColumn: function (entity, column, clickedLink) {
         // 'this._currentEntity(entity)' returns closure with 'entity' tapped.
         // This closure returns either 'entity' or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
         const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
-        if (!column.runAction(this._currentEntity(entity), actionIndex)) {
-            // if the clicked property is a hyperlink and there was no custom action associted with it
-            // then let's open the linked resources
-            if (this.isHyperlinkProp(entity, column) === true) {
-                const url = this.getBindedValue(entity, column);
-                openLink(url);
-            } else {
+        if (clickedLink) {
+            const targetAttr = clickedLink.getAttribute("target");
+            checkLinkAndOpen(clickedLink.getAttribute("href"), targetAttr ? targetAttr : "_self");
+        } else if (!column.runAction(this._currentEntity(entity), actionIndex)) {
+            if (this.isHyperlinkProp(entity, column) === false) {
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
                 } else if (this.hasDefaultAction(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
-            } 
+            }
         }
     },
 
@@ -1497,14 +1485,13 @@ Polymer({
     },
 
     _allSelectionChanged: function (e) {
-        const target = e.target || e.srcElement;
-        this.selectAll(target.checked);
+        this.selectAll(e.target.checked);
     },
 
     _selectionChanged: function (e) {
         if (this.egiModel) {
             const index = e.model.entityIndex;
-            var target = e.target || e.srcElement;
+            const target = e.target;
             //Perform selection range selection or single selection.
             if (target.checked && this._rangeSelection && this._lastSelectedIndex >= 0) {
                 this._selectRange(this._lastSelectedIndex, index);
@@ -1534,11 +1521,11 @@ Polymer({
     },
 
     _tapFixedAction: function (e, detail) {
-        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index], e);
     },
 
     _tapAction: function (e, detail) {
-        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index], e);
     },
 
     _columnDomChanged: function (addedColumns, removedColumns) {
@@ -1778,27 +1765,26 @@ Polymer({
         this._columnResizingObject = null;
     },
 
-    _makeEgiUnselectable: function (e) {
+    _setUpCursor: function (e) {
+        tearDownEvent(e);
         if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", true);
             console.log("set resizing action");
         }
-        this.$.baseContainer.classList.toggle("noselect", true);
         document.body.style["cursor"] = "col-resize";
     },
 
-    _makeEgiSelectable: function (e) {
+    _resetCursor: function (e) {
         if (this.mobile) {
             e.currentTarget.classList.toggle("resizing-action", false);
         }
-        this.$.baseContainer.classList.toggle("noselect", false);
         document.body.style["cursor"] = "";
     },
 
     //Style calculator
     _calcMaterialStyle: function (showMarginAround) {
         if (showMarginAround) {
-            return "margin:10px;";
+            return "margin:5px 10px;";
         }
         return "";
     },

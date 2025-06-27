@@ -9,6 +9,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.annotations.SsoRedirectUriSignOut;
+import ua.com.fielden.platform.security.session.ISsoSessionController;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -85,6 +86,7 @@ public class LogoutResourceFactory extends Restlet {
                     injector.getInstance(IUserProvider.class),
                     coUser,
                     injector.getInstance(IUserSession.class),
+                    injector.getInstance(ISsoSessionController.class),
                     domainName,
                     path,
                     injector.getInstance(IDeviceProvider.class),
@@ -96,4 +98,5 @@ public class LogoutResourceFactory extends Restlet {
             ).handle();
         }
     }
+
 }

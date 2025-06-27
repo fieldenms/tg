@@ -2,96 +2,278 @@
 <html>
 
 <head>
-	<meta charset="UTF-8">
-	<title>entity-centre basic tests</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-	
-	<script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <meta charset="UTF-8">
+    <title>entity-centre basic tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
-	<tg-reflector id="reflector"></tg-reflector>
-	<test-fixture id="CentreFixture">
-    	<template>
-    	    <tg-MiTgCollectionalSerialisationParent-centre id="centre"></tg-MiTgCollectionalSerialisationParent-centre>
-    	</template>
-	</test-fixture>
+<tg-reflector id="reflector"></tg-reflector>
+<test-fixture id="CentreFixture">
+    <template>
+        <tg-MiTgCollectionalSerialisationParent-centre id="centre"></tg-MiTgCollectionalSerialisationParent-centre>
+    </template>
+</test-fixture>
 
-    <script type="module">
+<script type="module">
 
-		import '/app/tg-reflector.js';
-		import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgCollectionalSerialisationParent';
-		import '/master_ui/ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent';
-		
-		suite('entity centre', function() {
-			let centre, reflector;
-		
-			setup(function() {
-				centre = fixture('CentreFixture');
-				reflector = document.querySelector('#reflector');
-			});
-			test('editing through EntityEditAction embedded master (with collectional properties) works', function (done) {
-				const old_postRun = centre._postRun;
-				let firstTime = false;
-				
-				centre._postRun = function (criteriaEntity, newBindingEntity, result) {
-					old_postRun(criteriaEntity, newBindingEntity, result);
-					
-					if (firstTime === false) {
-						assert.strictEqual(result.resultEntities.length, 1, 'The count of resultant entities for the centre should be 1.');
-						const entity = result.resultEntities[0];
-						
-						const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
-						editAction.currentEntity = () => entity;
-						const value = editAction._run();
-						
-						editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
-							console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
-							
-							const outerMaster = editAction._masterReferenceForTesting;
-							const innerMaster = outerMaster.shadowRoot.querySelector('tg-tgcollectionalserialisationparent-master');
-							const loader = outerMaster.$.loader;
-							
-							outerMaster.addEventListener('after-load', function (event) {
-								const embeddedMaster = event.detail;
-								
-								const edProperty = embeddedMaster.$.editor_4_desc;
-								
-								embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
-									assert.strictEqual(edProperty._editingValue, '23999', "_editingValue should be 'IS'.");
-									assert.strictEqual(edProperty._commValue, '23999', "_commValue should be 'IS'.");
-									assert.strictEqual(edProperty._acceptedValue, '23999', "_acceptedValue should be 'IS'.");
-									
-									assert.strictEqual(validatedEntity.get("desc"), '23999', "'property' value should be 'IS' after modification.");
-									assert.strictEqual(bindingEntity.get("desc"), '23999', "Binding 'property' value should be 'IS' after modification.");
+    import '/app/tg-reflector.js';
+    import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgCollectionalSerialisationParent';
+    import '/master_ui/ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent';
 
-									done();
-								};
-								
-								embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
-									edProperty._editingValue = '23999';
-									edProperty.commit();
-								};
-							});
-						}
-						
-						firstTime = true;
-					} else {
-						assert.strictEqual(result.resultEntities.length, 1, 'The count of refreshed entity for the centre should be 1.');
-					}
-				};
-				
-				centre.postRetrieved = function (entity, bindingEntity, customObject) {
-					centre.run();
-				};
+    suite('entity centre', function() {
+        let centre, reflector;
 
-				centre.retrieve();
-			});
-		});
-    </script>
+        setup(function() {
+          centre = fixture('CentreFixture');
+          reflector = document.querySelector('#reflector');
+        });
+
+        test('editing through EntityEditAction embedded master (with collectional properties) works', function (done) {
+            const old_postRun = centre._postRun;
+            let firstTime = false;
+
+            centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                old_postRun(criteriaEntity, newBindingEntity, result);
+
+                if (firstTime === false) {
+                    assert.strictEqual(result.resultEntities.length, 1, 'The count of resultant entities for the centre should be 1.');
+                    const entity = result.resultEntities[0];
+
+                    const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
+                    editAction.currentEntity = () => entity;
+                    const value = editAction._run();
+
+                    editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                        console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+
+                        const outerMaster = editAction._masterReferenceForTesting;
+                        const innerMaster = outerMaster.shadowRoot.querySelector('tg-tgcollectionalserialisationparent-master');
+                        const loader = outerMaster.$.loader;
+
+                        outerMaster.addEventListener('after-load', function (event) {
+                            const embeddedMaster = event.detail;
+
+                            const edProperty = embeddedMaster.$.editor_4_desc;
+
+                            embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                                assert.strictEqual(edProperty._editingValue, '23999', "_editingValue should be 'IS'.");
+                                assert.strictEqual(edProperty._commValue, '23999', "_commValue should be 'IS'.");
+                                assert.strictEqual(edProperty._acceptedValue, '23999', "_acceptedValue should be 'IS'.");
+
+                                assert.strictEqual(validatedEntity.get("desc"), '23999', "'property' value should be 'IS' after modification.");
+                                assert.strictEqual(bindingEntity.get("desc"), '23999', "Binding 'property' value should be 'IS' after modification.");
+
+                                done();
+                            };
+
+                            embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                                edProperty._editingValue = '23999';
+                                edProperty.commit();
+                            };
+                        });
+                    }
+
+                    firstTime = true;
+                } else {
+                  assert.strictEqual(result.resultEntities.length, 1, 'The count of refreshed entity for the centre should be 1.');
+                }
+            };
+
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                centre.run();
+            };
+
+            centre.retrieve();
+        });
+
+        const VALUE_FOR_CONFLICT = 'validate + conflict';
+
+        test('editing through EntityEditAction embedded master (with collectional properties) works even with a conflict', function (done) {
+            const old_postRun = centre._postRun;
+
+            const FURTHER_VALUE = VALUE_FOR_CONFLICT + ' + changed';
+
+            centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                old_postRun(criteriaEntity, newBindingEntity, result);
+
+                assert.strictEqual(result.resultEntities.length, 1, 'The count of resultant entities for the centre should be 1.');
+                const entity = result.resultEntities[0];
+
+                const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
+                editAction.currentEntity = () => entity;
+                const value = editAction._run();
+
+                editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                    editAction._masterReferenceForTesting.addEventListener('after-load', function (event) {
+                        const embeddedMaster = event.detail;
+
+                        const edProperty = embeddedMaster.$.editor_4_desc;
+                        let firstTime = true;
+
+                        embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                            if (firstTime) {
+                                assert.strictEqual(edProperty._editingValue, VALUE_FOR_CONFLICT);
+                                assert.strictEqual(edProperty._commValue, VALUE_FOR_CONFLICT);
+                                assert.strictEqual(edProperty._acceptedValue, VALUE_FOR_CONFLICT);
+
+                                assert.strictEqual(validatedEntity.get("desc"), VALUE_FOR_CONFLICT);
+                                assert.strictEqual(bindingEntity.get("desc"), VALUE_FOR_CONFLICT);
+
+                                edProperty._editingValue = FURTHER_VALUE;
+                                edProperty.commit();
+
+                                firstTime = false;
+                            } else {
+                                assert.strictEqual(edProperty._editingValue, FURTHER_VALUE);
+                                assert.strictEqual(edProperty._commValue, FURTHER_VALUE);
+                                assert.strictEqual(edProperty._acceptedValue, FURTHER_VALUE);
+
+                                assert.isOk(validatedEntity.prop('desc').validationResult());
+                                assert.isOk(validatedEntity.prop('desc').validationResult().message);
+                                assert.isTrue(validatedEntity.prop('desc').validationResult().message.startsWith('This property has been recently changed. Please either edit the value back to'));
+
+                                assert.strictEqual(bindingEntity.get('desc'), FURTHER_VALUE);
+                                assert.isOk(bindingEntity['@desc_error']);
+                                assert.isOk(bindingEntity['@desc_error'].message);
+                                assert.isTrue(bindingEntity['@desc_error'].message.startsWith('This property has been recently changed. Please either edit the value back to'));
+
+                                assert.isNotOk(bindingEntity['@collProp_error']);
+                                assert.isNotOk(bindingEntity['@collProp_warning']);
+
+                                done();
+                            }
+                        };
+
+                        embeddedMaster.async(function () { // need to place this on async to facilitate VALIDATE tg-action postActionError proper overriding
+                            embeddedMaster._postValidatedDefaultError = function (errorResult) {
+                                throw new Error('Validation has failed. Error: ' + errorResult.message);
+                            };
+                        });
+
+                        embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                            edProperty._editingValue = VALUE_FOR_CONFLICT;
+                            edProperty.commit();
+                        };
+                    });
+                }
+            };
+
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                centre.run();
+            };
+
+            centre.retrieve();
+        });
+
+        test('editing through EntityEditAction embedded master (with collectional properties) works even with a conflict and collection change and continues working on subsequent validations', function (done) {
+            const old_postRun = centre._postRun;
+
+            const VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE = VALUE_FOR_CONFLICT + ' + collection';
+            const FURTHER_VALUE = VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE + ' + changed';
+            const EVEN_FURTHER_VALUE = FURTHER_VALUE + ' + additional change';
+
+            centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                old_postRun(criteriaEntity, newBindingEntity, result);
+
+                assert.strictEqual(result.resultEntities.length, 1, 'The count of resultant entities for the centre should be 1.');
+                const entity = result.resultEntities[0];
+
+                const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
+                editAction.currentEntity = () => entity;
+                const value = editAction._run();
+
+                editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                    editAction._masterReferenceForTesting.addEventListener('after-load', function (event) {
+                        const embeddedMaster = event.detail;
+
+                        const edProperty = embeddedMaster.$.editor_4_desc;
+                        let count = 1;
+
+                        embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                            if (count === 1) {
+                                assert.strictEqual(edProperty._editingValue, VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE);
+                                assert.strictEqual(edProperty._commValue, VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE);
+                                assert.strictEqual(edProperty._acceptedValue, VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE);
+
+                                assert.strictEqual(validatedEntity.get("desc"), VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE);
+                                assert.strictEqual(bindingEntity.get("desc"), VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE);
+
+                                edProperty._editingValue = FURTHER_VALUE;
+                                edProperty.commit();
+
+                                count++;
+                            } else if (count === 2) {
+                                assert.strictEqual(edProperty._editingValue, FURTHER_VALUE);
+                                assert.strictEqual(edProperty._commValue, FURTHER_VALUE);
+                                assert.strictEqual(edProperty._acceptedValue, FURTHER_VALUE);
+
+                                assert.isOk(validatedEntity.prop('desc').validationResult());
+                                assert.isOk(validatedEntity.prop('desc').validationResult().message);
+                                assert.isTrue(validatedEntity.prop('desc').validationResult().message.startsWith('This property has been recently changed. Please either edit the value back to'));
+
+                                assert.strictEqual(bindingEntity.get('desc'), FURTHER_VALUE);
+                                assert.isOk(bindingEntity['@desc_error']);
+                                assert.isOk(bindingEntity['@desc_error'].message);
+                                assert.isTrue(bindingEntity['@desc_error'].message.startsWith('This property has been recently changed. Please either edit the value back to'));
+
+                                assert.isNotOk(bindingEntity['@collProp_error']);
+                                assert.isOk(bindingEntity['@collProp_warning']);
+                                assert.strictEqual(bindingEntity['@collProp_warning'].message, 'This property has been recently changed.');
+
+                                edProperty._editingValue = EVEN_FURTHER_VALUE;
+                                edProperty.commit();
+
+                                count++;
+                            } else {
+                                assert.strictEqual(edProperty._editingValue, EVEN_FURTHER_VALUE);
+                                assert.strictEqual(edProperty._commValue, EVEN_FURTHER_VALUE);
+                                assert.strictEqual(edProperty._acceptedValue, EVEN_FURTHER_VALUE);
+
+                                assert.isOk(validatedEntity.prop('desc').validationResult());
+                                assert.isOk(validatedEntity.prop('desc').validationResult().message);
+                                assert.isTrue(validatedEntity.prop('desc').validationResult().message.startsWith('This property has been recently changed. Please either edit the value back to'));
+
+                                assert.strictEqual(bindingEntity.get('desc'), EVEN_FURTHER_VALUE);
+                                assert.isOk(bindingEntity['@desc_error']);
+                                assert.isOk(bindingEntity['@desc_error'].message);
+                                assert.isTrue(bindingEntity['@desc_error'].message.startsWith('This property has been recently changed. Please either edit the value back to'));
+
+                                assert.isNotOk(bindingEntity['@collProp_error']);
+                                assert.isNotOk(bindingEntity['@collProp_warning']);
+
+                                done();
+                            }
+                        };
+
+                        embeddedMaster.async(function () { // need to place this on async to facilitate VALIDATE tg-action postActionError proper overriding
+                            embeddedMaster._postValidatedDefaultError = function (errorResult) {
+                                throw new Error('Validation has failed. Error: ' + errorResult.message);
+                            };
+                        });
+
+                        embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                            edProperty._editingValue = VALUE_FOR_CONFLICT_AND_COLLECTION_CHANGE;
+                            edProperty.commit();
+                        };
+                    });
+                }
+            };
+
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                centre.run();
+            };
+
+            centre.retrieve();
+        });
+
+    });
+</script>
 
 </body>
 
