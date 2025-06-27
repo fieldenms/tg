@@ -97,8 +97,7 @@ Polymer({
      * Event for toggling 'paper-radio-button' states. Changes main property 'orGroup'.
      */
     _multiMetaValueChanged: function (e) {
-        const source = e.target || e.srcElement;
-        if (source.checked) {
+        if (e.target.checked) {
             this._orGroup = e.model.group;
         } else {
             this._orGroup = null;

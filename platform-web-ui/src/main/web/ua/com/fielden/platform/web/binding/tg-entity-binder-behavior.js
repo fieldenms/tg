@@ -1,7 +1,8 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
-import { resultMessages, openLink } from '/resources/reflection/tg-polymer-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -306,7 +307,7 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         * Promise that starts on validate() call and fulfils iff this validation attempt gets successfully resolved.
          * 
          * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
          * However, 'lastValidationAttemptPromise' property gets replaced in this case.
@@ -422,7 +423,7 @@ export const TgEntityBinderBehavior = {
                                         attachment.title.toLowerCase().startsWith('ftps://') ||
                                         attachment.title.toLowerCase().startsWith('mailto:');
                 if (openAsHyperLink === true) {
-                    openLink(attachment.title);
+                    checkLinkAndOpen(attachment.title);
                 } else {
                     const self = this;
                     const url = '/download-attachment/' + attachment.id + '/' + attachment.sha1;
@@ -563,7 +564,7 @@ export const TgEntityBinderBehavior = {
 
         // callbacks, that will be bound by editor child elements:
         self.validate = (function () {
-            this.lastValidationAttemptPromise =  new Promise((resolve, reject) => {
+            this.lastValidationAttemptPromise = new Promise((resolve, reject) => {
                 const slf = this;
                 slf._validationCounter += 1;
                 console.log('validate initiated (', slf._validationCounter, ')');
@@ -585,8 +586,25 @@ export const TgEntityBinderBehavior = {
                     // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
                     // (if the entity was not modified -- _validate(holder) will start the error recovery process)
                     slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
-                    slf._validationPromise.then(res => resolve(res)).catch(e => {}); // _validationPromise can be aborted (see abortValidationIfAny) and this is okay; catch handler is used to prevent 'Uncaught (in promise)' errors
+                    // '_validationPromise' can be aborted (see 'abortValidationIfAny') and this is okay.
+                    // The outer promise must resolve if '_validationPromise' resolves.
+                    // But we should also reject the outer promise on '_validationPromise' rejection.
+                    // Otherwise we will end-up with endless 'lastValidationAttemptPromise'.
+                    // And this will disrupt its usage after erroneous validation: copy / edit entity editor title actions will hang.
+                    // The same will happen for other actions, like criteria SAVE (see 'lastValidationAttemptPromise' usage).
+                    // So, resolve(slf._validationPromise) call will ensure proper resolve / reject for outer promise.
+                    resolve(slf._validationPromise);
                 }, 50);
+            }).catch(error => {
+                // One of the reasons for catch handler is to prevent 'Uncaught (in promise)' errors.
+                if (error.error && error.error.message && 'Request aborted.' === error.error.message) {
+                    // Skip this error from <iron-request>.
+                    // This means that 'lastValidationAttemptPromise' promise will be fulfilled.
+                } else {
+                    console.error('Error in lastValidationAttemptPromise: ', error);
+                    // Ensure 'lastValidationAttemptPromise' rejection on error.
+                    throw error;
+                }
             });
         }).bind(self);
 
@@ -896,10 +914,14 @@ export const TgEntityBinderBehavior = {
             modPropHolder['version'] = bindingEntity['version'];
             modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch/tg_convertPropertyValue for more details of how it can be mutated)
             
-            // function that converts arrays of entities to array of strings or otherwise return the same (or equal) value;
-            // this is needed to provide modifHolder with flatten 'val' and 'origVal' arrays that do not contain fully-fledged entities but rather string representations of those;
-            // this is because modifHolder deserialises as simple LinkedHashMap on server and inner values will not be deserialised as entities but rather as simple Java bean objects;
-            // also, we do not support conversion of array of entities on the server side -- such properties are immutable from client-side editor perspective (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions)
+            // Function that converts an array of entities to an array of strings, and returns the same (or equal) value otherwise.
+            // This is needed to provide `modifHolder` with flattened `val` and `origVal` arrays that do not contain
+            // fully-fledged entities, but rather their string representations.
+            // This is because `modifHolder` deserialises as a simple Map on the server, and inner values will not be
+            // deserialised as entities, but rather as simple Java bean objects.
+            // Also, we do support limited conversion of arrays of entities on the server (only for conflicting warning).
+            // Such properties are immutable from client-side editor perspective
+            // (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions).
             const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;
             
             bindingEntity.traverseProperties(function (propertyName) {

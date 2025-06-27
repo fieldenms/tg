@@ -1,16 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.join;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -21,6 +10,17 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.actions.IAction;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.join;
 
 /**
  * The implementation for functional entity actions (DOM element).
@@ -193,7 +193,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return attrs;
     }
 
-    private String generateElementName() {
+    /**
+     * Generates element name for corresponding functional Entity Master.
+     */
+    public String generateElementName() {
         return conf().functionalEntity.map(entityType -> "tg-" + entityType.getSimpleName() + "-master").orElse("");
     }
 
