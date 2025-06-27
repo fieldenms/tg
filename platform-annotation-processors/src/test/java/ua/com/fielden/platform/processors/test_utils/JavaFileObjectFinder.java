@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.processors.test_utils;
 
 import com.google.testing.compile.JavaFileObjects;
-import ua.com.fielden.platform.processors.test_utils.exceptions.PackageNotFoundException;
+import ua.com.fielden.platform.test_utils.compile.PackageNotFoundException;
 
 import javax.tools.JavaFileObject;
 import java.io.File;

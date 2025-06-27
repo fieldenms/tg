@@ -51,6 +51,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -491,12 +492,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     public static <T extends AbstractEntity<?>> Optional<EntityActionConfig> restoreActionConfig(final IWebUiConfig webUiConfig, final CentreContextHolder centreContextHolder) {
         final Optional<EntityActionConfig> actionConfig;
         if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
-            final Class<? extends MiWithConfigurationSupport<?>> miType;
-            try {
-                miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));
-            } catch (final ClassNotFoundException e) {
-                throw new IllegalStateException(e);
-            }
+            final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>)
+                    ClassesRetriever.findClass((String) centreContextHolder.getCustomObject().get("@@miType"));
             final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
             actionConfig = ofNullable(centre.actionConfig(
                 valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),

@@ -152,7 +152,32 @@ public class MiscUtilities {
         properties.putAll(map);
         return properties;
     }
-    
+
+    /**
+     * Creates a {@link Properties} instance populated with the specified entries.
+     */
+    public static Properties mkProperties(final String key, final String value) {
+        final var properties = new Properties();
+        properties.put(key, value);
+        return properties;
+    }
+
+    /// Left-biased union of properties.
+    public static Properties propertiesUnionLeft(final Properties left, final Properties right) {
+        if (left.isEmpty()) {
+            return right;
+        }
+        if (right.isEmpty()) {
+            return right;
+        }
+        else {
+            final var result = new Properties();
+            result.putAll(right);
+            result.putAll(left);
+            return result;
+        }
+    }
+
     /**
      * Returns a function accepting a format string and returning that string formatted with {@code args}.
      * <p>
