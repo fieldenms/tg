@@ -2,6 +2,7 @@ package ua.com.fielden.platform.migration;
 
 import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -16,11 +17,13 @@ import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.reflection.EntityMetadata.keyTypeInfo;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 // TODO This class uses both typeful metadata and reflection + EntityTypeInfo. The latter should be replaced.
 public class MigrationUtils {
@@ -90,13 +93,21 @@ public class MigrationUtils {
             final List<PropertyMetadata> keyMembers,
             final IDomainMetadata domainMetadata)
     {
-        return keyMembers.stream().flatMap(km -> {
-                    if (domainMetadata.propertyMetadataUtils().isPropEntityType(km, EntityMetadata::isPersistent)) {
-                        return keyPaths(km, domainMetadata).stream();
-                    } else {
-                        return Stream.of(km.name());
-                    }
-                })
+        return keyMembers.stream()
+                .map(km -> km.type().asEntity()
+                        .flatMap(et -> domainMetadata.forEntityOpt(et.javaType()))
+                        .map(em -> switch (em) {
+                            case EntityMetadata.Union union -> domainMetadata.entityMetadataUtils()
+                                    .unionMembers(union)
+                                    .stream()
+                                    .map(unionMember -> keyPaths(unionMember, domainMetadata))
+                                    .flatMap(Collection::stream)
+                                    .collect(toImmutableList());
+                            case EntityMetadata.Persistent $ -> keyPaths(km, domainMetadata);
+                            default -> ImmutableList.of(km.name());
+                        })
+                        .orElseGet(() -> ImmutableList.of(km.name())))
+                .flatMap(Collection::stream)
                 .map(s -> parentProp == null ? s : parentProp.name() + "." + s)
                 .toList();
     }
@@ -131,10 +142,17 @@ public class MigrationUtils {
         return keyMembers.stream()
                 .map(keyMember -> keyMember.map((name, type) -> {
                     final var propPath = parentPath == null ? name : parentPath + "." + name;
-                    if (!isPersistentEntityType(type)) {
-                        return List.of(propPath);
-                    } else {
+                    if (isUnionEntityType(type)) {
+                        return unionProperties((Class<? extends AbstractUnionEntity>) type)
+                                .stream()
+                                .map(unionMember -> keyPaths(propPath + "." + unionMember.getName(), (Class<? extends AbstractEntity<?>>) unionMember.getType()))
+                                .flatMap(Collection::stream)
+                                .collect(toImmutableList());
+                    }
+                    if (isPersistentEntityType(type)) {
                         return keyPaths(propPath, (Class<? extends AbstractEntity<?>>) type);
+                    } else {
+                        return List.of(propPath);
                     }
                 }))
                 .flatMap(Collection::stream)
