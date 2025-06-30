@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.entity;
 
-import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
 import static java.lang.String.format;
@@ -17,12 +20,10 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
     private Class<? extends MiWithConfigurationSupport<?>> menuItemTypeAsClass;
 
     @IsProperty
-    @MapTo
     @Title("Import URI")
     private String importUri;
 
     @IsProperty
-    @MapTo
     @Title("Element Name")
     private String elementName;
 

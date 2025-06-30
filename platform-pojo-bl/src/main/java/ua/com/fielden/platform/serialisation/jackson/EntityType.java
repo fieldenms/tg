@@ -49,7 +49,7 @@ public class EntityType extends AbstractEntity<String> {
     private Boolean _persistentWithAudit;
 
     @IsProperty
-    @Title(value = "Is audited?", desc = "Indicates whether the associated entity type is annotated with Audited annotation")
+    @Title(value = "Is Audited?", desc = "Indicates whether the associated entity type is annotated with Audited annotation.")
     private Boolean _audited;
 
     @IsProperty

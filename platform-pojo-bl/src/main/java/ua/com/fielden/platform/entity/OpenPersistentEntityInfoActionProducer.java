@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
 
-/// A producer for new instances of entity {@link OpenPersistentEntityInfoAction}.
+/// A producer for new instances of the {@link OpenPersistentEntityInfoAction} entity.
 ///
 public class OpenPersistentEntityInfoActionProducer extends AbstractProducerForOpenEntityMasterAction<PersistentEntityInfo, OpenPersistentEntityInfoAction> {
 

@@ -20,7 +20,7 @@ public class PersistentEntityInfoProducer extends DefaultEntityProducerWithConte
     protected PersistentEntityInfo provideDefaultValues(final PersistentEntityInfo entity) {
         if (currentEntityNotEmpty()) {
             final AbstractEntity<?> currEntity = currentEntity();
-            PersistentEntityInfoCo infoEntityCo = co(PersistentEntityInfo.class);
+            final PersistentEntityInfoCo infoEntityCo = co(PersistentEntityInfo.class);
             return infoEntityCo.initEntityWith(currEntity, entity);
         }
         // This happens when the entity master gets closed.

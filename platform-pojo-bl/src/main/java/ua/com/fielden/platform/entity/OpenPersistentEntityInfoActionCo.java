@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
-/// Companion object for entity {@link OpenPersistentEntityInfoAction}.
+/// Companion object for the {@link OpenPersistentEntityInfoAction} entity.
 ///
 public interface OpenPersistentEntityInfoActionCo extends IEntityDao<OpenPersistentEntityInfoAction> {
     static final IFetchProvider<OpenPersistentEntityInfoAction> FETCH_PROVIDER = fetch(OpenPersistentEntityInfoAction.class).with(

@@ -66,7 +66,7 @@ public interface IBasicWebApplicationServerModule {
         // dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure
         bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class);
 
-        // is required to load entity centre data into Audit menu item entity.
+        // is required to load entity centre data into Audit Menu Item entity.
         bindType(IAuditMenuItemInitializer.class).to(AuditMenuItemInitializer.class);
 
         // bind companion object implementations that are dependent on ICriteriaEntityRestorer

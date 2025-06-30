@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.web.interfaces.IAuditMenuItemInitializer;
 
-/// DAO implementation for companion object {@link AuditCompoundMenuItemCo}.
+/// DAO implementation for the {@link AuditCompoundMenuItemCo} companion object.
 ///
 @EntityType(AuditCompoundMenuItem.class)
 public class AuditCompoundMenuItemDao extends CommonEntityDao<AuditCompoundMenuItem> implements AuditCompoundMenuItemCo{

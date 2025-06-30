@@ -19,7 +19,7 @@ import static ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction.AUDI
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-/// DAO implementation for companion object {@link OpenPersistentEntityInfoActionCo}.
+/// DAO implementation for the {@link OpenPersistentEntityInfoActionCo} companion object.
 ///
 @EntityType(OpenPersistentEntityInfoAction.class)
 public class OpenPersistentEntityInfoActionDao extends AbstractOpenCompoundMasterDao<OpenPersistentEntityInfoAction>  implements OpenPersistentEntityInfoActionCo {
