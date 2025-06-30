@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.migration;
 
+import com.google.common.collect.ImmutableList;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -12,8 +13,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
-import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.toList;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.eql.meta.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
@@ -25,30 +25,33 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 public class MigrationUtils {
     private static final Set<String> PROPS_TO_IGNORE = setOf(ID, VERSION);
 
-    public static EntityMd generateEntityMd(final String tableName, final Collection<PropertyMetadata> pms,
-                                            final IDomainMetadata domainMetadata) {
+    public static EntityMd generateEntityMd(
+            final String tableName,
+            final Collection<PropertyMetadata> pms,
+            final IDomainMetadata domainMetadata)
+    {
         final var pmUtils = domainMetadata.propertyMetadataUtils();
         final var propMds = pms.stream()
                 .filter(pm -> !pm.type().isCollectional())
                 .flatMap(pm -> switch (pm) {
                     case PropertyMetadata.Persistent ppm when !PROPS_TO_IGNORE.contains(ppm.name()) -> {
-                        final var leafs = pmUtils.isPropEntityType(ppm, EntityMetadata::isPersistent)
+                        final var leaves = pmUtils.isPropEntityType(ppm, EntityMetadata::isPersistent)
                                 ? keyPaths(ppm, domainMetadata)
                                 : List.of(pm.name());
                         yield Stream.of(new PropMd(ppm.name(), (Class<?>) ppm.type().javaType(), ppm.data().column().name,
-                                                   ppm.is(REQUIRED), pm.hibType() instanceof IUtcDateTimeType, leafs));
+                                                   ppm.is(REQUIRED), pm.hibType() instanceof IUtcDateTimeType, leaves));
                     }
                     default -> {
                         final boolean required = !pmUtils.isPropEntityType(pm, EntityMetadata::isUnion) && pm.is(REQUIRED);
                         yield pmUtils.subProperties(pm).stream()
                                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                                 .map(spm -> {
-                                    final var leafs = pmUtils.isPropEntityType(spm, EntityMetadata::isPersistent)
+                                    final var leaves = pmUtils.isPropEntityType(spm, EntityMetadata::isPersistent)
                                             ? keyPaths(spm, domainMetadata).stream().map(s -> pm.name() + "." + s).toList()
                                             : List.of(pm.name() + "." + spm.name());
                                     return new PropMd(pm.name() + "." + spm.name(), (Class<?>) spm.type().javaType(),
                                                       spm.data().column().name, required,
-                                                      spm.hibType() instanceof IUtcDateTimeType, leafs);
+                                                      spm.hibType() instanceof IUtcDateTimeType, leaves);
                                 });
                     }
                 }).toList();
@@ -75,20 +78,22 @@ public class MigrationUtils {
 
     // TODO migrate to typeful metadata
     public static <ET extends AbstractEntity<?>> List<String> keyPaths(final String propName, final Class<ET> et) {
-        final List<String> result = new ArrayList<>();
         final List<T2<String, Class<?>>> keyMembers = getEntityTypeInfo(et).compositeKeyMembers;
         if (keyMembers.isEmpty()) {
-            result.add(propName);
-        } else {
-            for (final T2<String, Class<?>> keyMember : keyMembers) {
-                if (!isPersistentEntityType(keyMember._2)) {
-                    result.add(propName + "." + keyMember._1);
-                } else {
-                    result.addAll(keyPaths(propName + "." + keyMember._1, (Class<? extends AbstractEntity<?>>) keyMember._2));
-                }
-            }
+            return ImmutableList.of(propName);
         }
-        return unmodifiableList(result);
+        else {
+            return keyMembers.stream()
+                    .map(keyMember -> {
+                        if (!isPersistentEntityType(keyMember._2)) {
+                            return List.of(propName + "." + keyMember._1);
+                        } else {
+                            return keyPaths(propName + "." + keyMember._1, (Class<? extends AbstractEntity<?>>) keyMember._2);
+                        }
+                    })
+                    .flatMap(Collection::stream)
+                    .collect(toImmutableList());
+        }
     }
 
     public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final IDomainMetadata domainMetadata) {
@@ -112,71 +117,80 @@ public class MigrationUtils {
     }
 
     // TODO migrate to typeful metadata
-    public static <ET extends AbstractEntity<?>> List<String> keyPaths(final Class<ET> et) {
-        final var result = new ArrayList<String>();
-        final var keyMembers = getEntityTypeInfo(et).compositeKeyMembers;
+    public static <ET extends AbstractEntity<?>> List<String> keyPaths(final Class<ET> entityType) {
+        final var keyMembers = getEntityTypeInfo(entityType).compositeKeyMembers;
         if (keyMembers.isEmpty()) {
-            if (EntityUtils.isOneToOne(et)) {
-                result.addAll(keyPaths(KEY, (Class<ET>) keyTypeInfo(et)));
+            if (EntityUtils.isOneToOne(entityType)) {
+                return keyPaths(KEY, (Class<ET>) keyTypeInfo(entityType));
             } else {
-                result.add(KEY);
+                return ImmutableList.of(KEY);
             }
         } else {
-            for (final T2<String, Class<?>> keyMember : keyMembers) {
-                if (!isPersistentEntityType(keyMember._2)) {
-                    result.add(keyMember._1);
-                } else {
-                    result.addAll(keyPaths(keyMember._1, (Class<? extends AbstractEntity<?>>) keyMember._2));
-                }
-            }
+            return keyMembers.stream()
+                    .map(keyMember -> {
+                        if (!isPersistentEntityType(keyMember._2)) {
+                            return List.of(keyMember._1);
+                        } else {
+                            return keyPaths(keyMember._1, (Class<? extends AbstractEntity<?>>) keyMember._2);
+                        }
+                    })
+                    .flatMap(Collection::stream)
+                    .collect(toImmutableList());
         }
-        return unmodifiableList(result);
     }
 
-    public static List<PropInfo> produceContainers(final List<PropMd> props, final List<String> keyMemberPaths, final Map<String, Integer> retrieverResultFields, final boolean updater) {
-        final var result = new ArrayList<PropInfo>();
-
+    public static List<PropInfo> produceContainers(
+            final List<PropMd> props,
+            final List<String> keyMemberPaths,
+            final Map<String, Integer> resultFieldIndices,
+            final boolean isUpdater)
+    {
         final var usedPaths = new HashSet<String>();
-        for (final PropMd propMd : props) {
-            final var indices = obtainIndices(propMd.leafProps(), retrieverResultFields);
-            // need to determine incomplete mapping for key members of entity property
-            // if the number of null values doesn't match the number of indices then mapping is incomplete
-            final long countOfNullValuedIndices = indices.values().stream().filter(Objects::isNull).count();
-            if (countOfNullValuedIndices > 0 && countOfNullValuedIndices != indices.size()) {
-                throw new DataMigrationException("Mapping for prop [" + propMd.name() + "] does not have all its members specified: " + indices.entrySet().stream().filter(entry -> entry.getValue() == null).map(Entry::getKey).collect(toList()));
-            } else if (!indices.containsValue(null)) {
-                result.add(new PropInfo(propMd.name(), propMd.type(), propMd.column(), propMd.utcType(), new ArrayList<>(indices.values())));
-                usedPaths.addAll(propMd.leafProps());
-            } else if (propMd.required() && !updater) {
-                throw new DataMigrationException("prop [" + propMd.name() + "] is required");
-            }
-        }
+
+        final var propInfos = props.stream()
+                .map(propMd -> {
+                    final var indices = obtainIndices(propMd.leafProps(), resultFieldIndices);
+                    // need to determine incomplete mapping for key members of entity property
+                    // if the number of null values doesn't match the number of indices then mapping is incomplete
+                    final long countOfNullValuedIndices = indices.values().stream().filter(Objects::isNull).count();
+                    if (countOfNullValuedIndices > 0 && countOfNullValuedIndices != indices.size()) {
+                        throw new DataMigrationException("Mapping for prop [" + propMd.name() + "] does not have all its members specified: " + indices.entrySet().stream().filter(entry -> entry.getValue() == null).map(Entry::getKey).toList());
+                    } else if (!indices.containsValue(null)) {
+                        usedPaths.addAll(propMd.leafProps());
+                        return new PropInfo(propMd.name(), propMd.type(), propMd.column(), propMd.utcType(), ImmutableList.copyOf(indices.values()));
+                    } else if (propMd.required() && !isUpdater) {
+                        throw new DataMigrationException("prop [" + propMd.name() + "] is required");
+                    }
+                    else return null;
+                })
+                .filter(Objects::nonNull)
+                .toList();
 
         for (final var keyMemberPath : keyMemberPaths) {
-            if (!retrieverResultFields.containsKey(keyMemberPath)) {
+            if (!resultFieldIndices.containsKey(keyMemberPath)) {
                 throw new DataMigrationException("Sql mapping for property [" + keyMemberPath + "] is required as it is a part of the key definition.");
             }
         }
 
-        if (!retrieverResultFields.keySet().equals(usedPaths)) {
-            final var declaredProps = new TreeSet<>(retrieverResultFields.keySet());
+        if (!resultFieldIndices.keySet().equals(usedPaths)) {
+            final var declaredProps = new TreeSet<>(resultFieldIndices.keySet());
             declaredProps.removeAll(usedPaths); // compute the diff between the declared and used.
             throw new DataMigrationException("Used and declared props are different. The following props are specified but not used: " + declaredProps);
         }
 
-        return unmodifiableList(result);
+        return propInfos;
     }
 
-    private static LinkedHashMap<String, Integer> obtainIndices(final List<String> leafProps, final Map<String, Integer> retrieverResultFields) {
+    private static LinkedHashMap<String, Integer> obtainIndices(final List<String> leafProps, final Map<String, Integer> resultFieldIndices) {
         final var result = new LinkedHashMap<String, Integer>();
         for (final var lp : leafProps) {
-            result.put(lp, retrieverResultFields.get(lp));
+            result.put(lp, resultFieldIndices.get(lp));
         }
         return result;
     }
 
-    public static List<Integer> produceKeyFieldsIndices(final Class<? extends AbstractEntity<?>> entityType, final Map<String, Integer> retrieverResultFields) {
-        return new ArrayList<>(obtainIndices(keyPaths(entityType), retrieverResultFields).values());
+    public static List<Integer> produceKeyFieldsIndices(final Class<? extends AbstractEntity<?>> entityType, final Map<String, Integer> resultFieldIndices) {
+        return new ArrayList<>(obtainIndices(keyPaths(entityType), resultFieldIndices).values());
     }
 
     public static Object transformValue(final Class<?> type, final List<Object> values, final IdCache cache) {

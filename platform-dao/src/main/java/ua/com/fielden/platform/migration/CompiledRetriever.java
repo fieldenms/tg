@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.migration;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * A class that represents the result of processing {@code retriever} definition, including the legacy SELECT statement and the target INSERT or UPDATE statement.   
@@ -43,10 +43,11 @@ public class CompiledRetriever {
     }
 
     public Class<? extends AbstractEntity<?>> getType() {
-    	return retriever.type();
+        return retriever.type();
     }
     
     public List<PropInfo> getContainers() {
-    	return tdi != null ? tdi.containers : tdu.containers;
+        return tdi != null ? tdi.containers : tdu.containers;
     }
+
 }

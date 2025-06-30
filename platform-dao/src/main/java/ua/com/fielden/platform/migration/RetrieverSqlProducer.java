@@ -60,7 +60,7 @@ public class RetrieverSqlProducer {
     }
 
     public static String allYieldsSql(final SortedMap<String, String> resultProps) {
-        return SELECT + resultProps.entrySet().stream().map(e -> e.getValue() + " \"" + e.getKey() + "\"").collect(joining(", "));
+        return SELECT + resultProps.entrySet().stream().map(e -> "%s \"%s\"".formatted(e.getValue(), e.getKey())).collect(joining(", "));
     }
 
     private static String fromSql(final IRetriever<? extends AbstractEntity<?>> retriever) {

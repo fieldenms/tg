@@ -21,8 +21,15 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements IRetriever<T> {
     protected final Class<T> entityType;
 
+    /// Prefer [#AbstractRetriever(Class)] instead of this constructor.
+    ///
+    @Deprecated(forRemoval = true)
     protected AbstractRetriever(final IEntityDao<T> dao) {
-        this.entityType = dao.getEntityType();
+        this(dao.getEntityType());
+    }
+
+    protected AbstractRetriever(final Class<T> entityType) {
+        this.entityType = entityType;
     }
 
     @Override

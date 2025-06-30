@@ -1,11 +1,8 @@
 package ua.com.fielden.platform.migration;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.migration.DataValidatorUtils.produceDataIntegrityValidationSql;
-import static ua.com.fielden.platform.migration.DataValidatorUtils.produceKeyUniquenessViolationSql;
-import static ua.com.fielden.platform.migration.DataValidatorUtils.produceRequirednessValidationSql;
-import static ua.com.fielden.platform.migration.DataValidatorUtils.produceUpdatersKeysDataIntegrityValidationSql;
+import com.google.common.collect.Lists;
+import org.apache.logging.log4j.Logger;
+import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -14,13 +11,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.Logger;
-
-import com.google.common.collect.Lists;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.groupingBy;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.migration.DataValidatorUtils.*;
 
 public class DataValidator {
 
@@ -30,16 +25,16 @@ public class DataValidator {
 
     private final boolean includeDetails;
     private final Connection conn;
-    private final List<CompiledRetriever> retrieversJobs;
-    private final Map<Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> entityTypeRetrievers;
+    private final List<CompiledRetriever> retrievers;
+    private final Map<Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> retrieversByType;
     private final Map<CompiledRetriever, List<CompiledRetriever>> domainTypeRetrieversByUpdaters;
 
-    public DataValidator(final Connection conn, final boolean includeDetails, final List<CompiledRetriever> retrieversJobs) {
+    public DataValidator(final Connection conn, final boolean includeDetails, final List<CompiledRetriever> retrievers) {
         this.conn = conn;
         this.includeDetails = includeDetails;
-        this.retrieversJobs = retrieversJobs;
-        this.entityTypeRetrievers = retrieversJobs.stream().filter(r -> !r.retriever.isUpdater()).collect(Collectors.groupingBy(CompiledRetriever::getType));
-        this.domainTypeRetrieversByUpdaters = domainTypeRetrieversByUpdater(retrieversJobs);
+        this.retrievers = retrievers;
+        this.retrieversByType = retrievers.stream().filter(r -> !r.retriever.isUpdater()).collect(groupingBy(CompiledRetriever::getType));
+        this.domainTypeRetrieversByUpdaters = domainTypeRetrieversByUpdater(retrievers);
     }
 
     public void performValidations() {
@@ -51,7 +46,7 @@ public class DataValidator {
     }
 
     private void checkDataIntegrity() {
-        final var stmts = produceDataIntegrityValidationSql(retrieversJobs);
+        final var stmts = produceDataIntegrityValidationSql(retrievers);
 
         LOGGER.debug("Checking data integrity ...");
 
@@ -87,25 +82,27 @@ public class DataValidator {
     }
 
     private void checkRequiredness() {
-        final var stmts = produceRequirednessValidationSql(retrieversJobs);
-        LOGGER.debug("Checking requiredness ...");
+        final var stmts = produceRequirednessValidationSql(retrievers);
+        LOGGER.debug(() -> "Checking requiredness ...");
         for (final var sql : stmts) {
             try (final var st = conn.createStatement(); final var rs = st.executeQuery(sql._3)) {
                 rs.next();
                 final var count = rs.getInt(1);
                 if (count > 0) {
-                    LOGGER.error(format("Violated requiredness records count for property [%s] within retriever [%s] is [%s].\n"
-                            + "%s", sql._2, sql._1, count, includeDetails ? sql + LONG_BREAK : ""));
+                    LOGGER.error(format("""
+                                        Violated requiredness records count for property [%s] within retriever [%s] is [%s].
+                                        %s""",
+                                        sql._2, sql._1, count, includeDetails ? sql + LONG_BREAK : ""));
                 }
             } catch (final SQLException ex) {
-                LOGGER.error("Exception while counting records with violated requiredness with SQL:\n" + sql, ex);
+                LOGGER.error(() -> "An error occured while counting records with violated requiredness. SQL:\n" + sql, ex);
             }
         }
     }
 
     private void checkRetrievalSqlForSyntaxErrors() {
         LOGGER.debug("Checking SQL syntax correctness ... ");
-        for (final var rj : retrieversJobs) {
+        for (final var rj : retrievers) {
             try (final var st = conn.createStatement(); final var rs = st.executeQuery(rj.legacySql)) {
             } catch (final Exception ex) {
                 LOGGER.error("Exception while checking sql syntax for [" + rj.retriever.getClass().getSimpleName() + "]" + ex + " SQL:\n" + rj.legacySql);
@@ -115,29 +112,34 @@ public class DataValidator {
 
     private void checkKeyUniqueness() {
         LOGGER.debug("Checking key values uniqueness ... ");
-        for (final var ret : entityTypeRetrievers.entrySet()) {
-            final var sql = produceKeyUniquenessViolationSql(ret.getKey(), ret.getValue());
+        retrieversByType.forEach((entityType, retrievers) -> {
+            final var sql = produceKeyUniquenessViolationSql(entityType, retrievers);
             try (final var st = conn.createStatement()) {
                 try (final var rs = st.executeQuery(sql)) {
                     if (rs.next()) {
-                        LOGGER.error(format("There are duplicates in data of [%s].\n"
-                                + "%s", ret.getKey().getSimpleName(), includeDetails ? sql + LONG_BREAK : ""));
+                        LOGGER.error(format("""
+                                            There are duplicates in data of [%s].
+                                            %s""",
+                                            entityType.getSimpleName(), includeDetails ? sql + LONG_BREAK : ""));
                     }
                 }
             } catch (final Exception ex) {
-                LOGGER.error(format("Exception while checking key data uniqueness [%s]%s SQL:\n"
-                        + "%s", ret.getKey().getSimpleName(), ex, sql));
+                LOGGER.error(format("""
+                                    An error occured while checking key data uniqueness in [%s]. SQL:
+                                    %s""",
+                                    entityType.getSimpleName(), sql),
+                             ex);
             }
 
-        }
+        });
     }
 
-    private static Map<CompiledRetriever, List<CompiledRetriever>> domainTypeRetrieversByUpdater(final List<CompiledRetriever> retrieversJobs) {
-        final var allRetrieverByType = retrieversJobs.stream().collect(Collectors.groupingBy(CompiledRetriever::getType));
+    private static Map<CompiledRetriever, List<CompiledRetriever>> domainTypeRetrieversByUpdater(final List<CompiledRetriever> retrievers) {
+        final var retrieversByType = retrievers.stream().collect(groupingBy(CompiledRetriever::getType));
 
         final var result = new HashMap<CompiledRetriever, List<CompiledRetriever>>();
 
-        for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : allRetrieverByType.entrySet()) {
+        for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : retrieversByType.entrySet()) {
             final var currentTypeResult = new HashMap<CompiledRetriever, List<CompiledRetriever>>();
 
             for (final CompiledRetriever rt : Lists.reverse(typeAndItsRetrievers.getValue())) {

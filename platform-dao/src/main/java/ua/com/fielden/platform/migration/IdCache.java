@@ -22,7 +22,7 @@ public class IdCache {
 
     protected void registerCacheForType(final Class<? extends AbstractEntity<?>> entityType) {
         if (!cache.containsKey(entityType)) {
-            cache.put(entityType, new HashMap<Object, Long>());
+            cache.put(entityType, new HashMap<>());
         }
     }
 
