@@ -36,31 +36,63 @@ public class MigrationUtils {
     {
         final var pmUtils = domainMetadata.propertyMetadataUtils();
         final var propMds = pms.stream()
-                .filter(pm -> !pm.type().isCollectional())
-                .flatMap(pm -> switch (pm) {
-                    case PropertyMetadata.Persistent ppm when !PROPS_TO_IGNORE.contains(ppm.name()) -> {
-                        final var leaves = pmUtils.isPropEntityType(ppm, EntityMetadata::isPersistent)
-                                ? keyPaths(ppm, domainMetadata)
-                                : List.of(pm.name());
-                        yield Stream.of(new PropMd(ppm.name(), (Class<?>) ppm.type().javaType(), ppm.data().column().name,
-                                                   ppm.is(REQUIRED), pm.hibType() instanceof IUtcDateTimeType, leaves));
-                    }
-                    default -> {
-                        final boolean required = !pmUtils.isPropEntityType(pm, EntityMetadata::isUnion) && pm.is(REQUIRED);
-                        yield pmUtils.subProperties(pm).stream()
-                                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
-                                .map(spm -> {
-                                    final var leaves = pmUtils.isPropEntityType(spm, EntityMetadata::isPersistent)
-                                            ? keyPaths(spm, domainMetadata).stream().map(s -> pm.name() + "." + s).toList()
-                                            : List.of(pm.name() + "." + spm.name());
-                                    return new PropMd(pm.name() + "." + spm.name(), (Class<?>) spm.type().javaType(),
-                                                      spm.data().column().name, required,
-                                                      spm.hibType() instanceof IUtcDateTimeType, leaves);
-                                });
-                    }
-                }).toList();
+                .filter(pm -> !PROPS_TO_IGNORE.contains(pm.name()))
+                .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
+                .flatMap(pm -> Optional.<Stream<PropMd>>empty()
+                        // Component-typed property: expand into components, unless there is just one component.
+                        .or(() -> pm.type()
+                                .asComponent()
+                                .map(ct -> {
+                                    final var subPms = pmUtils.subProperties(pm)
+                                            .stream()
+                                            .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
+                                            .toList();
+                                    if (subPms.size() > 1) {
+                                        return subPms.stream()
+                                                .map(spm -> generatePropMd(spm, pm, domainMetadata));
+                                    }
+                                    // Special case: component-typed property with a single component.
+                                    // Do not expand into sub-properties so that this property can be specified in retrievers by itself.
+                                    // E.g., `money` instead of `money.amount`.
+                                    else {
+                                        return Stream.of(generatePropMd(pm, null, domainMetadata));
+                                    }
+                                }))
+                        // Union-typed property: expand into union members.
+                        .or(() -> pm.type()
+                                .asEntity()
+                                .flatMap(et -> domainMetadata.forEntityOpt(et.javaType()))
+                                .flatMap(EntityMetadata::asUnion)
+                                .map(union -> pmUtils.subProperties(pm)
+                                        .stream()
+                                        .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
+                                        .map(spm -> generatePropMd(spm, pm, domainMetadata))))
+                        // Other properties
+                        .orElseGet(() -> Stream.of(generatePropMd(pm, null, domainMetadata))))
+                .toList();
 
         return new EntityMd(tableName, propMds);
+    }
+
+    private static PropMd generatePropMd(
+            final PropertyMetadata.Persistent prop,
+            final @Nullable PropertyMetadata parentProp,
+            final IDomainMetadata domainMetadata)
+    {
+        final var name = combinePath(parentProp, prop.name());
+        final var leaves = domainMetadata.propertyMetadataUtils().isPropEntityType(prop, EntityMetadata::isPersistent)
+                ? keyPaths(prop, domainMetadata).stream().map(s -> combinePath(parentProp, s)).toList()
+                : List.of(name);
+        return new PropMd(name,
+                          (Class<?>) prop.type().javaType(),
+                          prop.data().column().name,
+                          prop.is(REQUIRED),
+                          prop.hibType() instanceof IUtcDateTimeType,
+                          leaves);
+    }
+
+    private static String combinePath(final @Nullable PropertyMetadata a, final String b) {
+        return a == null ? b : a.name() + "." + b;
     }
 
     public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final IDomainMetadata domainMetadata) {
