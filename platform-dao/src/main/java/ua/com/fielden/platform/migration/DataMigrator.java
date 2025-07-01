@@ -7,7 +7,6 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -24,7 +23,6 @@ import static java.util.Optional.of;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
-import static ua.com.fielden.platform.migration.MigrationUtils.generateEntityMd;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.StreamUtils.enumerate;
 
@@ -49,7 +47,8 @@ public class DataMigrator {
     {
         final DateTime start = new DateTime();
         this.hiberUtil = hiberUtil;
-        this.cache = new IdCache(injector.getInstance(ICompanionObjectFinder.class));
+        final var migrationUtils = injector.getInstance(MigrationUtils.class);
+        this.cache = new IdCache(injector.getInstance(ICompanionObjectFinder.class), migrationUtils);
 
         final var retrievers = instantiateRetrievers(injector, retrieverTypes);
 
@@ -59,11 +58,12 @@ public class DataMigrator {
             }
         }
 
-        final List<CompiledRetriever> compiledRetrievers = compileRetrievers(retrievers, injector.getInstance(IDomainMetadata.class));
+        final var sqlProducer = injector.getInstance(RetrieverSqlProducer.class);
+        final List<CompiledRetriever> compiledRetrievers = compileRetrievers(retrievers, migrationUtils, sqlProducer);
 
         final Connection legacyConn = injector.getInstance(Connection.class);
         if (!skipValidations) {
-            new DataValidator(legacyConn, includeDetails, compiledRetrievers).performValidations();
+            injector.getInstance(DataValidator.class).performValidations(legacyConn, includeDetails, compiledRetrievers);
         }
         final long lastId = batchInsert(compiledRetrievers, legacyConn, getNextId());
         final var period = new Period(start, new DateTime());
@@ -94,22 +94,21 @@ public class DataMigrator {
 
     private static List<CompiledRetriever> compileRetrievers(
             final List<? extends IRetriever<? extends AbstractEntity<?>>> retrievers,
-            final IDomainMetadata domainMetadata)
+            final MigrationUtils utils,
+            final RetrieverSqlProducer sqlProducer)
     {
         return retrievers.stream()
                 .map(retriever -> {
                     try {
-                        final String legacySql = RetrieverSqlProducer.getSql(retriever);
-                        final var entityMetadata = domainMetadata.forEntity(retriever.type()).asPersistent()
-                                .orElseThrow(() -> new DataMigrationException("Unable to generate a retriever job for non-persistent entity [%s].".formatted(retriever.type().getSimpleName())));
-                        final var md = generateEntityMd(entityMetadata.data().tableName(), entityMetadata.properties(), domainMetadata);
+                        final String legacySql = sqlProducer.getSql(retriever);
+                        final var md = utils.generateEntityMd(retriever.type());
 
                         final var resultFieldIndices = enumerate(retriever.resultFields().keySet().stream(), 1, T2::t2)
                                 .collect(toMap(t2 -> t2._1, t2 -> t2._2));
                         if (retriever.isUpdater()) {
-                            return CompiledRetriever.forUpdate(retriever, legacySql, new TargetDataUpdate(retriever.type(), resultFieldIndices, md), md);
+                            return CompiledRetriever.forUpdate(retriever, legacySql, new TargetDataUpdate(retriever.type(), resultFieldIndices, md, utils), md);
                         } else {
-                            return CompiledRetriever.forInsert(retriever, legacySql, new TargetDataInsert(retriever.type(), resultFieldIndices, md), md);
+                            return CompiledRetriever.forInsert(retriever, legacySql, new TargetDataInsert(retriever.type(), resultFieldIndices, md, utils), md);
                         }
                     }
                     catch (final Exception ex) {

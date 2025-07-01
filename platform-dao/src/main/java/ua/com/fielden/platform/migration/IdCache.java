@@ -1,23 +1,27 @@
 package ua.com.fielden.platform.migration;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 class IdCache {
-    private final Map<Class<?>, Map<Object, Long>> cache = new HashMap<>();
-    private final ICompanionObjectFinder coFinder;
 
-    public IdCache(final ICompanionObjectFinder coFinder) {
+    private final ICompanionObjectFinder coFinder;
+    private final MigrationUtils migrationUtils;
+
+    private final Map<Class<?>, Map<Object, Long>> cache = new HashMap<>();
+
+    IdCache(final ICompanionObjectFinder coFinder, final MigrationUtils migrationUtils) {
         this.coFinder = coFinder;
+        this.migrationUtils = migrationUtils;
     }
 
     protected void registerCacheForType(final Class<? extends AbstractEntity<?>> entityType) {
@@ -58,7 +62,7 @@ class IdCache {
             throw ex;
         }
 
-        final List<String> keyFields = MigrationUtils.keyPaths(entityType);
+        final List<String> keyFields = migrationUtils.keyPaths(entityType);
 
         for (final AbstractEntity<?> abstractEntity : entities) {
             result.put(prepareValueForCache(abstractEntity, keyFields), abstractEntity.getId());
