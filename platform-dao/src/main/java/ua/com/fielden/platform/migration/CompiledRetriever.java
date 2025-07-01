@@ -47,7 +47,7 @@ final class CompiledRetriever {
     }
     
     public List<PropInfo> getContainers() {
-        return tdi != null ? tdi.containers : tdu.containers;
+        return tdi != null ? tdi.containers() : tdu.containers();
     }
 
     public IRetriever<? extends AbstractEntity<?>> retriever() {

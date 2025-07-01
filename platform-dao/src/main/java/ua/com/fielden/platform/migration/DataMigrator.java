@@ -106,9 +106,9 @@ public class DataMigrator {
                         final var resultFieldIndices = enumerate(retriever.resultFields().keySet().stream(), 1, T2::t2)
                                 .collect(toMap(t2 -> t2._1, t2 -> t2._2));
                         if (retriever.isUpdater()) {
-                            return CompiledRetriever.forUpdate(retriever, legacySql, new TargetDataUpdate(retriever.type(), resultFieldIndices, md, utils), md);
+                            return CompiledRetriever.forUpdate(retriever, legacySql, utils.targetDataUpdate(retriever.type(), resultFieldIndices, md), md);
                         } else {
-                            return CompiledRetriever.forInsert(retriever, legacySql, new TargetDataInsert(retriever.type(), resultFieldIndices, md, utils), md);
+                            return CompiledRetriever.forInsert(retriever, legacySql, utils.targetDataInsert(retriever.type(), resultFieldIndices, md), md);
                         }
                     }
                     catch (final Exception ex) {
@@ -172,27 +172,27 @@ public class DataMigrator {
     private void performBatchUpdates(final TargetDataUpdate tdu, final ResultSet legacyRs, final String retrieverName) {
         final var start = new DateTime();
         final var exceptions = new HashMap<String, List<List<Object>>>();
-        final var typeCache = utils.cacheForType(cache, tdu.retrieverEntityType);
+        final var typeCache = utils.cacheForType(cache, tdu.entityType());
         final var tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
         hiberUtil.getSessionFactory().getCurrentSession().doWork(targetConn -> {
-            try (final var insertStmt = targetConn.prepareStatement(tdu.updateStmt)) {
+            try (final var insertStmt = targetConn.prepareStatement(tdu.updateStmt())) {
                 int batchId = 0;
                 final var batchValues = new ArrayList<List<Object>>();
 
                 while (legacyRs.next()) {
                     batchId = batchId + 1;
                     final var keyValue = new ArrayList<>();
-                    for (final Integer keyIndex : tdu.keyIndices) {
+                    for (final Integer keyIndex : tdu.keyIndices()) {
                         keyValue.add(legacyRs.getObject(keyIndex));
                     }
                     final Object key = keyValue.size() == 1 ? keyValue.get(0) : keyValue;
                     final Long idObject = typeCache.get(key);
                     if (idObject == null) {
-                        System.out.println("           !!! can't find id for " + tdu.retrieverEntityType.getSimpleName() + " with key: [" + key + "]");
+                        System.out.println("           !!! can't find id for " + tdu.entityType().getSimpleName() + " with key: [" + key + "]");
                     } else {
                         final long id = idObject;
                         int index = 1;
-                        final var currTransformedValues = tdu.transformValuesForUpdate(legacyRs, cache, id);
+                        final var currTransformedValues = utils.transformValuesForUpdate(tdu, legacyRs, cache, id);
                         batchValues.add(currTransformedValues);
                         for (final Object value : currTransformedValues) {
                             insertStmt.setObject(index, value);
@@ -214,31 +214,31 @@ public class DataMigrator {
             }
         });
         tr.commit();
-        LOGGER.info(generateFinalMessage(start, retrieverName, typeCache.size(), tdu.updateStmt, exceptions));
+        LOGGER.info(generateFinalMessage(start, retrieverName, typeCache.size(), tdu.updateStmt(), exceptions));
     }
 
     private long performBatchInserts(final TargetDataInsert tdi, final ResultSet legacyRs, final String retrieverName, final long startingId) {
         final var start = new DateTime();
         final var exceptions = new HashMap<String, List<List<Object>>>();
-        final var typeCache = utils.cacheForType(cache, tdi.entityType);
+        final var typeCache = utils.cacheForType(cache, tdi.entityType());
         final var tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
 
         final long idToReturn = hiberUtil.getSessionFactory().getCurrentSession().doReturningWork(targetConn -> {
-            try (final var insertStmt = targetConn.prepareStatement(tdi.insertStmt)) {
+            try (final var insertStmt = targetConn.prepareStatement(tdi.insertStmt())) {
                 int batchId = 0;
                 final var batchValues = new ArrayList<List<Object>>();
                 Long id = startingId;
                 while (legacyRs.next()) {
                     id = id + 1;
                     batchId = batchId + 1;
-                    final var keyValues = new ArrayList<>(tdi.keyIndices.size());
-                    for (final var keyIndex : tdi.keyIndices) {
+                    final var keyValues = new ArrayList<>(tdi.keyIndices().size());
+                    for (final var keyIndex : tdi.keyIndices()) {
                         keyValues.add(legacyRs.getObject(keyIndex));
                     }
                     typeCache.put(keyValues.size() == 1 ? keyValues.getFirst() : keyValues, id);
 
                     int index = 1;
-                    final var currTransformedValues = tdi.transformValuesForInsert(legacyRs, cache, id);
+                    final var currTransformedValues = utils.transformValuesForInsert(tdi, legacyRs, cache, id);
                     batchValues.add(currTransformedValues.stream().map(f -> f._1).toList());
                     for (final var t2 : currTransformedValues) {
                         transformIfUtcValueAndSet(t2._2, insertStmt, index, t2._1);
@@ -257,7 +257,7 @@ public class DataMigrator {
                     repeatAction(insertStmt, batchValues, exceptions);
                 }
 
-                LOGGER.info(() -> generateFinalMessage(start, retrieverName, typeCache.size(), tdi.insertStmt, exceptions));
+                LOGGER.info(() -> generateFinalMessage(start, retrieverName, typeCache.size(), tdi.insertStmt(), exceptions));
                 return id;
             }
         });

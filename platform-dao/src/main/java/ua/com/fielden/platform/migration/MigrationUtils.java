@@ -10,9 +10,11 @@ import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
@@ -23,7 +25,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 @Singleton
@@ -205,7 +209,72 @@ final class MigrationUtils {
         return new ArrayList<>(obtainIndices(keyPaths(entityType), resultFieldIndices).values());
     }
 
-    public Object transformValue(final Class<?> type, final List<Object> values, final IdCache cache) {
+    public Map<Object, Long> cacheForType(final IdCache cache, final Class<? extends AbstractEntity<?>> entityType) {
+        return cache.cacheFor(entityType, () -> retrieveDataForCache(entityType));
+    }
+
+    private <ET extends AbstractEntity<?>> Map<Object, Long> retrieveDataForCache(final Class<ET> entityType) {
+        final IEntityDao<ET> co = coFinder.find(entityType);
+        final var keyPaths = keyPaths(entityType);
+        final Map<Object, Long> result = new HashMap<>();
+        try (final var stream = co.stream(from(select(entityType).model()).model())) {
+            stream.forEach(entity -> result.put(entityToCacheKey(entity, keyPaths), entity.getId()));
+        }
+        return unmodifiableMap(result);
+    }
+
+    private Object entityToCacheKey(final AbstractEntity<?> entity, final List<String> keyPaths) {
+        if (keyPaths.size() == 1) {
+            return entity.get(keyPaths.getFirst());
+        }
+        else {
+            return keyPaths.stream().map(entity::get).toList();
+        }
+    }
+
+    public TargetDataInsert targetDataInsert(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final Map<String, Integer> resultFieldIndices,
+            final EntityMd entityMd)
+    {
+        final var containers = produceContainers(entityMd.props(), keyPaths(entityType), resultFieldIndices, false);
+        final var insertStmt = TargetDataInsert.generateInsertStmt(containers.stream().map(PropInfo::column).toList(),
+                                                                   entityMd.tableName(),
+                                                                   !isOneToOne(entityType));
+        final var keyIndices = produceKeyFieldsIndices(entityType, resultFieldIndices);
+        return new TargetDataInsert(entityType, containers, insertStmt, keyIndices);
+    }
+
+    public List<T2<Object, Boolean>> transformValuesForInsert(
+            final TargetDataInsert tdi,
+            final ResultSet resultSet,
+            final IdCache cache,
+            final long id)
+    {
+        final var result = new ArrayList<T2<Object, Boolean>>();
+        for (final var propInfo : tdi.containers()) {
+            final var values = propInfo.indices()
+                    .stream()
+                    .map(index -> {
+                        try {
+                            return resultSet.getObject(index);
+                        } catch (final Exception ex) {
+                            throw new DataMigrationException("Could not read data.", ex);
+                        }
+                    })
+                    .toList();
+            result.add(t2(transformValue(propInfo.propType(), values, cache), propInfo.utcType()));
+        }
+
+        result.add(t2(0, false)); // for version
+        if (!isOneToOne(tdi.entityType())) {
+            result.add(t2(id, false)); // for ID where applicable
+        }
+
+        return result;
+    }
+
+    private Object transformValue(final Class<?> type, final List<Object> values, final IdCache cache) {
         if (!isPersistentEntityType(type)) {
             return values.getFirst();
         } else {
@@ -232,27 +301,34 @@ final class MigrationUtils {
         return true;
     }
 
-    public Map<Object, Long> cacheForType(final IdCache cache, final Class<? extends AbstractEntity<?>> entityType) {
-        return cache.cacheFor(entityType, () -> retrieveDataForCache(entityType));
+    public TargetDataUpdate targetDataUpdate(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final Map<String, Integer> retrieverResultFieldsIndices,
+            final EntityMd entityMd)
+    {
+        final var containers = produceContainers(entityMd.props(), keyPaths(entityType), retrieverResultFieldsIndices, true);
+        final var updateStmt = TargetDataUpdate.generateUpdateStmt(containers.stream().map(PropInfo::column).toList(), entityMd.tableName());
+        final var keyIndices = produceKeyFieldsIndices(entityType, retrieverResultFieldsIndices);
+        return new TargetDataUpdate(entityType, containers, updateStmt, keyIndices);
     }
 
-    private <ET extends AbstractEntity<?>> Map<Object, Long> retrieveDataForCache(final Class<ET> entityType) {
-        final IEntityDao<ET> co = coFinder.find(entityType);
-        final var keyPaths = keyPaths(entityType);
-        final Map<Object, Long> result = new HashMap<>();
-        try (final var stream = co.stream(from(select(entityType).model()).model())) {
-            stream.forEach(entity -> result.put(entityToCacheKey(entity, keyPaths), entity.getId()));
+    public List<Object> transformValuesForUpdate(final TargetDataUpdate tdu, final ResultSet legacyRs, final IdCache cache, final long id) {
+        final var result = new ArrayList<>();
+        for (final var propInfo : tdu.containers()) {
+            final var values = propInfo.indices()
+                    .stream()
+                    .map(index -> {
+                        try {
+                            return legacyRs.getObject(index);
+                        } catch (final Exception ex) {
+                            throw new DataMigrationException("Could not read data.", ex);
+                        }
+                    })
+                    .toList();
+            result.add(transformValue(propInfo.propType(), values, cache));
         }
-        return unmodifiableMap(result);
-    }
-
-    private Object entityToCacheKey(final AbstractEntity<?> entity, final List<String> keyPaths) {
-        if (keyPaths.size() == 1) {
-            return entity.get(keyPaths.getFirst());
-        }
-        else {
-            return keyPaths.stream().map(entity::get).toList();
-        }
+        result.add(id);
+        return result;
     }
 
 }
