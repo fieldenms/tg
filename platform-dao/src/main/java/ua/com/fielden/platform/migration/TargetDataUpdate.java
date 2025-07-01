@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @author TG Team
  *
  */
-public class TargetDataUpdate {
+final class TargetDataUpdate {
     public final Class<? extends AbstractEntity<?>> retrieverEntityType;
     public final String updateStmt;
     public final List<PropInfo> containers;

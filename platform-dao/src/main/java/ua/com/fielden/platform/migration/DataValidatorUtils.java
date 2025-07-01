@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
-public class DataValidatorUtils {
+final class DataValidatorUtils {
 
     public static String produceKeyUniquenessViolationSql(final Class<? extends AbstractEntity<?>> entityType, final List<CompiledRetriever> entityTypeRetrievers) {
         final List<String> keyProps = MigrationUtils.keyPaths(entityType);

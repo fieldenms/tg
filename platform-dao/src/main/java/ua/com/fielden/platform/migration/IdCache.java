@@ -12,7 +12,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
-public class IdCache {
+class IdCache {
     private final Map<Class<?>, Map<Object, Long>> cache = new HashMap<>();
     private final ICompanionObjectFinder coFinder;
 

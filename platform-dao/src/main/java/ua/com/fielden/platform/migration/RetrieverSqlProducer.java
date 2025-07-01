@@ -9,7 +9,7 @@ import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public class RetrieverSqlProducer {
+final class RetrieverSqlProducer {
     private final static String SELECT = "\nSELECT ALL ";
     private final static String FROM = "\nFROM ";
     private final static String WHERE = "\nWHERE ";

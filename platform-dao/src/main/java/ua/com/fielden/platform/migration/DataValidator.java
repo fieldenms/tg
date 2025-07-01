@@ -17,7 +17,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.migration.DataValidatorUtils.*;
 
-public class DataValidator {
+final class DataValidator {
 
     private static final String LONG_BREAK = "\n\n\n";
 

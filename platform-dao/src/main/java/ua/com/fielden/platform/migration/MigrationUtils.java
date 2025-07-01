@@ -26,7 +26,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 // TODO This class uses both typeful metadata and reflection + EntityTypeInfo. The latter should be replaced.
-public class MigrationUtils {
+final class MigrationUtils {
     private static final Set<String> PROPS_TO_IGNORE = setOf(ID, VERSION);
 
     public static EntityMd generateEntityMd(

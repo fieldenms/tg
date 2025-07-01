@@ -15,5 +15,5 @@ import javax.annotation.Nonnull;
 ///                 Those composite key member indices follow an order that is the same as in [IdCache],
 ///                 legacy data result sets and target insert statements.
 ///
-public record PropInfo(String propName, Class<?> propType, String column, boolean utcType, List<Integer> indices) {
+record PropInfo(String propName, Class<?> propType, String column, boolean utcType, List<Integer> indices) {
 }

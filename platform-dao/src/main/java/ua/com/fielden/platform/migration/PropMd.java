@@ -10,5 +10,5 @@ import javax.annotation.Nonnull;
  * @author TG Team
  *
  */
-public record PropMd(String name, Class<?> type, String column, boolean required, boolean utcType, List<String> leafProps) {
+record PropMd(String name, Class<?> type, String column, boolean required, boolean utcType, List<String> leafProps) {
 }

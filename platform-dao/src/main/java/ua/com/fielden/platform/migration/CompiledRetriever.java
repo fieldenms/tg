@@ -12,7 +12,7 @@ import java.util.function.Function;
  * @author TG Team
  *
  */
-public class CompiledRetriever {
+final class CompiledRetriever {
     public final IRetriever<? extends AbstractEntity<?>> retriever;
     public final String legacySql;
     private final TargetDataInsert tdi;

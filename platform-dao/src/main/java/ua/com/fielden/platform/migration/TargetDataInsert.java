@@ -19,7 +19,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
  * @author TG Team
  *
  */
-public class TargetDataInsert {
+final class TargetDataInsert {
 
     public final Class<? extends AbstractEntity<?>> entityType;
     public final String insertStmt;
