@@ -1,8 +1,12 @@
 package ua.com.fielden.platform.migration;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import jakarta.inject.Singleton;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -11,27 +15,33 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.sql.ResultSet;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.function.Predicate.not;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.listCopy;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 @Singleton
 final class MigrationUtils {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private static final Set<String> PROPS_TO_IGNORE = setOf(ID, VERSION);
 
     private final IDomainMetadata domainMetadata;
@@ -155,7 +165,7 @@ final class MigrationUtils {
                 .toList();
     }
 
-    public List<PropInfo> produceContainers(
+    private List<PropInfo> produceContainers(
             final List<PropMd> props,
             final List<String> keyMemberPaths,
             final Map<String, Integer> resultFieldIndices,
@@ -166,32 +176,34 @@ final class MigrationUtils {
         final var propInfos = props.stream()
                 .map(propMd -> {
                     final var indices = obtainIndices(propMd.leafProps(), resultFieldIndices);
-                    // need to determine incomplete mapping for key members of entity property
-                    // if the number of null values doesn't match the number of indices then mapping is incomplete
-                    final long countOfNullValuedIndices = indices.values().stream().filter(Objects::isNull).count();
-                    if (countOfNullValuedIndices > 0 && countOfNullValuedIndices != indices.size()) {
-                        throw new DataMigrationException("Mapping for prop [" + propMd.name() + "] does not have all its members specified: " + indices.entrySet().stream().filter(entry -> entry.getValue() == null).map(Entry::getKey).toList());
-                    } else if (!indices.containsValue(null)) {
+                    // If the number of null values doesn't match the number of indices, the mapping is incomplete.
+                    final long nullCount = indices.values().stream().filter(Objects::isNull).count();
+                    if (nullCount > 0 && nullCount != indices.size()) {
+                        throw new DataMigrationException(format(
+                                "Mapping for property [%s] is incomplete, missing members: [%s]",
+                                propMd.name(),
+                                CollectionUtil.toString(Maps.filterValues(indices, Objects::isNull).keySet(), ", ")));
+                    }
+                    else if (!indices.containsValue(null)) {
                         usedPaths.addAll(propMd.leafProps());
                         return new PropInfo(propMd.name(), propMd.type(), propMd.column(), propMd.utcType(), ImmutableList.copyOf(indices.values()));
-                    } else if (propMd.required() && !isUpdater) {
-                        throw new DataMigrationException("prop [" + propMd.name() + "] is required");
+                    }
+                    else if (propMd.required() && !isUpdater) {
+                        throw new DataMigrationException(format("Mapping for required property [%s] is missing.", propMd.name()));
                     }
                     else return null;
                 })
                 .filter(Objects::nonNull)
                 .toList();
 
-        for (final var keyMemberPath : keyMemberPaths) {
-            if (!resultFieldIndices.containsKey(keyMemberPath)) {
-                throw new DataMigrationException("Sql mapping for property [" + keyMemberPath + "] is required as it is a part of the key definition.");
-            }
+        final var missingKeys = keyMemberPaths.stream().filter(not(resultFieldIndices::containsKey)).toList();
+        if (!missingKeys.isEmpty()) {
+            throw new DataMigrationException(format("Mappings for some key members are missing: [%s]", CollectionUtil.toString(missingKeys, ", ")));
         }
 
         if (!resultFieldIndices.keySet().equals(usedPaths)) {
-            final var declaredProps = new TreeSet<>(resultFieldIndices.keySet());
-            declaredProps.removeAll(usedPaths); // compute the diff between the declared and used.
-            throw new DataMigrationException("Used and declared props are different. The following props are specified but not used: " + declaredProps);
+            final var diff = Sets.difference(resultFieldIndices.keySet(), usedPaths);
+            throw new DataMigrationException(format("Unrecognised properties were specified in the mapping: [%s]", CollectionUtil.toString(diff, ", ")));
         }
 
         return propInfos;
@@ -206,7 +218,7 @@ final class MigrationUtils {
     }
 
     public List<Integer> produceKeyFieldsIndices(final Class<? extends AbstractEntity<?>> entityType, final Map<String, Integer> resultFieldIndices) {
-        return new ArrayList<>(obtainIndices(keyPaths(entityType), resultFieldIndices).values());
+        return listCopy(obtainIndices(keyPaths(entityType), resultFieldIndices).values());
     }
 
     public Map<Object, Long> cacheForType(final IdCache cache, final Class<? extends AbstractEntity<?>> entityType) {
@@ -277,28 +289,21 @@ final class MigrationUtils {
     private Object transformValue(final Class<?> type, final List<Object> values, final IdCache cache) {
         if (!isPersistentEntityType(type)) {
             return values.getFirst();
-        } else {
-            final Map<Object, Long> cacheForType = cacheForType(cache, (Class<? extends AbstractEntity<?>>) type);
-            final Object entityKeyObject = values.size() == 1 ? values.getFirst() : values;
-            final Long result = cacheForType.get(entityKeyObject);
-            if (values.size() == 1 && values.getFirst() != null && result == null) {
-                System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: [" + values.getFirst() + "]");
+        }
+        else {
+            final var cacheForType = cacheForType(cache, (Class<? extends AbstractEntity<?>>) type);
+            final var entityKeyObject = values.size() == 1 ? values.getFirst() : values;
+            final var id = cacheForType.get(entityKeyObject);
+
+            if (id == null && values.size() == 1 && values.getFirst() != null) {
+                LOGGER.warn(() -> "Could not find ID for [%s] with key [%s]".formatted(type.getSimpleName(), values.getFirst()));
             }
-            if (values.size() > 1 && !containsOnlyNull(values) && result == null) {
-                System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values);
+            if (id == null && values.size() > 1 && values.stream().allMatch(Objects::isNull)) {
+                LOGGER.warn(() -> "Could not find ID for [%s] with key values %s".formatted(type.getSimpleName(), CollectionUtil.toString(values, "[%s]"::formatted, ", ")));
             }
 
-            return result;
+            return id;
         }
-    }
-
-    private static boolean containsOnlyNull(final List<Object> values) {
-        for (final Object object : values) {
-            if (object != null) {
-                return false;
-            }
-        }
-        return true;
     }
 
     public TargetDataUpdate targetDataUpdate(
