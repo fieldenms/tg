@@ -85,8 +85,8 @@ public class DataMigrator {
             if (typeAndItsRetrievers.getValue().size() > 1) {
                 System.out.println(" == " + typeAndItsRetrievers.getKey().getSimpleName());
                 for (final CompiledRetriever compiledRetriever : typeAndItsRetrievers.getValue()) {
-                    System.out.println("        " + (compiledRetriever.retriever.isUpdater() ? "U" : " ") + " "
-                            + compiledRetriever.retriever.getClass().getSimpleName());
+                    System.out.println("        " + (compiledRetriever.isUpdater() ? "U" : " ") + " "
+                                       + compiledRetriever.retriever().getClass().getSimpleName());
                 }
             }
         }
@@ -148,8 +148,8 @@ public class DataMigrator {
         final var id = new AtomicLong(firstId);
 
         for (final var ret : retrievers) {
-            try (final var legacyStmt = legacyConn.createStatement(); final var legacyRs = legacyStmt.executeQuery(ret.legacySql)) {
-                final var retrieverName = ret.retriever.getClass().getSimpleName();
+            try (final var legacyStmt = legacyConn.createStatement(); final var legacyRs = legacyStmt.executeQuery(ret.legacySql())) {
+                final var retrieverName = ret.retriever().getClass().getSimpleName();
                 LOGGER.info(() -> "Executing retriever [%s]".formatted(retrieverName));
                 try {
                     final Function<TargetDataUpdate, Optional<Long>> updater = tdu -> {

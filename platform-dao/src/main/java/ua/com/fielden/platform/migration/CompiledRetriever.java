@@ -10,14 +10,14 @@ import java.util.function.Function;
  * A class that represents the result of processing {@code retriever} definition, including the legacy SELECT statement and the target INSERT or UPDATE statement.   
  *
  * @author TG Team
- *
  */
 final class CompiledRetriever {
-    public final IRetriever<? extends AbstractEntity<?>> retriever;
-    public final String legacySql;
+
+    private final IRetriever<? extends AbstractEntity<?>> retriever;
+    private final String legacySql;
     private final TargetDataInsert tdi;
     private final TargetDataUpdate tdu;
-    public final EntityMd md;
+    private final EntityMd md;
     
     public static CompiledRetriever forInsert(final IRetriever<? extends AbstractEntity<?>> retriever, final String legacySql, final TargetDataInsert tdi, final EntityMd md) {
         return new CompiledRetriever(retriever, tdi, null, legacySql, md);
@@ -48,6 +48,22 @@ final class CompiledRetriever {
     
     public List<PropInfo> getContainers() {
         return tdi != null ? tdi.containers : tdu.containers;
+    }
+
+    public IRetriever<? extends AbstractEntity<?>> retriever() {
+        return retriever;
+    }
+
+    public boolean isUpdater() {
+        return retriever.isUpdater();
+    }
+
+    public String legacySql() {
+        return legacySql;
+    }
+
+    public EntityMd entityMd() {
+        return md;
     }
 
 }

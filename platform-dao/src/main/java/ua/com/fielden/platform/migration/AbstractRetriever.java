@@ -1,15 +1,14 @@
 package ua.com.fielden.platform.migration;
 
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Updater;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Updater;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 /**
  * A base class for all concrete retrievers.
@@ -19,6 +18,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
  * @param <T>
  */
 public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements IRetriever<T> {
+
     protected final Class<T> entityType;
 
     /// Prefer [#AbstractRetriever(Class)] instead of this constructor.
@@ -52,41 +52,24 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
         return null;
     }
 
-    public static FieldMapping field(final CharSequence key, final String stmt) {
+    protected static FieldMapping field(final CharSequence key, final String stmt) {
         return new FieldMapping(key.toString(), stmt);
     }
 
-    protected static class FieldMapping {
-        String key;
-        String stmt;
+    protected record FieldMapping (String key, String statement) {}
 
-        public FieldMapping(final String key, final String stmt) {
-            this.key = key;
-            this.stmt = stmt;
-        }
-
-        protected String getKey() {
-            return key;
-        }
-
-        protected String getStmt() {
-            return stmt;
-        }
-
-    }
-
-    public static SortedMap<String, String> map(final FieldMapping... pairs) {
+    protected static SortedMap<String, String> map(final FieldMapping... mappings) {
         final SortedMap<String, String> result = new TreeMap<>();
-        for (final FieldMapping pair : pairs) {
-            if (result.containsKey(pair.getKey())) {
-                throw new IllegalArgumentException("Duplicate stmts for property [" + pair.getKey() + "]");
+        for (final FieldMapping mapping : mappings) {
+            if (result.containsKey(mapping.key())) {
+                throw new IllegalArgumentException("Duplicate mappings for property [%s]".formatted(mapping.key()));
             }
-            result.put(pair.getKey(), pair.getStmt());
+            result.put(mapping.key(), mapping.statement());
         }
         return result;
     }
 
-    public static List<String> list(final String... stmts) {
+    protected static List<String> list(final String... stmts) {
         return Arrays.asList(stmts);
     }
 
@@ -100,4 +83,5 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
     public final boolean isUpdater() {
         return AnnotationReflector.isAnnotationPresentForClass(Updater.class, getClass());
     }
+
 }
