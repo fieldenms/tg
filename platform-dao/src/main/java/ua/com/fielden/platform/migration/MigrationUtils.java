@@ -3,7 +3,9 @@ package ua.com.fielden.platform.migration;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import jakarta.inject.Singleton;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -16,7 +18,10 @@ import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
@@ -26,10 +31,12 @@ final class MigrationUtils {
     private static final Set<String> PROPS_TO_IGNORE = setOf(ID, VERSION);
 
     private final IDomainMetadata domainMetadata;
+    private final ICompanionObjectFinder coFinder;
 
     @Inject
-    MigrationUtils(final IDomainMetadata domainMetadata) {
+    MigrationUtils(final IDomainMetadata domainMetadata, final ICompanionObjectFinder coFinder) {
         this.domainMetadata = domainMetadata;
+        this.coFinder = coFinder;
     }
 
     public EntityMd generateEntityMd(final Class<? extends AbstractEntity<?>> entityType) {
@@ -202,7 +209,7 @@ final class MigrationUtils {
         if (!isPersistentEntityType(type)) {
             return values.getFirst();
         } else {
-            final Map<Object, Long> cacheForType = cache.getCacheForType((Class<? extends AbstractEntity<?>>) type);
+            final Map<Object, Long> cacheForType = cacheForType(cache, (Class<? extends AbstractEntity<?>>) type);
             final Object entityKeyObject = values.size() == 1 ? values.getFirst() : values;
             final Long result = cacheForType.get(entityKeyObject);
             if (values.size() == 1 && values.getFirst() != null && result == null) {
@@ -223,6 +230,29 @@ final class MigrationUtils {
             }
         }
         return true;
+    }
+
+    public Map<Object, Long> cacheForType(final IdCache cache, final Class<? extends AbstractEntity<?>> entityType) {
+        return cache.cacheFor(entityType, () -> retrieveDataForCache(entityType));
+    }
+
+    private <ET extends AbstractEntity<?>> Map<Object, Long> retrieveDataForCache(final Class<ET> entityType) {
+        final IEntityDao<ET> co = coFinder.find(entityType);
+        final var keyPaths = keyPaths(entityType);
+        final Map<Object, Long> result = new HashMap<>();
+        try (final var stream = co.stream(from(select(entityType).model()).model())) {
+            stream.forEach(entity -> result.put(entityToCacheKey(entity, keyPaths), entity.getId()));
+        }
+        return unmodifiableMap(result);
+    }
+
+    private Object entityToCacheKey(final AbstractEntity<?> entity, final List<String> keyPaths) {
+        if (keyPaths.size() == 1) {
+            return entity.get(keyPaths.getFirst());
+        }
+        else {
+            return keyPaths.stream().map(entity::get).toList();
+        }
     }
 
 }

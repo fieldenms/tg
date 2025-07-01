@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -37,6 +36,7 @@ public class DataMigrator {
 
     private final HibernateUtil hiberUtil;
     private final IdCache cache;
+    private final MigrationUtils utils;
 
     public DataMigrator(
             final Injector injector,
@@ -47,8 +47,8 @@ public class DataMigrator {
     {
         final DateTime start = new DateTime();
         this.hiberUtil = hiberUtil;
-        final var migrationUtils = injector.getInstance(MigrationUtils.class);
-        this.cache = new IdCache(injector.getInstance(ICompanionObjectFinder.class), migrationUtils);
+        this.utils = injector.getInstance(MigrationUtils.class);
+        this.cache = new IdCache();
 
         final var retrievers = instantiateRetrievers(injector, retrieverTypes);
 
@@ -59,7 +59,7 @@ public class DataMigrator {
         }
 
         final var sqlProducer = injector.getInstance(RetrieverSqlProducer.class);
-        final List<CompiledRetriever> compiledRetrievers = compileRetrievers(retrievers, migrationUtils, sqlProducer);
+        final List<CompiledRetriever> compiledRetrievers = compileRetrievers(retrievers, utils, sqlProducer);
 
         final Connection legacyConn = injector.getInstance(Connection.class);
         if (!skipValidations) {
@@ -172,7 +172,7 @@ public class DataMigrator {
     private void performBatchUpdates(final TargetDataUpdate tdu, final ResultSet legacyRs, final String retrieverName) {
         final var start = new DateTime();
         final var exceptions = new HashMap<String, List<List<Object>>>();
-        final var typeCache = cache.getCacheForType(tdu.retrieverEntityType);
+        final var typeCache = utils.cacheForType(cache, tdu.retrieverEntityType);
         final var tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
         hiberUtil.getSessionFactory().getCurrentSession().doWork(targetConn -> {
             try (final var insertStmt = targetConn.prepareStatement(tdu.updateStmt)) {
@@ -220,7 +220,7 @@ public class DataMigrator {
     private long performBatchInserts(final TargetDataInsert tdi, final ResultSet legacyRs, final String retrieverName, final long startingId) {
         final var start = new DateTime();
         final var exceptions = new HashMap<String, List<List<Object>>>();
-        final var typeCache = cache.getCacheForType(tdi.entityType);
+        final var typeCache = utils.cacheForType(cache, tdi.entityType);
         final var tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
 
         final long idToReturn = hiberUtil.getSessionFactory().getCurrentSession().doReturningWork(targetConn -> {
