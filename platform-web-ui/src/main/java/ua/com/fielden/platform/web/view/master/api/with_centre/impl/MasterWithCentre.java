@@ -8,13 +8,8 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 
-/**
- * An entity master that represents a single Entity Centre.
- *
- * @author TG Team
- *
- * @param <T>
- */
+/// An entity master that represents a single Entity Centre.
+///
 public class MasterWithCentre<T extends AbstractEntity<?>> extends AbstractMasterWithCentre<T> {
     public final EntityCentre<?> embeddedCentre;
 

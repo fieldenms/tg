@@ -164,7 +164,7 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(PersistentEntityInfo.class, PersistentEntityInfoProducer.class, masterConfig, injector);
     }
 
-    /// Creates an entity master configuration for {@link PersistentEntityInfo}.
+    /// Creates a compound entity master configuration for {@link PersistentEntityInfo}.
     ///
     public static EntityMaster<OpenPersistentEntityInfoAction> createPersistentEntityInfoCompoundMaster(final Injector injector, final IWebUiBuilder builder, final EntityMaster<PersistentEntityInfo> mainMaster) {
 

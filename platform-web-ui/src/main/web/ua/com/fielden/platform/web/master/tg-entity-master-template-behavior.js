@@ -89,7 +89,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
         };
 
         self._modifyAuditInfoFunctionalEntity = function (bindingEntity, master, action) {
-            if (!master._hasEmbededView()) { //if given master has no embedded view then it is simple master (not compound master)
+            if (!master._hasEmbededView()) { //If the given master has no embedded view, it is considered a simple master (not a compound master)
                 master.fire('tg-dynamic-title-changed', bindingEntity["@@origin"]["entityTitle"]);
             }
         }

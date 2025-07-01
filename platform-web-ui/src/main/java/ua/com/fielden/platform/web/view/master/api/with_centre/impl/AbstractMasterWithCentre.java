@@ -17,6 +17,8 @@ import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
+/// Abstract implementation of a master with centre view.
+///
 public abstract class AbstractMasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
 
     private final Class<T> entityType;
