@@ -10,13 +10,12 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-/**
- * A base class for all concrete retrievers.
- *
- * @author TG Team
- *
- * @param <T>
- */
+/// A base class for all concrete retrievers.
+///
+/// To denote the update function of the implementing class, it should be annotated with [Updater].
+///
+/// To implement [#resultFields()], the following methods are provided: [#map(FieldMapping...)], [#field(CharSequence,String)].
+///
 public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements IRetriever<T> {
 
     protected final Class<T> entityType;
