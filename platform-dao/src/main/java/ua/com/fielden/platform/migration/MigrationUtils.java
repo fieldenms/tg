@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
+import ua.com.fielden.platform.meta.PropertyTypeMetadata;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.CollectionUtil;
@@ -102,9 +103,7 @@ final class MigrationUtils {
             final @Nullable PropertyMetadata parentProp)
     {
         final var name = combinePath(parentProp, prop.name());
-        final var leaves = domainMetadata.propertyMetadataUtils().isPropEntityType(prop, EntityMetadata::isPersistent)
-                ? keyPaths(prop).stream().map(s -> combinePath(parentProp, s)).toList()
-                : List.of(name);
+        final var leaves = keyPaths(parentProp, prop);
         return new PropMd(name,
                           (Class<?>) prop.type().javaType(),
                           prop.data().column().name,
@@ -127,42 +126,44 @@ final class MigrationUtils {
                 return List.of(KEY);
             }
         } else {
-            return keyPaths(null, keyMembers);
+            return keyMembers.stream().map(this::keyPaths).flatMap(Collection::stream).collect(toImmutableList());
         }
     }
 
     private List<String> keyPaths(final PropertyMetadata pm) {
-        return pm.type().asEntity().map(et -> {
-            final var keyMembers = domainMetadata.entityMetadataUtils().compositeKeyMembers(domainMetadata.forEntity(et.javaType()));
-            if (keyMembers.isEmpty()) {
-                return List.of(pm.name());
-            } else {
-                return keyPaths(pm, keyMembers);
-            }
-        }).orElseGet(List::of);
+        return keyPaths(null, pm);
     }
 
-    private List<String> keyPaths(
-            final @Nullable PropertyMetadata parentProp,
-            final List<PropertyMetadata> keyMembers)
-    {
-        return keyMembers.stream()
-                .map(km -> km.type().asEntity()
-                        .flatMap(et -> domainMetadata.forEntityOpt(et.javaType()))
-                        .map(em -> switch (em) {
-                            case EntityMetadata.Union union -> domainMetadata.entityMetadataUtils()
+    private List<String> keyPaths(final @Nullable PropertyMetadata parentProp, final PropertyMetadata prop) {
+        final var paths = switch (prop.type()) {
+            case PropertyTypeMetadata.Entity et ->
+                    keyPaths_(et.javaType())
+                            .map(it -> it.stream().map(p -> combinePath(prop, p)).toList())
+                            .orElseGet(() -> List.of(prop.name()));
+            default -> List.of(prop.name());
+        };
+
+        return paths.stream().map(p -> combinePath(parentProp, p)).collect(toImmutableList());
+    }
+
+    private Optional<List<String>> keyPaths_(final Class<? extends AbstractEntity<?>> entityType) {
+        return domainMetadata.forEntityOpt(entityType)
+                .flatMap(em -> switch (em) {
+                    case EntityMetadata.Union union -> Optional.of(
+                            domainMetadata.entityMetadataUtils()
                                     .unionMembers(union)
                                     .stream()
                                     .map(this::keyPaths)
                                     .flatMap(Collection::stream)
-                                    .collect(toImmutableList());
-                            case EntityMetadata.Persistent $ -> keyPaths(km);
-                            default -> ImmutableList.of(km.name());
-                        })
-                        .orElseGet(() -> ImmutableList.of(km.name())))
-                .flatMap(Collection::stream)
-                .map(s -> parentProp == null ? s : parentProp.name() + "." + s)
-                .toList();
+                                    .toList());
+                    case EntityMetadata.Persistent persistent -> {
+                        final var keyMembers = domainMetadata.entityMetadataUtils().compositeKeyMembers(domainMetadata.forEntity(persistent.javaType()));
+                        yield keyMembers.isEmpty()
+                                ? Optional.empty()
+                                : Optional.of(keyMembers.stream().map(this::keyPaths).flatMap(Collection::stream).toList());
+                    }
+                    default -> Optional.empty();
+                });
     }
 
     private List<PropInfo> produceContainers(
