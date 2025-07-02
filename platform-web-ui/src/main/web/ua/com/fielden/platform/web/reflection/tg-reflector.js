@@ -890,6 +890,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
+     * Returns 'true' if the entity type is audited (i.e., annotated with @Audit).
+     *
+     */
+    EntityType.prototype.isAudited = function () {
+        return typeof this['_audited'] === 'undefined' ? false : this['_audited'];
+    }
+
+    /**
      * Returns 'true' if the entity type represents a continuation entity.
      *
      */

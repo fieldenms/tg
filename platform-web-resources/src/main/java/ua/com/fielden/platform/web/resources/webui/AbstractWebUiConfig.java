@@ -7,6 +7,8 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
+import ua.com.fielden.platform.audit.AuditUtils;
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.entity.*;
@@ -24,6 +26,7 @@ import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
+import ua.com.fielden.platform.web.audit.IAuditWebUiConfigFactory;
 import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -243,6 +246,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
         final EntityMaster<UserDefinableHelp> userDefinableHelpMaster = StandardMastersWebUiConfig.createUserDefinableHelpMaster(injector());
         final EntityMaster<PersistentEntityInfo> persistentEntityInfoMaster = StandardMastersWebUiConfig.createPersistentEntityInfoMaster(injector());
+        final EntityMaster<OpenPersistentEntityInfoAction> persistentEntityInfoCompoundMaster = StandardMastersWebUiConfig.createPersistentEntityInfoCompoundMaster(injector(), webUiBuilder, persistentEntityInfoMaster);
 
         AcknowledgeWarningsWebUiConfig.register(injector(), configApp()); // generic TG functionality for warnings acknowledgement
 
@@ -259,6 +263,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(userMenuAssociatorWebUiConfig.master)
         .addMaster(userDefinableHelpMaster)
         .addMaster(persistentEntityInfoMaster)
+        .addMaster(persistentEntityInfoCompoundMaster)
         // centre configuration management
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdaterMaster)
         .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdaterMaster)
@@ -273,6 +278,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(centreConfigurationWebUiConfig.centreConfigDeleteActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigSaveActionMaster)
         .addMaster(centreConfigurationWebUiConfig.overrideCentreConfigMaster);
+
+        //Register embedded entity centres for audited entity types
+        final var appDomainProvider = injector.getInstance(IApplicationDomainProvider.class);
+        final var auditCentreFactory = injector.getInstance(IAuditWebUiConfigFactory.class);
+        appDomainProvider.entityTypes().stream().filter(AuditUtils::isAudited).forEach(entityType -> {
+            configApp().register(auditCentreFactory.createEmbeddedCentre(entityType));
+        });
     }
 
     @Override

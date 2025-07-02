@@ -1,18 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.compound;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-
-import java.util.Optional;
-import java.util.function.BiFunction;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.inject.Injector;
-
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -29,6 +18,13 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
+
+import java.util.Optional;
+import java.util.function.BiFunction;
+
+import static java.util.Optional.*;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
 public class Compound {
 
@@ -55,6 +51,17 @@ public class Compound {
                     .forEntityWithSaveOnActivate(menuItemType)
                     .withCentre(embeddedCentre)
                     .done(),
+                injector);
+    }
+
+    protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miPolymorphicCentre(
+            final Class<MENU_ITEM> menuItemType,
+            final Injector injector) {
+        return new EntityMaster<MENU_ITEM>(
+                menuItemType,
+                new MasterWithCentreBuilder<MENU_ITEM>()
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .done(),
                 injector);
     }
 

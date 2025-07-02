@@ -8,11 +8,13 @@ import ua.com.fielden.platform.attachment.producers.AttachmentsUploadActionProdu
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
+import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
+import ua.com.fielden.platform.web.view.master.api.compound.impl.CompoundMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityEditMaster;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipulationMasterBuilder;
@@ -23,6 +25,8 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.EntityExportAction.*;
+import static ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction.AUDIT;
+import static ua.com.fielden.platform.entity.OpenPersistentEntityInfoAction.MAIN;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
@@ -158,6 +162,27 @@ public class StandardMastersWebUiConfig {
                 .done();
 
         return new EntityMaster<>(PersistentEntityInfo.class, PersistentEntityInfoProducer.class, masterConfig, injector);
+    }
+
+    /// Creates a compound entity master configuration for {@link PersistentEntityInfo}.
+    ///
+    public static EntityMaster<OpenPersistentEntityInfoAction> createPersistentEntityInfoCompoundMaster(final Injector injector, final IWebUiBuilder builder, final EntityMaster<PersistentEntityInfo> mainMaster) {
+
+        return CompoundMasterBuilder.<PersistentEntityInfo, OpenPersistentEntityInfoAction> create(injector, builder)
+                .forEntity(OpenPersistentEntityInfoAction.class)
+                .withProducer(OpenPersistentEntityInfoActionProducer.class)
+                .addMenuItem(PersistentEntityInfoMaster_OpenMain_MenuItem.class)
+                    .icon("icons:picture-in-picture")
+                    .shortDesc(MAIN)
+                    .longDesc("Persistent entity info.")
+                    .withView(mainMaster)
+                .also()
+                .addMenuItem(AuditCompoundMenuItem.class)
+                    .icon("icons:view-module")
+                    .shortDesc(AUDIT)
+                    .longDesc("Audit data for persistent entity info")
+                    .withPolymorphicCenter()
+                .done();
     }
 
     // TODO once it will be necessary, uncomment this code to implement generic EDIT / NEW actions with 'no parent centre refresh' capability:

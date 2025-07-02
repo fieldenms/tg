@@ -7,7 +7,6 @@ import ua.com.fielden.platform.utils.Pair;
 
 import java.util.Date;
 
-///
 /// An action-entity that is used to retrieve and represent a persistent versioning information about an entity that extends [AbstractPersistentEntity].
 /// The actual data retrieval is implemented in [PersistentEntityInfoProducer].
 ///
@@ -63,6 +62,20 @@ public class PersistentEntityInfo extends AbstractFunctionalEntityWithCentreCont
     @IsProperty
     @Title("Entity Title")
     private String entityTitle;
+
+    @IsProperty
+    @Title(value = "Entity Type", desc = "Entity Type to Inspect")
+    private String entityType;
+
+    @Observable
+    public PersistentEntityInfo setEntityType(final String entityType) {
+        this.entityType = entityType;
+        return this;
+    }
+
+    public String getEntityType() {
+        return entityType;
+    }
 
     public String getEntityTitle() {
         return entityTitle;
