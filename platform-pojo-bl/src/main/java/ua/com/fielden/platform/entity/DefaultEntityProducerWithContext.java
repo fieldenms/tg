@@ -3,11 +3,13 @@ package ua.com.fielden.platform.entity;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 
 import java.util.*;
 
+import static java.lang.String.*;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -183,7 +185,12 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * Returns uninstrumented instance.
      */
     protected final <M extends AbstractEntity<?>> M refetch(final Long id, final Class<M> entityType, final CharSequence property) {
-        return findByIdWithFiltering(id, co(entityType), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
+        final var fetch = reader.get().getFetchProvider().<M>fetchFor(property).fetchModel();
+        if (entityType != fetch.getEntityType()) {
+            throw new EntityProducingException(format("Unexpected type of property [%s.%s]. Expected: [%s]. Actual: [%s]",
+                                                       this.entityType.getSimpleName(), property, entityType.getSimpleName(), fetch.getEntityType().getSimpleName()));
+        }
+        return findByIdWithFiltering(id, co(entityType), fetch);
     }
 
     /**
