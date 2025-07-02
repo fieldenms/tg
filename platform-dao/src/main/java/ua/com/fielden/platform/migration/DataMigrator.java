@@ -235,7 +235,11 @@ public class DataMigrator {
                     for (final var keyIndex : tdi.keyIndices()) {
                         keyValues.add(legacyRs.getObject(keyIndex));
                     }
-                    typeCache.put(keyValues.size() == 1 ? keyValues.getFirst() : keyValues, id);
+                    final var cacheKey = keyValues.size() == 1 ? keyValues.getFirst() : keyValues;
+                    if (typeCache.containsKey(cacheKey)) {
+                        continue;
+                    }
+                    typeCache.put(cacheKey, id);
 
                     int index = 1;
                     final var currTransformedValues = utils.transformValuesForInsert(tdi, legacyRs, cache, id);
