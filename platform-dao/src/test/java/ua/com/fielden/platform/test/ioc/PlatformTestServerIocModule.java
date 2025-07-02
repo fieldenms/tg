@@ -30,11 +30,9 @@ import ua.com.fielden.platform.security.provider.SecurityTestIocModule;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
-import ua.com.fielden.platform.test.audit.AuditMenuInitializerForTestingPurposes;
 import ua.com.fielden.platform.test.entities.*;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-import ua.com.fielden.platform.web.interfaces.IAuditMenuItemInitializer;
 
 import java.util.List;
 import java.util.Properties;
@@ -188,8 +186,6 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgInventoryCo.class).to(TgInventoryDao.class);
         bind(TgInventoryBinCo.class).to(TgInventoryBinDao.class);
         bind(TgInventoryIssueCo.class).to(TgInventoryIssueDao.class);
-
-        bind(IAuditMenuItemInitializer.class).to(AuditMenuInitializerForTestingPurposes.class);
 
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...

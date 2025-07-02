@@ -125,6 +125,7 @@ public class PlatformDomainTypes {
         typesDependentOnWebUI.add(CentreConfigEditAction.class);
         typesDependentOnWebUI.add(CentreConfigSaveAction.class);
         typesDependentOnWebUI.add(CentreConfigConfigureAction.class);
+        typesDependentOnWebUI.add(AuditCompoundMenuItem.class);
 
         typesNotDependentOnWebUI.addAll(types);
         typesNotDependentOnWebUI.removeAll(typesDependentOnWebUI);
