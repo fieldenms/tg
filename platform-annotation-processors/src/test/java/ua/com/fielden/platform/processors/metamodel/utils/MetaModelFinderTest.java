@@ -5,6 +5,8 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.AbstractUnionEntityMetaModel;
+import ua.com.fielden.platform.entity.meta.AbstractUnionEntityMetaModelAliased;
 import ua.com.fielden.platform.processors.metamodel.MetaModelProcessor;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
@@ -269,6 +271,7 @@ public class MetaModelFinderTest {
     @Test
     public void findMetaModels_finds_all_meta_models_declared_by_MetaModels() {
         final List<Class<?>> expectedClasses = List.of(
+                AbstractUnionEntityMetaModel.class,
                 EntityWithDescTitleMetaModel.class,
                 EntityWithEntityTypedAndOrdinaryPropsMetaModel.class,
                 EntityWithKeyTypeNoKeyMetaModel.class,
@@ -289,6 +292,7 @@ public class MetaModelFinderTest {
                 PersistentEntityMetaModel.class,
                 SubEntityMetaModel.class,
                 SuperEntityMetaModel.class,
+                AbstractUnionEntityMetaModelAliased.class,
                 EntityWithDescTitleMetaModelAliased.class,
                 EntityWithEntityTypedAndOrdinaryPropsMetaModelAliased.class,
                 EntityWithKeyTypeNoKeyMetaModelAliased.class,
