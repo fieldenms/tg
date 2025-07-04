@@ -34,7 +34,7 @@ import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadataUtils;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.IDates;
@@ -44,6 +44,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -596,14 +597,16 @@ public class DynamicQueryBuilderSqlTest {
 
         set_up();
         final QueryProperty property = queryProperties.get(propertyName);
-        property.setValue(Arrays.asList("some val 1*", "some val 2*"));
+        final var values = List.of("some val 1*", "some val 2*");
+        property.setValue(values);
 
         final String cbn = property.getConditionBuildingName();
+        final var cbnNoKey = getPropertyNameWithoutKeyPart(cbn);
 
         final ICompleted<? extends AbstractEntity<?>> expected = //
         /**/iJoin.where().condition(cond() //
-        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull().and() //
-        /*    */.condition(cond().prop(cbn).iLike().anyOfValues((Object[]) DynamicQueryBuilder.prepCritValuesForEntityTypedProp((List<String>) property.getValue())).model()) //
+        /*  */.condition(cond().prop(cbnNoKey).isNotNull().and() //
+        /*    */.condition(cond().prop(cbnNoKey).in().model(select(SlaveEntity.class).where().prop(KEY).iLike().anyOfValues(DynamicQueryBuilder.prepCritValuesForEntityTypedProp(values)).model()).model())
         /*  */.model()) //
         /**/.model()); //
         final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
@@ -657,7 +660,7 @@ public class DynamicQueryBuilderSqlTest {
                             .and()
                             .condition(
                                 cond().prop(cbnNoKey).in().model(subSelect)
-                                .or().prop(cbn).iLike().anyOfValues(prepCritValuesForEntityTypedProp(Arrays.asList(critValuesWithWildcard)))
+                                .or().prop(cbnNoKey).in().model(select(SlaveEntity.class).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(Arrays.asList(critValuesWithWildcard))).model())
                                 .model())
                         .model())
                 .model();
@@ -1410,18 +1413,18 @@ public class DynamicQueryBuilderSqlTest {
         final ICompleted<? extends AbstractEntity<?>> expected = //
         /**/select(select(TgBogie.class).model().setShouldMaterialiseCalcPropsAsColumnsInSqlQuery(true)).as(alias).where().condition(cond() //
         /*  */.condition(cond().prop(alias).isNotNull().and() //
-        /*    */.condition(cond().prop(alias + ".key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
+           /*    */.condition(cond().prop(alias).in().model(select(TgBogie.class).where().prop(KEY).iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model()).model())//
         /*  */.model()).and()//
         /*  */.condition(cond().prop(alias + ".desc").isNotNull().and() //
         /*    */.condition(cond().prop(alias + ".desc").iLike().anyOfValues(new Object[] { "%Some string value%" }).model()) //
         /*  */.model()).and()//
         /*  */.condition(cond().prop(alias + ".location").isNotNull().and() //
-        /*    */.condition(cond().prop(alias + ".location.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
+        /*    */.condition(cond().prop(alias + ".location.id").in().model(select(TgBogieLocation.class).where().prop(KEY).iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model()).model())//
         /*  */.model()).and()//
         /*    */.condition(cond()//
         /*	*/.condition(cond()//
         /*	  */.condition(cond().prop(alias + ".location.workshop").isNotNull().and()//
-        /*	    */.condition(cond().prop(alias + ".location.workshop.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
+        /*	    */.condition(cond().prop(alias + ".location.workshop").in().model(select(TgWorkshop.class).where().prop(KEY).iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model()).model())//
         /*	  */.model()).and()//
         /*	  */.condition(cond().prop(alias + ".location.workshop.desc").isNotNull().and()//
         /*	    */.condition(cond().prop(alias + ".location.workshop.desc").iLike().anyOfValues(new Object[] { "%Some string value%" }).model())
@@ -1430,10 +1433,10 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.or()//
         /*	*/.condition(cond()//
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot").isNotNull().and()//
-        /*	    */.condition(cond().prop(alias + ".location.wagonSlot.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
+        /*	    */.condition(cond().prop(alias + ".location.wagonSlot").in().model(select(TgWagonSlot.class).where().prop(KEY).iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model()).model())//
         /*	  */.model()).and()//
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot.wagon").isNotNull().and()//
-        /*	    */.condition(cond().prop(alias + ".location.wagonSlot.wagon.key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
+        /*	    */.condition(cond().prop(alias + ".location.wagonSlot.wagon").in().model(select(TgWagon.class).where().prop(KEY).iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model()).model())//
         /*	  */.model()).and()//
         /*	  */.condition(cond().prop(alias + ".location.wagonSlot.position").isNotNull().and()//
         /*	    */.condition(cond().prop(alias + ".location.wagonSlot.position").ge().iVal(3).and().prop(alias + ".location.wagonSlot.position").le().iVal(7).model())//
