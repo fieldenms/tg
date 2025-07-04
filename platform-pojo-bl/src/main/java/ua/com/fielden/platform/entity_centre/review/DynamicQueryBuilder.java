@@ -29,7 +29,6 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 
@@ -53,6 +52,7 @@ import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryC
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
+import static ua.com.fielden.platform.utils.CollectionUtil.partitionBy;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -1100,19 +1100,17 @@ public class DynamicQueryBuilder {
             : cond().prop(getPropertyNameWithoutKeyPart(propertyNameWithKey)).in().values(matchedPropDescriptors.toArray()).model(); // passing of PropertyDescriptor instances works due to their proper conversion .toString() at the EQL level
     }
 
-    /**
-     * Generates condition for entity-typed property with type <code>propType</code> and criteria <code>searchValues</code>.
-     *
-     * @param propertyNameWithKey -- the name of property concatenated with ".key"
-     * @param searchValues
-     * @param propType
-     * @return
-     */
-    private static ConditionModel propertyLike(final String propertyNameWithKey, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
-        return searchValues.stream().collect(StreamUtils.partitioning(str -> str.contains("*")))
+    /// Generates a condition for an entity-typed property using values specified for a criterion.
+    ///
+    /// @param prop  property path that ends with an entity-typed property or with `key`
+    /// @param propType  type of the criterion property
+    ///
+    private static ConditionModel propertyLike(final String prop, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
+        return partitionBy(searchValues, str -> str.contains("*"))
                 .map((wildVals, exactVals) -> {
-                    final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyNameWithKey);
-                    final var propId = propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "");
+                    final var propWithoutKey = getPropertyNameWithoutKeyPart(prop);
+                    // TODO After #2452, adding ".id" for union-typed properties will no longer be necessary.
+                    final var propId = propWithoutKey + (isUnionEntityType(propType) ? ".id" : "");
                     // Exact and wilcard search values.
                     if (!exactVals.isEmpty() && !wildVals.isEmpty()) {
                         return cond()
@@ -1126,7 +1124,6 @@ public class DynamicQueryBuilder {
                     // Only exact search values.
                     else if (!exactVals.isEmpty()) {
                         return cond()
-                                // Condition for exact search values.
                                 .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactVals).model())
                                 .model();
                     }
