@@ -99,6 +99,8 @@ public class BasicWebServerIocModule extends CompanionIocModule {
         bindConstant().annotatedWith(Names.named("email.smtp")).to(props.getProperty("email.smtp"));
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to(props.getProperty("email.fromAddress"));
         bindConstant().annotatedWith(Names.named("independent.time.zone")).to(Boolean.parseBoolean(props.getProperty("independent.time.zone")));
+        bindConstant().annotatedWith(Names.named("externalSites.allowlist")).to(props.getProperty("externalSites.allowlist", ""));
+        bindConstant().annotatedWith(Names.named("externalSites.expiresIn")).to(props.getProperty("externalSites.expiresIn", ""));
         final boolean enableWebApi = Boolean.parseBoolean(props.getProperty("web.api"));
         bindConstant().annotatedWith(Names.named("web.api")).to(enableWebApi);
         final var maxQueryDepthKey = "web.api.maxQueryDepth";

@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.app.config;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
@@ -222,9 +221,7 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
-                replace("@masterActionOptions", "\"" + webUiConfig.masterActionOptions() + "\"").
-                replace("@siteAllowlist", format("[%s]", CollectionUtil.toString(webUiConfig.siteAllowlist(), ", "))).
-                replace("@daysUntilSitePermissionExpires", Integer.toString(webUiConfig.daysUntilSitePermissionExpires()));
+                replace("@masterActionOptions", "\"" + webUiConfig.masterActionOptions() + "\"");
     }
 
     public String getAppIndex(final IDates dates) {

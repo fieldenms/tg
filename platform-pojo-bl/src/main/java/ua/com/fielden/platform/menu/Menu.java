@@ -1,17 +1,13 @@
 package ua.com.fielden.platform.menu;
 
-import static java.util.Collections.unmodifiableList;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Represents device-profile-specific application menu with tiles and actions on them.
@@ -54,6 +50,35 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     @IsProperty
     @Title("User name")
     private String userName;
+
+    @IsProperty(String.class)
+    @Title(value = "Site Allow List", desc = "Site white list that user can visit without confirmation.")
+    private List<String> siteAllowlist = new ArrayList<>();
+
+    @IsProperty
+    @Title(value = "Allowed Site Expiry (Days)", desc = "Defines how long an allowed site remains trusted before requiring re-confirmation.")
+    private Integer daysUntilSitePermissionExpires;
+
+    public Integer getDaysUntilSitePermissionExpires() {
+        return daysUntilSitePermissionExpires;
+    }
+
+    @Observable
+    public Menu setDaysUntilSitePermissionExpires(final Integer daysUntilSitePermissionExpires) {
+        this.daysUntilSitePermissionExpires = daysUntilSitePermissionExpires;
+        return this;
+    }
+    
+    @Observable
+    protected Menu setSiteAllowlist(final List<String> siteAllowlist) {
+        this.siteAllowlist.clear();
+        this.siteAllowlist.addAll(siteAllowlist);
+        return this;
+    }
+
+    public List<String> getSiteAllowlist() {
+        return unmodifiableList(siteAllowlist);
+    }
 
     @Observable
     public Menu setUserName(final String userName) {

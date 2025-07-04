@@ -1,46 +1,45 @@
 package ua.com.fielden.platform.menu;
 
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
-import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.apache.logging.log4j.Logger;
-
 import com.google.inject.Inject;
-
+import com.google.inject.name.Named;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.menu.exceptions.MenuInitialisationException;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
 public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
     private static final Logger LOGGER = getLogger(MenuProducer.class);
+    private static final int DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS = 183;
 
     private final IMenuRetriever menuRetriever;
     private final IUserProvider userProvider;
     private final WebMenuItemInvisibilityCo miInvisible;
+    private final List<String> siteAllowlist;
+    private final int daysUntilSitePermissionExpires;
 
     @Inject
     public MenuProducer(
@@ -48,11 +47,19 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
             final WebMenuItemInvisibilityCo miInvisible,
             final IUserProvider userProvider,
             final ICompanionObjectFinder coFinder,
-            final EntityFactory entityFactory) {
+            final EntityFactory entityFactory,
+            final @Named("externalSites.allowlist") String siteAllowlist,
+            final @Named("externalSites.expiresIn") String expiryDays) {
         super(entityFactory, Menu.class, coFinder);
         this.menuRetriever = menuRetriever;
         this.miInvisible = miInvisible;
         this.userProvider = userProvider;
+        this.siteAllowlist = TryWrapper.Try( () -> stream(siteAllowlist.trim().split("\\s*,\\s*"))
+                        .map(site -> site.toLowerCase().replaceAll("[\"']", "").replace(".", "\\.").replace("*", ".*")) //generates javascript RegEx
+                        .toList())
+                .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'siteAllowlist': %s".formatted(ex.getMessage())));
+        this.daysUntilSitePermissionExpires = TryWrapper.Try( () -> isEmpty(expiryDays) ? DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS : Integer.parseInt(expiryDays) )
+                .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'daysUntilSitePermissionExpires': %s".formatted(ex.getMessage())));
     }
 
     @Override
@@ -65,6 +72,8 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
             // At this stage all items are visible for mobile profile.
             // In case where invisibility logic should be implemented, there is a need to extend persistent WebMenuItemInvisibility entity.
         }
+        menu.setSiteAllowlist(this.siteAllowlist);
+        menu.setDaysUntilSitePermissionExpires(this.daysUntilSitePermissionExpires);
         return menu.copyTo(entity);
     }
 

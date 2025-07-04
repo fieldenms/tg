@@ -113,12 +113,13 @@ export function checkLinkAndOpen(urlString, target, windowFeatures) {
         const url = urlAndHostname.url.href;
         if (isExternalURL(urlAndHostname)) {
             const hostName = urlAndHostname.hostname;
-            const isAllowedSite = () => appConfig.siteAllowlist.find(pattern => pattern.test(hostName));
+            const isAllowedSite = () => appConfig.getSiteAllowlist() && appConfig.getSiteAllowlist().find(pattern => pattern.test(hostName));
             const wasAcceptedByUser = () => {
                 const now = moment();
                 const isRecent = (key) =>
+                    appConfig.getDaysUntilSitePermissionExpires() && 
                     localStorage.getItem(key) &&
-                    now.diff(moment(localStorage.getItem(key), dateFormat), 'days') < appConfig.daysUntilSitePermissionExpires;
+                    now.diff(moment(localStorage.getItem(key), dateFormat), 'days') < appConfig.getDaysUntilSitePermissionExpires();
 
                 return isRecent(localStorageKey(url)) || isRecent(localStorageKey(hostName));
             };
