@@ -339,4 +339,28 @@ public class CollectionUtilTest {
         assertEquals(List.of("a", "b", "a", "b"), concatList(List.of("a"), linkedSetOf("b", "a"), List.of("b")));
     }
 
+    @Test
+    public void partitionBy_returns_a_pair_of_empty_lists_for_an_empty_collection() {
+        assertEquals(t2(List.of(), List.of()), partitionBy(List.of(), x -> true));
+        assertEquals(t2(List.of(), List.of()), partitionBy(List.of(), x -> false));
+        assertEquals(t2(List.of(), List.of()), partitionBy(Set.of(), x -> true));
+        assertEquals(t2(List.of(), List.of()), partitionBy(Set.of(), x -> false));
+    }
+
+    @Test
+    public void partitionBy_returns_a_pair_whose_first_element_contains_all_collection_elements_satisfying_predicate() {
+        assertEquals(List.of(1), partitionBy(List.of(1), x -> x > 0)._1);
+        assertEquals(List.of(1, 2, 3), partitionBy(List.of(1, 2, 3), x -> x > 0)._1);
+        assertEquals(List.of(), partitionBy(List.of(0), x -> x > 0)._1);
+        assertEquals(List.of(1, 2), partitionBy(List.of(-1, 1, -2, 2), x -> x > 0)._1);
+    }
+
+    @Test
+    public void partitionBy_returns_a_pair_whose_second_element_contains_all_collection_elements_not_satisfying_predicate() {
+        assertEquals(List.of(), partitionBy(List.of(1), x -> x > 0)._2);
+        assertEquals(List.of(), partitionBy(List.of(1, 2, 3), x -> x > 0)._2);
+        assertEquals(List.of(0), partitionBy(List.of(0), x -> x > 0)._2);
+        assertEquals(List.of(-1, -2), partitionBy(List.of(-1, 1, -2, 2), x -> x > 0)._2);
+    }
+
 }

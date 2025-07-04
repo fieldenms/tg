@@ -16,6 +16,7 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertEmpty;
 import static ua.com.fielden.platform.test_utils.TestUtils.assertOptEquals;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
@@ -444,6 +445,28 @@ public class StreamUtilsTest {
         assertOptEquals(false, areAllEqual(IntStream.of(n, m)));
         assertOptEquals(false, areAllEqual(IntStream.of(m, n, m + 1)));
         assertOptEquals(false, areAllEqual(IntStream.of(m, m, n)));
+    }
+
+    @Test
+    public void partitioning_collects_a_pair_of_empty_lists_for_an_empty_stream() {
+        assertEquals(t2(List.of(), List.of()), Stream.of().collect(partitioning(x -> true)));
+        assertEquals(t2(List.of(), List.of()), Stream.of().collect(partitioning(x -> false)));
+    }
+
+    @Test
+    public void partitioning_collects_a_pair_whose_first_element_contains_all_stream_elements_satisfying_predicate() {
+        assertEquals(List.of(1), Stream.of(1).collect(partitioning(x -> x > 0))._1);
+        assertEquals(List.of(1, 2, 3), Stream.of(1, 2, 3).collect(partitioning(x -> x > 0))._1);
+        assertEquals(List.of(), Stream.of(0).collect(partitioning(x -> x > 0))._1);
+        assertEquals(List.of(1, 2), Stream.of(-1, 1, -2, 2).collect(partitioning(x -> x > 0))._1);
+    }
+
+    @Test
+    public void partitioning_collects_a_pair_whose_second_element_contains_all_stream_elements_not_satisfying_predicate() {
+        assertEquals(List.of(), Stream.of(1).collect(partitioning(x -> x > 0))._2);
+        assertEquals(List.of(), Stream.of(1, 2, 3).collect(partitioning( x -> x > 0))._2);
+        assertEquals(List.of(0), Stream.of(0).collect(partitioning(x -> x > 0))._2);
+        assertEquals(List.of(-1, -2), Stream.of(-1, 1, -2, 2).collect(partitioning(x -> x > 0))._2);
     }
 
 }
