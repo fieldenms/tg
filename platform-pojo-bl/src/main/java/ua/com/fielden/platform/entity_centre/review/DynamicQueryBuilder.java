@@ -27,9 +27,9 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.RichText;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 
@@ -1109,35 +1109,36 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static ConditionModel propertyLike(final String propertyNameWithKey, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
-        // A map to separate exact (false) and wildcard (true) search values; this provides a way to optimise the database query.
-        final Map<Boolean, List<String>> exactAndWildcardSearchVals = searchValues.stream().collect(groupingBy(str -> str.contains("*")));
-        final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyNameWithKey);
-        final var propId = propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "");
-        // Exact and wilcard search values.
-        if (exactAndWildcardSearchVals.containsKey(false) && exactAndWildcardSearchVals.containsKey(true)) {
-            return cond()
-                    // Condition for exact search values.
-                    .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactAndWildcardSearchVals.get(false).toArray()).model())
-                    .or()
-                    // Condition for wildcard search values.
-                    .prop(propId).in().model(select(propType).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(true))).model())
-                    .model();
-        }
-        // Only exact search values.
-        else if (exactAndWildcardSearchVals.containsKey(false) && !exactAndWildcardSearchVals.containsKey(true)) {
-            return cond()
-                    // Condition for exact search values.
-                    .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactAndWildcardSearchVals.get(false).toArray()).model())
-                    .model();
-        }
-        // Only wildcards.
-        else {
-            return cond()
-                    .prop(propId)
-                    .in()
-                    .model(select(propType).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(true))).model())
-                    .model();
-        }
+        return searchValues.stream().collect(StreamUtils.partitioning(str -> str.contains("*")))
+                .map((wildVals, exactVals) -> {
+                    final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyNameWithKey);
+                    final var propId = propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "");
+                    // Exact and wilcard search values.
+                    if (!exactVals.isEmpty() && !wildVals.isEmpty()) {
+                        return cond()
+                                // Condition for exact search values.
+                                .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactVals).model())
+                                .or()
+                                // Condition for wildcard search values.
+                                .prop(propId).in().model(select(propType).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals)).model())
+                                .model();
+                    }
+                    // Only exact search values.
+                    else if (!exactVals.isEmpty()) {
+                        return cond()
+                                // Condition for exact search values.
+                                .prop(propId).in().model(select(propType).where().prop(KEY).in().values(exactVals).model())
+                                .model();
+                    }
+                    // Only wildcards.
+                    else {
+                        return cond()
+                                .prop(propId)
+                                .in()
+                                .model(select(propType).where().prop(KEY).iLike().anyOfValues(prepCritValuesForEntityTypedProp(wildVals)).model())
+                                .model();
+                    }
+                });
     }
 
     /**
