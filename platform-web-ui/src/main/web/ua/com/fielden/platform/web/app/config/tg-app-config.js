@@ -16,6 +16,15 @@ moment.locale('custom-locale', {
 });
 
 /**
+ * Site white list that can be visited without confiramtion
+ */
+let siteAllowlist;
+/**
+ * Number of days during which a user-allowed site can be accessed without additional confiramtion.
+ */
+let daysUntilSitePermissionExpires;
+
+/**
  * Timer Id to reconnect via sse after an error.
  */
 let timerIdForReconnection = null;
@@ -171,20 +180,30 @@ export const TgAppConfig = Polymer({
             readOnly: true,
             value: window.firstDayOfWeek
         },
-        siteAllowlist: {
-            type: Array,
-            readOnly: true,
-            value: @siteAllowlist
-        },
-        daysUntilSitePermissionExpires: {
-            type: Number,
-            readOnly: true,
-            value: @daysUntilSitePermissionExpires
-        }
     },
     
     attached: function() {
         this.style.display = "none";
+    },
+
+    getSiteAllowlist: function () {
+        return siteAllowlist;
+    },
+
+    setSiteAllowlist: function (allowlist) {
+        if (!siteAllowlist) {
+            siteAllowlist = allowlist;
+        }
+    },
+
+    getDaysUntilSitePermissionExpires: function () {
+        return daysUntilSitePermissionExpires;
+    },
+
+    setDaysUntilSitePermissionExpires: function (expiryDays) {
+        if (!daysUntilSitePermissionExpires) {
+            daysUntilSitePermissionExpires = expiryDays;
+        }
     }
     
 });
