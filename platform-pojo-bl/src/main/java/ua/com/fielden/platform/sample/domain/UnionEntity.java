@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 @DenyIntrospection
 @CompanionObject(IUnionEntity.class)
-public class UnionEntity extends AbstractUnionEntity {
+public class UnionEntity extends AbstractUnionEntity implements UnionMatchable<UnionEntity, UnionEntity.M1<?>> {
 
     // Pattern matching with sealed interfaces
 
