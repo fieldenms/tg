@@ -1,16 +1,19 @@
 package ua.com.fielden.platform.web.menu.impl;
 
-import static java.util.stream.Collectors.toList;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import ua.com.fielden.platform.menu.ModuleMenu;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.menu.module.impl.WebMenuModule;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 public class WebMainMenu {
 
@@ -52,4 +55,12 @@ public class WebMainMenu {
     JsCode createActionsObject() {
         return new JsCode(null);
     }
+
+    /// [JsImport]s for currently configured actions from all modules.
+    public Set<JsImport> actionImports() {
+        return modules.stream()
+            .flatMap(module -> module.getActions().stream().flatMap(EntityActionConfig::importStatements))
+            .collect(toSet());
+    }
+
 }

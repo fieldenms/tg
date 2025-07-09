@@ -1,22 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
-
-import java.util.Optional;
-
 import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
@@ -28,7 +12,6 @@ import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterProducer;
 import ua.com.fielden.platform.ui.menu.sample.MiUserRole;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
-import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -40,6 +23,22 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+
+import java.util.Optional;
+
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.action.pre.PreActions.entityNavigation;
+import static ua.com.fielden.platform.web.action.pre.PreActions.okCancel;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
 
 /**
  * {@link UserRole} Web UI configuration.
@@ -177,7 +176,7 @@ public class UserRoleWebUiConfig {
             public EntityActionConfig mkAction() {
                 return action(EntityEditAction.class)
                         .withContext(context().withCurrentEntity().withSelectionCrit().build())
-                        .preAction(new EntityNavigationPreAction("User Role"))
+                        .preAction(entityNavigation("User Role"))
                         .icon("editor:mode-edit")
                         .shortDesc("Edit User Role")
                         .longDesc("Opens master for User Role editing.")

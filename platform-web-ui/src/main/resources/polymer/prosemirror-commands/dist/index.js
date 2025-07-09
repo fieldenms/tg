@@ -327,6 +327,8 @@ function splitBlockAs(splitNode) {
             types[0] = deflt ? { type: deflt } : null;
             can = canSplit(tr.doc, splitPos, types.length, types);
         }
+        if (!can)
+            return false;
         tr.split(splitPos, types.length, types);
         if (!atEnd && atStart && $from.node(splitDepth).type != deflt) {
             let first = tr.mapping.map($from.before(splitDepth)), $first = tr.doc.resolve(first);

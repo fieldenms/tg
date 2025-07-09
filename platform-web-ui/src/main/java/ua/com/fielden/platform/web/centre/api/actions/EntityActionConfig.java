@@ -1,16 +1,22 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
+import ua.com.fielden.platform.web.minijs.JsImport;
+import ua.com.fielden.platform.web.view.master.api.actions.IAction;
+import ua.com.fielden.platform.web.view.master.api.actions.IComposableAction;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
+
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import static java.util.stream.Stream.of;
 
 /**
  * Configuration of a specific entity action, which is associated with an entity on an entity centre.
@@ -315,4 +321,22 @@ public final class EntityActionConfig {
         }
         return true;
     }
+
+    /// Combined action [JsImport]s from all pre/postActions.
+    public Stream<JsImport> importStatements() {
+        return of(
+            importStatements(preAction),
+            importStatements(successPostAction),
+            importStatements(errorPostAction)
+        ).flatMap(s -> s);
+    }
+
+    /// [Stream] of [JsImport]s for optional [IComposableAction] descendant.
+    /// Returns empty [Stream] of `actionOpt` is empty.
+    public Stream<JsImport> importStatements(final Optional<? extends IComposableAction> actionOpt) {
+        return actionOpt
+            .map(action -> action.importStatements().stream())
+            .orElseGet(Stream::empty);
+    }
+
 }

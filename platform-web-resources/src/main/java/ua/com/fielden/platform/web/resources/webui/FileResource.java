@@ -31,6 +31,7 @@ import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepres
  *
  */
 public class FileResource extends AbstractWebResource {
+    public static final String CHECKSUM_URL_SUFFIX = "?checksum=true";
     private final List<String> resourcePaths;
     private final IWebResourceLoader webResourceLoader;
 
@@ -74,7 +75,7 @@ public class FileResource extends AbstractWebResource {
      * @return
      */
     private static Representation returnChecksumRepresentationOr(final Supplier<Representation> createRepresentation, final IWebResourceLoader webResourceLoader, final MediaType mediaType, final String path, final String remainingPart) {
-        if (remainingPart.endsWith("?checksum=true")) {
+        if (remainingPart.endsWith(CHECKSUM_URL_SUFFIX)) {
             return encodedRepresentation(new ByteArrayInputStream(webResourceLoader.checksum(path).orElse("").getBytes(UTF_8)), mediaType);
         } else {
             return createRepresentation.get();

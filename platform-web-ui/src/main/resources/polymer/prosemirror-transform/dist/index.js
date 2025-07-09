@@ -714,7 +714,7 @@ class ReplaceStep extends Step {
         let from = mapping.mapResult(this.from, 1), to = mapping.mapResult(this.to, -1);
         if (from.deletedAcross && to.deletedAcross)
             return null;
-        return new ReplaceStep(from.pos, Math.max(from.pos, to.pos), this.slice);
+        return new ReplaceStep(from.pos, Math.max(from.pos, to.pos), this.slice, this.structure);
     }
     merge(other) {
         if (!(other instanceof ReplaceStep) || other.structure || this.structure)
@@ -2061,19 +2061,26 @@ class Transform {
         return this;
     }
     /**
-    Remove a mark (or a mark of the given type) from the node at
+    Remove a mark (or all marks of the given type) from the node at
     position `pos`.
     */
     removeNodeMark(pos, mark) {
-        if (!(mark instanceof Mark)) {
-            let node = this.doc.nodeAt(pos);
-            if (!node)
-                throw new RangeError("No node at position " + pos);
-            mark = mark.isInSet(node.marks);
-            if (!mark)
-                return this;
+        let node = this.doc.nodeAt(pos);
+        if (!node)
+            throw new RangeError("No node at position " + pos);
+        if (mark instanceof Mark) {
+            if (mark.isInSet(node.marks))
+                this.step(new RemoveNodeMarkStep(pos, mark));
         }
-        this.step(new RemoveNodeMarkStep(pos, mark));
+        else {
+            let set = node.marks, found, steps = [];
+            while (found = mark.isInSet(set)) {
+                steps.push(new RemoveNodeMarkStep(pos, found));
+                set = found.removeFromSet(set);
+            }
+            for (let i = steps.length - 1; i >= 0; i--)
+                this.step(steps[i]);
+        }
         return this;
     }
     /**
