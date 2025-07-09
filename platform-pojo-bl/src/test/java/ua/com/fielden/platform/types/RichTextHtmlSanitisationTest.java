@@ -3,8 +3,8 @@ package ua.com.fielden.platform.types;
 import org.junit.Test;
 import ua.com.fielden.platform.error.Result;
 
-import static graphql.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.error.Result.*;
 
 public class RichTextHtmlSanitisationTest {
 
@@ -167,6 +167,56 @@ public class RichTextHtmlSanitisationTest {
     public void attribute_target_in_element_a_is_allowed() {
         assertSanitizationSuccess("the <a target='_blank' href='https://example.org'> example </a> site");
     }
+
+    @Test
+    public void extended_Result_message_is_allowed() {
+        assertSanitizationSuccess(informativeEx("problem", "extra details").getMessage());
+        assertSanitizationSuccess(warningEx("problem", "extra details").getMessage());
+        assertSanitizationSuccess(failureEx("problem", "extra details").getMessage());
+    }
+
+    @Test
+    public void valid_email_address_is_allowed() {
+        assertSanitizationSuccess("John Doe <john.doe@gmail.com> wrote:");
+        assertSanitizationSuccess("John Doe < john.doe@gmail.com> wrote:");
+        assertSanitizationSuccess("John Doe < john.doe@gmail.com > wrote:");
+        assertSanitizationSuccess("John Doe <j@j> wrote:");
+    }
+
+    @Test
+    public void malformed_email_address_is_disallowed() {
+        assertSanitizationFailure("John Doe <john.doe@> wrote:");
+        assertSanitizationFailure("John Doe <john doe@gmail.com> wrote:");
+        // These are allowed because they are not recognised as HTML elements by the OWASP sanitiser.
+        // assertSanitizationFailure("John Doe <@> wrote:");
+        // assertSanitizationFailure("John Doe <@gmail.com> wrote:");
+    }
+
+    @Test
+    public void email_address_with_attributes_is_disallowed() {
+        assertSanitizationFailure("John Doe <john.doe@gmail.com onload='boom'> wrote:");
+        assertSanitizationFailure("John Doe <john.doe@gmail.com hidden> wrote:");
+        assertSanitizationFailure("John Doe <john.doe@gmail.com hidden onclick='boom'> wrote:");
+        assertSanitizationFailure("John Doe <john.doe@gmail .com> wrote:");
+    }
+
+    @Test
+    public void email_address_may_be_absent_or_escaped_in_sanitised_output() {
+        final var sanitiser = new RichTextSanitiser();
+        assertEquals("John Doe  wrote:", sanitiser.sanitise("John Doe <john.doe@gmail.com> wrote:"));
+        assertEquals("John Doe  wrote:", sanitiser.sanitise("John Doe <john.doe@gmail.com > wrote:"));
+        assertEquals("John Doe &lt; john.doe&#64;gmail.com&gt; wrote:", sanitiser.sanitise("John Doe < john.doe@gmail.com> wrote:"));
+    }
+
+    @Test
+    public void email_address_with_closing_tag_is_disallowed() {
+        assertSanitizationFailure("John Doe </john.doe@gmail.com> wrote:");
+        assertSanitizationFailure("John Doe <john.doe@gmail.com>some text</john.doe@gmail.com> wrote:");
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // : Utilities
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     private void assertSanitizationFailure(final String input) {
         assertFalse(RichTextSanitiser.sanitiseHtml(input).isSuccessful());

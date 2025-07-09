@@ -170,6 +170,16 @@ export const TgAppConfig = Polymer({
             notify: true,
             readOnly: true,
             value: window.firstDayOfWeek
+        },
+        siteAllowlist: {
+            type: Array,
+            readOnly: true,
+            value: @siteAllowlist
+        },
+        daysUntilSitePermissionExpires: {
+            type: Number,
+            readOnly: true,
+            value: @daysUntilSitePermissionExpires
         }
     },
     

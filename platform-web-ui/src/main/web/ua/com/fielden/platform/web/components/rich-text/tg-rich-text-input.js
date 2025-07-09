@@ -6,7 +6,8 @@ import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys
 import { IronOverlayManager } from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-manager.js';
 
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, isMobileApp, openLink } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 
 import Editor from '/resources/polymer/lib/toastui-editor-lib.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
@@ -212,7 +213,7 @@ let shortPress = false;
 function runLinkIfPossible(el) {
     const a = findParentBy.bind(this)(el, isLink);
     if (a) {
-        openLink(a.getAttribute('href'));
+        checkLinkAndOpen(a.getAttribute('href'));
     }
 }
 
@@ -240,7 +241,7 @@ function mouseUpHandler(e) {
         }
         if (shortPress && !longPress && (e.ctrlKey || e.metaKey)) {
             const el = e.target;
-            setTimeout( () => {runLinkIfPossible.bind(this)(el)}, 150);
+            setTimeout(() => {runLinkIfPossible.bind(this)(el)}, 150);
         }
         longPress = false;
         shortPress = false;
@@ -380,6 +381,18 @@ function focusOnKeyDown(event) {
         if (event.key.length === 1) {
             setTimeout(() => {this._editor.insertText(event.key)}, 1);
         }
+    }
+}
+
+/**
+ * Prevents the propagation of click events when triggered on link elements.
+ * 
+ * @param {Event} event - click event object 
+ */
+function preventLinkClick(event) {
+    const a = findParentBy.bind(this)(event.composedPath()[0], isLink);
+    if (a) {
+        tearDownEvent(event);
     }
 }
 
@@ -923,6 +936,8 @@ class TgRichTextInput extends mixinBehaviors([IronResizableBehavior, IronA11yKey
             }
         };
         this.addEventListener('keydown', focusOnKeyDown.bind(this));
+        //Add click event to prevent the browser from opening the link.
+        this.addEventListener('click', preventLinkClick.bind(this));
     }
 
     connectedCallback () {
