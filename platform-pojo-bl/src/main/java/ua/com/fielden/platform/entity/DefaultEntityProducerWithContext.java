@@ -186,8 +186,8 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      */
     protected final <M extends AbstractEntity<?>> M refetch(final Long id, final Class<M> entityType, final CharSequence property) {
         final var fetch = reader.get().getFetchProvider().<M>fetchFor(property).fetchModel();
-        if (entityType != fetch.getEntityType()) {
-            throw new EntityProducingException(format("Unexpected type of property [%s.%s]. Expected: [%s]. Actual: [%s]",
+        if (!fetch.getEntityType().isAssignableFrom(entityType)) {
+            throw new EntityProducingException(format("Unexpected type of property [%s.%s]. Expected: [%s] or supertype. Actual: [%s]",
                                                        this.entityType.getSimpleName(), property, entityType.getSimpleName(), fetch.getEntityType().getSimpleName()));
         }
         return findByIdWithFiltering(id, co(entityType), fetch);
