@@ -40,7 +40,7 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
     }
 
     @Observable
-    public AbstractPolymorphicCentreCompoundMenuItem setEventSourceClass(final String eventSourceClass) {
+    public AbstractPolymorphicCentreCompoundMenuItem<T> setEventSourceClass(final String eventSourceClass) {
         this.eventSourceClass = eventSourceClass;
         return this;
     }
@@ -50,7 +50,7 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
     }
 
     @Observable
-    public AbstractPolymorphicCentreCompoundMenuItem setShouldEnforcePostSaveRefresh(final boolean shouldEnforcePostSaveRefresh) {
+    public AbstractPolymorphicCentreCompoundMenuItem<T> setShouldEnforcePostSaveRefresh(final boolean shouldEnforcePostSaveRefresh) {
         this.shouldEnforcePostSaveRefresh = shouldEnforcePostSaveRefresh;
         return this;
     }
@@ -60,13 +60,13 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
     }
 
     @Observable
-    public AbstractPolymorphicCentreCompoundMenuItem setMenuItemType(final String menuItemType) {
+    public AbstractPolymorphicCentreCompoundMenuItem<T> setMenuItemType(final String menuItemType) {
         this.menuItemType = menuItemType;
         return this;
     }
 
     @Observable
-    public AbstractPolymorphicCentreCompoundMenuItem setElementName(final String elementName) {
+    public AbstractPolymorphicCentreCompoundMenuItem<T> setElementName(final String elementName) {
         this.elementName = elementName;
         return this;
     }
@@ -76,7 +76,7 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
     }
 
     @Observable
-    protected AbstractPolymorphicCentreCompoundMenuItem setImportUri(final String importUri) {
+    protected AbstractPolymorphicCentreCompoundMenuItem<T> setImportUri(final String importUri) {
         this.importUri = importUri;
         return this;
     }
@@ -85,7 +85,7 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
         return importUri;
     }
 
-    public AbstractPolymorphicCentreCompoundMenuItem setMenuItemTypeForCentre(final Class<? extends MiWithConfigurationSupport<?>> menuItemTypeAsClass) {
+    public AbstractPolymorphicCentreCompoundMenuItem<T> setMenuItemTypeForCentre(final Class<? extends MiWithConfigurationSupport<?>> menuItemTypeAsClass) {
         this.menuItemTypeAsClass = menuItemTypeAsClass;
         setMenuItemType(menuItemTypeAsClass.getName());
         setImportUri(format("/centre_ui/%s", menuItemTypeAsClass.getName()));
