@@ -30,7 +30,7 @@ public class AuditEntityQueryEnhancer implements IQueryEnhancer<AbstractSynAudit
             final EntityQueryProgressiveInterfaces.IWhere0<AbstractSynAuditEntity<?>> where,
             final Optional<CentreContext<AbstractSynAuditEntity<?>, ?>> context)
     {
-        var ctxDecomposer = IContextDecomposer.decompose(context.get());
+        final var ctxDecomposer = IContextDecomposer.decompose(context.get());
         if (ctxDecomposer.masterEntityInstanceOf(AuditCompoundMenuItem.class)) {
             return enhanceEmbededCentreQuery(where, createConditionProperty(AUDITED_ENTITY), ctxDecomposer.masterEntity().getKey(), "entityId");
         } else {

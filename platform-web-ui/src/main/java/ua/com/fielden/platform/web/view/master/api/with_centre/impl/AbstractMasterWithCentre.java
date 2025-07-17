@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.with_centre.impl;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
-import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -29,7 +28,13 @@ public abstract class AbstractMasterWithCentre<T extends AbstractEntity<?>> impl
 
     private IRenderable renderable;
 
-    AbstractMasterWithCentre(final Class<T> entityType, final boolean saveOnActivate, final Optional<JsCode> customCode, final Optional<JsCode> customCodeOnAttach, final Optional<JsCode> customImports) {
+    AbstractMasterWithCentre(
+            final Class<T> entityType,
+            final boolean saveOnActivate,
+            final Optional<JsCode> customCode,
+            final Optional<JsCode> customCodeOnAttach,
+            final Optional<JsCode> customImports)
+    {
         this.entityType = entityType;
         this.saveOnActivate = saveOnActivate;
         this.customCode = customCode;
@@ -47,7 +52,7 @@ public abstract class AbstractMasterWithCentre<T extends AbstractEntity<?>> impl
     public IRenderable render() {
         if (renderable == null) {
             final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                    .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n" + customImports.map(ci -> ci.toString()).orElse(""))
+                    .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n" + customImports.map(JsCode::toString).orElse(""))
                     .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                     .replace("<!--@tg-entity-master-content-->",
                             """
@@ -91,18 +96,13 @@ public abstract class AbstractMasterWithCentre<T extends AbstractEntity<?>> impl
                                 }
                             }.bind(self);
                             """.formatted(getAttributes()))
-                    .replace("//@attached-callback","self.registerCentreRefreshRedirector();\n".formatted(getAttributes()))
-                    .replace("//@master-is-ready-custom-code", customCode.map(code -> code.toString()).orElse(""))
-                    .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.map(code -> code.toString()).orElse(""))
+                    .replace("//@attached-callback", "self.registerCentreRefreshRedirector();\n")
+                    .replace("//@master-is-ready-custom-code", customCode.map(JsCode::toString).orElse(""))
+                    .replace("//@master-has-been-attached-custom-code", customCodeOnAttach.map(JsCode::toString).orElse(""))
                     .replace("@prefDim", "null")
                     .replace("@noUiValue", "false")
                     .replace("@saveOnActivationValue", saveOnActivate + "");
-            renderable = new IRenderable() {
-                @Override
-                public DomElement render() {
-                    return new InnerTextElement(entityMasterStr);
-                }
-            };
+            renderable = () -> new InnerTextElement(entityMasterStr);
         }
         return renderable;
     }
@@ -114,6 +114,7 @@ public abstract class AbstractMasterWithCentre<T extends AbstractEntity<?>> impl
 
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
-        throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+        throw new UnsupportedOperationException("Action configuration is not supported.");
     }
+
 }

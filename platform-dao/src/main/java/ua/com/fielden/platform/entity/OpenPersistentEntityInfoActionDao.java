@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 
 import java.util.HashMap;
@@ -27,7 +26,7 @@ public class OpenPersistentEntityInfoActionDao extends AbstractOpenCompoundMaste
     private final IAuditTypeFinder auditTypeFinder;
 
     @Inject
-    public OpenPersistentEntityInfoActionDao(final IFilter filter, final IEntityAggregatesOperations coAggregates, final IAuditTypeFinder auditTypeFinder) {
+    OpenPersistentEntityInfoActionDao(final IFilter filter, final IEntityAggregatesOperations coAggregates, final IAuditTypeFinder auditTypeFinder) {
         super(filter, coAggregates);
         this.auditTypeFinder = auditTypeFinder;
     }
@@ -35,17 +34,22 @@ public class OpenPersistentEntityInfoActionDao extends AbstractOpenCompoundMaste
     @SuppressWarnings("unchecked")
     @Override
     public OpenPersistentEntityInfoAction save(final OpenPersistentEntityInfoAction entity) {
-        var savedEntity = super.save(entity);
-        var auditedType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entity.getKey().getEntityType());
-        var synAuditType = auditTypeFinder.navigate(auditedType).synAuditEntityType();
-        final EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded<AbstractEntity<?>> queryPart = select()
+        final var savedEntity = super.save(entity);
+        final var auditedType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entity.getKey().getEntityType());
+        final var synAuditType = auditTypeFinder.navigate(auditedType).synAuditEntityType();
+        final var query = select()
                 .yield()
-                .caseWhen()
-                    .exists(enhanceEmbededCentreQuery(select(synAuditType).where(), AUDITED_ENTITY, entity.getKey().getEntityId()).model().setFilterable(true))
-                    .then().val(1).otherwise().val(0).endAsInt().as(AUDIT);
-        final EntityAggregates existEntity = coAggregates.getEntity(from(queryPart.modelAsAggregate()).model());
-        final Map<String, Integer> newPresence = new HashMap<>();
-        newPresence.put(AUDIT, existEntity.get(AUDIT));
+                    .caseWhen()
+                    .exists(enhanceEmbededCentreQuery(select(synAuditType).where(), AUDITED_ENTITY, entity.getKey().getEntityId())
+                                    .model()
+                                    .setFilterable(true))
+                    .then().val(1).otherwise().val(0)
+                    .endAsInt()
+                .as(AUDIT)
+                .modelAsAggregate();
+        final EntityAggregates result = coAggregates.getEntity(from(query).model());
+        final Map<String, Integer> newPresence = new HashMap<>(1);
+        newPresence.put(AUDIT, result.get(AUDIT));
         savedEntity.setEntityPresence(newPresence);
         return savedEntity;
     }

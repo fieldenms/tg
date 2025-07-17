@@ -2,17 +2,19 @@ package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /// Companion object for the {@link PersistentEntityInfo} entity.
 ///
 public interface PersistentEntityInfoCo extends IEntityDao<PersistentEntityInfo> {
 
-    /// Initializes the given instance of {@link PersistentEntityInfo} with metadata from the provided {@link AbstractEntity}.
-    /// If the entity is not persistent or lacks versioning information (i.e., who and when it was created),
-    /// an {@link InvalidStateException} will be thrown with an appropriate description.
+    /// Initialises `info` from `entity`.
+    /// If the type of `entity` does not satisfy [EntityUtils#isPersistentWithVersionData(Class)], an {@link InvalidStateException} will be thrown.
     ///
-    /// @param persistentEntity the {@link AbstractEntity} instance that serves as the source of metadata
-    /// @param entity the {@link PersistentEntityInfo} instance to initialize
-    /// @return the initialized `entity`
-    PersistentEntityInfo initEntityWith(final AbstractEntity<?> persistentEntity, final PersistentEntityInfo entity);
+    /// @param entity  source of metadata
+    /// @param info  instance to initialise
+    /// @return  initialised `entity`
+    ///
+    PersistentEntityInfo initialise(final AbstractEntity<?> entity, final PersistentEntityInfo info);
+
 }

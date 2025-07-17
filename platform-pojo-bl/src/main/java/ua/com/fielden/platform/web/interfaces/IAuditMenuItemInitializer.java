@@ -7,8 +7,8 @@ import ua.com.fielden.platform.entity.AuditCompoundMenuItem;
 ///
 public interface IAuditMenuItemInitializer {
 
-    /// Initialises the given {@link AuditCompoundMenuItem} instance with entity centre data and returns it.
+    /// Initialises `menuItem` with entity centre data and returns it.
     ///
-    /// @param auditedType the type of the audited entity used to determine which auditing entity centre should initialize the given `menuItem`
+    /// @param auditedType the type of the audited entity used to determine which audit-entity centre should initialise `menuItem`
     AuditCompoundMenuItem init(final Class<? extends AbstractEntity<?>> auditedType, AuditCompoundMenuItem menuItem);
 }

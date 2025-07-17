@@ -14,7 +14,7 @@ import static java.lang.String.format;
 
 public class AuditMenuItemInitializer implements IAuditMenuItemInitializer {
 
-    public static final String ERR_ENTITY_TYPE_IS_NOT_AUDITED = "The entity type [%s] is not audited.";
+    public static final String ERR_ENTITY_TYPE_IS_NOT_AUDITED = "Entity type [%s] is not audited.";
     public static final String ERR_AUDITED_TYPE_HAS_NO_REGISTERED_CENTRE = "Audited entity type [%s] has no registered entity centre with menu type [%s].";
 
 

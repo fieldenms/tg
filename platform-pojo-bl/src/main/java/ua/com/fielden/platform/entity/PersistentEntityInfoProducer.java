@@ -11,7 +11,7 @@ import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_C
 public class PersistentEntityInfoProducer extends DefaultEntityProducerWithContext<PersistentEntityInfo> {
 
     @Inject
-    public PersistentEntityInfoProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
+    PersistentEntityInfoProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, PersistentEntityInfo.class, companionFinder);
     }
 
@@ -19,9 +19,8 @@ public class PersistentEntityInfoProducer extends DefaultEntityProducerWithConte
     @Authorise(PersistentEntityInfo_CanExecute_Token.class)
     protected PersistentEntityInfo provideDefaultValues(final PersistentEntityInfo entity) {
         if (currentEntityNotEmpty()) {
-            final AbstractEntity<?> currEntity = currentEntity();
-            final PersistentEntityInfoCo infoEntityCo = co(PersistentEntityInfo.class);
-            return infoEntityCo.initEntityWith(currEntity, entity);
+            final PersistentEntityInfoCo co = co(PersistentEntityInfo.class);
+            return co.initialise(currentEntity(), entity);
         }
         // This happens when the entity master gets closed.
         else {

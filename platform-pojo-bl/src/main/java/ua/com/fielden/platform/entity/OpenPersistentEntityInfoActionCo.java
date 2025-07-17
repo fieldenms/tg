@@ -8,7 +8,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 /// Companion object for the {@link OpenPersistentEntityInfoAction} entity.
 ///
 public interface OpenPersistentEntityInfoActionCo extends IEntityDao<OpenPersistentEntityInfoAction> {
-    static final IFetchProvider<OpenPersistentEntityInfoAction> FETCH_PROVIDER = fetch(OpenPersistentEntityInfoAction.class).with(
+
+    IFetchProvider<OpenPersistentEntityInfoAction> FETCH_PROVIDER = fetch(OpenPersistentEntityInfoAction.class).with(
             // key is needed to be correctly autopopulated by newly saved compound master entity (ID-based restoration of entity-typed key)
             "key");
+
 }

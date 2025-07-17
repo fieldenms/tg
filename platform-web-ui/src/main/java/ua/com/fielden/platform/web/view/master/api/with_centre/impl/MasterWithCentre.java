@@ -11,9 +11,17 @@ import static java.lang.String.format;
 /// An entity master that represents a single Entity Centre.
 ///
 public class MasterWithCentre<T extends AbstractEntity<?>> extends AbstractMasterWithCentre<T> {
+
     public final EntityCentre<?> embeddedCentre;
 
-    MasterWithCentre(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre, final Optional<JsCode> customCode, final Optional<JsCode> customCodeOnAttach, final Optional<JsCode> customImports) {
+    MasterWithCentre(
+            final Class<T> entityType,
+            final boolean saveOnActivate,
+            final EntityCentre<?> entityCentre,
+            final Optional<JsCode> customCode,
+            final Optional<JsCode> customCodeOnAttach,
+            final Optional<JsCode> customImports)
+    {
         super(entityType, saveOnActivate, customCode, customCodeOnAttach,customImports);
         embeddedCentre = entityCentre;
     }
@@ -27,7 +35,7 @@ public class MasterWithCentre<T extends AbstractEntity<?>> extends AbstractMaste
                     eventSourceClass: '%s',
                     uuid: this.uuid
                }
-               """.formatted(embeddedCentre.shouldEnforcePostSaveRefresh(), embeddedCentre.eventSourceClass().map(clazz -> clazz.getName()).orElse(""));
+               """.formatted(embeddedCentre.shouldEnforcePostSaveRefresh(), embeddedCentre.eventSourceClass().map(Class::getName).orElse(""));
     }
 
     @Override

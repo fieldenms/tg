@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 
@@ -16,31 +15,29 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentWithVersionD
 @EntityType(PersistentEntityInfo.class)
 public class PersistentEntityInfoDao extends CommonEntityDao<PersistentEntityInfo> implements PersistentEntityInfoCo {
 
-    public static final String ERR_NOT_SUITABLE_ENTITY = "Current entity [%s] does not have the versioning info.";
+    public static final String ERR_NOT_SUITABLE_ENTITY = "Entity [%s] does not have version information.";
 
+    @SuppressWarnings("unchecked")
     @Override
-    public PersistentEntityInfo initEntityWith(final AbstractEntity<?> persistentEntity, PersistentEntityInfo entity) {
-        if (isPersistentWithVersionData(persistentEntity.getType())) {
-            final var entityCo = (IEntityDao<AbstractPersistentEntity<?>>) co(persistentEntity.getType());
-            final var entityWithInfo = entityCo.findById(persistentEntity.getId(), fetchKeyAndDescOnly(entityCo.getEntityType())
-                    .with(VERSION)
-                    .with(CREATED_BY)
-                    .with(CREATED_DATE)
-                    .with(LAST_UPDATED_BY)
-                    .with(LAST_UPDATED_DATE));
-            entity.setEntityId(entityWithInfo.getId())
+    public PersistentEntityInfo initialise(final AbstractEntity<?> entity, PersistentEntityInfo info) {
+        if (isPersistentWithVersionData(entity.getType())) {
+            final var entityCo = co((Class<AbstractPersistentEntity<?>>) entity.getType());
+            final var entityFetch = fetchKeyAndDescOnly(entityCo.getEntityType()).with(VERSION, CREATED_BY, CREATED_DATE, LAST_UPDATED_BY, LAST_UPDATED_DATE);
+            final var refetchedEntity = entityCo.findById(entity.getId(), entityFetch);
+            info.setEntityId(refetchedEntity.getId())
                     .setEntityType(entityCo.getEntityType().getName())
-                    .setEntityVersion(entityWithInfo.getVersion())
-                    .setCreatedBy(entityWithInfo.getCreatedBy())
-                    .setCreatedDate(entityWithInfo.getCreatedDate())
-                    .setLastUpdatedBy(entityWithInfo.getLastUpdatedBy())
-                    .setLastUpdatedDate(entityWithInfo.getLastUpdatedDate())
-                    .setEntityTitle(isEmpty(entityWithInfo.getDesc()) ?
-                            "%s".formatted(entityWithInfo.getKey()) :
-                            "%s: %s".formatted(entityWithInfo.getKey(), entityWithInfo.getDesc()));
-            return entity;
-        } else {
-            throw new InvalidStateException(ERR_NOT_SUITABLE_ENTITY.formatted(persistentEntity.getType().getSimpleName()));
+                    .setEntityVersion(refetchedEntity.getVersion())
+                    .setCreatedBy(refetchedEntity.getCreatedBy())
+                    .setCreatedDate(refetchedEntity.getCreatedDate())
+                    .setLastUpdatedBy(refetchedEntity.getLastUpdatedBy())
+                    .setLastUpdatedDate(refetchedEntity.getLastUpdatedDate())
+                    .setEntityTitle(isEmpty(refetchedEntity.getDesc())
+                                            ? refetchedEntity.getKey().toString()
+                                            : "%s: %s".formatted(refetchedEntity.getKey(), refetchedEntity.getDesc()));
+            return info;
+        }
+        else {
+            throw new InvalidStateException(ERR_NOT_SUITABLE_ENTITY.formatted(entity.getType().getSimpleName()));
         }
     }
 }
