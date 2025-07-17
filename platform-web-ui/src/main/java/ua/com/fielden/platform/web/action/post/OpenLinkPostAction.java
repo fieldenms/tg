@@ -29,14 +29,14 @@ public class OpenLinkPostAction implements IPostAction {
 
     @Override
     public Set<JsImport> importStatements() {
-        return of(namedImport("checkLinkAndOpen", "components/tg-link-opener"));
+        return of(namedImport("postActionLinkOpen", "components/actions/tg-post-link-opener"));
     }
 
     @Deprecated(since = WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS)
     @Override
     public JsCode build() {
         return jsCode("""
-            checkLinkAndOpen(functionalEntity.get('%s'));
+            postActionLinkOpen(functionalEntity.get('%s'));
         """.formatted(
             property.toPath()
         ));
