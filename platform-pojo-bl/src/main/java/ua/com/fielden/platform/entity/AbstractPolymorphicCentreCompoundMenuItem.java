@@ -44,6 +44,7 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
         this.eventSourceClass = eventSourceClass;
         return this;
     }
+
     public boolean getShouldEnforcePostSaveRefresh() {
         return shouldEnforcePostSaveRefresh;
     }
@@ -53,6 +54,7 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
         this.shouldEnforcePostSaveRefresh = shouldEnforcePostSaveRefresh;
         return this;
     }
+
     public String getMenuItemType() {
         return menuItemType;
     }
@@ -94,4 +96,5 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
     public Class<? extends MiWithConfigurationSupport<?>> getMenuItemTypeAsClass() {
         return menuItemTypeAsClass;
     }
+
 }
