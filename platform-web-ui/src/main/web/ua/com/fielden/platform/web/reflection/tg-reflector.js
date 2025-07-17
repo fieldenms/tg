@@ -882,7 +882,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
-     * Returns 'true' if the entity type represents a persistent entity and contains versioning information like created/updated, version, etc.
+     * Returns 'true' if the entity type is persistent and contains version information (created/updated date, created/updated by, version number).
      *
      */
     EntityType.prototype.isPersistentWithVersionData = function () {

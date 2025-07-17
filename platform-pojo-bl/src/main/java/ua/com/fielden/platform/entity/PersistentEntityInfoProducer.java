@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.functional.PersistentEntityInfo_CanExecute_Token;
 
-/// Producer of {@link PersistentEntityInfo} that retrieve the versioning information for an entity that is passed as the "current entity" in the context.
+/// Producer of [PersistentEntityInfo] that retrieves version information for the "current entity" in the context.
 ///
 public class PersistentEntityInfoProducer extends DefaultEntityProducerWithContext<PersistentEntityInfo> {
 
