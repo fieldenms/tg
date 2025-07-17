@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.audit;
 
 import ua.com.fielden.platform.audit.AbstractSynAuditEntity;
+import ua.com.fielden.platform.entity.AuditCompoundMenuItem;
+import ua.com.fielden.platform.entity.IContextDecomposer;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -28,9 +30,13 @@ public class AuditEntityQueryEnhancer implements IQueryEnhancer<AbstractSynAudit
             final EntityQueryProgressiveInterfaces.IWhere0<AbstractSynAuditEntity<?>> where,
             final Optional<CentreContext<AbstractSynAuditEntity<?>, ?>> context)
     {
-        return enhanceEmbededCentreQuery(where,
-                                         createConditionProperty(AUDITED_ENTITY),
-                                         context.get().getMasterEntity().getKey());
+        final var ctxDecomposer = IContextDecomposer.decompose(context.get());
+        if (ctxDecomposer.masterEntityInstanceOf(AuditCompoundMenuItem.class)) {
+            return enhanceEmbededCentreQuery(where, createConditionProperty(AUDITED_ENTITY), ctxDecomposer.masterEntity().getKey(), "entityId");
+        } else {
+            return enhanceEmbededCentreQuery(where, createConditionProperty(AUDITED_ENTITY), ctxDecomposer.masterEntity().getKey());
+        }
+
     }
 
 }
