@@ -82,7 +82,7 @@ const template = html`<!-- TODO layout vertical -->
             long-desc="Version info"
             modify-functional-entity = "[[_modifyAuditInfoFunctionalEntity]]"
             current-entity = '[[_currentEntityForPersistentEntityInfo()]]'
-            hidden$="[[!_isPersistentEntityWithAuditData(_currEntity)]]"
+            hidden$="[[!_isPersistentEntityWithVersionData(_currEntity)]]"
             disabled="[[!_isEntityPersisted(_currEntity)]]"
             slot="persistent-entity-info-slot">
         </tg-ui-action>

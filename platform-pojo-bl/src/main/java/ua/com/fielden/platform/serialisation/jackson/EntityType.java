@@ -45,11 +45,11 @@ public class EntityType extends AbstractEntity<String> {
     private Boolean _persistent;
 
     @IsProperty
-    @Title(value = "Persistent with audit data?", desc = "Indicates whether the associated entity type represents a persistent entity with audit data.")
-    private Boolean _persistentWithAudit;
+    @Title(value = "Persistent with version?", desc = "Indicates whether the associated entity type represents a persistent entity with version data.")
+    private Boolean _persistentWithVersion;
 
     @IsProperty
-    @Title(value = "Is Audited?", desc = "Indicates whether the associated entity type is annotated with Audited annotation.")
+    @Title(value = "Is Audited?", desc = "Indicates whether the associated entity type is audited.")
     private Boolean _audited;
 
     @IsProperty
@@ -168,13 +168,13 @@ public class EntityType extends AbstractEntity<String> {
         return _displayDesc;
     }
 
-    public Boolean get_persistentWithAudit() {
-        return _persistentWithAudit;
+    public Boolean get_persistentWithVersion() {
+        return _persistentWithVersion;
     }
 
     @Observable
-    public EntityType set_persistentWithAudit(final Boolean _persistentWithAudit) {
-        this._persistentWithAudit = _persistentWithAudit;
+    public EntityType set_persistentWithVersion(final Boolean _persistentWithVersion) {
+        this._persistentWithVersion = _persistentWithVersion;
         return this;
     }
 

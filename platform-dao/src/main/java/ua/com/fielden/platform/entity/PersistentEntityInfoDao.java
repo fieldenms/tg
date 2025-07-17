@@ -9,7 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistentWithAuditData;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistentWithVersionData;
 
 /// DAO implementation for the {@link PersistentEntityInfoCo} companion object .
 ///
@@ -20,7 +20,7 @@ public class PersistentEntityInfoDao extends CommonEntityDao<PersistentEntityInf
 
     @Override
     public PersistentEntityInfo initEntityWith(final AbstractEntity<?> persistentEntity, PersistentEntityInfo entity) {
-        if (isPersistentWithAuditData(persistentEntity.getType())) {
+        if (isPersistentWithVersionData(persistentEntity.getType())) {
             final var entityCo = (IEntityDao<AbstractPersistentEntity<?>>) co(persistentEntity.getType());
             final var entityWithInfo = entityCo.findById(persistentEntity.getId(), fetchKeyAndDescOnly(entityCo.getEntityType())
                     .with(VERSION)
