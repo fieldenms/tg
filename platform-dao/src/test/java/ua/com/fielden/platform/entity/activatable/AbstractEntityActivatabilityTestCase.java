@@ -23,7 +23,7 @@ import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ER
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
-public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase {
+public class AbstractEntityActivatabilityTestCase extends AbstractDaoTestCase {
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : It is not possible for an active entity to reference an inactive one (under normal circumstances).
