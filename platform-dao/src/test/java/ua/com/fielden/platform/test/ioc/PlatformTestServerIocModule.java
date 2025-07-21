@@ -12,6 +12,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.activatable.test_entities.*;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolderDao;
 import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.ISavingInfoHolder;
@@ -179,6 +180,12 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgInventoryCo.class).to(TgInventoryDao.class);
         bind(TgInventoryBinCo.class).to(TgInventoryBinDao.class);
         bind(TgInventoryIssueCo.class).to(TgInventoryIssueDao.class);
+
+        bind(UnionCo.class).to(UnionDao.class);
+        bind(Member1Co.class).to(Member1Dao.class);
+        bind(Member2Co.class).to(Member2Dao.class);
+        bind(ActivatableUnionOwnerCo.class).to(ActivatableUnionOwnerDao.class);
+        bind(UnionOwnerCo.class).to(UnionOwnerDao.class);
 
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...

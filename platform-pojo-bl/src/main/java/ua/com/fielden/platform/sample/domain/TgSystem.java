@@ -57,7 +57,11 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @Title(value = "Forth Cat", desc = "Desc")
     @SkipActivatableTracking
     private TgCategory forthCat;
-    
+
+    @IsProperty
+    @MapTo
+    private TgSystem system1;
+
     @IsProperty
     @CritOnly(SINGLE)
     @Title(value = "Crit-only Single Category", desc = "Desc")
@@ -72,6 +76,16 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @IsProperty(TgCategory.class)
     @MapTo
     private PropertyDescriptor<TgCategory> propDescriptor;
+
+    public TgSystem getSystem1() {
+        return system1;
+    }
+
+    @Observable
+    public TgSystem setSystem1(final TgSystem system1) {
+        this.system1 = system1;
+        return this;
+    }
 
     @Observable
     public TgSystem setPermitNewCategory(final TgCategory permitNewCategory) {

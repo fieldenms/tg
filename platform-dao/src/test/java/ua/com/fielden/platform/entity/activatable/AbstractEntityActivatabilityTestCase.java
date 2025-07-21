@@ -2,93 +2,175 @@ package ua.com.fielden.platform.entity.activatable;
 
 import org.junit.Test;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.sample.domain.TgSubSystem;
-import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.security.user.*;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+
+import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL;
 import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
+import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
-public class AbstractEntityActivatabilityTestCase extends AbstractDaoTestCase {
+public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTestCase {
+
+    /// * `A` and `B` are activatable entity types.
+    /// * `A` references `B` via 3 properties: `b1`, `b2`, `b3`, `b4`.
+    /// * `A.b3` is annotated with [SkipEntityExistsValidation] and [SkipEntityExistsValidation#skipActiveOnly()] is `true`.
+    /// * `A.b4` is annotated with [SkipEntityExistsValidation] and [SkipEntityExistsValidation#skipActiveOnly()] is `false`.
+    /// * `A.a1` is a property whose type is `A` (possibility for self-reference).
+    ///
+    protected interface Spec1<A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>>
+        extends ICanSetProperty
+    {
+        A newA();
+        default A newA(CharSequence prop1, Object val1, Object... rest) {
+            return setProperties(this, newA(), prop1, val1, rest);
+        }
+        B newB();
+        default B newB(CharSequence prop1, Object val1, Object... rest) {
+            return setProperties(this, newB(), prop1, val1, rest);
+        }
+        Class<A> aType();
+        Class<B> bType();
+        CharSequence A_b1();
+        CharSequence A_b2();
+        CharSequence A_b3();
+        CharSequence A_b4();
+        CharSequence A_a1();
+        A setB1(A a, B b);
+        A setB2(A a, B b);
+        A setB3(A a, B b);
+        A setB4(A a, B b);
+        A setA1(A a, A a1);
+    }
+
+    /// * `A` is a non-activatable entity type.
+    /// * `B` is an activatable entity type.
+    /// * `A` references `B`.
+    ///
+    protected interface Spec2<A extends AbstractEntity<?>, B extends ActivatableAbstractEntity<?>>
+        extends ICanSetProperty
+    {
+        A newA();
+        default A newA(CharSequence prop1, Object val1, Object... rest) {
+            return setProperties(this, newA(), prop1, val1, rest);
+        }
+        B newB();
+        default B newB(CharSequence prop1, Object val1, Object... rest) {
+            return setProperties(this, newB(), prop1, val1, rest);
+        }
+        Class<A> aType();
+        Class<B> bType();
+        CharSequence A_b();
+        A setB(A a, B b);
+    }
+
+    protected abstract <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> Spec1<A, B> spec1();
+
+    protected abstract <A extends AbstractEntity<?>, B extends ActivatableAbstractEntity<?>> Spec2<A, B> spec2();
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : It is not possible for an active entity to reference an inactive one (under normal circumstances).
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    //
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    concurrent_referencing_by_new_entity_of_activatable_that_has_just_became_inactive_is_prevented() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b = save(spec.newB(ACTIVE, true));
+
+        final A a = spec.newA(ACTIVE, true, spec.A_b1(), b);
+
+        // Concurrent deactivation of B just referenced by A.
+        final var b1 = refetch$(b, ALL);
+        b1.set(ACTIVE, false);
+        save(b1);
+
+        assertThatThrownBy(() -> save(a))
+                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(spec.bType()).getKey(), b));
+    }
+
 
     @Test
-    public void concurrent_referencing_by_new_entity_of_activatable_that_has_just_became_inactive_is_prevented() {
-        final var cat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
-        assertTrue(cat7.isActive());
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    concurrent_referencing_by_persisted_entity_of_activatable_that_has_just_became_inactive_is_prevented() {
+        final Spec1<A, B> spec = spec1();
+        final B b = save(spec.newB(ACTIVE, true));
 
-        final var sys3 = new_(TgSystem.class, "Sys3").setActive(true).setFirstCategory(cat7);
+        final A a = save(spec.newA(ACTIVE, true));
+        spec.setB1(a, b);
 
-        // Concurrent deactivation of Cat7 just referenced by Sys3.
-        save(co$(TgCategory.class).findByEntityAndFetch(fetchAll(TgCategory.class), cat7)
-                     .setActive(false));
+        // Concurrent deactivation of B just referenced by A.
+        final var b1 = refetch$(b, ALL);
+        b1.set(ACTIVE, false);
+        save(b1);
 
-        assertThatThrownBy(() -> save(sys3))
-                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(TgCategory.class).getKey(), cat7));
+        assertThatThrownBy(() -> save(a))
+                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(spec.bType()).getKey(), b));
     }
 
     @Test
-    public void concurrent_referencing_by_persisted_entity_of_activatable_that_has_just_became_inactive_is_prevented() {
-        final var cat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
-        assertTrue(cat7.isActive());
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    activating_an_entity_that_references_inactive_entities_does_not_pass_validation() {
+        final Spec1<A, B> spec = spec1();
+        final B b = save(spec.newB(ACTIVE, false));
+        // FIXME Fails due to EntityExistsValidator
+        final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
 
-        final var sys3 = save(new_(TgSystem.class, "Sys3").setActive(true))
-                .setFirstCategory(cat7);
+        a.set(ACTIVE, true);
 
-        save(co$(TgCategory.class)
-                     .findByEntityAndFetch(fetchAll(TgCategory.class), cat7)
-                     .setActive(false));
-
-        assertThatThrownBy(() -> save(sys3))
-                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(TgCategory.class).getKey(), cat7));
+        assertNotNull(a.getProperty(ACTIVE).getFirstFailure());
+        assertEquals(format(ERR_INACTIVE_REFERENCES,
+                            getTitleAndDesc(spec.A_b1(), a.getType()).getKey(),
+                            getEntityTitleAndDesc(a.getType()).getKey(),
+                            a,
+                            getEntityTitleAndDesc(b.getType()).getKey(),
+                            b),
+                     a.getProperty(ACTIVE).getFirstFailure().getMessage());
     }
 
     @Test
-    public void activating_an_entity_that_references_inactive_entities_does_not_pass_validation() {
-        final var cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
-        assertFalse(cat4.isActive());
-        assertFalse(cat4.getParent().isActive());
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    activating_an_entity_that_references_inactive_entities_referenced_via_proxied_properties_passes_validation_but_save_fails() {
+        final Spec1<A, B> spec = spec1();
+        final B b = save(spec.newB(ACTIVE, false));
+        final A a;
+        {
+            final A a1 = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
+            a = refetch$(a1, fetchAll(spec.aType()).without(spec.A_b1()));
+        }
 
-        cat4.setActive(true);
+        assertFalse(a.isActive());
+        assertTrue(a.getPropertyIfNotProxy(spec.A_b1().toString()).isEmpty());
 
-        assertNotNull(cat4.getProperty(ACTIVE).getFirstFailure());
-        assertEquals("Property [Selfy] in Tg Category [Cat4] references inactive Tg Category [Cat3].",
-                     cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
-    }
+        a.set(ACTIVE, true);
+        assertTrue(a.isValid().isSuccessful());
 
-    @Test
-    public void activating_an_entity_that_references_inactive_entities_referenced_via_proxied_properties_passes_validation_but_save_fails() {
-        final var cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class).without("parent"), "Cat4");
-        assertFalse(cat4.isActive());
-        assertThat(cat4.getPropertyIfNotProxy("parent")).isEmpty();
-        cat4.setActive(true);
-        assertTrue(cat4.isValid().isSuccessful());
-
-        assertThatThrownBy(() -> co$(TgCategory.class).save(cat4))
+        assertThatThrownBy(() -> save(a))
                 .isInstanceOf(EntityCompanionException.class)
-                .satisfies(ex -> {
-                    final var categoryTitle = TitlesDescsGetter.getEntityTitleAndDesc(TgCategory.class).getKey();
-                    final var cat4Full = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
-                    assertEquals(format(ERR_INACTIVE_REFERENCES, getTitleAndDesc("parent", TgCategory.class).getKey(), categoryTitle, cat4Full, categoryTitle, cat4Full.getParent()),
-                                 ex.getMessage());
-                });
+                .hasMessage(format(ERR_INACTIVE_REFERENCES,
+                                   getTitleAndDesc(spec.A_b1(), a.getType()).getKey(),
+                                   getEntityTitleAndDesc(a.getType()).getKey(),
+                                   a,
+                                   getEntityTitleAndDesc(b.getType()).getKey(),
+                                   b));
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -96,131 +178,70 @@ public class AbstractEntityActivatabilityTestCase extends AbstractDaoTestCase {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     @Test
-    public void non_activatable_entities_do_not_effect_ref_count_of_referenced_activatables() {
-        final TgSubSystem subSys1 = co$(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SubSys1");
-        final TgCategory cat6BeforeChange = subSys1.getFirstCategory();
-        assertEquals(Integer.valueOf(2), cat6BeforeChange.getRefCount());
-        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
+    public <A extends AbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    non_activatable_entities_do_not_effect_ref_count_of_referenced_activatables() {
+        final Spec2<A, B> spec = spec2();
 
-        final TgSubSystem savedSubSys1 = save(subSys1.setFirstCategory(cat1).setSecondCategory(null));
-        assertEquals(cat6BeforeChange.getRefCount(), co$(TgCategory.class).findByKey("Cat6").getRefCount());
-        assertEquals(cat1.getRefCount(), savedSubSys1.getFirstCategory().getRefCount());
+        final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final B b2 = save(spec.newB(ACTIVE, true, REF_COUNT, 20));
+        final A a = save(spec.newA(ACTIVE, false, spec.A_b(), b1));
+
+        assertRefCount(10, b1);
+        assertRefCount(20, b2);
+
+        spec.setB(a, b2);
+        save(a);
+
+        assertRefCount(10, b1);
+        assertRefCount(20, b2);
     }
 
     @Test
-    public void refCount_of_referenced_active_entity_remains_unchanged_after_inactive_entity_dereferences_it_and_new_value_is_null() {
-        final var co$Category = co$(TgCategory.class);
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    refCount_of_referenced_active_entity_remains_unchanged_after_inactive_entity_dereferences_it_and_new_value_is_null() {
+        final Spec1<A, B> spec = spec1();
 
-        {
-            final var catA = save(new_(TgCategory.class, "A").setActive(true));
-            save(new_(TgCategory.class, "B").setActive(true).setParent(catA));
-            save(new_(TgCategory.class, "C").setActive(false).setParent(catA));
-        }
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
 
-        {
-            final var catA = co$Category.findByKey("A");
-            assertTrue(catA.isActive());
-            assertThat(catA.getRefCount()).isEqualTo(1);
-        }
+        assertRefCount(10, b);
 
-        save(co$Category.findByKey("C").setParent(null));
-
-        {
-            final var catA = co$Category.findByKey("A");
-            assertTrue(catA.isActive());
-            assertThat(catA.getRefCount()).isEqualTo(1);
-        }
+        save(spec.setB1(a, null));
+        assertRefCount(10, b);
     }
 
     @Test
-    public void refCount_of_referenced_active_entity_remains_unchanged_after_inactive_entity_dereferences_it_and_new_value_is_not_null() {
-        final var co$Category = co$(TgCategory.class);
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    refCount_of_referenced_active_entity_remains_unchanged_after_inactive_entity_dereferences_it_and_new_value_is_not_null() {
+        final Spec1<A, B> spec = spec1();
 
-        {
-            final var catA = save(new_(TgCategory.class, "A").setActive(true));
-            save(new_(TgCategory.class, "B").setActive(true).setParent(catA));
-            save(new_(TgCategory.class, "C").setActive(false).setParent(catA));
-        }
+        final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b1));
 
-        {
-            final var catA = co$Category.findByKey("A");
-            assertTrue(catA.isActive());
-            assertThat(catA.getRefCount()).isEqualTo(1);
-        }
+        assertRefCount(10, b1);
 
-        save(co$Category.findByKeyAndFetch(fetch(TgCategory.class).with("parent"), "C")
-                     .setParent(co$Category.findByKey("B")));
-
-        {
-            final var catA = co$Category.findByKey("A");
-            assertTrue(catA.isActive());
-            assertThat(catA.getRefCount()).isEqualTo(1);
-        }
+        final B b2 = save(spec.newB(ACTIVE, true, REF_COUNT, 20));
+        save(spec.setB1(a, b2));
+        assertRefCount(10, b1);
+        assertRefCount(20, b2);
     }
 
     @Test
-    public void dereferencing_with_concurrent_deactivation_of_the_referencing_entity_decrements_refCount_only_once_when_new_value_is_null() {
-        final var co$Category = co$(TgCategory.class);
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    if_entity_A_is_concurrently_deactivated_before_it_begins_referencing_entity_B_then_refCount_of_B_is_not_affected() {
+        final Spec1<A, B> spec = spec1();
 
-        {
-            final var catA = save(new_(TgCategory.class, "A").setActive(true));
-            save(new_(TgCategory.class, "B").setActive(true).setParent(catA));
-            save(new_(TgCategory.class, "C").setActive(true).setParent(catA));
-        }
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, true));
 
-        {
-            final var catA = co$Category.findByKey("A");
-            assertTrue(catA.isActive());
-            assertThat(catA.getRefCount()).isEqualTo(2);
-        }
+        final A a_v1 = (A) refetch$(a).set(ACTIVE, false);
+        final A a_v2 = spec.setB1(refetch$(a), b);
 
-        final var catB_1 = co$Category.findByKey("B").setActive(false);
-        final var catB_2 = co$Category.findByKey("B").setParent(null);
+        save(a_v1);
+        assertRefCount(10, b);
 
-        {
-            final var catB_1_saved = save(catB_1);
-            assertFalse(catB_1_saved.isActive());
-            final var catA = co$Category.findByKey("A");
-            assertTrue(catA.isActive());
-            assertThat(catA.getRefCount()).isEqualTo(1);
-            assertEquals(catB_1_saved.getParent(), catA);
-        }
-
-        {
-            final var catB_2_saved = save(catB_2);
-            assertFalse(catB_2_saved.isActive());
-            assertNull(catB_2_saved.getParent());
-            final var catA = co$Category.findByKey("A");
-            assertTrue(catA.isActive());
-            assertThat(catA.getRefCount()).isEqualTo(1);
-        }
-    }
-
-    @Test
-    public void if_entity_B_is_concurrently_deactivated_before_it_begins_referencing_entity_A_then_refCount_of_A_is_not_affected() {
-        final var co$Category = co$(TgCategory.class);
-
-        final var catA = save(new_(TgCategory.class, "A").setActive(true));
-        save(new_(TgCategory.class, "B").setActive(true));
-
-        final var catB_1 = co$Category.findByKey("B").setActive(false);
-        final var catB_2 = co$Category.findByKeyAndFetch(fetchAll(TgCategory.class).with("parent"), "B")
-                .setParent(co$Category.findByKey("A"));
-
-        {
-            final var catB_1_saved = save(catB_1);
-            assertFalse(catB_1_saved.isActive());
-            assertNull(catB_1_saved.getParent());
-        }
-
-        {
-            final var catB_2_saved = save(catB_2);
-            assertFalse(catB_2_saved.isActive());
-            final var catA_v1 = co$Category.findByKey("A");
-            assertEquals(catA_v1, catB_2_saved.getParent());
-            assertTrue(catA_v1.isActive());
-            assertEquals(catA.getRefCount(), catA_v1.getRefCount());
-        }
+        save(a_v2);
+        assertRefCount(10, b);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -228,192 +249,225 @@ public class AbstractEntityActivatabilityTestCase extends AbstractDaoTestCase {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     @Test
-    public void concurrent_deactivation_of_the_same_entity_decrements_refCount_of_referenced_active_entities_only_once() {
-        final var co$Category = co$(TgCategory.class);
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    concurrent_deactivation_of_the_same_entity_decrements_refCount_of_referenced_active_entities_only_once() {
+        final Spec1<A, B> spec = spec1();
 
-        {
-            final var catA = save(new_(TgCategory.class, "A").setActive(true));
-            save(new_(TgCategory.class, "B").setActive(true).setParent(catA));
-            save(new_(TgCategory.class, "C").setActive(true).setParent(catA));
-        }
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
+        assertRefCount(11, b);
 
-        final var catA = co$Category.findByKey("A");
-        assertEquals(Integer.valueOf(2), catA.getRefCount());
+        final A a_v1 = (A) refetch$(a).set(ACTIVE, false);
+        final A a_v2 = (A) refetch$(a).set(ACTIVE, false);
 
-        final var catB_1 = co$Category.findByKey("B").setActive(false);
-        final var catB_2 = co$Category.findByKey("B").setActive(false);
+        save(a_v1);
+        assertRefCount(10, b);
 
-        save(catB_1);
-        assertEquals(catA.getRefCount() - 1, co$Category.findByKey("A").getRefCount() + 0);
-
-        save(catB_2);
-        assertEquals(catA.getRefCount() - 1, co$Category.findByKey("A").getRefCount() + 0);
+        save(a_v2);
+        assertRefCount(10, b);
     }
 
     @Test
-    public void concurrent_activation_of_the_same_entity_increments_refCount_of_referenced_active_entities_only_once() {
-        final var co$Category = co$(TgCategory.class);
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    concurrent_activation_of_the_same_entity_increments_refCount_of_referenced_active_entities_only_once() {
+        final Spec1<A, B> spec = spec1();
 
-        {
-            final var catA = save(new_(TgCategory.class, "A").setActive(true));
-            save(new_(TgCategory.class, "B").setActive(false).setParent(catA));
-        }
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
+        assertRefCount(10, b);
 
-        final var catA = co$Category.findByKey("A");
-        assertEquals(Integer.valueOf(0), catA.getRefCount());
+        // TODO Should work with the DEFAULT category.
+        // This operation fails with a validation error saying that `b` referenced by `a` is inactive despite it obviously being active.
+        // The reason is that the result of `refetch$(a)` has property `ActivatableUnionOwner.union` whose
+        // value is an id-only proxy by structure but not by type (AbstractEntity.isIdOnlyProxy() == false).
+        // In fact, its type is a plain entity type, therefore none of its properties are proxied.
+        // This leads to ActivePropertyValidator accessing `a.b.active` and getting `false` as the result.
+        // FIXME Runtime error in ActivePropertyValidator
+        final A a_v1 = (A) refetch$(a, ALL).set(ACTIVE, true);
+        final A a_v2 = (A) refetch$(a, ALL).set(ACTIVE, true);
 
-        final var catB_1 = co$Category.findByKey("B").setActive(true);
-        final var catB_2 = co$Category.findByKey("B").setActive(true);
+        save(a_v1);
+        assertRefCount(11, b);
 
-        save(catB_1);
-        assertEquals(catA.getRefCount() + 1, co$Category.findByKey("A").getRefCount() + 0);
-
-        save(catB_2);
-        assertEquals(catA.getRefCount() + 1, co$Category.findByKey("A").getRefCount() + 0);
+        save(a_v2);
+        assertRefCount(11, b);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Concurrent operations
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void dereferencing_with_concurrent_deactivation_of_the_referencing_entity_decrements_refCount_only_once_when_new_value_is_not_null() {
-        final var co$Category = co$(TgCategory.class);
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    dereferencing_with_concurrent_deactivation_of_the_referencing_entity_decrements_refCount_only_once_when_new_value_is_null() {
+        final Spec1<A, B> spec = spec1();
 
-        final TgCategory catC;
-        {
-            final var catA = save(new_(TgCategory.class, "A").setActive(true));
-            save(new_(TgCategory.class, "B").setActive(true).setParent(catA));
-            catC = save(new_(TgCategory.class, "C").setActive(true).setParent(catA));
-            assertThat(catC.getRefCount()).isEqualTo(0);
-        }
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
 
-        {
-            final var catA = co$Category.findByKey("A");
-            assertTrue(catA.isActive());
-            assertThat(catA.getRefCount()).isEqualTo(2);
-        }
+        assertRefCount(11, b);
 
-        final var catB_1 = co$Category.findByKey("B").setActive(false);
-        final var catB_2 = co$Category.findByKeyAndFetch(fetch(TgCategory.class).with("parent"), "B")
-                .setParent(catC);
+        final A a_v1 = (A) refetch$(a).set(ACTIVE, false);
+        // TODO This should work with the DEFAULT category.
+        // Category ALL must be used here, otherwise `save(a_v2)` below fails with "Could not resolve conflicting changes"
+        // The reason is that the result of `a_v2 = refetch$(a)` has property `ActivatableUnionOwner.union` whose
+        // value is an id-only proxy by structure but not by type (AbstractEntity.isIdOnlyProxy() == false),
+        // which makes is not equal to an entity instance with the same ID but loaded by Hibernate.
+        // The underlying cause is a flaw in the EQL process of instantiating entities from containers, where no support
+        // was foreseen for union-typed properties whose values are ID-only proxies.
+        final A a_v2 = spec.setB1(refetch$(a, ALL), null);
 
-        {
-            final var catB_1_saved = save(catB_1);
-            assertFalse(catB_1_saved.isActive());
-            final var catA = co$Category.findByKey("A");
-            assertTrue(catA.isActive());
-            assertThat(catA.getRefCount()).isEqualTo(1);
-            assertEquals(catB_1_saved.getParent(), catA);
-        }
+        save(a_v1);
+        assertRefCount(10, b);
 
-        {
-            final var catB_2_saved = save(catB_2);
-            assertFalse(catB_2_saved.isActive());
-            assertEquals(catC, catB_2_saved.getParent());
-            final var catA = co$Category.findByKey("A");
-            assertTrue(catA.isActive());
-            assertThat(catA.getRefCount()).isEqualTo(1);
-            final var catC_after_being_referenced = co$Category.findByKey("C");
-            assertTrue(catC_after_being_referenced.isActive());
-            // catB_2 referenced catC while active, but saving happened after saving catB_1, which deactivated "B"
-            // Hence, no change to refCount of "C" is expected.
-            assertThat(catC_after_being_referenced.getRefCount()).isEqualTo(0);
-        }
+        save(a_v2);
+        assertRefCount(10, b);
     }
 
     @Test
-    public void refCount_for_dereferenced_entity_is_decremented_only_once_upon_concurrent_dereferencing_from_the_same_entity() {
-        final TgSystem sys1User1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
-        final TgSystem sys1User2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    dereferencing_with_concurrent_deactivation_of_the_referencing_entity_decrements_refCount_only_once_when_new_value_is_not_null() {
+        final Spec1<A, B> spec = spec1();
 
-        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
-        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
 
-        save(sys1User1.setCategory(null));
-        save(sys1User2.setCategory(null)); // concurrent, non-conflicting change
+        assertRefCount(11, b);
 
-        // how about refCount values?
-        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+        final A a_v1 = (A) refetch$(a).set(ACTIVE, false);
+        final B b2 = save(spec.newB(ACTIVE, true));
+        // TODO This should work with the DEFAULT category.
+        // Category ALL must be used here, otherwise setter invocation leads to an error:
+        // StrictProxyException: Invocation of method [getKey] is restricted due to unfetched property [key]
+        // The result of `refetch$(a)` has property `TgSystem.category` whose value is an id-only proxy, hence has `key` proxied.
+        // The error occurs when this value is compared to `b2` during setter interception.
+        // The error is caused by a flaw in `AbstractEntity.equals`.
+        final A a_v2 = spec.setB1(refetch$(a, ALL), b2);
+
+        save(a_v1);
+        assertRefCount(10, b);
+
+        save(a_v2);
+        assertRefCount(10, b);
     }
 
     @Test
-    public void refCount_for_referenced_entity_is_incremented_only_once_upon_concurrent_modification_of_the_same_entity() {
-        final TgSystem sys2User1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys2");
-        final TgSystem sys2User2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys2");
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    refCount_for_dereferenced_entity_is_decremented_only_once_upon_concurrent_dereferencing_from_the_same_entity() {
+        final Spec1<A, B> spec = spec1();
 
-        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
-        assertEquals(Integer.valueOf(2), cat1.getRefCount());
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
 
-        assertNull(sys2User1.getCategory());
-        save(sys2User1.setCategory(cat1));
-        assertNull(sys2User2.getCategory());
-        save(sys2User2.setCategory(cat1)); // concurrent, non-conflicting change
+        assertRefCount(11, b);
 
-        // how about refCount values?
-        assertEquals(cat1.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
+        final A a_v1 = spec.setB1(refetch$(a), null);
+        final A a_v2 = spec.setB1(refetch$(a), null);
+
+        save(a_v1);
+        assertRefCount(10, b);
+        save(a_v2);
+        assertRefCount(10, b);
     }
 
     @Test
-    public void refCount_for_dereferenced_entity_is_decremented_and_incremented_for_referened_entity_only_once_upon_concurrent_modification_of_the_same_entity() {
-        final TgSystem sys1User1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
-        final TgSystem sys1User2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    refCount_for_referenced_entity_is_incremented_only_once_upon_concurrent_modification_of_the_same_entity() {
+        final Spec1<A, B> spec = spec1();
 
-        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
-        assertEquals(Integer.valueOf(2), cat1.getRefCount());
-        final TgCategory cat5 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat5");
-        assertEquals(Integer.valueOf(0), cat5.getRefCount());
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, true));
 
-        save(sys1User1.setCategory(cat5));
-        save(sys1User2.setCategory(cat5)); // concurrent, non-conflicting change
+        final A a_v1 = spec.setB1(refetch$(a), b);
+        final A a_v2 = spec.setB1(refetch$(a), b);
 
-        // how about refCount values?
-        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
-        assertEquals(cat5.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat5").getRefCount() + 0);
+        final A saved_a_v1 = save(a_v1);
+        assertEquals(1, saved_a_v1.getVersion().intValue());
+        assertRefCount(11, b);
+
+        final A saved_a_v2 = save(a_v2);
+        assertEquals(2, saved_a_v2.getVersion().intValue());
+        assertRefCount(11, b);
     }
 
     @Test
-    public void activation_that_is_concurrent_with_referencing_leads_to_increment_of_refCount() {
-        // Sys_X (version: 0) is inactive.
-        final var sys0 = save(new_(TgSystem.class, "Sys_X").setActive(false));
-        final var cat = save(new_(TgCategory.class, "Cat_X").setActive(true));
-        assertEquals(0, cat.getRefCount().intValue());
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    refCount_for_dereferenced_entity_is_decremented_and_incremented_for_referened_entity_only_once_upon_concurrent_modification_of_the_same_entity() {
+        final Spec1<A, B> spec = spec1();
 
-        // Sys_X becomes active.
-        final var sys1 = co$(TgSystem.class).findByEntityAndFetch(fetchAll(TgSystem.class), sys0)
-                .setActive(true);
-        // Concurrently, Sys_X begins referencing Cat_X.
-        final var sys2 = co$(TgSystem.class).findByEntityAndFetch(fetchAll(TgSystem.class), sys0)
-                .setCategory(cat);
+        final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final B b2 = save(spec.newB(ACTIVE, true, REF_COUNT, 20));
 
-        save(sys1);
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b1));
 
-        save(sys2);
-        assertEquals(1, co(TgCategory.class).findByEntityAndFetch(fetchAll(TgCategory.class), cat).getRefCount().intValue());
+        assertRefCount(11, b1);
+
+        final A a_v1 = spec.setB1(refetch$(a, ALL), b2);
+        final A a_v2 = spec.setB1(refetch$(a, ALL), b2);
+
+        final A saved_a_v1 = save(a_v1);
+        assertEquals(1, saved_a_v1.getVersion().intValue());
+        assertRefCount(10, b1);
+        assertRefCount(21, b2);
+
+        final A saved_a_v2 = save(a_v2);
+        assertEquals(2, saved_a_v2.getVersion().intValue());
+        assertRefCount(10, b1);
+        assertRefCount(21, b2);
     }
 
     @Test
-    public void concurrent_activation_and_dereferencing_both_change_refCount_with_cumulative_effect_of_0() {
-        // Sys_X (version: 0) is inactive and references active Cat_X.
-        final var cat = save(new_(TgCategory.class, "Cat_X").setActive(true));
-        final var sys0 = save(new_(TgSystem.class, "Sys_X").setActive(false).setCategory(cat));
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    activation_that_is_concurrent_with_referencing_leads_to_increment_of_refCount() {
+        final Spec1<A, B> spec = spec1();
 
-        assertEquals(0, co(TgCategory.class).findByEntityAndFetch(fetchAll(TgCategory.class), cat).getRefCount().intValue());
+        final A a = save(spec.newA(ACTIVE, false));
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
 
-        // Sys_X becomes active.
-        final var sys1 = co$(TgSystem.class).findByEntityAndFetch(fetchAll(TgSystem.class), sys0)
-                .setActive(true);
-        // Concurrently, Sys_X dereferences Cat_X.
-        final var sys2 = co$(TgSystem.class).findByEntityAndFetch(fetchAll(TgSystem.class), sys0)
-                .setCategory(null);
+        final A a_v1 = (A) refetch$(a).set(ACTIVE, true);
+        final A a_v2 = spec.setB1(refetch$(a), b);
 
-        save(sys1);
-        // refCount of Cat_X is incremented.
-        assertEquals(1, co(TgCategory.class).findByEntityAndFetch(fetchAll(TgCategory.class), cat).getRefCount().intValue());
+        save(a_v1);
+        assertRefCount(10, b);
 
-        save(sys2);
-        // refCount of Cat_X is decremented.
-        assertEquals(0, co(TgCategory.class).findByEntityAndFetch(fetchAll(TgCategory.class), cat).getRefCount().intValue());
+        save(a_v2);
+        assertRefCount(11, b);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    concurrent_activation_and_dereferencing_both_change_refCount_with_cumulative_effect_of_0() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
+
+        assertRefCount(10, b);
+
+        // TODO Should work with the DEFAULT category.
+        // This operation fails with a validation error saying that `b` referenced by `a` is inactive despite it obviously being active.
+        // The reason is that the result of `refetch$(a)` has property `ActivatableUnionOwner.union` whose
+        // value is an id-only proxy by structure but not by type (AbstractEntity.isIdOnlyProxy() == false).
+        // In fact, its type is a plain entity type, therefore none of its properties are proxied.
+        // This leads to ActivePropertyValidator accessing `a.b.active` and getting `false` as the result.
+        // FIXME Runtime error in ActivePropertyValidator
+        final A a_v1 = (A) refetch$(a, ALL).set(ACTIVE, true);
+        // TODO Should work with the DEFAULT category.
+        // Category ALL must be used here, otherwise `save(a_v2)` below fails with "Could not resolve conflicting changes"
+        // The reason is that the result of `a_v2 = refetch$(a)` has property `ActivatableUnionOwner.union` whose
+        // value is an id-only proxy by structure but not by type (AbstractEntity.isIdOnlyProxy() == false),
+        // which makes is not equal to an entity instance with the same ID but loaded by Hibernate.
+        // The underlying cause is a flaw in the EQL process of instantiating entities from containers, where no support
+        // was foreseen for union-typed properties whose values are ID-only proxies.
+        final A a_v2 = spec.setB1(refetch$(a, ALL), null);
+
+        save(a_v1);
+        assertRefCount(11, b);
+
+        save(a_v2);
+        assertRefCount(10, b);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -421,72 +475,84 @@ public class AbstractEntityActivatabilityTestCase extends AbstractDaoTestCase {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     @Test
-    public void when_a_new_entity_A_begins_referencing_entity_B_refCount_of_B_is_incremented_for_each_reference_from_A() {
-        final var catA = save(new_(TgCategory.class, "A").setActive(true));
-        final var sysA = save(new_(TgSystem.class, "A").setActive(true).setCategory(catA).setFirstCategory(catA));
-        final var coCategory = co$(TgCategory.class);
-        assertEquals(Integer.valueOf(2), coCategory.findByKey("A").getRefCount());
+    public
+    <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>>
+    void when_a_new_entity_A_begins_referencing_entity_B_refCount_of_B_is_incremented_for_each_reference_from_A() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b = save(spec.newB(ACTIVE, true));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b, spec.A_b2(), b));
+
+        assertRefCount(2, b);
     }
 
     @Test
-    public void when_a_modified_entity_A_begins_referencing_entity_B_refCount_of_B_is_incremented_for_each_reference_from_A() {
-        final var catA = save(new_(TgCategory.class, "A").setActive(true));
-        final var sysA = save(save(new_(TgSystem.class, "A").setActive(true))
-                                      .setCategory(catA).setFirstCategory(catA));
-        final var coCategory = co$(TgCategory.class);
-        assertEquals(Integer.valueOf(2), coCategory.findByKey("A").getRefCount());
+    public
+    <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>>
+    void when_a_modified_entity_A_begins_referencing_entity_B_refCount_of_B_is_incremented_for_each_reference_from_A() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b = save(spec.newB(ACTIVE, true));
+        {
+            final A a = save(spec.newA(ACTIVE, true));
+            spec.setB1(a, b);
+            spec.setB2(a, b);
+            save(a);
+        }
+
+        assertRefCount(2, b);
     }
 
     @Test
-    public void when_entity_A_is_activated_refCount_of_B_is_incremented_for_each_reference_from_A() {
-        final var co$Category = co$(TgCategory.class);
+    public
+    <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>>
+    void when_entity_A_is_activated_refCount_of_B_is_incremented_for_each_reference_from_A() {
+        final Spec1<A, B> spec = spec1();
 
-        final var catA = save(new_(TgCategory.class, "A").setActive(true));
-        final var sysA = save(new_(TgSystem.class, "A").setActive(false).setCategory(catA).setFirstCategory(catA));
-        assertThat(co$Category.findByKey("A").getRefCount()).isEqualTo(0);
-        save(sysA.setActive(true));
-        assertThat(co$Category.findByKey("A").getRefCount()).isEqualTo(2);
+        final B b = save(spec.newB(ACTIVE, true));
+        final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b, spec.A_b2(), b));
+        assertRefCount(0, b);
+
+        // FIXME Runtime error in ActivePropertyValidator
+        save(a.set(ACTIVE, true));
+        assertRefCount(2, b);
     }
 
     @Test
-    public void when_entity_A_is_deactivated_refCount_of_B_is_decremented_for_each_reference_from_A() {
-        final var co$Category = co$(TgCategory.class);
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    when_entity_A_is_deactivated_refCount_of_B_is_decremented_for_each_reference_from_A() {
+        final Spec1<A, B> spec = spec1();
 
-        final var catA = save(new_(TgCategory.class, "A").setActive(true));
-        save(new_(TgCategory.class, "X").setActive(true).setParent(catA));
-        final var sysA = save(new_(TgSystem.class, "A").setActive(true).setCategory(catA).setFirstCategory(catA));
-        assertThat(co$Category.findByKey("A").getRefCount()).isEqualTo(3);
-        save(sysA.setActive(false));
-        assertThat(co$Category.findByKey("A").getRefCount()).isEqualTo(1);
+        final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b1, spec.A_b2(), b1));
+
+        assertRefCount(12, b1);
+
+        save(a.set(ACTIVE, false));
+        assertRefCount(10, b1);
     }
 
     @Test
-    public void refCount_value_is_equal_to_number_of_references_from_entities_in_different_properties_rather_than_to_number_of_such_entities() {
-        final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    refCount_value_is_equal_to_number_of_references_from_entities_in_different_properties_rather_than_to_number_of_such_entities() {
+        final Spec1<A, B> spec = spec1();
 
-        // set properties one by one and assert refCount increasing
-        TgSystem sys = save(new_(TgSystem.class, "NEW_SYS").setActive(true).setFirstCategory(cat));
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
 
-        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        // Set properties one by one and assert refCount increasing.
+        A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
+        assertRefCount(11, b);
 
-        sys = save(sys.setSecondCategory(cat));
+        a = save(spec.setB2(a, b));
 
-        assertEquals(Integer.valueOf(2), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        assertRefCount(12, b);
 
-        // unset properties one by one and assert refCount decreasing
-        sys = save(sys.setFirstCategory(null));
+        // Unset properties one by one and assert refCount decreasing.
+        a = save(spec.setB1(a, null));
+        assertRefCount(11, b);
 
-        assertEquals(Integer.valueOf(1), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
-
-        sys = save(sys.setSecondCategory(null));
-
-        assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
-
-        // set two properties at once and then deactive the entity to assert that refCount becomes zero
-        sys = save(sys.setFirstCategory(cat).setSecondCategory(cat));
-        assertEquals(Integer.valueOf(2), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
-        sys = save(sys.setActive(false));
-        assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+        a = save(spec.setB2(a, null));
+        assertRefCount(10, b);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -494,322 +560,277 @@ public class AbstractEntityActivatabilityTestCase extends AbstractDaoTestCase {
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     @Test
-    public void activating_entity_that_was_referencing_inactive_activatable_does_not_change_ref_count_of_that_activatable() {
-        final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
-        final TgCategory oldParent = cat4.getParent();
-        assertFalse(cat4.isActive());
-        final TgCategory savedCat4 = save(cat4.setParent(null).setActive(true));
-        assertNull(savedCat4.getParent());
-        assertTrue(savedCat4.isActive());
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    activating_entity_that_was_referencing_inactive_activatable_does_not_change_ref_count_of_that_activatable() {
+        final Spec1<A, B> spec = spec1();
 
-        final TgCategory cat3 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat3");
-        assertEquals(oldParent.getRefCount(), cat3.getRefCount());
+        final B b = save(spec.newB(ACTIVE, false, REF_COUNT, 10));
+        // FIXME EntityExistsValidator fails when the reference is via a union-typed property.
+        final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
+
+        save(setProperties(spec, a, spec.A_b1(), null, ACTIVE, true));
+
+        assertRefCount(10, b);
     }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     @Test
-    public void active_entity_with_active_references_cannot_be_deactivated() {
-        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
-        cat1.setActive(false);
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    active_entity_with_active_references_cannot_be_deactivated() {
+        final Spec1<A, B> spec = spec1();
 
-        final MetaProperty<Boolean> activeProperty = cat1.getProperty("active");
+        final B b = save(spec.newB(ACTIVE, true));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
 
-        assertFalse(activeProperty.isValid());
-        final String entityTitle = getEntityTitleAndDesc(cat1.getType()).getKey();
-        assertTrue(activeProperty.getFirstFailure().getMessage().startsWith(format("%s [%s] has %s active dependencies", entityTitle, cat1, 2)));
-    }
-
-    @Test
-    public void activating_entity_referencing_inactive_values_in_properties_with_SkipEntityExistsValidation_where_skipActiveOnly_eq_true_is_permitted() {
-        final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
-        assertFalse(cat4.isActive());
-
-        final TgSystem inactiveSys3 = save(new_(TgSystem.class, "Sys3").setActive(false).setThirdCategory(cat4));
-
-        final TgSystem activatedSys3 = inactiveSys3.setActive(true);
-        assertNull(activatedSys3.getProperty(ACTIVE).getFirstFailure());
-        save(activatedSys3);
-    }
-
-    @Test
-    public void activating_entity_referencing_inactive_values_in_properties_with_SkipEntityExistsValidation_where_skipActiveOnly_eq_false_is_not_permitted() {
-        final TgCategory cat4 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
-        assertFalse(cat4.isActive());
-
-        final TgSystem inactiveSys3 = save(new_(TgSystem.class, "Sys3").setActive(false).setSecondCategory(cat4));
-
-        final TgSystem sys3 = inactiveSys3.setActive(true);
-        assertNotNull(sys3.getProperty(ACTIVE).getFirstFailure());
-        assertEquals("Property [Second Cat] in Tg System [Sys3] references inactive Tg Category [Cat4].", sys3.getProperty(ACTIVE).getFirstFailure().getMessage());
-    }
-
-    @Test
-    public void deactivation_and_saving_of_self_referenced_activatable_is_permissible_but_does_not_decrement_its_ref_count() {
-        final TgCategory cat5 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat5");
-        assertEquals(Integer.valueOf(0), cat5.getRefCount());
-
-        final TgCategory savedCat5 = save(cat5.setActive(false));
-        assertEquals(Integer.valueOf(0), savedCat5.getRefCount());
-        assertFalse(savedCat5.isActive());
-        assertFalse(savedCat5.getParent().isActive());
-    }
-
-    @Test
-    public void activating_entity_that_is_referenced_by_inactive_is_permitted_but_does_not_change_its_ref_count_and_also_updates_referenced_not_dirty_active_activatables() {
-        final TgCategory cat3 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat3");
-        assertEquals(Integer.valueOf(0), cat3.getRefCount());
-        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
-        assertTrue(cat1.isActive());
-
-        final TgCategory savedCat3 = save(cat3.setActive(true));
-        assertTrue(co$(TgCategory.class).findByKey("Cat1").isActive());
-        assertEquals("RefCount should not change", cat3.getRefCount(), savedCat3.getRefCount());
-        assertEquals("RefCount of the referenced non-dirty activatable should have increated by 1.", cat3.getParent().getRefCount() + 1, savedCat3.getParent().getRefCount() + 0);
-    }
-
-    @Test
-    public void activating_entity_A_and_dereferencing_entity_B_does_not_affect_refCount_of_B() {
-        final TgCategory cat3 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat3");
-        final TgCategory oldParent = cat3.getParent();
-        assertEquals(Integer.valueOf(0), cat3.getRefCount());
-        assertEquals(Integer.valueOf(2), oldParent.getRefCount());
-
-        final TgCategory savedCat3 = save(cat3.setParent(null).setActive(true));
-        assertNull(savedCat3.getParent());
-        assertTrue(savedCat3.isActive());
-        assertEquals("RefCount should not change", cat3.getRefCount(), savedCat3.getRefCount());
-        assertEquals("RefCount of the de-referenced non-dirty activatable should have not changed.",
-                     oldParent.getRefCount(),
-                     co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1").getRefCount());
-    }
-
-    @Test
-    public void deactivation_of_an_entity_decrements_refCount_of_referenced_active_entities() {
-        final var cat2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat2");
-        assertTrue(cat2.isActive());
-        final var oldParent = cat2.getParent();
-        assertTrue(oldParent.isActive());
-        assertThat(oldParent.getRefCount()).isPositive();
-
-        final var savedCat2 = save(cat2.setActive(false));
-        assertFalse(savedCat2.isActive());
-        assertEquals(oldParent.getRefCount() - 1, savedCat2.getParent().getRefCount() + 0);
-    }
-    @Test
-    public void changing_activatable_properties_leads_to_decrement_of_dereferenced_instances_and_increment_of_just_referenced_ones() {
-        final TgSystem sys1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
-        final TgCategory cat1BeforeChange = sys1.getCategory();
-        assertEquals(Integer.valueOf(2), cat1BeforeChange.getRefCount());
-        final TgCategory cat6 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
-
-        final TgSystem savedSys1 = save(sys1.setCategory(cat6));
-        assertEquals(cat1BeforeChange.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
-        assertEquals(cat6.getRefCount() + 1, savedSys1.getCategory().getRefCount() + 0);
-    }
-
-    @Test
-    public void changing_and_unsetting_activatable_properties_leads_to_decrement_of_dereferenced_instances_and_increment_of_just_referenced_ones() {
-        final TgSystem sys2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys2");
-        final TgCategory cat6BeforeChange = sys2.getFirstCategory();
-        assertEquals(Integer.valueOf(2), cat6BeforeChange.getRefCount());
-        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
-
-        final TgSystem savedSys2 = save(sys2.setFirstCategory(cat1).setSecondCategory(null));
-        assertEquals(cat6BeforeChange.getRefCount() - 2, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
-        assertEquals(cat1.getRefCount() + 1, savedSys2.getFirstCategory().getRefCount() + 0);
-    }
-
-    @Test
-    public void self_referenced_activatable_can_become_inactive() {
-        final TgCategory cat5 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat5");
-        final TgCategory savedCat5 = save(cat5.setActive(false));
-
-        assertFalse(savedCat5.isActive());
-        assertEquals(savedCat5, savedCat5.getParent());
-        assertEquals(Integer.valueOf(0), savedCat5.getRefCount());
-    }
-
-    @Test
-    public void deactivation_with_simultaneous_dereferencing_of_active_activatables_decrements_refCount_of_dereferenced_active_activatables() {
-        final TgCategory cat2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat2");
-        final TgCategory cat1 = cat2.getParent();
-        final TgCategory savedCat2 = save(cat2.setParent(null).setActive(false));
-
-        assertFalse(savedCat2.isActive());
-        assertNull(savedCat2.getParent());
-        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
-    }
-
-    @Test
-    public void recomputation_of_refCount_after_multiple_changes_of_activatable_property_with_referencing_is_performed_for_correct_instances() {
-        final TgSystem sys1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
-
-        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
-        assertEquals(Integer.valueOf(2), cat1.getRefCount());
-        final TgCategory cat5 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat5");
-        assertEquals(Integer.valueOf(0), cat5.getRefCount());
-        final TgCategory cat6 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
-        assertEquals(Integer.valueOf(2), cat6.getRefCount());
-
-        final MetaProperty<TgCategory> mpCategory = sys1.getProperty("category");
-        assertEquals(cat1, mpCategory.getValue());
-        assertEquals(cat1, mpCategory.getPrevValue());
-        assertEquals(cat1, mpCategory.getOriginalValue());
-
-        sys1.setCategory(cat6); // intermediate category, which will be replaced before saving changes
-        assertEquals(cat6, mpCategory.getValue());
-        assertEquals(cat1, mpCategory.getPrevValue());
-        assertEquals(cat1, mpCategory.getOriginalValue());
-
-        sys1.setCategory(cat5);
-        assertEquals(cat5, mpCategory.getValue());
-        assertEquals(cat6, mpCategory.getPrevValue());
-        assertEquals(cat1, mpCategory.getOriginalValue());
-
-        final TgSystem savedSys1 = save(sys1);
-        final MetaProperty<TgCategory> savedMpCategory = savedSys1.getProperty("category");
-        assertEquals(cat5, savedMpCategory.getValue());
-        assertEquals(cat5, savedMpCategory.getPrevValue());
-        assertEquals(cat5, savedMpCategory.getOriginalValue());
-
-        // how about refCount values?
-        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
-        assertEquals(cat5.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat5").getRefCount() + 0);
-        assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
-    }
-
-    @Test
-    public void recomputation_of_refCount_after_mutiple_changes_of_activatable_property_with_dereferencing_is_performed_for_correct_instances() {
-        final TgSystem sys1 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys1");
-
-        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
-        assertEquals(Integer.valueOf(2), cat1.getRefCount());
-        final TgCategory cat6 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
-        assertEquals(Integer.valueOf(2), cat6.getRefCount());
-
-        final MetaProperty<TgCategory> mpCategory = sys1.getProperty("category");
-        assertEquals(cat1, mpCategory.getValue());
-        assertEquals(cat1, mpCategory.getPrevValue());
-        assertEquals(cat1, mpCategory.getOriginalValue());
-
-        sys1.setCategory(cat6); // intermediate category, which will be dereferenced before saving changes
-        assertEquals(cat6, mpCategory.getValue());
-        assertEquals(cat1, mpCategory.getPrevValue());
-        assertEquals(cat1, mpCategory.getOriginalValue());
-
-        sys1.setCategory(null);
-        assertNull(mpCategory.getValue());
-        assertEquals(cat6, mpCategory.getPrevValue());
-        assertEquals(cat1, mpCategory.getOriginalValue());
-
-        final TgSystem savedSys1 = save(sys1);
-        final MetaProperty<TgCategory> savedMpCategory = savedSys1.getProperty("category");
-        assertNull(savedMpCategory.getValue());
-        assertNull(savedMpCategory.getPrevValue());
-        assertNull(savedMpCategory.getOriginalValue());
-
-        // how about refCount values?
-        assertEquals(cat1.getRefCount() - 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
-        assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
-    }
-
-    @Test
-    public void recomputation_of_refCount_after_mutiple_changes_of_activatable_property_that_had_no_value_before_is_performed_for_correct_instances() {
-        final TgSystem sys2 = co$(TgSystem.class).findByKeyAndFetch(fetchAll(TgSystem.class), "Sys2");
-        assertNull(sys2.getCategory());
-
-        final TgCategory cat1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
-        assertEquals(Integer.valueOf(2), cat1.getRefCount());
-        final TgCategory cat6 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat6");
-        assertEquals(Integer.valueOf(2), cat6.getRefCount());
-
-        final MetaProperty<TgCategory> mpCategory = sys2.getProperty("category");
-        assertNull(mpCategory.getValue());
-        assertNull(mpCategory.getPrevValue());
-        assertNull(mpCategory.getOriginalValue());
-
-        sys2.setCategory(cat6); // intermediate category, which will be dereferenced before saving changes
-        assertEquals(cat6, mpCategory.getValue());
-        assertNull(mpCategory.getPrevValue());
-        assertNull(mpCategory.getOriginalValue());
-
-        sys2.setCategory(cat1);
-        assertEquals(cat1, mpCategory.getValue());
-        assertEquals(cat6, mpCategory.getPrevValue());
-        assertNull(mpCategory.getOriginalValue());
-
-        final TgSystem savedSys2 = save(sys2);
-        final MetaProperty<TgCategory> savedMpCategory = savedSys2.getProperty("category");
-        assertEquals(cat1, savedMpCategory.getValue());
-        assertEquals(cat1, savedMpCategory.getPrevValue());
-        assertEquals(cat1, savedMpCategory.getOriginalValue());
-
-        // how about refCount values?
-        assertEquals(cat1.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
-        assertEquals("RefCount should not have been changed for this intermediate value.", cat6.getRefCount() + 0, co$(TgCategory.class).findByKey("Cat6").getRefCount() + 0);
-    }
-
-    @Test
-    public void new_entity_is_validated_upon_activation() {
-        final TgCategory cat = save(new_(TgCategory.class, "InactiveCat").setActive(false));
-        final TgSystem sys = new_(TgSystem.class, "Sys").setCategory(cat);
-        assertFalse(sys.isActive());
-        assertTrue(sys.isValid().isSuccessful());
-
-        sys.setActive(true);
-        final MetaProperty<Boolean> mpActive = sys.getProperty(ACTIVE);
+        b.set(ACTIVE, false);
+        final var mpActive = b.getProperty(ACTIVE);
+        // FIXME Property remains valid for union-typed references.
         assertFalse(mpActive.isValid());
-        assertEquals("Property [Category] in Tg System [Sys] references inactive Tg Category [InactiveCat].",
-                     mpActive.getFirstFailure().getMessage());
+        assertThat(mpActive.getFirstFailure().getMessage())
+                .startsWith(format(ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES, getEntityTitleAndDesc(b).getKey(), b, 1, "dependency"));
     }
 
     @Test
-    public void stale_entity_can_be_deactivated() {
-        final var cat7 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat7");
-        assertTrue(cat7.isActive());
-        final var cat7_1 = save(cat7.setDesc(cat7.getDesc() + " some change."));
-        assertThat(cat7.getVersion()).isLessThan(cat7_1.getVersion());
-        assertThat(cat7_1.getRefCount()).isEqualTo(0);
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    activating_entity_referencing_inactive_values_in_properties_with_SkipEntityExistsValidation_where_skipActiveOnly_eq_true_is_permitted() {
+        final Spec1<A, B> spec = spec1();
 
-        // deactivate stale instance
-        final var cat7_2 = save(cat7.setActive(false));
-        assertFalse(cat7_2.isActive());
+        final B b = save(spec.newB(ACTIVE, false));
+        // FIXME EntityExistsValidator fails when the reference is via a union-typed property.
+        A a = save(spec.newA(ACTIVE, false, spec.A_b3(), b));
+
+        a = (A) a.set(ACTIVE, true);
+        assertNull(a.getProperty(ACTIVE).getFirstFailure());
+        save(a);
     }
 
-    @Override
-    protected void populateDomain() {
-        super.populateDomain();
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    activating_entity_referencing_inactive_values_in_properties_with_SkipEntityExistsValidation_where_skipActiveOnly_eq_false_is_not_permitted() {
+        final Spec1<A, B> spec = spec1();
 
-        // set up logged in person, which is needed for TgSubSystem
-        final String loggedInUser = "LOGGED_IN_USER";
-        final IUser coUser = co$(User.class);
-        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true).setEmail(loggedInUser + "@unit-test.software").setActive(true));
+        final B b = save(spec.newB(ACTIVE, false));
+        // FIXME EntityExistsValidator fails when the reference is via a union-typed property.
+        A a = save(spec.newA(ACTIVE, false, spec.A_b4(), b));
 
-        // associate the admin role with lUser
-        final UserRole admin = co$(UserRole.class).findByKey(UNIT_TEST_ROLE);
-        save(new_composite(UserAndRoleAssociation.class, lUser, admin));
+        a = (A) a.set(ACTIVE, true);
+        // FIXME Property remains valid for union-typed references.
+        assertNotNull(a.getProperty(ACTIVE).getFirstFailure());
+        assertEquals(format(ERR_INACTIVE_REFERENCES,
+                            getTitleAndDesc(spec.A_b4(), a.getType()).getKey(),
+                            getEntityTitleAndDesc(a).getKey(),
+                            a,
+                            getEntityTitleAndDesc(b).getKey(),
+                            b),
+                     a.getProperty(ACTIVE).getFirstFailure().getMessage());
+    }
 
-        save(new_(TgPerson.class, loggedInUser).setUser(lUser));
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    deactivation_and_saving_of_self_referenced_activatable_is_permissible_but_does_not_decrement_its_ref_count() {
+        final Spec1<A, B> spec = spec1();
 
-        final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(loggedInUser, getInstance(IUser.class));
+        A a = save(spec.newA(ACTIVE, true, REF_COUNT, 10));
+        a = save(spec.setA1(a, a));
 
-        // now the test data
-        TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));
-        cat1 = save(cat1.setParent(cat1));
-        final TgCategory cat2 = save(new_(TgCategory.class, "Cat2").setActive(true).setParent(cat1));
-        final TgCategory cat3 = save(new_(TgCategory.class, "Cat3").setActive(false).setParent(cat1));
-        save(new_(TgCategory.class, "Cat4").setActive(false).setParent(cat3));
-        final TgCategory cat5 = save(new_(TgCategory.class, "Cat5").setActive(true));
-        save(cat5.setParent(cat5));
+        assertRefCount(10, a);
 
-        save(new_(TgSystem.class, "Sys1").setActive(true).setCategory(cat1));
-        final TgCategory cat6 = save(new_(TgCategory.class, "Cat6").setActive(true));
-        final TgCategory cat7 = save(new_(TgCategory.class, "Cat7").setActive(true));
-        save(new_(TgSubSystem.class, "SubSys1").setFirstCategory(cat6).setSecondCategory(cat6));
+        a = save((A) a.set(ACTIVE, false));
 
-        save(new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat6).setSecondCategory(cat6));
+        assertRefCount(10, a);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    activating_entity_that_is_referenced_by_inactive_is_permitted_but_does_not_change_its_ref_count_and_also_updates_referenced_not_dirty_active_activatables() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        A a1 = save(spec.newA(ACTIVE, false, spec.A_b1(), b, REF_COUNT, 20));
+        // FIXME EntityExistsValidator fails when the reference is via a union-typed property.
+        final A a2 = save(spec.newA(ACTIVE, false, spec.A_a1(), a1));
+
+        a1 = save((A) a1.set(ACTIVE, true));
+        assertRefCount(20, a1);
+
+        assertRefCount("refCount of the referenced non-dirty activatable should have increased by 1.", 11, b);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    activating_entity_A_and_dereferencing_entity_B_does_not_affect_refCount_of_B() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
+
+        // FIXME Runtime error in ActivePropertyValidator
+        assertRefCount(10, b);
+
+        a = save(setProperties(spec, a, ACTIVE, true, spec.A_b1(), null));
+
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    deactivation_of_an_entity_decrements_refCount_of_referenced_active_entities() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
+
+        assertRefCount(11, b);
+
+        save(a.set(ACTIVE, false));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    changing_and_unsetting_activatable_properties_leads_to_decrement_of_dereferenced_instances_and_increment_of_just_referenced_ones() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b1));
+
+        assertRefCount(11, b1);
+
+        final B b2 = save(spec.newB(ACTIVE, true, REF_COUNT, 20));
+        save(setProperties(spec, a, spec.A_b1(), null, spec.A_b2(), b2));
+
+        assertRefCount(10, b1);
+        assertRefCount(21, b2);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    deactivation_with_simultaneous_dereferencing_of_active_activatables_decrements_refCount_of_dereferenced_active_activatables() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
+
+        assertRefCount(11, b);
+
+        save(setProperties(spec, a, ACTIVE, false, spec.A_b1(), null));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    recomputation_of_refCount_after_multiple_changes_of_activatable_property_with_referencing_is_performed_for_correct_instances() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final B b2 = save(spec.newB(ACTIVE, true, REF_COUNT, 20));
+        final B b3 = save(spec.newB(ACTIVE, true, REF_COUNT, 30));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b1));
+
+        assertRefCount(11, b1);
+
+        // Intermediate value that will be replaced before saving changes.
+        spec.setB1(a, b2);
+        spec.setB1(a, b3);
+        save(a);
+
+        assertRefCount(10, b1);
+        assertRefCount(20, b2);
+        assertRefCount(31, b3);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    recomputation_of_refCount_after_mutiple_changes_of_activatable_property_with_dereferencing_is_performed_for_correct_instances() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final B b2 = save(spec.newB(ACTIVE, true, REF_COUNT, 20));
+        final A a = save(spec.newA(ACTIVE, true, spec.A_b1(), b1));
+
+        assertRefCount(11, b1);
+
+        // Intermediate value that will be replaced before saving changes.
+        spec.setB1(a, b2);
+        spec.setB1(a, null);
+        save(a);
+
+        assertRefCount(10, b1);
+        assertRefCount(20, b2);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    recomputation_of_refCount_after_mutiple_changes_of_activatable_property_that_had_no_value_before_is_performed_for_correct_instances() {
+        final Spec1<A, B> spec = spec1();
+
+        final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final B b2 = save(spec.newB(ACTIVE, true, REF_COUNT, 20));
+        final A a = save(spec.newA(ACTIVE, true));
+
+        // Intermediate value that will be replaced before saving changes.
+        spec.setB1(a, b1);
+        spec.setB1(a, b2);
+        save(a);
+
+        assertRefCount(10, b1);
+        assertRefCount(21, b2);
+    }
+
+    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    @SuppressWarnings("unchecked")
+    private static <E extends AbstractEntity<?>> E setProperties(final ICanSetProperty setter, final E entity, final CharSequence prop1, final Object val1, final Object... rest) {
+        if (rest.length % 2 != 0) {
+            throw new InvalidArgumentException("[rest] must have even length: %s".formatted(rest.length));
+        }
+
+        setter.setProperty(entity, prop1, val1);
+
+        for (var i = 0; i < rest.length; i+=2) {
+            final CharSequence prop = (CharSequence) rest[i];
+            setter.setProperty(entity, prop, rest[i+1]);
+        }
+
+        return entity;
+    }
+
+    private interface ICanSetProperty {
+        default <E extends AbstractEntity<?>> E setProperty(final E entity, final CharSequence prop, final Object value) {
+            entity.set(prop.toString(), value);
+            return entity;
+        }
+    }
+
+    private <E extends AbstractEntity<?>> E refetch$(final E entity, final fetch<E> fetch) {
+        return co$((Class<E>) entity.getType()).findByEntityAndFetch(fetch, entity);
+    }
+
+    private <E extends AbstractEntity<?>> E refetch$(final E entity, final FetchCategory category) {
+        return refetch$(entity, new fetch<E>((Class<E>) entity.getType(), category));
+    }
+
+    private <E extends AbstractEntity<?>> E refetch$(final E entity) {
+        return refetch$(entity, FetchCategory.DEFAULT);
+    }
+
+    private void assertRefCount(final int expected, final ActivatableAbstractEntity<?> entity) {
+        assertRefCount(() -> "refCount for [%s] %s".formatted(getEntityTitleAndDesc(entity).getKey(), entity),
+                       expected, entity);
+    }
+
+    private void assertRefCount(final String message, final int expected, final ActivatableAbstractEntity<?> entity) {
+        assertRefCount(() -> message, expected, entity);
+    }
+
+    private void assertRefCount(final Supplier<String> messageSupplier, final int expected, final ActivatableAbstractEntity<?> entity) {
+        assertNotNull(entity);
+        final Class<ActivatableAbstractEntity<?>> entityType = (Class<ActivatableAbstractEntity<?>>) entity.getType();
+        final int actual = co(entityType).findByEntityAndFetch(fetchNone(entityType).with(REF_COUNT), entity).getRefCount();
+        assertThat(actual)
+                .describedAs(messageSupplier)
+                .isEqualTo(expected);
     }
 
 }

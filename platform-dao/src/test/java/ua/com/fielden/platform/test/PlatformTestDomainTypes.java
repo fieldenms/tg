@@ -4,6 +4,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.companion.PersistentEntityWithAllKindsOfProperties;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.activatable.test_entities.*;
 import ua.com.fielden.platform.entity.query.test_entities.EntityToFill;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequiredness;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
@@ -144,6 +145,11 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgInventory.class);
         add(TgInventoryBin.class);
         add(TgInventoryIssue.class);
+        add(Union.class);
+        add(Member1.class);
+        add(Member2.class);
+        add(ActivatableUnionOwner.class);
+        add(UnionOwner.class);
     }
 
     @Override
