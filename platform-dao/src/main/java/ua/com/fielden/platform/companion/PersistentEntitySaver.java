@@ -454,13 +454,13 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // If the new value is `null`, an activatable entity has been dereferenced and its `refCount` may need to be decremented.
         if (value == null) {
             // Original property value should not be null, otherwise property would not become dirty by assigning null.
-            decRefCount(entity, persistedEntity, prop, (ActivatableAbstractEntity<?>) prop.getOriginalValue(), session);
+            decRefCount(entity, persistedIsActive, prop, (ActivatableAbstractEntity<?>) prop.getOriginalValue(), session);
             // Assign null as the property value to actually dereference the activatable.
             persistedEntity.set(propName, null);
         }
         // Otherwise, `entity` began referencing `value`, and may have dereferenced the previous value if it was not `null`.
         else {
-            decRefCount(entity, persistedEntity, prop, (ActivatableAbstractEntity<?>) prop.getOriginalValue(), session);
+            decRefCount(entity, persistedIsActive, prop, (ActivatableAbstractEntity<?>) prop.getOriginalValue(), session);
 
             // The newly referenced activatable `value` needs to have its `refCount` incremented if:
             // * `entity` is active and was not concurrently deactivated OR `entity` is inactive and was concurrently activated;
@@ -496,20 +496,19 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     /// * and `value` is not equal to the entity being saved (is not a self-reference).
     ///
     /// @param entity  the referencing entity, activatable
-    /// @param persistedEntity  the persisted version of `entity`
     /// @param mp  the property representing the activatable entity whose `refCount` should be decremented
     /// @param value  the value of the property (not necessarily the current value, may be the original value)
     /// @param session  the current session
     private static <T extends AbstractEntity<?>> void decRefCount(
             final T entity,
-            final T persistedEntity,
+            final boolean persistedIsActive,
             final MetaProperty<?> mp,
             final @Nullable ActivatableAbstractEntity<?> value,
             final Session session)
     {
         if (value != null) {
             final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.load(mp.getType(), value.getId(), UPGRADE);
-            if (persistedEntity.<Boolean>get(ACTIVE) && persistedValue.isActive() && !areEqual(entity, persistedValue)) {
+            if (persistedIsActive && persistedValue.isActive() && !areEqual(entity, persistedValue)) {
                 persistedValue.setIgnoreEditableState(true);
                 session.update(persistedValue.decRefCount());
             }
