@@ -369,11 +369,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // Process dirty activatable properties.
         for (final var prop : entity.getDirtyProperties()) {
-            final var maybePropMetadata = entityMetadata.property(prop).orElseThrow(Function.identity());
-            if (maybePropMetadata.filter(PropertyMetadata::isPersistent).isPresent()) {
-                if (shouldProcessAsActivatable(entity, prop)) {
-                    processActivatableProperty(entity, persistedEntity, (MetaProperty<? extends AbstractEntity<?>>) prop, session);
-                }
+            if (shouldProcessAsActivatable(entity, prop)) {
+                processActivatableProperty(entity, persistedEntity, (MetaProperty<? extends AbstractEntity<?>>) prop, session);
             }
         }
 
@@ -713,13 +710,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
 
         if (shouldProcessActivatableProperties) {
-            final var entityMetadata = domainMetadata.forEntity(entityType);
             for (final var prop : entity.getDirtyProperties()) {
-                final var maybePropMetadata = entityMetadata.property(prop).orElseThrow(Function.identity());
-                if (maybePropMetadata.filter(PropertyMetadata::isPersistent).isPresent()) {
-                    if (shouldProcessAsActivatable(entity, prop)) {
-                        processActivatableProperty(entity, null, (MetaProperty<? extends AbstractEntity<?>>) prop, session);
-                    }
+                if (shouldProcessAsActivatable(entity, prop)) {
+                    processActivatableProperty(entity, null, (MetaProperty<? extends AbstractEntity<?>>) prop, session);
                 }
             }
         }
