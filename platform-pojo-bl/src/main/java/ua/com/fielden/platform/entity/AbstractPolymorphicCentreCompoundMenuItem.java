@@ -17,8 +17,6 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
     @Title(value = "Menu Item Type", desc = "Entity Centre Menu Item Type")
     private String menuItemType;
 
-    private Class<? extends MiWithConfigurationSupport<?>> menuItemTypeAsClass;
-
     @IsProperty
     @Title("Import URI")
     private String importUri;
@@ -86,15 +84,9 @@ public abstract class AbstractPolymorphicCentreCompoundMenuItem<T extends Abstra
     }
 
     public AbstractPolymorphicCentreCompoundMenuItem<T> setMenuItemTypeForCentre(final Class<? extends MiWithConfigurationSupport<?>> menuItemTypeAsClass) {
-        this.menuItemTypeAsClass = menuItemTypeAsClass;
         setMenuItemType(menuItemTypeAsClass.getName());
         setImportUri(format("/centre_ui/%s", menuItemTypeAsClass.getName()));
         setElementName(format("tg-%s-centre", menuItemTypeAsClass.getSimpleName()));
         return this;
     }
-
-    public Class<? extends MiWithConfigurationSupport<?>> getMenuItemTypeAsClass() {
-        return menuItemTypeAsClass;
-    }
-
 }
