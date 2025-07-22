@@ -367,26 +367,29 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // Need to record the persisted active status before `persistedEntity` is modified.
         final Optional<Boolean> persistedIsActive = entity instanceof ActivatableAbstractEntity ? optional(persistedEntity.get(ACTIVE)) : Optional.empty();
 
-        // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
-        // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
-        // the easiest way to do that is to load entity by id using the current session
+        // Process dirty activatable properties.
+        for (final var prop : entity.getDirtyProperties()) {
+            final var maybePropMetadata = entityMetadata.property(prop).orElseThrow(Function.identity());
+            if (maybePropMetadata.filter(PropertyMetadata::isPersistent).isPresent()) {
+                if (shouldProcessAsActivatable(entity, prop)) {
+                    processActivatableProperty(entity, persistedEntity, (MetaProperty<? extends AbstractEntity<?>>) prop, session);
+                }
+            }
+        }
+
+        // Proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in Git.
         for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
             // Set of meta-properties and set of properties with metadata may be different, but persistent properties
             // must always be present in both sets.
             final var maybePropMetadata = entityMetadata.property(prop).orElseThrow(Function.identity());
             if (maybePropMetadata.filter(PropertyMetadata::isPersistent).isPresent()) {
                 final Object value = prop.getValue();
-                if (shouldProcessAsActivatable(entity, prop)) {
-                    processActivatableProperty(entity, persistedEntity, (MetaProperty<? extends AbstractEntity<?>>) prop, session);
-                    if (value instanceof AbstractEntity<?> valueAsEntity) {
-                        persistedEntity.set(prop.getName(), session.load(valueAsEntity.getType(), valueAsEntity.getId()));
-                    }
-                    else {
-                        persistedEntity.set(prop.getName(), null);
-                    }
-                } else if (value instanceof AbstractEntity<?> valueAsEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
+                // If a property is of an entity type, it should be re-associated with the current session before being set.
+                // TODO Is this still true?
+                if (value instanceof AbstractEntity<?> valueAsEntity && !(value instanceof PropertyDescriptor) && !(value instanceof AbstractUnionEntity)) {
                     persistedEntity.set(prop.getName(), session.load(valueAsEntity.getType(), valueAsEntity.getId()));
-                } else {
+                }
+                else {
                     persistedEntity.set(prop.getName(), value);
                 }
             }
