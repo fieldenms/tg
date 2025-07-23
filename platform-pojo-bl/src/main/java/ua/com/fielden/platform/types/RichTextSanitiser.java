@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.joining;
 import static org.owasp.html.Sanitizers.BLOCKS;
 import static org.owasp.html.Sanitizers.IMAGES;
 import static ua.com.fielden.platform.error.Result.*;
+import static ua.com.fielden.platform.property.validator.EmailValidator.isValidEmailAddress;
 import static ua.com.fielden.platform.utils.StreamUtils.*;
 
 // NOTE: Consider replacing the OWASP sanitiser by jsoup sanitiser (https://jsoup.org/cookbook/cleaning-html/safelist-sanitiser).
@@ -147,8 +148,33 @@ public final class RichTextSanitiser {
         }
     }
 
-    public String sanitise(final String input) {
-        return listener.sanitise(POLICY_FACTORY, input);
+    String sanitise(final String input) {
+        // A pre-processor that detects HTML elements whose name is a valid email address and whose set of tags is empty.
+        // Such elements are not processed further whatsoever, effectively disabling their sanitisation, which also means
+        // that they will be absent in the sanitiser's output.
+        final HtmlStreamEventProcessor allowEmailAddress = sink -> new HtmlStreamEventReceiverWrapper(sink) {
+            @Override
+            public void openTag(final String elementName, final List<String> attrs) {
+                if (attrs.isEmpty() && isValidEmailAddress(elementName)) {
+                    // skip email tags without attributes as safe
+                } else {
+                    super.openTag(elementName, attrs);
+                }
+            }
+
+            @Override
+            public void closeTag(String elementName) {
+                if (isValidEmailAddress(elementName)) {
+                    // closing email tags are considered unsafe
+                    violations.add(elementName);
+                } else {
+                    super.closeTag(elementName);
+                }
+            }
+        };
+
+        final var policy = POLICY_FACTORY.and(new HtmlPolicyBuilder().withPreprocessor(allowEmailAddress).toFactory());
+        return listener.sanitise(policy, input);
     }
 
     public List<String> violations() {
@@ -379,6 +405,12 @@ public final class RichTextSanitiser {
                 .toFactory();
     }
 
+    private static PolicyFactory allowTgElements() {
+        return new HtmlPolicyBuilder()
+                .allowElements("extended") // Used in Result.
+                .toFactory();
+    }
+
     private static PolicyFactory allowStyles() {
         // Extend the default CSS schema with additional safe properties.
         final var cssSchema = CssSchema.withProperties(Set.of("display"));
@@ -434,8 +466,8 @@ public final class RichTextSanitiser {
             .and(allowLinks())
             .and(allowCommonElements())
             .and(allowToastUi())
-            .and(new HtmlPolicyBuilder().withPreprocessor(StyleAttributeProcessor.INSTANCE).toFactory())
-            ;
+            .and(allowTgElements())
+            .and(new HtmlPolicyBuilder().withPreprocessor(StyleAttributeProcessor.INSTANCE).toFactory());
 
     /**
      * A visitor of {@link HtmlInline} nodes and any {@link Text} nodes following them.

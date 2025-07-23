@@ -24,7 +24,7 @@
         }); // this generates first 'unhandledrejection' event
 
         setTimeout(() => {
-            prom.catch(e => { // this catch gets actioned after promise has been fullfilled -- this leads to 'rejectionhandled' event
+            prom.catch(e => { // this catch gets actioned after promise has been fulfilled -- this leads to 'rejectionhandled' event
                 console.log("catched rejection in a while after fulfilling");
                 throw new Error("error"); // this generates second 'unhandledrejection' event
             });
