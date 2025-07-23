@@ -392,6 +392,30 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         assertEquals(1, co(TgCategory.class).findByEntityAndFetch(fetchAll(TgCategory.class), cat).getRefCount().intValue());
     }
 
+    @Test
+    public void concurrent_activation_and_dereferencing_both_change_refCount_with_cumulative_effect_of_0() {
+        // Sys_X (version: 0) is inactive and references active Cat_X.
+        final var cat = save(new_(TgCategory.class, "Cat_X").setActive(true));
+        final var sys0 = save(new_(TgSystem.class, "Sys_X").setActive(false).setCategory(cat));
+
+        assertEquals(0, co(TgCategory.class).findByEntityAndFetch(fetchAll(TgCategory.class), cat).getRefCount().intValue());
+
+        // Sys_X becomes active.
+        final var sys1 = co$(TgSystem.class).findByEntityAndFetch(fetchAll(TgSystem.class), sys0)
+                .setActive(true);
+        // Concurrently, Sys_X dereferences Cat_X.
+        final var sys2 = co$(TgSystem.class).findByEntityAndFetch(fetchAll(TgSystem.class), sys0)
+                .setCategory(null);
+
+        save(sys1);
+        // refCount of Cat_X is incremented.
+        assertEquals(1, co(TgCategory.class).findByEntityAndFetch(fetchAll(TgCategory.class), cat).getRefCount().intValue());
+
+        save(sys2);
+        // refCount of Cat_X is decremented.
+        assertEquals(0, co(TgCategory.class).findByEntityAndFetch(fetchAll(TgCategory.class), cat).getRefCount().intValue());
+    }
+
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : Each property counts as a separate reference.
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

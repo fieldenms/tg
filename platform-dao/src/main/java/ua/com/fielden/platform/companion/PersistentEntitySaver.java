@@ -491,8 +491,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     /// Decrements the [ActivatableAbstractEntity#refCount] of an activatable entity assigned to a property of another activatable entity.
     ///
     /// `refCount` is decremented if and only if:
-    /// * `entity` was active (was made inactive) or remains active (active status was not changed);
-    /// * and `persistedEntity` is active (otherwise, a concurrent update deactivated it and took care of decrementing `refCount`);
+    /// * `persistedEntity` is active (otherwise, a concurrent update deactivated it and took care of decrementing `refCount`);
     /// * and the persisted version of `value` is active;
     /// * and `value` is not equal to the entity being saved (is not a self-reference).
     ///
@@ -509,10 +508,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final Session session)
     {
         if (value != null) {
-            final MetaProperty<Boolean> activeProp = entity.getProperty(ACTIVE);
-            final boolean wasActive = activeProp.isDirty() ? activeProp.getOriginalValue() : activeProp.getValue();
             final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.load(mp.getType(), value.getId(), UPGRADE);
-            if (wasActive && persistedEntity.<Boolean>get(ACTIVE) && persistedValue.isActive() && !areEqual(entity, persistedValue)) {
+            if (persistedEntity.<Boolean>get(ACTIVE) && persistedValue.isActive() && !areEqual(entity, persistedValue)) {
                 persistedValue.setIgnoreEditableState(true);
                 session.update(persistedValue.decRefCount());
             }
