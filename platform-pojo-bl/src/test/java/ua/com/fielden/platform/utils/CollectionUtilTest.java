@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.types.tuples.T2;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -348,19 +349,27 @@ public class CollectionUtilTest {
     }
 
     @Test
-    public void partitionBy_returns_a_pair_whose_first_element_contains_all_collection_elements_satisfying_predicate() {
-        assertEquals(List.of(1), partitionBy(List.of(1), x -> x > 0)._1);
-        assertEquals(List.of(1, 2, 3), partitionBy(List.of(1, 2, 3), x -> x > 0)._1);
-        assertEquals(List.of(), partitionBy(List.of(0), x -> x > 0)._1);
-        assertEquals(List.of(1, 2), partitionBy(List.of(-1, 1, -2, 2), x -> x > 0)._1);
-    }
-
-    @Test
-    public void partitionBy_returns_a_pair_whose_second_element_contains_all_collection_elements_not_satisfying_predicate() {
-        assertEquals(List.of(), partitionBy(List.of(1), x -> x > 0)._2);
-        assertEquals(List.of(), partitionBy(List.of(1, 2, 3), x -> x > 0)._2);
-        assertEquals(List.of(0), partitionBy(List.of(0), x -> x > 0)._2);
-        assertEquals(List.of(-1, -2), partitionBy(List.of(-1, 1, -2, 2), x -> x > 0)._2);
+    public void partitionBy_returns_a_tupple_where_first_element_contains_all_collection_elements_satisfying_predicate_and_second_element_contains_the_rest() {
+        {
+            final var partitioned = partitionBy(List.of(1), x -> x > 0);
+            assertEquals(List.of(1), partitioned._1);
+            assertEquals(List.of(), partitioned._2);
+        }
+        {
+            final var partitioned = partitionBy(List.of(1, 2, 3), x -> x > 0);
+            assertEquals(List.of(1, 2, 3), partitioned._1);
+            assertEquals(List.of(), partitioned._2);
+        }
+        {
+            final var partitioned = partitionBy(List.of(0), x -> x > 0);
+            assertEquals(List.of(), partitioned._1);
+            assertEquals(List.of(0), partitioned._2);
+        }
+        {
+            final var partitioned = partitionBy(List.of(-1, 1, -2, 2), x -> x > 0);
+            assertEquals(List.of(1, 2), partitioned._1);
+            assertEquals(List.of(-1, -2), partitioned._2);
+        }
     }
 
 }
