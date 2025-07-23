@@ -80,7 +80,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.MiscUtilities.optional;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
 /**
@@ -362,13 +361,23 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
-        // Need to record the persisted active status before `persistedEntity` is modified.
-        final Optional<Boolean> persistedIsActive = entity instanceof ActivatableAbstractEntity ? optional(persistedEntity.get(ACTIVE)) : Optional.empty();
-
         // Process dirty activatable properties.
         for (final var prop : entity.getDirtyProperties()) {
             if (shouldProcessAsActivatable(entity, prop)) {
                 processActivatableProperty(entity, persistedEntity, (MetaProperty<? extends AbstractEntity<?>>) prop, session);
+            }
+        }
+
+        // Handle ref counts of non-dirty activatable properties
+        if (entity instanceof ActivatableAbstractEntity) {
+            try {
+                handleNonDirtyActivatableIfNecessary(entity, persistedEntity, session);
+            } catch (final StaleStateException ex) {
+                // StaleStateException may occur when a stale object is loaded from a session (via `session.load`).
+                // For example, two entities concurrently begin referencing some other entity, thereby incrementing its `refCount` concurrently.
+                // The exception occurs when a thread loads the modified entity for the second time, after its concurrent modification
+                // (the first time it must have been loaded before its modification).
+                throw new EntityCompanionException(ERR_CONFLICTING_CONCURRENT_CHANGE, ex);
             }
         }
 
@@ -387,19 +396,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 else {
                     persistedEntity.set(prop.getName(), value);
                 }
-            }
-        }
-
-        // Handle ref counts of non-dirty activatable properties
-        if (entity instanceof ActivatableAbstractEntity) {
-            try {
-                handleNonDirtyActivatableIfNecessary(entity, persistedEntity, persistedIsActive.get(), session);
-            } catch (final StaleStateException ex) {
-                // StaleStateException may occur when a stale object is loaded from a session (via `session.load`).
-                // For example, two entities concurrently begin referencing some other entity, thereby incrementing its `refCount` concurrently.
-                // The exception occurs when a thread loads the modified entity for the second time, after its concurrent modification
-                // (the first time it must have been loaded before its modification).
-                throw new EntityCompanionException(ERR_CONFLICTING_CONCURRENT_CHANGE, ex);
             }
         }
 
@@ -541,9 +537,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     /// is different from the active status in `entity`.
     /// Otherwise, if persisted active status matches that of `entity`, then no action needs to be taken as all that work
     /// would have already been done during the concurrent modification.
-    private void handleNonDirtyActivatableIfNecessary(final T entity, final T persistedEntity, final boolean persistedIsActive, final Session session) {
+    private void handleNonDirtyActivatableIfNecessary(final T entity, final T persistedEntity, final Session session) {
         final var activeProp = entity.getProperty(ACTIVE);
-        if (activeProp.isDirty() && !entity.get(ACTIVE).equals(persistedIsActive)) {
+        if (activeProp.isDirty() && !entity.get(ACTIVE).equals(persistedEntity.get(ACTIVE))) {
             entity.getProperties().values()
                     .stream()
                     .filter(mp -> (mp.isProxy() || !mp.isDirty()) && shouldProcessAsActivatable(entity, mp))
@@ -587,7 +583,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     });
 
             // Deactivate deactivatable dependencies if the entity being saved is being deactivated.
-            if (!entity.<Boolean>get(ACTIVE) && !entity.get(ACTIVE).equals(persistedIsActive)) {
+            if (!entity.<Boolean>get(ACTIVE) && !entity.get(ACTIVE).equals(persistedEntity.get(ACTIVE))) {
                 final List<? extends ActivatableAbstractEntity<?>> deactivatables = findActiveDeactivatableDependencies((ActivatableAbstractEntity<?>) entity, coFinder);
                 for (final ActivatableAbstractEntity<?> deactivatable : deactivatables) {
                     deactivatable.set(ACTIVE, false);
