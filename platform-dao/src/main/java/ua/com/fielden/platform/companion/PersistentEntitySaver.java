@@ -451,7 +451,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // If `entity` is persisted, the previous value of `prop`, if not null, was dereferenced, therefore its `refCount` needs to be decremented.
         if (persistedEntity != null) {
             // Original property value should not be null, otherwise property would not become dirty by assigning null.
-            decRefCount(entity, persistedEntity.get(ACTIVE), prop, (ActivatableAbstractEntity<?>) prop.getOriginalValue(), session);
+            decRefCount(entity, persistedEntity.get(ACTIVE), (ActivatableAbstractEntity<?>) prop.getOriginalValue(), session);
         }
 
         // `entity` began referencing `value`.
@@ -470,7 +470,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // * Without `UPGRADE`: safe concurrent updates without blocking (optimistic locking), but with a risk of rollback on conflict.
             //
             // We prefer using `UPGRADE` in this context to reduce the likelihood of rollbacks in potentially complex transactions caused by concurrent updates to `refCount`.
-            final var persistedValue = (ActivatableAbstractEntity<?>) session.load(prop.getType(), value.getId(), UPGRADE);
+            final var persistedValue = (ActivatableAbstractEntity<?>) session.load(value.getType(), value.getId(), UPGRADE);
 
             // The newly referenced activatable `value` needs to have its `refCount` incremented if:
             // * `entity` is active and was not concurrently deactivated OR `entity` is inactive and was concurrently activated;
@@ -505,18 +505,17 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     /// * and `value` is not equal to the entity being saved (is not a self-reference).
     ///
     /// @param entity  the referencing entity, activatable
-    /// @param mp  the property representing the activatable entity whose `refCount` should be decremented
     /// @param value  the value of the property (not necessarily the current value, may be the original value)
     /// @param session  the current session
+    ///
     private static <T extends AbstractEntity<?>> void decRefCount(
             final T entity,
             final boolean persistedIsActive,
-            final MetaProperty<?> mp,
             final @Nullable ActivatableAbstractEntity<?> value,
             final Session session)
     {
         if (value != null) {
-            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.load(mp.getType(), value.getId(), UPGRADE);
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.load(value.getType(), value.getId(), UPGRADE);
             if (persistedIsActive && persistedValue.isActive() && !areEqual(entity, persistedValue)) {
                 persistedValue.setIgnoreEditableState(true);
                 session.update(persistedValue.decRefCount());
@@ -545,12 +544,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     .filter(mp -> (mp.isProxy() || !mp.isDirty()) && shouldProcessAsActivatable(entity, mp))
                     .forEach(mp -> {
                         final var propName = mp.getName();
-                        final var propType = (Class<? extends ActivatableAbstractEntity<?>>) mp.getType();
                         // Get value from a persisted version of entity, which is loaded by Hibernate.
                         // If the property is proxied, its value will be retrieved lazily by Hibernate.
                         final AbstractEntity<?> value = persistedEntity.get(propName);
                         if (value != null) {
-                            final ActivatableAbstractEntity<?> persistedValue = session.load(propType, value.getId(), UPGRADE);
+                            final var persistedValue = (ActivatableAbstractEntity<?>) session.load(value.getType(), value.getId(), UPGRADE);
                             persistedValue.setIgnoreEditableState(true);
                             // Update `refCount` if the referenced entity is active and is not a self-reference.
                             if (!areEqual(entity, persistedValue)) {
