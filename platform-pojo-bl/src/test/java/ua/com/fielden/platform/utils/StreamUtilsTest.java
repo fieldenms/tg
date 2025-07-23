@@ -448,25 +448,17 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void partitioning_collects_a_pair_of_empty_lists_for_an_empty_stream() {
+    public void partitioning_collects_a_tupple_of_empty_lists_for_an_empty_stream() {
         assertEquals(t2(List.of(), List.of()), Stream.of().collect(partitioning(x -> true)));
         assertEquals(t2(List.of(), List.of()), Stream.of().collect(partitioning(x -> false)));
     }
 
     @Test
-    public void partitioning_collects_a_pair_whose_first_element_contains_all_stream_elements_satisfying_predicate() {
-        assertEquals(List.of(1), Stream.of(1).collect(partitioning(x -> x > 0))._1);
-        assertEquals(List.of(1, 2, 3), Stream.of(1, 2, 3).collect(partitioning(x -> x > 0))._1);
-        assertEquals(List.of(), Stream.of(0).collect(partitioning(x -> x > 0))._1);
-        assertEquals(List.of(1, 2), Stream.of(-1, 1, -2, 2).collect(partitioning(x -> x > 0))._1);
-    }
-
-    @Test
-    public void partitioning_collects_a_pair_whose_second_element_contains_all_stream_elements_not_satisfying_predicate() {
-        assertEquals(List.of(), Stream.of(1).collect(partitioning(x -> x > 0))._2);
-        assertEquals(List.of(), Stream.of(1, 2, 3).collect(partitioning( x -> x > 0))._2);
-        assertEquals(List.of(0), Stream.of(0).collect(partitioning(x -> x > 0))._2);
-        assertEquals(List.of(-1, -2), Stream.of(-1, 1, -2, 2).collect(partitioning(x -> x > 0))._2);
+    public void partitioning_collects_a_tupple_whose_first_element_contains_all_stream_elements_satisfying_predicate_and_second_element_contains_the_rest() {
+        assertEquals(t2(List.of(1), List.of()), Stream.of(1).collect(partitioning(x -> x > 0)));
+        assertEquals(t2(List.of(1, 2, 3), List.of()), Stream.of(1, 2, 3).collect(partitioning(x -> x > 0)));
+        assertEquals(t2(List.of(), List.of(0)), Stream.of(0).collect(partitioning(x -> x > 0)));
+        assertEquals(t2(List.of(1, 2), List.of(-1, -2)), Stream.of(-1, 1, -2, 2).collect(partitioning(x -> x > 0)));
     }
 
 }

@@ -2,7 +2,6 @@ package ua.com.fielden.platform.utils;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
-import ua.com.fielden.platform.types.tuples.T2;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -350,26 +349,10 @@ public class CollectionUtilTest {
 
     @Test
     public void partitionBy_returns_a_tupple_where_first_element_contains_all_collection_elements_satisfying_predicate_and_second_element_contains_the_rest() {
-        {
-            final var partitioned = partitionBy(List.of(1), x -> x > 0);
-            assertEquals(List.of(1), partitioned._1);
-            assertEquals(List.of(), partitioned._2);
-        }
-        {
-            final var partitioned = partitionBy(List.of(1, 2, 3), x -> x > 0);
-            assertEquals(List.of(1, 2, 3), partitioned._1);
-            assertEquals(List.of(), partitioned._2);
-        }
-        {
-            final var partitioned = partitionBy(List.of(0), x -> x > 0);
-            assertEquals(List.of(), partitioned._1);
-            assertEquals(List.of(0), partitioned._2);
-        }
-        {
-            final var partitioned = partitionBy(List.of(-1, 1, -2, 2), x -> x > 0);
-            assertEquals(List.of(1, 2), partitioned._1);
-            assertEquals(List.of(-1, -2), partitioned._2);
-        }
+        assertEquals(t2(List.of(1), List.of()), partitionBy(List.of(1), x -> x > 0));
+        assertEquals(t2(List.of(1, 2, 3), List.of()), partitionBy(List.of(1, 2, 3), x -> x > 0));
+        assertEquals(t2(List.of(), List.of(0)), partitionBy(List.of(0), x -> x > 0));
+        assertEquals(t2(List.of(1, 2), List.of(-1, -2)), partitionBy(List.of(-1, 1, -2, 2), x -> x > 0));
     }
 
 }
