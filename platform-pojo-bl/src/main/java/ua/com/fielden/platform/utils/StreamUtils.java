@@ -282,7 +282,7 @@ public class StreamUtils {
         return Stream.of(streams).flatMap(Function.identity());
     }
 
-    /// Applies a binary operator to all elements of the {@code stream}, going left to right.
+    /// Applies a binary operator to all elements of the `stream`, going left to right.
     ///
     public static <T> Optional<T> reduceLeft(
             final BaseStream<T, ?> stream,
