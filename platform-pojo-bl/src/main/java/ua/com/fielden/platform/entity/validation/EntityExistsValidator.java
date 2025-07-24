@@ -133,7 +133,9 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             if (isMockNotFoundValue) {
                 exists = false;
                 activeEnough = true;
-            } else if (!property.isActivatable()) { // is property value represents non-activatable?
+            }
+            // TODO Union-typed properties are considered activatable
+            else if (!property.isActivatable()) { // is property value represents non-activatable?
                 exists = isPropertyDescriptor || co.entityExists(newValue);
                 activeEnough = true;
             } else { // otherwise, property value is activatable

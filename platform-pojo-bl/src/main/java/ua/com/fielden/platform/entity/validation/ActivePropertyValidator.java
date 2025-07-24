@@ -127,6 +127,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     /**
      * Collects properties that represent non-null, non-proxy, and non-self-referenced activatable properties for {@code entity}.
      */
+    // TODO The result may contain union-typed properties
     private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
         return entity.nonProxiedProperties()
                .filter(mp -> mp.getValue() != null &&                           

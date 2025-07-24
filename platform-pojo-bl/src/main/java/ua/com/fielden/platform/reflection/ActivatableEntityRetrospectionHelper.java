@@ -84,6 +84,7 @@ public class ActivatableEntityRetrospectionHelper {
      * @param entity
      * @return
      */
+    // TODO The result may contain union-typed properties
      public static final <T extends AbstractEntity<?>> Set<T2<String, Class<ActivatableAbstractEntity<?>>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
         if (entity.isInstrumented()) {
             final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();

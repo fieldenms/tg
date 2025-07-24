@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 /**
  * A base class for a concept of meta-data about an entity property. Hence, meta-property.
@@ -90,7 +91,8 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         // a property of an ativatable entity type is considered "activatable" only if annotation SkipEntityExistsValidation is not present or
         // it is present with attribute skipActiveOnly == true
         // There is also annotation SkipActivatableTracking, but it does not affect the activatable nature of the property -- only the counting of references.
-        if (!ActivatableAbstractEntity.class.isAssignableFrom(type)) {
+        // TODO Properties whose type is a union entity type without activatable members should not be activatable.
+        if (!ActivatableAbstractEntity.class.isAssignableFrom(type) && !isUnionEntityType(type)) {
             this.activatable = false;
         } else {
             final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
