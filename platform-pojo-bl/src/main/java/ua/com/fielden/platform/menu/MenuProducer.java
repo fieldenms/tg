@@ -2,6 +2,7 @@ package ua.com.fielden.platform.menu;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
@@ -19,6 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.groupingBy;
@@ -55,7 +57,13 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         this.miInvisible = miInvisible;
         this.userProvider = userProvider;
         this.siteAllowlist = TryWrapper.Try( () -> stream(siteAllowlist.trim().split("\\s*,\\s*"))
-                        .map(site -> site.toLowerCase().replaceAll("[\"']", "").replace(".", "\\.").replace("*", ".*")) //generates javascript RegEx
+                        // Exclude blank entries.
+                        .filter(StringUtils::isNotBlank)
+                        // Wildcard subdomains should expand to include the corresponding domains.
+                        // For example, `*.google.com` should expand to `*.google.com` and `google.com`.
+                        .flatMap(site -> site.startsWith("*.") ? Stream.of(site, site.substring(2)) : Stream.of(site))
+                        // Convert sites to JavaScript regular expressions.
+                        .map(site -> site.toLowerCase().replaceAll("[\"']", "").replace(".", "\\.").replace("*", ".*"))
                         .collect(toSet()))
                 .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'siteAllowlist': %s".formatted(ex.getMessage())));
         this.daysUntilSitePermissionExpires = TryWrapper.Try( () -> isEmpty(expiryDays) ? DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS : Integer.parseInt(expiryDays) )
