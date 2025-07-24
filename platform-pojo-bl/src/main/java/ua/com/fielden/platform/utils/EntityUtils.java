@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -681,15 +680,10 @@ public class EntityUtils {
         }
     }
 
+    /// Determines whether an entity type is persistent and has version information, such as created/updated by, created/updated date, version number.
     ///
-    /// Determines whether the provided entity type represents a persistent entity and has versioning information like created/updated, version, etc.
-    /// This type should extend [AbstractPersistentEntity].
-    ///
-    /// @param type
-    /// @return
-    ///
-    public static boolean isPersistentWithAuditData(@Nullable final Class<?> type) {
-        return isPersistentEntityType(type) && AbstractPersistentEntity.class.isAssignableFrom(type);
+    public static boolean isPersistentWithVersionData(@Nullable final Class<?> type) {
+        return type != null && AbstractPersistentEntity.class.isAssignableFrom(type) && isPersistentEntityType(type);
     }
 
     /**

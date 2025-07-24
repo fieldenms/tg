@@ -1,18 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.compound;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-
-import java.util.Optional;
-import java.util.function.BiFunction;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.inject.Injector;
-
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -30,57 +19,80 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
 
+import java.util.Optional;
+import java.util.function.BiFunction;
+
+import static java.util.Optional.*;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+
 public class Compound {
 
     protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miMaster(
             final Class<MENU_ITEM> menuItemType,
             final EntityMaster<? extends AbstractEntity<?>> embeddedMaster,
-            final Injector injector) {
-        return new EntityMaster<MENU_ITEM>(
+            final Injector injector)
+    {
+        return new EntityMaster<>(
                 menuItemType,
                 new MasterWithMasterBuilder<MENU_ITEM>()
-                /*  */.forEntityWithSaveOnActivate(menuItemType)
-                /*  */.withMaster(embeddedMaster)
-                /*  */.done(),
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .withMaster(embeddedMaster)
+                        .done(),
                 injector);
     }
 
     protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miCentre(
             final Class<MENU_ITEM> menuItemType,
             final EntityCentre<? extends AbstractEntity<?>> embeddedCentre,
-            final Injector injector) {
-        return new EntityMaster<MENU_ITEM>(
+            final Injector injector)
+    {
+        return new EntityMaster<>(
                 menuItemType,
                 new MasterWithCentreBuilder<MENU_ITEM>()
-                    .forEntityWithSaveOnActivate(menuItemType)
-                    .withCentre(embeddedCentre)
-                    .done(),
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .withCentre(embeddedCentre)
+                        .done(),
+                injector);
+    }
+
+    protected static <K extends AbstractEntity<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miPolymorphicCentre(
+            final Class<MENU_ITEM> menuItemType,
+            final Injector injector)
+    {
+        return new EntityMaster<>(
+                menuItemType,
+                new MasterWithCentreBuilder<MENU_ITEM>()
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .done(),
                 injector);
     }
 
     public static <DETAILS_ACTION extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<DETAILS_ACTION> detailsCentre(
             final Class<DETAILS_ACTION> menuItemType,
             final EntityCentre<? extends AbstractEntity<?>> embeddedCentre,
-            final Injector injector) {
-        return new EntityMaster<DETAILS_ACTION>(
+            final Injector injector)
+    {
+        return new EntityMaster<>(
                 menuItemType,
                 new MasterWithCentreBuilder<DETAILS_ACTION>()
-                    .forEntityWithSaveOnActivate(menuItemType)
-                    .withCentre(embeddedCentre)
-                    .done(),
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .withCentre(embeddedCentre)
+                        .done(),
                 injector);
     }
 
     public static <DETAILS_ACTION extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<DETAILS_ACTION> detailsMaster(
             final Class<DETAILS_ACTION> menuItemType,
             final EntityMaster<? extends AbstractEntity<?>> embeddedMaster,
-            final Injector injector) {
-        return new EntityMaster<DETAILS_ACTION>(
+            final Injector injector)
+    {
+        return new EntityMaster<>(
                 menuItemType,
                 new MasterWithMasterBuilder<DETAILS_ACTION>()
-                    .forEntityWithSaveOnActivate(menuItemType)
-                    .withMaster(embeddedMaster)
-                    .done(),
+                        .forEntityWithSaveOnActivate(menuItemType)
+                        .withMaster(embeddedMaster)
+                        .done(),
                 injector);
     }
 
@@ -88,7 +100,8 @@ public class Compound {
             final Class<MENU_ITEM> menuItemType,
             final String icon,
             final String shortDesc,
-            final String longDesc) {
+            final String longDesc)
+    {
         return action(menuItemType)
                 .withContext(context().withMasterEntity().build())
                 .icon(icon)
@@ -113,7 +126,8 @@ public class Compound {
             final String icon,
             final String shortDesc,
             final String longDesc,
-            final PrefDim prefDim) {
+            final PrefDim prefDim)
+    {
         // TODO here empty context will be relevant in most cases, please use it when API for empty context will be implemented (for example, context().empty().build())
         return open(openCompoundMasterActionType, empty(), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withSelectionCrit().build());
     }
@@ -135,7 +149,8 @@ public class Compound {
             final String iconStyle,
             final String shortDesc,
             final String longDesc,
-            final PrefDim prefDim) {
+            final PrefDim prefDim)
+    {
         return open(openCompoundMasterActionType, empty(), ofNullable(icon), ofNullable(iconStyle), shortDesc, ofNullable(longDesc), prefDim, context().withSelectionCrit().build());
     }
 
@@ -155,7 +170,8 @@ public class Compound {
             final String icon,
             final String shortDesc,
             final String longDesc,
-            final PrefDim prefDim) {
+            final PrefDim prefDim)
+    {
         return open(openCompoundMasterActionType, empty(), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withMasterEntity().build());
     }
 
@@ -170,7 +186,8 @@ public class Compound {
     public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
             final String shortDesc,
-            final PrefDim prefDim) {
+            final PrefDim prefDim)
+    {
         return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), empty(), empty(), shortDesc, empty(), prefDim, context().withCurrentEntity().build());
     }
 
@@ -181,7 +198,6 @@ public class Compound {
      * @param shortDesc -- short description of action
      * @param longDesc -- long description of action
      * @param prefDim - preferred dimension for compound master dialog
-     * @return
      */
     public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
@@ -199,14 +215,14 @@ public class Compound {
      * @param shortDesc -- short description of action
      * @param longDesc -- long description of action
      * @param prefDim - preferred dimension for compound master dialog
-     * @return
      */
     public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
             final String icon,
             final String shortDesc,
             final String longDesc,
-            final PrefDim prefDim) {
+            final PrefDim prefDim)
+    {
         return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().build());
     }
     
@@ -219,7 +235,6 @@ public class Compound {
      * @param shortDesc -- short description of action
      * @param longDesc -- long description of action
      * @param prefDim - preferred dimension for compound master dialog
-     * @return
      */
     public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
             final Class<OPEN_ACTION> openCompoundMasterActionType,
@@ -227,7 +242,8 @@ public class Compound {
             final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation,
             final String shortDesc,
             final String longDesc,
-            final PrefDim prefDim) {
+            final PrefDim prefDim)
+    {
         return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().withComputation(computation).build());
     }
     
@@ -240,8 +256,8 @@ public class Compound {
             final String shortDesc,
             final Optional<String> longDesc,
             final PrefDim prefDim,
-            final CentreContextConfig centreContextConfig
-            ) {
+            final CentreContextConfig centreContextConfig)
+    {
         final IEntityActionBuilder1<AbstractEntity<?>> actionPart = action(openCompoundMasterActionType).withContext(centreContextConfig);
         IEntityActionBuilder2<AbstractEntity<?>> actionWithPreAction;
         if (preAction.isPresent()) {
@@ -270,4 +286,5 @@ public class Compound {
                     .build();
         }
     }
+    
 }

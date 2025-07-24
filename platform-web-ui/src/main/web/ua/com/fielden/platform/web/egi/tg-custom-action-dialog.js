@@ -1686,7 +1686,7 @@ Polymer({
             if (this._embeddedMasterType === null && !entityType.isCompoundMenuItem() && !entityMaster.masterWithMaster) {
                 this._embeddedMasterType = entityType;
             }
-            if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
+            if (this._mainEntityType === null && ((entityType.compoundOpenerType() && this._reflector.getType(entityType.compoundOpenerType()).isPersistent()) || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
             } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
                 // _masterMenu is present in above condition because of two possible cases:
