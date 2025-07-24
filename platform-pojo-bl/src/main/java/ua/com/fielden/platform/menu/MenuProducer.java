@@ -38,7 +38,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     private final IMenuRetriever menuRetriever;
     private final IUserProvider userProvider;
     private final WebMenuItemInvisibilityCo miInvisible;
-    private final List<String> siteAllowlist;
+    private final Set<String> siteAllowlist;
     private final int daysUntilSitePermissionExpires;
 
     @Inject
@@ -56,7 +56,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         this.userProvider = userProvider;
         this.siteAllowlist = TryWrapper.Try( () -> stream(siteAllowlist.trim().split("\\s*,\\s*"))
                         .map(site -> site.toLowerCase().replaceAll("[\"']", "").replace(".", "\\.").replace("*", ".*")) //generates javascript RegEx
-                        .toList())
+                        .collect(toSet()))
                 .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'siteAllowlist': %s".formatted(ex.getMessage())));
         this.daysUntilSitePermissionExpires = TryWrapper.Try( () -> isEmpty(expiryDays) ? DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS : Integer.parseInt(expiryDays) )
                 .orElseThrow(ex -> new MenuInitialisationException("Could not parse value for 'daysUntilSitePermissionExpires': %s".formatted(ex.getMessage())));

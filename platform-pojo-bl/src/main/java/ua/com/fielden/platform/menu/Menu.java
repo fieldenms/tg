@@ -2,12 +2,13 @@ package ua.com.fielden.platform.menu;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.Optional;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * Represents device-profile-specific application menu with tiles and actions on them.
@@ -21,7 +22,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
 
     @IsProperty(ModuleMenu.class)
     @Title("Menu")
-    private List<ModuleMenu> menu = new ArrayList<>();
+    private final List<ModuleMenu> menu = new ArrayList<>();
 
     @IsProperty
     @Title("Edit menu items")
@@ -53,7 +54,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
 
     @IsProperty(String.class)
     @Title(value = "Site Allow List", desc = "Site white list that user can visit without confirmation.")
-    private List<String> siteAllowlist = new ArrayList<>();
+    private final Set<String> siteAllowlist = new HashSet<>();
 
     @IsProperty
     @Title(value = "Allowed Site Expiry (Days)", desc = "Defines how long an allowed site remains trusted before requiring re-confirmation.")
@@ -70,14 +71,14 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     }
     
     @Observable
-    protected Menu setSiteAllowlist(final List<String> siteAllowlist) {
+    protected Menu setSiteAllowlist(final Set<String> siteAllowlist) {
         this.siteAllowlist.clear();
         this.siteAllowlist.addAll(siteAllowlist);
         return this;
     }
 
-    public List<String> getSiteAllowlist() {
-        return unmodifiableList(siteAllowlist);
+    public Set<String> getSiteAllowlist() {
+        return unmodifiableSet(siteAllowlist);
     }
 
     @Observable
