@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.tuples.T2;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
@@ -593,5 +595,55 @@ public class StreamUtils {
     // where
     private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(Boolean.FALSE);
     private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(Boolean.TRUE);
+
+    /// Equal to `partitioning(predicate, -1)`.
+    ///
+    /// @see #partitioning(Predicate, int)
+    ///
+    public static <T> Collector<T, ?, T2<List<T>, List<T>>> partitioning(final Predicate<? super T> predicate) {
+        return partitioning(predicate, -1);
+    }
+
+    /// Partitions a stream into a pair `(a, b)`, where `a` contains all elements that satisfy `predicate`, and `b` -- all others.
+    ///
+    /// @param estimatedSize  estimated number of elements in the stream. -1 denotes an unknown number.
+    ///
+    public static <T> Collector<T, ?, T2<List<T>, List<T>>> partitioning(final Predicate<? super T> predicate, final int estimatedSize) {
+        final var partSize = Math.max(1, (estimatedSize < 0 ? 10 : estimatedSize) / 2);
+
+        class Acc {
+            @Nullable List<T> ts;
+            @Nullable List<T> fs;
+
+            List<T> ts() {
+                return ts != null ? ts : (ts = new ArrayList<>(partSize));
+            }
+            List<T> fs() {
+                return fs != null ? fs : (fs = new ArrayList<>(partSize));
+            }
+        }
+
+        return Collector.of(Acc::new,
+                            (acc, x) -> {
+                                if (predicate.test(x)) {
+                                    acc.ts().add(x);
+                                }
+                                else {
+                                    acc.fs().add(x);
+                                }
+                            },
+                            (acc1, acc2) -> {
+                                if (acc2.ts != null) {
+                                    acc1.ts().addAll(acc2.ts);
+                                }
+                                if (acc2.fs != null) {
+                                    acc1.fs().addAll(acc2.fs);
+                                }
+                                return acc1;
+                            },
+                            acc -> T2.t2(acc.ts != null ? unmodifiableList(acc.ts) : ImmutableList.of(),
+                                         acc.fs != null ? unmodifiableList(acc.fs) : ImmutableList.of()),
+                            Collector.Characteristics.UNORDERED);
+    }
 
 }
