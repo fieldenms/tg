@@ -194,7 +194,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return attrs;
     }
 
-    private String generateElementName() {
+    /**
+     * Generates element name for corresponding functional Entity Master.
+     */
+    public String generateElementName() {
         return conf().functionalEntity.map(entityType -> "tg-" + entityType.getSimpleName() + "-master").orElse("");
     }
 

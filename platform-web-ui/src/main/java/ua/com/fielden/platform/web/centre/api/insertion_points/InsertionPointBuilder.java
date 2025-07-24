@@ -15,6 +15,12 @@ import static org.apache.commons.lang3.StringUtils.join;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
 
+import java.util.*;
+
+import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
+
 /**
  * The Insertion point builder class that allows one to render insertion point and generate action object.
  *
@@ -38,6 +44,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
     public DomElement render() {
         final DomElement insertionPointDom = new DomElement("tg-entity-centre-insertion-point")
                 .attr("id", "ip" + insertionPointActionElement.numberOfAction)
+                .attr("functional-master-tag-name", insertionPointActionElement.generateElementName().toUpperCase())
                 .attr("short-desc", insertionPointActionElement.conf().shortDesc.orElse(""))
                 .attr("long-desc", insertionPointActionElement.conf().longDesc.orElse(""))
                 .attr("icon", insertionPointActionElement.conf().icon.orElse(""))

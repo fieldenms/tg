@@ -43,6 +43,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <tg-app-config id="appConfig"></tg-app-config>
     <tg-global-error-handler id="errorHandler" toaster="[[toaster]]"></tg-global-error-handler>
     <app-location id="location" no-decode dwell-time="-1" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></app-location>
     <app-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></app-route>
@@ -499,8 +500,7 @@ Polymer({
      * @param {Object} source 
      */
     _animationFinished: function (e, detail, source) {
-        const target = e.target || e.srcElement;
-        if (target === this.$.pages){
+        if (e.target === this.$.pages){
             this._selectedModule = this._routeData.moduleName;
             if (this._routeData.moduleName === 'master') {
                 this._selectedSubmodule = this._subroute.path;
@@ -597,6 +597,8 @@ Polymer({
         this.entityType = "ua.com.fielden.platform.menu.Menu";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
+            this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));
+            this.$.appConfig.setDaysUntilSitePermissionExpires(entity.daysUntilSitePermissionExpires);
             const mainMenuActionImportsIfPresent = () => typeof mainMenuActionImports !== "undefined" ? mainMenuActionImports : {};
             const createFunctionFromString = prePostActionStr => new Function(...Object.keys(mainMenuActionImportsIfPresent()), "const self = this; return " + prePostActionStr).bind(this, ...Object.values(mainMenuActionImportsIfPresent()))();
             entity.menu.forEach(menuItem => {

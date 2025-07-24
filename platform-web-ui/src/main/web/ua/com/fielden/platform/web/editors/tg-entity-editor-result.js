@@ -44,7 +44,6 @@ const template = html`
             color: black;
             padding: 0px;
             overflow: auto; /* this is to make host scorable when needed */
-            -webkit-overflow-scrolling: touch;
             box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
             position: fixed;
             @apply --layout-vertical;
@@ -56,7 +55,6 @@ const template = html`
             font-size: small;
             margin: 0px;
             overflow: hidden;
-            -webkit-overflow-scrolling: touch;
             border-top: 1px solid #e3e3e3;
             min-height: 24px;
         }
@@ -130,7 +128,6 @@ const template = html`
             min-width: 250px;
             padding: 0px;
             overflow: auto;
-            -webkit-overflow-scrolling: touch;
             text-overflow: ellipsis;
         }
 
