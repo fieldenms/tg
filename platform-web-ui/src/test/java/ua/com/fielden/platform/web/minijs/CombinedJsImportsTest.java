@@ -65,13 +65,6 @@ public class CombinedJsImportsTest {
     }
 
     @Test
-    public void added_import_statements_convert_to_aliased_form() {
-        final var combinedImports = new CombinedJsImports();
-        combinedImports.add(namedImport("TgReflector", "/app/tg-reflector"));
-        assertEquals(of(namedImport("TgReflector", "/app/tg-reflector", "TgReflector")), combinedImports);
-    }
-
-    @Test
     public void added_import_statements_convert_to_full_aliased_form_of_code_with_natural_order_by_aliases() {
         final var combinedImports = new CombinedJsImports();
         combinedImports.addAll(of(
