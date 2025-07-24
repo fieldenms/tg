@@ -16,11 +16,12 @@ moment.locale('custom-locale', {
 });
 
 /**
- * Site white list that can be visited without confiramtion
+ * External site allowlist for hyperlinks that can be opened without a confirmation prompt.
  */
 let siteAllowlist;
+
 /**
- * Number of days during which a user-allowed site can be accessed without additional confiramtion.
+ * A number of days for caching user-allowed sites/links that can be opened without a confirmation prompt.
  */
 let daysUntilSitePermissionExpires;
 
