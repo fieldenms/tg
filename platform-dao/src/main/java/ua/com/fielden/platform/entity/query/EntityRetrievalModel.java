@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.entity.query;
 
+import com.google.common.collect.ImmutableList;
+import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.entity.query.exceptions.EntityRetrievalModelException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
@@ -12,6 +14,7 @@ import ua.com.fielden.platform.eql.meta.QuerySourceInfoProvider;
 import ua.com.fielden.platform.eql.meta.query.AbstractQuerySourceItem;
 import ua.com.fielden.platform.eql.meta.query.QuerySourceInfo;
 import ua.com.fielden.platform.meta.*;
+import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.utils.ToString;
 import ua.com.fielden.platform.utils.ToString.IFormat;
 
@@ -21,17 +24,22 @@ import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.joining;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
 import static ua.com.fielden.platform.meta.PropertyMetadataKeys.KEY_MEMBER;
 import static ua.com.fielden.platform.meta.PropertyTypeMetadata.Wrapper.unwrap;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
+import static ua.com.fielden.platform.utils.ImmutableListUtils.prepend;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
 
@@ -71,15 +79,6 @@ import static ua.com.fielden.platform.utils.ToString.separateLines;
  * <p>
  * Some categories deserve additional clarification:
  * <ol>
- *   <li> {@link FetchCategory#KEY_AND_DESC}
- *     <ul>
- *       <li> includes {@code key} without exploring it further (however, see the section on processing of {@code key});
- *     </ul>
- *   <li> {@link FetchCategory#DEFAULT}
- *     <ul>
- *       <li> if an entity has a simple entity-typed (but not a union) {@code key}, then it is explored further;
- *       <li> if an entity has a composite key, then all entity-typed (but not a union) key members are explored further;
- *     </ul>
  *   <li> {@link FetchCategory#ALL} - equivalent to {@link FetchCategory#DEFAULT},
  *        but without special handling of entity-typed keys and key members.
  * </ol>
@@ -102,11 +101,17 @@ import static ua.com.fielden.platform.utils.ToString.separateLines;
  */
 public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T>, ToString.IFormattable {
 
-    public static final String ERR_UNKNOWN_FETCH_CATEGORY = "Unknown fetch category [%s].";
-    public static final String ERR_UNEXPECTED_PROPERTY_IN_RETRIEVAL_MODEL = "No property [%s] in retrieval model:%n%s";
+    public static final String ERR_NO_SUCH_PROPERTY_IN_MODEL = "No such property [%s] in retrieval model:%n%s";
     public static final String ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find entity-typed property [%s] to be excluded from fetched properties of entity type [%s].";
     public static final String ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find property [%s] to be excluded from fetched properties of entity type [%s].";
     public static final String ERR_NON_EXISTING_PROPERTY = "Trying to fetch entity [%s] with non-existing property [%s].";
+
+    private static final String WARN_GRAPH_CYCLE = """
+      Cycle detected in entity graph. Retrieval model will be truncated.
+      Retrieval models stack (first element is the top):
+      %s""";
+
+    private static final Logger LOGGER = getLogger();
 
     private final fetch<T> originalFetch;
     /** Indicates whether this fetch is the top-most (graph root) or a nested one (subgraph). */
@@ -122,14 +127,26 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         this(originalFetch, domainMetadata, qsip, true);
     }
 
-    EntityRetrievalModel(final fetch<T> originalFetch,
-                         final IDomainMetadata domainMetadata,
-                         final QuerySourceInfoProvider qsip,
-                         final boolean topLevel) {
+    EntityRetrievalModel(
+            final fetch<T> originalFetch,
+            final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider qsip,
+            final boolean topLevel)
+    {
+        this(originalFetch, domainMetadata, qsip, topLevel, ImmutableList.of(new StackElement(originalFetch)));
+    }
+
+    private EntityRetrievalModel(
+            final fetch<T> originalFetch,
+            final IDomainMetadata domainMetadata,
+            final QuerySourceInfoProvider qsip,
+            final boolean topLevel,
+            final List<StackElement> stack)
+    {
         this.originalFetch = originalFetch;
         this.topLevel = topLevel;
 
-        final var builder = buildModel(originalFetch, domainMetadata, qsip);
+        final var builder = buildModel(originalFetch, domainMetadata, qsip, stack);
         this.primProps = unmodifiableSet(builder.primProps);
         this.entityProps = unmodifiableMap(builder.entityProps);
         this.proxiedProps = unmodifiableSet(builder.proxiedProps);
@@ -138,9 +155,10 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     private static <T extends AbstractEntity<?>> Builder buildModel(
             final fetch<T> originalFetch,
             final IDomainMetadata domainMetadata,
-            final QuerySourceInfoProvider qsip)
+            final QuerySourceInfoProvider qsip,
+            final List<StackElement> stack)
     {
-        final var builder = new Builder(originalFetch.getEntityType(), domainMetadata, qsip);
+        final var builder = new Builder(originalFetch.getEntityType(), domainMetadata, qsip, stack);
 
         switch (originalFetch.getFetchCategory()) {
             case ALL_INCL_CALC -> builder.includeAllFirstLevelPropsInclCalc();
@@ -150,7 +168,6 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             case ID_AND_VERSION -> builder.includeIdAndVersionOnly();
             case ID_ONLY -> builder.includeIdOnly();
             case NONE -> {}
-            default -> throw new IllegalStateException(ERR_UNKNOWN_FETCH_CATEGORY.formatted(originalFetch.getFetchCategory()));
         }
 
         for (final String propName : originalFetch.getExcludedProps()) {
@@ -195,7 +212,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     public IRetrievalModel<? extends AbstractEntity<?>> getRetrievalModel(final CharSequence path) {
         final var model = getRetrievalModelOrNull(path);
         if (model == null) {
-            throw new EqlException(ERR_UNEXPECTED_PROPERTY_IN_RETRIEVAL_MODEL.formatted(path, this));
+            throw new EntityRetrievalModelException(ERR_NO_SUCH_PROPERTY_IN_MODEL.formatted(path, this));
         }
         return model;
     }
@@ -275,6 +292,7 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         final EntityMetadata entityMetadata;
         final QuerySourceInfoProvider qsip;
         final QuerySourceInfo<?> querySourceInfo;
+        final List<StackElement> stack;
 
         // Mutable components that are being built
 
@@ -284,10 +302,12 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
         Builder(final Class<? extends AbstractEntity<?>> entityType,
                 final IDomainMetadata domainMetadata,
-                final QuerySourceInfoProvider qsip)
+                final QuerySourceInfoProvider qsip,
+                final List<StackElement> stack)
         {
             this.domainMetadata = domainMetadata;
             this.qsip = qsip;
+            this.stack = stack;
             this.querySourceInfo = qsip.getModelledQuerySourceInfo(entityType);
             this.entityType = entityType;
             this.entityMetadata = domainMetadata.forEntity(entityType);
@@ -386,17 +406,15 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 // TODO: Don't treat calculated components specially once TG applications no longer rely on this behaviour.
                 if (optPropMetadata.filter(it -> it.isCalculated() && !it.type().isComponent()).isPresent()) {} // skip
                 else {
-                    // FIXME: Union-entity typed keys or key members are not supported at this stage.
-                    //        However, there is nothing preventing such definitions, which leads to StackOverflowErrors during fetch model construction.
-                    //        To support such definitions, it would be necessary to take into account recursive definitions,
-                    //        where a key or key member that is of a union type may have a union-property of the same type as the enclosing entity.
-                    //        We would need to ensure that such union-properties are not explored to prevent StackOverflowErrors during fetch model construction.
-                    //        For now, let's simply skip the whole union-typed key and key-members from exploration.
-                    final boolean exploreEntities = optPropMetadata.isEmpty() ||
-                                                    optPropMetadata.filter(it -> it.type().isEntity()
-                                                                                 && !propMetadataUtils.isPropEntityType(it, EntityMetadata::isUnion)
-                                                                                 && (KEY.equals(it.name()) || it.has(KEY_MEMBER)))
-                                                            .isPresent();
+                    // Recursive key structures are not supported, and will lead to non-termination (see #2452).
+
+                    // Explore further if property is a union member or a key member.
+                    final boolean exploreEntities = optPropMetadata
+                            .map(propMetadata -> entityMetadata.isUnion() && propMetadata.type().isEntity()
+                                                 || KEY.equals(propMetadata.name())
+                                                 || propMetadata.has(KEY_MEMBER))
+                            .orElse(TRUE);
+
                     with(prop.name, !exploreEntities);
                 }
             });
@@ -507,11 +525,27 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         }
 
         private void with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
+            final var stackElement = new StackElement(propName, fetchModel);
+
+            // If a cycle is detected, override `fetchModel` with an ID_ONLY one.
+            // This is a form of partial support for cycles.
+            if (stack.stream().anyMatch(elt -> elt.fetch().equals(fetchModel))) {
+                LOGGER.warn(() -> format(WARN_GRAPH_CYCLE,
+                                         StreamUtils.prepend(stackElement, stack.stream())
+                                                 .map(elt -> format("%s: (%s, %s)",
+                                                                    elt.property(),
+                                                                    elt.fetch().getEntityType().getSimpleName(),
+                                                                    elt.fetch().getFetchCategory()))
+                                                 .collect(joining("\n"))));
+                with(propName, new fetch<>(fetchModel.getEntityType(), ID_ONLY));
+                return;
+            }
+
             final PropertyMetadata pm = entityMetadata.property(propName);
 
             final var propType = unwrap(pm.type());
             if (propType.javaType() != fetchModel.getEntityType()) {
-                throw new EqlException(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES.formatted(pm.type(), propName, entityType, fetchModel.getEntityType()));
+                throw new EntityRetrievalModelException(ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES.formatted(pm.type(), propName, entityType, fetchModel.getEntityType()));
             }
 
             // TODO: The following code to extend a fetch model for union-typed properties to include their union-properties appears to be irrelevant.
@@ -528,7 +562,9 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
 
             final var existingFetch = entityProps.get(propName);
             final var finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
-            entityProps.put(propName, new EntityRetrievalModel<>(finalFetch, domainMetadata, qsip, false));
+            final var model = new EntityRetrievalModel<>(finalFetch, domainMetadata, qsip, false, prepend(stackElement, stack));
+
+            entityProps.put(propName, model);
         }
 
         private void without(final String propName) {
@@ -537,12 +573,12 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             if (optPm.filter(pm -> pm.type().isEntity()).isPresent()) {
                 final var removalResult = entityProps.remove(propName);
                 if (removalResult == null) {
-                    throw new EqlException(ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH.formatted(propName, entityType.getSimpleName()));
+                    throw new EntityRetrievalModelException(ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH.formatted(propName, entityType.getSimpleName()));
                 }
             } else {
                 final var removalResult = primProps.remove(propName);
                 if (!removalResult) {
-                    throw new EqlException(ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH.formatted(propName, entityType.getSimpleName()));
+                    throw new EntityRetrievalModelException(ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH.formatted(propName, entityType.getSimpleName()));
                 }
             }
         }
@@ -564,11 +600,17 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 if (querySourceInfo.hasProp(propName)) {
                     return Optional.empty();
                 }
-                throw new EqlException(ERR_NON_EXISTING_PROPERTY.formatted(entityType.getSimpleName(), propName));
+                throw new EntityRetrievalModelException(ERR_NON_EXISTING_PROPERTY.formatted(entityType.getSimpleName(), propName));
             }
             return optPm;
         }
 
+    }
+
+    private record StackElement(String property, fetch<?> fetch) {
+        StackElement(fetch<?> fetch) {
+            this("#root", fetch);
+        }
     }
 
 }

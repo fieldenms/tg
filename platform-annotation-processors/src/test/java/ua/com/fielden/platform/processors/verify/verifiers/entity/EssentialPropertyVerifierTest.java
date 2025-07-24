@@ -25,6 +25,7 @@ import javax.lang.model.element.Modifier;
 import java.util.*;
 import java.util.function.Function;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.compileWithTempStorage;
@@ -39,7 +40,6 @@ import static ua.com.fielden.platform.processors.verify.verifiers.entity.Essenti
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.RichTextPropertyVerifier.errKeyMemberRichText;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.ERR_UNION_ENTITY_TYPED_SIMPLE_KEY;
-import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.errUnionEntityTypedKeyMember;
 
 /**
  * Tests related to the composable verifier {@link EssentialPropertyVerifier} and its components.
@@ -534,7 +534,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
     }
 
-    // 5. union-typed simple key and key members
+    // 5. union-typed simple key
     public static class UnionEntityTypedKeyVerifierTest extends AbstractVerifierTest {
         static final Class<?> VERIFIER_TYPE = EssentialPropertyVerifier.UnionEntityTypedKeyVerifier.class;
 
@@ -547,16 +547,16 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         public void simple_key_typed_with_a_union_entity_is_disallowed() {
             final var entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
-                    .addField(propertyBuilder(UnionEntity.class, "key").build())
+                    .addField(propertyBuilder(UnionEntity.class, KEY).build())
                     .build();
 
             compileAndAssertErrors(List.of(entity),
-                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "key"),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), KEY),
                     ERR_UNION_ENTITY_TYPED_SIMPLE_KEY);
         }
 
         @Test
-        public void key_member_typed_with_a_union_entity_is_disallowed() {
+        public void key_member_typed_with_a_union_entity_is_allowed() {
             final var entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(UnionEntity.class, "prop")
@@ -564,9 +564,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                             .build())
                     .build();
 
-            compileAndAssertErrors(List.of(entity),
-                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
-                    errUnionEntityTypedKeyMember("prop"));
+            compileAndAssertSuccess(List.of(entity));
         }
 
     }

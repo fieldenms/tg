@@ -97,7 +97,7 @@ final class EntityContainerFetcherImpl implements IEntityContainerFetcher {
             final var modelResult = getModelResult(queryModel);
             final Stream<List<EntityContainer<E>>> stream = streamContainersAsIs(session, modelResult, fetchSize);
             final var entityContainerEnhancer = new EntityContainerEnhancer(this, domainMetadata, idOnlyProxiedEntityTypeCache);
-            return stream.map(container -> entityContainerEnhancer.enhance(session, container, modelResult.fetchModel(), queryModel.getParamValues()));
+            return stream.map(containers -> entityContainerEnhancer.enhance(session, containers, modelResult.fetchModel(), queryModel.getParamValues()));
         } catch (final Exception ex) {
             final var exception = ex instanceof EntityRetrievalException it ? it : new EntityRetrievalException(ERR_DURING_ENTITY_RETRIEVAL, ex);
             LOGGER.error(() -> "%s\nQuery: %s".formatted(exception.getMessage(), queryModel), exception);

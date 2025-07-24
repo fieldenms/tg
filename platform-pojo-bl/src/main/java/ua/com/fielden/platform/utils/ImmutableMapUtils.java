@@ -9,6 +9,9 @@ import java.util.Map;
  * Utilities for immutable {@linkplain Map maps}.
  * <p>
  * <b>Null as either key or value is not permitted</b>.
+ *
+ * @see ImmutableSetUtils
+ * @see ImmutableListUtils
  */
 public final class ImmutableMapUtils {
 

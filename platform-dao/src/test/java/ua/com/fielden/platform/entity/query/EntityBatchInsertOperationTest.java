@@ -28,7 +28,7 @@ import static ua.com.fielden.platform.types.Colour.BLACK;
 public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
     
     private final static String ENTITY_ONE_KEY = "EO 1";
-    private final static Integer ENTITY_TWO_KEY = 2;
+    private final static String ENTITY_TWO_KEY = "2";
     
     @Test
     public void batch_insert_operation_works_for_single_enity() {
