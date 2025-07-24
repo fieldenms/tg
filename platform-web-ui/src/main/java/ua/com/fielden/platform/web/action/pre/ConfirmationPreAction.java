@@ -1,69 +1,49 @@
 package ua.com.fielden.platform.web.action.pre;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
-/**
- * A standard confirmation pre-action.
- *
- * @author TG Team
- *
- */
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
+
+/// A standard confirmation [IPreAction] that allows proceeding / rejecting the whole action through simple dialog.
+///
+/// @author TG Team
 public class ConfirmationPreAction implements IPreAction {
+    protected final String message;
+    protected final List<String> buttons = new ArrayList<>();
 
-    private final String message;
-    private final List<String> buttons = new ArrayList<>();
-
-    private enum ConfirmationButtons {
-
+    protected enum ConfirmationButtons {
         YES("{name:'Yes', confirm:true, autofocus:true}"),
         NO("{name:'No'}"),
         OK("{name:'Ok', confirm:true, autofocus:true}"),
         CANCEL("{name:'Cancel'}");
 
+        public final String code;
 
-        private final String code;
-        private ConfirmationButtons(final String code) {
+        ConfirmationButtons(final String code) {
             this.code = code;
         }
     }
 
-    private ConfirmationPreAction(final String message, final ConfirmationButtons... buttons) {
+    protected ConfirmationPreAction(final String message, final ConfirmationButtons... buttons) {
         this.message = message;
-        for (int buttonIndex = 0; buttonIndex < buttons.length; buttonIndex++) {
-            this.buttons.add(buttons[buttonIndex].code);
+        for (final ConfirmationButtons button : buttons) {
+            this.buttons.add(button.code);
         }
-    }
-
-
-    /**
-     * A convenient factory method to produce a confirmation dialog with buttons NO and YES.
-     *
-     * @param msg
-     * @return
-     */
-    public static ConfirmationPreAction yesNo(final String msg) {
-        return new ConfirmationPreAction(msg, ConfirmationButtons.NO, ConfirmationButtons.YES);
-    }
-
-    /**
-     * A convenient factory method to produce a confirmation dialog with buttons CANCEL and OK.
-     *
-     * @param msg
-     * @return
-     */
-    public static ConfirmationPreAction okCancel(final String msg) {
-        return new ConfirmationPreAction(msg, ConfirmationButtons.CANCEL, ConfirmationButtons.OK);
     }
 
     @Override
     public JsCode build() {
-        return new JsCode("return self.confirm('" + this.message + "', [" + StringUtils.join(buttons, ",") + "])");
+        return jsCode("""
+            return self.confirm('%s', [%s]);
+        """.formatted(
+            message,
+            join(buttons, ",")
+        ));
     }
 
 }

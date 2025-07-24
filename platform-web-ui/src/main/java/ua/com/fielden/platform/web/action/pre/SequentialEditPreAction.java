@@ -1,102 +1,34 @@
 package ua.com.fielden.platform.web.action.pre;
 
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
-/**
- * This pre-action implementation should be used only with sequential edit action.
- *
- * @author TG Team
- *
- */
+import java.util.Set;
+
+import static java.util.Set.of;
+import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
+import static ua.com.fielden.platform.web.minijs.JsImport.namedImport;
+
+/// A standard "sequential editing" [IPreAction], that allows further `Edit`ing of the next entity on successful `SAVE`.
+/// It is only applicable on Entity Centre `Edit` actions.
+///
+/// @author TG Team
 public class SequentialEditPreAction implements IPreAction {
 
+    protected SequentialEditPreAction() {}
+
+    @Override
+    public Set<JsImport> importStatements() {
+        return of(namedImport("sequentialEdit", "centre/actions/tg-sequential-edit"));
+    }
+
+    @Deprecated(since = WARN_DEPRECATION_DANGEROUS_CODE_CONCATENATION_WITHOUT_IMPORTS)
     @Override
     public JsCode build() {
-        return new JsCode("\n"
-                + "if(!self.seqEditEntities && !self.$.egi.isEditing()) {\n"
-                + "    if (self.$.egi.getSelectedEntities().length === 0) {\n"
-                + "        self.$.egi.selectAll(true);\n"
-                + "    }\n"
-                + "    self.seqEditEntities = self.$.egi.getSelectedEntities();\n"
-                + "    const firstEntity = self.seqEditEntities.shift();\n"
-                + "    action.currentEntity = () => firstEntity;\n"
-                + "    action._oldRestoreActionState = action.restoreActionState;\n"
-                + "    action.restoreActionState = function () {\n"
-                + "        action._oldRestoreActionState();\n"
-                + "        cancelEditing();\n"
-                + "    }.bind(self);\n"
-                + "    const cancelEditing = (function (data) {\n"
-                + "        delete this.seqEditEntities;\n"
-                + "        this.seqEditSuccessPostal.unsubscribe();\n"
-                + "        this.seqEditCancelPostal.unsubscribe();\n"
-                + "        const master = action._masterReferenceForTesting;\n"
-                + "        if (master) {\n"
-                + "            master.publishCloseForcibly();\n"
-                + "        }\n"
-                + "        action.currentEntity = () => null;\n"
-                + "        action.restoreActionState = action._oldRestoreActionState;\n"
-                + "    }).bind(self);\n"
-                + "    const updateCacheAndContinueSeqSaving = (function (shouldUnselect) {\n"
-                + "        const nextEntity = this.seqEditEntities && this.seqEditEntities.shift();\n"
-                + "        if (shouldUnselect !== false) {\n"
-                + "            self.$.egi.selectEntity(action.currentEntity(), false);\n"
-                + "        }\n"
-                + "        if (nextEntity) {\n"
-                + "            setEntityAndReload(nextEntity, shouldUnselect ? null : 'skipNext');\n"
-                + "        } else {\n"
-                + "            cancelEditing();\n"
-                + "        }\n"
-                + "    }).bind(self);\n"
-                + "    const setEntityAndReload = function (entity, spinnerInvoked) {\n"
-                + "        if (entity) {\n"
-                + "            action.currentEntity = () => entity;\n"
-                + "            const master = action._masterReferenceForTesting;\n"
-                + "            if (master) {\n"
-                + "                master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});\n"
-                + "                master.savingContext = action._createContextHolderForAction();\n"
-                + "                master.retrieve(master.savingContext).then(function(ironRequest) {\n"
-                + "                    if (action.modifyFunctionalEntity) {\n"
-                + "                        action.modifyFunctionalEntity(master._currBindingEntity, master, action);\n"
-                + "                    }\n"
-                + "                    master.addEventListener('binding-entity-loaded-and-focused', restoreNavigationButtonState);\n"
-                + "                    master.save().then(function(value) {}, function (error) {\n"
-                + "                        fireNavigationChangeEvent(true);\n"
-                + "                    }.bind(self));\n"
-                + "                }.bind(self), function (error) {\n"
-                + "                    fireNavigationChangeEvent(true);\n"
-                + "                }.bind(self));\n"
-                + "            }\n"
-                + "         }\n"
-                + "    }.bind(self),\n"
-                + "    fireNavigationChangeEvent = function (shouldResetSpinner) {\n"
-                + "        const master = action._masterReferenceForTesting;\n"
-                + "        if (master) {\n"
-                + "            master.fire('tg-action-navigation-changed', {\n"
-                + "                shouldResetSpinner: shouldResetSpinner\n,"
-                + "            });\n"
-                + "        }\n"
-                + "    }.bind(self),\n"
-                + "    restoreNavigationButtonState = function (e) {\n"
-                + "        fireNavigationChangeEvent(false);\n"
-                + "        const master = action._masterReferenceForTesting;\n"
-                + "        master.removeEventListener('binding-entity-loaded-and-focused', restoreNavigationButtonState);\n"
-                + "    }.bind(self);\n"
-                + "    action.continuous = true;\n"
-                + "    action.skipNext = function() {\n"
-                + "        updateCacheAndContinueSeqSaving(false);\n"
-                + "    };\n"
-                + "    self.seqEditSuccessPostal = postal.subscribe({\n"
-                + "        channel: self.uuid,\n"
-                + "        topic: 'save.post.success',\n"
-                + "        callback: updateCacheAndContinueSeqSaving\n"
-                + "    }).defer();\n"
-                + "    self.seqEditCancelPostal = postal.subscribe({\n"
-                + "        channel: self.uuid,\n"
-                + "        topic: 'refresh.post.success',\n"
-                + "        callback: cancelEditing"
-                + "    }).defer();\n"
-                + "}\n");
+        return jsCode("""
+            sequentialEdit(action, self);
+        """);
     }
 
 }

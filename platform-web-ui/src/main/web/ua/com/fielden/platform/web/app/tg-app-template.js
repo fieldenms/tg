@@ -31,7 +31,7 @@ import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js'
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
-import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';@mainMenuActionImports
 
 let screenWidth = window.screen.availWidth;
 let screenHeight = window.screen.availHeight;
@@ -599,14 +599,16 @@ Polymer({
         this.postRetrieved = function (entity, bindingEntity, customObject) {
             this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));
             this.$.appConfig.setDaysUntilSitePermissionExpires(entity.daysUntilSitePermissionExpires);
+            const mainMenuActionImportsIfPresent = () => typeof mainMenuActionImports !== "undefined" ? mainMenuActionImports : {};
+            const createFunctionFromString = prePostActionStr => new Function(...Object.keys(mainMenuActionImportsIfPresent()), "const self = this; return " + prePostActionStr).bind(this, ...Object.values(mainMenuActionImportsIfPresent()))();
             entity.menu.forEach(menuItem => {
                 menuItem.actions.forEach(action => {
                     action._showDialog = this._showDialog;
                     action.toaster = this.toaster;
                     action._createContextHolder = this._createContextHolder;
-                    action.preAction = new Function("const self = this;  return " + action.preAction).bind(this)();
-                    action.postActionSuccess = new Function("const self = this;  return " + action.postActionSuccess).bind(this)();
-                    action.postActionError = new Function("const self = this;  return " + action.postActionError).bind(this)();
+                    action.preAction = createFunctionFromString(action.preAction);
+                    action.postActionSuccess = createFunctionFromString(action.postActionSuccess);
+                    action.postActionError = createFunctionFromString(action.postActionError);
                     action.attrs = JSON.parse(action.attrs, (key, value) => {
                         if (key === 'width' || key === "height") {
                             return new Function("return " + value)();

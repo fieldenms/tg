@@ -1,23 +1,11 @@
 package ua.com.fielden.platform.web.view.master.api.compound;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-
-import java.util.Optional;
-import java.util.function.BiFunction;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.inject.Injector;
-
+import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.PrefDim;
-import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -29,6 +17,14 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
+
+import java.util.Optional;
+import java.util.function.BiFunction;
+
+import static java.util.Optional.*;
+import static ua.com.fielden.platform.web.action.pre.PreActions.entityNavigation;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
 public class Compound {
 
@@ -171,7 +167,7 @@ public class Compound {
             final Class<OPEN_ACTION> openCompoundMasterActionType,
             final String shortDesc,
             final PrefDim prefDim) {
-        return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), empty(), empty(), shortDesc, empty(), prefDim, context().withCurrentEntity().build());
+        return open(openCompoundMasterActionType, of(entityNavigation(shortDesc)), empty(), empty(), shortDesc, empty(), prefDim, context().withCurrentEntity().build());
     }
 
     /**
@@ -188,7 +184,7 @@ public class Compound {
             final String shortDesc,
             final String longDesc,
             final PrefDim prefDim) {
-        return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), empty(), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().build());
+        return open(openCompoundMasterActionType, of(entityNavigation(shortDesc)), empty(), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().build());
     }
 
     /**
@@ -207,7 +203,7 @@ public class Compound {
             final String shortDesc,
             final String longDesc,
             final PrefDim prefDim) {
-        return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().build());
+        return open(openCompoundMasterActionType, of(entityNavigation(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().build());
     }
     
     /**
@@ -228,7 +224,7 @@ public class Compound {
             final String shortDesc,
             final String longDesc,
             final PrefDim prefDim) {
-        return open(openCompoundMasterActionType, of(new EntityNavigationPreAction(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().withComputation(computation).build());
+        return open(openCompoundMasterActionType, of(entityNavigation(shortDesc)), ofNullable(icon), empty(), shortDesc, ofNullable(longDesc), prefDim, context().withCurrentEntity().withComputation(computation).build());
     }
     
 

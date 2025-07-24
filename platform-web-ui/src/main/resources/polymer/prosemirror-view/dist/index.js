@@ -2984,7 +2984,7 @@ function maybeWrapTrusted(html) {
     // innerHTML, even on a detached document. This wraps the string in
     // a way that makes the browser allow us to use its parser again.
     if (!_policy)
-        _policy = trustedTypes.createPolicy("ProseMirrorClipboard", { createHTML: (s) => s });
+        _policy = trustedTypes.defaultPolicy || trustedTypes.createPolicy("ProseMirrorClipboard", { createHTML: (s) => s });
     return _policy.createHTML(html);
 }
 function readHTML(html) {
@@ -3676,6 +3676,10 @@ class Dragging {
     }
 }
 const dragCopyModifier = mac ? "altKey" : "ctrlKey";
+function dragMoves(view, event) {
+    let moves = view.someProp("dragCopies", test => !test(event));
+    return moves != null ? moves : !event[dragCopyModifier];
+}
 handlers.dragstart = (view, _event) => {
     let event = _event;
     let mouseDown = view.input.mouseDown;
@@ -3705,7 +3709,7 @@ handlers.dragstart = (view, _event) => {
     event.dataTransfer.effectAllowed = "copyMove";
     if (!brokenClipboardAPI)
         event.dataTransfer.setData("text/plain", text);
-    view.dragging = new Dragging(slice, !event[dragCopyModifier], node);
+    view.dragging = new Dragging(slice, dragMoves(view, event), node);
 };
 handlers.dragend = view => {
     let dragging = view.dragging;
@@ -3732,7 +3736,7 @@ editHandlers.drop = (view, _event) => {
     else {
         slice = parseFromClipboard(view, getText(event.dataTransfer), brokenClipboardAPI ? null : event.dataTransfer.getData("text/html"), false, $mouse);
     }
-    let move = !!(dragging && !event[dragCopyModifier]);
+    let move = !!(dragging && dragMoves(view, event));
     if (view.someProp("handleDrop", f => f(view, event, slice || Slice.empty, move))) {
         event.preventDefault();
         return;
@@ -5017,9 +5021,11 @@ function readDOMChange(view, from, to, typeOver, addedNodes) {
     // as being an iOS enter press), just dispatch an Enter key instead.
     if (((ios && view.input.lastIOSEnter > Date.now() - 225 &&
         (!inlineChange || addedNodes.some(n => n.nodeName == "DIV" || n.nodeName == "P"))) ||
-        (!inlineChange && $from.pos < parse.doc.content.size && !$from.sameParent($to) &&
+        (!inlineChange && $from.pos < parse.doc.content.size &&
+            (!$from.sameParent($to) || !$from.parent.inlineContent) &&
+            !/\S/.test(parse.doc.textBetween($from.pos, $to.pos, "", "")) &&
             (nextSel = Selection.findFrom(parse.doc.resolve($from.pos + 1), 1, true)) &&
-            nextSel.head == $to.pos)) &&
+            nextSel.head > $from.pos)) &&
         view.someProp("handleKeyDown", f => f(view, keyEvent(13, "Enter")))) {
         view.input.lastIOSEnter = 0;
         return;

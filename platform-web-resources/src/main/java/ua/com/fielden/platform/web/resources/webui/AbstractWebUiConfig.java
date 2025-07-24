@@ -17,7 +17,6 @@ import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -32,6 +31,7 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
+import ua.com.fielden.platform.web.minijs.CombinedJsImports;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
@@ -48,20 +48,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.validator.routines.UrlValidator.ALLOW_LOCAL_URLS;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.types.Hyperlink.SupportedProtocols.HTTPS;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.minijs.JsCode.jsCode;
+import static ua.com.fielden.platform.web.resources.webui.AppIndexResource.FILE_APP_INDEX_HTML;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_OWN_COPY_MSG;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
+import static ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource.FILE_APP_LOGIN_INITIATE_RESET_HTML;
 import static ua.com.fielden.platform.web.view.master.api.actions.impl.MasterActionOptions.ALL_OFF;
 
 /**
@@ -78,6 +83,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
     private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default configurations for [%s]-typed centres (caching)...";
     private static final int DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS = 183;
+    /// Name for a constant in generated `tg-app-template` containing imports from main menu actions.
+    private static final String MAIN_MENU_ACTION_IMPORTS = "mainMenuActionImports";
 
     private final String title;
     private final Optional<String> ideaUri;
@@ -97,7 +104,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      */
     private final List<String> resourcePaths;
     private final Workflows workflow;
-    private final Map<String, String> checksums;
+    private final SequencedMap<String, String> checksums;
     private final boolean independentTimeZone;
     private final MasterActionOptions masterActionOptions;
 
@@ -268,9 +275,18 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return webUiBuilder.genWebUiPrefComponent();
     }
 
+    /// [CombinedJsImports] from main menu actions on both desktop / mobile configurations.
+    private CombinedJsImports mainMenuActionImports() {
+        final var combinedImports = new CombinedJsImports();
+        combinedImports.addAll(desktopMainMenuConfig.mainMenuActionImports());
+        combinedImports.addAll(mobileMainMenuConfig.mainMenuActionImports());
+        return combinedImports;
+    }
+
     @Override
     public final String genMainWebUIComponent() {
-        final String mainWebUiComponent = ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js");
+        final String mainWebUiComponent = requireNonNull(getText("ua/com/fielden/platform/web/app/tg-app-template.js"))
+            .replace("@%s".formatted(MAIN_MENU_ACTION_IMPORTS), mainMenuActionImports().toStringWith(MAIN_MENU_ACTION_IMPORTS));
         if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
             return mainWebUiComponent.replace("//@use-empty-console.log", "console.log = () => {};\n");
         } else {
@@ -373,6 +389,20 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public Optional<String> checksum(final String resourceURI) {
         return ofNullable(checksums.get(resourceURI));
+    }
+
+    @Override
+    public SequencedSet<String> deploymentResourcePaths() {
+        return checksums.keySet().stream()
+            .map(path -> switch (path) {
+                // Only two deployment resources are generated and have special binding paths.
+                // See `VulcanizingUtility.vulcanize` for full list.
+                // All generated paths start with `/app/...`, but only two of them is outside main vulcanised file.
+                case FILE_APP_INDEX_HTML -> AppIndexResource.BINDING_PATH;
+                case FILE_APP_LOGIN_INITIATE_RESET_HTML -> LoginInitiateResetResource.BINDING_PATH;
+                default -> path;
+            })
+            .collect(toCollection(LinkedHashSet::new));
     }
 
     @Override

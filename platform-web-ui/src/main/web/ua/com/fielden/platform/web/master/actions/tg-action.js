@@ -20,7 +20,6 @@ import { allDefined, localStorageKey, getParentAnd } from '/resources/reflection
 
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 import { _isEntity } from '/app/tg-reflector.js';
-// depends on '/resources/filesaver/FileSaver.min.js'
 
 const createDescWithShortcut = function(desc, shortcuts) {
     

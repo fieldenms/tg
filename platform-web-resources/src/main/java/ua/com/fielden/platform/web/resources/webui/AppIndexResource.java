@@ -1,25 +1,28 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static org.restlet.data.MediaType.TEXT_HTML;
-import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
-
-import java.lang.management.ManagementFactory;
-
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+
+import java.io.ByteArrayInputStream;
+import java.lang.management.ManagementFactory;
+
+import static com.google.common.base.Charsets.UTF_8;
+import static java.lang.String.join;
+import static org.restlet.data.MediaType.TEXT_HTML;
+import static org.restlet.data.MediaType.TEXT_URI_LIST;
+import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepresentation;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
 /**
  * Responds to GET request with a generated application specific index resource (for desktop and mobile web apps).
@@ -30,6 +33,11 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  *
  */
 public class AppIndexResource extends AbstractWebResource {
+    public static final String BINDING_PATH = "/";
+    public static final String FILE_APP_INDEX_HTML = "/app/tg-app-index.html";
+    private static final String RESOURCES_URL_SUFFIX = "?resources=true";
+    private static final String RESOURCES_DELIMITER = "\n";
+
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final IWebResourceLoader webResourceLoader;
@@ -69,7 +77,12 @@ public class AppIndexResource extends AbstractWebResource {
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
         }
-        return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
+        // Handle special Service Worker '?resources=true' GET request against `AppIndexResource` (aka '/').
+        if (getReference().getRemainingPart().endsWith(RESOURCES_URL_SUFFIX)) {
+            return encodedRepresentation(new ByteArrayInputStream(join(RESOURCES_DELIMITER, webResourceLoader.deploymentResourcePaths()).getBytes(UTF_8)), TEXT_URI_LIST);
+        }
+        // Handle actual `AppIndexResource` generated file (see 'index.html').
+        return createRepresentation(webResourceLoader, TEXT_HTML, FILE_APP_INDEX_HTML, getReference().getRemainingPart());
     }
 
     /**

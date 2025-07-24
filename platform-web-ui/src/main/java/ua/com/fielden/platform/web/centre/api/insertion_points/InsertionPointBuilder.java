@@ -7,6 +7,13 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.minijs.JsImport;
+
+import java.util.*;
+
+import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
 
 import java.util.*;
 
@@ -79,6 +86,11 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
      */
     public DomElement renderInsertionPointAction() {
         return insertionPointActionElement.render().clazz("insertion-point-action").attr("hidden", null);
+    }
+
+    /// [JsImport]s for currently configured insertion point action.
+    public Set<JsImport> actionImports() {
+        return insertionPointActionElement.actionImports();
     }
 
     /**

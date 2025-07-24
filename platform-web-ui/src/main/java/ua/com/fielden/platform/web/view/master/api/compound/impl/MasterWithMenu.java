@@ -1,19 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.compound.impl;
 
-import static java.lang.String.format;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
-import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
-import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
-
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-
 import org.apache.logging.log4j.Logger;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -25,7 +12,18 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.minijs.CombinedJsImports;
+import ua.com.fielden.platform.web.minijs.JsImport;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+
+import java.util.*;
+
+import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 /**
  * A compound entity master that has a menu, that extends {@link IMaster} contract.
@@ -57,6 +55,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
             throw new IllegalArgumentException(format("The default menu item index %s is outside of the range for the provided menu items.", defaultMenuItemIndex));
         }
 
+        final SortedSet<JsImport> actionImports = new CombinedJsImports();
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("master/menu/tg-master-menu");
         importPaths.add("master/menu/tg-master-menu-item-section");
@@ -77,6 +76,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
 
         for (final FunctionalActionElement el : menuItemActionsElements) {
             importPaths.add(el.importPath());
+            actionImports.addAll(el.actionImports());
             menuItemActionsDom.add(el.render());
             jsMenuItemActionObjects.append(el.createActionObject() + ",\n");
             menuItemViewsDom.add(
@@ -102,7 +102,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
 
         // generate the final master with menu
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, createImports(importPaths))
+                .replace(IMPORTS, createImports(importPaths) + actionImports)
                 .replace(ENTITY_TYPE, flattenedNameOf(functionalEntityType))
                 .replace("<!--@tg-entity-master-content-->",
                         format(""
