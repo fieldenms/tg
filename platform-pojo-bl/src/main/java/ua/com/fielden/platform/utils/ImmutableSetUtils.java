@@ -7,21 +7,19 @@ import com.google.common.collect.Iterables;
 import java.util.Set;
 import java.util.SortedSet;
 
-/**
- * Utilities for immutable {@linkplain Set sets}.
- * <p>
- * <b>Null as set member is not permitted</b>.
- *
- * @see ImmutableMapUtils
- */
+/// Utilities for immutable {@linkplain Set sets}.
+///
+/// **Null as set member is not permitted**.
+///
+/// @see ImmutableMapUtils
+///
 public final class ImmutableSetUtils {
 
-    /**
-     * Returns an immutable set that is the result of {@code union(xs, Set.of(y))};
-     *
-     * @param xs  must not contain null elements
-     * @param y  must not be null
-     */
+    /// Returns an immutable set that is the result of `union(xs, Set.of(y))`.
+    ///
+    /// @param xs  must not contain null elements
+    /// @param y  must not be null
+    ///
     public static <X extends Y, Y> Set<Y> insert(final Iterable</*@Nonnull*/ X> xs, final /*@Nonnull*/ Y y) {
         final var size = Iterables.size(xs);
 
@@ -39,12 +37,11 @@ public final class ImmutableSetUtils {
         }
     }
 
-    /**
-     * Returns an immutable set that is the result of {@code union(xs, Set.of(y))};
-     *
-     * @param xs  must not contain null elements
-     * @param y  must not be null
-     */
+    /// Returns an immutable set that is the result of `union(xs, Set.of(y))`.
+    ///
+    /// @param xs  must not contain null elements
+    /// @param y  must not be null
+    ///
     public static <X extends Y, Y extends Comparable<Y>> SortedSet<Y> insert(final SortedSet</*@Nonnull*/ X> xs, final /*@Nonnull*/ Y y) {
         if (xs.isEmpty()) {
             return ImmutableSortedSet.of(y);
@@ -60,12 +57,11 @@ public final class ImmutableSetUtils {
         }
     }
 
-    /**
-     * Returns an immutable set that is a union of the given iterables.
-     *
-     * @param xs  must not contain null elements
-     * @param ys  must not contain null elements
-     */
+    /// Returns an immutable set that is a union of the given iterables.
+    ///
+    /// @param xs  must not contain null elements
+    /// @param ys  must not contain null elements
+    ///
     public static <X extends Y, Y> Set<Y> union(final Iterable</*@Nonnull*/ X> xs, final Iterable</*@Nonnull*/ Y> ys) {
         if (xs == ys && ys instanceof ImmutableSet<Y> set) {
             return set;
