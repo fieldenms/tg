@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -13,6 +14,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -91,11 +93,10 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             // Therefore, we should only perform a so-called soft validation,
             // where validation would occur strictly against fetched values.
             // Later during saving, all activatable properties would get checked anyway.
-            final var activatableProps = collectActivatableNotNullNotProxyProperties(entity);
 
             // Need to check if already referenced activatables are active and thus may be referenced by this entity, which is being activated.
-            for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableProps) {
-                final ActivatableAbstractEntity<?> value = prop.getValue();
+            for (final var prop : collectActivatableNotNullNotProxyProperties(entity)) {
+                final var value = extractActivatable(prop.getValue());
                 if (!value.isActive()) {
                     final var entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
                     final var propTitle = getTitleAndDesc(prop.getName(), entity.getType()).getKey();
@@ -106,6 +107,14 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         }
         // Otherwise...
         return successful();
+    }
+
+    private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
+        return switch (entity) {
+            case ActivatableAbstractEntity<?> it -> it;
+            case AbstractUnionEntity union -> union.activeEntity() instanceof ActivatableAbstractEntity<?> it ? it : null;
+            case null, default -> null;
+        };
     }
 
     private String mkErrorMsg(final ActivatableAbstractEntity<?> entity, final int count, final List<EntityAggregates> dependencies) {
@@ -127,15 +136,14 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     /**
      * Collects properties that represent non-null, non-proxy, and non-self-referenced activatable properties for {@code entity}.
      */
-    // TODO The result may contain union-typed properties
-    private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
+    private Set<MetaProperty<? extends AbstractEntity<?>>> collectActivatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
         return entity.nonProxiedProperties()
                .filter(mp -> mp.getValue() != null &&                           
                              mp.isActivatable() &&
                              isNotSpecialActivatableToBeSkipped(mp) &&
                              !((AbstractEntity<?>) mp.getValue()).isIdOnlyProxy() &&
                              !entity.equals(mp.getValue()))
-               .map(mp -> (MetaProperty<? extends ActivatableAbstractEntity<?>>) mp)
+               .map(mp -> (MetaProperty<? extends AbstractEntity<?>>) mp)
                .collect(toCollection(LinkedHashSet::new));
     }
 

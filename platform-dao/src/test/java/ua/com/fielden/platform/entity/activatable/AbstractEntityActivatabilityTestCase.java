@@ -263,7 +263,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         // value is an id-only proxy by structure but not by type (AbstractEntity.isIdOnlyProxy() == false).
         // In fact, its type is a plain entity type, therefore none of its properties are proxied.
         // This leads to ActivePropertyValidator accessing `a.b.active` and getting `false` as the result.
-        // FIXME Runtime error in ActivePropertyValidator
         final A a_v1 = (A) refetch$(a, ALL).set(ACTIVE, true);
         final A a_v2 = (A) refetch$(a, ALL).set(ACTIVE, true);
 
@@ -433,7 +432,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         // value is an id-only proxy by structure but not by type (AbstractEntity.isIdOnlyProxy() == false).
         // In fact, its type is a plain entity type, therefore none of its properties are proxied.
         // This leads to ActivePropertyValidator accessing `a.b.active` and getting `false` as the result.
-        // FIXME Runtime error in ActivePropertyValidator
         final A a_v1 = (A) refetch$(a, ALL).set(ACTIVE, true);
         // TODO Should work with the DEFAULT category.
         // Category ALL must be used here, otherwise `save(a_v2)` below fails with "Could not resolve conflicting changes"
@@ -494,7 +492,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b, spec.A_b2(), b));
         assertRefCount(0, b);
 
-        // FIXME Runtime error in ActivePropertyValidator
         save(a.set(ACTIVE, true));
         assertRefCount(2, b);
     }
@@ -646,7 +643,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
         A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
 
-        // FIXME Runtime error in ActivePropertyValidator
         assertRefCount(10, b);
 
         a = save(setProperties(spec, a, ACTIVE, true, spec.A_b1(), null));
