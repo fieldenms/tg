@@ -561,7 +561,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
         b.set(ACTIVE, false);
         final var mpActive = b.getProperty(ACTIVE);
-        // FIXME Property remains valid for union-typed references.
         assertFalse(mpActive.isValid());
         assertThat(mpActive.getFirstFailure().getMessage())
                 .startsWith(format(ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES, getEntityTitleAndDesc(b).getKey(), b, 1, "dependency"));
@@ -589,7 +588,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         A a = save(spec.newA(ACTIVE, false, spec.A_b4(), b));
 
         a = (A) a.set(ACTIVE, true);
-        // FIXME Property remains valid for union-typed references.
         assertNotNull(a.getProperty(ACTIVE).getFirstFailure());
         assertEquals(format(ERR_INACTIVE_REFERENCES,
                             getTitleAndDesc(spec.A_b4(), a.getType()).getKey(),
