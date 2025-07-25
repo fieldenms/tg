@@ -131,7 +131,7 @@ public final class DomainMetadataModelGenerator {
                 final String prelTitle = prelTitleAndDesc.getKey();
                 final String prelDesc = prelTitleAndDesc.getValue();
 
-                final var propJavaType = (Class<?>) pm.type().javaType();
+                final var propJavaType = pm.type().javaType();
                 final DomainTypeData superTypeDtd = typesMap.get(entityType.superType());
                 final var domainPropertyData = new DomainPropertyData(
                         id,
@@ -163,7 +163,7 @@ public final class DomainMetadataModelGenerator {
                                                               subProp.name(),
                                                               null,
                                                               domainPropertyData,
-                                                              typesMap.get((Class<?>) subProp.type().javaType()),
+                                                              typesMap.get(subProp.type().javaType()),
                                                               titleAndDesc.getKey(),
                                                               titleAndDesc.getValue(),
                                                               null,

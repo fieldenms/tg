@@ -6,7 +6,9 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.meta.Assertions.EntityA;
 import ua.com.fielden.platform.meta.Assertions.SubPropertiesA;
+import ua.com.fielden.platform.meta.PropertyMetadataUtils.SubPropertyNaming;
 import ua.com.fielden.platform.meta.test_entities.Entity_VariousMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithRichText;
 import ua.com.fielden.platform.persistence.types.PlatformHibernateTypeMappings;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
@@ -16,6 +18,7 @@ import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
+import java.util.Set;
 
 import static ua.com.fielden.platform.entity.query.IDbVersionProvider.constantDbVersion;
 
@@ -98,6 +101,18 @@ public class PropertyMetadataUtilsTest {
                         .assertIs(PropertyTypeMetadata.Primitive.class).assertJavaType(String.class));
     }
 
+    @Test
+    public void subProperties_with_naming_PATH_returns_properties_that_have_paths_in_their_names() {
+        // Union entity type
+        subPropertiesOf(TgBogie.class, "location", SubPropertyNaming.PATH)
+                .assertSubPropertiesAre(Set.of("location.wagonSlot", "location.workshop", "location.fuelType",
+                                               "location.id", "location.key", "location.desc"));
+
+        // Component-typed property
+        subPropertiesOf(EntityWithRichText.class, "text", SubPropertyNaming.PATH)
+                .assertSubPropertiesAre(Set.of("text.formattedText", "text.searchText", "text.coreText"));
+    }
+
     ///////////////////////////////////////////
     /////////////// Utils /////////////////////
     ///////////////////////////////////////////
@@ -105,6 +120,15 @@ public class PropertyMetadataUtilsTest {
     private SubPropertiesA subPropertiesOf(final Class<? extends AbstractEntity<?>> entityType, final String propName) {
         final var entityMetadata = domainMetadata.forEntity(entityType);
         return EntityA.of(entityMetadata).getProperty(propName).subProperties(pmUtils);
+    }
+
+    private SubPropertiesA subPropertiesOf(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final String propName,
+            final SubPropertyNaming naming)
+    {
+        final var entityMetadata = domainMetadata.forEntity(entityType);
+        return EntityA.of(entityMetadata).getProperty(propName).subProperties(pmUtils, naming);
     }
 
 }
