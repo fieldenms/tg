@@ -182,7 +182,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
      * @param allTokens
      * @return
      */
-    private static SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
+    static SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
         final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
 
         allTokens.forEach(token -> {
