@@ -131,7 +131,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
     if_A_is_activated_while_referencing_inactive_B_then_validation_fails() {
         final Spec1<A, B> spec = spec1();
         final B b = save(spec.newB(ACTIVE, false));
-        // FIXME Fails due to EntityExistsValidator
         final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
 
         a.set(ACTIVE, true);
@@ -543,7 +542,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, false, REF_COUNT, 10));
-        // FIXME EntityExistsValidator fails when the reference is via a union-typed property.
         final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
 
         save(setProperties(spec, a, spec.A_b1(), null, ACTIVE, true));
@@ -575,7 +573,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, false));
-        // FIXME EntityExistsValidator fails when the reference is via a union-typed property.
         A a = save(spec.newA(ACTIVE, false, spec.A_b3(), b));
 
         a = (A) a.set(ACTIVE, true);
@@ -589,7 +586,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, false));
-        // FIXME EntityExistsValidator fails when the reference is via a union-typed property.
         A a = save(spec.newA(ACTIVE, false, spec.A_b4(), b));
 
         a = (A) a.set(ACTIVE, true);
@@ -626,7 +622,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
         final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
         A a1 = save(spec.newA(ACTIVE, false, spec.A_b1(), b, REF_COUNT, 20));
-        // FIXME EntityExistsValidator fails when the reference is via a union-typed property.
         final A a2 = save(spec.newA(ACTIVE, false, spec.A_a1(), a1));
 
         a1 = save((A) a1.set(ACTIVE, true));
