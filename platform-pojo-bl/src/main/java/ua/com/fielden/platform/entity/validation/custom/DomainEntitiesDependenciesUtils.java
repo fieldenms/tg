@@ -49,18 +49,18 @@ public class DomainEntitiesDependenciesUtils {
     public static AggregatedResultQueryModel dependencyCountQuery(final Set<DomainEntityDependency> dependencies, final boolean deactivationOnly) {
         final var models = dependencies.stream().map(dependency -> {
             final var cond = deactivationOnly
-                             ? cond().prop(ID).ne().param(PARAM).and().prop(dependency.propPath).eq().param(PARAM).and().prop(ACTIVE).eq().val(true).model()
-                             : cond().prop(ID).ne().param(PARAM).and().prop(dependency.propPath).eq().param(PARAM).model();
-            return select(dependency.entityType)
+                             ? cond().prop(ID).ne().param(PARAM).and().prop(dependency.propPath()).eq().param(PARAM).and().prop(ACTIVE).eq().val(true).model()
+                             : cond().prop(ID).ne().param(PARAM).and().prop(dependency.propPath()).eq().param(PARAM).model();
+            return select(dependency.entityType())
                    .where().condition(cond)
-                   .yield().val(dependency.entityType.getName()).as(ENTITY_TYPE_NAME)
-                   .yield().val(dependency.entityTitle).as(ENTITY_TYPE_TITLE)
-                   .yield().val(dependency.propPath).as(DEPENDENT_PROP_PATH)
-                   .yield().val(dependency.propTitle).as(DEPENDENT_PROP_TITLE)
+                   .yield().val(dependency.entityType().getName()).as(ENTITY_TYPE_NAME)
+                   .yield().val(dependency.entityTitle()).as(ENTITY_TYPE_TITLE)
+                   .yield().val(dependency.propPath()).as(DEPENDENT_PROP_PATH)
+                   .yield().val(dependency.propTitle()).as(DEPENDENT_PROP_TITLE)
                   .modelAsAggregate();
-        }).toList();
+        }).toArray(AggregatedResultQueryModel[]::new);
 
-        return select(models.toArray(new AggregatedResultQueryModel[] {}))
+        return select(models)
                .groupBy().prop(ENTITY_TYPE_NAME)
                .groupBy().prop(DEPENDENT_PROP_PATH)
                .groupBy().prop(ENTITY_TYPE_TITLE)

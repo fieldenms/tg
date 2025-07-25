@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -26,20 +27,18 @@ import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
  */
 public class DomainEntityDependencies {
     public final Class<? extends AbstractEntity<?>> entityType;
-    public final boolean activatable;
-    private final Set<Class<? extends ActivatableAbstractEntity<?>>> automaticallyDeactivatedDependencies;
+    private final Set<Class<? extends ActivatableAbstractEntity<?>>> deactivatableDependencies;
     private final Set<DomainEntityDependency> dependencies = new HashSet<>();
 
     public DomainEntityDependencies(final Class<? extends AbstractEntity<?>> entityType) {
         this.entityType = entityType;
-        this.activatable = isActivatableEntityType(entityType);
 
-        if (activatable && entityType.isAnnotationPresent(DeactivatableDependencies.class)) {
-            final DeactivatableDependencies annotation = ((Class<? extends ActivatableAbstractEntity<?>>) entityType).getAnnotation(DeactivatableDependencies.class);
-            automaticallyDeactivatedDependencies = ImmutableSet.copyOf(annotation.value());
+        final DeactivatableDependencies annot;
+        if (isActivatableEntityType(entityType) && (annot = getAnnotation(entityType, DeactivatableDependencies.class)) != null) {
+            deactivatableDependencies = ImmutableSet.copyOf(annot.value());
         }
         else {
-            automaticallyDeactivatedDependencies = ImmutableSet.of();
+            deactivatableDependencies = ImmutableSet.of();
         }
     }
 
@@ -48,7 +47,7 @@ public class DomainEntityDependencies {
      */
     public Set<DomainEntityDependency> getActivatableDependencies() {
         return dependencies.stream()
-               .filter(dep -> dep.shouldBeCheckedDuringDeactivation && !(automaticallyDeactivatedDependencies.contains(dep.entityType) && dep.belongsToEntityKey))
+               .filter(dep -> dep.shouldBeCheckedDuringDeactivation && !(deactivatableDependencies.contains(dep.entityType) && dep.belongsToEntityKey))
                .collect(toSet());
     }
 
@@ -58,11 +57,11 @@ public class DomainEntityDependencies {
      */
     private Stream<DomainEntityDependency> getImmediateDeactivatableDependencies() {
         return dependencies.stream()
-                .filter(dep -> dep.shouldBeCheckedDuringDeactivation && automaticallyDeactivatedDependencies.contains(dep.entityType));
+                .filter(dep -> dep.shouldBeCheckedDuringDeactivation && deactivatableDependencies.contains(dep.entityType));
     }
 
     /**
-     * Returns a subset of all deactivatable dependencies, including those stemming from immediate and transitive declarations of @link DeactivatableDependencies}.
+     * Returns a subset of all deactivatable dependencies, including those stemming from immediate and transitive declarations of {@link DeactivatableDependencies}.
      */
     public Stream<DomainEntityDependency> getAllDeactivatableDependencies(final Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> domainDependencies) {
         return getAllDeactivatableDependencies(getImmediateDeactivatableDependencies(), domainDependencies);
@@ -107,37 +106,14 @@ public class DomainEntityDependencies {
     /**
      * A convenient struct to represent a single property as a dependency.
      */
-    public static class DomainEntityDependency {
-        public final Class<? extends AbstractEntity<?>> entityType;
-        public final String entityTitle;
-        public final String propPath;
-        public final String propTitle;
-        public final boolean shouldBeCheckedDuringDeactivation;
-        public final boolean belongsToEntityKey;
-
-        private DomainEntityDependency(
-                Class<? extends AbstractEntity<?>> entityType,
-                String entityTitle,
-                String propPath,
-                String propTitle,
-                boolean shouldBeCheckedDuringDeactivation,
-                boolean belongsToEntityKey)
-        {
-            this.entityType = entityType;
-            this.entityTitle = entityTitle;
-            this.propPath = propPath;
-            this.propTitle = propTitle;
-            this.shouldBeCheckedDuringDeactivation = shouldBeCheckedDuringDeactivation;
-            this.belongsToEntityKey = belongsToEntityKey;
-        }
-
-        public Class<? extends AbstractEntity<?>> entityType() {
-            return entityType;
-        }
-
-        public String propPath() {
-            return propPath;
-        }
+    public record DomainEntityDependency(
+            Class<? extends AbstractEntity<?>> entityType,
+            String entityTitle,
+            String propPath,
+            String propTitle,
+            boolean shouldBeCheckedDuringDeactivation,
+            boolean belongsToEntityKey)
+    {
 
         private DomainEntityDependency(final Class<? extends AbstractEntity<?>> entityType, final String propPath) {
             this(entityType,
@@ -149,7 +125,7 @@ public class DomainEntityDependencies {
         }
 
         public DomainEntityDependency updatePropPath(final CharSequence propPathSuffix) {
-            return  new DomainEntityDependency(entityType, entityTitle, propPath + "." + propPathSuffix, propTitle, belongsToEntityKey, shouldBeCheckedDuringDeactivation);
+            return new DomainEntityDependency(entityType, entityTitle, propPath + "." + propPathSuffix, propTitle, belongsToEntityKey, shouldBeCheckedDuringDeactivation);
         }
 
         private static boolean checkDuringDeactivation(final Class<? extends AbstractEntity<?>> entityType, final String propPath) {
@@ -164,6 +140,6 @@ public class DomainEntityDependencies {
         public String toString() {
             return INFO_ENTITY_DEPENDENCIES.formatted(entityType.getName(), entityType.getName(), propPath, shouldBeCheckedDuringDeactivation, belongsToEntityKey);
         }
-
     }
+
 }
