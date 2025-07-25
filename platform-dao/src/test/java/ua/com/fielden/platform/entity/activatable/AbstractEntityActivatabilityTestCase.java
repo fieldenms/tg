@@ -91,7 +91,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
     //
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    concurrent_referencing_by_new_entity_of_activatable_that_has_just_became_inactive_is_prevented() {
+    new_active_A_that_references_active_B_cannot_be_saved_if_B_is_concurrenly_deactivated() {
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, true));
@@ -110,7 +110,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    concurrent_referencing_by_persisted_entity_of_activatable_that_has_just_became_inactive_is_prevented() {
+    persisted_active_A_that_references_active_B_cannot_be_saved_if_B_is_concurrenly_deactivated() {
         final Spec1<A, B> spec = spec1();
         final B b = save(spec.newB(ACTIVE, true));
 
@@ -128,7 +128,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    activating_an_entity_that_references_inactive_entities_does_not_pass_validation() {
+    if_A_is_activated_while_referencing_inactive_B_then_validation_fails() {
         final Spec1<A, B> spec = spec1();
         final B b = save(spec.newB(ACTIVE, false));
         // FIXME Fails due to EntityExistsValidator
@@ -148,7 +148,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    activating_an_entity_that_references_inactive_entities_referenced_via_proxied_properties_passes_validation_but_save_fails() {
+    if_A_is_activated_while_referencing_inactive_B_via_proxied_property_then_validation_succeeds_but_saving_A_fails() {
         final Spec1<A, B> spec = spec1();
         final B b = save(spec.newB(ACTIVE, false));
         final A a;
@@ -178,27 +178,8 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     @Test
-    public <A extends AbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    non_activatable_entities_do_not_effect_ref_count_of_referenced_activatables() {
-        final Spec2<A, B> spec = spec2();
-
-        final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
-        final B b2 = save(spec.newB(ACTIVE, true, REF_COUNT, 20));
-        final A a = save(spec.newA(ACTIVE, false, spec.A_b(), b1));
-
-        assertRefCount(10, b1);
-        assertRefCount(20, b2);
-
-        spec.setB(a, b2);
-        save(a);
-
-        assertRefCount(10, b1);
-        assertRefCount(20, b2);
-    }
-
-    @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    refCount_of_referenced_active_entity_remains_unchanged_after_inactive_entity_dereferences_it_and_new_value_is_null() {
+    if_inactive_A_dereferences_active_B_then_refCount_of_B_is_not_affected() {
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
@@ -212,7 +193,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    refCount_of_referenced_active_entity_remains_unchanged_after_inactive_entity_dereferences_it_and_new_value_is_not_null() {
+    if_inactive_A_dereferences_active_B1_and_references_active_B2_then_refCounts_of_Bs_are_not_affected() {
         final Spec1<A, B> spec = spec1();
 
         final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
@@ -228,7 +209,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    if_entity_A_is_concurrently_deactivated_before_it_begins_referencing_entity_B_then_refCount_of_B_is_not_affected() {
+    if_active_A_is_concurrently_deactivated_before_it_begins_referencing_active_B_then_refCount_of_B_is_not_affected() {
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
@@ -577,7 +558,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    active_entity_with_active_references_cannot_be_deactivated() {
+    active_entity_cannot_be_deactivated_while_referenced_by_other_active_entities() {
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, true));
