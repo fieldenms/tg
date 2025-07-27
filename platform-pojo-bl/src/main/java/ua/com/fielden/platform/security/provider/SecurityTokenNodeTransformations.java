@@ -52,7 +52,7 @@ public final class SecurityTokenNodeTransformations {
         return tree -> move(tree, findTokenNode(tree, child).orElseGet(() -> new SecurityTokenNode(child)), getTokenNode(tree, parent));
     }
 
-    /// Generalisation of [#setParentOf(Class, Class)].
+    /// Generalisation of [#setParentOf(Class, Class)], where multiple `children` tokens are relocated under token `parent`.
     ///
     public static ISecurityTokenNodeTransformation setParentOf(final Iterable<Class<? extends ISecurityToken>> children, final Class<? extends ISecurityToken> parent) {
         // This implementation can be optimised to perform a single traversal of the tree.
