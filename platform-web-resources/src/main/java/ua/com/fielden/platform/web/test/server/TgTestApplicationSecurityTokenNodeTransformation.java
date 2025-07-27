@@ -12,7 +12,8 @@ import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_
 import java.util.List;
 import java.util.SortedSet;
 
-/// A demo security token node transformer to illustrate the use of [SecurityTokenNodeTransformations] and the ability to build token hierarchies with more than one level of nexting.
+/// A demo security token node transformer to illustrate the use of [SecurityTokenNodeTransformations] and
+/// the ability to build token hierarchies with more than one level of nesting.
 ///
 public class TgTestApplicationSecurityTokenNodeTransformation implements ISecurityTokenNodeTransformation {
 
