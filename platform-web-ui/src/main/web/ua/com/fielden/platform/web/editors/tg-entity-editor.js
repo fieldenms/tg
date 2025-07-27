@@ -225,7 +225,7 @@ export class TgEntityEditor extends TgEditor {
             },
 
             /**
-             * Promise that starts on validate() call of the host master and fullfils iff this validation attempt gets successfully resolved.
+             * Promise that starts on validate() call of the host master and fulfils iff this validation attempt gets successfully resolved.
              * 
              * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
              * However, 'lastValidationAttemptPromise' property gets replaced in this case.
@@ -577,7 +577,11 @@ export class TgEntityEditor extends TgEditor {
      */
     _editNewTap (e) {
         if (this.lastValidationAttemptPromise) {
-            this.lastValidationAttemptPromise.then(res => {
+            // Open master on title edit also for previously rejected 'lastValidationAttemptPromise'.
+            // Avoid doing `.catch(_ => {})` to allow more console information (e.g. connection error or server exception).
+            // Note that 'lastValidationAttemptPromise' may also be rejected due to fast validation.
+            // But, likely, last promise will be resolved.
+            this.lastValidationAttemptPromise.finally(() => {
                 this._openEntityMaster();
             });
         } else {
@@ -589,7 +593,11 @@ export class TgEntityEditor extends TgEditor {
         if (this.multi) {
             super._copyTap();
         } else if (this.lastValidationAttemptPromise) {
-            this.lastValidationAttemptPromise.then(res => {
+            // Open master on title edit also for previously rejected 'lastValidationAttemptPromise'.
+            // Avoid doing `.catch(_ => {})` to allow more console information (e.g. connection error or server exception).
+            // Note that 'lastValidationAttemptPromise' may also be rejected due to fast validation.
+            // But, likely, last promise will be resolved.
+            this.lastValidationAttemptPromise.finally(() => {
                 this._copyFromLayerIfPresent(super._copyTap.bind(this));
             });
         } else {

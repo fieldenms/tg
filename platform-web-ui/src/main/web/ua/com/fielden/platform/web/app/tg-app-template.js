@@ -30,6 +30,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { InsertionPointManager } from '/resources/centre/tg-insertion-point-manager.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { isExternalURL, processURL, checkLinkAndOpen } from '/resources/components/tg-link-opener.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 let screenWidth = window.screen.availWidth;
@@ -42,6 +43,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <tg-app-config id="appConfig"></tg-app-config>
     <tg-global-error-handler id="errorHandler" toaster="[[toaster]]"></tg-global-error-handler>
     <app-location id="location" no-decode dwell-time="-1" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></app-location>
     <app-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></app-route>
@@ -498,8 +500,7 @@ Polymer({
      * @param {Object} source 
      */
     _animationFinished: function (e, detail, source) {
-        const target = e.target || e.srcElement;
-        if (target === this.$.pages){
+        if (e.target === this.$.pages){
             this._selectedModule = this._routeData.moduleName;
             if (this._routeData.moduleName === 'master') {
                 this._selectedSubmodule = this._subroute.path;
@@ -596,6 +597,8 @@ Polymer({
         this.entityType = "ua.com.fielden.platform.menu.Menu";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
+            this.$.appConfig.setSiteAllowlist(entity.siteAllowlist.map(site => new RegExp(site)));
+            this.$.appConfig.setDaysUntilSitePermissionExpires(entity.daysUntilSitePermissionExpires);
             entity.menu.forEach(menuItem => {
                 menuItem.actions.forEach(action => {
                     action._showDialog = this._showDialog;
@@ -642,6 +645,9 @@ Polymer({
 
         //Add resize listener that checks whether screen resolution changed
         window.addEventListener('resize', this._checkResolution.bind(this));
+
+        //Add click event listener to handle click on links
+        window.addEventListener('click', this._checkURL.bind(this));
     },
 
     attached: function () {
@@ -719,6 +725,20 @@ Polymer({
             screenWidth = window.screen.availWidth;
             screenHeight = window.screen.availHeight;
             window.dispatchEvent(new CustomEvent('tg-screen-resolution-changed', {bubbles: true, composed: true, detail: {width: screenWidth, height: screenHeight}}));
+        }
+    },
+
+    /**
+     * Check whether the clicked URL leads to a resource outside the application. If it does, prompt the user to confirm or reject the action.
+     * 
+     * @param {Event} e - click event
+     */
+    _checkURL: function (e) {
+        const linkNode = e.composedPath().find(n => n.tagName && n.tagName === 'A' && isExternalURL(processURL(n.getAttribute('href'))));
+
+        if (linkNode) {
+            tearDownEvent(e);
+            checkLinkAndOpen(linkNode.getAttribute('href'));
         }
     },
     

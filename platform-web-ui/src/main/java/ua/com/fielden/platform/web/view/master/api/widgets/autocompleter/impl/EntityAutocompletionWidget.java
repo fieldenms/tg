@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl;
 
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.util.Map;
 
 /**
  *
@@ -27,7 +27,6 @@ public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidg
         attrs.put("as-part-of-entity-master", true);
         attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");
         attrs.put("originally-produced-entity", "[[_originallyProducedEntity]]");
-        attrs.put("last-validation-attempt-promise", "[[lastValidationAttemptPromise]]");
         attrs.put("tg-open-master-action", "[[titleAction]]");
         return attrs;
     };

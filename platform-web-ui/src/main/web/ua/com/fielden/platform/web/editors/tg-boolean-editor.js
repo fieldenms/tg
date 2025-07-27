@@ -108,10 +108,9 @@ export class TgBooleanEditor extends TgEditor {
 
         this._onChange = (function (e) {
             console.log("_onChange:", e);
-            var target = e.target || e.srcElement;
-            this._editingValue = this.convertToString(target.checked);
+            this._editingValue = this.convertToString(e.target.checked);
             
-            var parentFunction = TgEditor.properties._onChange.value.call(this);
+            const parentFunction = TgEditor.properties._onChange.value.call(this);
             parentFunction.call(this, e);
         }).bind(this);
         

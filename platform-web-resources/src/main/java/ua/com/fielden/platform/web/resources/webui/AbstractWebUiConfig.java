@@ -77,6 +77,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = LogManager.getLogger(getClass());
     private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
     private static final String CREATE_DEFAULT_CONFIG_INFO = "Creating default configurations for [%s]-typed centres (caching)...";
+    private static final int DEFAULT_EXTERNAL_SITE_EXPIRY_DAYS = 183;
 
     private final String title;
     private final Optional<String> ideaUri;
@@ -129,25 +130,22 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.masterActionOptions = masterActionOptions.orElse(ALL_OFF);
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    logger.info("Closing Event Source Dispatching Emitter with all registered emitters...");
-                    dispatchingEmitter.close();
-                } catch (final Exception ex) {
-                    logger.error("Closing Event Source Dispatching Emitter encountered an error.", ex);
-                }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                logger.info("Closing Event Source Dispatching Emitter with all registered emitters...");
+                dispatchingEmitter.close();
+            } catch (final Exception ex) {
+                logger.error("Closing Event Source Dispatching Emitter encountered an error.", ex);
             }
-        });
+        }));
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
 
         this.workflow = workflow;
 
         final LinkedHashSet<String> allResourcePaths = new LinkedHashSet<>();
-        allResourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
-        allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
+        allResourcePaths.addAll(asList("", "ua/com/fielden/platform/web/"));
+        allResourcePaths.addAll(asList(externalResourcePaths));
         this.resourcePaths = new ArrayList<>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);
 
