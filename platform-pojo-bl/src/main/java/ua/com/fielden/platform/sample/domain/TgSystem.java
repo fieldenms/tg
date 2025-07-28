@@ -1,21 +1,10 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
-
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
 
 /**
  * Master entity object.
@@ -72,6 +61,11 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @Title(value = "Permit New", desc = "Permits new entity instances.")
     @SkipEntityExistsValidation(skipNew = true)
     private TgCategory permitNewCategory;
+
+    @IsProperty
+    @MapTo
+    @SkipEntityExistsValidation(skipNew = true, skipActiveOnly = true)
+    private TgCategory permitNewAndSkipActiveOnlyCategory;
 
     @IsProperty(TgCategory.class)
     @MapTo
@@ -161,6 +155,16 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @Observable
     public TgSystem setActive(final boolean active) {
         super.setActive(active);
+        return this;
+    }
+
+    public TgCategory getPermitNewAndSkipActiveOnlyCategory() {
+        return permitNewAndSkipActiveOnlyCategory;
+    }
+
+    @Observable
+    public TgSystem setPermitNewAndSkipActiveOnlyCategory(final TgCategory permitNewAndSkipActiveOnlyCategory) {
+        this.permitNewAndSkipActiveOnlyCategory = permitNewAndSkipActiveOnlyCategory;
         return this;
     }
 

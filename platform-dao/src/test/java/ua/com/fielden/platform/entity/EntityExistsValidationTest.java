@@ -1,18 +1,7 @@
 package ua.com.fielden.platform.entity;
 
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.HashSet;
-
-import org.junit.Test;
-
 import com.google.inject.Injector;
-
+import org.junit.Test;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -21,12 +10,19 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.sample.domain.TgSystem;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.sample.domain.crit_gen.CriteriaGeneratorTestIocModule;
+import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
+import java.util.HashSet;
+
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+
+// TODO This test class can be made generic in the fashion of AbstractEntityActivatabilityTestCase.
 public class EntityExistsValidationTest extends AbstractDaoTestCase {
     private final CriteriaGeneratorTestIocModule module = new CriteriaGeneratorTestIocModule();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
@@ -161,14 +157,26 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         cat1.setDesc(cat1.getDesc() + "some change");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat1);
 
-        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey(); 
+        final String entityTitle = getEntityTitleAndDesc(cat1.getType()).getKey();
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
         assertEquals(format(EntityExistsValidator.ERR_DIRTY, cat1, entityTitle), result.getMessage());
     }
 
     @Test
-    public void skipped_entity_validation_does_not_restrict_dirty_entities() {
+    public void dirty_values_inside_a_union_are_not_allowed() {
+        final var one = save(new_(EntityOne.class, "ONE"))
+                .setStringProperty("abc");
+        final var union = new_(UnionEntity.class).setPropertyOne(one);
+        final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp(union);
+
+        assertFalse(entity.getProperty("unionProp").isValid());
+        assertEquals(format(EntityExistsValidator.ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()),
+                     entity.getProperty("unionProp").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void dirty_values_are_allowed_for_property_annotated_with_SkipEntityExistsValidation() {
         final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
         cat1.setDesc(cat1.getDesc() + "some change");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setSecondCategory(cat1);
@@ -178,36 +186,102 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void entity_exists_validation_with_skipActiveOnly_does_not_permit_dirty_entities() {
-        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
-        cat1.setDesc(cat1.getDesc() + "some change");
-        final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setThirdCategory(cat1);
+    public void dirty_values_inside_union_are_allowed_for_property_annotated_with_SkipEntityExistsValidation() {
+        final var one = save(new_(EntityOne.class, "ONE"))
+                .setStringProperty("abc");
+        final var union = new_(UnionEntity.class).setPropertyOne(one);
+        final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp2(union);
 
-        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey(); 
-        final Result result = sys.isValid();
-        assertFalse(result.isSuccessful());
-        assertEquals(format(EntityExistsValidator.ERR_DIRTY, cat1, entityTitle), result.getMessage());
+        assertTrue(entity.getProperty("unionProp2").isValid());
+        assertNotNull(entity.getUnionProp2());
     }
-    
-    @Test
-    public void entity_exists_validation_with_skipNew_permints_new_entity_values() {
-        final TgCategory cat42 = co$(TgCategory.class).new_().setKey("Cat42");
-        final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setPermitNewCategory(cat42);
 
-        assertTrue(sys.isValid().isSuccessful());
+    @Test
+    public void dirty_values_are_not_allowed_for_property_annotated_with_SkipEntityExistsValidation_if_skipActiveOnly_is_true() {
+        final var cat1 = co$(TgCategory.class).findByKey("Cat1");
+        cat1.setDesc(cat1.getDesc() + "some change");
+        final var sys = new_(TgSystem.class, "Sys2").setActive(true).setThirdCategory(cat1);
+
+        assertFalse(sys.getProperty("thirdCategory").isValid());
+        assertEquals(format(EntityExistsValidator.ERR_DIRTY, cat1, getEntityTitleAndDesc(cat1).getKey()),
+                     sys.getProperty("thirdCategory").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void dirty_values_inside_union_are_not_allowed_for_property_annotated_with_SkipEntityExistsValidation_if_skipActiveOnly_is_true() {
+        final var one = save(new_(EntityOne.class, "ONE"))
+                .setStringProperty("abc");
+        final var union = new_(UnionEntity.class).setPropertyOne(one);
+        final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp3(union);
+
+        assertFalse(entity.getProperty("unionProp3").isValid());
+        assertEquals(format(EntityExistsValidator.ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()),
+                     entity.getProperty("unionProp3").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void dirty_values_are_not_allowed_for_property_annotated_with_SkipEntityExistsValidation_if_skipNew_is_true() {
+        final var cat1 = co$(TgCategory.class).findByKey("Cat1");
+        cat1.setDesc(cat1.getDesc() + "some change");
+        final var sys = new_(TgSystem.class, "Sys2").setActive(true).setPermitNewCategory(cat1);
+
+        assertFalse(sys.getProperty("permitNewCategory").isValid());
+        assertEquals(format(EntityExistsValidator.ERR_DIRTY, cat1, getEntityTitleAndDesc(cat1).getKey()),
+                     sys.getProperty("permitNewCategory").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void dirty_values_inside_union_are_not_allowed_for_property_annotated_with_SkipEntityExistsValidation_if_skipNew_is_true() {
+        final var one = save(new_(EntityOne.class, "ONE"))
+                .setStringProperty("abc");
+        final var union = new_(UnionEntity.class).setPropertyOne(one);
+        final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp4(union);
+
+        assertFalse(entity.getProperty("unionProp4").isValid());
+        assertEquals(format(EntityExistsValidator.ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()),
+                     entity.getProperty("unionProp4").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void dirty_values_are_not_allowed_for_property_annotated_with_SkipEntityExistsValidation_if_skipNew_and_skipActiveOnly_are_true() {
+        final var cat1 = co$(TgCategory.class).findByKey("Cat1");
+        cat1.setDesc(cat1.getDesc() + "some change");
+        final var sys = new_(TgSystem.class, "Sys2").setActive(true).setPermitNewAndSkipActiveOnlyCategory(cat1);
+
+        assertFalse(sys.getProperty("permitNewAndSkipActiveOnlyCategory").isValid());
+        assertEquals(format(EntityExistsValidator.ERR_DIRTY, cat1, getEntityTitleAndDesc(cat1).getKey()),
+                     sys.getProperty("permitNewAndSkipActiveOnlyCategory").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void dirty_values_inside_union_are_not_allowed_for_property_annotated_with_SkipEntityExistsValidation_if_skipNew_and_skipActiveOnly_are_true() {
+        final var one = save(new_(EntityOne.class, "ONE"))
+                .setStringProperty("abc");
+        final var union = new_(UnionEntity.class).setPropertyOne(one);
+        final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp5(union);
+
+        assertFalse(entity.getProperty("unionProp5").isValid());
+        assertEquals(format(EntityExistsValidator.ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()),
+                     entity.getProperty("unionProp5").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void non_persisted_entity_value_is_allowed_for_property_annotated_with_SkipEntityExistsValidation_if_skipNew_is_true() {
+        final var cat42 = co$(TgCategory.class).new_().setKey("Cat42");
+        final var sys = new_(TgSystem.class, "Sys2").setActive(true).setPermitNewCategory(cat42);
+
+        assertTrue(sys.getProperty("permitNewCategory").isValid());
         assertNotNull(sys.getPermitNewCategory());
     }
 
     @Test
-    public void entity_exists_validation_with_skipNew_does_not_permit_persited_dirty_entities() {
-        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
-        cat1.setDesc(cat1.getDesc() + "some change");
-        final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setPermitNewCategory(cat1);
+    public void non_persisted_entity_value_inside_union_is_allowed_if_property_and_active_union_member_are_annotated_with_SkipEntityExistsValidation_and_skipNew_is_true() {
+        final var two = new_(EntityTwo.class, 22);
+        final var union = new_(UnionEntity.class).setPropertyTwo(two);
+        final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp4(union);
 
-        final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey(); 
-        final Result result = sys.isValid();
-        assertFalse(result.isSuccessful());
-        assertEquals(format(EntityExistsValidator.ERR_DIRTY, cat1, entityTitle), result.getMessage());
+        assertTrue(entity.getProperty("unionProp4").isValid());
+        assertNotNull(entity.getUnionProp4());
     }
 
     @Test
