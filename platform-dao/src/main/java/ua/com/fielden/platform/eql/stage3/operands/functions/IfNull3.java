@@ -21,14 +21,15 @@ public class IfNull3 extends TwoOperandsFunction3 {
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion) {
         final String operand1Sql;
         final String operand2Sql;
-        // We need to help PostgreSQL with type inference by inserting explicit casts if one of the operands has unknown type.
+        // We need to help PostgreSQL with type inference by inserting explicit casts iff one of the operands is `null`.
         // See Issue #2213.
         if (dbVersion == POSTGRESQL && (operand1.type().isNull() ^ operand2.type().isNull())) {
             final var resultType = operand1.type().isNull() ? operand2.type() : operand1.type();
             final var dialect = HibernateHelpers.getDialect(dbVersion);
             operand1Sql = POSTGRESQL.castSql(operand1.sql(metadata, dbVersion), sqlCastTypeName(resultType.hibType(), dialect));
             operand2Sql = POSTGRESQL.castSql(operand2.sql(metadata, dbVersion), sqlCastTypeName(resultType.hibType(), dialect));
-        } else {
+        }
+        else {
             operand1Sql = operand1.sql(metadata, dbVersion);
             operand2Sql = operand2.sql(metadata, dbVersion);
         }
@@ -36,16 +37,16 @@ public class IfNull3 extends TwoOperandsFunction3 {
         if (operand1 instanceof SubQuery3) {
             // This optimisation ensures that the first argument to COALESCE is computed only once.
             // See Issue #2394 for more details.
-            // The aliases are chosen so as to be unique.
+            // The aliases are chosen to be unique enough.
             // The only place where a name conflict could occur is in the second argument to COALESCE,
             // if that expression happens to use one of the chosen aliases.
             // Although it is unlikely for a conflict to occur, a stronger guarantee would be to use a generated id,
             // such as TransformationContextFromStage2To3.sqlId.
             // However, that would require changing method IGenerateSql.sql to introduce another parameter,
             // which would demand significant refactoring effort.
-            interface $ { String QUERY_ALIAS ="EQL_Q12778210642", COLUMN_ALIAS = "EQL_C51037967375"; }
+            final String QUERY_ALIAS ="EQL_Q12778210642", COLUMN_ALIAS = "EQL_C51037967375";
             return format("(SELECT COALESCE(%1$s.%2$s, %3$s) FROM (SELECT (%4$s) AS %2$s) AS %1$s)",
-                          $.QUERY_ALIAS, $.COLUMN_ALIAS, operand2Sql, operand1Sql);
+                          QUERY_ALIAS, COLUMN_ALIAS, operand2Sql, operand1Sql);
         }
         else {
             return format("COALESCE(%s, %s)", operand1Sql, operand2Sql);
@@ -58,9 +59,10 @@ public class IfNull3 extends TwoOperandsFunction3 {
         final int result = super.hashCode();
         return prime * result + IfNull3.class.getName().hashCode();
     }
-    
+
     @Override
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof IfNull3;
-    } 
+    }
+
 }
