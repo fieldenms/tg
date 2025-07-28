@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.execution.functions;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import ua.com.fielden.platform.eql.execution.AbstractEqlExecutionTestCase;
+import ua.com.fielden.platform.eql.retrieval.exceptions.EntityRetrievalException;
 import ua.com.fielden.platform.test.WithDbVersion;
 
 import static org.junit.Assert.*;
@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 public class IfNullTest extends AbstractEqlExecutionTestCase {
 
+    /// The fist operant is value `null` and the second operand is a subquery yielding `null`.
     @Test
     public void ifNull_executes_when_both_operands_have_unknown_type_01() {
         final var query = select()
@@ -22,6 +23,7 @@ public class IfNullTest extends AbstractEqlExecutionTestCase {
         assertNull(retrieveResult(query));
     }
 
+    /// The fist operant is a query yielding `null` and the second operand is value `null`.
     @Test
     public void ifNull_executes_when_both_operands_have_unknown_type_02() {
         final var query = select()
@@ -32,6 +34,7 @@ public class IfNullTest extends AbstractEqlExecutionTestCase {
         assertNull(retrieveResult(query));
     }
 
+    /// Both operands are subqueries yielding `null`.
     @Test
     public void ifNull_executes_when_both_operands_have_unknown_type_03() {
         final var query = select()
@@ -43,8 +46,20 @@ public class IfNullTest extends AbstractEqlExecutionTestCase {
         assertNull(retrieveResult(query));
     }
 
+    /// Both operands are values of `null`.
+    @WithDbVersion(MSSQL)
     @Test
-    public void ifNull_executes_when_one_of_the_operands_has_unknown_type_01() {
+    public void MSSQL_ifNull_cannot_have_both_operands_as_null_vals() {
+        final var query = select()
+                .yield().ifNull().val(null).then().val(null)
+                .as(RESULT)
+                .modelAsAggregate();
+
+        assertThrows(EntityRetrievalException.class, () -> retrieveResult(query));
+    }
+
+    @Test
+    public void ifNull_executes_if_first_operand_has_unknown_type() {
         final var query = select()
                 .yield().ifNull().model(select().yield().val(null).modelAsPrimitive()).then().val(1)
                 .as(RESULT)
@@ -54,7 +69,7 @@ public class IfNullTest extends AbstractEqlExecutionTestCase {
     }
 
     @Test
-    public void ifNull_executes_when_one_of_the_operands_has_unknown_type_02() {
+    public void ifNull_executes_if_second_operand_has_unknown_type() {
         final var query = select()
                 .yield().ifNull().val(1).then().model(select().yield().val(null).modelAsPrimitive())
                 .as(RESULT)
@@ -74,8 +89,7 @@ public class IfNullTest extends AbstractEqlExecutionTestCase {
                      .ifNull().val(1).then().model(select().yield().prop("q1.x").modelAsPrimitive()).eq().prop("q2.x")
                      .and()
                      .ifNull().model(select().yield().prop("q1.x").modelAsPrimitive())
-                              .then().model(select().yield().prop("q2.x").modelAsPrimitive())
-                        .eq().prop("q2.x")
+                              .then().model(select().yield().prop("q2.x").modelAsPrimitive()).eq().prop("q2.x")
                 .yield().prop("q2.x").as(RESULT)
                 .modelAsAggregate();
 
@@ -97,11 +111,8 @@ public class IfNullTest extends AbstractEqlExecutionTestCase {
         assertEquals(50, retrieveResult(query));
     }
 
-    /// In general, SQL Server prohibits the use of subqueries as grouping expressions (1).
-    /// This test exists solely for illustrative purposes, hence it is ignored.
+    /// In general, SQL Server prohibits the use of [subqueries as grouping expressions](https://learn.microsoft.com/en-us/sql/t-sql/queries/select-group-by-transact-sql?view=sql-server-ver16#column-expression).
     ///
-    /// 1. https://learn.microsoft.com/en-us/sql/t-sql/queries/select-group-by-transact-sql?view=sql-server-ver16#column-expression
-    @Ignore
     @WithDbVersion(MSSQL)
     @Test
     public void MSSQL_ifNull_with_a_subquery_cannot_be_used_in_group_by() {
