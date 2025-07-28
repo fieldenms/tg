@@ -45,11 +45,11 @@ public class IfNull3 extends TwoOperandsFunction3 {
             // However, that would require changing method IGenerateSql.sql to introduce another parameter,
             // which would demand significant refactoring effort.
             final String QUERY_ALIAS ="EQL_Q12778210642", COLUMN_ALIAS = "EQL_C51037967375";
-            return format("(SELECT COALESCE(%1$s.%2$s, %3$s) FROM (SELECT (%4$s) AS %2$s) AS %1$s)",
-                          QUERY_ALIAS, COLUMN_ALIAS, operand2Sql, operand1Sql);
+            return "(SELECT COALESCE(%1$s.%2$s, %3$s) FROM (SELECT (%4$s) AS %2$s) AS %1$s)"
+                   .formatted(QUERY_ALIAS, COLUMN_ALIAS, operand2Sql, operand1Sql);
         }
         else {
-            return format("COALESCE(%s, %s)", operand1Sql, operand2Sql);
+            return "COALESCE(%s, %s)".formatted(operand1Sql, operand2Sql);
         }
     }
 
