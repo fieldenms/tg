@@ -43,7 +43,7 @@ public abstract class AbstractQuery3 implements ToString.IFormattable {
     }
 
     public String sql(final IDomainMetadata metadata, final DbVersion dbVersion, final List<PropType> expectedYieldTypes) {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append(yields.sql(metadata, dbVersion, expectedYieldTypes));
         sb.append(maybeJoinRoot.map(joinRoot -> "\nFROM\n" + joinRoot.sql(metadata, dbVersion))
                           .orElseGet(() -> dbVersion == ORACLE ? " FROM DUAL " : ""));
