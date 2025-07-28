@@ -100,18 +100,13 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             return successful();
         }
 
-        try {
-            if (isMockNotFoundValue(newValue)) {
-                // TODO newValue.getDesc() is expected to contain a string newValue typed by a user, but this will change (refer, issue https://github.com/fieldenms/tg/issues/1933).
-                // If a specific error message is present,then this error message is reported, otherwise a standard 'not found' message is reported.
-                return failure(entity, getErrorMessage(newValue).orElseGet(() -> format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(newValue), newValue.getDesc())));
-            }
+        if (isMockNotFoundValue(newValue)) {
+            // TODO newValue.getDesc() is expected to contain a string newValue typed by a user, but this will change (refer, issue https://github.com/fieldenms/tg/issues/1933).
+            // If a specific error message is present,then this error message is reported, otherwise a standard 'not found' message is reported.
+            return failure(entity, getErrorMessage(newValue).orElseGet(() -> format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(newValue), newValue.getDesc())));
+        }
 
-            return entityReferenceAlgebra.reference(entity, property.getName(), newValue, ops);
-        }
-        catch (final Exception e) {
-            return failure(entity, e);
-        }
+        return entityReferenceAlgebra.reference(entity, property.getName(), newValue, ops);
     }
 
     private final EntityReferenceAlgebra.Ops<Result> ops = new EntityReferenceAlgebra.Ops<>() {
