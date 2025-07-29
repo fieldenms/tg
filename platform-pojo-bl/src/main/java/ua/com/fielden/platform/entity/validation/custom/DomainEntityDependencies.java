@@ -22,10 +22,16 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDe
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
 
-/**
- * Identifies activatable dependencies for an entity of the specified type.
- */
+/// Represents an entity type and its dependencies.
+///
+/// For an entity type A, its dependency D is a persistent property typed with A and declared in entity type B.
+/// A and B may be the same type.
+///
 public class DomainEntityDependencies {
+
+    /// @deprecated  Please use [#entityType()].
+    ///
+    @Deprecated
     public final Class<? extends AbstractEntity<?>> entityType;
     private final Set<Class<? extends ActivatableAbstractEntity<?>>> deactivatableDependencies;
     private final Set<DomainEntityDependency> dependencies = new HashSet<>();
@@ -40,6 +46,10 @@ public class DomainEntityDependencies {
         else {
             deactivatableDependencies = ImmutableSet.of();
         }
+    }
+
+    public Class<? extends AbstractEntity<?>> entityType() {
+        return entityType;
     }
 
     /**
@@ -103,9 +113,10 @@ public class DomainEntityDependencies {
         dependencies.add(new DomainEntityDependency(entityType, propPath.toString()));
     }
 
-    /**
-     * A convenient struct to represent a single property as a dependency.
-     */
+    /// A convenient struct to represent a single property as a dependency.
+    ///
+    /// @param entityType  type of the property
+    ///
     public record DomainEntityDependency(
             Class<? extends AbstractEntity<?>> entityType,
             String entityTitle,

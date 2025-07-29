@@ -66,7 +66,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         // A persisted entity is being deactivated, but it may still be referenced.
         if (!newValue && entity.isPersisted()) {
             // Consider only activatable persistent entities as dependencies.
-            // Hypothetically speaking, every activatable entity is also persistent.
+            // As it stands now, every activatable entity is also persistent.
             // However, this may change in the future, which is why the type's persistence should also be tested.
             final var domainDependencies = entityDependencyMap(applicationDomainProvider.entityTypes(), PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE);
             final var dependencies = domainDependencies.get(entity.getType()).getAllDependenciesThatCanPreventDeactivation(domainDependencies).collect(toSet());

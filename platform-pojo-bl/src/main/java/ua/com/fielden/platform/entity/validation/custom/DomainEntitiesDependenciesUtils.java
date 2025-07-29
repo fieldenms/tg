@@ -98,7 +98,7 @@ public class DomainEntitiesDependenciesUtils {
         final var map = new HashMap<Class<? extends AbstractEntity<?>>, DomainEntityDependencies>();
         domainEntityTypes.stream().filter(entityTypePredicate)
         .forEach(entType -> {
-            // Need to make sure that every matching entity type as a corresponding instance of DomainEntityDependencies.
+            // Need to make sure that every matching entity type has a corresponding instance of DomainEntityDependencies.
             // Otherwise, there can be situations where an entity that has no properties of its type, ends up not represented in the dependency map.
             map.computeIfAbsent(entType, DomainEntityDependencies::new);
 
