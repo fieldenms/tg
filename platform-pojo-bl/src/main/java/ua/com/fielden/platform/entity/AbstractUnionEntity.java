@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
@@ -32,6 +33,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
  *
  */
 @KeyType(String.class)
+@WithMetaModel
 public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     public static final String ERR_UNION_PROPERTY_ALREADY_HAS_VALUE = "Invalid attempt to set property [%s] as active for union entity [%s] with active property [%s].";
