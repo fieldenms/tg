@@ -227,10 +227,10 @@ final class MigrationUtils {
     }
 
     private <ET extends AbstractEntity<?>> Map<Object, Long> retrieveDataForCache(final Class<ET> entityType) {
-        final IEntityDao<ET> co = coFinder.find(entityType);
+        final var co = coFinder.find(entityType);
         final var keyPaths = keyPaths(entityType);
-        final Map<Object, Long> result = new HashMap<>();
-        try (final var stream = co.stream(from(select(entityType).model()).model())) {
+        final var result = new HashMap<Object, Long>();
+        try (final var stream = co.stream(from(select(entityType).model()).model(), 1000)) {
             stream.forEach(entity -> result.put(entityToCacheKey(entity, keyPaths), entity.getId()));
         }
         return unmodifiableMap(result);
