@@ -48,30 +48,34 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
      */
     public enum FetchCategory {
         /**
-         *
-         * Equivalent to {@link #ALL} but also includes calculated properties.
+         * Includes {@link #ALL}.
+         * Includes calculated properties.
          */
         ALL_INCL_CALC,
         /**
-         * Includes all retrievable properties, except the following:
-         * <ul>
-         *   <li> collectional properties are excluded;
-         *   <li> non-retrievable properties are excluded;
-         *   <li> calculated properties are excluded (unless they have a component type or the property is {@code desc}).
-         * </ul>
-         * Property {@code desc} is always included if it belongs to the entity type.
+         * Includes {@link #DEFAULT}.
+         * Each entity-typed property is included using {@link #DEFAULT}.
          */
         ALL,
         /**
-         * Equivalent to {@link #ALL} but with narrower sub-fetch models - only simple keys and key members will have
-         * a sub-fetch model other than {@link #ID_ONLY}.
+         * Includes {@link #KEY_AND_DESC}.
+         * All other properties that satisfy the following rules are included.
+         * <ul>
+         *   <li> Collectional properties are excluded.
+         *   <li> Non-retrievable properties are excluded.
+         *   <li> Each calculated property is excluded unless it has a component type.
+         *   <li> {@code desc} is always included if it belongs to the entity type.
+         *   <li> Each entity-typed property {@link #ID_ONLY} is used, and each such property is included iff its type is persistent.
+         * </ul>
          */
         DEFAULT,
         /**
          * <ul>
-         *   <li> {@code key} is included;
+         *   <li> Includes {@link #ID_AND_VERSION} if the entity type is persistent;
+         *   <li> {@code key} is included.
+         *        If a key is composite, all key members are included.
+         *        If a key member is union-typed, all union members are included using {@link #DEFAULT}.
          *   <li> {@code desc} is included if it belongs to the entity type.
-         *   <li> all of {@link #ID_AND_VERSION} are included if the entity type is persistent;
          * </ul>
          */
         KEY_AND_DESC,
