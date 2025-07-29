@@ -8,15 +8,13 @@ import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.types.tuples.T2;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 
 /**
  * A helper class providing functions (aka static methods) for the retrospection of activatable entities and properties.
@@ -47,17 +45,11 @@ public class ActivatableEntityRetrospectionHelper {
     
     
 
-    /**
-     * A helper method to determine which of the provided properties should be handled upon save from the perspective of activatable entity logic (update of refCount).
-     * <p>
-     * A remark: the proxied activatable properties need to be handled from the perspective of activatable entity logic (update of refCount).
-     *
-     * @param entity
-     * @param keyMembers
-     * @param result
-     * @param prop
-     */
-    public static <T extends AbstractEntity<?>> void addToResultIfApplicableFromActivatablePerspective(final T entity, final Set<String> keyMembers, final Set<MetaProperty<? extends AbstractEntity<?>>> result, final MetaProperty<?> prop) {
+    /// A helper method to determine which of the provided properties should be handled upon save from the perspective of activatable entity logic (update of refCount).
+    ///
+    /// A remark: the proxied activatable properties need to be handled from the perspective of activatable entity logic (update of refCount).
+    ///
+    private static boolean shouldProcessAsActivatable(final AbstractEntity<?> entity, final Set<String> keyMembers, final MetaProperty<?> prop) {
         // let's first identify whether entity belongs to the deactivatable type of the referenced property type
         // if so, it should not inflict any ref counts for this property
         final var type = (Class<? extends AbstractEntity<?>>) prop.getType();
@@ -74,38 +66,31 @@ public class ActivatableEntityRetrospectionHelper {
         // checking prop.isProxy() is really just to prevent calling prop.getValue() on proxied properties, which fails with StrictProxyException
         // this also assumes that proxied properties might actually have a value and need to be included for further processing
         // values for proxied properties are then retrieved in a lazy fashion by Hibernate
-        if (!belongsToDeactivatableDependencies && (prop.isProxy() || prop.getValue() != null || entity.isPersisted())) {
-            result.add((MetaProperty<? extends AbstractEntity<?>>) prop);
-        }
+        return !belongsToDeactivatableDependencies && (prop.isProxy() || prop.getValue() != null || entity.isPersisted());
     }
 
-    /**
-     * Collects properties that represent not dirty activatable properties.
-     *
-     * @param entity
-     * @return
-     */
-     public static final <T extends AbstractEntity<?>> Set<T2<String, Class<AbstractEntity<?>>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
+    /// Collects properties that represent not dirty activatable properties.
+    ///
+    public static List<String> collectActivatableNotDirtyProperties(final AbstractEntity<?> entity, final Set<String> keyMembers) {
         if (entity.isInstrumented()) {
-            final Set<MetaProperty<? extends AbstractEntity<?>>> result = new HashSet<>();
-            for (final MetaProperty<?> prop : entity.getProperties().values()) {
-                // proxied property is considered to be not dirty in this context
-                final boolean notDirty = prop.isProxy() || !prop.isDirty();
-                if (notDirty && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
-                    addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
-                }
-            }
-            return result.stream()
-                    .map(prop -> t2(prop.getName(), (Class<AbstractEntity<?>>) prop.getType()))
-                    .collect(Collectors.toSet());
-        } else {
-            return Finder.streamRealProperties(entity.getType(), MapTo.class)
+            return entity.getProperties().values()
+                    .stream()
+                    // proxied property is considered to be not dirty in this context
+                    .filter(prop -> prop.isProxy() || !prop.isDirty())
+                    .filter(MetaProperty::isActivatable)
+                    .filter(prop -> shouldProcessAsActivatable(entity, keyMembers, prop))
+                    .filter(ActivatableEntityRetrospectionHelper::isNotSpecialActivatableToBeSkipped)
+                    .map(MetaProperty::getName)
+                    .toList();
+        }
+        else {
+            // TODO Why DeactivatableDependencies are not checked here?
+            return streamRealProperties(entity.getType(), MapTo.class)
                     .filter(field -> (ActivatableAbstractEntity.class.isAssignableFrom(field.getType()) || AbstractUnionEntity.class.isAssignableFrom(field.getType()))
                                      && isNotSpecialActivatableToBeSkipped(field))
-                    .map(field -> t2(field.getName(), (Class<AbstractEntity<?>>) field.getType()))
-                    .collect(Collectors.toSet());
+                    .map(Field::getName)
+                    .toList();
         }
     }
-
 
 }

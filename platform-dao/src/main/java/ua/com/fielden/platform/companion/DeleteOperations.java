@@ -15,23 +15,26 @@ import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlTables;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.types.tuples.T3;
 
 import javax.annotation.Nullable;
 import javax.persistence.PersistenceException;
-import java.util.*;
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 
 /**
  * A set of various delete operations that are used by entity companions. 
@@ -91,8 +94,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             throw new EntityCompanionException("Dirty entity instances cannot be deleted.");
         }
 
-        if (entity instanceof ActivatableAbstractEntity && ((ActivatableAbstractEntity<?>) entity).isActive()) {
-            return deleteActivatable(entity);
+        if (entity instanceof ActivatableAbstractEntity<?> activatable) {
+            return deleteActivatable(activatable);
         } else {
             return deleteById(entity.getId());
         }
@@ -116,49 +119,30 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         }
     }
 
-    /**
-     * A method for deleting activatable entities.
-     * It takes care of decrementing referenced activatable dependencies if any.
-     *
-     * @param entity
-     */
-    private int deleteActivatable(final T entity) {
-        if (!(entity instanceof ActivatableAbstractEntity)) {
-            throw new EntityCompanionException(format("Entity of type [%s] is not activatable.", entity.getType()));
-        }
-
-        // Iff `entity` is active and was not concurrently deactivated, we need to decrement refCounts of referenced active activatables, ignoring self-references.
-        if (((ActivatableAbstractEntity<?>) entity).isActive()) {
-            // let's collect activatable properties from entity to check them for activity and also to decrement their refCount
-            final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
-            final Set<T2<String, Class<AbstractEntity<?>>>> activatableProps = collectActivatableNotDirtyProperties(entity, keyMembers);
-            // reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed
-            final ActivatableAbstractEntity<?> persistedEntityToBeDeleted = (ActivatableAbstractEntity<?>) session.get().load(entity.getType(), entity.getId(), UPGRADE);
-            if (persistedEntityToBeDeleted.isActive()) {
-                activatableProps.stream()
-                        .map(prop -> T3.t3(persistedEntityToBeDeleted.get(prop._1), prop._2, prop._1))
-                        .filter(triple -> triple._1 != null)
-                        .forEach(
-                                triple -> {
-                                    // get value from a persisted version of entity, which is loaded by Hibernate
-                                    // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
-                                    final var activatable = extractActivatable(persistedEntityToBeDeleted.get(triple._3));
-                                    if (activatable != null) {
-                                        // load the latest value for the current property of an activatable type
-                                        final var persistedActivatable = (ActivatableAbstractEntity<?>) session.get().load(activatable.getType(), activatable.getId(), UPGRADE);
-                                        persistedActivatable.setIgnoreEditableState(true);
-                                        // if activatable property value (persistedValue) is active and is not a self-reference then its refCount needs to be decremented
-                                        if (persistedActivatable.isActive() && !entity.equals(persistedActivatable)) {
-                                            session.get().update(persistedActivatable.decRefCount());
-                                        }
-                                    }
-                                });
-
-
+    /// Deletes the specified activatable entity, and decrements the `refCount` of referenced activatables if applicable.
+    ///
+    private int deleteActivatable(final ActivatableAbstractEntity<?> entity) {
+        // Iff the persisted version of `entity` is active, we need to decrement refCounts of referenced active activatables, ignoring self-references.
+        // Reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed.
+        final var persistedEntity = (ActivatableAbstractEntity<?>) session.get().load(entity.getType(), entity.getId(), UPGRADE);
+        if (persistedEntity.isActive()) {
+            // Let's collect activatable properties from entity to check them for activity and also to decrement their refCount.
+            final var keyMembers = getKeyMembers(entity.getType()).stream().map(Field::getName).collect(toSet());
+            for (final var prop : collectActivatableNotDirtyProperties(entity, keyMembers)) {
+                // If `prop` is proxied, its value will be retrieved lazily by Hibernate.
+                final var activatable = extractActivatable(persistedEntity.get(prop));
+                if (activatable != null) {
+                    // Load the latest activatable value.
+                    final var persistedActivatable = (ActivatableAbstractEntity<?>) session.get().load(activatable.getType(), activatable.getId(), UPGRADE);
+                    persistedActivatable.setIgnoreEditableState(true);
+                    // If `persistedActivatable` is active and is not a self-reference then its `refCount` needs to be decremented.
+                    if (persistedActivatable.isActive() && !entity.equals(persistedActivatable)) {
+                        session.get().update(persistedActivatable.decRefCount());
+                    }
+                }
             }
         }
 
-        // delete entity by ID
         return deleteById(entity.getId());
     }
 
