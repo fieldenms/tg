@@ -7,7 +7,6 @@ import ua.com.fielden.platform.eql.stage2.queries.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.sample.domain.UnionEntityDetails;
 
-import static java.lang.String.join;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -28,7 +27,7 @@ public class OrderByPropEnhancementTest extends EqlStage2TestCase {
         final var expectedQuery = qry(select(UnionEntityDetails.class)
                                               .orderBy()
                                                   .prop(serial.toPath()).asc()
-                                                  .prop(join(".", union, KEY)).asc()
+                                                  .prop(union + "." + KEY).asc()
                                               .yield().prop(ID).as(ID)
                                               .modelAsEntity(UnionEntityDetails.class));
 

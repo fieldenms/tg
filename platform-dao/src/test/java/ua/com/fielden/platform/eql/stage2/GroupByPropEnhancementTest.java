@@ -4,7 +4,6 @@ import org.junit.Test;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.sample.domain.UnionEntityDetails;
 
-import static java.lang.String.join;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -22,7 +21,7 @@ public class GroupByPropEnhancementTest extends EqlStage2TestCase {
 
         final var expectedQuery = qry(select(UnionEntityDetails.class)
                                               .groupBy().prop(serial.toPath())
-                                              .groupBy().prop(join(".", union, KEY))
+                                              .groupBy().prop(union + "." + KEY)
                                               .yield().countAll()
                                               .modelAsEntity(UnionEntityDetails.class));
 
