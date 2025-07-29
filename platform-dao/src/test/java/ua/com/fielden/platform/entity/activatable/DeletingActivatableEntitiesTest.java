@@ -1,7 +1,8 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.activatable;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.activatable.test_entities.ActivatableUnionOwner;
 import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
 import ua.com.fielden.platform.entity.activatable.test_entities.Union;
