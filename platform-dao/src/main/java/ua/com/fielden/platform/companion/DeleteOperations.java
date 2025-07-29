@@ -127,34 +127,35 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             throw new EntityCompanionException(format("Entity of type [%s] is not activatable.", entity.getType()));
         }
 
-        // Iff `entity` is active, we need to decrement refCounts of referenced active activatables, ignoring self-references.
+        // Iff `entity` is active and was not concurrently deactivated, we need to decrement refCounts of referenced active activatables, ignoring self-references.
         if (((ActivatableAbstractEntity<?>) entity).isActive()) {
             // let's collect activatable properties from entity to check them for activity and also to decrement their refCount
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
             final Set<T2<String, Class<AbstractEntity<?>>>> activatableProps = collectActivatableNotDirtyProperties(entity, keyMembers);
             // reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed
             final ActivatableAbstractEntity<?> persistedEntityToBeDeleted = (ActivatableAbstractEntity<?>) session.get().load(entity.getType(), entity.getId(), UPGRADE);
+            if (persistedEntityToBeDeleted.isActive()) {
+                activatableProps.stream()
+                        .map(prop -> T3.t3(persistedEntityToBeDeleted.get(prop._1), prop._2, prop._1))
+                        .filter(triple -> triple._1 != null)
+                        .forEach(
+                                triple -> {
+                                    // get value from a persisted version of entity, which is loaded by Hibernate
+                                    // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
+                                    final var activatable = extractActivatable(persistedEntityToBeDeleted.get(triple._3));
+                                    if (activatable != null) {
+                                        // load the latest value for the current property of an activatable type
+                                        final var persistedActivatable = (ActivatableAbstractEntity<?>) session.get().load(activatable.getType(), activatable.getId(), UPGRADE);
+                                        persistedActivatable.setIgnoreEditableState(true);
+                                        // if activatable property value (persistedValue) is active and is not a self-reference then its refCount needs to be decremented
+                                        if (persistedActivatable.isActive() && !entity.equals(persistedActivatable)) {
+                                            session.get().update(persistedActivatable.decRefCount());
+                                        }
+                                    }
+                                });
 
-            activatableProps.stream()
-            .map(prop -> T3.t3(persistedEntityToBeDeleted.get(prop._1), prop._2, prop._1))
-            .filter(triple -> triple._1 != null)
-            .forEach(
-                    triple -> {
-                        // get value from a persisted version of entity, which is loaded by Hibernate
-                        // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
-                        final var activatable = extractActivatable(persistedEntityToBeDeleted.get(triple._3));
-                        if (activatable != null) {
-                            // load the latest value for the current property of an activatable type
-                            final var persistedActivatable = (ActivatableAbstractEntity<?>) session.get().load(activatable.getType(), activatable.getId(), UPGRADE);
-                            persistedActivatable.setIgnoreEditableState(true);
-                            // if activatable property value (persistedValue) is active and is not a self-reference then its refCount needs to be decremented
-                            if (persistedActivatable.isActive() && !entity.equals(persistedActivatable)) {
-                                session.get().update(persistedActivatable.decRefCount());
-                            }
-                        }
-                    });
 
-
+            }
         }
 
         // delete entity by ID

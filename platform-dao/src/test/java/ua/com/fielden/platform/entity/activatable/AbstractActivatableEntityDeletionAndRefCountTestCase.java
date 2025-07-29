@@ -8,6 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.activatable.WithActivatabilityTestUtils.setProperties;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL;
 
 /// This test covers the effects of activatable entity deletion on `refCount`.
 ///
@@ -102,6 +103,51 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
         co$(spec.aType()).delete(a);
 
         assertFalse(co$(spec.aType()).entityExists(a));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    deleting_concurrently_deactivated_A_that_references_active_B_does_not_affect_refCount_of_B() {
+        final Spec1<A, B> spec = spec1();
+
+        final var b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final var a_v0 = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
+        final var a_v1 = refetch$(a_v0);
+
+        assertRefCount(11, b);
+
+        save(a_v0.set(ACTIVE, false));
+
+        assertRefCount(10, b);
+
+        co$(spec.aType()).delete(a_v1);
+
+        assertFalse(co$(spec.aType()).entityExists(a_v1));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    deleting_concurrently_activated_A_that_references_active_B_decrements_refCount_of_B() {
+        final Spec1<A, B> spec = spec1();
+
+        final var b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final var a_v0 = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
+        // TODO Should work with DEFAULT.
+        //      When a union-typed value is retrieved using an id-only proxy fetch model, its active entity should be instantitated as an id-only proxy.
+        //      See EntityContainerEnhancer.assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty
+        final var a_v1 = refetch$(a_v0, ALL);
+
+        assertRefCount(10, b);
+
+        final var a_v2 = (A) save(a_v1.set(ACTIVE, true));
+
+        assertRefCount(11, b);
+
+        co$(spec.aType()).delete(a_v2);
+
+        assertFalse(co$(spec.aType()).entityExists(a_v2));
         assertRefCount(10, b);
     }
 
