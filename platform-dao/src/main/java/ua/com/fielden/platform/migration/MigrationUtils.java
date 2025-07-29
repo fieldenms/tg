@@ -25,7 +25,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.function.Predicate.not;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
@@ -40,6 +39,14 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
 
 @Singleton
 final class MigrationUtils {
+
+    public static final String
+            ERR_READING_DATA = "Could not read data.",
+            ERR_UNRECOGNISED_PROPERTIES = "Unrecognised properties were specified in the mapping: [%s].",
+            ERR_MISSING_MAPPINGS_FOR_SOME_KEY_MEMBERS = "Mappings for some key members are missing: [%s].",
+            ERR_MISSING_MAPPING_FOR_REQUIRED_PROPERTY = "Mapping for required property [%s] is missing.",
+            ERR_MAPPING_IS_INCOMPLETE = "Mapping for property [%s] is incomplete, missing members: [%s].",
+            ERR_NON_PERSISTENT_ENTITY = "Unable to generate a retriever job for non-persistent entity [%s].";
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -56,14 +63,14 @@ final class MigrationUtils {
 
     public EntityMd generateEntityMd(final Class<? extends AbstractEntity<?>> entityType) {
         final var entityMetadata = domainMetadata.forEntity(entityType).asPersistent()
-                .orElseThrow(() -> new DataMigrationException("Unable to generate a retriever job for non-persistent entity [%s].".formatted(entityType.getSimpleName())));
+                .orElseThrow(() -> new DataMigrationException(ERR_NON_PERSISTENT_ENTITY.formatted(entityType.getSimpleName())));
         final var tableName = entityMetadata.data().tableName();
         final var pmUtils = domainMetadata.propertyMetadataUtils();
         final var propMds = entityMetadata.properties().stream()
                 .filter(pm -> !PROPS_TO_IGNORE.contains(pm.name()))
                 .map(PropertyMetadata::asPersistent).flatMap(Optional::stream)
                 .flatMap(pm -> Optional.<Stream<PropMd>>empty()
-                        // Component-typed property: expand into components, unless there is just one component.
+                        // Component-typed property: expand into components, unless there is just a single component.
                         .or(() -> pm.type()
                                 .asComponent()
                                 .map(ct -> {
@@ -75,9 +82,9 @@ final class MigrationUtils {
                                         return subPms.stream()
                                                 .map(spm -> generatePropMd(spm, pm));
                                     }
-                                    // Special case: component-typed property with a single component.
-                                    // Do not expand into sub-properties so that this property can be specified in retrievers by itself.
-                                    // E.g., `money` instead of `money.amount`.
+                                    // Special case: a component-typed property with a single component.
+                                    // Expanding into sub-properties should be skipped, so that the property could be specified in retrievers by itself.
+                                    // For example, `money` instead of `money.amount`.
                                     else {
                                         return Stream.of(generatePropMd(pm, null));
                                     }
@@ -180,17 +187,16 @@ final class MigrationUtils {
                     // If the number of null values doesn't match the number of indices, the mapping is incomplete.
                     final long nullCount = indices.values().stream().filter(Objects::isNull).count();
                     if (nullCount > 0 && nullCount != indices.size()) {
-                        throw new DataMigrationException(format(
-                                "Mapping for property [%s] is incomplete, missing members: [%s]",
-                                propMd.name(),
-                                CollectionUtil.toString(Maps.filterValues(indices, Objects::isNull).keySet(), ", ")));
+                        throw new DataMigrationException(ERR_MAPPING_IS_INCOMPLETE
+                                                         .formatted(propMd.name(),
+                                                                    CollectionUtil.toString(Maps.filterValues(indices, Objects::isNull).keySet(), ", ")));
                     }
                     else if (!indices.containsValue(null)) {
                         usedPaths.addAll(propMd.leafProps());
                         return new PropInfo(propMd.name(), propMd.type(), propMd.column(), propMd.utcType(), ImmutableList.copyOf(indices.values()));
                     }
                     else if (propMd.required() && !isUpdater) {
-                        throw new DataMigrationException(format("Mapping for required property [%s] is missing.", propMd.name()));
+                        throw new DataMigrationException(ERR_MISSING_MAPPING_FOR_REQUIRED_PROPERTY.formatted(propMd.name()));
                     }
                     else return null;
                 })
@@ -199,12 +205,12 @@ final class MigrationUtils {
 
         final var missingKeys = keyMemberPaths.stream().filter(not(resultFieldIndices::containsKey)).toList();
         if (!missingKeys.isEmpty()) {
-            throw new DataMigrationException(format("Mappings for some key members are missing: [%s]", CollectionUtil.toString(missingKeys, ", ")));
+            throw new DataMigrationException(ERR_MISSING_MAPPINGS_FOR_SOME_KEY_MEMBERS.formatted(CollectionUtil.toString(missingKeys, ", ")));
         }
 
         if (!resultFieldIndices.keySet().equals(usedPaths)) {
             final var diff = Sets.difference(resultFieldIndices.keySet(), usedPaths);
-            throw new DataMigrationException(format("Unrecognised properties were specified in the mapping: [%s]", CollectionUtil.toString(diff, ", ")));
+            throw new DataMigrationException(ERR_UNRECOGNISED_PROPERTIES.formatted(CollectionUtil.toString(diff, ", ")));
         }
 
         return propInfos;
@@ -272,7 +278,7 @@ final class MigrationUtils {
                         try {
                             return resultSet.getObject(index);
                         } catch (final Exception ex) {
-                            throw new DataMigrationException("Could not read data.", ex);
+                            throw new DataMigrationException(ERR_READING_DATA, ex);
                         }
                     })
                     .toList();
@@ -327,7 +333,7 @@ final class MigrationUtils {
                         try {
                             return legacyRs.getObject(index);
                         } catch (final Exception ex) {
-                            throw new DataMigrationException("Could not read data.", ex);
+                            throw new DataMigrationException(ERR_READING_DATA, ex);
                         }
                     })
                     .toList();
