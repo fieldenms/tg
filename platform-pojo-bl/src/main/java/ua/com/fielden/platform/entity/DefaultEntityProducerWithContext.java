@@ -3,13 +3,11 @@ package ua.com.fielden.platform.entity;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 
 import java.util.*;
 
-import static java.lang.String.*;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -23,6 +21,9 @@ import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.findByIdW
  * @param <T>
  */
 public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T>, IContextDecomposer {
+
+    public static final String ERR_UNEXPECTED_TYPE = "Unexpected type of property [%s.%s]. Expected: [%s] or supertype. Actual: [%s].";
+
     private final EntityFactory factory;
     protected final Class<T> entityType;
     /** Instrumented reader to be used for producing of {@link #new_()} editable entities and for re-fetching ({@link #refetchInstrumentedEntityById(Long)}) of persisted editable entities. */
@@ -187,8 +188,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     protected final <M extends AbstractEntity<?>> M refetch(final Long id, final Class<M> entityType, final CharSequence property) {
         final var fetch = reader.get().getFetchProvider().<M>fetchFor(property).fetchModel();
         if (!fetch.getEntityType().isAssignableFrom(entityType)) {
-            throw new EntityProducingException(format("Unexpected type of property [%s.%s]. Expected: [%s] or supertype. Actual: [%s]",
-                                                       this.entityType.getSimpleName(), property, entityType.getSimpleName(), fetch.getEntityType().getSimpleName()));
+            throw new EntityProducingException(ERR_UNEXPECTED_TYPE.formatted(this.entityType.getSimpleName(), property, entityType.getSimpleName(), fetch.getEntityType().getSimpleName()));
         }
         return findByIdWithFiltering(id, co(entityType), fetch);
     }
