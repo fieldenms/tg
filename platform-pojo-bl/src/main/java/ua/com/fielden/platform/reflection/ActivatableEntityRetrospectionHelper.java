@@ -1,6 +1,14 @@
 package ua.com.fielden.platform.reflection;
 
-import static ua.com.fielden.platform.types.tuples.T2.t2;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.types.tuples.T2;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -8,14 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.types.tuples.T2;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /**
  * A helper class providing functions (aka static methods) for the retrospection of activatable entities and properties.
@@ -56,10 +57,10 @@ public class ActivatableEntityRetrospectionHelper {
      * @param result
      * @param prop
      */
-    public static <T extends AbstractEntity<?>> void addToResultIfApplicableFromActivatablePerspective(final T entity, final Set<String> keyMembers, final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result, final MetaProperty<?> prop) {
+    public static <T extends AbstractEntity<?>> void addToResultIfApplicableFromActivatablePerspective(final T entity, final Set<String> keyMembers, final Set<MetaProperty<? extends AbstractEntity<?>>> result, final MetaProperty<?> prop) {
         // let's first identify whether entity belongs to the deactivatable type of the referenced property type
         // if so, it should not inflict any ref counts for this property
-        final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
+        final var type = (Class<? extends AbstractEntity<?>>) prop.getType();
         final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
         boolean belongsToDeactivatableDependencies;
         if (ddAnnotation != null) {
@@ -74,7 +75,7 @@ public class ActivatableEntityRetrospectionHelper {
         // this also assumes that proxied properties might actually have a value and need to be included for further processing
         // values for proxied properties are then retrieved in a lazy fashion by Hibernate
         if (!belongsToDeactivatableDependencies && (prop.isProxy() || prop.getValue() != null || entity.isPersisted())) {
-            result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
+            result.add((MetaProperty<? extends AbstractEntity<?>>) prop);
         }
     }
 
@@ -84,24 +85,24 @@ public class ActivatableEntityRetrospectionHelper {
      * @param entity
      * @return
      */
-    // TODO The result may contain union-typed properties
-     public static final <T extends AbstractEntity<?>> Set<T2<String, Class<ActivatableAbstractEntity<?>>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
+     public static final <T extends AbstractEntity<?>> Set<T2<String, Class<AbstractEntity<?>>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
         if (entity.isInstrumented()) {
-            final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
+            final Set<MetaProperty<? extends AbstractEntity<?>>> result = new HashSet<>();
             for (final MetaProperty<?> prop : entity.getProperties().values()) {
                 // proxied property is considered to be not dirty in this context
-                final boolean notDirty = prop.isProxy() || !prop.isDirty(); 
+                final boolean notDirty = prop.isProxy() || !prop.isDirty();
                 if (notDirty && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
                     addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
                 }
             }
             return result.stream()
-                    .map(prop -> t2(prop.getName(), (Class<ActivatableAbstractEntity<?>>) prop.getType()))
+                    .map(prop -> t2(prop.getName(), (Class<AbstractEntity<?>>) prop.getType()))
                     .collect(Collectors.toSet());
         } else {
             return Finder.streamRealProperties(entity.getType(), MapTo.class)
-                    .filter(field -> ActivatableAbstractEntity.class.isAssignableFrom(field.getType()) && isNotSpecialActivatableToBeSkipped(field))
-                    .map(field -> t2(field.getName(), (Class<ActivatableAbstractEntity<?>>) field.getType()))
+                    .filter(field -> (ActivatableAbstractEntity.class.isAssignableFrom(field.getType()) || AbstractUnionEntity.class.isAssignableFrom(field.getType()))
+                                     && isNotSpecialActivatableToBeSkipped(field))
+                    .map(field -> t2(field.getName(), (Class<AbstractEntity<?>>) field.getType()))
                     .collect(Collectors.toSet());
         }
     }

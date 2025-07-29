@@ -2,6 +2,9 @@ package ua.com.fielden.platform.entity;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.activatable.test_entities.ActivatableUnionOwner;
+import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
+import ua.com.fielden.platform.entity.activatable.test_entities.Union;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -12,22 +15,38 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Supplier;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
 
     @Test
+    public void deletion_of_active_A_that_references_active_B_inside_union_decrements_refCount_of_B() {
+        final var b = save(new_(Member1.class, "Member1").setActive(true).setRefCount(10));
+        final var a = save(new_(ActivatableUnionOwner.class, "Owner1").setActive(true).setUnion(new_(Union.class).setMember1(b)));
+
+        assertRefCount(11, b);
+
+        co$(ActivatableUnionOwner.class).delete(a);
+
+        assertFalse(co$(ActivatableUnionOwner.class).entityExists(a));
+        assertRefCount(10, b);
+    }
+
+    @Test
     public void deletion_of_active_entity_that_references_the_same_active_entity_in_two_properties_decrements_its_refCount_by_two() {
         final TgCategory cat = save(new_(TgCategory.class, "NEW_CAT").setActive(true));
-        
+
         final TgSystem sys = save(new_(TgSystem.class, "NEW_SYS").setActive(true).setFirstCategory(cat).setSecondCategory(cat));
         assertEquals(Integer.valueOf(2), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
-        
+
         co$(TgSystem.class).delete(sys);
-        
+
         assertFalse(co$(TgSystem.class).findByIdOptional(sys.getId()).isPresent());
         assertEquals(Integer.valueOf(0), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
     }
@@ -255,6 +274,24 @@ public class DeletingActivatableEntitiesTest extends AbstractDaoTestCase {
         creationDeletionThread.join();
         
         assertEquals(Integer.valueOf(NO_OF_CREATED_ACTIVE_DEPENDENCIES), co$(TgCategory.class).findByKey(cat.getKey()).getRefCount());
+    }
+
+    private void assertRefCount(final int expected, final ActivatableAbstractEntity<?> entity) {
+        assertRefCount(() -> "refCount for [%s] %s".formatted(getEntityTitleAndDesc(entity).getKey(), entity),
+                       expected, entity);
+    }
+
+    private void assertRefCount(final String message, final int expected, final ActivatableAbstractEntity<?> entity) {
+        assertRefCount(() -> message, expected, entity);
+    }
+
+    private void assertRefCount(final Supplier<String> messageSupplier, final int expected, final ActivatableAbstractEntity<?> entity) {
+        assertNotNull(entity);
+        final Class<ActivatableAbstractEntity<?>> entityType = (Class<ActivatableAbstractEntity<?>>) entity.getType();
+        final int actual = co(entityType).findByEntityAndFetch(fetchNone(entityType).with(REF_COUNT), entity).getRefCount();
+        assertThat(actual)
+                .describedAs(messageSupplier)
+                .isEqualTo(expected);
     }
 
 }

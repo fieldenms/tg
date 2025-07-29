@@ -9,6 +9,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 
+import javax.annotation.Nullable;
 import javax.persistence.PersistenceException;
 import java.util.*;
 import java.util.function.Supplier;
@@ -125,11 +127,11 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             throw new EntityCompanionException(format("Entity of type [%s] is not activatable.", entity.getType()));
         }
 
-        // only if entity is active do we need to decrement ref-counts of the referenced by it activatable entities, accept self references, which should be ignored
+        // Iff `entity` is active, we need to decrement refCounts of referenced active activatables, ignoring self-references.
         if (((ActivatableAbstractEntity<?>) entity).isActive()) {
             // let's collect activatable properties from entity to check them for activity and also to decrement their refCount
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
-            final Set<T2<String, Class<ActivatableAbstractEntity<?>>>> activatableProps = collectActivatableNotDirtyProperties(entity, keyMembers);
+            final Set<T2<String, Class<AbstractEntity<?>>>> activatableProps = collectActivatableNotDirtyProperties(entity, keyMembers);
             // reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed
             final ActivatableAbstractEntity<?> persistedEntityToBeDeleted = (ActivatableAbstractEntity<?>) session.get().load(entity.getType(), entity.getId(), UPGRADE);
 
@@ -140,13 +142,15 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
                     triple -> {
                         // get value from a persisted version of entity, which is loaded by Hibernate
                         // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
-                        final AbstractEntity<?> value = persistedEntityToBeDeleted.get(triple._3);
-                        // load the latest value for the current property of an activatable type
-                        final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) session.get().load(triple._2, value.getId(), UPGRADE);
-                        persistedValue.setIgnoreEditableState(true);
-                        // if activatable property value (persistedValue) is active and is not a self-reference then its refCount needs to be decremented
-                        if (persistedValue.isActive() && !entity.equals(persistedValue)) {
-                            session.get().update(persistedValue.decRefCount());
+                        final var activatable = extractActivatable(persistedEntityToBeDeleted.get(triple._3));
+                        if (activatable != null) {
+                            // load the latest value for the current property of an activatable type
+                            final var persistedActivatable = (ActivatableAbstractEntity<?>) session.get().load(activatable.getType(), activatable.getId(), UPGRADE);
+                            persistedActivatable.setIgnoreEditableState(true);
+                            // if activatable property value (persistedValue) is active and is not a self-reference then its refCount needs to be decremented
+                            if (persistedActivatable.isActive() && !entity.equals(persistedActivatable)) {
+                                session.get().update(persistedActivatable.decRefCount());
+                            }
                         }
                     });
 
@@ -157,6 +161,13 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         return deleteById(entity.getId());
     }
 
+    private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
+        return switch (entity) {
+            case ActivatableAbstractEntity<?> it -> it;
+            case AbstractUnionEntity union -> union.activeEntity() instanceof ActivatableAbstractEntity<?> it ? it : null;
+            case null, default -> null;
+        };
+    }
 
     /**
      * A convenient default implementation for deletion of entities specified by provided query model.
