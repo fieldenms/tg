@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.entity.validation;
 
-import com.google.inject.Inject;
-import org.apache.logging.log4j.Logger;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -16,16 +15,15 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
 import static java.lang.Math.max;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.rightPad;
-import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
@@ -37,12 +35,14 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
+import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
 /**
  * A validator for property {@code active} on class {@link ActivatableAbstractEntity} to prevent deactivation of entities with active dependencies.
  */
+@Singleton
 public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Boolean> {
-    private static final Logger LOGGER = getLogger(ActivePropertyValidator.class);
+
     private static final String PAD_STR = "\u00A0";
     public static final String ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s.";
     public static final String ERR_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s:%n%n<br><br>%s<hr>%n<br>%s";
@@ -52,11 +52,10 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_ENTITY_TYPE = EntityUtils::isActivatableEntityType;
     public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE = PREDICATE_ACTIVATABLE_ENTITY_TYPE.and(EntityUtils::isPersistentEntityType);
 
-
     private final IApplicationDomainProvider applicationDomainProvider;
 
     @Inject
-    public ActivePropertyValidator(final ICompanionObjectFinder coFinder, final IApplicationDomainProvider applicationDomainProvider) {
+    ActivePropertyValidator(final IApplicationDomainProvider applicationDomainProvider) {
         this.applicationDomainProvider = applicationDomainProvider;
     }
 
@@ -95,7 +94,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             // Later during saving, all activatable properties would get checked anyway.
 
             // Need to check if already referenced activatables are active and thus may be referenced by this entity, which is being activated.
-            for (final var prop : collectActivatableNotNullNotProxyProperties(entity)) {
+            for (final var prop : activatableNotNullNotProxyProperties(entity)) {
                 final var value = extractActivatable(prop.getValue());
                 if (!value.isActive()) {
                     final var entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
@@ -118,9 +117,11 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     }
 
     private String mkErrorMsg(final ActivatableAbstractEntity<?> entity, final int count, final List<EntityAggregates> dependencies) {
-        final var lengths = dependencies.stream()
-                .map(dep -> t3(dep.get(ENTITY_TYPE_TITLE).toString().length(), dep.get(DEPENDENT_PROP_TITLE).toString().length(), dep.get(COUNT).toString().length()))
-                .reduce(t3(0, 0, 0), (accum, val) -> t3(max(accum._1, val._1), max(accum._2, val._2), max(accum._3, val._3)), (v1, v2) -> {throw failure("Should not happen");}); 
+        final var lengths = foldLeft(
+                dependencies.stream()
+                        .map(dep -> t3(dep.get(ENTITY_TYPE_TITLE).toString().length(), dep.get(DEPENDENT_PROP_TITLE).toString().length(), dep.get(COUNT).toString().length())),
+                t3(0, 0, 0),
+                (accum, val) -> t3(max(accum._1, val._1), max(accum._2, val._2), max(accum._3, val._3)));
         final var deps = dependencies.stream()
                 .map(dep -> depMsg(dep.get(ENTITY_TYPE_TITLE), dep.get(DEPENDENT_PROP_TITLE), dep.get(COUNT).toString(), lengths))
                 .collect(joining("\n<br>"));
@@ -136,15 +137,16 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     /**
      * Collects properties that represent non-null, non-proxy, and non-self-referenced activatable properties for {@code entity}.
      */
-    private Set<MetaProperty<? extends AbstractEntity<?>>> collectActivatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
+    @SuppressWarnings("unchecked")
+    private List<? extends MetaProperty<? extends AbstractEntity<?>>> activatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
         return entity.nonProxiedProperties()
-               .filter(mp -> mp.getValue() != null &&                           
-                             mp.isActivatable() &&
-                             isNotSpecialActivatableToBeSkipped(mp) &&
-                             !((AbstractEntity<?>) mp.getValue()).isIdOnlyProxy() &&
-                             !entity.equals(mp.getValue()))
-               .map(mp -> (MetaProperty<? extends AbstractEntity<?>>) mp)
-               .collect(toCollection(LinkedHashSet::new));
+                .filter(mp -> mp.getValue() != null &&
+                              mp.isActivatable() &&
+                              isNotSpecialActivatableToBeSkipped(mp) &&
+                              !((AbstractEntity<?>) mp.getValue()).isIdOnlyProxy() &&
+                              !entity.equals(mp.getValue()))
+                .map(mp -> (MetaProperty<? extends AbstractEntity<?>>) mp)
+                .toList();
     }
 
 }
