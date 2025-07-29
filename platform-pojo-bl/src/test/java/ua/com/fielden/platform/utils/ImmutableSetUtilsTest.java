@@ -14,9 +14,12 @@ public class ImmutableSetUtilsTest {
 
     @Test
     public void insert_returns_a_set_with_all_elements_from_the_given_iterable_and_the_other_given_element() {
-        assertEquals(Set.of("a", "b", "c"), insert(Set.of("a", "b"), "c"));
-        assertEquals(Set.of("c"), insert(Set.of(), "c"));
-        assertEquals(Set.of("c"), insert(Set.of("c"), "c"));
+        final var a = new A();
+        final var b1 = new B();
+        final var b2 = new B();
+        assertEquals(Set.of(a, b1, b2), insert(Set.of(b1, b2), a));
+        assertEquals(Set.of(a), insert(Set.of(), a));
+        assertEquals(Set.of(b1), insert(Set.of(b1), b1));
     }
 
     @Test
@@ -45,4 +48,6 @@ public class ImmutableSetUtilsTest {
         assertEquals(makeSet3.get(), union(makeSet3.get(), makeSet3.get()));
     }
 
+    class A {}
+    class B extends A {}
 }
