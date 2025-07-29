@@ -1502,7 +1502,8 @@ public class EntityUtils {
     }
 
     /**
-     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.
+     * Gets a list of all property paths representing a value of an entity key.
+     * For composite entities, props are listed in the order of key member declarations, taking into account cases of multilevel nesting.
      *
      * @param entityType -- entity type containing key property.
      * @return

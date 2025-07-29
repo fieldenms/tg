@@ -197,17 +197,15 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCentreDiffSerialisationNonPersistentCompositeChild.class);
         add(TgCategoryAttachment.class);
         add(TgDateTestEntity.class);
-        add(UnionEntityDetails.class);
-
     }
 
     @Override
     public List<Class<? extends AbstractEntity<?>>> entityTypes() {
-        return Collections.unmodifiableList(entityTypes.stream().collect(Collectors.toList()));
+        return Collections.unmodifiableList(entityTypes.stream().toList());
     }
 
     public static List<Class<? extends AbstractEntity<?>>> domainTypes() {
-        return Collections.unmodifiableList(domainTypes.stream().collect(Collectors.toList()));
+        return Collections.unmodifiableList(domainTypes.stream().toList());
     }
 
     public static Set<Class<? extends AbstractEntity<?>>> entityTypesSet() {
