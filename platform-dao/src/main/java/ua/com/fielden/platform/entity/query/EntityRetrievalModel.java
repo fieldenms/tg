@@ -136,6 +136,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
         this(originalFetch, domainMetadata, qsip, topLevel, ImmutableList.of(new StackElement(originalFetch)));
     }
 
+    /// @param stack  a stack of elements representing retrieval model exploration to identify and handle cycles.
+    ///
     private EntityRetrievalModel(
             final fetch<T> originalFetch,
             final IDomainMetadata domainMetadata,
