@@ -35,13 +35,13 @@ public class AppendIdToUnionTypedProp1Test extends EqlStage2TestCase {
     public void id_is_appended_to_union_typed_property_path() {
         final var query1 = select(TgEntityWithManyPropTypes.class)
                 .where()
-                .prop(join(".", unionEntityDetails, union)).eq().val(123)
+                .prop(unionEntityDetails + "." + union).eq().val(123)
                 .yield().prop(ID).as(ID)
                 .modelAsAggregate();
 
         final var query2 = select(TgEntityWithManyPropTypes.class)
                 .where()
-                .prop(join(".", unionEntityDetails, union, ID)).eq().val(123)
+                .prop(unionEntityDetails + "." + union + "." + ID).eq().val(123)
                 .yield().prop(ID).as(ID)
                 .modelAsAggregate();
 

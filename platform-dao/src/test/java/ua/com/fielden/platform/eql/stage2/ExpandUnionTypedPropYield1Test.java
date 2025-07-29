@@ -30,12 +30,12 @@ public class ExpandUnionTypedPropYield1Test extends EqlStage2TestCase {
     @Test
     public void union_typed_prop_path_yield_is_transformed_into_yields_for_all_union_members() {
         final var query1 = select(TgEntityWithManyPropTypes.class)
-                .yield().prop(join(".", unionEntityDetails, union)).as(join(".", unionEntityDetails, union))
+                .yield().prop(unionEntityDetails + "." + union).as(unionEntityDetails + "." + union)
                 .modelAsEntity(TgEntityWithManyPropTypes.class);
 
         final var query2 = select(TgEntityWithManyPropTypes.class)
-                .yield().prop(join(".", unionEntityDetails, union, "propertyOne")).as(join(".", unionEntityDetails, union, "propertyOne"))
-                .yield().prop(join(".", unionEntityDetails, union, "propertyTwo")).as(join(".", unionEntityDetails, union, "propertyTwo"))
+                .yield().prop(unionEntityDetails  + "." + union  + "." +  "propertyOne").as(unionEntityDetails + "." + union + "." +  "propertyOne")
+                .yield().prop(unionEntityDetails + "." + union + "." + "propertyTwo").as(unionEntityDetails  + "." +  union + "." + "propertyTwo")
                 .modelAsEntity(TgEntityWithManyPropTypes.class);
 
         assertEquals(qry(query2), qry(query1));
