@@ -24,80 +24,72 @@ import static ua.com.fielden.platform.utils.ImmutableSetUtils.insert;
 import static ua.com.fielden.platform.utils.ImmutableSetUtils.union;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
-/**
- * Represents an entity graph that describes the shape of an entity to be fetched.
- * <p>
- * This class provides a fluent API to build fetch models.
- * Methods {@link #with(CharSequence)}, {@link #without(CharSequence)} and their corresponding overloads return a new fetch model instance.
- * This representation is <b>immutable</b>.
- * <p>
- * Unlike {@link IFetchProvider}, this class <b>does not support dot-expression in property paths</b>, only simple property names are allowed.
- * To specify a fetch model for a sub-property, use {@link #with(CharSequence, fetch)}.
- *
- * @param <T> entity type
- * @see FetchCategory
- * @see ua.com.fielden.platform.entity.query.IRetrievalModel
- */
+/// Represents an entity graph that describes the shape of an entity to be fetched.
+///
+/// This class provides a fluent API to build fetch models.
+/// Methods [#with(CharSequence)], [#without(CharSequence)] and their corresponding overloads return a new fetch model instance.
+/// This representation is **immutable**.
+///
+/// Unlike [IFetchProvider], this class **does not support dot-expression in property paths**, only simple property names are allowed.
+/// To specify a fetch model for a sub-property, use [#with(CharSequence,fetch)].
+///
+/// @param <T>  top-level entity type (root of the graph)
+/// @see FetchCategory
+/// @see ua.com.fielden.platform.entity.query.IRetrievalModel
+///
 public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable {
     public static final String ERR_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s].";
     public static final String ERR_PROPERTY_IS_ALREADY_PRESENT = "Property [%s] is already present within fetch model.";
     public static final String ERR_INVALID_PROPERTY_FOR_ENTITY = "Property [%s] is not present within [%s] entity.";
 
-    /**
-     * Standard fetch categories, ordered by richness, descendingly.
-     */
+    /// Standard fetch categories, ordered by richness, descendingly.
+    ///
     public enum FetchCategory {
-        /**
-         * Includes {@link #ALL}.
-         * Includes calculated properties.
-         */
+
+        /// * Includes [#ALL].
+        /// * Includes calculated properties.
+        ///
         ALL_INCL_CALC,
-        /**
-         * Includes {@link #DEFAULT}.
-         * Each entity-typed property is included using {@link #DEFAULT}.
-         */
+
+        /// * Includes [#DEFAULT].
+        /// * Each entity-typed property is included using [#DEFAULT].
+        ///
         ALL,
-        /**
-         * Includes {@link #KEY_AND_DESC}.
-         * All other properties that satisfy the following rules are included.
-         * <ul>
-         *   <li> Collectional properties are excluded.
-         *   <li> Non-retrievable properties are excluded.
-         *   <li> Each calculated property is excluded unless it has a component type.
-         *   <li> {@code desc} is always included if it belongs to the entity type.
-         *   <li> Each entity-typed property {@link #ID_ONLY} is used, and each such property is included iff its type is persistent.
-         * </ul>
-         */
+
+        /// Includes [#KEY_AND_DESC].
+        /// All other properties that satisfy the following rules are included.
+        /// *  Collectional properties are excluded.
+        /// *  Non-retrievable properties are excluded.
+        /// *  Each calculated property is excluded unless it has a component type.
+        /// *  `desc` is always included if it belongs to the entity type.
+        /// *  Each entity-typed property [#ID_ONLY] is used, and each such property is included iff its type is persistent.
+        ///
         DEFAULT,
-        /**
-         * <ul>
-         *   <li> Includes {@link #ID_AND_VERSION} if the entity type is persistent;
-         *   <li> {@code key} is included.
-         *        If a key is composite, all key members are included.
-         *        If a key member is union-typed, all union members are included using {@link #DEFAULT}.
-         *   <li> {@code desc} is included if it belongs to the entity type.
-         * </ul>
-         */
+
+        /// * Includes [#ID_AND_VERSION] if the entity type is persistent;
+        /// * `key` is included.
+        ///   If a key is composite, all key members are included.
+        ///   If a key member is union-typed, all union members are included using [#DEFAULT].
+        /// * `desc` is included if it belongs to the entity type.
+        ///
         KEY_AND_DESC,
-        /**
-         * A slightly broader fetch model than {@link #ID_ONLY}.
-         * <ul>
-         *   <li> {@code id} is included if it belongs to the entity type;
-         *   <li> {@code version} is included if the entity type is persistent;
-         *   <li> {@code refCount} and {@code active} are included entities extending {@link ua.com.fielden.platform.entity.ActivatableAbstractEntity},
-         *        as they are generally required when saving changes;
-         *   <li> the group of "last updated" properties is included for entities extending {@link ua.com.fielden.platform.entity.AbstractPersistentEntity},
-         *        as they are generally required when saving changes (unlike the "created" group of properties).
-         * </ul>
-         */
+
+        /// A slightly broader fetch model than [#ID_ONLY].
+        /// *  `id` is included if it belongs to the entity type;
+        /// *  `version` is included if the entity type is persistent;
+        /// *  `refCount` and `active` are included entities extending [ua.com.fielden.platform.entity.ActivatableAbstractEntity],
+        ///    as they are generally required when saving changes;
+        /// *  the group of "last updated" properties is included for entities extending [ua.com.fielden.platform.entity.AbstractPersistentEntity],
+        ///    as they are generally required when saving changes (unlike the "created" group of properties).
+        ///
         ID_AND_VERSION,
-        /**
-         * Sole property {@code id} is included.
-         */
+
+        /// Sole property `id` is included.
+        ///
         ID_ONLY,
-        /**
-         * Nothing is included.
-         */
+
+        /// Nothing is included.
+        ///
         NONE
     }
 
@@ -158,21 +150,20 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
         }
     }
 
-    /**
-     * Adds the property to this fetch model.
-     * </p>
-     * It is an error if the property is already included in or excluded from this fetch model.
-     * It is an error if the property doesn't exist in the entity type associated with this fetch model.
-     *
-     * @param propName this could be the name of a:
-     *                 primitive property (e.g. {@code desc}, {@code numberOfPages}),
-     *                 entity property ({@code station}),
-     *                 composite type property ({@code cost}, {@code cost.amount}),
-     *                 union entity property ({@code location}, {@code location.workshop}),
-     *                 collectional property ({@code slots}),
-     *                 one-to-one association property ({@code financialDetails}).
-     * @return a new fetch model that includes the given property
-     */
+    /// Adds a property to this fetch model.
+    ///
+    /// It is an error if the property is already included in or excluded from this fetch model.
+    /// It is an error if the property doesn't exist in the entity type associated with this fetch model.
+    ///
+    /// @param propName this could be the name of a:
+    ///                 primitive property (e.g. `desc`, `numberOfPages`),
+    ///                 entity property (`station`),
+    ///                 composite type property (`cost`, `cost.amount`),
+    ///                 union entity property (`location`, `location.workshop`),
+    ///                 collectional property (`slots`),
+    ///                 one-to-one association property (`financialDetails`).
+    /// @return a new fetch model that includes the given property
+    ///
     public fetch<T> with(final CharSequence propName) {
         validate(propName.toString());
         return new fetch<>(entityType,
@@ -183,12 +174,11 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
                            excludedProps);
     }
 
-    /**
-     * Adds all given properties to this fetch model.
-     *
-     * @return a new fetch model that includes the given properties
-     * @see #with(CharSequence)
-     */
+    /// Adds all given properties to this fetch model.
+    ///
+    /// @return a new fetch model that includes the given properties
+    /// @see #with(CharSequence)
+    ///
     public fetch<T> with(final CharSequence propName, final CharSequence... propNames) {
         validate(propName.toString());
         for (final var name : propNames) {
@@ -214,12 +204,11 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
                            excludedProps);
     }
 
-    /**
-     * Adds all given properties to this fetch model.
-     *
-     * @return a new fetch model that includes the given properties
-     * @see #with(CharSequence)
-     */
+    /// Adds all given properties to this fetch model.
+    ///
+    /// @return a new fetch model that includes the given properties
+    /// @see #with(CharSequence)
+    ///
     public fetch<T> with(final Iterable<? extends CharSequence> propNames) {
         if (Iterables.isEmpty(propNames)) {
             return this;
@@ -235,21 +224,20 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
         }
     }
 
-    /**
-     * Excludes the property from this fetch model.
-     * <p>
-     * It is an error if the property is already included in or excluded from this fetch model.
-     * It is an error if the property doesn't exist in the entity type associated with this fetch model.
-     *
-     * @param propName this could be the name of a:
-     *                 primitive property (e.g. {@code desc}, {@code numberOfPages}),
-     *                 entity property ({@code station}),
-     *                 composite type property ({@code cost}, {@code cost.amount}),
-     *                 union entity property ({@code location}, {@code location.workshop}),
-     *                 collectional property ({@code slots}),
-     *                 one-to-one association property ({@code financialDetails}).
-     * @return a new fetch model that excludes the given property
-     */
+    /// Excludes the property from this fetch model.
+    ///
+    /// It is an error if the property is already included in or excluded from this fetch model.
+    /// It is an error if the property doesn't exist in the entity type associated with this fetch model.
+    ///
+    /// @param propName this could be the name of a:
+    ///                 primitive property (e.g. `desc`, `numberOfPages`),
+    ///                 entity property (`station`),
+    ///                 composite type property (`cost`, `cost.amount`),
+    ///                 union entity property (`location`, `location.workshop`),
+    ///                 collectional property (`slots`),
+    ///                 one-to-one association property (`financialDetails`).
+    /// @return a new fetch model that excludes the given property
+    ///
     public fetch<T> without(final CharSequence propName) {
         validate(propName.toString());
         return new fetch<>(entityType,
@@ -260,12 +248,11 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
                            insert(excludedProps, propName.toString()));
     }
 
-    /**
-     * Excludes all given properties from this fetch model.
-     *
-     * @return a new fetch model that excludes the given properties
-     * @see #without(CharSequence)
-     */
+    /// Excludes all given properties from this fetch model.
+    ///
+    /// @return a new fetch model that excludes the given properties
+    /// @see #without(CharSequence)
+    ///
     public fetch<T> without(final CharSequence propName, final CharSequence... propNames) {
         validate(propName.toString());
         for (final var name : propNames) {
@@ -291,12 +278,11 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
                            newExcludedProps);
     }
 
-    /**
-     * Excludes all given properties from this fetch model.
-     *
-     * @return a new fetch model that excludes the given properties
-     * @see #without(CharSequence)
-     */
+    /// Excludes all given properties from this fetch model.
+    ///
+    /// @return a new fetch model that excludes the given properties
+    /// @see #without(CharSequence)
+    ///
     public fetch<T> without(final Iterable<? extends CharSequence> propNames) {
         if (Iterables.isEmpty(propNames)) {
             return this;
@@ -312,15 +298,14 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
         }
     }
 
-    /**
-     * Adds the property to this fetch model and associates the given fetch model with it.
-     * <p>
-     * It is an error if the property's type does not match the entity type associated with the given fetch model.
-     * <p>
-     * The resulting fetch model represents a graph that contains the given fetch model as a subgraph.
-     *
-     * @return a new fetch model that contains the given property
-     */
+    /// Adds the property to this fetch model and associates the given fetch model with it.
+    ///
+    /// It is an error if the property's type does not match the entity type associated with the given fetch model.
+    ///
+    /// The resulting fetch model represents a graph that contains the given fetch model as a subgraph.
+    ///
+    /// @return a new fetch model that contains the given property
+    ///
     public fetch<T> with(final CharSequence propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
         validate(propName.toString());
         // if the entityType is not an aggregate entity then we must validate that the type of propName and the type of fetchModel match
