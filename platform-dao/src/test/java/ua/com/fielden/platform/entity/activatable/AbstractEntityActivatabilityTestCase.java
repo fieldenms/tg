@@ -2,15 +2,9 @@ package ua.com.fielden.platform.entity.activatable;
 
 import org.junit.Test;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
-import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-
-import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,8 +12,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.activatable.WithActivatabilityTestUtils.setProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL;
 import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
 import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES;
@@ -27,7 +21,7 @@ import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ER
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
-public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTestCase {
+public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTestCase implements WithActivatabilityTestUtils {
 
     /// * `A` and `B` are activatable entity types.
     /// * `A` references `B` via 3 properties: `b1`, `b2`, `b3`, `b4`.
@@ -723,61 +717,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
         assertRefCount(10, b1);
         assertRefCount(21, b2);
-    }
-
-    // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    @SuppressWarnings("unchecked")
-    private static <E extends AbstractEntity<?>> E setProperties(final ICanSetProperty setter, final E entity, final CharSequence prop1, final Object val1, final Object... rest) {
-        if (rest.length % 2 != 0) {
-            throw new InvalidArgumentException("[rest] must have even length: %s".formatted(rest.length));
-        }
-
-        setter.setProperty(entity, prop1, val1);
-
-        for (var i = 0; i < rest.length; i+=2) {
-            final CharSequence prop = (CharSequence) rest[i];
-            setter.setProperty(entity, prop, rest[i+1]);
-        }
-
-        return entity;
-    }
-
-    private interface ICanSetProperty {
-        default <E extends AbstractEntity<?>> E setProperty(final E entity, final CharSequence prop, final Object value) {
-            entity.set(prop.toString(), value);
-            return entity;
-        }
-    }
-
-    private <E extends AbstractEntity<?>> E refetch$(final E entity, final fetch<E> fetch) {
-        return co$((Class<E>) entity.getType()).findByEntityAndFetch(fetch, entity);
-    }
-
-    private <E extends AbstractEntity<?>> E refetch$(final E entity, final FetchCategory category) {
-        return refetch$(entity, new fetch<E>((Class<E>) entity.getType(), category));
-    }
-
-    private <E extends AbstractEntity<?>> E refetch$(final E entity) {
-        return refetch$(entity, FetchCategory.DEFAULT);
-    }
-
-    private void assertRefCount(final int expected, final ActivatableAbstractEntity<?> entity) {
-        assertRefCount(() -> "refCount for [%s] %s".formatted(getEntityTitleAndDesc(entity).getKey(), entity),
-                       expected, entity);
-    }
-
-    private void assertRefCount(final String message, final int expected, final ActivatableAbstractEntity<?> entity) {
-        assertRefCount(() -> message, expected, entity);
-    }
-
-    private void assertRefCount(final Supplier<String> messageSupplier, final int expected, final ActivatableAbstractEntity<?> entity) {
-        assertNotNull(entity);
-        final Class<ActivatableAbstractEntity<?>> entityType = (Class<ActivatableAbstractEntity<?>>) entity.getType();
-        final int actual = co(entityType).findByEntityAndFetch(fetchNone(entityType).with(REF_COUNT), entity).getRefCount();
-        assertThat(actual)
-                .describedAs(messageSupplier)
-                .isEqualTo(expected);
     }
 
 }
