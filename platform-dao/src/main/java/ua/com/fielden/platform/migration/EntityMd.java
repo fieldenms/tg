@@ -10,5 +10,5 @@ import javax.annotation.Nonnull;
  * @author TG Team
  *
  */
-public record EntityMd(@Nonnull String tableName, @Nonnull List<PropMd> props) {
+record EntityMd(String tableName, List<PropMd> props) {
 }
