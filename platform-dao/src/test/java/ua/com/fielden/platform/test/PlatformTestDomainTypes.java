@@ -149,7 +149,6 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(Member1.class);
         add(Member2.class);
         add(ActivatableUnionOwner.class);
-        add(UnionOwner.class);
     }
 
     @Override

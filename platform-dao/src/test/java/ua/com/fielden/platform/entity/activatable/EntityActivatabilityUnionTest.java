@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.activatable.test_entities.ActivatableUnionOwner;
 import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
 import ua.com.fielden.platform.entity.activatable.test_entities.Union;
-import ua.com.fielden.platform.entity.activatable.test_entities.UnionOwner;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
@@ -112,64 +111,9 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
         }
     };
 
-    private final Spec2 spec2 = new Spec2<UnionOwner, Member1> () {
-
-        private int ownerKeyCounter = 1;
-        private int memberKeyCounter = 1;
-
-        @Override
-        public UnionOwner newA() {
-            return new_(UnionOwner.class, "Owner%s".formatted(ownerKeyCounter++));
-        }
-
-        @Override
-        public Member1 newB() {
-            return new_(Member1.class, "Member%s".formatted(memberKeyCounter++));
-        }
-
-        @Override
-        public Class<UnionOwner> aType() {
-            return UnionOwner.class;
-        }
-
-        @Override
-        public Class<Member1> bType() {
-            return Member1.class;
-        }
-
-        @Override
-        public CharSequence A_b() {
-            return "union";
-        }
-
-        @Override
-        public UnionOwner setB(final UnionOwner owner, final Member1 member1) {
-            return owner.setUnion(member1 == null ? null : new_(Union.class).setMember1(member1));
-        }
-
-        @Override
-        public <E extends AbstractEntity<?>> E setProperty(
-                final E entity,
-                final CharSequence prop,
-                final Object value)
-        {
-            if (value != null && entity instanceof UnionOwner owner && prop.equals("union") && !(value instanceof AbstractUnionEntity)) {
-                return (E) owner.setUnion(new_(Union.class).setUnionProperty((AbstractEntity<?>) value));
-            }
-            else {
-                return Spec2.super.setProperty(entity, prop, value);
-            }
-        }
-    };
-
     @Override
     protected Spec1 spec1() {
         return spec1;
-    }
-
-    @Override
-    protected Spec2 spec2() {
-        return spec2;
     }
 
 }

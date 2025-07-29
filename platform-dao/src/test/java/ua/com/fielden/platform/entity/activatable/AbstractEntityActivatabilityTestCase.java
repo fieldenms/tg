@@ -60,30 +60,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         A setA1(A a, A a1);
     }
 
-    /// * `A` is a non-activatable entity type.
-    /// * `B` is an activatable entity type.
-    /// * `A` references `B`.
-    ///
-    protected interface Spec2<A extends AbstractEntity<?>, B extends ActivatableAbstractEntity<?>>
-        extends ICanSetProperty
-    {
-        A newA();
-        default A newA(CharSequence prop1, Object val1, Object... rest) {
-            return setProperties(this, newA(), prop1, val1, rest);
-        }
-        B newB();
-        default B newB(CharSequence prop1, Object val1, Object... rest) {
-            return setProperties(this, newB(), prop1, val1, rest);
-        }
-        Class<A> aType();
-        Class<B> bType();
-        CharSequence A_b();
-        A setB(A a, B b);
-    }
-
     protected abstract <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> Spec1<A, B> spec1();
-
-    protected abstract <A extends AbstractEntity<?>, B extends ActivatableAbstractEntity<?>> Spec2<A, B> spec2();
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : It is not possible for an active entity to reference an inactive one (under normal circumstances).

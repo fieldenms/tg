@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.activatable;
 
 import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 
 public class EntityActivatabilityStandardTest extends AbstractEntityActivatabilityTestCase {
@@ -81,49 +80,9 @@ public class EntityActivatabilityStandardTest extends AbstractEntityActivatabili
         }
     };
 
-    private final Spec2 spec2 = new Spec2<TgSubSystem, TgCategory>() {
-        private int categoryKeyCounter = 1;
-        private int subSystemKeyCounter = 1;
-
-        @Override
-        public TgSubSystem newA() {
-            return new_(TgSubSystem.class, "SUBSYS%s".formatted(subSystemKeyCounter++));
-        }
-
-        @Override
-        public TgCategory newB() {
-            return new_(TgCategory.class, "CAT%s".formatted(categoryKeyCounter++));
-        }
-
-        @Override
-        public Class<TgSubSystem> aType() {
-            return TgSubSystem.class;
-        }
-
-        @Override
-        public Class<TgCategory> bType() {
-            return TgCategory.class;
-        }
-
-        @Override
-        public CharSequence A_b() {
-            return "firstCategory";
-        }
-
-        @Override
-        public TgSubSystem setB(final TgSubSystem tgSubSystem, final TgCategory tgCategory) {
-            return tgSubSystem.setFirstCategory(tgCategory);
-        }
-    };
-
     @Override
     protected Spec1 spec1() {
         return spec1;
-    }
-
-    @Override
-    protected Spec2 spec2() {
-        return spec2;
     }
 
 }
