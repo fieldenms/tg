@@ -19,6 +19,8 @@ import java.util.function.Function;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.utils.ImmutableSetUtils.union;
 
+///  A convenient mixin for testing of retrieval models.
+///
 interface IRetrievalModelTestUtils {
 
     <T> T getInstance(Class<T> type);
