@@ -49,7 +49,7 @@ public class StartSecureJetty {
             https.setSecurePort(port);
             https.setSecureScheme("https");
 
-            final SslContextFactory sslContextFactory = new SslContextFactory();
+            final var sslContextFactory = new SslContextFactory.Server();
             sslContextFactory.setKeyStorePath(ResourceLoader.getURL("tsl/ca-signed-keystore").getPath());
             sslContextFactory.setKeyStorePassword("changeit");
             sslContextFactory.setKeyManagerPassword("changeit");
