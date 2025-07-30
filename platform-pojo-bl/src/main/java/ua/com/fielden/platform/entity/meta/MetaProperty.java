@@ -92,12 +92,15 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         // it is present with attribute skipActiveOnly == true
         // There is also annotation SkipActivatableTracking, but it does not affect the activatable nature of the property -- only the counting of references.
         // TODO Properties whose type is a union entity type without activatable members should not be activatable.
-        if (!ActivatableAbstractEntity.class.isAssignableFrom(type) && !isUnionEntityType(type)) {
-            this.activatable = false;
-        } else {
-            final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
-            final boolean skipActiveOnly = seevAnnotation != null ? seevAnnotation.skipActiveOnly() : false;
+        //      This change would serve as an optimisation, without changing semantics, because activatability of union-typed properties
+        //      can be determined only from their actual values.
+        if (ActivatableAbstractEntity.class.isAssignableFrom(type) || isUnionEntityType(type)) {
+            final var seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
+            final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
             this.activatable = !skipActiveOnly;
+        }
+        else {
+            this.activatable = false;
         }
     }
 
