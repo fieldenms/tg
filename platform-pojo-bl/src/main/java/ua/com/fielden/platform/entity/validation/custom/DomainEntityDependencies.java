@@ -29,14 +29,11 @@ import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
 ///
 public class DomainEntityDependencies {
 
-    /// @deprecated  Please use [#entityType()].
-    ///
-    @Deprecated
-    public final Class<? extends AbstractEntity<?>> entityType;
+    private final Class<? extends AbstractEntity<?>> entityType;
     private final Set<Class<? extends ActivatableAbstractEntity<?>>> deactivatableDependencies;
     private final Set<DomainEntityDependency> dependencies = new HashSet<>();
 
-    public DomainEntityDependencies(final Class<? extends AbstractEntity<?>> entityType) {
+    DomainEntityDependencies(final Class<? extends AbstractEntity<?>> entityType) {
         this.entityType = entityType;
 
         final DeactivatableDependencies annot;
