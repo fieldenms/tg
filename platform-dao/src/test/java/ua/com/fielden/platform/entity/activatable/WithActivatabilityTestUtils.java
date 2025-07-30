@@ -5,10 +5,14 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.utils.ArrayUtils;
 
+import java.util.Arrays;
 import java.util.function.Supplier;
 
+import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
@@ -47,6 +51,25 @@ interface WithActivatabilityTestUtils {
         assertNotNull(entity);
         final Class<ActivatableAbstractEntity<?>> entityType = (Class<ActivatableAbstractEntity<?>>) entity.getType();
         final int actual = co(entityType).findByEntityAndFetch(fetchNone(entityType).with(REF_COUNT), entity).getRefCount();
+        assertThat(actual)
+                .describedAs(messageSupplier)
+                .isEqualTo(expected);
+    }
+
+    default void assertRefCount(final int expected, final Class<? extends ActivatableAbstractEntity<?>> entityType, final Object... key) {
+        assertRefCount(() -> "refCount for [%s] %s".formatted(getEntityTitleAndDesc(entityType).getKey(), Arrays.stream(key).map(Object::toString).collect(joining(" "))),
+                       expected, entityType, key);
+    }
+
+    default void assertRefCount(final String message, final int expected, final Class<? extends ActivatableAbstractEntity<?>> entityType, final Object... key) {
+        assertRefCount(() -> message, expected, entityType, key);
+    }
+
+    default <E extends ActivatableAbstractEntity<?>> void assertRefCount(final Supplier<String> messageSupplier, final int expected, final Class<E> entityType, final Object... key) {
+        assertNotNull(key);
+        assertFalse("Key must not contain nulls.", ArrayUtils.contains(key, null));
+
+        final int actual = co(entityType).findByKeyAndFetch(fetchNone(entityType).with(REF_COUNT), key).getRefCount();
         assertThat(actual)
                 .describedAs(messageSupplier)
                 .isEqualTo(expected);
