@@ -25,7 +25,7 @@ public class StartSecure {
     private static final Logger LOGGER = getLogger(StartSecure.class);
 
     public static void main(final String[] args) throws IOException {
-        final String fileName = "src/main/resources/application.properties";
+        final String fileName = "src/main/resources/application-PostgreSql.properties";
         final Properties props = new Properties();
         try (final InputStream st = new FileInputStream(fileName);) {
             props.load(st);
