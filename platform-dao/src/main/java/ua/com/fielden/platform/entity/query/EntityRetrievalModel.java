@@ -42,69 +42,61 @@ import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.ImmutableListUtils.prepend;
 import static ua.com.fielden.platform.utils.ToString.separateLines;
 
-
-/**
- * Represents retrieval models specialised for entity types.
- * <p>
- * Retrieval model {@code RM} is constructed from {@linkplain fetch fetch model} {@code FM} as follows:
- * <ol>
- *   <li> {@link FetchCategory} is used to construct the initial parts of {@code RM}; more details are provided below.
- *   <li> Any properties explicitly excluded by {@code FM} are excluded from {@code RM}.
- *   <li> Any properties explicitly included by {@code FM} are included into {@code RM}.
- *        Any sub-fetch models among them are combined with those used during previous steps.
- *        For example, given entity-typed property {@code P}, if the fetch category resulted in a sub-retrieval model
- *        {@code RM_P} (with an underlying fetch model {@code RMFM_P}) for {@code P},
- *        and {@code P} is explicitly included into {@code FM} with a sub-fetch model {@code FM_P},
- *        then {@code FM_P} is combined with {@code RMFM_P} to produce the final sub-retrieval model for {@code P}.
- *   <li> The set of proxied properties is constructed.
- * </ol>
- *
- * <h4> Processing of entity-typed properties </h4>
- * Property {@code P} with entity type {@code E} may be explored during construction of a retrieval model,
- * which will result in a richer sub-model for that property.
- * <p>
- * If {@code P} is explored, then:
- * <ul>
- *   <li> if {@code E} is a union entity, {@link FetchCategory#ALL} is used;
- *   <li> otherwise {@link FetchCategory#DEFAULT} is used.
- * </ul>
- * Otherwise, if {@code P} is not explored, then:
- * <ul>
- *   <li> if {@code E} is a persistent entity, {@link FetchCategory#ID_ONLY} is used;
- *   <li> otherwise, {@code P} is ignored and no sub-model is constructed for it.
- * </ul>
- *
- * <h4> Fetch categories </h4>
- * See the documentation {@link FetchCategory} for a description of each category.
- * <p>
- * Some categories deserve additional clarification:
- * <ol>
- *   <li> {@link FetchCategory#ALL} - equivalent to {@link FetchCategory#DEFAULT},
- *        but without special handling of entity-typed keys and key members.
- * </ol>
- *
- * <h4> Processing of property {@code key} </h4>
- * <ul>
- *   <li> If an entity has a composite key, the retrieval model is expanded to include all the key members, which are always explored further.
- *        Property {@code key} itself is never included in such cases as it is effective a "virtual" property, having different types at Java and EQL levels.
- *        More specifically, it is {@link DynamicEntityKey} in Java, and a string in EQL, because it is implicitly calculated
- *        (i.e. key members are converted to string and concatenated with a key value separator to produce the key value).
- *        If such {@code key} were to be retrieved, then it would be required to parse its string value into a {@link DynamicEntityKey}.
- *        Instead, a composite {@code key} is never included in a retrieval model, and the constructor of {@link AbstractEntity} takes care of initialising its value.
- *   <li> If an entity is a union, {@code key} is included together with all the union members, which are always explored further.
- * </ul>
- *
- * <h4> Implementation Details </h4>
- * When inspecting property types for a potential entity type,
- * method {@link PropertyTypeMetadata.Wrapper#unwrap(PropertyTypeMetadata)} is used because of the way fetch models are constructed -- heuristically.
- * One case where unwrapping is needed is collectional properties: fetch models know only about the collectional element type.
- */
+/// Represents retrieval models specialised for entity types.
+///
+/// Retrieval model `RM` is constructed from [fetch model][fetch] `FM` as follows:
+///
+///   1. [FetchCategory] is used to construct the initial parts of `RM` (more details are provided below).
+///   2. Any properties explicitly excluded by `FM` are excluded from `RM`.
+///   3. Any properties explicitly included by `FM` are included into `RM`.
+///      Any sub-fetch models among them are combined with those used during the previous steps.
+///      For example, given entity-typed property `P`, if the fetch category resulted in a sub-retrieval model
+///      `RM_P` (with an underlying fetch model `RMFM_P`) for `P`,
+///      and `P` is explicitly included into `FM` with a sub-fetch model `FM_P`,
+///      then `FM_P` is combined with `RMFM_P` to produce the final sub-retrieval model for `P`.
+///   4. The set of proxied properties is constructed.
+///
+/// #### Processing of entity-typed properties
+/// Property `P` with entity type `E` may be explored during construction of a retrieval model,
+/// which will result in a richer sub-model for that property.
+///
+/// If `P` is explored, then:
+///
+/// 1. If `E` is a union entity, `FetchCategory#ALL` is used.
+/// 2. Otherwise, `FetchCategory#DEFAULT` is used.
+///
+/// If `P` is not explored, then:
+///
+/// 1. If `E` is a persistent entity, `FetchCategory#ID_ONLY` is used.
+/// 2. Otherwise, `P` is ignored and no sub-model is constructed for it.
+///
+/// #### Fetch categories
+/// See the documentation [FetchCategory] for a description of each category.
+///
+/// Please note that [FetchCategory#ALL] is equivalent to [FetchCategory#DEFAULT], but without special handling of entity-typed keys and key members.
+///
+/// #### Processing of property `key`
+///
+/// * If an entity has a composite key, the retrieval model is expanded to include all the key members, which are always explored further.
+///   Property `key` itself is never included in such cases as it is effective a "virtual" property, having different types at the domain model and EQL levels.
+///   More specifically, it is [DynamicEntityKey] at the domain model level, and [String] in EQL, where it is implicitly calculated
+///   (key members are converted to string and concatenated with a key member separator).
+///   If such `key` were to be retrieved, then it would be required to parse its string value into a [DynamicEntityKey].
+///   Instead, a composite `key` is never included in a retrieval model, and the constructor of [AbstractEntity] takes care of initialising its value.
+/// * If an entity is a union, `key` is included together with all the union members, which are always explored further.
+///
+/// #### Implementation details
+///
+/// When inspecting property types for a potential entity type,
+/// method [PropertyTypeMetadata.Wrapper#unwrap(PropertyTypeMetadata)] is used because of the way fetch models are constructed -- heuristically.
+/// One case where unwrapping is needed is collectional properties where fetch models know only about the collectional element type.
+///
 public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T>, ToString.IFormattable {
 
-    public static final String ERR_NO_SUCH_PROPERTY_IN_MODEL = "No such property [%s] in retrieval model:%n%s";
-    public static final String ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find entity-typed property [%s] to be excluded from fetched properties of entity type [%s].";
-    public static final String ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find property [%s] to be excluded from fetched properties of entity type [%s].";
-    public static final String ERR_NON_EXISTING_PROPERTY = "Trying to fetch entity [%s] with non-existing property [%s].";
+    public static final String ERR_NO_SUCH_PROPERTY_IN_MODEL = "No such property [%s] in retrieval model:%n%s",
+                               ERR_EXPECTED_TO_FIND_ENTITY_TYPED_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find entity-typed property [%s] to be excluded from fetched properties of entity type [%s].",
+                               ERR_EXPECTED_TO_FIND_PROPERTY_EXCLUDED_FROM_FETCH = "Couldn't find property [%s] to be excluded from fetched properties of entity type [%s].",
+                               ERR_NON_EXISTING_PROPERTY = "Trying to fetch entity [%s] with non-existing property [%s].";
 
     private static final String WARN_GRAPH_CYCLE = """
       Cycle detected in entity graph. Retrieval model will be truncated.
@@ -114,13 +106,13 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
     private static final Logger LOGGER = getLogger();
 
     private final fetch<T> originalFetch;
-    /** Indicates whether this fetch is the top-most (graph root) or a nested one (subgraph). */
+    /// Indicates whether this fetch is the top-most (graph root) or a nested one (subgraph).
     private final boolean topLevel;
-    /** Association between an entity-typed property and its nested fetch model. */
+    /// Association between an entity-typed property and its nested fetch model.
     private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps;
-    /** Primitive properties that should be retrieved. */
+    /// Primitive properties that should be retrieved.
     private final Set<String> primProps;
-    /** Properties that should be proxied in the resulting entity proxy instance. */
+    /// Properties that should be proxied in the resulting entity proxy instance.
     private final Set<String> proxiedProps;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final IDomainMetadata domainMetadata, final QuerySourceInfoProvider qsip) {
@@ -275,17 +267,15 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
                 .$();
     }
 
-    /**
-     * Mutable builder for initialisation of {@link EntityRetrievalModel}.
-     * Its output is stored in {@link #primProps}, {@link #entityProps}, and {@link #proxiedProps}.
-     * </p>
-     * Both {@link IDomainMetadata} and {@link QuerySourceInfoProvider} are required to correctly build a retrieval model.
-     * <ul>
-     * <li> {@link IDomainMetadata} is required because of the richness of information it provides about entity types and their properties.
-     * <li> {@link QuerySourceInfoProvider} is required because it contains EQL-specific information that is not provided
-     *      by {@link IDomainMetadata} (e.g., properties that are present in the yields of synthetic entity models).
-     * </ul>
-     */
+   /// Mutable builder for initialisation of [EntityRetrievalModel].
+   /// Its output is stored in [#primProps], [#entityProps], and [#proxiedProps].
+   ///
+   /// Both [IDomainMetadata] and [QuerySourceInfoProvider] are required to correctly build a retrieval model.
+   ///
+   /// * [IDomainMetadata] is required because of the richness of information it provides about entity types and their properties.
+   /// * [QuerySourceInfoProvider] is required because it contains EQL-specific information not provided by [IDomainMetadata]
+   ///   (e.g., properties that are present in the yields of synthetic entity models).
+   ///
     private static final class Builder {
         final Class<? extends AbstractEntity<?>> entityType;
         final IDomainMetadata domainMetadata;
@@ -324,12 +314,11 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             return primProps.contains(propName) || entityProps.containsKey(propName);
         }
 
-        /**
-         * Performs an action for each <i>modelled</i> property (see {@link QuerySourceInfoProvider}) of the entity type.
-         * </p>
-         * The action is supplied with an optional {@link PropertyMetadata} that may be absent.
-         * Refer to {@link QuerySourceInfoProvider} for a description of when such cases may occur.
-         */
+       /// Performs an action for each _modelled_ property (see [QuerySourceInfoProvider]) of the entity type.
+       ///
+       /// The action is supplied with an optional [PropertyMetadata] that may be absent.
+       /// Refer to [QuerySourceInfoProvider] for a description of when such cases may occur.
+       ///
         private void forEachProperty(final BiConsumer<? super AbstractQuerySourceItem<?>, ? super Optional<PropertyMetadata>> fn) {
             querySourceInfo.getProps().values()
                     .forEach(prop -> fn.accept(prop, entityMetadata.propertyOpt(prop.name)));
@@ -481,9 +470,8 @@ public final class EntityRetrievalModel<T extends AbstractEntity<?>> implements 
             }
         }
 
-        /**
-         * Includes the property and explores it further, if it is entity-typed.
-         */
+        /// Includes the property and explores it further, if it is entity-typed.
+        ///
         private void with(final String propName) {
             with(propName, false);
         }

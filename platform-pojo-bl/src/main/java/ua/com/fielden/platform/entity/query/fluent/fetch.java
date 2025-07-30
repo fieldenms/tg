@@ -62,7 +62,7 @@ public class fetch<T extends AbstractEntity<?>> implements ToString.IFormattable
         /// *  Non-retrievable properties are excluded.
         /// *  Each calculated property is excluded unless it has a component type.
         /// *  `desc` is always included if it belongs to the entity type.
-        /// *  Each entity-typed property [#ID_ONLY] is used, and each such property is included iff its type is persistent.
+        /// *  Each persistent entity-typed property is included as [#ID_ONLY].
         ///
         DEFAULT,
 
