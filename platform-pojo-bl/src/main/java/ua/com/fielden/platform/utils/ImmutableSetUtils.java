@@ -12,6 +12,7 @@ import java.util.SortedSet;
 /// **Null as set member is not permitted**.
 ///
 /// @see ImmutableMapUtils
+/// @see ImmutableListUtils
 ///
 public final class ImmutableSetUtils {
 
