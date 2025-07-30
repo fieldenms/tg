@@ -99,7 +99,7 @@ public final class EqlQueryTransformer {
         return query2.transform(context2);
     }
 
-    <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(
+    public <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(
             final QueryProcessingModel<E, ?> qem,
             final Optional<String> username)
     {
