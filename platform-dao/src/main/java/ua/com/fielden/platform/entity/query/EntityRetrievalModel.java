@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
@@ -18,7 +19,6 @@ import ua.com.fielden.platform.utils.StreamUtils;
 import ua.com.fielden.platform.utils.ToString;
 import ua.com.fielden.platform.utils.ToString.IFormat;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;

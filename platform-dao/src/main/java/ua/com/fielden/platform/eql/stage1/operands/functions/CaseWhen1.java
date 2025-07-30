@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.operands.functions;
 
 import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.stage1.TransformationContextFromStage1To2;
@@ -14,7 +15,6 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ToString;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

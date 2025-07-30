@@ -2,8 +2,6 @@ package ua.com.fielden.platform.migration;
 
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
 /// Information about an entity property that needs to be migrated.
 ///
 /// @param propName  property path

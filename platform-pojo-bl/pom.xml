@@ -16,9 +16,9 @@
     </description>
 
     <properties>
-        <jackson.version>2.15.0</jackson.version>
-        <log4j.version>2.23.1</log4j.version>
-        <guava.version>33.2.1-jre</guava.version>
+        <jackson.version>2.19.2</jackson.version>
+        <log4j.version>2.25.1</log4j.version>
+        <guava.version>33.4.8-jre</guava.version>
         <poi.verstion>5.4.1</poi.verstion>
         <xalan.version>2.7.3</xalan.version>
         <guice.version>7.0.0</guice.version>
@@ -29,6 +29,13 @@
             <groupId>fielden</groupId>
             <artifactId>platform-annotations</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>3.0.0</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
