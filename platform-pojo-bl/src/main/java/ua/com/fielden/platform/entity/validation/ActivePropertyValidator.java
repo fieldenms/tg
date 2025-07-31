@@ -24,6 +24,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.rightPad;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
@@ -96,7 +97,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             // Need to check if already referenced activatables are active and thus may be referenced by this entity, which is being activated.
             for (final var prop : activatableNotNullNotProxyProperties(entity)) {
                 final var value = extractActivatable(prop.getValue());
-                if (!value.isActive()) {
+                if (!value.proxiedPropertyNames().contains(ACTIVE) && !value.isActive()) {
                     final var entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
                     final var propTitle = getTitleAndDesc(prop.getName(), entity.getType()).getKey();
                     final var valueEntityTitle = getEntityTitleAndDesc(value.getType()).getKey();

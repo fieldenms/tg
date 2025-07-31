@@ -227,14 +227,8 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
         assertRefCount(10, b);
 
-        // TODO Should work with the DEFAULT category.
-        // This operation fails with a validation error saying that `b` referenced by `a` is inactive despite it obviously being active.
-        // The reason is that the result of `refetch$(a)` has property `ActivatableUnionOwner.union` whose
-        // value is an id-only proxy by structure but not by type (AbstractEntity.isIdOnlyProxy() == false).
-        // In fact, its type is a plain entity type, therefore none of its properties are proxied.
-        // This leads to ActivePropertyValidator accessing `a.b.active` and getting `false` as the result.
-        final A a_v1 = (A) refetch$(a, ALL).set(ACTIVE, true);
-        final A a_v2 = (A) refetch$(a, ALL).set(ACTIVE, true);
+        final A a_v1 = (A) refetch$(a).set(ACTIVE, true);
+        final A a_v2 = (A) refetch$(a).set(ACTIVE, true);
 
         save(a_v1);
         assertRefCount(11, b);
@@ -259,14 +253,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         assertRefCount(11, b);
 
         final A a_v1 = (A) refetch$(a).set(ACTIVE, false);
-        // TODO This should work with the DEFAULT category.
-        // Category ALL must be used here, otherwise `save(a_v2)` below fails with "Could not resolve conflicting changes"
-        // The reason is that the result of `a_v2 = refetch$(a)` has property `ActivatableUnionOwner.union` whose
-        // value is an id-only proxy by structure but not by type (AbstractEntity.isIdOnlyProxy() == false),
-        // which makes is not equal to an entity instance with the same ID but loaded by Hibernate.
-        // The underlying cause is a flaw in the EQL process of instantiating entities from containers, where no support
-        // was foreseen for union-typed properties whose values are ID-only proxies.
-        final A a_v2 = spec.setB1(refetch$(a, ALL), null);
+        final A a_v2 = spec.setB1(refetch$(a), null);
 
         save(a_v1);
         assertRefCount(10, b);
@@ -396,21 +383,8 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
         assertRefCount(10, b);
 
-        // TODO Should work with the DEFAULT category.
-        // This operation fails with a validation error saying that `b` referenced by `a` is inactive despite it obviously being active.
-        // The reason is that the result of `refetch$(a)` has property `ActivatableUnionOwner.union` whose
-        // value is an id-only proxy by structure but not by type (AbstractEntity.isIdOnlyProxy() == false).
-        // In fact, its type is a plain entity type, therefore none of its properties are proxied.
-        // This leads to ActivePropertyValidator accessing `a.b.active` and getting `false` as the result.
-        final A a_v1 = (A) refetch$(a, ALL).set(ACTIVE, true);
-        // TODO Should work with the DEFAULT category.
-        // Category ALL must be used here, otherwise `save(a_v2)` below fails with "Could not resolve conflicting changes"
-        // The reason is that the result of `a_v2 = refetch$(a)` has property `ActivatableUnionOwner.union` whose
-        // value is an id-only proxy by structure but not by type (AbstractEntity.isIdOnlyProxy() == false),
-        // which makes is not equal to an entity instance with the same ID but loaded by Hibernate.
-        // The underlying cause is a flaw in the EQL process of instantiating entities from containers, where no support
-        // was foreseen for union-typed properties whose values are ID-only proxies.
-        final A a_v2 = spec.setB1(refetch$(a, ALL), null);
+        final A a_v1 = (A) refetch$(a).set(ACTIVE, true);
+        final A a_v2 = spec.setB1(refetch$(a), null);
 
         save(a_v1);
         assertRefCount(11, b);
