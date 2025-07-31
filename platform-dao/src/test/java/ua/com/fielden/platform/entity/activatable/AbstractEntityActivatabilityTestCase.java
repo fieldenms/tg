@@ -274,13 +274,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
         final A a_v1 = (A) refetch$(a).set(ACTIVE, false);
         final B b2 = save(spec.newB(ACTIVE, true));
-        // TODO This should work with the DEFAULT category.
-        // Category ALL must be used here, otherwise setter invocation leads to an error:
-        // StrictProxyException: Invocation of method [getKey] is restricted due to unfetched property [key]
-        // The result of `refetch$(a)` has property `TgSystem.category` whose value is an id-only proxy, hence has `key` proxied.
-        // The error occurs when this value is compared to `b2` during setter interception.
-        // The error is caused by a flaw in `AbstractEntity.equals`.
-        final A a_v2 = spec.setB1(refetch$(a, ALL), b2);
+        final A a_v2 = spec.setB1(refetch$(a), b2);
 
         save(a_v1);
         assertRefCount(10, b);
