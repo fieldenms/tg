@@ -2,10 +2,18 @@ package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 @DenyIntrospection
 @CompanionObject(IUnionEntity.class)
 public class UnionEntity extends AbstractUnionEntity {
+
+    public enum Property implements IConvertableToPath {
+        propertyOne, propertyTwo;
+
+        @Override public String toPath() { return name(); }
+    }
 
     @Title(value = "Prop One", desc = "Desc")
     @IsProperty

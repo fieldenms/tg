@@ -276,7 +276,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void non_persisted_entity_value_inside_union_is_allowed_if_property_and_active_union_member_are_annotated_with_SkipEntityExistsValidation_and_skipNew_is_true() {
-        final var two = new_(EntityTwo.class, 22);
+        final var two = new_(EntityTwo.class, "22");
         final var union = new_(UnionEntity.class).setPropertyTwo(two);
         final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp4(union);
 

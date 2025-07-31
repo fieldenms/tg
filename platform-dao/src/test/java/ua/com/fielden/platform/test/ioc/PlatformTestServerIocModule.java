@@ -181,6 +181,8 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(TgInventoryBinCo.class).to(TgInventoryBinDao.class);
         bind(TgInventoryIssueCo.class).to(TgInventoryIssueDao.class);
 
+        bind(UnionEntityDetailsCo.class).to(UnionEntityDetailsDao.class);
+
         bind(UnionCo.class).to(UnionDao.class);
         bind(Member1Co.class).to(Member1Dao.class);
         bind(Member2Co.class).to(Member2Dao.class);
