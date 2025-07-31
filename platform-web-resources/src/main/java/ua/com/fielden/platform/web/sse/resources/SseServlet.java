@@ -108,12 +108,12 @@ public final class SseServlet extends HttpServlet {
         http.setPort(port);
         server.addConnector(http);
 
-        // We need to add a handler, but with a context since Jetty 12+.
-        final ServletContextHandler context = new ServletContextHandler("/");
-        server.setHandler(context);
+        // We need to use a context handler since Jetty 12+.
+        final ServletContextHandler contextHandler = new ServletContextHandler("/");
+        server.setHandler(contextHandler);
 
         // SSE servlet instantiation, which still needs to be associated with a Jetty instance
-        SseServlet.addSseServlet(context, eseRegister, coFinder, hashingKey, crypto);
+        SseServlet.addSseServlet(contextHandler, eseRegister, coFinder, hashingKey, crypto);
         return of(server);
     }
 
