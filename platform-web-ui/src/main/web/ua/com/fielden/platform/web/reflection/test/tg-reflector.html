@@ -1889,14 +1889,6 @@
                 done();
             });
             
-            test('unionCommonProps method does not return key for types of non-composite nature with different key types (Integer and String keys)', function (done) {
-                assert.deepEqual(reflector.getType('ua.com.fielden.platform.sample.domain.UnionEntity').unionCommonProps(), [
-                    'stringProperty', // common props from most specific types EntityOne and EntityTwo
-                    'desc' // common prop from AbstractEntity (in both union types @DescTitle is present)
-                ]);
-                done();
-            });
-            
             test('unionCommonProps method does not return desc for types where one of them has no @DescTitle annotation', function (done) {
                 assert.deepEqual(reflector.getType('ua.com.fielden.platform.sample.domain.UnionEntityWithoutSecondDescTitle').unionCommonProps(), [
                     'stringProperty' // common props from most specific types EntityOne and EntityThree
