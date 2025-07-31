@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee10.servlet.ServletHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -44,7 +43,7 @@ import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTH
 
 /// A Servlet that implements support for non-blocking async Server-Sent Eventing.
 ///
-/// TG-based applications should use factory method [#addSseServlet] to create and add an SSE servlet to [ServletHandler].
+/// TG-based applications should use factory method [#addSseServlet] to create and add an SSE servlet to [ServletContextHandler].
 ///
 public final class SseServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
