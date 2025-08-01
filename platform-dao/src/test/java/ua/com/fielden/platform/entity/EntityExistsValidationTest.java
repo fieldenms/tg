@@ -26,6 +26,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_DIRTY;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_UNION_INVALID;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 // TODO This test class can be made generic in the fashion of AbstractEntityActivatabilityTestCase.
@@ -199,7 +200,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp(union);
 
         assertFalse(entity.getProperty("unionProp").isValid());
-        assertEquals(format(ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()),
+        assertEquals(format(ERR_UNION_INVALID, getEntityTitleAndDesc(UnionEntity.class).getKey(), format(ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey())),
                      entity.getProperty("unionProp").getFirstFailure().getMessage());
     }
 
@@ -243,7 +244,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp3(union);
 
         assertFalse(entity.getProperty("unionProp3").isValid());
-        assertEquals(format(ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()),
+        assertEquals(format(ERR_UNION_INVALID, getEntityTitleAndDesc(UnionEntity.class).getKey(), format(ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey())),
                      entity.getProperty("unionProp3").getFirstFailure().getMessage());
     }
 
@@ -266,7 +267,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp4(union);
 
         assertFalse(entity.getProperty("unionProp4").isValid());
-        assertEquals(format(ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()),
+        assertEquals(format(ERR_UNION_INVALID, getEntityTitleAndDesc(UnionEntity.class).getKey(), format(ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey())),
                      entity.getProperty("unionProp4").getFirstFailure().getMessage());
     }
 
@@ -289,7 +290,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         final var entity = new_(TgEntityWithManyPropTypes.class, "A").setUnionProp5(union);
 
         assertFalse(entity.getProperty("unionProp5").isValid());
-        assertEquals(format(ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()),
+        assertEquals(format(ERR_UNION_INVALID, getEntityTitleAndDesc(UnionEntity.class).getKey(), format(ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey())),
                      entity.getProperty("unionProp5").getFirstFailure().getMessage());
     }
 

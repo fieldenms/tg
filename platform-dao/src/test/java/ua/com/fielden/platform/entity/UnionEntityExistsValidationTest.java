@@ -8,8 +8,10 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_UNION_INVALID;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockFoundMoreThanOneEntity;
@@ -23,6 +25,13 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNo
  * 
  */
 public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
+
+    @Test
+    public void inactive_entities_can_be_assigned_to_properties_of_union_entities() {
+        final var m1 = save(new_(Member1.class, "M1").setActive(false));
+        final var union = new_(Union.class).setMember1(m1);
+        assertNull(union.getProperty("member1").getFirstFailure());
+    }
 
     private void valid_union_entity_can_be_assigned(final Supplier<TgBogieLocation> creator) {
         co$(TgWorkshop.class).save((TgWorkshop) co$(TgWorkshop.class).new_().setKey("W1"));
@@ -73,9 +82,10 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         bogie.setLocation(creator.get().setWorkshop(workshop));
 
         assertNull(bogie.getLocation());
-        assertFalse(bogie.getProperty("location").isValid());
-        assertEquals(format("%s was not found.", getEntityTitleAndDesc(TgWorkshop.class).getKey()),
-                     bogie.getProperty("location").getFirstFailure().getMessage());
+        assertThat(bogie.getProperty("location").getFirstFailure())
+                .hasMessage(format(ERR_UNION_INVALID,
+                                   getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
+                                   format("%s was not found.", getEntityTitleAndDesc(TgWorkshop.class).getKey())));
     }
 
     @Test
@@ -122,9 +132,10 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
 
         bogie.setLocation(bogieLocation);
 
-        assertFalse(bogie.getProperty("location").isValid());
-        assertEquals(format("%s [%s] was not found.", getEntityTitleAndDesc(workshop).getKey(), workshop),
-                     bogie.getProperty("location").getFirstFailure().getMessage());
+        assertThat(bogie.getProperty("location").getFirstFailure())
+                        .hasMessage(format(ERR_UNION_INVALID,
+                                           getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
+                                           format("%s [%s] was not found.", getEntityTitleAndDesc(workshop).getKey(), workshop)));
     }
 
     @Test

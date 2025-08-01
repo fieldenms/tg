@@ -48,7 +48,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     public static final String ERR_WAS_NOT_FOUND = "%s was not found.";
     public static final String ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE = "%s [%s] exists, but is not active.";
     public static final String ERR_DIRTY = "Dirty entity %s (%s) is not acceptable.";
-    private static final String ERR_UNION_INVALID = "%s is invalid: %s";
+    public static final String ERR_UNION_INVALID = "%s is invalid: %s";
 
     private final ICompanionObjectFinder coFinder;
     private final EntityReferenceAlgebra entityReferenceAlgebra;
@@ -61,25 +61,9 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         this.entityReferenceAlgebra = entityReferenceAlgebra;
     }
 
-    @SuppressWarnings("unchecked")
-    private static <V extends AbstractEntity<?>> boolean skipNewEntities(
-            final Class<? extends AbstractEntity<?>> entityType,
-            final CharSequence propertyName,
-            final V value,
-            final IEntityDao<V> valueCo)
-    {
+    private static boolean skipNewEntities(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propertyName) {
         final var annot = getPropertyAnnotation(SkipEntityExistsValidation.class, entityType, propertyName.toString());
-        if (annot != null && annot.skipNew()) {
-            if (value instanceof AbstractUnionEntity union) {
-                // Union instance must be instrumented to use `activeProperyName()`.
-                // TODO Instrumentation will no longer be necessary after tg/2466 is implemented.
-                final var instrumentedUnion = instrument(union, (IEntityDao<AbstractUnionEntity>) valueCo);
-                final var memberAnnot = getPropertyAnnotation(SkipEntityExistsValidation.class, union.getType(), instrumentedUnion.activePropertyName());
-                return memberAnnot != null && memberAnnot.skipNew();
-            }
-            else return true;
-        }
-        else return false;
+        return annot != null && annot.skipNew();
     }
 
     private static String entityTitle(final AbstractEntity<?> entity) {
@@ -93,12 +77,6 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         }
 
         final AbstractEntity<?> entity = property.getEntity();
-
-        // It does not make sense to validate properties of union entities.
-        // If an entity has a union-typed property, this validator will use the union's active property value.
-        if (entity instanceof AbstractUnionEntity) {
-            return successful();
-        }
 
         if (isMockNotFoundValue(newValue)) {
             // TODO newValue.getDesc() is expected to contain a string newValue typed by a user, but this will change (refer, issue https://github.com/fieldenms/tg/issues/1933).
@@ -119,7 +97,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             else {
                 final var valueCo = (IEntityDao<AbstractEntity<?>>) coFinder.find(value.getType());
 
-                var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, value, valueCo, value);
+                var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, value);
                 if (dirtyOrNewCheckResult != null) {
                     return dirtyOrNewCheckResult;
                 }
@@ -137,15 +115,13 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         @Override
         public Result applyUnion(
                 final AbstractEntity<?> entity,
-                final CharSequence property, final AbstractUnionEntity union,
+                final CharSequence property,
+                final AbstractUnionEntity union,
                 final AbstractEntity<?> unionMember)
         {
             final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(union.getType());
 
             // Union instance must be instrumented for validation.
-            // TODO It may be unnecessary to check union entities for validity.
-            //      It is likely that this approach was used only to detect violations of this validator by union members
-            //      when this validator was applicable to properties of union entity types.
             final var isValid = instrument(union, unionCo).isValid();
             if (!isValid.isSuccessful()) {
                 return failure(entity, new Exception(format(ERR_UNION_INVALID, entityTitle(union), isValid.getEx().getMessage()), isValid.getEx()));
@@ -153,7 +129,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
 
             final var unionMemberCo = (IEntityDao<AbstractEntity<?>>) coFinder.find(unionMember.getType());
 
-            var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, union, unionCo, unionMember);
+            var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, unionMember);
             if (dirtyOrNewCheckResult != null) {
                 return dirtyOrNewCheckResult;
             }
@@ -163,27 +139,23 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         }
     };
 
-
-    /// @param value  the value that is being assigned to the property
-    /// @param flatValue  the entity whose dirty state and persistence status will be checked
+    /// @param value  the entity whose dirty state and persistence status will be checked
     ///
-    private <V extends AbstractEntity<?>> @Nullable Result checkDirtyOrNew(
+    private @Nullable Result checkDirtyOrNew(
             final AbstractEntity<?> entity,
             final CharSequence property,
-            final V value,
-            final IEntityDao<V> valueCo,
-            final AbstractEntity<?> flatValue)
+            final AbstractEntity<?> value)
     {
         // If an entity is uninstrumented, its dirty state is irrelevant and cannot be checked.
-        if (flatValue.isInstrumented() && flatValue.isDirty()) {
-            if (!flatValue.isPersisted() && skipNewEntities(entity.getType(), property, value, valueCo)) {
+        if (value.isInstrumented() && value.isDirty()) {
+            if (!value.isPersisted() && skipNewEntities(entity.getType(), property)) {
                 return successful(entity);
             }
             // let's differentiate between dirty and new instances
             return failure(entity,
-                           !flatValue.isPersisted()
-                                   ? format(ERR_WAS_NOT_FOUND, entityTitle(flatValue))
-                                   : format(ERR_DIRTY, flatValue, entityTitle(flatValue)));
+                           !value.isPersisted()
+                                   ? format(ERR_WAS_NOT_FOUND, entityTitle(value))
+                                   : format(ERR_DIRTY, value, entityTitle(value)));
         }
         else return null;
     }
