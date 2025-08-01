@@ -24,11 +24,15 @@ public @interface SkipEntityExistsValidation {
     ///
     /// Also, it forces the activation-related entity tracking logic to ignore references from activatable entities' properties that have this attribute `true`.
     ///
+    /// This attribute has no effect on validation of properties of union entities.
+    ///
     boolean skipActiveOnly() default false;
     
-    /// If `true`, property ensures that an entity exists, but ignores new entities that were not yet persisted and were
+    /// If `true`, validation ensures that an entity exists, but ignores new entities that were not yet persisted and were
     /// most likely created ad-hoc through [IEntityReader#findByEntityAndFetch(ua.com.fielden.platform.entity.query.fluent.fetch,ua.com.fielden.platform.entity.AbstractEntity)].
     /// This attribute provides a way to support assigning new entity values while still restricting assignment of persisted, but modified values.
+    ///
+    /// In application to union entities, this attribute should be used both on a union-typed property and properties of the union type.
     ///
     boolean skipNew() default false;
     
