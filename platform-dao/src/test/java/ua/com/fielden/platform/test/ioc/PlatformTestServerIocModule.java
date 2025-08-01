@@ -17,6 +17,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolderDao;
 import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.ISavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolderDao;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.*;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessCo;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessDao;
 import ua.com.fielden.platform.ioc.BasicWebServerIocModule;
@@ -188,6 +189,11 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(Member2Co.class).to(Member2Dao.class);
         bind(ActivatableUnionOwnerCo.class).to(ActivatableUnionOwnerDao.class);
         bind(UnionOwnerCo.class).to(UnionOwnerDao.class);
+
+        bind(TestExists_UnionCo.class).to(TestExists_UnionDao.class);
+        bind(TestExists_Member1Co.class).to(TestExists_Member1Dao.class);
+        bind(TestExists_Member2Co.class).to(TestExists_Member2Dao.class);
+        bind(TestExists_Member3Co.class).to(TestExists_Member3Dao.class);
 
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...

@@ -2,11 +2,10 @@ package ua.com.fielden.platform.entity.validation.exists;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
-import ua.com.fielden.platform.entity.activatable.test_entities.Union;
-import ua.com.fielden.platform.sample.domain.EntityOne;
-import ua.com.fielden.platform.sample.domain.EntityTwo;
-import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member1;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member2;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Union;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import static java.lang.String.format;
@@ -24,37 +23,36 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void dirty_entities_cannot_be_assigned_to_properties_of_union_entities() {
-        final var one = save(new_(EntityOne.class, "A"));
-        one.setStringProperty("hello");
-        assertTrue(one.isDirty());
-        final var union = new_(UnionEntity.class).setPropertyOne(one);
-        Assertions.assertThat(union.getProperty(UnionEntity.Property.propertyOne).getFirstFailure())
-                .hasMessage(format(ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()));
+        final var m1 = save(new_(TestExists_Member1.class, "M1"));
+        m1.setStr1("hello");
+        assertTrue(m1.isDirty());
+        final var union = new_(TestExists_Union.class).setMember1(m1);
+        Assertions.assertThat(union.getProperty("member1").getFirstFailure())
+                .hasMessage(format(ERR_DIRTY, m1, getEntityTitleAndDesc(m1).getKey()));
     }
 
     @Test
     public void non_persisted_entities_cannot_be_assigned_to_properties_of_union_entities() {
-        final var one = new_(EntityOne.class, "A");
-        assertFalse(one.isPersisted());
-        final var union = new_(UnionEntity.class).setPropertyOne(one);
-        Assertions.assertThat(union.getProperty(UnionEntity.Property.propertyOne).getFirstFailure())
-                .hasMessage(format(EntityExistsValidator.ERR_WAS_NOT_FOUND, getEntityTitleAndDesc(one).getKey()));
+        final var m1 = new_(TestExists_Member1.class, "M1");
+        assertFalse(m1.isPersisted());
+        final var union = new_(TestExists_Union.class).setMember1(m1);
+        Assertions.assertThat(union.getProperty("member1").getFirstFailure())
+                .hasMessage(format(EntityExistsValidator.ERR_WAS_NOT_FOUND, getEntityTitleAndDesc(m1).getKey()));
     }
 
     @Test
     public void non_persisted_entities_can_be_assigned_to_properties_of_union_entities_if_skipNew_is_true() {
-        final var two = new_(EntityTwo.class, "A");
-        assertFalse(two.isPersisted());
-        final var union = new_(UnionEntity.class).setPropertyTwo(two);
-        assertNull(union.getProperty(UnionEntity.Property.propertyOne).getFirstFailure());
+        final var m2 = new_(TestExists_Member2.class, "M2");
+        assertFalse(m2.isPersisted());
+        final var union = new_(TestExists_Union.class).setMember2(m2);
+        assertNull(union.getProperty("member2").getFirstFailure());
     }
 
     @Test
     public void inactive_entities_can_be_assigned_to_properties_of_union_entities() {
-        final var m1 = save(new_(Member1.class, "M1").setActive(false));
-        final var union = new_(Union.class).setMember1(m1);
+        final var m1 = save(new_(TestExists_Member1.class, "M1").setActive(false));
+        final var union = new_(TestExists_Union.class).setMember1(m1);
         assertNull(union.getProperty("member1").getFirstFailure());
     }
-
 
 }
