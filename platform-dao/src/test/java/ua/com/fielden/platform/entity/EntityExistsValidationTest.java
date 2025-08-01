@@ -1,9 +1,14 @@
 package ua.com.fielden.platform.entity;
 
 import com.google.inject.Injector;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.entity.activatable.test_entities.ActivatableUnionOwner;
+import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
+import ua.com.fielden.platform.entity.activatable.test_entities.Union;
+import ua.com.fielden.platform.entity.activatable.test_entities.UnionOwner;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -45,6 +50,28 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
         assertEquals("Tg Category [Cat2] exists, but is not active.", result.getMessage());
+    }
+
+    @Test
+    public void existing_but_inactive_entity_can_be_assigned_to_property_with_default_validation_if_enclosing_entity_is_inactive() {
+        final var cat = save(new_(TgCategory.class, "CAT10").setActive(false));
+        final var sys = new_(TgSystem.class, "Sys2").setActive(false).setCategory(cat);
+        assertTrue(sys.isValid().isSuccessful());
+        assertTrue(sys.getProperty("category").isValid());
+    }
+
+    @Test
+    public void existing_but_inactive_entity_inside_union_can_be_assigned_to_property_with_default_validation_if_enclosing_entity_is_inactive() {
+        final var m1 = save(new_(Member1.class, "M1").setActive(false));
+        final var o1 = new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion(new_(Union.class).setMember1(m1));
+        assertTrue(o1.getProperty("union").isValid());
+    }
+
+    @Test
+    public void existing_but_inactive_entity_inside_union_can_be_assigned_to_property_with_default_validation_if_enclosing_entity_is_not_activatable() {
+        final var m1 = save(new_(Member1.class, "M1").setActive(false));
+        final var o1 = new_(UnionOwner.class, "O1").setUnion(new_(Union.class).setMember1(m1));
+        assertTrue(o1.getProperty("union").isValid());
     }
 
     @Test
@@ -263,6 +290,33 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(entity.getProperty("unionProp5").isValid());
         assertEquals(format(EntityExistsValidator.ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()),
                      entity.getProperty("unionProp5").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void dirty_entities_cannot_be_assigned_to_properties_of_union_entities() {
+        final var one = save(new_(EntityOne.class, "A"));
+        one.setStringProperty("hello");
+        assertTrue(one.isDirty());
+        final var union = new_(UnionEntity.class).setPropertyOne(one);
+        Assertions.assertThat(union.getProperty(UnionEntity.Property.propertyOne).getFirstFailure())
+                .hasMessage(format(EntityExistsValidator.ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()));
+    }
+
+    @Test
+    public void non_persisted_entities_cannot_be_assigned_to_properties_of_union_entities() {
+        final var one = new_(EntityOne.class, "A");
+        assertFalse(one.isPersisted());
+        final var union = new_(UnionEntity.class).setPropertyOne(one);
+        Assertions.assertThat(union.getProperty(UnionEntity.Property.propertyOne).getFirstFailure())
+                .hasMessage(format(EntityExistsValidator.ERR_WAS_NOT_FOUND, getEntityTitleAndDesc(one).getKey()));
+    }
+
+    @Test
+    public void non_persisted_entities_can_be_assigned_to_properties_of_union_entities_if_skipNew_is_true() {
+        final var two = new_(EntityTwo.class, "A");
+        assertFalse(two.isPersisted());
+        final var union = new_(UnionEntity.class).setPropertyTwo(two);
+        assertNull(union.getProperty(UnionEntity.Property.propertyOne).getFirstFailure());
     }
 
     @Test
