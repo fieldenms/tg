@@ -12,7 +12,6 @@ import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.*;
 
-import javax.annotation.Nonnull;
 import java.math.BigDecimal;
 import java.util.Date;
 

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.IEntityReader;
@@ -25,7 +26,6 @@ import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;

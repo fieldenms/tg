@@ -3,6 +3,7 @@ package ua.com.fielden.platform.companion;
 import com.google.inject.ImplementedBy;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
@@ -46,7 +47,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
-import javax.annotation.Nullable;
 import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Field;
 import java.util.*;

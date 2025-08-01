@@ -1,23 +1,20 @@
 package ua.com.fielden.platform.eql.dbschema;
 
 import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nonnull;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.eql.dbschema.exceptions.DbSchemaException;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.types.either.Either;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static ua.com.fielden.platform.types.either.Either.left;
-import static ua.com.fielden.platform.types.either.Either.right;
 
 // TODO reduce visibility after configuring tests to use Injector
 @Singleton

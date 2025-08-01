@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.indexer;
 
 import com.google.common.collect.ImmutableMap;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.Mutator;
@@ -10,7 +11,6 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;

@@ -132,26 +132,15 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             }
         }
     }
-    
-    /**
-     * This is very much an experimental attempt to remedy accumulation of generated types inside Jackson caches.
-     */
-    private void clearCaches() {
-//        getTypeFactory().clearCache();
+
+    /// This is very much an experimental attempt to remedy accumulation of generated types inside Jackson caches.
+    ///
+    /// Note that the original name of this method was `clearCaches` (`s` at the end), but since the update to Jackson `2.19.2` it started clashing with the method [ObjectMapper#clearCaches()].
+    private void clearCache() {
         TypeFactory.defaultInstance().clearCache();
         // flushing cache is a synchronized operation
         final DefaultSerializerProvider defaultSerializerProvider = (DefaultSerializerProvider) getSerializerProvider();
         defaultSerializerProvider.flushCachedSerializers();
-        // EXPERIMENTAL
-//        synchronized (this) {
-//            try {
-//                if (cachedFCAsToClear != null) {
-//                    cachedFCAsToClear.clear();
-//                }
-//            } catch (final Exception ex) {
-//                logger.error("Could not clear _cachedFCA.", ex);
-//            }
-//        }
     }
     
     /**
@@ -161,7 +150,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * @return
      */
     public EntityType registerNewEntityType(final Class<AbstractEntity<?>> newType) {
-        clearCaches();
+        clearCache();
         return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache).getEntityTypeInfo();
     }
     

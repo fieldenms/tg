@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage2;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public class TransformationResultFromStage2To3<T> {
     /**

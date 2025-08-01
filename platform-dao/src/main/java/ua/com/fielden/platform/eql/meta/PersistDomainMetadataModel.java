@@ -6,32 +6,20 @@ import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.eql.dbschema.PropertyInlinerImpl;
-import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadata;
-import ua.com.fielden.platform.meta.PropertyMetadataUtils;
-import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 
-import javax.annotation.Nullable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
-import static ua.com.fielden.platform.meta.PropertyMetadataKeys.REQUIRED;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.utils.EntityUtils.entityTypeHierarchy;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 /**
  * Performs instant persistence of the Domain Metadata Model entities, generated for an application domain.
