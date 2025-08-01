@@ -1138,6 +1138,10 @@ Polymer({
     reloadDialog: function() {
         const self = this;
         if (self.$.elementLoader.loadedElement.tagName !== self._lastAction.elementName.toUpperCase()) {
+            //Call this method necause entity master type changes, therefore dialog's dimension and position will be changed
+            self._handleMasterBeforeChange();
+
+
             self._customiseAction(self._lastAction);
             self.dynamicTitle = null;
 
@@ -1161,6 +1165,9 @@ Polymer({
                                 } else {
                                     return Promise.reject('Retrieval / saving promise was not successful.');
                                 }
+                            })
+                            .then( e => {
+                                self._handleMasterChanged(e);
                             })
                             .catch(function(error) {
                                 self._finishErroneousOpening();
@@ -1426,7 +1433,7 @@ Polymer({
             this._maximised = this._customMaximised();
         }
 
-        console.log(`--refiting fialog maximised state: ${this._maximised}--`);
+        console.log(`--refiting dialog maximised state: ${this._maximised}--`);
 
         if (this._dialogIsOutOfTheWindow()) {
             this._removePersistedPositionAndDimensions();
@@ -1550,8 +1557,10 @@ Polymer({
         }
 
         this._refit();
-        this.open();
-        this._showBlockingPane();
+        if (!this.opened) { 
+            this.open();
+            this._showBlockingPane();
+        }
     },
     
     //Makes blocking pane visible via the animation. If the blocking pane is already visible then just increase _blockingPaneCounter.

@@ -277,12 +277,12 @@ const TgEntityCentreTemplateBehaviorImpl = {
                     this.$.egi.editEntity(entity);
                     const master = action._masterReferenceForTesting;
                     if (master) {
+                        master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});
                         //TODO the logic of determining of the right entity type should be changed
                         const masterInfo = (entity.type().notEnhancedFullClassName() === 'fielden.example.SynExample' ? this._reflector.getType(entity.get("exampleEntityType")) : entity.type()).entityMaster();
                         if (masterInfo.key.toUpperCase() !== master.tagName) {
                             action._setEntityMasterInfo(masterInfo);
                         } else {
-                            master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});
                             master.savingContext = action._createContextHolderForAction();
                             master.retrieve(master.savingContext).then(function(ironRequest) {
                                 if (action.modifyFunctionalEntity) {
