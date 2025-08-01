@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity;
 
 import com.google.inject.Injector;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
@@ -9,6 +8,7 @@ import ua.com.fielden.platform.entity.activatable.test_entities.ActivatableUnion
 import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
 import ua.com.fielden.platform.entity.activatable.test_entities.Union;
 import ua.com.fielden.platform.entity.activatable.test_entities.UnionOwner;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -21,15 +21,26 @@ import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import java.util.HashSet;
+import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_DIRTY;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_UNION_INVALID;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockFoundMoreThanOneEntity;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 
-// TODO This test class can be made generic in the fashion of AbstractEntityActivatabilityTestCase.
+/// This test case covers rules of the entity-exists validation.
+///
+/// @see EntityExistsValidator
+/// @see SkipEntityExistsValidation
+///
+// TODO Some parts of this test class can be made generic in the fashion of AbstractEntityActivatabilityTestCase.
 public class EntityExistsValidationTest extends AbstractDaoTestCase {
     private final CriteriaGeneratorTestIocModule module = new CriteriaGeneratorTestIocModule();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
@@ -295,33 +306,6 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void dirty_entities_cannot_be_assigned_to_properties_of_union_entities() {
-        final var one = save(new_(EntityOne.class, "A"));
-        one.setStringProperty("hello");
-        assertTrue(one.isDirty());
-        final var union = new_(UnionEntity.class).setPropertyOne(one);
-        Assertions.assertThat(union.getProperty(UnionEntity.Property.propertyOne).getFirstFailure())
-                .hasMessage(format(ERR_DIRTY, one, getEntityTitleAndDesc(one).getKey()));
-    }
-
-    @Test
-    public void non_persisted_entities_cannot_be_assigned_to_properties_of_union_entities() {
-        final var one = new_(EntityOne.class, "A");
-        assertFalse(one.isPersisted());
-        final var union = new_(UnionEntity.class).setPropertyOne(one);
-        Assertions.assertThat(union.getProperty(UnionEntity.Property.propertyOne).getFirstFailure())
-                .hasMessage(format(EntityExistsValidator.ERR_WAS_NOT_FOUND, getEntityTitleAndDesc(one).getKey()));
-    }
-
-    @Test
-    public void non_persisted_entities_can_be_assigned_to_properties_of_union_entities_if_skipNew_is_true() {
-        final var two = new_(EntityTwo.class, "A");
-        assertFalse(two.isPersisted());
-        final var union = new_(UnionEntity.class).setPropertyTwo(two);
-        assertNull(union.getProperty(UnionEntity.Property.propertyOne).getFirstFailure());
-    }
-
-    @Test
     public void non_persisted_entity_value_is_allowed_for_property_annotated_with_SkipEntityExistsValidation_if_skipNew_is_true() {
         final var cat42 = co$(TgCategory.class).new_().setKey("Cat42");
         final var sys = new_(TgSystem.class, "Sys2").setActive(true).setPermitNewCategory(cat42);
@@ -348,6 +332,137 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         final MetaProperty<?> mp = sys.getProperty("propDescriptor");
         assertTrue(mp.isValid());
         assertEquals(pd, mp.getValue());
+    }
+
+    @Test
+    public void uninstrumented_union_entity_with_existing_active_property__that_has_been_deleted__cannot_be_assigned() {
+        final var w1 = save(new_(TgWorkshop.class, "W1"));
+        final var bogie = new_(TgBogie.class);
+        final var bogieLocation = new TgBogieLocation().setWorkshop(w1);
+
+        co$(TgWorkshop.class).delete(w1);
+
+        bogie.setLocation(bogieLocation);
+
+        assertThat(bogie.getProperty("location").getFirstFailure())
+                .hasMessage(format(ERR_UNION_INVALID,
+                                   getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
+                                   format("%s [%s] was not found.", getEntityTitleAndDesc(w1).getKey(), w1)));
+    }
+
+    @Test
+    public void instrumented_union_entity_with_existing_active_property__that_has_been_deleted__cannot_be_assigned() {
+        final var w1 = save(new_(TgWorkshop.class, "W1"));
+        final var bogie = new_(TgBogie.class);
+        final var bogieLocation = new_(TgBogieLocation.class).setWorkshop(w1);
+
+        co$(TgWorkshop.class).delete(w1);
+
+        bogie.setLocation(bogieLocation);
+
+        // The error message does not contain "Union is invalid" because when an uninstrumented union is assigned,
+        // it is first instrumented and then validated, which immediately yields an invalid result.
+        // But when a union is instrumented prior to assignment, its validation had already been performed, and its result
+        // is successful since it occurred before deletion.
+        assertThat(bogie.getProperty("location").getFirstFailure())
+                .hasMessage(format("%s [%s] was not found.", getEntityTitleAndDesc(w1).getKey(), w1));
+    }
+
+    @Test
+    public void mock_union_entity_cannot_be_assigned() {
+        final var bogie = co$(TgBogie.class).new_();
+        bogie.setLocation((TgBogieLocation) createMockNotFoundEntity(TgBogieLocation.class, "UNKNOWN"));
+
+        assertFalse(bogie.getProperty("location").isValid());
+        assertEquals(format("%s [%s] was not found.", getEntityTitleAndDesc(TgBogieLocation.class).getKey(), "UNKNOWN"),
+                     bogie.getProperty("location").getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void more_than_one_mock_union_entity_cannot_be_assigned() {
+        final var bogie = co$(TgBogie.class).new_();
+        bogie.setLocation((TgBogieLocation) createMockFoundMoreThanOneEntity(TgBogieLocation.class, "MANY"));
+
+        assertFalse(bogie.getProperty("location").isValid());
+        assertEquals("Please choose a specific value explicitly from a drop-down.", bogie.getProperty("location").getFirstFailure().getMessage());
+    }
+
+    private void union_entity_without_active_property_cannot_be_assigned(final Supplier<TgBogieLocation> locationSupplier) {
+        final var bogie = new_(TgBogie.class);
+        bogie.setLocation(locationSupplier.get());
+
+        assertThat(bogie.getProperty("location").getFirstFailure())
+                .hasMessage(format(ERR_UNION_INVALID,
+                                   getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
+                                   format("Required property [%s] is not specified for entity [%s].",
+                                          getTitleAndDesc(KEY, TgBogieLocation.class).getKey(),
+                                          getEntityTitleAndDesc(TgBogieLocation.class).getKey())));
+    }
+
+    @Test
+    public void instrumented_union_entity_without_active_property_cannot_be_assigned() {
+        union_entity_without_active_property_cannot_be_assigned(() -> co$(TgBogieLocation.class).new_());
+    }
+
+    @Test
+    public void uninstrumented_union_entity_without_active_property_cannot_be_assigned() {
+        union_entity_without_active_property_cannot_be_assigned(TgBogieLocation::new);
+    }
+
+    private void union_entity_with_non_existing_active_property_cannot_be_assigned(final Supplier<TgBogieLocation> locationSupplier) {
+        final var bogie = new_(TgBogie.class);
+        final var workshop = new_(TgWorkshop.class, "W1");
+        bogie.setLocation(locationSupplier.get().setWorkshop(workshop));
+
+        assertThat(bogie.getProperty("location").getFirstFailure())
+                .hasMessage(format(ERR_UNION_INVALID,
+                                   getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
+                                   format("%s was not found.", getEntityTitleAndDesc(TgWorkshop.class).getKey())));
+    }
+
+    @Test
+    public void instrumented_union_entity_with_non_existing_active_property_cannot_be_assigned() {
+        union_entity_with_non_existing_active_property_cannot_be_assigned(() -> co$(TgBogieLocation.class).new_());
+    }
+
+    @Test
+    public void uninstrumented_union_entity_with_non_existing_active_property_cannot_be_assigned() {
+        union_entity_with_non_existing_active_property_cannot_be_assigned(TgBogieLocation::new);
+    }
+
+    private void _valid_union_entity_can_be_assigned(final Supplier<TgBogieLocation> locationSupplier) {
+        final var workshop = save(new_(TgWorkshop.class, "W1"));
+        final var bogie = new_(TgBogie.class);
+        bogie.setLocation(locationSupplier.get().setWorkshop(workshop));
+        assertNull(bogie.getProperty("location").getFirstFailure());
+    }
+
+    @Test
+    public void instrumented_valid_union_entity_can_be_assigned() {
+        _valid_union_entity_can_be_assigned(() -> co$(TgBogieLocation.class).new_());
+    }
+
+    @Test
+    public void uninstrumented_valid_union_entity_can_be_assigned() {
+        _valid_union_entity_can_be_assigned(TgBogieLocation::new);
+    }
+
+    private void skipEntityExistsNew_union_entity_with_skipEntityExistsNew_active_property_can_be_assigned(final Supplier<UnionEntityWithSkipExistsValidation> creator) {
+        final var entityWithUnion = co$(EntityWithUnionEntityWithSkipExistsValidation.class).new_();
+        final var workshop = (TgWorkshop) co$(TgWorkshop.class).new_().setKey("W1");
+        entityWithUnion.setUnion(creator.get().setWorkshop(workshop));
+
+        assertNull(entityWithUnion.getProperty("union").getFirstFailure());
+    }
+
+    @Test
+    public void skipEntityExistsNew_union_entity_with_skipEntityExistsNew_active_property_can_be_assigned() {
+        skipEntityExistsNew_union_entity_with_skipEntityExistsNew_active_property_can_be_assigned(() -> co$(UnionEntityWithSkipExistsValidation.class).new_());
+    }
+
+    @Test
+    public void skipEntityExistsNew_uninstrumented_union_entity_with_skipEntityExistsNew_active_property_can_be_assigned() {
+        skipEntityExistsNew_union_entity_with_skipEntityExistsNew_active_property_can_be_assigned(UnionEntityWithSkipExistsValidation::new);
     }
 
     @Override
