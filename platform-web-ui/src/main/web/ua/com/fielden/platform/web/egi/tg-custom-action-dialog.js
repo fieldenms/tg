@@ -750,6 +750,7 @@ Polymer({
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
             this._lastAction.firstEntry();
+            this.reloadDialog();
         }
     },
     
@@ -760,6 +761,7 @@ Polymer({
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
             this._lastAction.previousEntry();
+            this.reloadDialog();
         }
     },
     
@@ -770,6 +772,7 @@ Polymer({
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
             this._lastAction.nextEntry();
+            this.reloadDialog();
         }
     },
     
@@ -780,6 +783,7 @@ Polymer({
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
             this._lastAction.lastEntry();
+            this.reloadDialog();
         }
     },
     
@@ -1070,7 +1074,7 @@ Polymer({
                 customAction.restoreActionState();
             }
         } else {
-            var self = this;
+            const self = this;
             if (self.isRunning === false) {
                 //Add this dialog to body before opening it. Dialog should be added to document DOM because it's 'ready' callback will be invoked immediately before first attaching.
                 //Also shadow DOM of dialog component won't be defined until dialog is attached for the first time. It is important because
@@ -1083,11 +1087,11 @@ Polymer({
 
                 self._getElement(customAction)
                     .then(function(element) {
-                        var promise = customAction._onExecuted(null, element, null);
+                        const promise = customAction._onExecuted(null, element, null);
                         if (promise) {
                             return promise
                                 .then(function(ironRequest) {
-                                    var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                                    const key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                                     if (!self._cachedElements.hasOwnProperty(key)) {
                                         if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
                                             console.log("caching:", key);
@@ -1128,6 +1132,61 @@ Polymer({
                         throw new UnreportableError(error);
                     });
             }
+        }
+    },
+
+    reloadDialog: function() {
+        const self = this;
+        if (self.$.elementLoader.loadedElement.tagName !== self._lastAction.elementName.toUpperCase()) {
+            self._customiseAction(self._lastAction);
+            self.dynamicTitle = null;
+
+            self._getElement(self._lastAction)
+                .then(function(element) {
+                    const promise = self._lastAction._onExecuted(null, element, null);
+                    if (promise) {
+                        return promise
+                            .then(function(ironRequest) {
+                                const key = self._lastAction.elementAlias ? self._lastAction.elementAlias : self._lastAction.elementName;
+                                if (!self._cachedElements.hasOwnProperty(key)) {
+                                    if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
+                                        console.log("caching:", key);
+                                        self._cachedElements[key] = element;
+                                    }
+                                }
+                                if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
+                                    return Promise.resolve(self._showMaster(self._lastAction, element, null, null, false));
+                                } else  if (ironRequest && ironRequest.response && ironRequest.response.ex && ironRequest.response.ex.continuationTypeStr) {
+                                    return Promise.resolve(self._showMaster(self._lastAction, element, null, null, true));
+                                } else {
+                                    return Promise.reject('Retrieval / saving promise was not successful.');
+                                }
+                            })
+                            .catch(function(error) {
+                                self._finishErroneousOpening();
+                            });
+                    } else {
+                        return Promise.resolve()
+                            .then(function() {
+                                return Promise.resolve(self._showMaster(self._lastAction, element, null, null, false));
+                            })
+                            .catch(function(error) {
+                                self._finishErroneousOpening();
+                            });
+                    }
+                })
+                .catch(function(error) {
+                    console.error(error);
+                    self.$.toaster.text = 'There was an error displaying the dialog.';
+                    self.$.toaster.hasMore = true;
+                    self.$.toaster.msgText = `There was an error displaying the dialog.<br><br>` +
+                                                `<b>Error cause:</b><br>${error.message}`;
+                    self.$.toaster.showProgress = false;
+                    self.$.toaster.isCritical = true;
+                    self.$.toaster.show();
+                    self._finishErroneousOpening();
+                    throw new UnreportableError(error);
+                });
         }
     },
 
@@ -1466,7 +1525,7 @@ Polymer({
         this.refit();//Needed to make dialog position fixed.
         
         const actionsDialog = findParentDialog(action);
-        if (actionsDialog) {
+        if (actionsDialog && actionsDialog !== this._parentDialog) {
             actionsDialog._childDialogs.push(this);
             this._parentDialog = actionsDialog;
         }

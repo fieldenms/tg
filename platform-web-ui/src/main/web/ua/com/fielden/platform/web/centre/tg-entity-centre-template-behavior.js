@@ -277,25 +277,31 @@ const TgEntityCentreTemplateBehaviorImpl = {
                     this.$.egi.editEntity(entity);
                     const master = action._masterReferenceForTesting;
                     if (master) {
-                        master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});
-                        master.savingContext = action._createContextHolderForAction();
-                        master.retrieve(master.savingContext).then(function(ironRequest) {
-                            if (action.modifyFunctionalEntity) {
-                                action.modifyFunctionalEntity(master._currBindingEntity, master, action);
-                            }
-                            if (master.$.menu) {
-                                master.$.menu.currentSection()._showBlockingPane();
-                                master.$.menu.maintainPreviouslyOpenedMenuItem = true;
-                            }
-                            master.addEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
-                            master.addEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
-                            master.save().then(function(value) {}, function (error) {
+                        //TODO the logic of determining of the right entity type should be changed
+                        const masterInfo = (entity.type().notEnhancedFullClassName() === 'fielden.example.SynExample' ? this._reflector.getType(entity.get("exampleEntityType")) : entity.type()).entityMaster();
+                        if (masterInfo.key.toUpperCase() !== master.tagName) {
+                            action._setEntityMasterInfo(masterInfo);
+                        } else {
+                            master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});
+                            master.savingContext = action._createContextHolderForAction();
+                            master.retrieve(master.savingContext).then(function(ironRequest) {
+                                if (action.modifyFunctionalEntity) {
+                                    action.modifyFunctionalEntity(master._currBindingEntity, master, action);
+                                }
+                                if (master.$.menu) {
+                                    master.$.menu.currentSection()._showBlockingPane();
+                                    master.$.menu.maintainPreviouslyOpenedMenuItem = true;
+                                }
+                                master.addEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
+                                master.addEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
+                                master.save().then(function(value) {}, function (error) {
+                                    action._fireNavigationChangeEvent(true);
+                                }.bind(this));
+                            }.bind(this), function (error) {
+                                this.$.egi.editEntity(entity);
                                 action._fireNavigationChangeEvent(true);
                             }.bind(this));
-                        }.bind(this), function (error) {
-                            this.$.egi.editEntity(entity);
-                            action._fireNavigationChangeEvent(true);
-                        }.bind(this));
+                        }
                     }
                 }
             }.bind(this);

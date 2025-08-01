@@ -521,7 +521,10 @@ Polymer({
             self.persistActiveElement();
 
             if (this.dynamicAction && (this.rootEntityType || this.currentEntity())) {
-                const currentEntityType = this.rootEntityType ? this._reflector.getType(this.rootEntityType) : getFirstEntityType(this.currentEntity(), this.chosenProperty); // currentEntityType is never empty due to either this.rootEntityType not empty or this.currentEntity() not empty
+                //TODO the logic of determining of the right entity type should be changed
+                const currentEntityType = this.rootEntityType ? this._reflector.getType(this.rootEntityType) : 
+                        (this.currentEntity().type().notEnhancedFullClassName() === 'fielden.example.SynExample' ? this._reflector.getType(this.currentEntity().get("exampleEntityType")) :        
+                                    getFirstEntityType(this.currentEntity(), this.chosenProperty)); // currentEntityType is never empty due to either this.rootEntityType not empty or this.currentEntity() not empty
                 if (!this.elementName) { // element name for dynamic action is not specified at first run
                     this._originalShortDesc = this.shortDesc; // it means that shortDesc wasn't changed yet
                 }
