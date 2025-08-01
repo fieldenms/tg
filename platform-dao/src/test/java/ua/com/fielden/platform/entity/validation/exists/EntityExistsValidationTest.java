@@ -28,8 +28,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_DIRTY;
-import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_UNION_INVALID;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.*;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockFoundMoreThanOneEntity;
@@ -66,6 +65,14 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void existing_but_inactive_entity_inside_union_cannot_be_assigned_to_property_with_default_validation() {
+        final var m1 = save(new_(Member1.class, "M1").setActive(false));
+        final var o1 = new_(ActivatableUnionOwner.class, "O1").setActive(true).setUnion(new_(Union.class).setMember1(m1));
+        assertThat(o1.getProperty("union").getFirstFailure())
+                .hasMessage(format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, getEntityTitleAndDesc(m1).getKey(), m1));
+   }
+
+    @Test
     public void existing_but_inactive_entity_can_be_assigned_to_property_with_default_validation_if_enclosing_entity_is_inactive() {
         final var cat = save(new_(TgCategory.class, "CAT10").setActive(false));
         final var sys = new_(TgSystem.class, "Sys2").setActive(false).setCategory(cat);
@@ -85,6 +92,20 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         final var m1 = save(new_(Member1.class, "M1").setActive(false));
         final var o1 = new_(UnionOwner.class, "O1").setUnion(new_(Union.class).setMember1(m1));
         assertTrue(o1.getProperty("union").isValid());
+    }
+
+    @Test
+    public void existing_but_inactive_entity_can_be_assigned_to_property_of_active_entity_with_skipActiveOnly() {
+        final var cat = save(new_(TgCategory.class, "CAT10").setActive(false));
+        final var sys = new_(TgSystem.class, "Sys2").setActive(true).setThirdCategory(cat);
+        assertTrue(sys.getProperty("thirdCategory").isValid());
+    }
+
+    @Test
+    public void existing_but_inactive_entity_inside_union_can_be_assigned_to_property_of_active_entity_with_skipActiveOnly() {
+        final var m1 = save(new_(Member1.class, "M1").setActive(false));
+        final var o1 = new_(ActivatableUnionOwner.class, "O1").setActive(true).setUnion2(new_(Union.class).setMember1(m1));
+        assertTrue(o1.getProperty("union2").isValid());
     }
 
     @Test

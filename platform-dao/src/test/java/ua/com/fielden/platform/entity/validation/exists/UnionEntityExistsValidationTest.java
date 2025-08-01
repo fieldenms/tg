@@ -5,6 +5,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member1;
 import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member2;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member3;
 import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Union;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
@@ -53,6 +54,14 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         final var m1 = save(new_(TestExists_Member1.class, "M1").setActive(false));
         final var union = new_(TestExists_Union.class).setMember1(m1);
         assertNull(union.getProperty("member1").getFirstFailure());
+    }
+
+    @Test
+    public void non_existing_entity_can_be_assigned_to_properties_of_union_entities_with_SkipEntityExistsValidation() {
+        final var m3 = save(new_(TestExists_Member3.class, "M3").setActive(false));
+        co(TestExists_Member3.class).delete(m3);
+        final var union = new_(TestExists_Union.class).setMember3(m3);
+        assertNull(union.getProperty("member3").getFirstFailure());
     }
 
 }
