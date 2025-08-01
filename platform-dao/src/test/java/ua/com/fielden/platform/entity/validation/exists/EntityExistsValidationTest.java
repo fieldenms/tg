@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.validation.exists;
 
 import com.google.inject.Injector;
 import org.junit.Test;

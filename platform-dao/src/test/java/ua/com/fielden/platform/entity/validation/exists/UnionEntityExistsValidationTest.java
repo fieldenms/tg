@@ -1,10 +1,9 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.validation.exists;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
 import ua.com.fielden.platform.entity.activatable.test_entities.Union;
-import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
