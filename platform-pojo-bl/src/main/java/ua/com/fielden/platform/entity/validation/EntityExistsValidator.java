@@ -102,7 +102,12 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                     return dirtyOrNewCheckResult;
                 }
 
-                final var existenceCheckResult = checkExistence(entity, property, value, valueCo);
+                final var existenceCheckResult = entity instanceof ActivatableAbstractEntity<?> entityA
+                                                 && value instanceof ActivatableAbstractEntity<?> valueA
+                                                 && entity.getProperty(property.toString()).isActivatable()
+                        ? checkExistenceForActivatable(entityA, valueA, (IEntityDao) valueCo)
+                        : checkExistenceWithoutActive(entity, value, valueCo);
+
                 if (existenceCheckResult != null) {
                     return existenceCheckResult;
                 }
@@ -127,15 +132,23 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 return failure(entity, new Exception(format(ERR_UNION_INVALID, entityTitle(union), isValid.getEx().getMessage()), isValid.getEx()));
             }
 
-            final var unionMemberCo = (IEntityDao<AbstractEntity<?>>) coFinder.find(unionMember.getType());
-
             var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, unionMember);
             if (dirtyOrNewCheckResult != null) {
                 return dirtyOrNewCheckResult;
             }
 
-            final var existenceCheckResult = checkExistence(entity, property, unionMember, unionMemberCo);
-            return existenceCheckResult != null ? existenceCheckResult : successful();
+            final var unionMemberCo = (IEntityDao<AbstractEntity<?>>) coFinder.find(unionMember.getType());
+            final var existenceCheckResult = entity instanceof ActivatableAbstractEntity<?> entityA
+                                             && unionMember instanceof ActivatableAbstractEntity<?> activatable
+                                             && isActivatableUnionMember(entity, property, union, unionCo)
+                    ? checkExistenceForActivatable(entityA, activatable, (IEntityDao) unionMemberCo)
+                    : checkExistenceWithoutActive(entity, unionMember, unionMemberCo);
+
+            if (existenceCheckResult != null) {
+                return existenceCheckResult;
+            }
+
+            return successful();
         }
     };
 
@@ -160,17 +173,22 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         else return null;
     }
 
-    private <V extends AbstractEntity<?>> @Nullable Result checkExistence(
+    /// A union member is activatable iff [MetaProperty#isActivatable()] is true for both the union-typed property and the union member property.
+    private static <U extends AbstractUnionEntity> boolean isActivatableUnionMember(
             final AbstractEntity<?> entity,
             final CharSequence property,
-            final V value,
-            final IEntityDao<V> valueCo)
+            final U union,
+            final IEntityDao<U> unionCo)
     {
-        return entity instanceof ActivatableAbstractEntity<?> entityA
-               && value instanceof ActivatableAbstractEntity<?> valueA
-               && entity.getProperty(property.toString()).isActivatable()
-                ? checkExistenceForActivatable(entityA, valueA, (IEntityDao<ActivatableAbstractEntity<?>>) valueCo)
-                : checkExistenceWithoutActive(entity, value, valueCo);
+        final var mp = entity.getProperty(property.toString());
+
+        if (mp.isActivatable()) {
+            return true;
+        }
+
+        // TODO Instrumentation will no longer be necessary after #2466.
+        final var instrumentedUnion = instrument(union, unionCo);
+        return instrumentedUnion.getProperty(instrumentedUnion.activePropertyName()).isActivatable();
     }
 
     private <V extends AbstractEntity<?>> @Nullable Result checkExistenceWithoutActive(

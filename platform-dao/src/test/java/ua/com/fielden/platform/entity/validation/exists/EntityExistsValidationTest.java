@@ -13,6 +13,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_ActivatableUnionOwner;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member1;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member4;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Union;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.*;
@@ -102,10 +106,27 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void existing_but_inactive_entity_inside_union_can_be_assigned_to_property_of_active_entity_with_skipActiveOnly() {
-        final var m1 = save(new_(Member1.class, "M1").setActive(false));
-        final var o1 = new_(ActivatableUnionOwner.class, "O1").setActive(true).setUnion2(new_(Union.class).setMember1(m1));
+    public void existing_but_inactive_entity_inside_union_can_be_assigned_to_property_of_active_entity_if_both_union_typed_property_and_union_member_have_skipActiveOnly() {
+        final var m4 = save(new_(TestExists_Member4.class, "M4").setActive(false));
+        final var o1 = new_(TestExists_ActivatableUnionOwner.class, "O1").setActive(true)
+                .setUnion2(new_(TestExists_Union.class).setMember4(m4));
         assertTrue(o1.getProperty("union2").isValid());
+    }
+
+    @Test
+    public void existing_but_inactive_entity_inside_union_cannot_be_assigned_to_property_of_active_entity_if_skipActiveOnly_is_present_only_on_union_typed_property() {
+        final var m1 = save(new_(TestExists_Member1.class, "M1").setActive(false));
+        final var o1 = new_(TestExists_ActivatableUnionOwner.class, "O1").setActive(true).setUnion2(new_(TestExists_Union.class).setMember1(m1));
+        assertThat(o1.getProperty("union2").getFirstFailure())
+                .hasMessage(format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, getEntityTitleAndDesc(m1).getKey(), m1));
+    }
+
+    @Test
+    public void existing_but_inactive_entity_inside_union_cannot_be_assigned_to_property_of_active_entity_if_skipActiveOnly_is_present_only_on_the_union_member() {
+        final var m4 = save(new_(TestExists_Member4.class, "M4").setActive(false));
+        final var o1 = new_(TestExists_ActivatableUnionOwner.class, "O1").setActive(true).setUnion1(new_(TestExists_Union.class).setMember4(m4));
+        assertThat(o1.getProperty("union1").getFirstFailure())
+                .hasMessage(format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, getEntityTitleAndDesc(m4).getKey(), m4));
     }
 
     @Test

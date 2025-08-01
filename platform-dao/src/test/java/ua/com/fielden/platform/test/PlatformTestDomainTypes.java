@@ -6,10 +6,7 @@ import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.activatable.test_entities.*;
 import ua.com.fielden.platform.entity.query.test_entities.EntityToFill;
-import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member1;
-import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member2;
-import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member3;
-import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Union;
+import ua.com.fielden.platform.entity.validation.exists.test_entities.*;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequiredness;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
@@ -159,6 +156,8 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TestExists_Member1.class);
         add(TestExists_Member2.class);
         add(TestExists_Member3.class);
+        add(TestExists_Member4.class);
+        add(TestExists_ActivatableUnionOwner.class);
     }
 
     @Override

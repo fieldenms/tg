@@ -20,6 +20,21 @@ public class TestExists_Union extends AbstractUnionEntity {
     @SkipEntityExistsValidation
     private TestExists_Member3 member3;
 
+    @IsProperty
+    @MapTo
+    @SkipEntityExistsValidation(skipActiveOnly = true)
+    private TestExists_Member4 member4;
+
+    public TestExists_Member4 getMember4() {
+        return member4;
+    }
+
+    @Observable
+    public TestExists_Union setMember4(final TestExists_Member4 member4) {
+        this.member4 = member4;
+        return this;
+    }
+
     public TestExists_Member3 getMember3() {
         return member3;
     }

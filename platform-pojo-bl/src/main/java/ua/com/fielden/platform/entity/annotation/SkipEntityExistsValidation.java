@@ -24,7 +24,8 @@ public @interface SkipEntityExistsValidation {
     ///
     /// Also, it forces the activation-related entity tracking logic to ignore references from activatable entities' properties that have this attribute `true`.
     ///
-    /// This attribute has no effect on validation of properties of union entities.
+    /// To skip validation of the active status of a union value, this attribute must be `true` for both a union-typed property
+    /// and a corresponding member property of the union type.
     ///
     boolean skipActiveOnly() default false;
     
