@@ -12,7 +12,7 @@ import ua.com.fielden.platform.meta.PropertyMetadataUtils;
 
 public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityTestCase {
 
-    private final Spec1 spec1 = new Spec1<ActivatableUnionOwner, Member1> () {
+    private final Spec1<ActivatableUnionOwner, Member1> spec1 = new Spec1<> () {
 
         private int ownerKeyCounter = 1;
         private int memberKeyCounter = 1;
@@ -111,8 +111,9 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
         }
     };
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Spec1 spec1() {
+    protected Spec1<ActivatableUnionOwner, Member1> spec1() {
         return spec1;
     }
 

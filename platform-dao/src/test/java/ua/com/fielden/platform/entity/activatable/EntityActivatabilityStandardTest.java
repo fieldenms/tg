@@ -5,7 +5,7 @@ import ua.com.fielden.platform.sample.domain.TgSystem;
 
 public class EntityActivatabilityStandardTest extends AbstractEntityActivatabilityTestCase {
 
-    private final Spec1 spec1 = new Spec1<TgSystem, TgCategory>() {
+    private final Spec1<TgSystem, TgCategory> spec1 = new Spec1<>() {
         private int categoryKeyCounter = 1;
         private int systemKeyCounter = 1;
 
@@ -80,8 +80,9 @@ public class EntityActivatabilityStandardTest extends AbstractEntityActivatabili
         }
     };
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Spec1 spec1() {
+    protected Spec1<TgSystem, TgCategory> spec1() {
         return spec1;
     }
 
