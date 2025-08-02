@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
 import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.eql.dbschema.PropertyInliner;
@@ -8,11 +9,8 @@ import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
-import ua.com.fielden.platform.types.either.Left;
-import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.utils.Pair;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.LongFunction;
 import java.util.stream.Stream;

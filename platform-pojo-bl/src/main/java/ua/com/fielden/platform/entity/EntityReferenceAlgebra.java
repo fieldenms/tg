@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-
-import javax.annotation.Nullable;
 
 /// A mechanism for pattern matching on references between two entities.
 ///

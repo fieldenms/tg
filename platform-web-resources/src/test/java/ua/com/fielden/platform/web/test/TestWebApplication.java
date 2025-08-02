@@ -3,7 +3,9 @@ package ua.com.fielden.platform.web.test;
 import org.apache.logging.log4j.Logger;
 import org.restlet.Component;
 import org.restlet.Restlet;
+import org.restlet.data.Parameter;
 import org.restlet.data.Protocol;
+import org.restlet.util.Series;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
@@ -29,6 +31,14 @@ public final class TestWebApplication {
 
     static {
         component.getServers().add(Protocol.HTTP, PORT);
+        // Jetty needs additional settings to react to a shutdown signal, sent to JVM.
+        final var server = component.getServers().getFirst();
+        final Series<Parameter> parameters = server.getContext().getParameters();
+
+        // Parameters to ensure quick shutdown of the test server during unit testing.
+        parameters.add("shutdown.timeout", "1");
+        parameters.add("shutdown.gracefully", "true");
+
         try {
             component.start();
         } catch (final Exception e) {

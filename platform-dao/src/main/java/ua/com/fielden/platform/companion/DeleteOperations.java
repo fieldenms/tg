@@ -3,6 +3,7 @@ package ua.com.fielden.platform.companion;
 import com.google.inject.ImplementedBy;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
@@ -16,7 +17,6 @@ import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperati
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlTables;
 
-import javax.annotation.Nullable;
 import javax.persistence.PersistenceException;
 import java.lang.reflect.Field;
 import java.util.Collection;

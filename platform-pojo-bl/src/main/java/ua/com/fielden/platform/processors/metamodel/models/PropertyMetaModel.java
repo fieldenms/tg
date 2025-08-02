@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel.models;
 
+import jakarta.annotation.Nonnull;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
-
-import javax.annotation.Nonnull;
 
 /**
  * A class representing a metamodel for an entity property with a type, which does not have its own meta-model.

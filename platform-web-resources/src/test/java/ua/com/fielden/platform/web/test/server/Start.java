@@ -9,8 +9,11 @@ import java.util.Properties;
 
 import org.apache.logging.log4j.Logger;
 import org.restlet.Component;
+import org.restlet.Server;
+import org.restlet.data.Parameter;
 import org.restlet.data.Protocol;
 
+import org.restlet.util.Series;
 import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 
 /**
@@ -63,6 +66,13 @@ public class Start {
         LOGGER.info("Starting...");
         final Component component = new TgTestApplicationConfiguration(props);
         component.getServers().add(Protocol.HTTP, Integer.parseInt(props.getProperty("port")));
+        // Jetty needs additional settings to react to a shutdown signal, sent to JVM.
+        final var server = component.getServers().getFirst();
+        final Series<Parameter> parameters = server.getContext().getParameters();
+        // Parameters to ensure quick shutdown for the test app instead of waiting for the default 30 seconds.
+        parameters.add("shutdown.timeout", "1");
+        parameters.add("shutdown.gracefully", "true");
+
 
         try {
             component.start();

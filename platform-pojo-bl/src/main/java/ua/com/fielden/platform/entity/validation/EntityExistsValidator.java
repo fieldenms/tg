@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.validation;
 
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -13,7 +14,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
 
-import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 

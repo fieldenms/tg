@@ -14,11 +14,6 @@ import ua.com.fielden.platform.types.markers.*;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import ua.com.fielden.platform.types.markers.*;
-
-import javax.annotation.Nonnull;
-import java.math.BigDecimal;
-import java.util.Date;
 
 /**
  * An entity for testing purposes, which contains properties with all possible types.

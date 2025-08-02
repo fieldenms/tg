@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.entity.query;
 
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.utils.ToString.IFormat;
 import ua.com.fielden.platform.utils.ToString.IFormattable;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
