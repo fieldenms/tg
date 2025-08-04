@@ -749,8 +749,7 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
-            this._lastAction.firstEntry();
-            this.reloadDialog();
+            this._lastAction.firstEntry(this.reloadDialog.bind(this));
         }
     },
     
@@ -760,8 +759,7 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasPrev && this._isNavigationButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
-            this._lastAction.previousEntry();
-            this.reloadDialog();
+            this._lastAction.previousEntry(this.reloadDialog.bind(this));
         }
     },
     
@@ -771,8 +769,7 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
-            this._lastAction.nextEntry();
-            this.reloadDialog();
+            this._lastAction.nextEntry(this.reloadDialog.bind(this));
         }
     },
     
@@ -782,8 +779,7 @@ Polymer({
         }
         if (this._isNavigationBarVisible(this._lastAction, this._minimised) && this.canClose() 
                 && this._hasNext && this._isNavigationButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
-            this._lastAction.lastEntry();
-            this.reloadDialog();
+            this._lastAction.lastEntry(this.reloadDialog.bind(this));
         }
     },
     
@@ -1145,7 +1141,7 @@ Polymer({
             self._customiseAction(self._lastAction);
             self.dynamicTitle = null;
 
-            self._getElement(self._lastAction)
+            return self._getElement(self._lastAction)
                 .then(function(element) {
                     const promise = self._lastAction._onExecuted(null, element, null);
                     if (promise) {
@@ -1195,6 +1191,7 @@ Polymer({
                     throw new UnreportableError(error);
                 });
         }
+        return Promise.reject("The entity master type didn't changed.");
     },
 
     _addToDom: function () {

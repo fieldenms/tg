@@ -272,7 +272,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 }
                 return this.$.egi.filteredEntities.length;
             }.bind(this);
-            action._setEntityAndReload = function (entity, spinnerInvoked) {
+            action._setEntityAndReload = function (entity, spinnerInvoked, masterChangedCallback) {
                 if (entity) {
                     this.$.egi.editEntity(entity);
                     const master = action._masterReferenceForTesting;
@@ -282,6 +282,11 @@ const TgEntityCentreTemplateBehaviorImpl = {
                         const masterInfo = (entity.type().notEnhancedFullClassName() === 'fielden.example.SynExample' ? this._reflector.getType(entity.get("exampleEntityType")) : entity.type()).entityMaster();
                         if (masterInfo && masterInfo.key.toUpperCase() !== master.tagName) {
                             action._setEntityMasterInfo(masterInfo);
+                            if (masterChangedCallback) {
+                                masterChangedCallback().finally(() => {
+                                    action._fireNavigationChangeEvent(true);
+                                })
+                            }
                         } else {
                             master.savingContext = action._createContextHolderForAction();
                             master.retrieve(master.savingContext).then(function(ironRequest) {
@@ -311,27 +316,27 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 master.removeEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
                 master.removeEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
             }.bind(this);
-            action.firstEntry = function() {
-                action._setEntityAndReload(action._findFirstEntity(), 'firstEntity');
+            action.firstEntry = function(masterChangeCallback) {
+                action._setEntityAndReload(action._findFirstEntity(), 'firstEntity', masterChangeCallback);
             }.bind(this);
-            action.previousEntry = function() {
+            action.previousEntry = function(masterChangeCallback) {
                 const entityIndex = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (entityIndex >= 0) {
-                    action._setEntityAndReload(action._findPreviousEntityTo(entityIndex), 'prevEntity');
+                    action._setEntityAndReload(action._findPreviousEntityTo(entityIndex), 'prevEntity', masterChangeCallback);
                 } else {
-                    action._setEntityAndReload(action._findFirstEntity(), 'prevEntity');
+                    action._setEntityAndReload(action._findFirstEntity(), 'prevEntity', masterChangeCallback);
                 }
             }.bind(this);
-            action.nextEntry = function() {
+            action.nextEntry = function(masterChangeCallback) {
                 const entityIndex = this.$.egi.findFilteredEntityIndex(action.currentEntity());
                 if (entityIndex >= 0) {
-                    action._setEntityAndReload(action._findNextEntityTo(entityIndex), 'nextEntity');
+                    action._setEntityAndReload(action._findNextEntityTo(entityIndex), 'nextEntity', masterChangeCallback);
                 } else {
-                    action._setEntityAndReload(action._findFirstEntity(), 'nextEntity');
+                    action._setEntityAndReload(action._findFirstEntity(), 'nextEntity', masterChangeCallback);
                 }
             }.bind(this);
-            action.lastEntry = function() {
-                action._setEntityAndReload(action._findLastEntity(), 'lastEntity');
+            action.lastEntry = function(masterChangeCallback) {
+                action._setEntityAndReload(action._findLastEntity(), 'lastEntity', masterChangeCallback);
             }.bind(this);
             action.hasPreviousEntry = function() {
                 const thisPageInd = this.$.egi.findFilteredEntityIndex(action.currentEntity());
