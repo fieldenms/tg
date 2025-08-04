@@ -59,7 +59,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void existing_but_inactive_entity_cannot_be_assigned_to_property_with_default_validation() {
+    public void existing_but_inactive_entity_cannot_be_assigned_to_property_of_activatable_entity_with_default_validation() {
         final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat2);
 
@@ -69,7 +69,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void existing_but_inactive_entity_cannot_be_assigned_to_property_with_default_validation_in_non_activatable_entity() {
+    public void existing_but_inactive_entity_cannot_be_assigned_to_property_of_non_activatable_entity_with_default_validation() {
         final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
         final var subSys = new_(TgSubSystem.class, "SubSys2").setFirstCategory(cat2);
 
@@ -87,7 +87,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
    }
 
     @Test
-    public void existing_but_inactive_entity_can_be_assigned_to_property_with_default_validation_if_enclosing_entity_is_inactive() {
+    public void existing_but_inactive_entity_can_be_assigned_to_property_of_inactive_entity_with_default_validation() {
         final var cat = save(new_(TgCategory.class, "CAT10").setActive(false));
         final var sys = new_(TgSystem.class, "Sys2").setActive(false).setCategory(cat);
         assertTrue(sys.isValid().isSuccessful());
@@ -95,14 +95,14 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void existing_but_inactive_entity_inside_union_can_be_assigned_to_property_with_default_validation_if_enclosing_entity_is_inactive() {
+    public void existing_but_inactive_entity_inside_union_can_be_assigned_to_property_of_inactive_entity_with_default_validation() {
         final var m1 = save(new_(Member1.class, "M1").setActive(false));
         final var o1 = new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion(new_(Union.class).setMember1(m1));
         assertTrue(o1.getProperty("union").isValid());
     }
 
     @Test
-    public void existing_but_inactive_entity_inside_union_cannot_be_assigned_to_property_with_default_validation_if_enclosing_entity_is_not_activatable() {
+    public void existing_but_inactive_entity_inside_union_cannot_be_assigned_to_property_of_non_activatable_entity_with_default_validation() {
         final var m1 = save(new_(Member1.class, "M1").setActive(false));
         final var o1 = new_(UnionOwner.class, "O1").setUnion(new_(Union.class).setMember1(m1));
         assertThat(o1.getProperty("union").getFirstFailure())
@@ -141,7 +141,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void existing_but_inactive_entity_can_be_assigned_to_property_with_default_validation_on_criteria_entity() {
+    public void existing_but_inactive_entity_can_be_assigned_to_property_of_criteria_entity_with_default_validation() {
         cdtm.getFirstTick().check(TgSystem.class, "critOnlySingleCategory", true);
         final var cg = injector.getInstance(ICriteriaGenerator.class);
         final var criteriaEntity = cg.generateCentreQueryCriteria(cdtm);
@@ -179,7 +179,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
 
     
     @Test
-    public void non_existing_entity_can_be_assigned_to_property_with_default_validation_on_criteria_entity() {
+    public void non_existing_entity_can_be_assigned_to_property_of_criteria_entity_with_default_validation() {
         cdtm.getFirstTick().check(TgSystem.class, "critOnlySingleCategory", true);
         final var cg = injector.getInstance(ICriteriaGenerator.class);
         final var criteriaEntity = cg.generateCentreQueryCriteria(cdtm);
