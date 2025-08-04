@@ -69,6 +69,16 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void existing_but_inactive_entity_cannot_be_assigned_to_property_with_default_validation_in_non_activatable_entity() {
+        final TgCategory cat2 = co$(TgCategory.class).findByKey("Cat2");
+        final var subSys = new_(TgSubSystem.class, "SubSys2").setFirstCategory(cat2);
+
+        final Result result = subSys.isValid();
+        assertFalse(result.isSuccessful());
+        assertEquals("Tg Category [Cat2] exists, but is not active.", result.getMessage());
+    }
+
+    @Test
     public void existing_but_inactive_entity_inside_union_cannot_be_assigned_to_property_with_default_validation() {
         final var m1 = save(new_(Member1.class, "M1").setActive(false));
         final var o1 = new_(ActivatableUnionOwner.class, "O1").setActive(true).setUnion(new_(Union.class).setMember1(m1));
@@ -92,10 +102,11 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void existing_but_inactive_entity_inside_union_can_be_assigned_to_property_with_default_validation_if_enclosing_entity_is_not_activatable() {
+    public void existing_but_inactive_entity_inside_union_cannot_be_assigned_to_property_with_default_validation_if_enclosing_entity_is_not_activatable() {
         final var m1 = save(new_(Member1.class, "M1").setActive(false));
         final var o1 = new_(UnionOwner.class, "O1").setUnion(new_(Union.class).setMember1(m1));
-        assertTrue(o1.getProperty("union").isValid());
+        assertThat(o1.getProperty("union").getFirstFailure())
+                .hasMessage(format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, getEntityTitleAndDesc(m1).getKey(), m1));
     }
 
     @Test

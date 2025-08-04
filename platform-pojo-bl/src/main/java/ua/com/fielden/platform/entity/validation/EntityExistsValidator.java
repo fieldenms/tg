@@ -102,10 +102,9 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                     return dirtyOrNewCheckResult;
                 }
 
-                final var existenceCheckResult = entity instanceof ActivatableAbstractEntity<?> entityA
-                                                 && value instanceof ActivatableAbstractEntity<?> valueA
+                final var existenceCheckResult = value instanceof ActivatableAbstractEntity<?> valueA
                                                  && entity.getProperty(property.toString()).isActivatable()
-                        ? checkExistenceForActivatable(entityA, valueA, (IEntityDao) valueCo)
+                        ? checkExistenceForActivatable(entity, valueA, (IEntityDao) valueCo)
                         : checkExistenceWithoutActive(entity, value, valueCo);
 
                 if (existenceCheckResult != null) {
@@ -138,10 +137,9 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             }
 
             final var unionMemberCo = (IEntityDao<AbstractEntity<?>>) coFinder.find(unionMember.getType());
-            final var existenceCheckResult = entity instanceof ActivatableAbstractEntity<?> entityA
-                                             && unionMember instanceof ActivatableAbstractEntity<?> activatable
+            final var existenceCheckResult = unionMember instanceof ActivatableAbstractEntity<?> activatable
                                              && isActivatableUnionMember(entity, property, union, unionCo)
-                    ? checkExistenceForActivatable(entityA, activatable, (IEntityDao) unionMemberCo)
+                    ? checkExistenceForActivatable(entity, activatable, (IEntityDao) unionMemberCo)
                     : checkExistenceWithoutActive(entity, unionMember, unionMemberCo);
 
             if (existenceCheckResult != null) {
@@ -203,12 +201,16 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     }
 
     private <V extends ActivatableAbstractEntity<?>> @Nullable Result checkExistenceForActivatable(
-            final ActivatableAbstractEntity<?> entity,
+            final AbstractEntity<?> entity,
             final V value,
             final IEntityDao<V> valueCo)
     {
-        // Activatability matters iff the enclosing entity is active.
-        if (!entity.isActive()) {
+        // Activatability should be ignored if the enclosing entity is an inactive activatable or a union.
+        // This special treatment of unions is for the sake of simplicity.
+        // If we prohibited inactive entities for properties of unions, we would have to add the ability to ignore validation
+        // errors of this nature when a union value is assigned to a union-typed property of an inactive entity
+        // (to uphold the invariant that inactive entities can reference other inactive entities).
+        if ((entity instanceof ActivatableAbstractEntity<?> it && !it.isActive()) || entity instanceof AbstractUnionEntity) {
             return checkExistenceWithoutActive(entity, value, valueCo);
         }
         else {
