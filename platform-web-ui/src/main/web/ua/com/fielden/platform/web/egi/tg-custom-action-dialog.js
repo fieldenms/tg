@@ -1416,7 +1416,7 @@ Polymer({
             if (!actionWithContinuation) {
                 self._removeFromDom();
             }
-        } else { // otherwise show master in dialog
+        } else if (!this.opened){ // otherwise show master in dialog
             this._openOnce(closeEventChannel, closeEventTopics, action, null, null);    
         }
     },
@@ -1557,10 +1557,8 @@ Polymer({
         }
 
         this._refit();
-        if (!this.opened) { 
-            this.open();
-            this._showBlockingPane();
-        }
+        this.open();
+        this._showBlockingPane();
     },
     
     //Makes blocking pane visible via the animation. If the blocking pane is already visible then just increase _blockingPaneCounter.
