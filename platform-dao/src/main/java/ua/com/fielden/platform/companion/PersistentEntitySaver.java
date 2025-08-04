@@ -81,6 +81,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.MiscUtilities.optional;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
 /**
@@ -362,9 +363,11 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
+        // Need to record the persisted active status before `persistedEntity` is modified to support processing of deactivatable dependencies.
+        final Optional<Boolean> persistedIsActive = entity instanceof ActivatableAbstractEntity ? optional(persistedEntity.get(ACTIVE)) : Optional.empty();
+
         try {
             refCountInstructions(entity, persistedEntity, session).forEach(ins -> execute(ins, session));
-            processDeactivatableDependencies(entity, persistedEntity);
         } catch (final StaleStateException ex) {
             // StaleStateException may occur when a stale object is loaded from a session (via `session.load`).
             // For example, two entities concurrently begin referencing some other entity, thereby incrementing its `refCount` concurrently.
@@ -390,6 +393,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 }
             }
         }
+
+        // Deactivatable dependencies need to be processed after property changes have been assigned to `persistedEntity`.
+        processDeactivatableDependencies(entity, persistedEntity, persistedIsActive.orElse(false));
 
         // perform meta-data assignment to capture the information about this modification
         if (entity instanceof AbstractPersistentEntity<?> entityAsPersistent) {
@@ -422,14 +428,14 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
     /// If `entity` was deactivated, deactivates its [deactivatable dependencies][DeactivatableDependencies].
     ///
-    private <E extends AbstractEntity<?>> void processDeactivatableDependencies(final E entity, final E persistedEntity) {
+    private <E extends AbstractEntity<?>> void processDeactivatableDependencies(final E entity, final E persistedEntity, final boolean persistedIsActive) {
         if (entity instanceof ActivatableAbstractEntity<?> activatable) {
-            processDeactivatableDependencies_(activatable, (ActivatableAbstractEntity<?>) persistedEntity);
+            processDeactivatableDependencies_(activatable, (ActivatableAbstractEntity<?>) persistedEntity, persistedIsActive);
         }
     }
 
-    private <E extends ActivatableAbstractEntity<?>> void processDeactivatableDependencies_(final E entity, final E persistedEntity) {
-        if (!entity.<Boolean>get(ACTIVE) && !entity.get(ACTIVE).equals(persistedEntity.get(ACTIVE))) {
+    private <E extends ActivatableAbstractEntity<?>> void processDeactivatableDependencies_(final E entity, final E persistedEntity, final boolean persistedIsActive) {
+        if (!entity.<Boolean>get(ACTIVE) && !entity.get(ACTIVE).equals(persistedIsActive)) {
             final List<? extends ActivatableAbstractEntity<?>> deactivatables = findActiveDeactivatableDependencies((ActivatableAbstractEntity<?>) entity, coFinder);
             for (final ActivatableAbstractEntity<?> deactivatable : deactivatables) {
                 deactivatable.set(ACTIVE, false);
