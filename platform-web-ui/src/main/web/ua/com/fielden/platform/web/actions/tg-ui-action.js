@@ -496,12 +496,15 @@ Polymer({
                 button.focus(); // force 'tg-ui-action' UI element focusing to ensure focus lost event happens in other editor
             }
 
+            let promise = null;
+
+            if (this.preAction) {
+                const result = this.preAction(this);
+                promise = result instanceof Promise ? result : Promise.resolve(result);
+            }
+
             const postMasterInfoRetrieve = function () {
-                if (this.preAction) {
-                    const result = this.preAction(this);
-                    
-                    const promise = result instanceof Promise ? result : Promise.resolve(result);
-    
+                if (promise) {
                     promise.then(function (value) {
                         self.showDialog(self);
                     }, function (error) {
@@ -523,7 +526,7 @@ Polymer({
             if (this.dynamicAction && (this.rootEntityType || this.currentEntity())) {
                 //TODO the logic of determining of the right entity type should be changed
                 const currentEntityType = this.rootEntityType ? this._reflector.getType(this.rootEntityType) : 
-                        (this.currentEntity().type().notEnhancedFullClassName() === 'fielden.example.SynExample' ? this._reflector.getType(this.currentEntity().get("exampleEntityType")) :        
+                        (this.calculateEntityType ? this.calculateEntityType(this.currentEntity()) :        
                                     getFirstEntityType(this.currentEntity(), this.chosenProperty)); // currentEntityType is never empty due to either this.rootEntityType not empty or this.currentEntity() not empty
                 if (!this.elementName) { // element name for dynamic action is not specified at first run
                     this._originalShortDesc = this.shortDesc; // it means that shortDesc wasn't changed yet

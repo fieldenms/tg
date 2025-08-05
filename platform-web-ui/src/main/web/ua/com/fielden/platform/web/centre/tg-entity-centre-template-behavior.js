@@ -279,7 +279,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
                     if (master) {
                         master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});
                         //TODO the logic of determining of the right entity type should be changed
-                        const masterInfo = (entity.type().notEnhancedFullClassName() === 'fielden.example.SynExample' ? this._reflector.getType(entity.get("exampleEntityType")) : entity.type()).entityMaster();
+                        const masterInfo = (action.calculateEntityType ? action.calculateEntityType(entity) : entity.type()).entityMaster();
                         if (masterInfo && masterInfo.key.toUpperCase() !== master.tagName) {
                             action._setEntityMasterInfo(masterInfo);
                             if (masterChangedCallback) {

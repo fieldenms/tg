@@ -1036,12 +1036,12 @@ Polymer({
 
     /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
     _getElement: function(customAction) {
-        var self = this;
-        var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+        const self = this;
+        const key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
         // disabled chache (temprarily?) to support polymorphic masters
          if (self._cachedElements.hasOwnProperty(key)) {
             console.log("Reusing cached element:", key);
-            var element = self._cachedElements[key];
+            const element = self._cachedElements[key];
             self.$.elementLoader.insert(element);
             return Promise.resolve(element);
         } else { 
