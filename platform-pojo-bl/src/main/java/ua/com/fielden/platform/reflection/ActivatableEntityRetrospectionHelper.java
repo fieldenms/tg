@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 
 /**
@@ -25,25 +26,20 @@ import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
  */
 public class ActivatableEntityRetrospectionHelper {
     private ActivatableEntityRetrospectionHelper() {}
-    
-    /**
-     * Determines whether the specified property does not represent a special activatable entity that does not affect the reference count and should be skipped upon updating reference counts. 
-     * 
-     * @param propField
-     * @return
-     */
-    public static boolean isNotSpecialActivatableToBeSkipped(final Field propField) {
-        return !AbstractPersistentEntity.CREATED_BY.equals(propField.getName()) && 
-               !AbstractPersistentEntity.LAST_UPDATED_BY.equals(propField.getName()) &&
-               !propField.isAnnotationPresent(SkipActivatableTracking.class);
+
+    /// This predicate is true if the specified property represents a special activatable reference that does not affect the reference count.
+    ///
+    public static boolean isSpecialActivatableToBeSkipped(final Field prop) {
+        return AbstractPersistentEntity.CREATED_BY.equals(prop.getName()) ||
+               AbstractPersistentEntity.LAST_UPDATED_BY.equals(prop.getName()) ||
+               isAnnotationPresent(prop, SkipActivatableTracking.class);
     }
-    
-    public static boolean isNotSpecialActivatableToBeSkipped(final MetaProperty<?> prop) {
-        final Field propField = Finder.findFieldByName(prop.getEntity().getType(), prop.getName());
-        return isNotSpecialActivatableToBeSkipped(propField);
+
+    /// This predicate is true if the specified property represents a special activatable reference that does not affect the reference count.
+    ///
+    public static boolean isSpecialActivatableToBeSkipped(final MetaProperty<?> prop) {
+        return isSpecialActivatableToBeSkipped(Finder.findFieldByName(prop.getEntity().getType(), prop.getName()));
     }
-    
-    
 
     /// A helper method to determine which of the provided properties should be handled upon save from the perspective of activatable entity logic (update of refCount).
     ///
@@ -79,7 +75,7 @@ public class ActivatableEntityRetrospectionHelper {
                     .filter(prop -> prop.isProxy() || !prop.isDirty())
                     .filter(MetaProperty::isActivatable)
                     .filter(prop -> shouldProcessAsActivatable(entity, keyMembers, prop))
-                    .filter(ActivatableEntityRetrospectionHelper::isNotSpecialActivatableToBeSkipped)
+                    .filter(prop -> !isSpecialActivatableToBeSkipped(prop))
                     .map(MetaProperty::getName)
                     .toList();
         }
@@ -87,7 +83,7 @@ public class ActivatableEntityRetrospectionHelper {
             // TODO Why DeactivatableDependencies are not checked here?
             return streamRealProperties(entity.getType(), MapTo.class)
                     .filter(field -> (ActivatableAbstractEntity.class.isAssignableFrom(field.getType()) || AbstractUnionEntity.class.isAssignableFrom(field.getType()))
-                                     && isNotSpecialActivatableToBeSkipped(field))
+                                     && !isSpecialActivatableToBeSkipped(field))
                     .map(Field::getName)
                     .toList();
         }

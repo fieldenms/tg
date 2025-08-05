@@ -73,7 +73,7 @@ import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ER
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -454,7 +454,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     @SuppressWarnings("unchecked")
     private boolean shouldProcessAsActivatable(final Class<? extends ActivatableAbstractEntity<?>> entityType, final MetaProperty<?> prop) {
         final boolean shouldProcessAsActivatable;
-        if (prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
+        if (prop.isActivatable() && !isSpecialActivatableToBeSkipped(prop)) {
             final var propType = (Class<? extends AbstractEntity<?>>) prop.getType();
             final DeactivatableDependencies ddAnnotation = propType.getAnnotation(DeactivatableDependencies.class);
             if (ddAnnotation != null && prop.isKey()) {

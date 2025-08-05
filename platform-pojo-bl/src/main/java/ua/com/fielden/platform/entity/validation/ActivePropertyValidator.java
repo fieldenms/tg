@@ -29,7 +29,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
 import static ua.com.fielden.platform.error.Result.*;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -143,7 +143,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         return entity.nonProxiedProperties()
                 .filter(mp -> mp.getValue() != null &&
                               mp.isActivatable() &&
-                              isNotSpecialActivatableToBeSkipped(mp) &&
+                              !isSpecialActivatableToBeSkipped(mp) &&
                               !((AbstractEntity<?>) mp.getValue()).isIdOnlyProxy() &&
                               !entity.equals(mp.getValue()))
                 .map(mp -> (MetaProperty<? extends AbstractEntity<?>>) mp)

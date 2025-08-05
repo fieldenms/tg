@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isNotSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -140,7 +140,7 @@ public class DomainEntityDependencies {
             final Field prop0 = Finder.getFieldByName(entityType, splitPropPathToArray(propPath)[0]);
             final var seevAnnotation = prop0.getAnnotation(SkipEntityExistsValidation.class);
             final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
-            return isActivatableEntityType(entityType) && isNotSpecialActivatableToBeSkipped(prop0) && !skipActiveOnly;
+            return isActivatableEntityType(entityType) && !isSpecialActivatableToBeSkipped(prop0) && !skipActiveOnly;
         }
 
         public static final String INFO_ENTITY_DEPENDENCIES = "Entity [%s] has dependency in entity [%s] as property [%s] (checked during deactivation [%s], belongs to entity key [%s]).";
