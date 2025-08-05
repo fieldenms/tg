@@ -171,7 +171,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         else return null;
     }
 
-    /// A union member is activatable iff [MetaProperty#isActivatable()] is true for both the union-typed property and the union member property.
+    /// A union member is activatable iff [MetaProperty#isActivatable()] is true for either the union-typed property or the union member property.
+    /// In other words, to designate a union member as non-activatable, both the union-typed property and the union member property
+    /// must be designated as non-activatable.
+    ///
     private static <U extends AbstractUnionEntity> boolean isActivatableUnionMember(
             final AbstractEntity<?> entity,
             final CharSequence property,
