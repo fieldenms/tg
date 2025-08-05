@@ -8,6 +8,9 @@ import java.util.List;
 
 /// Generates SQL to update `refCount` for all persistent activatable entities.
 ///
+/// Only references between activatable persistent entities are considered.
+/// [DependencyPredicate] can be used to further filter references.
+///
 /// @author TG Team
 ///
 @ImplementedBy(GenRefCountSqlImpl.class)
