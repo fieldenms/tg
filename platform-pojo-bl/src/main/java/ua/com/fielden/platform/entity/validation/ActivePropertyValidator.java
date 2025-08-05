@@ -140,6 +140,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
      */
     @SuppressWarnings("unchecked")
     private List<? extends MetaProperty<? extends AbstractEntity<?>>> activatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
+        // TODO For union-typed properties, check the union member property annotations as well.
         return entity.nonProxiedProperties()
                 .filter(mp -> mp.getValue() != null &&
                               mp.isActivatable() &&

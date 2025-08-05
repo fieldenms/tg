@@ -137,6 +137,7 @@ public class DomainEntityDependencies {
         }
 
         private static boolean checkDuringDeactivation(final Class<? extends AbstractEntity<?>> entityType, final String propPath) {
+            // TODO For union-typed properties, check the union member property annotations as well.
             final Field prop0 = Finder.getFieldByName(entityType, splitPropPathToArray(propPath)[0]);
             final var seevAnnotation = prop0.getAnnotation(SkipEntityExistsValidation.class);
             final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();

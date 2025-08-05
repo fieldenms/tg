@@ -68,6 +68,7 @@ public class ActivatableEntityRetrospectionHelper {
     /// Collects properties that represent not dirty activatable properties.
     ///
     public static List<String> collectActivatableNotDirtyProperties(final AbstractEntity<?> entity, final Set<String> keyMembers) {
+        // TODO For union-typed properties, check the union member property annotations as well.
         if (entity.isInstrumented()) {
             return entity.getProperties().values()
                     .stream()

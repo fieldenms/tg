@@ -454,6 +454,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     @SuppressWarnings("unchecked")
     private boolean shouldProcessAsActivatable(final Class<? extends ActivatableAbstractEntity<?>> entityType, final MetaProperty<?> prop) {
         final boolean shouldProcessAsActivatable;
+        // TODO For union-typed properties, check the union member property annotations as well.
         if (prop.isActivatable() && !isSpecialActivatableToBeSkipped(prop)) {
             final var propType = (Class<? extends AbstractEntity<?>>) prop.getType();
             final DeactivatableDependencies ddAnnotation = propType.getAnnotation(DeactivatableDependencies.class);
