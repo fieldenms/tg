@@ -218,6 +218,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (isShortCollection(type, name)) {
                     entityTypeProp.set_shortCollectionKey(shortCollectionKey(type, name));
                 }
+
+                if (AnnotationReflector.isPropertyAnnotationPresent(EntityTypeCarrier.class, type, name)) {
+                    entityTypeProp.set_entityTypeCarrier(Boolean.TRUE);
+                }
+
                 props.put(name, entityTypeProp);
             }
             entityTypeInfo.set_props(props);
