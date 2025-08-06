@@ -288,7 +288,10 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     @Override
     public boolean equals(final Object obj) {
-        return obj instanceof AbstractUnionEntity that && Objects.equals(activeEntity(), that.activeEntity());
+        return this == obj
+               || obj instanceof AbstractUnionEntity that
+                  && getType().equals(that.getType())
+                  && Objects.equals(activeEntity(), that.activeEntity());
     }
 
     @Override
