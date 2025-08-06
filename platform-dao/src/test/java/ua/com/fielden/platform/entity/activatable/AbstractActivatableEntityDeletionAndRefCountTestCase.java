@@ -8,7 +8,6 @@ import static org.junit.Assert.assertFalse;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.activatable.WithActivatabilityTestUtils.setProperties;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL;
 
 /// This test covers the effects of activatable entity deletion on `refCount`.
 ///
@@ -134,10 +133,7 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
 
         final var b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
         final var a_v0 = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
-        // TODO Should work with DEFAULT.
-        //      When a union-typed value is retrieved using an id-only proxy fetch model, its active entity should be instantitated as an id-only proxy.
-        //      See EntityContainerEnhancer.assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty
-        final var a_v1 = refetch$(a_v0, ALL);
+        final var a_v1 = refetch$(a_v0);
 
         assertRefCount(10, b);
 
