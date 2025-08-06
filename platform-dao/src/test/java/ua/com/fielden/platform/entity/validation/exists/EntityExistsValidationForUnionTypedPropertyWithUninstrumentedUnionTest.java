@@ -2,10 +2,10 @@ package ua.com.fielden.platform.entity.validation.exists;
 
 import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_ActivatableUnionOwner;
 import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member1;
 import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Union;
-import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,15 +17,7 @@ public class EntityExistsValidationForUnionTypedPropertyWithUninstrumentedUnionT
 
     @Override
     protected <U extends AbstractUnionEntity> U newUnion(final Class<U> type) {
-        try {
-            final var ctor = type.getDeclaredConstructor();
-            ctor.setAccessible(true);
-            final U union = ctor.newInstance();
-            ctor.setAccessible(false);
-            return union;
-        } catch (final Exception e) {
-            throw new ReflectionException(e);
-        }
+        return EntityFactory.newPlainEntity(type, null);
     }
 
     @Test

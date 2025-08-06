@@ -14,9 +14,9 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_DIRTY;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
-/// Tests that cover entity-exists validation for properties of union entities.
+/// Tests that cover entity-exists validation for union properties (i.e. the properties of union entities).
 ///
-/// [EntityExistsValidationTest] contains tests that cover entity-exists validation for union-typed properties.
+/// Tests that cover entity-exists validation for union-typed properties can be found in [AbstractEntityExistsValidationForUnionTypedPropertyTestCase] and its descendants.
 ///
 /// @see EntityExistsValidator
 ///
