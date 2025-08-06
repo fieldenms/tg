@@ -30,6 +30,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.order
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
 import static ua.com.fielden.platform.error.Result.*;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -97,7 +98,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             // Need to check if already referenced activatables are active and thus may be referenced by this entity, which is being activated.
             for (final var prop : activatableNotNullNotProxyProperties(entity)) {
                 final var value = extractActivatable(prop.getValue());
-                if (!value.proxiedPropertyNames().contains(ACTIVE) && !value.isActive()) {
+                if (!isPropertyProxied(value, ACTIVE) && !value.isActive()) {
                     final var entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
                     final var propTitle = getTitleAndDesc(prop.getName(), entity.getType()).getKey();
                     final var valueEntityTitle = getEntityTitleAndDesc(value.getType()).getKey();
