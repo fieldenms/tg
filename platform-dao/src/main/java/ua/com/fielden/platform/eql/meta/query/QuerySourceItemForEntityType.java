@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.eql.meta.query;
 
-import java.util.Objects;
-
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.CalcPropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
-import javax.annotation.Nullable;
+import java.util.Objects;
 
 /**
  * A structure that represents a query source item of entity type {@code T}.

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel;
 
 import com.squareup.javapoet.*;
+import jakarta.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -23,7 +24,6 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.utils.Pair;
 
-import javax.annotation.Nonnull;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;

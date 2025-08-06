@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.meta;
 
 import com.google.common.collect.ImmutableMap;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.meta.PropertyMetadata.AnyKey;
 import ua.com.fielden.platform.types.tuples.T2;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
