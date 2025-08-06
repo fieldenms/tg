@@ -7,6 +7,7 @@ import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
+import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -20,33 +21,27 @@ import ua.com.fielden.platform.eql.meta.EqlTables;
 import javax.persistence.PersistenceException;
 import java.lang.reflect.Field;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 
-/**
- * A set of various delete operations that are used by entity companions. 
- * The main purpose of this call is to be more like a mixin that captures the implementation of delete operations.
- * 
- * @author TG Team
- *
- * @param <T>
- */
+/// Various delete operations that are used by entity companions.
+/// The main purpose of this class is to be more like a mixin that provides an implementation of delete operations.
+///
 public final class DeleteOperations<T extends AbstractEntity<?>> {
 
-    private static final Logger LOGGER = getLogger(DeleteOperations.class);
+    private static final Logger LOGGER = getLogger();
     public static final String ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES = "Deletion was unsuccessful due to existing dependencies.";
     public static final String ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_OTHER_REASONS = "Deletion was unsuccessful due to: %s";
 
@@ -78,15 +73,13 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
                                                                  final Class<E> entityType);
     }
 
-    /**
-     * A convenient default implementation for entity deletion, which should be used by overriding method {@link ua.com.fielden.platform.dao.CommonEntityDao#delete(AbstractEntity)}}.
-     *
-     * @param entity
-     */
+    /// A convenient default implementation for entity deletion, which should be used by overriding method [CommonEntityDao#delete(AbstractEntity)]}.
+    ///
+    /// @return the number of deleted entities, which could be 1 or 0.
+    ///
     public int defaultDelete(final T entity) {
-        if (entity == null) {
-            throw new EntityCompanionException("Null is not an acceptable value for an entity instance.");
-        }
+        requireNonNull(entity, "entity");
+
         if (!entity.isPersisted()) {
             throw new EntityCompanionException("Only persisted entity instances can be deleted.");
         }
@@ -101,12 +94,10 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         }
     }
 
-    /**
-     * Deletes an entity by ID.
-     *
-     * @param id
-     * @return the number of deleted entities, which could be 1 or 0.
-     */
+    /// Deletes an entity by ID.
+    ///
+    /// @return the number of deleted entities, which could be 1 or 0.
+    ///
     private int deleteById(final long id) {
         try {
             return session.get().createQuery(format("delete %s where id = %s", entityType.getName(), id)).executeUpdate();
@@ -154,99 +145,79 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         };
     }
 
-    /**
-     * A convenient default implementation for deletion of entities specified by provided query model.
-     *
-     * @param model
-     * @param paramValues
-     */
-    public int defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        if (model == null) {
-            throw new EntityCompanionException("Null is not an acceptable value for eQuery model.");
-        }
+    /// Deletes entities returned by the specified query.
+    ///
+    /// @return the number of deleted entities
+    ///
+    public int defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> parameters) {
+        requireNonNull(model, "model");
 
-       return reader.stream(from(model).with(paramValues).lightweight().model())
-               .mapToInt(entity -> defaultDelete(entity))
+       return reader.stream(from(model).with(parameters).lightweight().model())
+               .mapToInt(this::defaultDelete)
                .sum();
     }
 
-    /**
-     * The same as {@link #defaultDelete(EntityResultQueryModel, Map)}, but with empty parameters.
-     *
-     * @param model
-     */
+    /// The same as [#defaultDelete(EntityResultQueryModel,Map)], but with empty parameters.
+    ///
+    /// @return the number of deleted entities
+    ///
     public int defaultDelete(final EntityResultQueryModel<T> model) {
-        return defaultDelete(model, Collections.<String, Object> emptyMap());
+        return defaultDelete(model, Map.of());
     }
 
-    /**
-     * A convenient default implementation for batch deletion of entities specified by provided query model.
-     *
-     * @param model
-     * @param paramValues
-     */
-    public int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        if (model == null) {
-            throw new EntityCompanionException("Null is not an acceptable value for eQuery model.");
-        }
+    /// A convenient default implementation for batch deletion of entities specified by provided query model.
+    ///
+    /// @return the number of deleted entities
+    ///
+    public int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> parameters) {
+        requireNonNull(model, "model");
 
         if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
-            return defaultDelete(model, paramValues);
+            return defaultDelete(model, parameters);
         } else {
-            return entityBatchDeleteFactory.create(session).deleteEntities(model, paramValues);
+            return entityBatchDeleteFactory.create(session).deleteEntities(model, parameters);
         }
     }
 
-    /**
-     * The same as {@link #defaultBatchDelete(EntityResultQueryModel, Map)}, but with empty parameters.
-     *
-     * @param model
-     * @return
-     */
+    /// The same as [#defaultBatchDelete(EntityResultQueryModel,Map)], but with empty parameters.
+    ///
+    /// @return the number of deleted entities
+    ///
     public int defaultBatchDelete(final EntityResultQueryModel<T> model) {
-        return defaultBatchDelete(model, Collections.<String, Object> emptyMap());
+        return defaultBatchDelete(model, Map.of());
     }
 
-    /**
-     * Batch deletion of entities by their ID values.
-     *
-     * @param entitiesIds
-     * @return
-     */
+    /// Batch deletion of entities by their ID values.
+    ///
+    /// @return the number of deleted entities
+    ///
     public int defaultBatchDelete(final Collection<Long> entitiesIds) {
         return defaultBatchDeleteByPropertyValues(ID, entitiesIds);
     }
 
-    /**
-     * A more generic version of batch deletion of entities {@link #defaultBatchDelete(Collection)} that accepts a property name and a collection of ID values.
-     * Those entities that have the specified property matching any of those ID values get deleted.
-     *
-     * @param propName
-     * @param entitiesIds
-     * @return
-     */
+    /// Batch deletion of entities by ID values of their properties.
+    /// Entities that have the specified property matching any of the specified ID values are deleted.
+    ///
+    /// @return the number of deleted entities
+    ///
     public int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
         if (entitiesIds.isEmpty()) {
             throw new EntityCompanionException("No entity ids have been provided for deletion.");
         }
 
         if (ActivatableAbstractEntity.class.isAssignableFrom(entityType)) {
-            final EntityResultQueryModel<T> model = select(entityType).where().prop(propName).in().values(entitiesIds.toArray()).model();
-            return defaultDelete(model);
+            return defaultDelete(select(entityType).where().prop(propName).in().values(entitiesIds).model());
         } else {
             return batchDeleteByIdsOp.get().deleteEntities(propName, entitiesIds);
         }
     }
 
-    /**
-     * The same as {@link #defaultBatchDeleteByPropertyValues(String, Collection)}, but for a list of entities.
-     *
-     * @param propName
-     * @param propEntities
-     * @return
-     */
+    /// The same as [#defaultBatchDeleteByPropertyValues(String,Collection)], but using a list of entity instances instead of ID values
+    ///
+    /// @return the number of deleted entities
+    ///
     public <E extends AbstractEntity<?>> int defaultBatchDeleteByPropertyValues(final String propName, final List<E> propEntities) {
-        return defaultBatchDeleteByPropertyValues(propName, propEntities.stream().map(v -> v.getId()).collect(Collectors.toList()));
+        return defaultBatchDeleteByPropertyValues(propName, propEntities.stream().map(AbstractEntity::getId).toList());
     }
 
     // This factory must be implemented by hand since com.google.inject.assistedinject.FactoryModuleBuilder

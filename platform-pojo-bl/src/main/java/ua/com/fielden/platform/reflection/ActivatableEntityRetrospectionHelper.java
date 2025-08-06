@@ -8,22 +8,20 @@ import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.utils.ArrayUtils;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 
-/**
- * A helper class providing functions (aka static methods) for the retrospection of activatable entities and properties.
- * These are used upon entity saving and deletion.
- * 
- * @author TG Team
- *
- */
+/// A helper class for the retrospection of activatable entities and properties.
+/// These are used upon entity saving and deletion.
+///
 public class ActivatableEntityRetrospectionHelper {
     private ActivatableEntityRetrospectionHelper() {}
 
@@ -38,7 +36,7 @@ public class ActivatableEntityRetrospectionHelper {
     /// This predicate is true if the specified property represents a special activatable reference that does not affect the reference count.
     ///
     public static boolean isSpecialActivatableToBeSkipped(final MetaProperty<?> prop) {
-        return isSpecialActivatableToBeSkipped(Finder.findFieldByName(prop.getEntity().getType(), prop.getName()));
+        return isSpecialActivatableToBeSkipped(findFieldByName(prop.getEntity().getType(), prop.getName()));
     }
 
     /// A helper method to determine which of the provided properties should be handled upon save from the perspective of activatable entity logic (update of refCount).
@@ -48,13 +46,12 @@ public class ActivatableEntityRetrospectionHelper {
     private static boolean shouldProcessAsActivatable(final AbstractEntity<?> entity, final Set<String> keyMembers, final MetaProperty<?> prop) {
         // let's first identify whether entity belongs to the deactivatable type of the referenced property type
         // if so, it should not inflict any ref counts for this property
-        final var type = (Class<? extends AbstractEntity<?>>) prop.getType();
-        final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
+        final var ddAnnotation = getAnnotation(prop.getType(), DeactivatableDependencies.class);
         boolean belongsToDeactivatableDependencies;
         if (ddAnnotation != null) {
             // if the main type belongs to dependent deactivatables of the type for the current property,
             // and that property is a key member then such property should be excluded from standard processing of dirty activatables
-            belongsToDeactivatableDependencies = keyMembers.contains(prop.getName()) && Arrays.asList(ddAnnotation.value()).contains(entity.getType());
+            belongsToDeactivatableDependencies = keyMembers.contains(prop.getName()) && ArrayUtils.contains(ddAnnotation.value(), entity.getType());
         } else {
             belongsToDeactivatableDependencies = false;
         }
