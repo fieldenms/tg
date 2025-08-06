@@ -35,7 +35,7 @@ public class EntityMetadata {
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> CACHE_IS_ENTITY_EXISTS_APPLICABLE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Class<? extends Comparable>> CACHE_KEY_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<?>>> CACHE_PROP_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
-    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, EntityExists>> CACHE_ENTITY_EXISTS_ANNOTATION = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
+    private static final Cache<Class<? extends AbstractEntity<?>>, EntityExists> CACHE_ENTITY_EXISTS_ANNOTATION = CacheBuilder.newBuilder().initialCapacity(500).concurrencyLevel(50).build();
     private EntityMetadata() {}
 
     /**
@@ -126,21 +126,12 @@ public class EntityMetadata {
         return getAnnotation(propType, SupportsEntityExistsValidation.class) != null;
     }
 
-    /**
-     * Creates annotation instance of type {@link EntityExists}.
-     *
-     * @param entityType
-     * @param propName
-     * @param propType
-     * @return
-     */
     public static EntityExists entityExistsAnnotation(final Class<? extends AbstractEntity<?>> entityType, final String propName, final Class<? extends AbstractEntity<?>> propType) {
         try {
-            return CACHE_ENTITY_EXISTS_ANNOTATION
-                    .get(entityType, () -> CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(50).build())
-                    .get(propName, () -> EntityExistsAnnotation.newInstance(propType));
-         } catch (final ExecutionException ex) {
-             throw new ReflectionException(format("Could not create EntityExists annotation for property [%s] of entity [%s].", propName, entityType.getName()), ex);
+            return CACHE_ENTITY_EXISTS_ANNOTATION.get(propType, () -> EntityExistsAnnotation.newInstance(propType));
+         }
+        catch (final ExecutionException ex) {
+             throw new ReflectionException(format("Could not create EntityExists annotation for [%s.%s].", entityType.getSimpleName(), propName), ex.getCause());
          }
      }
 }
