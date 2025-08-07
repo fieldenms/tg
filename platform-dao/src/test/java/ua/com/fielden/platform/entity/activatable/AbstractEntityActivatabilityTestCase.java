@@ -21,6 +21,7 @@ import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 
 public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTestCase implements WithActivatabilityTestUtils {
 
@@ -79,6 +80,24 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
     }
 
     protected abstract <A extends ActivatableAbstractEntity<?>, B extends AbstractEntity<?>> Spec2<A, B> spec2();
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    a_verification_of_spec1() {
+        final Spec1<A, B> spec = spec1();
+        assertTrue(isActivatableEntityType(spec.aType()));
+        assertTrue(isActivatableEntityType(spec.bType()));
+        // TODO Verify references, which may be immediate or union references.
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    a_verification_of_spec2() {
+        final Spec2<A, B> spec = spec2();
+        assertTrue(isActivatableEntityType(spec.aType()));
+        assertFalse(isActivatableEntityType(spec.bType()));
+        // TODO Verify references, which may be immediate or union references.
+    }
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : It is not possible for an active entity to reference an inactive one (under normal circumstances).

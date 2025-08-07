@@ -6,9 +6,11 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.activatable.WithActivatabilityTestUtils.setProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 
 /// This test covers the effects of activatable entity deletion on `refCount`.
 ///
@@ -64,6 +66,24 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
     protected abstract <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> Spec1<A, B> spec1();
 
     protected abstract <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> Spec2<A, B> spec2();
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    a_verification_of_spec1() {
+        final Spec1<A, B> spec = spec1();
+        assertTrue(isActivatableEntityType(spec.aType()));
+        assertTrue(isActivatableEntityType(spec.bType()));
+        // TODO Verify references, which may be immediate or union references.
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    a_verification_of_spec2() {
+        final Spec2<A, B> spec = spec2();
+        assertTrue(isActivatableEntityType(spec.aType()));
+        assertTrue(isActivatableEntityType(spec.bType()));
+        // TODO Verify references, which may be immediate or union references.
+    }
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
