@@ -150,7 +150,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
                 .map(PropertyMetadata::name)
                 .filter(prop -> isActivatableProperty(entity.getType(), prop))
                 .filter(prop -> !isDeactivatableDependencyBackref(entity.getType(), prop))
-                .filter(prop -> !isSpecialActivatableToBeSkipped(entityType, prop));
+                .filter(prop -> !isSpecialActivatableToBeSkipped(entity.getType(), prop));
     }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
