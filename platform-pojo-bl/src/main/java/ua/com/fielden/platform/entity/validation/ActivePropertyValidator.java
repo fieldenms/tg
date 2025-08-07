@@ -7,6 +7,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -25,6 +26,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
@@ -98,7 +100,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
             // Need to check if already referenced activatables are active and thus may be referenced by this entity, which is being activated.
             for (final var prop : activatableNotNullNotProxyProperties(entity)) {
                 final var value = extractActivatable(prop.getValue());
-                if (!isPropertyProxied(value, ACTIVE) && !value.isActive()) {
+                if (value != null && !isPropertyProxied(value, ACTIVE) && !value.isActive()) {
                     final var entityTitle = getEntityTitleAndDesc(entity.getType()).getKey();
                     final var propTitle = getTitleAndDesc(prop.getName(), entity.getType()).getKey();
                     final var valueEntityTitle = getEntityTitleAndDesc(value.getType()).getKey();
@@ -111,10 +113,12 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
+        requireNonNull(entity, "entity");
+
         return switch (entity) {
             case ActivatableAbstractEntity<?> it -> it;
             case AbstractUnionEntity union -> union.activeEntity() instanceof ActivatableAbstractEntity<?> it ? it : null;
-            case null, default -> null;
+            default -> throw new InvalidStateException("Unexpected entity type for an activatable reference: [%s]".formatted(entity.getType().getSimpleName()));
         };
     }
 
