@@ -2,6 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
+import { getFirstEntityType } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -278,8 +279,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
                     const master = action._masterReferenceForTesting;
                     if (master) {
                         master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});
-                        const masterInfo = (action._getEntityType(entity) || entity.type()).entityMaster();
-                        if (masterInfo && masterInfo.key.toUpperCase() !== master.tagName) {
+                        const masterInfo = getFirstEntityType(entity, action.chosenProperty).entityMaster();
+                        if (action.dynamicAction && masterInfo && masterInfo.key.toUpperCase() !== master.tagName) {
                             action._setEntityMasterInfo(masterInfo);
                             if (masterChangedCallback) {
                                 masterChangedCallback().finally(() => {

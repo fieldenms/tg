@@ -769,6 +769,9 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
                     if (_props.hasOwnProperty(p)) {
                         var val = _props[p];
                         _props[p] = new EntityTypeProp(p, val);
+                        if (_props[p].isEntityTypeCarrier() && !this["#entityTypeCarrirerPropName#"]) {
+                            this["#entityTypeCarrirerPropName#"] = p;
+                        }
                     }
                 }
 
@@ -780,6 +783,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     };
     EntityType.prototype = Object.create(Object.prototype);
     EntityType.prototype.constructor = EntityType;
+
+    /**
+     * Returns entity type carrier property name if exists. Otherwise returns null
+     *
+     */
+    EntityType.prototype.entityTypeCarrierName = function () {
+        return this["#entityTypeCarrirerPropName#"] || null;
+    }
 
     /**
      * Returns full Java class name for the entity type.

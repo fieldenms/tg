@@ -526,8 +526,7 @@ Polymer({
             if (this.dynamicAction && (this.rootEntityType || this.currentEntity())) {
                 //TODO the logic of determining of the right entity type should be changed
                 const currentEntityType = (this.rootEntityType && this._reflector.getType(this.rootEntityType)) // If root entity type present then it should be used for entity master 
-                        || this._getEntityType(this.currentEntity()) // Otherwise take entity type from carrier
-                        || getFirstEntityType(this.currentEntity(), this.chosenProperty); // or get type from this.currentEntity()
+                        || getFirstEntityType(this.currentEntity(), this.chosenProperty); // or get type from this.currentEntity() and chosen property
                 if (!this.elementName) { // element name for dynamic action is not specified at first run
                     this._originalShortDesc = this.shortDesc; // it means that shortDesc wasn't changed yet
                 }
@@ -698,14 +697,6 @@ Polymer({
             throw 'modifyValue4Property: no property [' + propNameToBeAssigned + '] exists.';
         }
         bindingEntity[propNameToBeAssigned] = value;
-    },
-
-    _getEntityType: function (entity) {
-        if (entity && entity.type) {
-            const entityTypeCarrier = entity.type().props().find(prop => prop.isEntityTypeCarrier());
-            return entityTypeCarrier && this._reflector.getType(entity.get(entityTypeCarrier.name()));
-        }
-        return null;
     },
 
     /**
