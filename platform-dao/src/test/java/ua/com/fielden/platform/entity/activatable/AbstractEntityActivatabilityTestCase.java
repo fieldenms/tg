@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.activatable;
 
 import org.junit.Test;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -55,6 +56,29 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
     }
 
     protected abstract <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> Spec1<A, B> spec1();
+
+    /// * `A` is an activatable entity type.
+    /// * `B` is not an activatable entity type.
+    /// * `A` references `B` via `b1`.
+    ///
+    protected interface Spec2<A extends ActivatableAbstractEntity<?>, B extends AbstractEntity<?>>
+            extends ICanSetProperty
+    {
+        A newA();
+        default A newA(CharSequence prop1, Object val1, Object... rest) {
+            return setProperties(this, newA(), prop1, val1, rest);
+        }
+        B newB();
+        default B newB(CharSequence prop1, Object val1, Object... rest) {
+            return setProperties(this, newB(), prop1, val1, rest);
+        }
+        Class<A> aType();
+        Class<B> bType();
+        CharSequence A_b1();
+        A setB1(A a, B b);
+    }
+
+    protected abstract <A extends ActivatableAbstractEntity<?>, B extends AbstractEntity<?>> Spec2<A, B> spec2();
 
     // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // : It is not possible for an active entity to reference an inactive one (under normal circumstances).
@@ -685,6 +709,20 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
         assertRefCount(10, b1);
         assertRefCount(21, b2);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends AbstractEntity<?>> void
+    activatable_entity_can_be_activated_while_referencing_only_non_activatable_entities() {
+        final Spec2<A, B> spec = spec2();
+
+        final B b = save(spec.newB());
+        final A a = save(spec.newA(ACTIVE, false, spec.A_b1(), b));
+
+        assertFalse(a.isActive());
+        a.set(ACTIVE, true);
+        assertNull(a.getProperty(ACTIVE).getFirstFailure());
+        assertTrue(a.isActive());
     }
 
 }

@@ -71,6 +71,20 @@ public class TgSystem extends ActivatableAbstractEntity<String> {
     @MapTo
     private PropertyDescriptor<TgCategory> propDescriptor;
 
+    @IsProperty
+    @MapTo
+    private TgSubSystem subSys1;
+
+    public TgSubSystem getSubSys1() {
+        return subSys1;
+    }
+
+    @Observable
+    public TgSystem setSubSys1(final TgSubSystem subSys1) {
+        this.subSys1 = subSys1;
+        return this;
+    }
+
     public TgSystem getSystem1() {
         return system1;
     }

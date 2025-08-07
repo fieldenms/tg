@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.activatable;
 
 import ua.com.fielden.platform.sample.domain.TgCategory;
+import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 
 public class EntityActivatabilityStandardTest extends AbstractEntityActivatabilityTestCase {
@@ -80,10 +81,52 @@ public class EntityActivatabilityStandardTest extends AbstractEntityActivatabili
         }
     };
 
+    private final Spec2<TgSystem, TgSubSystem> spec2 = new Spec2<>() {
+        private int systemKeyCounter = 1;
+        private int subSystemKeyCounter = 1;
+
+        @Override
+        public TgSystem newA() {
+            return new_(TgSystem.class, "SYS%s".formatted(systemKeyCounter++));
+        }
+
+        @Override
+        public TgSubSystem newB() {
+            return new_(TgSubSystem.class, "SUBSYS%s".formatted(subSystemKeyCounter++));
+        }
+
+        @Override
+        public Class<TgSystem> aType() {
+            return TgSystem.class;
+        }
+
+        @Override
+        public Class<TgSubSystem> bType() {
+            return TgSubSystem.class;
+        }
+
+        @Override
+        public CharSequence A_b1() {
+            return "subSys1";
+        }
+
+        @Override
+        public TgSystem setB1(final TgSystem tgSystem, final TgSubSystem tgSubSystem) {
+            return tgSystem.setSubSys1(tgSubSystem);
+        }
+
+    };
+
     @SuppressWarnings("unchecked")
     @Override
     protected Spec1<TgSystem, TgCategory> spec1() {
         return spec1;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Spec2<TgSystem, TgSubSystem> spec2() {
+        return spec2;
     }
 
 }

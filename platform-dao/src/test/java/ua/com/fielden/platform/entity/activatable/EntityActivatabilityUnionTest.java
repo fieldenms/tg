@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.activatable.test_entities.ActivatableUnionOwner;
 import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
+import ua.com.fielden.platform.entity.activatable.test_entities.Member3;
 import ua.com.fielden.platform.entity.activatable.test_entities.Union;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
@@ -111,10 +112,75 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
         }
     };
 
+    private final Spec2<ActivatableUnionOwner, Member3> spec2 = new Spec2<> () {
+
+        private int ownerKeyCounter = 1;
+        private int memberKeyCounter = 1;
+        private final IDomainMetadata domainMetadata = getInstance(IDomainMetadata.class);
+        private final PropertyMetadataUtils pmUtils = domainMetadata.propertyMetadataUtils();
+
+        @Override
+        public ActivatableUnionOwner newA() {
+            return new_(ActivatableUnionOwner.class, "Owner%s".formatted(ownerKeyCounter++));
+        }
+
+        @Override
+        public Member3 newB() {
+            return new_(Member3.class, "Member%s".formatted(memberKeyCounter++));
+        }
+
+        @Override
+        public Class<ActivatableUnionOwner> aType() {
+            return ActivatableUnionOwner.class;
+        }
+
+        @Override
+        public Class<Member3> bType() {
+            return Member3.class;
+        }
+
+        @Override
+        public CharSequence A_b1() {
+            return "union";
+        }
+
+        @Override
+        public ActivatableUnionOwner setB1(final ActivatableUnionOwner owner, final Member3 member3) {
+            return owner.setUnion(member3 == null ? null : new_(Union.class).setMember3(member3));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <E extends AbstractEntity<?>> E setProperty(
+                final E entity,
+                final CharSequence prop,
+                final Object value)
+        {
+            final PropertyMetadata pm;
+            if (value != null
+                && entity instanceof ActivatableUnionOwner owner
+                && pmUtils.isPropEntityType((pm = domainMetadata.forProperty(entity.getType(), prop)), EntityMetadata::isUnion)
+                && !(value instanceof AbstractUnionEntity))
+            {
+                final var propType = (Class<? extends AbstractUnionEntity>) pm.type().javaType();
+                return (E) owner.set(prop.toString(), new_(propType).setUnionProperty((AbstractEntity<?>) value));
+            }
+            else {
+                return Spec2.super.setProperty(entity, prop, value);
+            }
+        }
+    };
+
     @SuppressWarnings("unchecked")
     @Override
     protected Spec1<ActivatableUnionOwner, Member1> spec1() {
         return spec1;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Spec2<ActivatableUnionOwner, Member3> spec2() {
+        return spec2;
     }
 
 }

@@ -187,6 +187,7 @@ public class PlatformTestServerIocModule extends BasicWebServerIocModule {
         bind(UnionCo.class).to(UnionDao.class);
         bind(Member1Co.class).to(Member1Dao.class);
         bind(Member2Co.class).to(Member2Dao.class);
+        bind(Member3Co.class).to(Member3Dao.class);
         bind(ActivatableUnionOwnerCo.class).to(ActivatableUnionOwnerDao.class);
         bind(UnionOwnerCo.class).to(UnionOwnerDao.class);
 
