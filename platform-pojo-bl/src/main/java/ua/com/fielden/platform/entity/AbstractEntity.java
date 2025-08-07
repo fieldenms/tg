@@ -447,16 +447,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             return false;
         }
 
-        // TODO need to carefully consider this bit of logic for comparing ID-only values
         if (that.isIdOnlyProxy() && this.isIdOnlyProxy()) {
             return that.getId().equals(this.getId());
         }
-        // TODO need to carefully consider this bit of logic for comparing ID-only values
         if (this.isPersistent() && (that.isIdOnlyProxy() || this.isIdOnlyProxy()) &&
                 (!that.isInstrumented() || !that.isDirty()) &&
-                (!this.isInstrumented() || !this.isDirty()) &&
-                that.getId().equals(this.getId())) {
-            return true;
+                (!this.isInstrumented() || !this.isDirty()))
+        {
+            return that.getId().equals(this.getId());
         }
         // now can compare key values
         final Object thatKey = that.getKey();

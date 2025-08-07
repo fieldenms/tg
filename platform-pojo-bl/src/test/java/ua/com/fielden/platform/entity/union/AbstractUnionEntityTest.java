@@ -9,10 +9,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
-import ua.com.fielden.platform.sample.domain.EntityOne;
-import ua.com.fielden.platform.sample.domain.EntityThree;
-import ua.com.fielden.platform.sample.domain.EntityTwo;
-import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 
 import java.lang.reflect.Field;
@@ -280,6 +277,60 @@ public class AbstractUnionEntityTest {
     public void unionPropertyNameByType_returns_empty_result_if_no_matching_property_could_be_found() {
         final var maybePropName = AbstractUnionEntity.unionPropertyNameByType(UnionEntity.class, EntityThree.class);
         assertTrue(maybePropName.isEmpty());
+    }
+
+    @Test
+    public void union_entities_of_different_types_but_with_equal_active_entities_are_not_equal() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var union = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        final var otherUnion = factory.newEntity(UnionEntityWithoutSecondDescTitle.class).setPropertyOne(one);
+        assertNotEquals(union.getType(), otherUnion.getType());
+        assertEquals(union.activeEntity(), otherUnion.activeEntity());
+        assertNotEquals(union, otherUnion);
+    }
+
+    @Test
+    public void union_entities_of_different_types_with_active_entities_of_different_types_are_not_equal() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var union = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        final var three = factory.newEntity(EntityThree.class, 2L);
+        final var otherUnion = factory.newEntity(UnionEntityWithoutSecondDescTitle.class).setPropertyThree(three);
+        assertNotEquals(union.getType(), otherUnion.getType());
+        assertNotEquals(union.activeEntity().getType(), otherUnion.activeEntity().getType());
+        assertNotEquals(union, otherUnion);
+    }
+
+    @Test
+    public void union_entities_of_same_type_and_equal_active_entities_are_equal() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        final var union2 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        assertEquals(union1.getType(), union2.getType());
+        assertEquals(union1.activeEntity(), union2.activeEntity());
+        assertEquals(union1, union2);
+    }
+
+    @Test
+    public void union_entities_of_same_type_with_active_entities_of_same_type_but_with_different_active_entity_instances_are_not_equal() {
+        final var one1 = factory.newEntity(EntityOne.class, 1L, "01");
+        final var one2 = factory.newEntity(EntityOne.class, 2L, "02");
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one1);
+        final var union2 = factory.newEntity(UnionEntity.class).setPropertyOne(one2);
+        assertEquals(union1.getType(), union2.getType());
+        assertEquals(union1.activeEntity().getType(), union2.activeEntity().getType());
+        assertNotEquals(union1.activeEntity(), union2.activeEntity());
+        assertNotEquals(union1, union2);
+    }
+
+    @Test
+    public void union_entities_of_same_type_with_active_entities_of_different_types_are_not_equal() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var two = factory.newEntity(EntityTwo.class, 2L);
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        final var union2 = factory.newEntity(UnionEntity.class).setPropertyTwo(two);
+        assertEquals(union1.getType(), union2.getType());
+        assertNotEquals(union1.activeEntity().getType(), union2.activeEntity().getType());
+        assertNotEquals(union1, union2);
     }
 
 }

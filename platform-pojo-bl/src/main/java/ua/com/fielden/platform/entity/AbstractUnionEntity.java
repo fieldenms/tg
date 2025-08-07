@@ -20,7 +20,6 @@ import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 /**
  * A base class for implementing synthetic entities to be used for modelling situations where a property of some entity can be of multiple types, but any individual instance of a
@@ -289,15 +288,10 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        // use standard equality from AbstractEntity and, if equals, compare active entities
-        if (!super.equals(obj)) { // there are special handling for id-only-proxies and may be more specialisation in future
-            return false;
-        }
-        // this.getType() and obj.getType() are equal as per super.equals call; so we can safely convert 'obj' to AbstractUnionEntity
-        return equalsEx(this.activeEntity(), ((AbstractUnionEntity) obj).activeEntity());
+        return this == obj
+               || obj instanceof AbstractUnionEntity that
+                  && getType().equals(that.getType())
+                  && Objects.equals(activeEntity(), that.activeEntity());
     }
 
     @Override
