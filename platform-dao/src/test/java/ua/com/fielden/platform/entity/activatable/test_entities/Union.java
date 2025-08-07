@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.entity.activatable.test_entities;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.*;
 
 @CompanionObject(UnionCo.class)
 public class Union extends AbstractUnionEntity {
@@ -15,6 +12,7 @@ public class Union extends AbstractUnionEntity {
 
     @IsProperty
     @MapTo
+    @SkipEntityExistsValidation(skipActiveOnly = true)
     private Member2 member2;
 
     @IsProperty

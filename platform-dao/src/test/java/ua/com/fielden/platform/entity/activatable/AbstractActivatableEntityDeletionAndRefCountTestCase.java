@@ -11,6 +11,8 @@ import static ua.com.fielden.platform.entity.activatable.WithActivatabilityTestU
 
 /// This test covers the effects of activatable entity deletion on `refCount`.
 ///
+/// @see ActivatableEntityDeletionTest
+///
 public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase extends AbstractDaoTestCase implements WithActivatabilityTestUtils {
 
     /// * `A` and `B` are activatable entity types.
@@ -36,7 +38,31 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
         A setB2(A a, B b);
     }
 
+    /// * `A` and `B` are activatable entity types.
+    /// * `A` references `B` via 1 property: `b1`.
+    /// * `A` supports deletion.
+    /// * `A.b1` allows inactive values.
+    ///
+    protected interface Spec2<A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>>
+            extends ICanSetProperty
+    {
+        A newA();
+        default A newA(CharSequence prop1, Object val1, Object... rest) {
+            return setProperties(this, newA(), prop1, val1, rest);
+        }
+        B newB();
+        default B newB(CharSequence prop1, Object val1, Object... rest) {
+            return setProperties(this, newB(), prop1, val1, rest);
+        }
+        Class<A> aType();
+        Class<B> bType();
+        CharSequence A_b1();
+        A setB1(A a, B b);
+    }
+
     protected abstract <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> Spec1<A, B> spec1();
+
+    protected abstract <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> Spec2<A, B> spec2();
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
@@ -47,6 +73,22 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
         final var a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
 
         assertRefCount(11, b);
+
+        co$(spec.aType()).delete(a);
+
+        assertFalse(co$(spec.aType()).entityExists(a));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    deletion_of_active_A_that_references_inactive_B_does_not_affect_refCount_of_B() {
+        final Spec2<A, B> spec = spec2();
+
+        final var b = save(spec.newB(ACTIVE, false, REF_COUNT, 10));
+        final var a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
+
+        assertRefCount(10, b);
 
         co$(spec.aType()).delete(a);
 
@@ -144,6 +186,66 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
         co$(spec.aType()).delete(a_v2);
 
         assertFalse(co$(spec.aType()).entityExists(a_v2));
+        assertRefCount(10, b);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    deletion_of_active_A_that_concurrently_begins_referencing_another_active_B_decrements_refCount_only_of_that_B() {
+        final Spec1<A, B> spec = spec1();
+
+        final var b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final var b2 = save(spec.newB(ACTIVE, true, REF_COUNT, 20));
+        final var a = save(spec.newA(ACTIVE, true, spec.A_b1(), b1));
+
+        save(spec.setB1(refetch$(a), b2));
+
+        assertRefCount(10, b1);
+        assertRefCount(21, b2);
+
+        co$(spec.aType()).delete(a);
+
+        assertFalse(co$(spec.aType()).entityExists(a));
+        assertRefCount(10, b1);
+        assertRefCount(20, b2);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    deletion_of_active_A_that_concurrently_begins_referencing_another_inactive_B_does_not_affect_refCount_of_that_B() {
+        final Spec2<A, B> spec = spec2();
+
+        final var b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final var b2 = save(spec.newB(ACTIVE, false, REF_COUNT, 20));
+        final var a = save(spec.newA(ACTIVE, true, spec.A_b1(), b1));
+
+        save(spec.setB1(refetch$(a), b2));
+
+        assertRefCount(10, b1);
+        assertRefCount(20, b2);
+
+        co$(spec.aType()).delete(a);
+
+        assertFalse(co$(spec.aType()).entityExists(a));
+        assertRefCount(10, b1);
+        assertRefCount(20, b2);
+    }
+
+    @Test
+    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    deletion_of_active_A_that_concurrently_dereferences_B_does_not_affect_refCount_of_B() {
+        final Spec1<A, B> spec = spec1();
+
+        final var b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
+        final var a = save(spec.newA(ACTIVE, true, spec.A_b1(), b));
+
+        save(spec.setB1(refetch$(a), null));
+
+        assertRefCount(10, b);
+
+        co$(spec.aType()).delete(a);
+
+        assertFalse(co$(spec.aType()).entityExists(a));
         assertRefCount(10, b);
     }
 

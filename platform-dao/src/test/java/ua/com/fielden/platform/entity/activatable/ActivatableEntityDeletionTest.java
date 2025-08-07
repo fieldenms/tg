@@ -20,6 +20,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 /// This test covers various ways of deleting activatable entities.
 ///
+/// @see AbstractActivatableEntityDeletionAndRefCountTestCase
+///
 public class ActivatableEntityDeletionTest extends AbstractDaoTestCase implements WithActivatabilityTestUtils {
 
     @Test
