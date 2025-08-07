@@ -52,6 +52,9 @@ public class ActivatableEntityRetrospectionHelper {
         return isSpecialActivatableToBeSkipped(findFieldByName(entityType, prop));
     }
 
+    /// This predicate is true if the specified property is _activatable_.
+    /// Such properties are processed during reference counting and validation of activatable entities.
+    ///
     public static boolean isActivatableProperty(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
         try {
             return CACHE_ACTIVATABLE_PROP
@@ -60,6 +63,10 @@ public class ActivatableEntityRetrospectionHelper {
         } catch (final ExecutionException ex) {
             throw new ReflectionException(format("Could not determine whether property [%s.%s] is activatable.", entityType.getSimpleName(), propName), ex.getCause());
         }
+    }
+
+    public static boolean isActivatableProperty(final MetaProperty<?> mp) {
+        return isActivatableProperty(mp.getEntity().getType(), mp.getName());
     }
 
     private static boolean isActivatableProperty_(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {

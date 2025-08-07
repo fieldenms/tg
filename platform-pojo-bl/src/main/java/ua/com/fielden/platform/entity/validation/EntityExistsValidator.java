@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
@@ -25,6 +26,7 @@ import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.isMoc
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableProperty;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.copy;
@@ -102,8 +104,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                     return dirtyOrNewCheckResult;
                 }
 
-                final var existenceCheckResult = value instanceof ActivatableAbstractEntity<?> valueA
-                                                 && entity.getProperty(property.toString()).isActivatable()
+                final var existenceCheckResult = value instanceof ActivatableAbstractEntity<?> valueA && isActivatableProperty(entity.getType(), property)
                         ? checkExistenceForActivatable(entity, valueA, (IEntityDao) valueCo)
                         : checkExistenceWithoutActive(entity, value, valueCo);
 
@@ -171,7 +172,8 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         else return null;
     }
 
-    /// A union member is activatable iff [MetaProperty#isActivatable()] is true for either the union-typed property or the union member property.
+    /// A union member is activatable iff [ActivatableEntityRetrospectionHelper#isActivatableProperty(Class, CharSequence)]
+    /// is true for either the union-typed property or the union member property.
     /// In other words, to designate a union member as non-activatable, both the union-typed property and the union member property
     /// must be designated as non-activatable.
     ///
@@ -183,13 +185,12 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     {
         final var mp = entity.getProperty(property.toString());
 
-        if (mp.isActivatable()) {
+        if (isActivatableProperty(mp)) {
             return true;
         }
 
         // TODO Instrumentation will no longer be necessary after #2466.
-        final var instrumentedUnion = instrument(union, unionCo);
-        return instrumentedUnion.getProperty(instrumentedUnion.activePropertyName()).isActivatable();
+        return isActivatableProperty(union.getType(), instrument(union, unionCo).activePropertyName());
     }
 
     private <V extends AbstractEntity<?>> @Nullable Result checkExistenceWithoutActive(

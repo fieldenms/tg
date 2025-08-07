@@ -70,8 +70,7 @@ import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ER
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isDeactivatableDependencyBackref;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -450,8 +449,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     /// This predicate identifies whether the specified property needs to be processed as an activatable reference.
     ///
     private boolean shouldProcessAsActivatable(final MetaProperty<?> prop) {
-        // TODO For union-typed properties, check the union member property annotations as well.
-        return prop.isActivatable() && !isSpecialActivatableToBeSkipped(prop) && !isDeactivatableDependencyBackref(prop);
+        return isActivatableProperty(prop) && !isSpecialActivatableToBeSkipped(prop) && !isDeactivatableDependencyBackref(prop);
     }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {

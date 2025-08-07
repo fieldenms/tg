@@ -31,6 +31,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
 import static ua.com.fielden.platform.error.Result.*;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableProperty;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -148,7 +149,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         // TODO For union-typed properties, check the union member property annotations as well.
         return entity.nonProxiedProperties()
                 .filter(mp -> mp.getValue() != null &&
-                              mp.isActivatable() &&
+                              isActivatableProperty(mp) &&
                               !isSpecialActivatableToBeSkipped(mp) &&
                               !((AbstractEntity<?>) mp.getValue()).isIdOnlyProxy() &&
                               !entity.equals(mp.getValue()))
