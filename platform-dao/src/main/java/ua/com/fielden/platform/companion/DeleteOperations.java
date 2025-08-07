@@ -46,6 +46,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private static final Logger LOGGER = getLogger();
     public static final String ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_EXISTING_DEPENDENCIES = "Deletion was unsuccessful due to existing dependencies.";
     public static final String ERR_DELETION_WAS_UNSUCCESSFUL_DUE_TO_OTHER_REASONS = "Deletion was unsuccessful due to: %s";
+    public static final String ERR_ONLY_PERSISTED_CAN_BE_DELETED = "Only persisted entity instances can be deleted.";
+    public static final String ERR_DIRTY_CANNOT_BE_DELETED = "Dirty entity instances cannot be deleted.";
 
     private final Supplier<Session> session;
     private final Class<T> entityType;
@@ -83,10 +85,10 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         requireNonNull(entity, "entity");
 
         if (!entity.isPersisted()) {
-            throw new EntityCompanionException("Only persisted entity instances can be deleted.");
+            throw new EntityCompanionException(ERR_ONLY_PERSISTED_CAN_BE_DELETED);
         }
         if (entity.isInstrumented() && entity.isDirty()) {
-            throw new EntityCompanionException("Dirty entity instances cannot be deleted.");
+            throw new EntityCompanionException(ERR_DIRTY_CANNOT_BE_DELETED);
         }
 
         if (entity instanceof ActivatableAbstractEntity<?> activatable) {
