@@ -13,12 +13,12 @@ import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlTables;
-import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
 
 import javax.persistence.PersistenceException;
 import java.util.Collection;
@@ -35,8 +35,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isDeactivatableDependencyBackref;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
 
 /// Various delete operations that are used by entity companions.
 /// The main purpose of this class is to be more like a mixin that provides an implementation of delete operations.
@@ -54,6 +53,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private final IEntityReader<T> reader;
     private final Supplier<EntityBatchDeleteByIdsOperation<T>> batchDeleteByIdsOp;
     private final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory;
+    private final IDomainMetadata domainMetadata;
 
     @Inject
     public DeleteOperations(
@@ -61,12 +61,14 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             @Assisted final Supplier<Session> session,
             @Assisted final Class<T> entityType,
             final EqlTables eqlTables,
-            final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory)
+            final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory,
+            final IDomainMetadata domainMetadata)
     {
         this.reader = reader;
         this.session = session;
         this.entityType = entityType;
         this.entityBatchDeleteFactory = entityBatchDeleteFactory;
+        this.domainMetadata = domainMetadata;
         this.batchDeleteByIdsOp = () -> new EntityBatchDeleteByIdsOperation<>(session.get(), eqlTables.getTableForEntityType(entityType));
     }
 
@@ -141,23 +143,14 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     }
 
     private Stream<String> activatableProperties(final ActivatableAbstractEntity<?> entity) {
-        // Instrumentation is required only to use MetaProperty.isActivatable().
-        // TODO Replace usage of MetaProperty.isActivatable with something that does not require MetaProperty.
-        final ActivatableAbstractEntity<? extends Comparable<?>> instrumentedEntity;
-        if (entity.isInstrumented()) {
-            instrumentedEntity = entity;
-        }
-        else {
-            EntityUtils.copy(entity, instrumentedEntity = (ActivatableAbstractEntity<?>) reader.new_());
-        }
-
         // TODO For union-typed properties, check the union member property annotations as well.
-        return instrumentedEntity.getProperties().values()
+        return domainMetadata.forEntity(entity.getType())
+                .properties()
                 .stream()
-                .filter(MetaProperty::isActivatable)
-                .filter(prop -> !isDeactivatableDependencyBackref(prop))
-                .filter(prop -> !isSpecialActivatableToBeSkipped(prop))
-                .map(MetaProperty::getName);
+                .map(PropertyMetadata::name)
+                .filter(prop -> isActivatableProperty(entity.getType(), prop))
+                .filter(prop -> !isDeactivatableDependencyBackref(entity.getType(), prop))
+                .filter(prop -> !isSpecialActivatableToBeSkipped(entityType, prop));
     }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
@@ -249,18 +242,21 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
 
         private final EqlTables eqlTables;
         private final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory;
+        private final IDomainMetadata domainMetadata;
 
         @Inject
         FactoryImpl(final EqlTables eqlTables,
-                    final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory) {
+                    final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory,
+                    final IDomainMetadata domainMetadata) {
             this.eqlTables = eqlTables;
             this.entityBatchDeleteFactory = entityBatchDeleteFactory;
+            this.domainMetadata = domainMetadata;
         }
 
         public <E extends AbstractEntity<?>> DeleteOperations<E> create(final IEntityReader<E> reader,
                                                                         final Supplier<Session> session,
                                                                         final Class<E> entityType) {
-            return new DeleteOperations<>(reader, session, entityType, eqlTables, entityBatchDeleteFactory);
+            return new DeleteOperations<>(reader, session, entityType, eqlTables, entityBatchDeleteFactory, domainMetadata);
         }
     }
 
