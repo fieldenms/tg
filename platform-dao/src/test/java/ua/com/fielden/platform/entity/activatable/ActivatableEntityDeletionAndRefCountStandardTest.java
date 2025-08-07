@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.activatable;
 
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 
@@ -95,6 +97,13 @@ public class ActivatableEntityDeletionAndRefCountStandardTest extends AbstractAc
     @Override
     protected Spec2 spec2() {
         return spec2;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void delete(final AbstractEntity<?> entity) {
+        final var co$ = (IEntityDao<AbstractEntity<?>>) co$(entity.getType());
+        co$.delete(entity);
     }
 
 }

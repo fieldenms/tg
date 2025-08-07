@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.activatable;
 
 import org.junit.Test;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
@@ -74,7 +75,7 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
 
         assertRefCount(11, b);
 
-        co$(spec.aType()).delete(a);
+        delete(a);
 
         assertFalse(co$(spec.aType()).entityExists(a));
         assertRefCount(10, b);
@@ -90,7 +91,7 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
 
         assertRefCount(10, b);
 
-        co$(spec.aType()).delete(a);
+        delete(a);
 
         assertFalse(co$(spec.aType()).entityExists(a));
         assertRefCount(10, b);
@@ -106,7 +107,7 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
 
         assertRefCount(12, b);
 
-        co$(spec.aType()).delete(a);
+        delete(a);
 
         assertFalse(co$(spec.aType()).entityExists(a));
         assertRefCount(10, b);
@@ -124,7 +125,7 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
         assertRefCount(11, b1);
         assertRefCount(21, b2);
 
-        co$(spec.aType()).delete(a);
+        delete(a);
 
         assertFalse(co$(spec.aType()).entityExists(a));
         assertRefCount(10, b1);
@@ -141,7 +142,7 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
 
         assertRefCount(10, b);
 
-        co$(spec.aType()).delete(a);
+        delete(a);
 
         assertFalse(co$(spec.aType()).entityExists(a));
         assertRefCount(10, b);
@@ -162,7 +163,7 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
 
         assertRefCount(10, b);
 
-        co$(spec.aType()).delete(a_v1);
+        delete(a_v1);
 
         assertFalse(co$(spec.aType()).entityExists(a_v1));
         assertRefCount(10, b);
@@ -183,7 +184,7 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
 
         assertRefCount(11, b);
 
-        co$(spec.aType()).delete(a_v2);
+        delete(a_v2);
 
         assertFalse(co$(spec.aType()).entityExists(a_v2));
         assertRefCount(10, b);
@@ -203,7 +204,7 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
         assertRefCount(10, b1);
         assertRefCount(21, b2);
 
-        co$(spec.aType()).delete(a);
+        delete(a);
 
         assertFalse(co$(spec.aType()).entityExists(a));
         assertRefCount(10, b1);
@@ -224,7 +225,7 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
         assertRefCount(10, b1);
         assertRefCount(20, b2);
 
-        co$(spec.aType()).delete(a);
+        delete(a);
 
         assertFalse(co$(spec.aType()).entityExists(a));
         assertRefCount(10, b1);
@@ -243,10 +244,12 @@ public abstract class AbstractActivatableEntityDeletionAndRefCountTestCase exten
 
         assertRefCount(10, b);
 
-        co$(spec.aType()).delete(a);
+        delete(a);
 
         assertFalse(co$(spec.aType()).entityExists(a));
         assertRefCount(10, b);
     }
+
+    protected abstract void delete(AbstractEntity<?> entity);
 
 }
