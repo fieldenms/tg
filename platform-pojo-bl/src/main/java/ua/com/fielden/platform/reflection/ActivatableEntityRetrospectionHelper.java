@@ -2,22 +2,19 @@ package ua.com.fielden.platform.reflection;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.utils.ArrayUtils;
 
 import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Set;
 
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
-import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
 /// A helper class for the retrospection of activatable entities and properties.
 /// These are used upon entity saving and deletion.
@@ -39,51 +36,34 @@ public class ActivatableEntityRetrospectionHelper {
         return isSpecialActivatableToBeSkipped(findFieldByName(prop.getEntity().getType(), prop.getName()));
     }
 
-    /// A helper method to determine which of the provided properties should be handled upon save from the perspective of activatable entity logic (update of refCount).
+    /// This predicate is true if the specified property is a _backreference_ from a deactivatable dependency.
+    /// I.e., if the property is a key member and the type of the property has [deactivatable dependencies][DeactivatableDependencies]
+    /// that include `entityType`.
     ///
-    /// A remark: the proxied activatable properties need to be handled from the perspective of activatable entity logic (update of refCount).
+    /// For example, consider activatable entity `Manager` that has a key member `person: Person`.
+    /// `Person` is activatable and includes `Manager` in its `@DeactivatableDependencies`.
+    /// When a `Manager` is being deactivated, `Manager.person` will be a candidate for processing due to the activatable nature of `Person`.
+    /// However, `Manager` is a specialisation of `Person`, since `Manager.person` is a key member and `Person` includes `Manager` in its `@DeactivatableDependencies`.
+    /// Activation/deactivation of a `Manager` should not affect `refCount` for `Person`.
+    /// That is why, property `Manager.person` needs to be excluded from activatable processing.
     ///
-    private static boolean shouldProcessAsActivatable(final AbstractEntity<?> entity, final Set<String> keyMembers, final MetaProperty<?> prop) {
-        // let's first identify whether entity belongs to the deactivatable type of the referenced property type
-        // if so, it should not inflict any ref counts for this property
-        final var ddAnnotation = getAnnotation(prop.getType(), DeactivatableDependencies.class);
-        boolean belongsToDeactivatableDependencies;
-        if (ddAnnotation != null) {
-            // if the main type belongs to dependent deactivatables of the type for the current property,
-            // and that property is a key member then such property should be excluded from standard processing of dirty activatables
-            belongsToDeactivatableDependencies = keyMembers.contains(prop.getName()) && ArrayUtils.contains(ddAnnotation.value(), entity.getType());
-        } else {
-            belongsToDeactivatableDependencies = false;
-        }
-        // null values correspond to dereferencing and should be allowed only for already persisted entities
-        // checking prop.isProxy() is really just to prevent calling prop.getValue() on proxied properties, which fails with StrictProxyException
-        // this also assumes that proxied properties might actually have a value and need to be included for further processing
-        // values for proxied properties are then retrieved in a lazy fashion by Hibernate
-        return !belongsToDeactivatableDependencies && (prop.isProxy() || prop.getValue() != null || entity.isPersisted());
+    public static boolean isDeactivatableDependencyBackref(final Class<? extends AbstractEntity<?>> entityType, final CharSequence prop) {
+        return isDeactivatableDependencyBackref_(entityType, prop, determinePropertyType(entityType, prop));
     }
 
-    /// Collects properties that represent not dirty activatable properties.
-    ///
-    public static List<String> collectActivatableNotDirtyProperties(final AbstractEntity<?> entity, final Set<String> keyMembers) {
-        // TODO For union-typed properties, check the union member property annotations as well.
-        if (entity.isInstrumented()) {
-            return entity.getProperties().values()
-                    .stream()
-                    // proxied property is considered to be not dirty in this context
-                    .filter(prop -> prop.isProxy() || !prop.isDirty())
-                    .filter(MetaProperty::isActivatable)
-                    .filter(prop -> shouldProcessAsActivatable(entity, keyMembers, prop))
-                    .filter(prop -> !isSpecialActivatableToBeSkipped(prop))
-                    .map(MetaProperty::getName)
-                    .toList();
+    public static boolean isDeactivatableDependencyBackref(final MetaProperty<?> mp) {
+        return isDeactivatableDependencyBackref_(mp.getEntity().getType(), mp.getName(), mp.getType());
+    }
+
+    private static boolean isDeactivatableDependencyBackref_(final Class<? extends AbstractEntity<?>> entityType, final CharSequence prop, final Class<?> propType) {
+        final var ddAnnotation = getAnnotation(propType, DeactivatableDependencies.class);
+        if (ddAnnotation != null) {
+            final var baseEntityType = baseEntityType(entityType);
+            final var isKeyMember = getKeyMembers(baseEntityType).stream().anyMatch(km -> km.getName().contentEquals(prop));
+            return isKeyMember && ArrayUtils.contains(ddAnnotation.value(), baseEntityType);
         }
         else {
-            // TODO Why DeactivatableDependencies are not checked here?
-            return streamRealProperties(entity.getType(), MapTo.class)
-                    .filter(field -> (ActivatableAbstractEntity.class.isAssignableFrom(field.getType()) || AbstractUnionEntity.class.isAssignableFrom(field.getType()))
-                                     && !isSpecialActivatableToBeSkipped(field))
-                    .map(Field::getName)
-                    .toList();
+            return false;
         }
     }
 

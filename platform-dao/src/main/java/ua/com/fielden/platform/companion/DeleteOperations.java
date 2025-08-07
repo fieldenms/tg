@@ -13,28 +13,30 @@ import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlTables;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 import javax.persistence.PersistenceException;
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toSet;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.collectActivatableNotDirtyProperties;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isDeactivatableDependencyBackref;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
 
 /// Various delete operations that are used by entity companions.
 /// The main purpose of this class is to be more like a mixin that provides an implementation of delete operations.
@@ -118,23 +120,42 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         final var persistedEntity = (ActivatableAbstractEntity<?>) session.get().load(entity.getType(), entity.getId(), UPGRADE);
         if (persistedEntity.isActive()) {
             // Let's collect activatable properties from entity to check them for activity and also to decrement their refCount.
-            final var keyMembers = getKeyMembers(entity.getType()).stream().map(Field::getName).collect(toSet());
-            for (final var prop : collectActivatableNotDirtyProperties(entity, keyMembers)) {
-                // If `prop` is proxied, its value will be retrieved lazily by Hibernate.
-                final var activatable = extractActivatable(persistedEntity.get(prop));
-                if (activatable != null) {
-                    // Load the latest activatable value.
-                    final var persistedActivatable = (ActivatableAbstractEntity<?>) session.get().load(activatable.getType(), activatable.getId(), UPGRADE);
-                    persistedActivatable.setIgnoreEditableState(true);
-                    // If `persistedActivatable` is active and is not a self-reference then its `refCount` needs to be decremented.
-                    if (persistedActivatable.isActive() && !entity.equals(persistedActivatable)) {
-                        session.get().update(persistedActivatable.decRefCount());
-                    }
-                }
-            }
+            // If `prop` is proxied, its value will be retrieved lazily by Hibernate.
+            // Load the latest activatable value.
+            // If `persistedActivatable` is active and is not a self-reference then its `refCount` needs to be decremented.
+            activatableProperties(entity)
+                    .map(prop -> extractActivatable(persistedEntity.get(prop)))
+                    .filter(Objects::nonNull)
+                    .map(activatable -> (ActivatableAbstractEntity<?>) session.get().load(activatable.getType(), activatable.getId(), UPGRADE))
+                    .forEach(persistedActivatable -> {
+                        persistedActivatable.setIgnoreEditableState(true);
+                        if (persistedActivatable.isActive() && !entity.equals(persistedActivatable)) {
+                            session.get().update(persistedActivatable.decRefCount());
+                        }
+                    });
         }
 
         return deleteById(entity.getId());
+    }
+
+    private Stream<String> activatableProperties(final ActivatableAbstractEntity<?> entity) {
+        // Instrumentation is required only to use MetaProperty.isActivatable().
+        // TODO Replace usage of MetaProperty.isActivatable with something that does not require MetaProperty.
+        final ActivatableAbstractEntity<? extends Comparable<?>> instrumentedEntity;
+        if (entity.isInstrumented()) {
+            instrumentedEntity = entity;
+        }
+        else {
+            EntityUtils.copy(entity, instrumentedEntity = (ActivatableAbstractEntity<?>) reader.new_());
+        }
+
+        // TODO For union-typed properties, check the union member property annotations as well.
+        return instrumentedEntity.getProperties().values()
+                .stream()
+                .filter(MetaProperty::isActivatable)
+                .filter(prop -> !isDeactivatableDependencyBackref(prop))
+                .filter(prop -> !isSpecialActivatableToBeSkipped(prop))
+                .map(MetaProperty::getName);
     }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {

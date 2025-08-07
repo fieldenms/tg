@@ -40,7 +40,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.ArrayUtils;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
@@ -71,8 +70,8 @@ import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ER
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isDeactivatableDependencyBackref;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -450,33 +449,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
     /// This predicate identifies whether the specified property needs to be processed as an activatable reference.
     ///
-    /// @param entityType  entity type that contains `prop`
-    ///
-    private boolean shouldProcessAsActivatable(final Class<? extends ActivatableAbstractEntity<?>> entityType, final MetaProperty<?> prop) {
-        final boolean shouldProcessAsActivatable;
+    private boolean shouldProcessAsActivatable(final MetaProperty<?> prop) {
         // TODO For union-typed properties, check the union member property annotations as well.
-        if (prop.isActivatable() && !isSpecialActivatableToBeSkipped(prop)) {
-            final DeactivatableDependencies ddAnnotation;
-            if (prop.isKey() && (ddAnnotation = getAnnotation(prop.getType(), DeactivatableDependencies.class)) != null) {
-                // If the type of the referencing property has deactivatable dependencies that include the type of the entity, which is being saved,
-                // and the property is a key or a key member, then such property should be excluded from processing.
-                //
-                // Consider an example of activatable entity `Manager`, which has a key member `person: Person`.
-                // Entity `Person` is activatable and includes `Manager` in its `@DeactivatableDependencies`.
-                // Now imagine a scenario where an entity instance of `Manager` is being deactivated.
-                // Property `Manager.person` would be considered for processing as it is of activatable type `Person`.
-                // However, `Manager` is a specialisation of `Person`.
-                // This is signified by the fact that `Manager.person` is a key member and `Person` includes `Manager` in its `@DeactivatableDependencies`.
-                // Activation/deactivation of a `Manager` should not affect `refCount` for `Person`.
-                // That is why, property `Manager.person` needs to be excluded from activatable processing.
-                shouldProcessAsActivatable = !ArrayUtils.contains(ddAnnotation.value(), entityType);
-            } else {
-                shouldProcessAsActivatable = true;
-            }
-        } else {
-            shouldProcessAsActivatable = false;
-        }
-        return shouldProcessAsActivatable;
+        return prop.isActivatable() && !isSpecialActivatableToBeSkipped(prop) && !isDeactivatableDependencyBackref(prop);
     }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
@@ -614,7 +589,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         if (persistedEntity != null && entity.getProperty(ACTIVE).isDirty() && entity.isActive() != persistedEntity.isActive()) {
             instructionsForNonDirty = entity.getProperties().values()
                     .stream()
-                    .filter(mp -> (mp.isProxy() || !mp.isDirty()) && shouldProcessAsActivatable(entityType, mp))
+                    .filter(mp -> (mp.isProxy() || !mp.isDirty()) && shouldProcessAsActivatable(mp))
                     .<RefCountInstruction>map(mp -> {
                         final var propName = mp.getName();
                         // If the property is proxied, its value will be retrieved lazily by Hibernate.
@@ -662,7 +637,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         final Stream<RefCountInstruction> instructionsForDirty = entity.getDirtyProperties()
                 .stream()
-                .filter(prop -> shouldProcessAsActivatable(entityType, prop))
+                .filter(this::shouldProcessAsActivatable)
                 // If the current and persisted property values are the same, nothing needs to be done.
                 // At this stage, these values can only be the same iff a non-conflicting concurrent modification occurred.
                 // In such case, recalculation of `refCount` for the referenced entity has already been performed, and double-dipping should be avoided.
