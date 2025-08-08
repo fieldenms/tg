@@ -1133,7 +1133,7 @@ Polymer({
 
     reloadDialog: function() {
         const self = this;
-        if (self.$.elementLoader.loadedElement.tagName !== self._lastAction.elementName.toUpperCase()) {
+        if (self._lastElement.tagName !== self._lastAction.elementName.toUpperCase()) {
             //Call this method necause entity master type changes, therefore dialog's dimension and position will be changed
             self._handleMasterBeforeChange();
 
@@ -1156,8 +1156,6 @@ Polymer({
                                 }
                                 if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
                                     return Promise.resolve(self._showMaster(self._lastAction, element, null, null, false));
-                                } else  if (ironRequest && ironRequest.response && ironRequest.response.ex && ironRequest.response.ex.continuationTypeStr) {
-                                    return Promise.resolve(self._showMaster(self._lastAction, element, null, null, true));
                                 } else {
                                     return Promise.reject('Retrieval / saving promise was not successful.');
                                 }
@@ -1166,7 +1164,7 @@ Polymer({
                                 self._handleMasterChanged(e);
                             })
                             .catch(function(error) {
-                                self._finishErroneousOpening();
+                                self._handleError({detail: error});
                             });
                     } else {
                         return Promise.resolve()
@@ -1187,7 +1185,7 @@ Polymer({
                     self.$.toaster.showProgress = false;
                     self.$.toaster.isCritical = true;
                     self.$.toaster.show();
-                    self._finishErroneousOpening();
+                    self._handleError({detail: error.message});
                     throw new UnreportableError(error);
                 });
         }
