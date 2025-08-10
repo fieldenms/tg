@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
+import ua.com.fielden.platform.entity.annotation.EntityTypeCarrier;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -304,7 +306,17 @@ public interface IContextDecomposer {
         // 2. chosenProperty is a sub property of a property of type for Entity Master, where that "parent" property belongs to the current entity, or
         // 3. currentEntity() itself is of type for Entity Master (chosenProperty() is "" aka "this" or chosenProperty() is not defined in context configuration)
         return traversePropPath(currentEntity(), chosenProperty()) // traverse entity-typed paths and values
-            .filter(pathAndValueOpt -> compatibilityType.isAssignableFrom(determineActualEntityType(currentEntity().getType(), pathAndValueOpt._1))) // find only type-compatible paths
+            .filter(pathAndValueOpt -> {
+                        try {
+                            return compatibilityType.isAssignableFrom(determineActualEntityType(currentEntity().getType(), pathAndValueOpt._1))
+                                || pathAndValueOpt._2.isPresent()
+                                    && !Finder.findProperties(pathAndValueOpt._2.get().getClass(), EntityTypeCarrier.class).isEmpty()
+                                    && compatibilityType.isAssignableFrom(Class.forName((String) pathAndValueOpt._2.get().get(Finder.findProperties(pathAndValueOpt._2.get().getClass(), EntityTypeCarrier.class).getFirst().getName())));
+                        } catch (ClassNotFoundException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+            ) // find only type-compatible paths
             .findFirst() // find first (most full) type-compatible pair, if any
             .flatMap(pathAndValueOpt -> pathAndValueOpt._2) // get optional entity value, if any
             .map(AbstractEntity::getId); // get ID from it, if any
