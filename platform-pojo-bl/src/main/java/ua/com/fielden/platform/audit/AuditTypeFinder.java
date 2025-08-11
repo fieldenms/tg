@@ -297,7 +297,7 @@ final class AuditTypeFinder implements IAuditTypeFinder {
         // If auditing is enabled, validate existence of audit types.
         if (auditingMode == AuditingMode.ENABLED) {
             if (auditEntityTypes.isEmpty()) {
-                throw new EntityDefinitionException(ERR_MUST_HAVE_AT_LEAST_ONE_PERSISTENT_AUDIT_ENTITY_TYPE);
+                throw new EntityDefinitionException(ERR_MUST_HAVE_AT_LEAST_ONE_PERSISTENT_AUDIT_ENTITY_TYPE.formatted(auditedType.getSimpleName()));
             }
 
             final var expectedTypeVersions = IntStream.rangeClosed(1, auditEntityTypes.size()).toArray();
