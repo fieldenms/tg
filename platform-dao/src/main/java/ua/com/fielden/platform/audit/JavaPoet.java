@@ -3,7 +3,7 @@ package ua.com.fielden.platform.audit;
 import com.squareup.javapoet.*;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;

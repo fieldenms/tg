@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 

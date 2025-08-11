@@ -211,7 +211,7 @@ public class AuditingTest extends AbstractDaoTestCase {
         }
 
         {
-            final var union = save(new_(UnionEntity.class).setPropertyTwo(save(new_(EntityTwo.class, 2))));
+            final var union = save(new_(UnionEntity.class).setPropertyTwo(save(new_(EntityTwo.class, "2"))));
             final var entity_v2 = save(entity.setUnion(union));
 
             final var audit = coAudit.getAudit(entity_v2);

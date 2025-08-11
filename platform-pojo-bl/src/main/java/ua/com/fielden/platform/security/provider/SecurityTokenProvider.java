@@ -228,7 +228,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     ///
     /// `allTokens` must contain all tokens that are contained in the resulting forest of trees.
     /// For example, it is an error if `allTokens` contains a sub-token but does not contain its parent token.
-    private static SortedSet<SecurityTokenNode> buildTokenNodes(final Iterable<Class<? extends ISecurityToken>> allTokens) {
+    static SortedSet<SecurityTokenNode> buildTokenNodes(final Iterable<Class<? extends ISecurityToken>> allTokens) {
         final Map<Class<? extends ISecurityToken>, SecurityTokenNode> tokenTypeToNode = new HashMap<>(Iterables.size(allTokens));
         allTokens.forEach(t -> buildTokenNodes_(t, tokenTypeToNode));
 
