@@ -73,7 +73,7 @@ public abstract class AbstractSynAuditEntity<E extends AbstractEntity<?>> extend
     public abstract E getAuditedEntity();
 
     @IsProperty
-    @Title(value = "Audit Version", desc = "Version of the entity for which this audit record was created.")
+    @Title(value = "Version", desc = "Version of the entity for which this audit record was created.")
     @CompositeKeyMember(2)
     @DenyIntrospection
     private Long auditedVersion;

@@ -64,7 +64,7 @@ public abstract class AbstractAuditEntity<E extends AbstractEntity<?>> extends A
 
     @IsProperty
     @MapTo
-    @Title(value = "Audit Version", desc = "Version of the entity for which this audit record was created.")
+    @Title(value = "Version", desc = "Version of the entity for which this audit record was created.")
     @CompositeKeyMember(2)
     private Long auditedVersion;
 
