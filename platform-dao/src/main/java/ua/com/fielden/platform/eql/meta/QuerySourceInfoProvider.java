@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -20,7 +21,6 @@ import ua.com.fielden.platform.meta.*;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

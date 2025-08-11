@@ -38,7 +38,6 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleQueryContainer;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
@@ -74,29 +73,6 @@ public class RestServerUtil {
             }
         }
         return headers;
-    }
-
-    /**
-     * Creates a response header entry.
-     *
-     * @param response
-     * @param headerEntry
-     * @param value
-     */
-    public void setHeaderEntry(final Response response, final HttpHeaders headerEntry, final String value) {
-        getMessageHeaders(response).add(headerEntry.value, value);
-    }
-
-    /**
-     * Returns a header entry value if present. Otherwise, null.
-     *
-     * @param response
-     * @param headerEntry
-     * @return
-     */
-    public String getHeaderValue(final Request request, final HttpHeaders headerEntry) {
-        final Series<Header> header = getMessageHeaders(request);
-        return header != null && header.getFirst(headerEntry.value) != null ? header.getFirst(headerEntry.value).getValue() : null;
     }
 
     /**

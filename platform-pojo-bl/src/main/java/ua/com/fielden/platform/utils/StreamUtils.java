@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.utils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -280,11 +282,12 @@ public class StreamUtils {
         return Stream.of(streams).flatMap(Function.identity());
     }
 
-    /**
-     * Applies a binary operator to all elements of the {@code stream}, going left to right.
-     */
-    public static <T> Optional<T> reduceLeft(final BaseStream<T, ?> stream,
-                                             final BiFunction<? super T, ? super T, T> fn) {
+    /// Applies a binary operator to all elements of the `stream`, going left to right.
+    ///
+    public static <T> Optional<T> reduceLeft(
+            final BaseStream<T, ?> stream,
+            final BiFunction<? super T, ? super T, T> fn)
+    {
         final var iter = stream.iterator();
         if (!iter.hasNext()) {
             return Optional.empty();
@@ -293,32 +296,37 @@ public class StreamUtils {
         return Optional.of(foldLeft_(iter, iter.next(), fn));
     }
 
-    /**
-     * Applies a binary function to a start value and all elements of a stream, going left to right.
-     *
-     * @param stream the stream to be folded.
-     * @param fn  the binary function that folds an element into the result
-     * @param z  the start value
-     * @return the result of applying {@code fn} to consecutive elements of the {@code stream}, going left to right with the start value {@code z} on the left:
-     *         {@code fn(...fn(z, x1), x2, ..., xn)} where {@code x1}, ..., {@code xn} are the elements of the stream. Returns {@code z} if the stream is empty.
-     */
-    public static <A, B> B foldLeft(final BaseStream<A, ?> stream,
-                                      final B z,
-                                      final BiFunction<? super B, ? super A, B> fn) {
+    /// Applies a binary function to a start value and all elements of a stream, going left to right.
+    ///
+    /// @param stream the stream to be folded.
+    /// @param fn  the binary function that folds an element into the result
+    /// @param z  the start value
+    /// @return the result of applying `fn` to consecutive elements of the `stream`, going left to right with the start value `z` on the left:
+    ///         `fn(...fn(z, x1), x2, ..., xn)` where `x1`, ..., `xn` are the elements of the stream.
+    ///         Returns `z` if the stream is empty.
+    ///
+    public static <A, B> B foldLeft(
+            final BaseStream<A, ?> stream,
+            final B z,
+            final BiFunction<? super B, ? super A, B> fn)
+    {
         return foldLeft_(stream.iterator(), z, fn);
     }
 
-    /**
-     * Helper function that actually performs folding.
-     *
-     * @param iter
-     * @param z
-     * @param fn
-     * @return
-     */
-    private static <A, B> B foldLeft_(final Iterator<A> iter,
-                                      final B z,
-                                      final BiFunction<? super B, ? super A, B> fn) {
+    /// Equivalent to [#foldLeft(BaseStream, Object, BiFunction)], but for [Iterable].
+    ///
+    public static <A, B> B foldLeft(
+            final Iterable<A> iterable,
+            final B z,
+            final BiFunction<? super B, ? super A, B> fn) {
+        return foldLeft_(iterable.iterator(), z, fn);
+    }
+
+    private static <A, B> B foldLeft_(
+            final Iterator<A> iter,
+            final B z,
+            final BiFunction<? super B, ? super A, B> fn)
+    {
         if (!iter.hasNext()) {
             return z;
         }
@@ -592,5 +600,55 @@ public class StreamUtils {
     // where
     private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(Boolean.FALSE);
     private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(Boolean.TRUE);
+
+    /// Equal to `partitioning(predicate, -1)`.
+    ///
+    /// @see #partitioning(Predicate, int)
+    ///
+    public static <T> Collector<T, ?, T2<List<T>, List<T>>> partitioning(final Predicate<? super T> predicate) {
+        return partitioning(predicate, -1);
+    }
+
+    /// Partitions a stream into a pair `(a, b)`, where `a` contains all elements that satisfy `predicate`, and `b` -- all others.
+    ///
+    /// @param estimatedSize  estimated number of elements in the stream. -1 denotes an unknown number.
+    ///
+    public static <T> Collector<T, ?, T2<List<T>, List<T>>> partitioning(final Predicate<? super T> predicate, final int estimatedSize) {
+        final var partSize = Math.max(1, (estimatedSize < 0 ? 10 : estimatedSize) / 2);
+
+        class Acc {
+            @Nullable List<T> ts;
+            @Nullable List<T> fs;
+
+            List<T> ts() {
+                return ts != null ? ts : (ts = new ArrayList<>(partSize));
+            }
+            List<T> fs() {
+                return fs != null ? fs : (fs = new ArrayList<>(partSize));
+            }
+        }
+
+        return Collector.of(Acc::new,
+                            (acc, x) -> {
+                                if (predicate.test(x)) {
+                                    acc.ts().add(x);
+                                }
+                                else {
+                                    acc.fs().add(x);
+                                }
+                            },
+                            (acc1, acc2) -> {
+                                if (acc2.ts != null) {
+                                    acc1.ts().addAll(acc2.ts);
+                                }
+                                if (acc2.fs != null) {
+                                    acc1.fs().addAll(acc2.fs);
+                                }
+                                return acc1;
+                            },
+                            acc -> T2.t2(acc.ts != null ? unmodifiableList(acc.ts) : ImmutableList.of(),
+                                         acc.fs != null ? unmodifiableList(acc.fs) : ImmutableList.of()),
+                            Collector.Characteristics.UNORDERED);
+    }
 
 }

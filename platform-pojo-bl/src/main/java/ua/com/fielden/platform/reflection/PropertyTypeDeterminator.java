@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
@@ -12,12 +13,10 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.*;
 import java.util.Map;
 import java.util.Optional;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 import static ua.com.fielden.platform.types.tuples.T2.t2;

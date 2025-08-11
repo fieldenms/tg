@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 import java.math.BigDecimal;
 
@@ -16,6 +17,12 @@ import java.math.BigDecimal;
 @CompanionObject(IEntityOne.class)
 @MapEntityTo
 public class EntityOne extends AbstractEntity<String> {
+
+    public enum Property implements IConvertableToPath {
+        stringProperty, bigDecimalProperty;
+
+        @Override public String toPath() { return name(); }
+    }
 
     @IsProperty
     @MapTo

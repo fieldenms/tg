@@ -3,12 +3,13 @@ package ua.com.fielden.platform.utils;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Streams;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.*;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 /**
  * A convenience class to provide common collection related routines and algorithms.
@@ -454,6 +456,28 @@ public final class CollectionUtil {
 
         public C $() {
             return collection;
+        }
+    }
+
+    /// Partitions `xs` into a pair `(a, b)`, where `a` contains all elements that satisfy `predicate`, and `b` -- all others.
+    ///
+    /// @param xs  a source of elements, may contain `null`
+    ///
+    public static <X> T2<List<X>, List<X>> partitionBy(final Iterable<X> xs, final Predicate<? super X> predicate) {
+        if (xs instanceof Collection<X> coll) {
+            if (coll.isEmpty()) {
+                return t2(ImmutableList.of(), ImmutableList.of());
+            }
+            else if (coll.size() == 1) {
+                final var x0 = coll instanceof SequencedCollection<X> seq ? seq.getFirst() : coll.iterator().next();
+                return predicate.test(x0) ? t2(ImmutableList.of(x0), ImmutableList.of()) : t2(ImmutableList.of(), ImmutableList.of(x0));
+            }
+            else {
+                return coll.stream().collect(StreamUtils.partitioning(predicate, coll.size()));
+            }
+        }
+        else {
+            return Streams.stream(xs).collect(StreamUtils.partitioning(predicate));
         }
     }
 

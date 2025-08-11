@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import jakarta.annotation.Nonnull;
+import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
@@ -9,7 +11,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -32,6 +33,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
  *
  */
 @KeyType(String.class)
+@WithMetaModel
 public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     public static final String ERR_UNION_PROPERTY_ALREADY_HAS_VALUE = "Invalid attempt to set property [%s] as active for union entity [%s] with active property [%s].";
