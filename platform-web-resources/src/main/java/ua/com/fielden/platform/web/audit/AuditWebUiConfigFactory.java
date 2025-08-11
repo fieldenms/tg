@@ -111,7 +111,7 @@ final class AuditWebUiConfigFactory implements IAuditWebUiConfigFactory {
                 .setLayoutFor(DESKTOP, empty(), layout)
                 .setLayoutFor(TABLET, empty(), layout)
                 .setLayoutFor(MOBILE, empty(), layout)
-                .withScrollingConfig(standardEmbeddedScrollingConfig(3))
+                .withScrollingConfig(standardEmbeddedScrollingConfig(1))
 
                 // Order by version, which resembles entity history more accurately than audit date.
                 .addProp(AUDITED_VERSION).order(1).desc().minWidth(50)
