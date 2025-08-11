@@ -496,15 +496,12 @@ Polymer({
                 button.focus(); // force 'tg-ui-action' UI element focusing to ensure focus lost event happens in other editor
             }
 
-            let promise = null;
-
-            if (this.preAction) {
-                const result = this.preAction(this);
-                promise = result instanceof Promise ? result : Promise.resolve(result);
-            }
-
             const postMasterInfoRetrieve = function () {
-                if (promise) {
+                if (this.preAction) {
+                    const result = this.preAction(this);
+                    
+                    const promise = result instanceof Promise ? result : Promise.resolve(result);
+    
                     promise.then(function (value) {
                         self.showDialog(self);
                     }, function (error) {
