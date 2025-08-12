@@ -858,7 +858,7 @@ Polymer({
 
     /** Used by the master, which incorporates this menu to check if it can be closed. */
     canLeave: function () {
-        return this._section(this.route).canLeave();
+        return this._section(this.route) && this._section(this.route).canLeave();
     },
 
     _sectionRouteChanged: function (newRoute, oldRoute) {

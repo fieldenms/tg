@@ -555,6 +555,9 @@ Polymer({
             //self constatnt is created to have a reference on action in functions created for entity master like postRetrieved, postSaved etc.
             const self = this;
 
+            // Set master for this action.
+            self._masterReferenceForTesting = master;
+
             // spinner requiredness assignment should be before action's progress changes as it is used in its observer
             // the spinner is required only if the action has no UI part
             self._isSpinnerRequired = master.noUI;
@@ -660,9 +663,6 @@ Polymer({
                     if (self.modifyFunctionalEntity) {
                         self.modifyFunctionalEntity(master._currBindingEntity, master, self);
                     }
-
-                    // Set master for this action.
-                    self._masterReferenceForTesting = master;
 
                     if (master.saveOnActivation === true) {
                         return master.save(); // saving promise

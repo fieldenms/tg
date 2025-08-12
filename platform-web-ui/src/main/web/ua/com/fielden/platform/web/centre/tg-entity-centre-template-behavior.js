@@ -283,7 +283,10 @@ const TgEntityCentreTemplateBehaviorImpl = {
                         if (action.dynamicAction && masterInfo && masterInfo.key.toUpperCase() !== master.tagName) {
                             action._setEntityMasterInfo(masterInfo);
                             if (masterChangedCallback) {
-                                masterChangedCallback().finally(() => {
+                                masterChangedCallback().then(() => {
+                                    action._fireNavigationChangeEvent(true);
+                                }).catch(e => {
+                                    this.$.egi.editEntity(entity);
                                     action._fireNavigationChangeEvent(true);
                                 })
                             }
@@ -294,14 +297,16 @@ const TgEntityCentreTemplateBehaviorImpl = {
                                     action.modifyFunctionalEntity(master._currBindingEntity, master, action);
                                 }
                                 if (master.$.menu) {
-                                    master.$.menu.currentSection()._showBlockingPane();
+                                    if (master.$.menu.currentSection()) { //current menu item section can be null if previous entity wasn't retrieved or any other error happened 
+                                        master.$.menu.currentSection()._showBlockingPane();
+                                    }
                                     master.$.menu.maintainPreviouslyOpenedMenuItem = true;
                                 }
                                 master.addEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
                                 master.addEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
-                                master.save().then(function(value) {}, function (error) {
+                                master.save().finally(value => {
                                     action._fireNavigationChangeEvent(true);
-                                }.bind(this));
+                                });
                             }.bind(this), function (error) {
                                 this.$.egi.editEntity(entity);
                                 action._fireNavigationChangeEvent(true);
@@ -367,9 +372,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 action.entInd = thisPageInd >= 0 ? pageNumber * pageCapacity + thisPageInd : action.entInd;
                 action.hasPrev  = action.hasPreviousEntry();
                 action.hasNext = action.hasNextEntry();
-                const master = action._masterReferenceForTesting;
-                if (master) {
-                    master.fire('tg-action-navigation-changed', {
+                if (action._masterReferenceForTesting) {
+                    action._masterReferenceForTesting.fire('tg-action-navigation-changed', {
                         hasPrev: action.hasPrev,
                         hasNext: action.hasNext,
                         count: action.count,

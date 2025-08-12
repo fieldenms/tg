@@ -1083,6 +1083,7 @@ Polymer({
 
                 self._getElement(customAction)
                     .then(function(element) {
+                        self._lastElement = element;
                         const promise = customAction._onExecuted(null, element, null);
                         if (promise) {
                             return promise
@@ -1136,47 +1137,27 @@ Polymer({
         if (self._lastElement.tagName !== self._lastAction.elementName.toUpperCase()) {
             //Call this method necause entity master type changes, therefore dialog's dimension and position will be changed
             self._handleMasterBeforeChange();
-
-
             self._customiseAction(self._lastAction);
             self.dynamicTitle = null;
-
             return self._getElement(self._lastAction)
-                .then(function(element) {
-                    const promise = self._lastAction._onExecuted(null, element, null);
-                    if (promise) {
-                        return promise
-                            .then(function(ironRequest) {
-                                const key = self._lastAction.elementAlias ? self._lastAction.elementAlias : self._lastAction.elementName;
-                                if (!self._cachedElements.hasOwnProperty(key)) {
-                                    if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
-                                        console.log("caching:", key);
-                                        self._cachedElements[key] = element;
-                                    }
-                                }
-                                if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
-                                    return Promise.resolve(self._showMaster(self._lastAction, element, null, null, false));
-                                } else {
-                                    return Promise.reject('Retrieval / saving promise was not successful.');
-                                }
-                            })
-                            .then( e => {
-                                self._handleMasterChanged(e);
-                            })
-                            .catch(function(error) {
-                                self._handleError({detail: error});
-                            });
-                    } else {
-                        return Promise.resolve()
-                            .then(function() {
-                                return Promise.resolve(self._showMaster(self._lastAction, element, null, null, false));
-                            })
-                            .catch(function(error) {
-                                self._finishErroneousOpening();
-                            });
-                    }
-                })
-                .catch(function(error) {
+                .then(element => {
+                    self._lastElement = element;
+                    return self._lastAction._onExecuted(null, element, null).then(ironRequest => {
+                        const key = self._lastAction.elementAlias ? self._lastAction.elementAlias : self._lastAction.elementName;
+                        if (!self._cachedElements.hasOwnProperty(key)) {
+                            if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
+                                console.log("caching:", key);
+                                self._cachedElements[key] = element;
+                            }
+                        }
+                        if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
+                            self._handleMasterChanged(e);
+                            return Promise.resolve(element);
+                        } else {
+                            return Promise.reject('Retrieval / saving promise was not successful.');
+                        }
+                    })
+                }).catch(error => {
                     console.error(error);
                     self.$.toaster.text = 'There was an error displaying the dialog.';
                     self.$.toaster.hasMore = true;
@@ -1403,7 +1384,6 @@ Polymer({
     },
     
     _showMaster: function(action, element, closeEventChannel, closeEventTopics, actionWithContinuation) {
-        this._lastElement = element;
         const self = this;
         if (element.noUI === true) { // is this is the end of action execution?
             self._resetState();
