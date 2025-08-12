@@ -9,11 +9,13 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.reflection.Finder.streamProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -287,7 +289,24 @@ public interface IContextDecomposer {
     default Optional<Class<AbstractEntity<?>>> chosenEntityType() {
         return traversePropPath(currentEntity(), chosenProperty()) // traverse entity-typed paths and values
             .findFirst() // find first (most full) pair, if any
-            .map(pathAndValueOpt -> determineActualEntityType(currentEntity().getType(), pathAndValueOpt._1)); // take the path only and determine actual entity type from that path
+            .map(pathAndValueOpt -> {
+                final Supplier<Class<AbstractEntity<?>>> determineChosenPropType = () -> determineActualEntityType(currentEntity().getType(), pathAndValueOpt._1);
+                return pathAndValueOpt._2
+                    .map(value -> {
+                        return streamProperties(value.getClass(), EntityTypeCarrier.class)
+                            .findAny()
+                            .map(field -> (String) value.get(field.getName()))
+                            .map(carrierValue -> {
+                                try {
+                                    return (Class<AbstractEntity<?>>) Class.forName(carrierValue);
+                                } catch (ClassNotFoundException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            })
+                            .orElseGet(determineChosenPropType);
+                    })
+                    .orElseGet(determineChosenPropType);
+            }); // take the path only and determine actual entity type from that path
     }
     
     /**
