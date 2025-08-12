@@ -521,7 +521,6 @@ Polymer({
             self.persistActiveElement();
 
             if (this.dynamicAction && (this.rootEntityType || this.currentEntity())) {
-                //TODO the logic of determining of the right entity type should be changed
                 const currentEntityType = (this.rootEntityType && this._reflector.getType(this.rootEntityType)) // If root entity type present then it should be used for entity master 
                         || getFirstEntityType(this.currentEntity(), this.chosenProperty); // or get type from this.currentEntity() and chosen property
                 if (!this.elementName) { // element name for dynamic action is not specified at first run

@@ -26,7 +26,7 @@ export function getFirstEntityTypeAndProperty (entity, propertyName) {
             currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
             currentType = currentProperty ? entityType.prop(currentProperty).type() : entityType;
         }
-        return [calculateEntityType(entity.get(currentProperty), reflector), currentProperty]; 
+        return [calculateEntityType(entity.get(currentProperty), reflector) || currentType, currentProperty]; 
     } else if (entity) {
         return [calculateEntityType(entity, reflector), propertyName];
     }
@@ -40,8 +40,8 @@ export function getFirstEntityTypeAndProperty (entity, propertyName) {
  * @returns The object that represents the type of given entity
  */
 function calculateEntityType(entity, reflector) {
-    const entityType = entity.constructor.prototype.type.call(entity);
-    return (entityType.entityTypeCarrierName() && reflector.getType(entity.get(entityType.entityTypeCarrierName()))) || entityType;
+    const entityType = entity && entity.constructor.prototype.type.call(entity);
+    return (entityType && entityType.entityTypeCarrierName() && reflector.getType(entity.get(entityType.entityTypeCarrierName()))) || entityType;
 }
 
 /**
