@@ -284,7 +284,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
                             action._setEntityMasterInfo(masterInfo);
                             if (masterChangedCallback) {
                                 masterChangedCallback().then(() => {
-                                    action._fireNavigationChangeEvent(true);
+                                    action._fireNavigationChangeEvent(false);
                                 }).catch(e => {
                                     this.$.egi.editEntity(entity);
                                     action._fireNavigationChangeEvent(true);
@@ -304,7 +304,9 @@ const TgEntityCentreTemplateBehaviorImpl = {
                                 }
                                 master.addEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);
                                 master.addEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);
-                                master.save().finally(value => {
+                                master.save().then(() => {
+                                    action._fireNavigationChangeEvent(false);
+                                }).catch(() => {
                                     action._fireNavigationChangeEvent(true);
                                 });
                             }.bind(this), function (error) {
