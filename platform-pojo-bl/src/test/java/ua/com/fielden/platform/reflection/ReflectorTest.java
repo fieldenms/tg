@@ -1,30 +1,13 @@
 package ua.com.fielden.platform.reflection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.util.List;
-
-import org.junit.Test;
-
 import com.google.inject.Injector;
-
+import org.junit.Test;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.DetailEntityForOneToOneAssociationWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAssociations;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
@@ -35,13 +18,22 @@ import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
-import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
-import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
-import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
-import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
+import ua.com.fielden.platform.reflection.test_entities.*;
+import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /**
  * Test case for {@link Reflector}.
@@ -324,6 +316,102 @@ public class ReflectorTest {
             assertTrue(AbstractEntity.isStrictModelVerification());
             assertTrue(ComplexKeyEntity.isStrictModelVerification());
         }
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_calculated_properties() {
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "calcCategory"));
+        assertFalse(isPropertyPersistent(EntityWithPropertiesOfActivatableTypes.class, "calcCategory"));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_critOnly_properties() {
+        assertTrue(isPropertyAnnotationPresent(CritOnly.class, EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
+        assertFalse(isPropertyPersistent(EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_plain_properties() {
+        assertFalse(isPropertyAnnotationPresent(CritOnly.class, EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertFalse(isPropertyPersistent(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertFalse(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertFalse(isPropertyPersistent(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_true_for_simple_key_in_a_persistent_entity_type() {
+        assertTrue(isPersistentEntityType(TgPerson.class));
+        assertFalse(isCompositeEntity(TgPerson.class));
+        assertTrue(isPropertyPersistent(TgPerson.class, KEY));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_composite_key_in_a_persistent_entity_type() {
+        assertTrue(isPersistentEntityType(TgAuthorship.class));
+        assertTrue(isCompositeEntity(TgAuthorship.class));
+        assertFalse(isPropertyPersistent(TgAuthorship.class, KEY));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_composite_key_in_a_synthetic_entity_type() {
+        assertTrue(isSyntheticEntityType(TgVehicleFuelUsage.class));
+        assertTrue(isCompositeEntity(TgVehicleFuelUsage.class));
+        assertFalse(isPropertyPersistent(TgVehicleFuelUsage.class, KEY));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_key_in_a_union_type() {
+        assertTrue(isUnionEntityType(TgUnion.class));
+        assertFalse(isPropertyPersistent(TgUnion.class, KEY));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_desc_in_a_union_type_without_desc() {
+        assertTrue(isUnionEntityType(UnionEntityWithoutDesc.class));
+        assertFalse(hasDescProperty(UnionEntityWithoutDesc.class));
+        assertFalse(isPropertyPersistent(UnionEntityWithoutDesc.class, DESC));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_desc_in_a_union_type_with_desc() {
+        assertTrue(isUnionEntityType(UnionEntityWithDesc.class));
+        assertTrue(hasDescProperty(UnionEntityWithDesc.class));
+        assertFalse(isPropertyPersistent(UnionEntityWithDesc.class, DESC));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_true_for_desc_in_a_persistent_entity_type_with_desc() {
+        assertTrue(isPersistentEntityType(TgAuthor.class));
+        assertTrue(hasDescProperty(TgAuthor.class));
+        assertTrue(isPropertyPersistent(TgAuthor.class, DESC));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_desc_in_a_persistent_entity_type_without_desc() {
+        assertTrue(isPersistentEntityType(TgAuthorship.class));
+        assertFalse(hasDescProperty(TgAuthorship.class));
+        assertFalse(isPropertyPersistent(TgAuthorship.class, DESC));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_true_for_properties_annotated_with_MapTo_in_persistent_entities() {
+        assertTrue(isPersistentEntityType(TgVehicle.class));
+        assertTrue(isPropertyAnnotationPresent(MapTo.class, TgVehicle.class, "initDate"));
+        assertTrue(isPropertyPersistent(TgVehicle.class, "initDate"));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_true_for_properties_annotated_with_MapTo_in_union_entities() {
+        assertTrue(isUnionEntityType(TgUnion.class));
+        assertTrue(isPropertyAnnotationPresent(MapTo.class, TgUnion.class, "union1"));
+        assertTrue(isPropertyPersistent(TgUnion.class, "union1"));
+    }
+
+    @Test
+    public void isPropertyPersistent_is_false_for_properties_annotated_with_MapTo_in_synthetic_entities() {
+        assertTrue(isSyntheticEntityType(TgReBogieWithHighLoad.class));
+        assertTrue(isPropertyAnnotationPresent(MapTo.class, TgReBogieWithHighLoad.class, "location"));
+        assertFalse(isPropertyPersistent(TgReBogieWithHighLoad.class, "location"));
     }
 
     @KeyType(String.class)
