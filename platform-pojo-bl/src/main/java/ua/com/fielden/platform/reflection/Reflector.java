@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -28,8 +29,9 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
-import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotExpression;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 /**
@@ -608,6 +610,31 @@ public final class Reflector {
      */
     public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final String propName) {
         return isPropertyRetrievable(entity, Finder.findFieldByName(entity.getClass(), propName)); 
+    }
+
+    /// This predicate is true for persistent properties.
+    ///
+    /// @param propName  a simple property name
+    ///
+    public static boolean isPropertyPersistent(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
+        if (isDotExpression(propName)) {
+            throw new InvalidArgumentException("[propName] must be a simple property name, but was [%s].".formatted(propName));
+        }
+
+        // This logic should remain aligned with domain metadata (PropertyMetadata.isPersistent).
+
+        if (isSyntheticEntityType(entityType)) {
+            return false;
+        }
+        else if (AbstractEntity.KEY.contentEquals(propName)) {
+            return !isUnionEntityType(entityType) && !isCompositeEntity(entityType);
+        }
+        else if (AbstractEntity.DESC.contentEquals(propName)) {
+            return !isUnionEntityType(entityType) && hasDescProperty(entityType);
+        }
+        else {
+            return isPropertyAnnotationPresent(MapTo.class, entityType, propName.toString());
+        }
     }
     
     /**

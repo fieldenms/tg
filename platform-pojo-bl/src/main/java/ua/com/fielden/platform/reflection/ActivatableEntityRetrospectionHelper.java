@@ -21,6 +21,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotatio
 import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 /// A helper class for the retrospection of activatable entities and properties.
@@ -72,13 +73,13 @@ public class ActivatableEntityRetrospectionHelper {
     private static boolean isActivatableProperty_(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
         final var prop = getFieldByName(entityType, propName.toString());
         final var propType = EntityMetadata.determinePropType(entityType, prop);
-        // A property of an ativatable entity type is considered "activatable" iff @SkipEntityExistsValidation is absent
-        // or is present with skipActiveOnly == true.
+        // A property of an activatable entity type is considered "activatable" iff it is persistent
+        // and @SkipEntityExistsValidation is absent or is present with skipActiveOnly == true.
         // There is also @SkipActivatableTracking, but it does not affect the activatable nature of the property -- only the counting of references.
         // TODO Properties whose type is a union entity type without activatable members should not be activatable.
         //      This change would serve as an optimisation, without changing semantics, because activatability of union-typed properties
         //      can be determined only from their actual values.
-        if (ActivatableAbstractEntity.class.isAssignableFrom(propType) || isUnionEntityType(propType)) {
+        if ((ActivatableAbstractEntity.class.isAssignableFrom(propType) || isUnionEntityType(propType)) && isPropertyPersistent(entityType, propName)) {
             final var seevAnnotation = getAnnotation(prop, SkipEntityExistsValidation.class);
             final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
             return !skipActiveOnly;
