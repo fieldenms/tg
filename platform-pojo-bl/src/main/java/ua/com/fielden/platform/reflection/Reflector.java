@@ -49,10 +49,16 @@ public final class Reflector {
      * A cache for {@link Method} instances.
      */
     private static final Cache<Class<?>, Cache<String, Method>> METHOD_CACHE = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+    
+    /**
+     * A cache for persistent property checks.
+     */
+    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> PERSISTENT_PROP_CACHE = CacheBuilder.newBuilder().weakKeys().initialCapacity(500).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
 
     public static long cleanUp() {
         METHOD_CACHE.cleanUp();
-        return METHOD_CACHE.size();
+        PERSISTENT_PROP_CACHE.cleanUp();
+        return METHOD_CACHE.size() + PERSISTENT_PROP_CACHE.size();
     }
 
     /** Regex pattern that represents a separator between properties in property path expressions. */
@@ -621,6 +627,16 @@ public final class Reflector {
             throw new InvalidArgumentException("[propName] must be a simple property name, but was [%s].".formatted(propName));
         }
 
+        try {
+            return PERSISTENT_PROP_CACHE
+                    .get(entityType, () -> CacheBuilder.newBuilder().initialCapacity(30).concurrencyLevel(50).build())
+                    .get(propName.toString(), () -> isPropertyPersistent_(entityType, propName));
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException("Could not determine whether property [%s.%s] is persistent.".formatted(entityType.getSimpleName(), propName), ex.getCause());
+        }
+    }
+    
+    private static boolean isPropertyPersistent_(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
         // This logic should remain aligned with domain metadata (PropertyMetadata.isPersistent).
 
         if (!isPersistentEntityType(entityType) && !isUnionEntityType(entityType)) {
