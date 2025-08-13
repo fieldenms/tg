@@ -431,6 +431,68 @@ Web modules (`platform-web-resources` and `platform-web-ui`) are tested through 
 
 ### Security and Validation
 
+TG implements a comprehensive security framework with declarative authorization at the domain level:
+
+#### Domain-Centric Authorization
+
+**Security Tokens**: Every operation is protected by security tokens following standardized templates:
+
+**Save Operation Tokens**:
+- `@Template.SAVE` - `EntityName_CanSave_Token` - **Standard Save**: Authorizes saving both new and modified entities (most common usage)
+- `@Template.SAVE_NEW` - `EntityName_CanSaveNew_Token` - **Creating New Entities**: Authorizes saving non-persisted entities (`!entity.isPersisted()`) - used only in specific domain cases requiring fine-grained control
+- `@Template.SAVE_MODIFIED` - `EntityName_CanSaveModified_Token` - **Updating Existing Entities**: Authorizes saving already-persisted entities (`entity.isPersisted()`) - used only in specific domain cases requiring fine-grained control
+
+**Usage Pattern**: Generally, only `SAVE` token is used for standard save operations. `SAVE_NEW` and `SAVE_MODIFIED` are employed only in specific domain cases where business requirements demand separate permissions for creates vs updates. When `SAVE_NEW`/`SAVE_MODIFIED` are used, the general `SAVE` token is not used for that entity.
+
+**Other Operation Tokens**:
+- `@Template.DELETE` - `EntityName_CanDelete_Token` - Authorizes deletion operations
+- `@Template.READ` - `EntityName_CanRead_Token` - Authorizes reading entity data
+- `@Template.READ_MODEL` - `EntityName_CanReadModel_Token` - Authorizes reading data model
+- `@Template.EXECUTE` - `EntityName_CanExecute_Token` - Authorizes action execution
+- `@Template.MODIFY` - `EntityName_CanModify_PropertyName_Token` - Property-level modification rights
+- `@Template.MASTER_OPEN` - `EntityName_CanOpen_Token` - Authorizes opening entity masters
+- `@Template.MASTER_MENU_ITEM_ACCESS` - `EntityName_CanAccess_Token` - Authorizes access to compound master menu items
+
+**Declarative Authorization**: Security is applied using `@Authorise` annotation:
+```java
+@Override
+@SessionRequired
+@Authorise(Project_CanDelete_Token.class)
+public int batchDelete(final Collection<Long> entitiesIds) {
+    // Delete implementation with authorization check
+}
+
+@Override
+@Authorise(OpenWorkActivityMasterAction_CanOpen_Token.class)
+protected OpenWorkActivityMasterAction provideDefaultValues(...) {
+    // Producer with authorization check
+}
+```
+
+**Authorization Infrastructure**:
+- `AuthorisationInterceptor` - AOP interceptor that processes `@Authorise` annotations
+- `IAuthorisationModel` - Contract for authorization implementations (database, LDAP, etc.)
+- `AbstractAuthorisationModel` - Base implementation with start/stop scope management
+- Thread-local scoping prevents nested authorization checks within the same operation
+
+**Nested Authorization Scopes**: The interceptor prevents redundant checks:
+- `isStarted()` method tracks if authorization is already in progress
+- First intercepted method performs authorization check
+- Subsequent nested calls bypass authorization (already authorized)
+- Finally block ensures proper cleanup of authorization state
+
+**Security Token Naming Convention**:
+Templates use format strings to generate consistent token names:
+- Class-based: `%s_CanSave_Token` → `WorkActivity_CanSave_Token`
+- Property-based: `%s_CanModify_%s_Token` → `WorkActivity_CanModify_Type_Token`
+
+**Authorization Patterns**:
+- **DAO Level**: CRUD operations protected with appropriate tokens
+- **Producer Level**: Entity creation/opening requires authorization
+- **Property Level**: Fine-grained access control for sensitive properties
+- **Action Level**: Business processes require execution permissions
+
+#### Traditional Security Features
 - Role-based access control with fine-grained permissions
 - Multi-layered validation framework
 - Property-level and entity-level validators
