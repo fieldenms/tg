@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.reflection.Finder;
 
 import java.lang.reflect.Field;
@@ -14,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableProperty;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
@@ -138,10 +138,11 @@ public class DomainEntityDependencies {
 
         private static boolean checkDuringDeactivation(final Class<? extends AbstractEntity<?>> entityType, final String propPath) {
             // TODO For union-typed properties, check the union member property annotations as well.
-            final Field prop0 = Finder.getFieldByName(entityType, splitPropPathToArray(propPath)[0]);
-            final var seevAnnotation = prop0.getAnnotation(SkipEntityExistsValidation.class);
-            final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
-            return isActivatableEntityType(entityType) && !isSpecialActivatableToBeSkipped(prop0) && !skipActiveOnly;
+            final String prop0Name = splitPropPathToArray(propPath)[0];
+            final Field prop0 = Finder.getFieldByName(entityType, prop0Name);
+            return isActivatableEntityType(entityType) 
+                && !isSpecialActivatableToBeSkipped(prop0)
+                && isActivatableProperty(entityType, prop0Name);
         }
 
         public static final String INFO_ENTITY_DEPENDENCIES = "Entity [%s] has dependency in entity [%s] as property [%s] (checked during deactivation [%s], belongs to entity key [%s]).";

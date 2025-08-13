@@ -22,6 +22,7 @@ import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 /// A helper class for the retrospection of activatable entities and properties.
@@ -79,7 +80,7 @@ public class ActivatableEntityRetrospectionHelper {
         // TODO Properties whose type is a union entity type without activatable members should not be activatable.
         //      This change would serve as an optimisation, without changing semantics, because activatability of union-typed properties
         //      can be determined only from their actual values.
-        if ((ActivatableAbstractEntity.class.isAssignableFrom(propType) || isUnionEntityType(propType)) && isPropertyPersistent(entityType, propName)) {
+        if ((isActivatableEntityType(propType) || isUnionEntityType(propType)) && isPropertyPersistent(entityType, propName)) {
             final var seevAnnotation = getAnnotation(prop, SkipEntityExistsValidation.class);
             final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
             return !skipActiveOnly;
