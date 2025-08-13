@@ -414,6 +414,11 @@ public class ReflectorTest {
         assertFalse(isPropertyPersistent(TgReBogieWithHighLoad.class, "location"));
     }
 
+    @Test
+    public void isPropetyPersistent_is_false_for_properties_annotated_with_MapTo_in_action_entities() {
+        assertFalse(isPropertyPersistent(ExportAction.class, "count"));
+    }
+
     @KeyType(String.class)
     protected static class EntityWithValidationLimits extends AbstractEntity<String> {
 

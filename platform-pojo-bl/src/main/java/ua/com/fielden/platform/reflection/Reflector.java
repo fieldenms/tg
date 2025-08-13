@@ -623,7 +623,7 @@ public final class Reflector {
 
         // This logic should remain aligned with domain metadata (PropertyMetadata.isPersistent).
 
-        if (isSyntheticEntityType(entityType)) {
+        if (!isPersistentEntityType(entityType) && !isUnionEntityType(entityType)) {
             return false;
         }
         else if (AbstractEntity.KEY.contentEquals(propName)) {
