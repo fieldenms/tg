@@ -277,7 +277,6 @@ Polymer({
         'iron-overlay-closed': '_dialogClosed',
         'tg-dynamic-title-changed': '_updateDynamicTitle',
         'tg-menu-appeared': '_updateMenuButton',
-        'tg-master-type-changed': '_handleMasterChanged',
         'tg-master-type-before-change': '_handleMasterBeforeChange',
         'tg-action-navigation-changed': '_handleActionNavigationChange',
         'tg-action-navigation-invoked': '_handleActionNavigationInvoked',
@@ -339,7 +338,7 @@ Polymer({
         //This property also has three states: true, false and undefined.
         //True - means that master is about to change it's layout when master type is changing. This value is applied only in _handleMasterBeforeChange method.
         //False - means that master has changed it's type and can be resized smoothly using the CSS transitioning functionality, which is invoked in _updateDialogAnimation method.
-        //        This value is applied only in _handleMasterChanged method.
+        //        This value is applied only in _handleDataLoaded method.
         //Undefined - means that dialog has changed it's size and blocking layer has become invisible. This indicates also that all animations have finished.
         //            This value is applied in _handleBodyTransitionEnd method when master container is visible and in _resetAnimationBlockingSpinnerState method to ensure 
         //            that all animation is finished in case when master was closed during animation process or error happend when navigating to another entity. 
@@ -1151,7 +1150,6 @@ Polymer({
                             }
                         }
                         if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
-                            self._handleMasterChanged(e);
                             return Promise.resolve(element);
                         } else {
                             return Promise.reject('Retrieval / saving promise was not successful.');
@@ -1192,6 +1190,9 @@ Polymer({
     
     // This method handles data-loaded-and-focused event. This event can be fired when dialog is opening or navigating to another entity and resets the spinner state and hides blocking layer.
     _handleDataLoaded: function () {
+        if (this._masterLayoutChanges && this.opened) {
+            this._masterLayoutChanges = false;
+        }
         this._dataLoaded = true;
         this._resetSpinner();
         this._hideBlockingPane();
@@ -1338,13 +1339,6 @@ Polymer({
             //Then set dimension properties as transitional for dialog for futher animation.
             this.style.transitionProperty = "top, left, width, height";
             this.style.transitionDuration = "500ms";
-        }
-    },
-    
-    //Invoked when master has changed it's type, then _masterLayoutChanges property becomes false that should trigger resizing animation if blocking layer has finished animating.
-    _handleMasterChanged: function (e) {
-        if (this.opened) {
-            this._masterLayoutChanges = false;
         }
     },
     
