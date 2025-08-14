@@ -90,11 +90,13 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         }
         allGeneratedMetaModels.addAll(generatedMetaModels);
 
-        // generation or re-generation of the meta-models entry point class should occur only during the first round of processing
-        if (getRoundNumber() == 1) {
+        // Generation or re-generation of the meta-models entry point class should occur only during the 2nd round of processing.
+        // This is because all possible meta-models will be generated only by the end of the 2nd round -- meta-models for
+        // source entities are generated in the 1st round, for generated synthetic entities -- in the 2nd round.
+        if (getRoundNumber() == 2) {
             if (maybeMetaModelsElement.isEmpty()) {
-                // if the MetaModels class does not yet exist, let's generate it to include meta-models, which were generated during this first round
-                writeMetaModelsClass(generatedMetaModels);
+                // If the meta-models entry point does not yet exist, let's generate it to include all generated meta-models.
+                writeMetaModelsClass(allGeneratedMetaModels);
             } else {
                 final MetaModelsElement metaModelsElt = maybeMetaModelsElement.get();
                 // if MetaModels class already exists, we need to analyse its content and identify meta-models that represent "inactive" entities -- those that either no longer exist or are not considered to be domain entities.
@@ -110,7 +112,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                 final Set<MetaModelElement> deactivedMetaModels = inactiveMetaModels.stream().filter(mme -> writeInactiveMetaModel(mme)).collect(toSet());
 
                 // regenerate the MetaModels class by adding new fields and removing those that represent deactivated meta-models
-                writeMetaModelsClass(generatedMetaModels, maybeMetaModelsElement, deactivedMetaModels);
+                writeMetaModelsClass(allGeneratedMetaModels, maybeMetaModelsElement, deactivedMetaModels);
             }
         }
 
