@@ -2,6 +2,7 @@ package ua.com.fielden.platform.processors.minheritance;
 
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.*;
+import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -104,20 +106,24 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
 
         final var atExtendsMirror = ExtendsMirror.fromAnnotation(atExtends, elementFinder);
 
-        // Group all inherited properties by name to detect conflicts.
-        final var inheritedPropertiesGroups = atExtendsMirror.value()
+        final var inheritedProperties = atExtendsMirror.value()
                 .stream()
                 .flatMap(atEntityMirror  -> {
                     final var entity = entityFinder.newEntityElement(asTypeElementOfTypeMirror(atEntityMirror.value()));
                     return inheritedPropertiesFrom(entity, ImmutableSet.copyOf(atEntityMirror.exclude()));
                 })
                 .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.getSimpleName().toString()))
+                .toList();
+
+        final var specProperties = entityFinder.streamProperties(specEntity)
+                .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.getSimpleName().toString()))
+                .toList();
+
+        // Group all properties by name to detect conflicts.
+        final var propertyGroups = Stream.concat(specProperties.stream(), inheritedProperties.stream())
                 .collect(groupingBy(PropertyElement::getSimpleName));
 
-        // TODO How to handle conflicts between properties inherited from supertypes and properties declared in the spec entity?
-        //      Currently, such conflicts are ignored.
-
-        final var conflictingGroups = inheritedPropertiesGroups.values()
+        final var conflictingGroups = propertyGroups.values()
                 .stream()
                 .filter(group -> group.size() > 1)
                 .filter(this::isConflicting)
@@ -126,16 +132,18 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
             throw new PropertyConflictException(conflictingGroups);
         }
 
-        // There are no conflicts, so all groups have a single member.
-        final Supplier<Stream<PropertyElement>> streamProperties = () -> inheritedPropertiesGroups.values().stream().map(List::getFirst);
+        // There are no conflicts, so pick the first property for each name.
+        // Generate only properties from entities in `@Extends`, since properties of the spec entity will be inherited by virtue of extending it.
+        final var generatedProperties = StreamUtils.distinct(inheritedProperties.stream(), PropertyElement::getSimpleName).toList();
 
         final var genEntitySimpleName = simpleNameForGenEntity(specEntity.getSimpleName());
 
         return TypeSpec.classBuilder(genEntitySimpleName)
                 .addModifiers(PUBLIC)
                 .superclass(specEntity.getEntityClassName())
-                .addFields(streamProperties.get().map(this::makePropertySpec).toList())
-                .addMethods(streamProperties.get()
+                .addAnnotation(WithMetaModel.class)
+                .addFields(generatedProperties.stream().map(this::makePropertySpec).toList())
+                .addMethods(generatedProperties.stream()
                                     .flatMap(prop -> Stream.of(makeGetterSpec(prop), makeSetterSpec(prop, genEntitySimpleName)))
                                     .toList())
                 // Static field for the EQL model.
@@ -145,11 +153,19 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
     }
 
     private void printConflictMessage(final List<PropertyElement> group, final EntityElement specEntity) {
-        messager.printMessage(Diagnostic.Kind.ERROR,
-                              format("Cannot inherit property [%s] with different types from %s.",
-                                     group.getFirst().getSimpleName(),
-                                     group.stream().map(prop -> prop.getEnclosingElement().getSimpleName()).map("[%s]"::formatted).collect(joining(", "))),
-                              specEntity.element());
+        // If a property of the spec entity is among conflicting ones, attach the message to it.
+        // Otherwise, attach the message to the spec entity.
+        final var maybeSpecProperty = group.stream()
+                .filter(prop -> prop.getEnclosingElement().equals(specEntity.element()))
+                .findFirst();
+        final var msg = format("Cannot inherit property [%s] with different types from %s.",
+                                  group.getFirst().getSimpleName(),
+                                  group.stream()
+                                          .map(prop -> prop.getEnclosingElement().getSimpleName())
+                                          .map("[%s]"::formatted)
+                                          .collect(joining(", ")));
+        maybeSpecProperty.ifPresentOrElse(it -> messager.printMessage(Diagnostic.Kind.ERROR, msg, it.element()),
+                                          () -> messager.printMessage(Diagnostic.Kind.ERROR, msg, specEntity.element()));
     }
 
     private boolean isConflicting(final List<PropertyElement> props) {
