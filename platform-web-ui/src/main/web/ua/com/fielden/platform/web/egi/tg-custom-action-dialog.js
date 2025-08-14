@@ -162,21 +162,6 @@ const template = html`
         paper-icon-button.button-reverse {
             transform: scale(-1, 1);
         }
-        paper-spinner {
-            position: absolute;
-            width: 20px;
-            height: 20px; 
-            min-width: 20px; 
-            min-height: 20px; 
-            max-width: 20px; 
-            max-height: 20px; 
-            padding: 0;
-            margin-left: 0;
-            --paper-spinner-layer-1-color: white;
-            --paper-spinner-layer-2-color: white;
-            --paper-spinner-layer-3-color: white;
-            --paper-spinner-layer-4-color: white;
-        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <div id="titleBar" class="title-bar layout horizontal justified center" on-track="moveComponent">
@@ -584,6 +569,23 @@ Polymer({
             this.refit();
             this.notifyResizeWithoutItselfAndAncestors();
         });
+        //Set inline style for spinner, because it will be added to shadow dom of paper-icon-buttons
+        this.$.spinner.style.position = 'absolute';
+        this.$.spinner.style.left = '50%';
+        this.$.spinner.style.top = '50%';
+        this.$.spinner.style.transform = 'translate(-50%, -50%)';
+        this.$.spinner.style.width = '20px';
+        this.$.spinner.style.height = '20px'; 
+        this.$.spinner.style.minWidth = '20px'; 
+        this.$.spinner.style.minHeight = '20px'; 
+        this.$.spinner.style.maxWidth = '20px'; 
+        this.$.spinner.style.maxHeight = '20px'; 
+        this.$.spinner.style.padding = '0';
+        this.$.spinner.style.marginLeft = '0';
+        this.$.spinner.style.setProperty('--paper-spinner-layer-1-color', 'white');
+        this.$.spinner.style.setProperty('--paper-spinner-layer-2-color', 'white');
+        this.$.spinner.style.setProperty('--paper-spinner-layer-3-color', 'white');
+        this.$.spinner.style.setProperty('--paper-spinner-layer-4-color', 'white');
     },
 
     attached: function() {
@@ -784,12 +786,10 @@ Polymer({
     
     _displaySpinnerOn: function (element) {
         this.$.spinner.style.removeProperty("display");
-        this.$.spinner.style.left = element.offsetLeft + (element.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
-        this.$.spinner.style.top = element.offsetTop + (element.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
-        element.parentElement.appendChild(this.$.spinner);
+        element.shadowRoot.appendChild(this.$.spinner);
         this.isNavigationActionInProgress = true;
     },
-    
+
     _getFirstEntryActionTooltip: function (_navigationType) {
         return "Get first " + _navigationType + ", Ctrl&nbsp+&nbsp<span style='font-size:18px;font-weight:bold'>&#8593</span>";
     },
