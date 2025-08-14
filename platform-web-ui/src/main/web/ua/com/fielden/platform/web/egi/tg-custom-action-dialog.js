@@ -1148,7 +1148,7 @@ Polymer({
             return self._getElement(self._lastAction)
                 .then(element => {
                     //Hide element loader that contains loaded element because it might cause flickering effect on moving from master type to another. 
-                    this.$.elementLoader.style.display = 'none';
+                    //this.$.elementLoader.style.display = 'none';
                     self._lastElement = element;
                     if (elementLoaded) {
                         elementLoaded(element);
@@ -1337,8 +1337,15 @@ Polymer({
     },
     
     //Invoked when master is about to change it's type.
-    _handleMasterBeforeChange: function () {
+    _handleMasterBeforeChange: function (e) {
         if (this.opened && !this._minimised && !this._maximised) {
+            //Set new title
+            if (e && e.detail && e.detail.currType) {
+                const masterInfo = this._reflector.getType(e.detail.currType).entityMaster();
+                if (masterInfo) {
+                    this.staticTitle = masterInfo.shortDesc;
+                }
+            }
             //First animate the blocking pane.
             this._showBlockingPane();
             //Indicate that master is about to change it's type
