@@ -19,7 +19,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { hideTooltip } from '/resources/components/tg-tooltip-behavior.js';
-import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp, isTouchEnabled } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp, isTouchEnabled, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
@@ -354,6 +354,7 @@ Polymer({
             this.addEventListener('dragenter', this.dragEntered.bind(this));
             this.addEventListener('dragover', this.dragOver.bind(this));
         }
+        this._toggleMenuBound = this._toggleMenu.bind(this);
     },
 
     attached: function () {
@@ -451,11 +452,6 @@ Polymer({
         }.bind(this), 0);
         //Needed to set the dynamic title
         this.fire('tg-dynamic-title-changed', this.sectionTitle);
-        this.fire('tg-menu-appeared', {
-            appeared: true,
-            func: self._toggleMenu.bind(self),
-            drawer: self.$.drawerPanel
-        });
         //Configure key event target for menu triggering.
         self.async(function () {
             self.keyEventTarget = getKeyEventTarget(self, self);
@@ -464,8 +460,10 @@ Polymer({
         afterNextRender(this, () => {
             this.$.drawerPanel._narrowChanged();
         });
-        this._cachedParentNode = this.parentNode;
-        this.fire('tg-master-menu-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
+        this._cachedParentNode = getParentAnd(this.parentElement, element => element.matches('tg-custom-action-dialog'));
+        if (this._cachedParentNode) {
+            this.fire('tg-master-menu-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
+        }
     },
 
     detached: function () {
@@ -473,8 +471,10 @@ Polymer({
             this._subscriptions.pop().unsubscribe();
         }
         this.defaultRoute = this._originalDefaultRoute; // return original value after detaching; this is necessary in case where the same instance of 'tg-master-menu' (and the same instance of parent master) is used for different actions
-        this.fire('tg-master-menu-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
-        delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
+        if (this._cachedParentNode) {
+            this.fire('tg-master-menu-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
+            delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
+        }
     },
 
     //Drag from behavior implementation

@@ -261,7 +261,6 @@ Polymer({
         'iron-overlay-opened': '_dialogOpened',
         'iron-overlay-closed': '_dialogClosed',
         'tg-dynamic-title-changed': '_updateDynamicTitle',
-        'tg-menu-appeared': '_updateMenuButton',
         'tg-master-type-before-change': '_handleMasterBeforeChange',
         'tg-action-navigation-changed': '_handleActionNavigationChange',
         'tg-action-navigation-invoked': '_handleActionNavigationInvoked',
@@ -998,14 +997,11 @@ Polymer({
     /**
      * Updates 'hidden' state of the menu toggler button and assigns _toogleMenu function.
      */
-    _updateMenuButton: function(event) {
-        const appearedAndFunc = event.detail;
-        this.$.menuToggler.hidden = !appearedAndFunc.appeared;
-        if (appearedAndFunc.appeared) {
-            this._toggleMenu = appearedAndFunc.func;
-            if (this.mobile && isIPhoneOs()) {
-                appearedAndFunc.drawer.drawer.align = 'right';
-            }
+    _updateMenuButton: function (menu, appeared) {
+        this.$.menuToggler.hidden = !appeared;
+        this._toggleMenu = appeared ? menu._toggleMenuBound : null;
+        if (appeared && this.mobile && isIPhoneOs()) {
+            menu.$.drawerPanel.drawer.align = 'right';
         }
     },
 
@@ -1779,6 +1775,7 @@ Polymer({
      */
     _masterMenuAttached: function (event) {
         this._masterMenu = event.detail;
+        this._updateMenuButton(this._masterMenu, true);
         tearDownEvent(event);
     },
     
@@ -1786,6 +1783,7 @@ Polymer({
      * Function that handles detaching of tg-master-menu inside this dialog.
      */
     _masterMenuDetached: function (event) {
+        this._updateMenuButton(this._masterMenu, false);
         this._masterMenu = null;
         tearDownEvent(event);
     },
