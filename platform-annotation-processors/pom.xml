@@ -147,22 +147,6 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>default-testCompile</id>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <release>21</release>
-                            <encoding>UTF-8</encoding>
-                            <showWarnings>true</showWarnings>
-                            <generatedTestSourcesDirectory>${project.build.directory}/generated-test-sources</generatedTestSourcesDirectory>
-                            <annotationProcessors>
-                                <annotationProcessor>ua.com.fielden.platform.processors.minheritance.MultiInheritanceProcessor</annotationProcessor>
-                                <annotationProcessor>ua.com.fielden.platform.processors.metamodel.MetaModelProcessor</annotationProcessor>
-                            </annotationProcessors>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>default-compile</id>
                         <goals>
                             <goal>compile</goal>
