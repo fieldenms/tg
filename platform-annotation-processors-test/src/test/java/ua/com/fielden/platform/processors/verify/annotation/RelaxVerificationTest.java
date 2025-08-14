@@ -1,33 +1,26 @@
 package ua.com.fielden.platform.processors.verify.annotation;
 
-import static javax.tools.Diagnostic.Kind.ERROR;
-import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
-import static javax.tools.Diagnostic.Kind.NOTE;
-import static javax.tools.Diagnostic.Kind.OTHER;
-import static javax.tools.Diagnostic.Kind.WARNING;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
-import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
-import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.WARN;
-
-import java.util.List;
-
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.tools.Diagnostic.Kind;
-
-import org.junit.Test;
-
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-
+import org.junit.Test;
 import ua.com.fielden.platform.processors.test_utils.CompilationResult;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.test_utils.Message;
 import ua.com.fielden.platform.processors.verify.test_utils.MessagePrintingVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.tools.Diagnostic.Kind;
+import java.util.List;
+
+import static javax.tools.Diagnostic.Kind.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
+import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
+import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.WARN;
 
 /**
  * Tests covering logic associated with the {@link RelaxVerification} annotation.

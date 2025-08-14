@@ -15,7 +15,7 @@ import java.util.List;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 
 /**
- * Implementation of {@link org.junit.rules.TestRule} that runs test methods during the last round of annotation processing.
+ * Implementation of {@link TestRule} that runs test methods during the last round of annotation processing.
  * <p>
  * This rule can be used for:
  * <ul>

@@ -46,11 +46,11 @@ public class ElementFinderTest {
     public void isSameType_tests_whether_type_element_and_class_represent_the_same_type() {
         processAndEvaluate(finder -> {
             assertTrue(ElementFinder.isSameType(finder.getTypeElement(String.class), String.class));
-            assertTrue(ElementFinder.isSameType(finder.getTypeElement(java.util.Date.class), java.util.Date.class));
+            assertTrue(ElementFinder.isSameType(finder.getTypeElement(Date.class), Date.class));
             // java.sql.Date != java.util.Date
-            assertFalse(ElementFinder.isSameType(finder.getTypeElement(java.sql.Date.class), java.util.Date.class));
+            assertFalse(ElementFinder.isSameType(finder.getTypeElement(java.sql.Date.class), Date.class));
             // java.util.Date != java.sql.Date
-            assertFalse(ElementFinder.isSameType(finder.getTypeElement(java.util.Date.class), java.sql.Date.class));
+            assertFalse(ElementFinder.isSameType(finder.getTypeElement(Date.class), java.sql.Date.class));
         });
     }
 

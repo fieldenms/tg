@@ -451,7 +451,7 @@ public class EntityFinderTest {
 
         @SuppressWarnings("unchecked")
         @Observable
-        public EntityFinderTest.SuperUserWithDeclaredDesc setDesc(final String desc) {
+        public SuperUserWithDeclaredDesc setDesc(final String desc) {
             this.desc = desc;
             return this;
         }

@@ -20,6 +20,7 @@ import java.util.Set;
 @KeyTitle("Key")
 @MapEntityTo
 @DomainEntity
+//abs
 @DescTitle("Description")
 public class ExampleEntity extends AbstractEntity<String> {
 
