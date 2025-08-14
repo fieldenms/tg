@@ -217,7 +217,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     public String getShortDesc() {
-        return conf().shortDesc.isPresent() ? conf().shortDesc.get() : "NOT SPECIFIED";
+        return conf().shortDesc.isPresent() ? conf().shortDesc.get() : "";
     }
 
     /**
