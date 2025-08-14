@@ -882,6 +882,6 @@ Polymer({
             }
         }
 
-        action._run();
+        action && action._run();
     }
 });

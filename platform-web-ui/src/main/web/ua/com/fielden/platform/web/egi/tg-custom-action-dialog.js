@@ -1023,6 +1023,13 @@ Polymer({
             }
             this._parentDialog = null;
         }
+        //Reset routes for compound masters those are in cache. It is needed in case if all some masters in cache were opened via navigation action,
+        //which tries to maintain previously opened menu item.
+        Object.values(this._cachedElements).forEach(element => {
+            if (element.$.menu) {
+                element.$.menu.route = undefined;
+            }
+        });
         this.close();
         this._removeFromDom();
     },
