@@ -281,9 +281,16 @@ const TgEntityCentreTemplateBehaviorImpl = {
                         master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});
                         const masterInfo = getFirstEntityType(entity, action.chosenProperty).entityMaster();
                         if (action.dynamicAction && masterInfo && masterInfo.key.toUpperCase() !== master.tagName) {
+                            if (master.$.menu) {
+                                master.$.menu.maintainPreviouslyOpenedMenuItem = false;
+                            }
                             action._setEntityMasterInfo(masterInfo);
                             if (masterChangedCallback) {
-                                masterChangedCallback().then(() => {
+                                masterChangedCallback(newMaster => {
+                                    if (newMaster.$.menu) {
+                                        newMaster.$.menu.maintainPreviouslyOpenedMenuItem = true;
+                                    }
+                                }).then(() => {
                                     action._fireNavigationChangeEvent(false);
                                 }).catch(e => {
                                     this.$.egi.editEntity(entity);

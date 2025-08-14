@@ -1131,7 +1131,7 @@ Polymer({
         }
     },
 
-    reloadDialog: function() {
+    reloadDialog: function(elementLoaded) {
         const self = this;
         if (self._lastElement.tagName !== self._lastAction.elementName.toUpperCase()) {
             //Call this method necause entity master type changes, therefore dialog's dimension and position will be changed
@@ -1141,6 +1141,9 @@ Polymer({
             return self._getElement(self._lastAction)
                 .then(element => {
                     self._lastElement = element;
+                    if (elementLoaded) {
+                        elementLoaded(element);
+                    }
                     return self._lastAction._onExecuted(null, element, null).then(ironRequest => {
                         const key = self._lastAction.elementAlias ? self._lastAction.elementAlias : self._lastAction.elementName;
                         if (!self._cachedElements.hasOwnProperty(key)) {

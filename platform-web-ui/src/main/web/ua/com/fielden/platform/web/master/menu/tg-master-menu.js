@@ -706,7 +706,11 @@ Polymer({
 
         if (this._isRefreshCycle === false) {
             if (this.maintainPreviouslyOpenedMenuItem) {
-                this._sectionRouteChanged(this.route, this.route);
+                if (!this.route) {
+                    this.route = this.defaultRoute;
+                } else {
+                    this._sectionRouteChanged(this.route, this.route);
+                }
             } else {
                 if (this.route !== this.defaultRoute) {
                     this.route = this.defaultRoute;
