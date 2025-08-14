@@ -1148,7 +1148,7 @@ Polymer({
             return self._getElement(self._lastAction)
                 .then(element => {
                     //Hide element loader that contains loaded element because it might cause flickering effect on moving from master type to another. 
-                    //this.$.elementLoader.style.display = 'none';
+                    this.$.elementLoader.style.display = 'none';
                     self._lastElement = element;
                     if (elementLoaded) {
                         elementLoaded(element);
