@@ -146,7 +146,7 @@ Polymer({
         },
         sectionTitle: {
             type: String,
-            value: '[[sectionTitle]]',
+            value: '',
             observer: '_sectionTitleChanged'
         },
 
