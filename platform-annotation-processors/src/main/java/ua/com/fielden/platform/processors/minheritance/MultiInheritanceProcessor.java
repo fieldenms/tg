@@ -17,6 +17,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -44,6 +45,26 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.T
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 
 /// An annotation processor for the [Extends] annotation.
+///
+/// #### Verification of generated entities
+/// Generated entities are annotated with [ua.com.fielden.platform.processors.verify.annotation.SkipVerification],
+/// which disables their verification.
+///
+/// Proper support for verification of generated entities requires non-trivial effort to implement.
+/// Here is one scenario that currently produces undesired effects if verification is enabled for generated entities:
+/// 1. `ReVehicle` with entity-typed property `model` is generated in the 1st round.
+/// 2. `ReVehicle` is verified in the 2nd round.
+/// 3. `ApplicationDomain` is regenerated in the 2nd round.
+///
+/// The outcome of step 2 depends on the prior existence of `ApplicationDomain`:
+/// * If `ApplicationDomain` exists, the verification will use its old version (not the regenerated one, as it won't be seen until the 3rd round),
+///   which does not yet contain `ReVehicle`.
+///   The verification will report an "unregistered entity" error if `ReVehicle` has a property whose type is `ReVehicle`.
+/// * If `ApplicationDomain` does not exist (most likely due to a clean build occurring),
+///   verification of `ReVehicle` will report an "unregistered entity" error for each entity-typed property.
+///
+/// One solution is to delay verification until the 3rd round, while gathering all inputs in the first two rounds.
+/// The challenging part is the handling of different scenarios -- sometimes, the 2nd round may be the last one.
 ///
 @SupportedAnnotationTypes("*")
 public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcessor {
@@ -142,6 +163,9 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 .addModifiers(PUBLIC)
                 .superclass(specEntity.getEntityClassName())
                 .addAnnotation(WithMetaModel.class)
+                // Skip verification of generated entities, which are unlikely to violate any rules.
+                // For more details, see the documentation of this class.
+                .addAnnotation(SkipVerification.class)
                 .addFields(generatedProperties.stream().map(this::makePropertySpec).toList())
                 .addMethods(generatedProperties.stream()
                                     .flatMap(prop -> Stream.of(makeGetterSpec(prop), makeSetterSpec(prop, genEntitySimpleName)))
