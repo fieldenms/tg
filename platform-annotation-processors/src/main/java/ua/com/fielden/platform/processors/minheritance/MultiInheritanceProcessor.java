@@ -137,8 +137,10 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.getSimpleName().toString()))
                 .toList();
 
-        final var specProperties = entityFinder.streamProperties(specEntity)
-                .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.getSimpleName().toString()))
+        // Use `distinct` to enable property hiding in the spec-entity.
+        final var specProperties = StreamUtils.distinct(
+                        entityFinder.streamProperties(specEntity).filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.getSimpleName().toString())),
+                        PropertyElement::getSimpleName)
                 .toList();
 
         // Group all properties by name to detect conflicts.
@@ -247,8 +249,10 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
     }
 
     private Stream<PropertyElement> inheritedPropertiesFrom(final EntityElement entity, final Set<String> excludedProps) {
-        return entityFinder.streamProperties(entity)
-                .filter(prop -> !excludedProps.contains(prop.getSimpleName().toString()));
+        // Use `distinct` to enable property hiding.
+        return StreamUtils.distinct(
+                entityFinder.streamProperties(entity).filter(prop -> !excludedProps.contains(prop.getSimpleName().toString())),
+                PropertyElement::getSimpleName);
     }
 
     // TODO Decide on a naming convention for generated entity types.
