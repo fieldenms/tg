@@ -1334,7 +1334,8 @@ Polymer({
     
     //Invoked when master is about to change it's type.
     _handleMasterBeforeChange: function (e) {
-        if (this.opened && !this._minimised && !this._maximised) {
+        //Check _masterLayoutChanges, because if it is already true ther is no need to initiate resize animation because it was already initiated.
+        if (this.opened && !this._masterLayoutChanges && !this._minimised && !this._maximised) {
             //Set new title
             if (e && e.detail && e.detail.currType) {
                 const masterInfo = this._reflector.getType(e.detail.currType).entityMaster();
@@ -1562,12 +1563,12 @@ Polymer({
     _hideBlockingPane: function () {
         if (this._blockingPaneCounter > 0) {
             this._blockingPaneCounter--;
-        }
-        if (this._blockingPaneCounter === 0 && this.$.loadingPanel.classList.contains("visible")) {
-            //Indicate that blocking pane is changing it's visibility from visible to invisible.
-            this._masterVisibilityChanges = true;
-            this.$.loadingPanel.classList.remove("visible");
-            this.$.dialogLoader.classList.remove("hidden");
+            if (this._blockingPaneCounter === 0 && this.$.loadingPanel.classList.contains("visible")) {
+                //Indicate that blocking pane is changing it's visibility from visible to invisible.
+                this._masterVisibilityChanges = true;
+                this.$.loadingPanel.classList.remove("visible");
+                this.$.dialogLoader.classList.remove("hidden");
+            }
         }
     },
 
