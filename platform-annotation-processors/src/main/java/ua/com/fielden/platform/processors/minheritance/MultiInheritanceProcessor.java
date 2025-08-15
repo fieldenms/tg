@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.exceptions.AbstractPlatformCheckedException;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.DateTimeUtils;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -166,6 +167,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 // Skip verification of generated entities, which are unlikely to violate any rules.
                 // For more details, see the documentation of this class.
                 .addAnnotation(SkipVerification.class)
+                .addAnnotation(buildAtGenerated(DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow())))
                 .addFields(generatedProperties.stream().map(this::makePropertySpec).toList())
                 .addMethods(generatedProperties.stream()
                                     .flatMap(prop -> Stream.of(makeGetterSpec(prop), makeSetterSpec(prop, genEntitySimpleName)))
