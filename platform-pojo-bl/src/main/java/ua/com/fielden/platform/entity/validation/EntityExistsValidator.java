@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity.validation;
 
-import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -16,9 +15,12 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper;
 
 import java.lang.annotation.Annotation;
+import java.util.Optional;
 import java.util.Set;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.getErrorMessage;
@@ -36,12 +38,10 @@ import static ua.com.fielden.platform.utils.EntityUtils.copy;
 /// * If the validated property has [SkipEntityExistsValidation], this validator will be ignored.
 /// * If the union-typed property has `@SkipEntityExistsValidation(skipNew = true)`, a union value with non-persisted
 ///   active entity will be considered valid iff the corresponding union member is also annotated so.
-/// * The new value must be persisted and non-dirty.
+/// * The value must be persisted and non-dirty.
 /// * If the property is union-typed, the new union value must be valid.
 /// * If the property represents an activatable reference (either direct or via a union), and its enclosing entity is active,
 ///   the referenced entity must also be active.
-///
-/// @author TG Team
 ///
 @Singleton
 public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<T> {
@@ -99,20 +99,17 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             else {
                 final var valueCo = (IEntityDao<AbstractEntity<?>>) coFinder.find(value.getType());
 
-                var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, value);
-                if (dirtyOrNewCheckResult != null) {
-                    return dirtyOrNewCheckResult;
+                final var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, value);
+                if (dirtyOrNewCheckResult.isPresent()) {
+                    return dirtyOrNewCheckResult.get();
                 }
 
-                final var existenceCheckResult = value instanceof ActivatableAbstractEntity<?> valueA && isActivatableProperty(entity.getType(), property)
+                final Optional<Result> existenceCheckResult = value instanceof ActivatableAbstractEntity<?> valueA && isActivatableProperty(entity.getType(), property)
                         ? checkExistenceForActivatable(entity, valueA, (IEntityDao) valueCo)
                         : checkExistenceWithoutActive(entity, value, valueCo);
 
-                if (existenceCheckResult != null) {
-                    return existenceCheckResult;
-                }
+                return existenceCheckResult.orElseGet(Result::successful);
 
-                return successful();
             }
         }
 
@@ -129,31 +126,27 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             // Union instance must be instrumented for validation.
             final var isValid = instrument(union, unionCo).isValid();
             if (!isValid.isSuccessful()) {
-                return failure(entity, new Exception(format(ERR_UNION_INVALID, entityTitle(union), isValid.getEx().getMessage()), isValid.getEx()));
+                return failure(entity, new Exception(ERR_UNION_INVALID.formatted(entityTitle(union), isValid.getEx().getMessage()), isValid.getEx()));
             }
 
             var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, unionMember);
-            if (dirtyOrNewCheckResult != null) {
-                return dirtyOrNewCheckResult;
+            if (dirtyOrNewCheckResult.isPresent()) {
+                return dirtyOrNewCheckResult.get();
             }
 
             final var unionMemberCo = (IEntityDao<AbstractEntity<?>>) coFinder.find(unionMember.getType());
-            final var existenceCheckResult = unionMember instanceof ActivatableAbstractEntity<?> activatable
+            final Optional<Result> existenceCheckResult = unionMember instanceof ActivatableAbstractEntity<?> activatable
                                              && isActivatableUnionMember(entity, property, union, unionCo)
                     ? checkExistenceForActivatable(entity, activatable, (IEntityDao) unionMemberCo)
                     : checkExistenceWithoutActive(entity, unionMember, unionMemberCo);
 
-            if (existenceCheckResult != null) {
-                return existenceCheckResult;
-            }
-
-            return successful();
+            return existenceCheckResult.orElseGet(Result::successful);
         }
     };
 
     /// @param value  the entity whose dirty state and persistence status will be checked
     ///
-    private @Nullable Result checkDirtyOrNew(
+    private Optional<Result> checkDirtyOrNew(
             final AbstractEntity<?> entity,
             final CharSequence property,
             final AbstractEntity<?> value)
@@ -161,15 +154,17 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         // If an entity is uninstrumented, its dirty state is irrelevant and cannot be checked.
         if (value.isInstrumented() && value.isDirty()) {
             if (!value.isPersisted() && skipNewEntities(entity.getType(), property)) {
-                return successful(entity);
+                return of(successful(entity));
             }
-            // let's differentiate between dirty and new instances
-            return failure(entity,
-                           !value.isPersisted()
-                                   ? format(ERR_WAS_NOT_FOUND, entityTitle(value))
-                                   : format(ERR_DIRTY, value, entityTitle(value)));
+            // Let's differentiate between dirty and new instances.
+            return of(failure(entity,
+                              !value.isPersisted()
+                              ? ERR_WAS_NOT_FOUND.formatted(entityTitle(value))
+                              : ERR_DIRTY.formatted(value, entityTitle(value))));
         }
-        else return null;
+        else {
+            return empty();
+        }
     }
 
     /// A union member is activatable iff [ActivatableEntityRetrospectionHelper#isActivatableProperty(Class, CharSequence)]
@@ -193,18 +188,20 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         return isActivatableProperty(union.getType(), instrument(union, unionCo).activePropertyName());
     }
 
-    private <V extends AbstractEntity<?>> @Nullable Result checkExistenceWithoutActive(
+    private <V extends AbstractEntity<?>> Optional<Result> checkExistenceWithoutActive(
             final AbstractEntity<?> entity,
             final V value,
             final IEntityDao<V> valueCo)
     {
         if (!valueCo.entityExists(value)) {
-            return makeNotExistsResult(entity, value);
+            return of(makeNotExistsResult(entity, value));
         }
-        else return null;
+        else {
+            return empty();
+        }
     }
 
-    private <V extends ActivatableAbstractEntity<?>> @Nullable Result checkExistenceForActivatable(
+    private <V extends ActivatableAbstractEntity<?>> Optional<Result> checkExistenceForActivatable(
             final AbstractEntity<?> entity,
             final V value,
             final IEntityDao<V> valueCo)
@@ -225,20 +222,22 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             final var ent = valueCo.getEntity(qem);
 
             if (ent == null) {
-                return makeNotExistsResult(entity, value);
+                return of(makeNotExistsResult(entity, value));
             }
             else if (!ent.isActive()) {
-                return failure(entity, format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, entityTitle(value), value));
+                return of(failure(entity, ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(entityTitle(value), value)));
             }
-            else return null;
+            else {
+                return empty();
+            }
         }
     }
 
     private static Result makeNotExistsResult(final AbstractEntity<?> entity, final AbstractEntity<?> value) {
         return failure(entity,
                        KEY_NOT_ASSIGNED.equals(value.toString())
-                               ? format(ERR_WAS_NOT_FOUND, entityTitle(value))
-                               : format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(value), value));
+                       ? ERR_WAS_NOT_FOUND.formatted(entityTitle(value))
+                       : ERR_ENTITY_WAS_NOT_FOUND.formatted(entityTitle(value), value));
     }
 
     private static <U extends AbstractUnionEntity> U instrument(final U union, final IEntityDao<U> co) {
