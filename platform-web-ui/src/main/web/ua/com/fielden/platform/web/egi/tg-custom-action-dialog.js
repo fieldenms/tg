@@ -1338,8 +1338,8 @@ Polymer({
             //Set new title
             if (e && e.detail && e.detail.currType) {
                 const masterInfo = this._reflector.getType(e.detail.currType).entityMaster();
-                if (masterInfo) {
-                    this.staticTitle = masterInfo.shortDesc;
+                if (masterInfo && this._lastAction.dynamicAction) {
+                    this.staticTitle = this._lastAction._originalShortDesc || masterInfo.shortDesc;
                 }
             }
             //First animate the blocking pane.
