@@ -8,12 +8,22 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /// This annotation controls validation of entity-typed properties for existence of entities that get assigned to them.
+/// Annotating a property with [SkipEntityExistsValidation] without any attributes changed, effectively,
+/// turns off any validation for entity existence, whether it is active or not, new or modified.
 ///
 /// In case of persistent properties, semantically, this suggests that their values should be most likely persisted
 /// at the time of saving their enclosing entity.
 /// However, the actual semantics can only be defined at the domain level.
 ///
-/// @author TG Team
+/// **A note on activatable entities:**
+///
+/// * If [SkipEntityExistsValidation] is applied to an activatable property with [SkipEntityExistsValidation#skipActiveOnly()] as `false`,
+/// then both active and inactive values are admitted, but the active ones would be tracked if the property is persistent,
+/// with all the relevant activatable effects such as preventing main entity deactivation, etc.
+///
+/// * If [SkipEntityExistsValidation#skipActiveOnly()] as `true`, then not only both active and inactive values are admitted,
+/// but the activatable nature of the property is completely turned off.
+///
 ///
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
@@ -26,11 +36,12 @@ public @interface SkipEntityExistsValidation {
     ///
     /// To skip validation of the active status for a union-typed property, this attribute must be `true` for both the union-typed property
     /// and a corresponding member property of the union type.
+    /// It is expected that the most common use case would be where all union member properties have the same annotations.
     ///
     boolean skipActiveOnly() default false;
     
     /// If `true`, validation ensures that an entity exists, but ignores new entities that were not yet persisted and were
-    /// most likely created ad-hoc through [IEntityReader#findByEntityAndFetch(ua.com.fielden.platform.entity.query.fluent.fetch,ua.com.fielden.platform.entity.AbstractEntity)].
+    /// most likely created ad hoc through [IEntityReader#findByEntityAndFetch(ua.com.fielden.platform.entity.query.fluent.fetch,ua.com.fielden.platform.entity.AbstractEntity)].
     /// This attribute provides a way to support assigning new entity values while still restricting assignment of persisted, but modified values.
     ///
     /// To allow new entities for a union-typed property, this attribute must be `true` for both the union-typed property
