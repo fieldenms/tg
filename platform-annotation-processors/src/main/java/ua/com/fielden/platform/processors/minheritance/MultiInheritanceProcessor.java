@@ -31,7 +31,6 @@ import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -160,7 +159,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
         // Generate only properties from entities in `@Extends`, since properties of the spec entity will be inherited by virtue of extending it.
         final var generatedProperties = StreamUtils.distinct(inheritedProperties.stream(), PropertyElement::getSimpleName).toList();
 
-        final var genEntitySimpleName = simpleNameForGenEntity(specEntity.getSimpleName());
+        final var genEntitySimpleName = atExtendsMirror.name();
 
         return TypeSpec.classBuilder(genEntitySimpleName)
                 .addModifiers(PUBLIC)

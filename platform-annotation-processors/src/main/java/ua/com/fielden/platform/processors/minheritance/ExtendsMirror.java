@@ -9,14 +9,14 @@ import java.util.List;
 
 /// Represents instances of [Extends] on the level of [TypeMirror].
 ///
-record ExtendsMirror(List<EntityMirror> value) {
+record ExtendsMirror(List<EntityMirror> value, String name) {
 
     public static ExtendsMirror fromAnnotation(final Extends annot, final ElementFinder finder) {
         final var value = Arrays.stream(annot.value())
                 .map(atEntity -> EntityMirror.fromAnnotation(atEntity, finder))
                 .toList();
 
-        return new ExtendsMirror(value);
+        return new ExtendsMirror(value, annot.name());
     }
 
     ///

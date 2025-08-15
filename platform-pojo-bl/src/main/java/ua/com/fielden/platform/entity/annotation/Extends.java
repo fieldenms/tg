@@ -20,6 +20,10 @@ public @interface Extends {
     ///
     Entity[] value();
 
+    /// The simple name for the generated entity type.
+    ///
+    String name();
+
     @interface Entity {
 
         Class<? extends AbstractEntity<?>> value();
