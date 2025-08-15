@@ -175,10 +175,8 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             final U union,
             final IEntityDao<U> unionCo)
     {
-        final var mp = entity.getProperty(property.toString());
-
-        return isActivatableProperty(mp.getEntity().getType(), mp.getName()) ||
-               isActivatableProperty(union.getType(), instrument(union, unionCo).activePropertyName());
+        return isActivatableProperty(entity.getType(), property)
+               || isActivatableProperty(union.getType(), instrument(union, unionCo).activePropertyName());
     }
 
     private <V extends AbstractEntity<?>> Optional<Result> checkExistenceWithoutActive(

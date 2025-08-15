@@ -17,13 +17,12 @@ import java.lang.annotation.Target;
 ///
 /// **A note on activatable entities:**
 ///
-/// * If [SkipEntityExistsValidation] is applied to an activatable property with [SkipEntityExistsValidation#skipActiveOnly()] as `false`,
-/// then both active and inactive values are admitted, but the active ones would be tracked if the property is persistent,
+/// * If [SkipEntityExistsValidation#skipActiveOnly()] is `false` for an activatable property,
+/// then both active and inactive values are admitted, but the active ones are tracked if the property is persistent,
 /// with all the relevant activatable effects such as preventing main entity deactivation, etc.
 ///
-/// * If [SkipEntityExistsValidation#skipActiveOnly()] as `true`, then not only both active and inactive values are admitted,
+/// * If [SkipEntityExistsValidation#skipActiveOnly()] is `true`, then not only both active and inactive values are admitted,
 /// but the activatable nature of the property is completely turned off.
-///
 ///
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
