@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection.test_entities;
 
+import ua.com.fielden.platform.entity.activatable.test_entities.Union;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.sample.domain.TgCategory;
@@ -30,6 +31,20 @@ public class ActionEntity extends AbstractFunEntityForDataExport<String> {
     @IsProperty
     @Title
     private TgCategory plainCategory;
+
+    @IsProperty
+    @Title
+    private Union union;
+
+    public Union getUnion() {
+        return union;
+    }
+
+    @Observable
+    public ActionEntity setUnion(final Union union) {
+        this.union = union;
+        return this;
+    }
 
     public TgCategory getPlainCategory() {
         return plainCategory;

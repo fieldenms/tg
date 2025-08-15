@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.activatable.test_entities.UnionOwner;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.reflection.test_entities.ActionEntity;
@@ -89,6 +90,21 @@ public class ActivatableEntityRetrospectionHelperTest {
         assertTrue(isPropertyPersistent(EntityWithPropertiesOfActivatableTypes.class, "author"));
         assertFalse(isActivatableEntityType(determinePropertyType(EntityWithPropertiesOfActivatableTypes.class, "author")));
         assertFalse(isActivatableProperty(EntityWithPropertiesOfActivatableTypes.class, "author"));
+    }
+
+    @Test
+    public void isActivatableProperty_is_true_for_persistent_union_typed_properties_in_persistent_entities() {
+        assertTrue(isPersistentEntityType(UnionOwner.class));
+        assertTrue(isUnionEntityType(determinePropertyType(UnionOwner.class, "union")));
+        assertTrue(isActivatableProperty(UnionOwner.class, "union"));
+    }
+
+    @Test
+    public void isActivatableProperty_is_true_for_persistent_union_typed_properties_in_action_entities() {
+        assertFalse(isPersistentEntityType(ActionEntity.class));
+        assertFalse(isSyntheticEntityType(ActionEntity.class));
+        assertTrue(isUnionEntityType(determinePropertyType(ActionEntity.class, "union")));
+        assertTrue(isActivatableProperty(ActionEntity.class, "union"));
     }
 
 }
