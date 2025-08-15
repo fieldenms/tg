@@ -371,6 +371,36 @@ The project uses JUnit 4 for testing with extensive test coverage:
 - Test data fixtures using DbDrivenTestCase pattern
 - Test-specific Guice modules for dependency injection
 
+#### Testing Best Practices
+
+**Prefer AssertJ over JUnit Assertions:**
+- Always use AssertJ's fluent assertions (`assertThat()`) instead of traditional JUnit assertions (`assertTrue()`, `assertEquals()`, etc.)
+- AssertJ provides better readability, more descriptive failure messages, and a more intuitive API
+- Exception testing: Use AssertJ's `assertThatThrownBy()` for exception testing instead of try-catch blocks or JUnit's `@Test(expected=...)`
+- Descriptive test names: Use method names that clearly state the expected behavior
+
+**Examples:**
+```java
+// Prefer this (AssertJ):
+assertThat(result).isTrue();
+assertThat(entity.getProperty()).isEqualTo(expectedValue);
+assertThat(list).hasSize(3).containsExactly("a", "b", "c");
+assertThatThrownBy(() -> method.call())
+    .isInstanceOf(InvalidArgumentException.class)
+    .hasMessageContaining("must be a simple property name");
+
+// Instead of this (JUnit):
+assertTrue(result);
+assertEquals(expectedValue, entity.getProperty());
+assertEquals(3, list.size());
+try {
+    method.call();
+    fail("Should have thrown InvalidArgumentException");
+} catch (InvalidArgumentException ex) {
+    assertTrue(ex.getMessage().contains("must be a simple property name"));
+}
+```
+
 #### Important: Indirect Testing Pattern in TG Applications
 
 TG-based applications use an **indirect testing pattern** where business logic validation is tested through the DAO layer.
@@ -522,6 +552,29 @@ Templates use format strings to generate consistent token names:
    - Use EQL for complex queries
    - Leverage fetch providers for optimization
    - Apply appropriate fetch strategies
+
+### Code Documentation Standards
+
+**Comment and Javadoc Formatting:**
+- Always place each new sentence on a new line for better readability and version control diffs
+- Always end sentences with a full stop (period)
+- This applies to both inline comments and Javadoc documentation
+- Multi-line comments should have each sentence on its own line
+- **Always use Markdown for Javadoc** instead of HTML tags for better readability and modern documentation standards
+
+**Examples:**
+```java
+// Prefer this format:
+// TgPerson extends ActivatableAbstractEntity and is persistent.
+// This ensures proper activation functionality.
+
+/// Checks if the entity type represents activatable entities.
+/// Only persistent entities can be considered activatable.
+/// Synthetic entities are not supported for activation. 
+
+// Instead of this format:
+// TgPerson extends ActivatableAbstractEntity and is persistent, this ensures proper activation functionality
+```
 
 ## Development Tips
 
