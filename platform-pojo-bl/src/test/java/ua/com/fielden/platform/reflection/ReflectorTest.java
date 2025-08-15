@@ -9,6 +9,7 @@ import ua.com.fielden.platform.associations.test_entities.EntityWithManyToOneAss
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.entity.annotation.factory.ParamAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.DateParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -18,9 +19,11 @@ import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.test_entities.*;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
+import ua.com.fielden.platform.test_entities.Entity;
 import ua.com.fielden.platform.utils.Pair;
 
 import java.lang.reflect.Constructor;
@@ -30,6 +33,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
@@ -417,6 +421,87 @@ public class ReflectorTest {
     @Test
     public void isPropetyPersistent_is_false_for_properties_annotated_with_MapTo_in_action_entities() {
         assertFalse(isPropertyPersistent(ExportAction.class, "count"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_true_for_explicitly_calculated_properties_in_persistent_entities() {
+        assertTrue(isPersistentEntityType(EntityWithPropertiesOfActivatableTypes.class));
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "calcCategory"));
+        assertTrue(Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "calcCategory"));
+        
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "calcAuthor"));
+        assertTrue(Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "calcAuthor"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_calculated_properties_in_non_persistent_non_synthetic_entities() {
+        // Entity is neither persistent nor synthetic, so calculated properties should return false
+        assertFalse(isPersistentEntityType(Entity.class));
+        assertFalse(isSyntheticEntityType(Entity.class));
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, Entity.class, "firstProperty"));
+        assertFalse(Reflector.isPropertyCalculated(Entity.class, "firstProperty"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_true_for_implicitly_calculated_one2one_relationships_in_persistent_entities() {
+        assertTrue(isPersistentEntityType(MasterEntityWithOneToOneAssociation.class));
+        assertTrue(Finder.isOne2One_association(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation"));
+        assertTrue(Reflector.isPropertyCalculated(MasterEntityWithOneToOneAssociation.class, "one2oneAssociation"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_non_calculated_persistent_properties() {
+        assertTrue(isPersistentEntityType(EntityWithPropertiesOfActivatableTypes.class));
+        assertFalse(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "category"));
+        assertFalse(Finder.isOne2One_association(EntityWithPropertiesOfActivatableTypes.class, "category"));
+        assertFalse(Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "category"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_critOnly_properties() {
+        assertTrue(isPersistentEntityType(EntityWithPropertiesOfActivatableTypes.class));
+        assertTrue(isPropertyAnnotationPresent(CritOnly.class, EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
+        assertFalse(Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_plain_properties() {
+        assertTrue(isPersistentEntityType(EntityWithPropertiesOfActivatableTypes.class));
+        assertFalse(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertFalse(Finder.isOne2One_association(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertFalse(Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_properties_in_action_entities() {
+        assertFalse(isPersistentEntityType(ActionEntity.class));
+        assertFalse(isSyntheticEntityType(ActionEntity.class));
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, ActionEntity.class, "calculated"));
+        assertFalse(Reflector.isPropertyCalculated(ActionEntity.class, "calculated"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_false_for_non_calculated_properties_in_synthetic_entities() {
+        assertTrue(isSyntheticEntityType(TgReBogieWithHighLoad.class));
+        // TgReBogieWithHighLoad extends TgBogie and inherits "location" property which is annotated with @MapTo but not @Calculated
+        assertFalse(isPropertyAnnotationPresent(Calculated.class, TgReBogieWithHighLoad.class, "location"));
+        assertFalse(Finder.isOne2One_association(TgReBogieWithHighLoad.class, "location"));
+        assertFalse(Reflector.isPropertyCalculated(TgReBogieWithHighLoad.class, "location"));
+    }
+
+    @Test
+    public void isPropertyCalculated_is_true_for_calculated_properties_in_synthetic_entities() {
+        assertTrue(isSyntheticEntityType(TgReBogieWithHighLoad.class));
+        assertTrue(isPropertyAnnotationPresent(Calculated.class, TgReBogieWithHighLoad.class, "calculated"));
+        assertFalse(Finder.isOne2One_association(TgReBogieWithHighLoad.class, "calculated"));
+        assertTrue(Reflector.isPropertyCalculated(TgReBogieWithHighLoad.class, "calculated"));
+    }
+
+    @Test
+    public void isPropertyCalculated_throws_exception_for_dot_expressions() {
+        assertThatThrownBy(() -> Reflector.isPropertyCalculated(EntityWithPropertiesOfActivatableTypes.class, "category.key"))
+                .isInstanceOf(InvalidArgumentException.class)
+                .hasMessageContaining("must be a simple property name");
     }
 
     @KeyType(String.class)

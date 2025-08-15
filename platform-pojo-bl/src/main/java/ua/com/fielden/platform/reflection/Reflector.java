@@ -54,11 +54,17 @@ public final class Reflector {
      * A cache for persistent property checks.
      */
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> PERSISTENT_PROP_CACHE = CacheBuilder.newBuilder().weakKeys().initialCapacity(500).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+    
+    /**
+     * A cache for calculated property checks.
+     */
+    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> CALCULATED_PROP_CACHE = CacheBuilder.newBuilder().weakKeys().initialCapacity(500).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
 
     public static long cleanUp() {
         METHOD_CACHE.cleanUp();
         PERSISTENT_PROP_CACHE.cleanUp();
-        return METHOD_CACHE.size() + PERSISTENT_PROP_CACHE.size();
+        CALCULATED_PROP_CACHE.cleanUp();
+        return METHOD_CACHE.size() + PERSISTENT_PROP_CACHE.size() + CALCULATED_PROP_CACHE.size();
     }
 
     /** Regex pattern that represents a separator between properties in property path expressions. */
@@ -651,6 +657,46 @@ public final class Reflector {
         else {
             return isPropertyAnnotationPresent(MapTo.class, entityType, propName.toString());
         }
+    }
+    
+    /// This predicate is true for calculated properties.
+    /// There are two kinds of calculated properties:
+    /// 1. Explicitly calculated - annotated with @Calculated
+    /// 2. Implicitly calculated - one-2-one relationship
+    /// Calculated properties may only occur in persistent and synthetic entities.
+    ///
+    /// TODO: we skip the case of one-2-many relationship for now, until better understanding of how to better recognise them.
+    ///
+    /// @param entityType  the entity type
+    /// @param propName  a simple property name
+    ///
+    public static boolean isPropertyCalculated(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
+        if (isDotExpression(propName)) {
+            throw new InvalidArgumentException("[propName] must be a simple property name, but was [%s].".formatted(propName));
+        }
+
+        try {
+            return CALCULATED_PROP_CACHE
+                    .get(entityType, () -> CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(50).build())
+                    .get(propName.toString(), () -> isPropertyCalculated_(entityType, propName));
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException("Could not determine whether property [%s.%s] is calculated.".formatted(entityType.getSimpleName(), propName), ex.getCause());
+        }
+    }
+    
+    private static boolean isPropertyCalculated_(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
+        // Calculated properties can only exist in persistent or synthetic entities
+        if (!isPersistentEntityType(entityType) && !isSyntheticEntityType(entityType)) {
+            return false;
+        }
+        
+        // Check for explicit @Calculated annotation
+        if (isPropertyAnnotationPresent(Calculated.class, entityType, propName.toString())) {
+            return true;
+        }
+        
+        // Check for implicit calculation via one-2-one association
+        return Finder.isOne2One_association(entityType, propName.toString());
     }
     
     /**
