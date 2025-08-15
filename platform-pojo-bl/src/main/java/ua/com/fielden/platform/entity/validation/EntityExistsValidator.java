@@ -185,7 +185,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     {
         final var mp = entity.getProperty(property.toString());
 
-        if (isActivatableProperty(mp)) {
+        if (isActivatableProperty(mp.getEntity().getType(), mp.getName())) {
             return true;
         }
 

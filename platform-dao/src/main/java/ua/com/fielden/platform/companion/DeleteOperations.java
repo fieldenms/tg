@@ -148,7 +148,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
                 .properties()
                 .stream()
                 .map(PropertyMetadata::name)
-                .filter(prop -> isActivatableProperty(entity.getType(), prop))
+                .filter(prop -> isActivatablePersistentProperty(entity.getType(), prop))
                 .filter(prop -> !isDeactivatableDependencyBackref(entity.getType(), prop))
                 .filter(prop -> !isSpecialActivatableToBeSkipped(entity.getType(), prop));
     }

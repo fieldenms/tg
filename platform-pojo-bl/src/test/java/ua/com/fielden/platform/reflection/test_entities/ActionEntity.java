@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection.test_entities;
 
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
@@ -25,6 +26,20 @@ public class ActionEntity extends AbstractFunEntityForDataExport<String> {
     @Title
     private Integer calculated;
     protected static final ExpressionModel calculated_ = expr().val(null).model();
+
+    @IsProperty
+    @Title
+    private TgCategory plainCategory;
+
+    public TgCategory getPlainCategory() {
+        return plainCategory;
+    }
+
+    @Observable
+    public ActionEntity setPlainCategory(final TgCategory plainCategory) {
+        this.plainCategory = plainCategory;
+        return this;
+    }
 
     @Observable
     protected ActionEntity setCalculated(final Integer calculated) {

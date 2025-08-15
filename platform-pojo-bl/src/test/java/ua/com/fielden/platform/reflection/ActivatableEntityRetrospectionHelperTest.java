@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.reflection;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.reflection.test_entities.ActionEntity;
 import ua.com.fielden.platform.reflection.test_entities.EntityWithPropertiesOfActivatableTypes;
 
 import static org.junit.Assert.assertFalse;
@@ -11,7 +13,7 @@ import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionH
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 public class ActivatableEntityRetrospectionHelperTest {
 
@@ -29,11 +31,14 @@ public class ActivatableEntityRetrospectionHelperTest {
         assertFalse(isActivatableProperty(EntityWithPropertiesOfActivatableTypes.class, "calcAuthor"));
     }
 
+    /// This holds for generative entities, which are persistent and use crit-only properties to capture additional execution parameters in Entity Centres.
+    ///
     @Test
-    public void isActivatableProperty_is_false_for_critOnly_property_with_activatable_type() {
+    public void isActivatableProperty_is_true_for_critOnly_property_with_activatable_type_for_persistent_entities() {
+        assertTrue(isPersistentEntityType(EntityWithPropertiesOfActivatableTypes.class));
         assertTrue(isPropertyAnnotationPresent(CritOnly.class, EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
         assertTrue(isActivatableEntityType(determinePropertyType(EntityWithPropertiesOfActivatableTypes.class, "categoryCrit")));
-        assertFalse(isActivatableProperty(EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
+        assertTrue(isActivatableProperty(EntityWithPropertiesOfActivatableTypes.class, "categoryCrit"));
     }
 
     @Test
@@ -44,12 +49,23 @@ public class ActivatableEntityRetrospectionHelperTest {
     }
 
     @Test
-    public void isActivatableProperty_is_false_for_plain_property_with_activatable_type() {
+    public void isActivatableProperty_is_true_for_plain_property_with_activatable_type_for_persistent_entities() {
+        assertTrue(isPersistentEntityType(EntityWithPropertiesOfActivatableTypes.class));
         assertFalse(isPropertyAnnotationPresent(CritOnly.class, EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
         assertFalse(isPropertyPersistent(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
         assertFalse(isPropertyAnnotationPresent(Calculated.class, EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
         assertTrue(isActivatableEntityType(determinePropertyType(EntityWithPropertiesOfActivatableTypes.class, "plainCategory")));
-        assertFalse(isActivatableProperty(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+        assertTrue(isActivatableProperty(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
+    }
+
+    /// Properties of activatable entity types in action entities still require the same validation as in persistent entities.
+    ///
+    @Test
+    public void isActivatableProperty_is_true_for_plain_property_with_activatable_type_for_action_entities() {
+        assertFalse(isPersistentEntityType(ActionEntity.class));
+        assertFalse(isSyntheticEntityType(ActionEntity.class));
+        assertTrue(isActivatableEntityType(determinePropertyType(ActionEntity.class, "plainCategory")));
+        assertTrue(isActivatableProperty(EntityWithPropertiesOfActivatableTypes.class, "plainCategory"));
     }
 
     @Test

@@ -13,10 +13,10 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableProperty;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
@@ -140,9 +140,9 @@ public class DomainEntityDependencies {
             // TODO For union-typed properties, check the union member property annotations as well.
             final String prop0Name = splitPropPathToArray(propPath)[0];
             final Field prop0 = Finder.getFieldByName(entityType, prop0Name);
-            return isActivatableEntityType(entityType) 
-                && !isSpecialActivatableToBeSkipped(prop0)
-                && isActivatableProperty(entityType, prop0Name);
+            return isActivatableEntityType(entityType)
+                   && !isSpecialActivatableToBeSkipped(prop0)
+                   && isActivatablePersistentProperty(entityType, prop0Name);
         }
 
         public static final String INFO_ENTITY_DEPENDENCIES = "Entity [%s] has dependency in entity [%s] as property [%s] (checked during deactivation [%s], belongs to entity key [%s]).";

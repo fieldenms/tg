@@ -449,7 +449,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     /// This predicate identifies whether the specified property needs to be processed as an activatable reference.
     ///
     private boolean shouldProcessAsActivatable(final MetaProperty<?> prop) {
-        return isActivatableProperty(prop) && !isSpecialActivatableToBeSkipped(prop) && !isDeactivatableDependencyBackref(prop);
+        return isActivatablePersistentProperty(prop.getEntity().getType(), prop.getName()) && !isSpecialActivatableToBeSkipped(prop) && !isDeactivatableDependencyBackref(prop);
     }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {

@@ -4,7 +4,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
-import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
@@ -21,6 +20,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotatio
 import static ua.com.fielden.platform.reflection.Finder.*;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyCalculated;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -67,20 +67,26 @@ public class ActivatableEntityRetrospectionHelper {
         }
     }
 
-    public static boolean isActivatableProperty(final MetaProperty<?> mp) {
-        return isActivatableProperty(mp.getEntity().getType(), mp.getName());
+    public static boolean isActivatablePersistentProperty(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
+        return isPropertyPersistent(entityType, propName) && isActivatableProperty(entityType, propName);
     }
 
     private static boolean isActivatableProperty_(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
         final var prop = getFieldByName(entityType, propName.toString());
         final var propType = EntityMetadata.determinePropType(entityType, prop);
-        // A property of an activatable entity type is considered "activatable" iff it is persistent
-        // and @SkipEntityExistsValidation is absent or is present with skipActiveOnly == true.
-        // There is also @SkipActivatableTracking, but it does not affect the activatable nature of the property -- only the counting of references.
+        // A property of an activatable entity type is considered "activatable" iff:
+        // 1. Property type is an activatable entity or a union entity.
+        // 2. @SkipEntityExistsValidation is absent or is present with skipActiveOnly == true.
+        // 3. Property is not calculated (both persistent and plain are applicable).
+        //
+        // Note 1: There is also @SkipActivatableTracking,
+        //         but it does not affect the activatable nature of the property -- only the counting of references.
+        // Note 2: @CritOnly properties (mainly relevant for SINGLE) in the context of persistent entity are considered activatable.
+        //         This is to support generative entities (those implementing [WithCreatedByUser] and companion implementing [IGenerator]).
         // TODO Properties whose type is a union entity type without activatable members should not be activatable.
         //      This change would serve as an optimisation, without changing semantics, because activatability of union-typed properties
         //      can be determined only from their actual values.
-        if ((isActivatableEntityType(propType) || isUnionEntityType(propType)) && isPropertyPersistent(entityType, propName)) {
+        if ((isActivatableEntityType(propType) || isUnionEntityType(propType)) && !isPropertyCalculated(entityType, propName)) {
             final var seevAnnotation = getAnnotation(prop, SkipEntityExistsValidation.class);
             final boolean skipActiveOnly = seevAnnotation != null && seevAnnotation.skipActiveOnly();
             return !skipActiveOnly;

@@ -31,8 +31,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
 import static ua.com.fielden.platform.error.Result.*;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableProperty;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -141,15 +140,14 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         return INFO_DEPENDENCY.formatted(rightPad(val1, lengths._1 + 2, PAD_STR), leftPad(val3, lengths._3 + 2, PAD_STR), rightPad(val2, lengths._2 + 2, PAD_STR));
     }
 
-    /**
-     * Collects properties that represent non-null, non-proxy, and non-self-referenced activatable properties for {@code entity}.
-     */
+    /// Collects properties that represent persistent, non-null, non-proxy, and non-self-referenced activatable properties for `entity`.
+    ///
     @SuppressWarnings("unchecked")
     private List<? extends MetaProperty<? extends AbstractEntity<?>>> activatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
         // TODO For union-typed properties, check the union member property annotations as well.
         return entity.nonProxiedProperties()
                 .filter(mp -> mp.getValue() != null &&
-                              isActivatableProperty(mp) &&
+                              isActivatablePersistentProperty(mp.getEntity().getType(), mp.getName()) &&
                               !isSpecialActivatableToBeSkipped(mp) &&
                               !((AbstractEntity<?>) mp.getValue()).isIdOnlyProxy() &&
                               !entity.equals(mp.getValue()))
