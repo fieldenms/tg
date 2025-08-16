@@ -178,6 +178,14 @@ abstract class PropertyMetadataImpl<N extends PropertyNature, D extends Property
             this.keyMap = ImmutableMap.builder();
         }
 
+        String name() {
+            return name;
+        }
+
+        N nature() {
+            return nature;
+        }
+
         /**
          * Key-value pairs are not used.
          */

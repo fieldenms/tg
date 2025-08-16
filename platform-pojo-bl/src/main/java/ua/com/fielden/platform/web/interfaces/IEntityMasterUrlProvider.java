@@ -1,15 +1,20 @@
 package ua.com.fielden.platform.web.interfaces;
 
+import com.google.inject.ImplementedBy;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 import java.util.Optional;
 
 /**
  * A contract to generate an entity master URI for a specific entity.
+ * <p>
+ * An implementation should be bound in an IoC module.
+ * The default implementation doesn't provide meaningful results.
  *
  * @author TG Team
  */
 @FunctionalInterface
+@ImplementedBy(StubEntityMasterUrlProvider.class)
 public interface IEntityMasterUrlProvider {
 
     static String PARTIAL_URL_PATTERN = "#/master/%s/%s";
