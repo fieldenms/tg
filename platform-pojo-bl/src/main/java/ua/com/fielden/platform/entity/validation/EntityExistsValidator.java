@@ -6,7 +6,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.EntityReferenceAlgebra;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -53,23 +52,10 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     public static final String ERR_UNION_INVALID = "%s is invalid: %s";
 
     private final ICompanionObjectFinder coFinder;
-    private final EntityReferenceAlgebra entityReferenceAlgebra;
 
     @Inject
-    EntityExistsValidator(final ICompanionObjectFinder coFinder,
-                          final EntityReferenceAlgebra entityReferenceAlgebra)
-    {
+    EntityExistsValidator(final ICompanionObjectFinder coFinder) {
         this.coFinder = coFinder;
-        this.entityReferenceAlgebra = entityReferenceAlgebra;
-    }
-
-    private static boolean skipNewEntities(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propertyName) {
-        final var annot = getPropertyAnnotation(SkipEntityExistsValidation.class, entityType, propertyName.toString());
-        return annot != null && annot.skipNew();
-    }
-
-    private static String entityTitle(final AbstractEntity<?> entity) {
-        return getEntityTitleAndDesc(entity.getType()).getKey();
     }
 
     @Override
@@ -86,63 +72,72 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             return failure(entity, getErrorMessage(newValue).orElseGet(() -> format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(newValue), newValue.getDesc())));
         }
 
-        return entityReferenceAlgebra.reference(entity, property.getName(), newValue, ops);
+        if (newValue instanceof AbstractUnionEntity newUnionValue) {
+            return handleUnionEntityValue(entity, property.getName(), newUnionValue, newUnionValue.activeEntity());
+        } else {
+            return handleEntityValue(entity, property.getName(), newValue);
+        }
     }
 
-    private final EntityReferenceAlgebra.Ops<Result> ops = new EntityReferenceAlgebra.Ops<>() {
-        @SuppressWarnings("unchecked")
-        @Override
-        public Result apply(final AbstractEntity<?> entity, final CharSequence property, final AbstractEntity<?> value) {
-            if (value instanceof PropertyDescriptor<?>) {
-                return successful();
-            }
-            else {
-                final var valueCo = (IEntityDao<AbstractEntity<?>>) coFinder.find(value.getType());
-
-                final var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, value);
-                if (dirtyOrNewCheckResult.isPresent()) {
-                    return dirtyOrNewCheckResult.get();
-                }
-
-                final Optional<Result> existenceCheckResult = value instanceof ActivatableAbstractEntity<?> valueA && isActivatableProperty(entity.getType(), property)
-                        ? checkExistenceForActivatable(entity, valueA, (IEntityDao) valueCo)
-                        : checkExistenceWithoutActive(entity, value, valueCo);
-
-                return existenceCheckResult.orElseGet(Result::successful);
-
-            }
+    /// Validates regular entity values (i.e. non-union).
+    ///
+    @SuppressWarnings("unchecked")
+    private Result handleEntityValue(final AbstractEntity<?> entity, final CharSequence property, final AbstractEntity<?> value) {
+        if (value instanceof PropertyDescriptor<?>) {
+            return successful();
         }
 
-        @SuppressWarnings("unchecked")
-        @Override
-        public Result applyUnion(
-                final AbstractEntity<?> entity,
-                final CharSequence property,
-                final AbstractUnionEntity union,
-                final AbstractEntity<?> unionMember)
-        {
-            final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(union.getType());
+        final IEntityDao valueCo = coFinder.find(value.getType());
 
-            // Union instance must be instrumented for validation.
-            final var isValid = instrument(union, unionCo).isValid();
-            if (!isValid.isSuccessful()) {
-                return failure(entity, new Exception(ERR_UNION_INVALID.formatted(entityTitle(union), isValid.getEx().getMessage()), isValid.getEx()));
-            }
-
-            var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, unionMember);
-            if (dirtyOrNewCheckResult.isPresent()) {
-                return dirtyOrNewCheckResult.get();
-            }
-
-            final var unionMemberCo = (IEntityDao<AbstractEntity<?>>) coFinder.find(unionMember.getType());
-            final Optional<Result> existenceCheckResult = unionMember instanceof ActivatableAbstractEntity<?> activatable
-                                             && isActivatableUnionMember(entity, property, union, unionCo)
-                    ? checkExistenceForActivatable(entity, activatable, (IEntityDao) unionMemberCo)
-                    : checkExistenceWithoutActive(entity, unionMember, unionMemberCo);
-
-            return existenceCheckResult.orElseGet(Result::successful);
+        final var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, value);
+        if (dirtyOrNewCheckResult.isPresent()) {
+            return dirtyOrNewCheckResult.get();
         }
-    };
+
+        final Optional<Result> existenceCheckResult = value instanceof ActivatableAbstractEntity<?> valueA && isActivatableProperty(entity.getType(), property)
+                ? checkExistenceForActivatable(entity, valueA, valueCo)
+                : checkExistenceWithoutActive(entity, value, valueCo);
+
+        return existenceCheckResult.orElseGet(Result::successful);
+    }
+
+    /// Validates union-typed entity values.
+    @SuppressWarnings("unchecked")
+    private Result handleUnionEntityValue(
+            final AbstractEntity<?> entity,
+            final CharSequence property,
+            final AbstractUnionEntity unionEntity,
+            final AbstractEntity<?> unionMemberValue)
+    {
+        final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(unionEntity.getType());
+
+        // Union instance must be instrumented for validation.
+        final var isValid = instrument(unionEntity, unionCo).isValid();
+        if (!isValid.isSuccessful()) {
+            return failure(entity, new Exception(ERR_UNION_INVALID.formatted(entityTitle(unionEntity), isValid.getEx().getMessage()), isValid.getEx()));
+        }
+
+        var dirtyOrNewCheckResult = checkDirtyOrNew(entity, property, unionMemberValue);
+        if (dirtyOrNewCheckResult.isPresent()) {
+            return dirtyOrNewCheckResult.get();
+        }
+
+        final IEntityDao unionMemberCo = coFinder.find(unionMemberValue.getType());
+        final Optional<Result> existenceCheckResult = unionMemberValue instanceof ActivatableAbstractEntity<?> activatable && isActivatableUnionMember(entity, property, unionEntity, unionCo)
+                ? checkExistenceForActivatable(entity, activatable, unionMemberCo)
+                : checkExistenceWithoutActive(entity, unionMemberValue, unionMemberCo);
+
+        return existenceCheckResult.orElseGet(Result::successful);
+    }
+
+    private static boolean skipNewEntities(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propertyName) {
+        final var annot = getPropertyAnnotation(SkipEntityExistsValidation.class, entityType, propertyName.toString());
+        return annot != null && annot.skipNew();
+    }
+
+    private static String entityTitle(final AbstractEntity<?> entity) {
+        return getEntityTitleAndDesc(entity.getType()).getKey();
+    }
 
     /// @param value  the entity whose dirty state and persistence status will be checked
     ///
@@ -167,9 +162,11 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         }
     }
 
-    /// A union member is activatable iff [ActivatableEntityRetrospectionHelper#isActivatableProperty(Class, CharSequence)]
-    /// is true for either the union-typed property or the union member property.
-    /// In other words, to designate a union member as non-activatable, both the union-typed property and the union member property
+    /// A union member is activatable iff [ActivatableEntityRetrospectionHelper#isActivatableProperty(Class, CharSequence)] is true for:
+    /// 1. Either the union-typed property, or
+    /// 2. The union member property.
+    ///
+    /// In other words, to designate a union member property as non-activatable, both the union-typed property and the union member property
     /// must be designated as non-activatable.
     ///
     private static <U extends AbstractUnionEntity> boolean isActivatableUnionMember(
@@ -180,12 +177,8 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     {
         final var mp = entity.getProperty(property.toString());
 
-        if (isActivatableProperty(mp.getEntity().getType(), mp.getName())) {
-            return true;
-        }
-
-        // TODO Instrumentation will no longer be necessary after #2466.
-        return isActivatableProperty(union.getType(), instrument(union, unionCo).activePropertyName());
+        return isActivatableProperty(mp.getEntity().getType(), mp.getName()) ||
+               isActivatableProperty(union.getType(), instrument(union, unionCo).activePropertyName());
     }
 
     private <V extends AbstractEntity<?>> Optional<Result> checkExistenceWithoutActive(
@@ -193,12 +186,9 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             final V value,
             final IEntityDao<V> valueCo)
     {
-        if (!valueCo.entityExists(value)) {
-            return of(makeNotExistsResult(entity, value));
-        }
-        else {
-            return empty();
-        }
+        return !valueCo.entityExists(value)
+               ? of(makeNotExistsResult(entity, value))
+               : empty();
     }
 
     private <V extends ActivatableAbstractEntity<?>> Optional<Result> checkExistenceForActivatable(
@@ -216,9 +206,9 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         }
         else {
             final var qem = from(select(valueCo.getEntityType()).where().prop(ID).eq().val(value).model())
-                    .with(fetchOnly(valueCo.getEntityType()).with(ACTIVE))
-                    .lightweight()
-                    .model();
+                            .with(fetchOnly(valueCo.getEntityType()).with(ACTIVE))
+                            .lightweight()
+                            .model();
             final var ent = valueCo.getEntity(qem);
 
             if (ent == null) {
@@ -240,13 +230,20 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                        : ERR_ENTITY_WAS_NOT_FOUND.formatted(entityTitle(value), value));
     }
 
-    private static <U extends AbstractUnionEntity> U instrument(final U union, final IEntityDao<U> co) {
+    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
+    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
+    ///
+    /// This method is a utility to perform instrumentation for uninstrumented values.
+    ///
+    /// TODO Instrumentation will no longer be necessary after #2466.
+    ///
+    private static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityDao<U> co) {
         final U instrumentedUnion;
-        if (union.isInstrumented()) {
-            instrumentedUnion = union;
+        if (unionEntity.isInstrumented()) {
+            instrumentedUnion = unionEntity;
         }
         else {
-            copy(union, instrumentedUnion = co.new_(), ID, VERSION);
+            copy(unionEntity, instrumentedUnion = co.new_(), ID, VERSION);
         }
         return instrumentedUnion;
     }
