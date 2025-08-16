@@ -19,7 +19,6 @@ import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.test_entities.*;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
@@ -230,12 +229,12 @@ public class ReflectorTest {
 
     @Test
     public void test_conversion_of_relative_property_paths_to_absolute() {
-        assertEquals("originator.name", Reflector.fromRelative2AbsotulePath("", "originator.name"));
-        assertEquals("vehicle.driver.name", Reflector.fromRelative2AbsotulePath("vehicle.driver", "name"));
-        assertEquals("originator.name", Reflector.fromRelative2AbsotulePath("vehicle.driver", "←.←.originator.name"));
-        assertEquals("vehicle.owner.name", Reflector.fromRelative2AbsotulePath("vehicle.driver", "←.owner.name"));
+        assertEquals("originator.name", Reflector.fromRelative2AbsolutePath("", "originator.name"));
+        assertEquals("vehicle.driver.name", Reflector.fromRelative2AbsolutePath("vehicle.driver", "name"));
+        assertEquals("originator.name", Reflector.fromRelative2AbsolutePath("vehicle.driver", "←.←.originator.name"));
+        assertEquals("vehicle.owner.name", Reflector.fromRelative2AbsolutePath("vehicle.driver", "←.owner.name"));
         try {
-            Reflector.fromRelative2AbsotulePath("vehicle.driver", "←.←.←.originator.name");
+            Reflector.fromRelative2AbsolutePath("vehicle.driver", "←.←.←.originator.name");
             fail("Validation should have prevented successful conversion.");
         } catch (final Exception ex) {
         }
@@ -243,24 +242,24 @@ public class ReflectorTest {
 
     @Test
     public void test_conversion_of_relative_property_paths_to_absolute_for_SELF_properties() {
-        assertEquals("", Reflector.fromRelative2AbsotulePath("", "SELF"));
-        assertEquals("vehicle", Reflector.fromRelative2AbsotulePath("vehicle", "SELF"));
-        assertEquals("vehicle.driver", Reflector.fromRelative2AbsotulePath("vehicle.driver", "SELF"));
+        assertEquals("", Reflector.fromRelative2AbsolutePath("", "SELF"));
+        assertEquals("vehicle", Reflector.fromRelative2AbsolutePath("vehicle", "SELF"));
+        assertEquals("vehicle.driver", Reflector.fromRelative2AbsolutePath("vehicle.driver", "SELF"));
     }
 
     @Test
     public void test_conversion_of_absolute_property_paths_to_relative() {
-        assertEquals("originator.name", Reflector.fromAbsotule2RelativePath("", "originator.name"));
-        assertEquals("name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.driver.name"));
-        assertEquals("←.←.originator.name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "originator.name"));
-        assertEquals("←.owner.name", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.owner.name"));
+        assertEquals("originator.name", Reflector.fromAbsolute2RelativePath("", "originator.name"));
+        assertEquals("name", Reflector.fromAbsolute2RelativePath("vehicle.driver", "vehicle.driver.name"));
+        assertEquals("←.←.originator.name", Reflector.fromAbsolute2RelativePath("vehicle.driver", "originator.name"));
+        assertEquals("←.owner.name", Reflector.fromAbsolute2RelativePath("vehicle.driver", "vehicle.owner.name"));
     }
 
     @Test
     public void test_conversion_of_absolute_property_paths_to_relative_for_SELF_properties() {
-        assertEquals("SELF", Reflector.fromAbsotule2RelativePath("", ""));
-        assertEquals("SELF", Reflector.fromAbsotule2RelativePath("vehicle", "vehicle"));
-        assertEquals("SELF", Reflector.fromAbsotule2RelativePath("vehicle.driver", "vehicle.driver"));
+        assertEquals("SELF", Reflector.fromAbsolute2RelativePath("", ""));
+        assertEquals("SELF", Reflector.fromAbsolute2RelativePath("vehicle", "vehicle"));
+        assertEquals("SELF", Reflector.fromAbsolute2RelativePath("vehicle.driver", "vehicle.driver"));
     }
 
     @Test

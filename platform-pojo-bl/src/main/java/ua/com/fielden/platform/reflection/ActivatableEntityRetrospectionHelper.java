@@ -14,7 +14,6 @@ import ua.com.fielden.platform.utils.ArrayUtils;
 import java.lang.reflect.Field;
 import java.util.concurrent.ExecutionException;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.*;
@@ -31,6 +30,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 public class ActivatableEntityRetrospectionHelper {
 
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> CACHE_ACTIVATABLE_PROP = CacheBuilder.newBuilder().initialCapacity(500).concurrencyLevel(50).build();
+
+    public static final String ERR_ACTIVATABLE_PROPERTY_DETERMINATION = "Could not determine whether property [%s.%s] is activatable.";
 
     private ActivatableEntityRetrospectionHelper() {}
 
@@ -63,7 +64,7 @@ public class ActivatableEntityRetrospectionHelper {
                     .get(entityType, () -> CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(50).build())
                     .get(propName.toString(), () -> isActivatableProperty_(entityType, propName));
         } catch (final ExecutionException ex) {
-            throw new ReflectionException(format("Could not determine whether property [%s.%s] is activatable.", entityType.getSimpleName(), propName), ex.getCause());
+            throw new ReflectionException(ERR_ACTIVATABLE_PROPERTY_DETERMINATION.formatted(entityType.getSimpleName(), propName), ex.getCause());
         }
     }
 
