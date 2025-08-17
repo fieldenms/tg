@@ -31,7 +31,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
 import static ua.com.fielden.platform.error.Result.*;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatablePersistentProperty;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -41,17 +42,17 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
-/**
- * A validator for property {@code active} on class {@link ActivatableAbstractEntity} to prevent deactivation of entities with active dependencies.
- */
+/// A validator for property `active` on class [ActivatableAbstractEntity] to prevent deactivation of entities with active dependencies.
+///
 @Singleton
 public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Boolean> {
 
     private static final String PAD_STR = "\u00A0";
+    public static final String INFO_DEPENDENCY = "<span style='font-family:monospace'>%s%s\u00A0%s</span>";
     public static final String ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s.";
     public static final String ERR_ENTITY_HAS_ACTIVE_DEPENDENCIES = "%s [%s] has %s active %s:%n%n<br><br>%s<hr>%n<br>%s";
-    public static final String INFO_DEPENDENCY = "<span style='font-family:monospace'>%s%s\u00A0%s</span>";
     public static final String ERR_INACTIVE_REFERENCES = "Property [%s] in %s [%s] references inactive %s [%s].";
+    public static final String ERR_UNEXPECTED_ENTITY_TYPE = "Unexpected entity type for an activatable reference: [%s]";
 
     public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_ENTITY_TYPE = EntityUtils::isActivatableEntityType;
     public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE = PREDICATE_ACTIVATABLE_ENTITY_TYPE.and(EntityUtils::isPersistentEntityType);
@@ -118,7 +119,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
         return switch (entity) {
             case ActivatableAbstractEntity<?> it -> it;
             case AbstractUnionEntity union -> union.activeEntity() instanceof ActivatableAbstractEntity<?> it ? it : null;
-            default -> throw new InvalidStateException("Unexpected entity type for an activatable reference: [%s]".formatted(entity.getType().getSimpleName()));
+            default -> throw new InvalidStateException(ERR_UNEXPECTED_ENTITY_TYPE.formatted(entity.getType().getSimpleName()));
         };
     }
 

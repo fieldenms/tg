@@ -123,8 +123,8 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         }
 
         final IEntityDao unionMemberCo = coFinder.find(unionMemberValue.getType());
-        final Optional<Result> existenceCheckResult = unionMemberValue instanceof ActivatableAbstractEntity<?> activatable && isActivatableUnionMember(entity, property, unionEntity, unionCo)
-                ? checkExistenceForActivatable(entity, activatable, unionMemberCo)
+        final Optional<Result> existenceCheckResult = unionMemberValue instanceof ActivatableAbstractEntity<?> activatableUnionMemberValue && isActivatableUnionMember(entity, property, unionEntity, unionCo)
+                ? checkExistenceForActivatable(entity, activatableUnionMemberValue, unionMemberCo)
                 : checkExistenceWithoutActive(entity, unionMemberValue, unionMemberCo);
 
         return existenceCheckResult.orElseGet(Result::successful);
