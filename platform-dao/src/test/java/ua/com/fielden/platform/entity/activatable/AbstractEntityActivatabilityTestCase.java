@@ -436,8 +436,8 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public
-    <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>>
-    void when_a_new_entity_A_begins_referencing_entity_B_refCount_of_B_is_incremented_for_each_reference_from_A() {
+    <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    when_a_new_entity_A_begins_referencing_entity_B_then_refCount_of_B_is_incremented_for_each_reference_from_A() {
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, true));
@@ -448,8 +448,8 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public
-    <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>>
-    void when_a_modified_entity_A_begins_referencing_entity_B_refCount_of_B_is_incremented_for_each_reference_from_A() {
+    <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    when_a_modified_entity_A_begins_referencing_entity_B_then_refCount_of_B_is_incremented_for_each_reference_from_A() {
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, true));
@@ -465,8 +465,8 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public
-    <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>>
-    void when_entity_A_is_activated_refCount_of_B_is_incremented_for_each_reference_from_A() {
+    <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
+    when_entity_A_is_activated_then_refCount_of_B_is_incremented_for_each_reference_from_A() {
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, true));
@@ -479,7 +479,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    when_entity_A_is_deactivated_refCount_of_B_is_decremented_for_each_reference_from_A() {
+    when_entity_A_is_deactivated_then_refCount_of_B_is_decremented_for_each_reference_from_A() {
         final Spec1<A, B> spec = spec1();
 
         final B b1 = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
@@ -520,7 +520,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    activating_entity_that_was_referencing_inactive_activatable_does_not_change_ref_count_of_that_activatable() {
+    activating_entity_that_was_referencing_inactive_activatable_does_not_change_refCount_of_that_activatable() {
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, false, REF_COUNT, 10));
@@ -582,7 +582,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    deactivation_and_saving_of_self_referenced_activatable_is_permissible_but_does_not_decrement_its_ref_count() {
+    deactivation_and_saving_of_self_referenced_activatable_is_permissible_but_does_not_decrement_its_refCount() {
         final Spec1<A, B> spec = spec1();
 
         A a = save(spec.newA(ACTIVE, true, REF_COUNT, 10));
@@ -597,7 +597,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    activating_entity_that_is_referenced_by_inactive_is_permitted_but_does_not_change_its_ref_count_and_also_updates_referenced_not_dirty_active_activatables() {
+    activating_entity_that_is_referenced_by_inactive_is_permitted_but_does_not_change_its_refCount_and_also_updates_referenced_not_dirty_active_activatables() {
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, true, REF_COUNT, 10));
