@@ -9,9 +9,10 @@ import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists
 import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Union;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-import static java.lang.String.format;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_DIRTY;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_WAS_NOT_FOUND;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 /// Tests that cover entity-exists validation for union properties (i.e. the properties of union entities).
@@ -29,7 +30,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         assertTrue(m1.isDirty());
         final var union = new_(TestExists_Union.class).setMember1(m1);
         Assertions.assertThat(union.getProperty("member1").getFirstFailure())
-                .hasMessage(format(ERR_DIRTY, m1, getEntityTitleAndDesc(m1).getKey()));
+                .hasMessage(ERR_DIRTY.formatted(m1, getEntityTitleAndDesc(m1).getKey()));
     }
 
     @Test
@@ -38,7 +39,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(m1.isPersisted());
         final var union = new_(TestExists_Union.class).setMember1(m1);
         Assertions.assertThat(union.getProperty("member1").getFirstFailure())
-                .hasMessage(format(EntityExistsValidator.ERR_WAS_NOT_FOUND, getEntityTitleAndDesc(m1).getKey()));
+                .hasMessage(ERR_WAS_NOT_FOUND.formatted(getEntityTitleAndDesc(m1).getKey()));
     }
 
     @Test
@@ -46,14 +47,14 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         final var m2 = new_(TestExists_Member2.class, "M2");
         assertFalse(m2.isPersisted());
         final var union = new_(TestExists_Union.class).setMember2(m2);
-        assertNull(union.getProperty("member2").getFirstFailure());
+        assertTrue(union.getProperty("member2").isValid());
     }
 
     @Test
     public void inactive_entities_can_be_assigned_to_properties_of_union_entities() {
         final var m1 = save(new_(TestExists_Member1.class, "M1").setActive(false));
         final var union = new_(TestExists_Union.class).setMember1(m1);
-        assertNull(union.getProperty("member1").getFirstFailure());
+        assertTrue(union.getProperty("member1").isValid());
     }
 
     @Test
@@ -61,7 +62,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         final var m3 = save(new_(TestExists_Member3.class, "M3").setActive(false));
         co(TestExists_Member3.class).delete(m3);
         final var union = new_(TestExists_Union.class).setMember3(m3);
-        assertNull(union.getProperty("member3").getFirstFailure());
+        assertTrue(union.getProperty("member3").isValid());
     }
 
 }
