@@ -77,7 +77,7 @@ public class EntityMetadata {
                 return keyType;
             });
         } catch (final ExecutionException ex) {
-            throw new EntityDefinitionException(ERR_TRYING_DETERMINE_KEY_TYPE.formatted(entityType.getName()), ex);
+            throw new EntityDefinitionException(ERR_TRYING_DETERMINE_KEY_TYPE.formatted(entityType.getName()), ex.getCause());
         }
     }
 
@@ -89,7 +89,7 @@ public class EntityMetadata {
                    .get(entityType, () -> CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(50).build())
                    .get(field.getName(), () -> KEY.equals(field.getName()) ? keyTypeInfo(entityType) : stripIfNeeded(field.getType()));
         } catch (final ExecutionException ex) {
-            throw new ReflectionException(ERR_DETERMINING_PROPERTY_TYPE.formatted(field.getName(), entityType.getName()), ex);
+            throw new ReflectionException(ERR_DETERMINING_PROPERTY_TYPE.formatted(field.getName(), entityType.getName()), ex.getCause());
         }
     }
 
@@ -106,7 +106,7 @@ public class EntityMetadata {
                         return doNotSkipEntityExistsValidation && (isPersistentEntityType(propType) || isPropertyDescriptor(propType) || isSupportsEntityExistsValidation(propType) || isUnionEntityType(propType));
                     });
          } catch (final ExecutionException ex) {
-             throw new ReflectionException(ERR_ENTITY_EXISTS_VALIDATION_APPLICABILITY.formatted(prop.getName(), entityType.getName()), ex);
+             throw new ReflectionException(ERR_ENTITY_EXISTS_VALIDATION_APPLICABILITY.formatted(prop.getName(), entityType.getName()), ex.getCause());
          }
     }
 
