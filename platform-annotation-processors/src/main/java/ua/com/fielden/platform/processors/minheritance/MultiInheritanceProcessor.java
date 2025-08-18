@@ -108,7 +108,36 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                     }
                 });
 
+        // Detect and report orphaned entity types.
+        // Ideally, orphaned entity types should be regenerated into "stubs", to prevent their further use.
+        // However, that is not currently possible because:
+        // * Sources that are among APT inputs cannot be regenerated.
+        //   Currently, this is the only way they can be discovered at all.
+        // * Alternative discovery mechanisms, such as a registry file, are possible but will add complexity.
+        if (getRoundNumber() == 1) {
+            roundEnv.getElementsAnnotatedWith(SpecifiedBy.class)
+                    .stream()
+                    .mapMulti(TYPE_ELEMENT_FILTER)
+                    .filter(this::isOrphaned)
+                    .forEach(elt -> messager.printError(
+                            format("[%s] is orphaned: its specification type could not be resolved. The orphaned entity type should be deleted manually.",
+                                   elt.getQualifiedName()),
+                            elt));
+        }
+
         return false;
+    }
+
+    private boolean isOrphaned(final TypeElement element) {
+        final var annot = element.getAnnotation(SpecifiedBy.class);
+        if (annot == null) {
+            messager.printWarning("Generated entity type [%s] is missing @%s.".formatted(element.getQualifiedName(), SpecifiedBy.class.getCanonicalName()),
+                                  element);
+            return true;
+        }
+        final var specTypeMirror = elementFinder.getAnnotationElementValueOfClassType(annot, SpecifiedBy::value);
+        // Missing types have TypeKind.ERROR.
+        return specTypeMirror.getKind() == TypeKind.ERROR;
     }
 
     private JavaFile writeEntity(final TypeSpec genEntity, final EntityElement specEntity) {
