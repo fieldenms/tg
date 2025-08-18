@@ -1090,13 +1090,7 @@ Polymer({
                         if (promise) {
                             return promise
                                 .then(function(ironRequest) {
-                                    const key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
-                                    if (!self._cachedElements.hasOwnProperty(key)) {
-                                        if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
-                                            console.log("caching:", key);
-                                            self._cachedElements[key] = element;
-                                        }
-                                    }
+                                    self._cacheElement(element);
                                     if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
                                         return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false));
                                     } else  if (ironRequest && ironRequest.response && ironRequest.response.ex && ironRequest.response.ex.continuationTypeStr) {
@@ -1120,13 +1114,7 @@ Polymer({
                     })
                     .catch(function(error) {
                         console.error(error);
-                        self.$.toaster.text = 'There was an error displaying the dialog.';
-                        self.$.toaster.hasMore = true;
-                        self.$.toaster.msgText = `There was an error displaying the dialog.<br><br>` +
-                                                  `<b>Error cause:</b><br>${error.message}`;
-                        self.$.toaster.showProgress = false;
-                        self.$.toaster.isCritical = true;
-                        self.$.toaster.show();
+                        self._showDisplayDialogErrorToast(error);
                         self._finishErroneousOpening();
                         throw new UnreportableError(error);
                     });
@@ -1150,13 +1138,7 @@ Polymer({
                         elementLoaded(element);
                     }
                     return self._lastAction._onExecuted(null, element, null).then(ironRequest => {
-                        const key = self._lastAction.elementAlias ? self._lastAction.elementAlias : self._lastAction.elementName;
-                        if (!self._cachedElements.hasOwnProperty(key)) {
-                            if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
-                                console.log("caching:", key);
-                                self._cachedElements[key] = element;
-                            }
-                        }
+                        self._cacheElement(element);
                         if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
                             return Promise.resolve(element);
                         } else {
@@ -1165,18 +1147,32 @@ Polymer({
                     })
                 }).catch(error => {
                     console.error(error);
-                    self.$.toaster.text = 'There was an error displaying the dialog.';
-                    self.$.toaster.hasMore = true;
-                    self.$.toaster.msgText = `There was an error displaying the dialog.<br><br>` +
-                                                `<b>Error cause:</b><br>${error.message}`;
-                    self.$.toaster.showProgress = false;
-                    self.$.toaster.isCritical = true;
-                    self.$.toaster.show();
+                    self._showDisplayDialogErrorToast(error);
                     self._handleError({detail: error.message});
                     throw new UnreportableError(error);
                 });
         }
         return Promise.reject("The entity master type didn't changed.");
+    },
+
+    _cacheElement: function(element) {
+        const key = this._lastAction.elementAlias ? this._lastAction.elementAlias : this._lastAction.elementName;
+        if (!this._cachedElements.hasOwnProperty(key)) {
+            if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
+                console.log("caching:", key);
+                this._cachedElements[key] = element;
+            }
+        }
+    },
+
+    _showDisplayDialogErrorToast: function(error) {
+        this.$.toaster.text = 'There was an error displaying the dialog.';
+        this.$.toaster.hasMore = true;
+        this.$.toaster.msgText = `There was an error displaying the dialog.<br><br>` +
+                                    `<b>Error cause:</b><br>${error.message}`;
+        this.$.toaster.showProgress = false;
+        this.$.toaster.isCritical = true;
+        this.$.toaster.show();
     },
 
     _addToDom: function () {
