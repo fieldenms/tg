@@ -2,7 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
-import { getFirstEntityType } from '/resources/reflection/tg-polymer-utils.js';
+import { getFirstEntityType, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -228,17 +228,21 @@ const TgEntityCentreTemplateBehaviorImpl = {
             action.entityTypeTitle = action.entityTypeTitle || navigationType;
             action._oldRestoreActionState = action.restoreActionState;
             action.restoreActionState = function () {
-                action._oldRestoreActionState();
-                this.$.egi.editEntity(null);
                 const master = action._masterReferenceForTesting;
-                if (master && master.$.menu) {
-                    master.$.menu.maintainPreviouslyOpenedMenuItem = false;
+                const dialog = master && getParentAnd(master, e => e.matches('tg-custom-action-dialog'));
+                if (!dialog.opened) {
+                    action._oldRestoreActionState();
+                    this.$.egi.editEntity(null);
+                    const master = action._masterReferenceForTesting;
+                    if (master && master.$.menu) {
+                        master.$.menu.maintainPreviouslyOpenedMenuItem = false;
+                    }
+                    this.removeEventListener('tg-entity-centre-refreshed', action._updateNavigationProps);
+                    delete action.count;
+                    delete action.entInd;
+                    delete action.hasPrev;
+                    delete action.hasNext;
                 }
-                this.removeEventListener('tg-entity-centre-refreshed', action._updateNavigationProps);
-                delete action.count;
-                delete action.entInd;
-                delete action.hasPrev;
-                delete action.hasNext;
             }.bind(this);
             action._propertyHasValue = function (entity, chosenProperty) {
                 return typeof entity.get(chosenProperty) !== 'undefined' && entity.get(chosenProperty) !== null;
@@ -293,7 +297,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
                                 }).then(() => {
                                     action._fireNavigationChangeEvent(false);
                                 }).catch(e => {
-                                    this.$.egi.editEntity(entity);
                                     action._fireNavigationChangeEvent(true);
                                 })
                             }
@@ -317,7 +320,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
                                     action._fireNavigationChangeEvent(true);
                                 });
                             }.bind(this), function (error) {
-                                this.$.egi.editEntity(entity);
                                 action._fireNavigationChangeEvent(true);
                             }.bind(this));
                         }
