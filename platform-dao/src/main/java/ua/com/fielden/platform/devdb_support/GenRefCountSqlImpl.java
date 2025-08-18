@@ -5,6 +5,8 @@ import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IDbVersionProvider;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.validation.custom.DomainEntityDependencies.DomainEntityDependency;
@@ -21,6 +23,7 @@ import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.entityDependencyMap;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistentEntityType;
@@ -32,18 +35,21 @@ class GenRefCountSqlImpl implements IGenRefCountSql {
     private final EqlTables eqlTables;
     private final EqlQueryTransformer eqlQueryTransformer;
     private final IDomainMetadata domainMetadata;
+    private final DbVersion dbVersion;
 
     @Inject
     GenRefCountSqlImpl(
             final IApplicationDomainProvider appDomainProvider,
             final EqlTables eqlTables,
             final EqlQueryTransformer eqlQueryTransformer,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final IDbVersionProvider dbVersionProvider)
     {
         this.appDomainProvider = appDomainProvider;
         this.eqlTables = eqlTables;
         this.eqlQueryTransformer = eqlQueryTransformer;
         this.domainMetadata = domainMetadata;
+        this.dbVersion = dbVersionProvider.dbVersion();
     }
 
     @Override
@@ -53,7 +59,9 @@ class GenRefCountSqlImpl implements IGenRefCountSql {
     {
         final List<String> sqls = new ArrayList<>();
 
-        sqls.add("SET QUOTED_IDENTIFIER ON");
+        if (dbVersion == MSSQL) {
+            sqls.add("SET QUOTED_IDENTIFIER ON");
+        }
 
         final var entityDependencyMap = entityDependencyMap(entityTypes);
 
@@ -69,7 +77,7 @@ class GenRefCountSqlImpl implements IGenRefCountSql {
                             .toList();
                     if (!deps.isEmpty()) {
                         // We are combining plain SQL with EQL here, and we need to refer, from EQL, to a column that appears in plain SQL.
-                        // That columns corresponds to `id` of the entity being updated.
+                        // That column corresponds to `id` of the entity being updated.
                         // Hence, we use a placeholder in EQL that is later replaced by the desired column name.
                         final int idPlaceholder = 777999777;
                         final var refCountSql = deps.stream()

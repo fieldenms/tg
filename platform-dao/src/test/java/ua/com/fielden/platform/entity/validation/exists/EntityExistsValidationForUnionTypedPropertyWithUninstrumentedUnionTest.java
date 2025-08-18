@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists
 import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Member1;
 import ua.com.fielden.platform.entity.validation.exists.test_entities.TestExists_Union;
 
-import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_WAS_NOT_FOUND;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_UNION_INVALID;
@@ -31,9 +30,9 @@ public class EntityExistsValidationForUnionTypedPropertyWithUninstrumentedUnionT
                 .setActive(true)
                 .setUnion1(union);
         assertThat(o1.getProperty("union1").getFirstFailure())
-                .hasMessage(format(ERR_UNION_INVALID,
+                .hasMessage(ERR_UNION_INVALID.formatted(
                                    getEntityTitleAndDesc(TestExists_Union.class).getKey(),
-                                   format(ERR_ENTITY_WAS_NOT_FOUND, getEntityTitleAndDesc(m1).getKey(), m1)));
+                                   ERR_ENTITY_WAS_NOT_FOUND.formatted(getEntityTitleAndDesc(m1).getKey(), m1)));
     }
 
 
