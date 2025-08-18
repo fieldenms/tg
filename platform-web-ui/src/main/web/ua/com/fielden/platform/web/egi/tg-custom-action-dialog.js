@@ -1401,7 +1401,7 @@ Polymer({
             if (!actionWithContinuation) {
                 self._removeFromDom();
             }
-        } else if (!this.opened){ // otherwise show master in dialog
+        } else { // otherwise show master in dialog
             this._openOnce(closeEventChannel, closeEventTopics, action, null, null);    
         }
     },
@@ -1517,7 +1517,7 @@ Polymer({
         this.refit();//Needed to make dialog position fixed.
         
         const actionsDialog = findParentDialog(action);
-        if (actionsDialog && actionsDialog !== this._parentDialog) {
+        if (actionsDialog) {
             actionsDialog._childDialogs.push(this);
             this._parentDialog = actionsDialog;
         }
