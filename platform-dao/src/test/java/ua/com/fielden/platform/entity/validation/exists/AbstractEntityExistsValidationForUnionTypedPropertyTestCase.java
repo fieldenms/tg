@@ -8,9 +8,7 @@ import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.*;
@@ -31,9 +29,9 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setUnion1(newUnion(TestExists_Union.class).setMember1(m1));
 
         assertThat(o1.getProperty("union1").getFirstFailure())
-                .hasMessage(format(ERR_UNION_INVALID,
+                .hasMessage(ERR_UNION_INVALID.formatted(
                                    getEntityTitleAndDesc(TestExists_Union.class).getKey(),
-                                   format(ERR_DIRTY, m1, getEntityTitleAndDesc(m1).getKey())));
+                                   ERR_DIRTY.formatted(m1, getEntityTitleAndDesc(m1).getKey())));
     }
 
     @Test
@@ -56,9 +54,9 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setUnion2(newUnion(TestExists_Union.class).setMember1(m1));
 
         assertThat(o1.getProperty("union2").getFirstFailure())
-                .hasMessage(format(ERR_UNION_INVALID,
+                .hasMessage(ERR_UNION_INVALID.formatted(
                                    getEntityTitleAndDesc(TestExists_Union.class).getKey(),
-                                   format(ERR_DIRTY, m1, getEntityTitleAndDesc(m1).getKey())));
+                                   ERR_DIRTY.formatted(m1, getEntityTitleAndDesc(m1).getKey())));
     }
 
     @Test
@@ -70,9 +68,9 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setUnion5(newUnion(TestExists_Union.class).setMember1(m1));
 
         assertThat(o1.getProperty("union5").getFirstFailure())
-                .hasMessage(format(ERR_UNION_INVALID,
+                .hasMessage(ERR_UNION_INVALID.formatted(
                                    getEntityTitleAndDesc(TestExists_Union.class).getKey(),
-                                   format(ERR_DIRTY, m1, getEntityTitleAndDesc(m1).getKey())));
+                                   ERR_DIRTY.formatted(m1, getEntityTitleAndDesc(m1).getKey())));
     }
 
     @Test
@@ -84,9 +82,9 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setUnion4(newUnion(TestExists_Union.class).setMember1(m1));
 
         assertThat(o1.getProperty("union4").getFirstFailure())
-                .hasMessage(format(ERR_UNION_INVALID,
+                .hasMessage(ERR_UNION_INVALID.formatted(
                                    getEntityTitleAndDesc(TestExists_Union.class).getKey(),
-                                   format(ERR_DIRTY, m1, getEntityTitleAndDesc(m1).getKey())));
+                                   ERR_DIRTY.formatted(m1, getEntityTitleAndDesc(m1).getKey())));
     }
 
     @Test
@@ -105,7 +103,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setActive(true)
                 .setUnion1(newUnion(TestExists_Union.class).setMember1(m1));
         assertThat(o1.getProperty("union1").getFirstFailure())
-                .hasMessage(format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, getEntityTitleAndDesc(m1).getKey(), m1));
+                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(m1).getKey(), m1));
     }
 
     @Test
@@ -114,7 +112,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
         final var o1 = new_(TestExists_UnionOwner.class, "O1")
                 .setUnion1(newUnion(TestExists_Union.class).setMember1(m1));
         assertThat(o1.getProperty("union1").getFirstFailure())
-                .hasMessage(format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, getEntityTitleAndDesc(m1).getKey(), m1));
+                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(m1).getKey(), m1));
     }
 
     @Test
@@ -133,7 +131,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setActive(true)
                 .setUnion2(newUnion(TestExists_Union.class).setMember1(m1));
         assertThat(o1.getProperty("union2").getFirstFailure())
-                .hasMessage(format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, getEntityTitleAndDesc(m1).getKey(), m1));
+                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(m1).getKey(), m1));
     }
 
     @Test
@@ -143,7 +141,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setActive(true)
                 .setUnion1(newUnion(TestExists_Union.class).setMember4(m4));
         assertThat(o1.getProperty("union1").getFirstFailure())
-                .hasMessage(format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, getEntityTitleAndDesc(m4).getKey(), m4));
+                .hasMessage(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE.formatted(getEntityTitleAndDesc(m4).getKey(), m4));
     }
 
     @Test
@@ -152,7 +150,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
         final var o1 = new_(TestExists_ActivatableUnionOwner.class, "O1")
                 .setActive(true)
                 .setUnion3(newUnion(TestExists_Union.class).setMember1(m1));
-        assertThat(o1.getProperty("union3").getFirstFailure()).isNull();
+        assertTrue(o1.getProperty("union3").isValid());
     }
 
     @Test
@@ -161,7 +159,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
         final var o1 = new_(TestExists_ActivatableUnionOwner.class, "O1")
                 .setActive(true)
                 .setUnion3(newUnion(TestExists_Union.class).setMember4(m4));
-        assertThat(o1.getProperty("union3").getFirstFailure()).isNull();
+        assertTrue(o1.getProperty("union3").isValid());
     }
 
     @Test
@@ -170,7 +168,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
         final var o1 = new_(TestExists_ActivatableUnionOwner.class, "O1")
                 .setActive(true)
                 .setUnion3(newUnion(TestExists_Union.class).setMember3(m3));
-        assertThat(o1.getProperty("union3").getFirstFailure()).isNull();
+        assertTrue(o1.getProperty("union3").isValid());
     }
 
     @Test
@@ -189,9 +187,9 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setActive(true)
                 .setUnion4(newUnion(TestExists_Union.class).setMember1(m1));
         assertThat(o1.getProperty("union4").getFirstFailure())
-                .hasMessage(format(ERR_UNION_INVALID,
+                .hasMessage(ERR_UNION_INVALID.formatted(
                                    getEntityTitleAndDesc(TestExists_Union.class).getKey(),
-                                   format(ERR_WAS_NOT_FOUND, getEntityTitleAndDesc(m1).getKey())));
+                                   ERR_WAS_NOT_FOUND.formatted(getEntityTitleAndDesc(m1).getKey())));
     }
 
     @Test
@@ -201,7 +199,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setActive(true)
                 .setUnion1(newUnion(TestExists_Union.class).setMember2(m2));
         assertThat(o1.getProperty("union1").getFirstFailure())
-                .hasMessage(format(ERR_WAS_NOT_FOUND, getEntityTitleAndDesc(m2).getKey()));
+                .hasMessage(ERR_WAS_NOT_FOUND.formatted(getEntityTitleAndDesc(m2).getKey()));
     }
 
     @Test
@@ -223,9 +221,9 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setActive(true)
                 .setUnion1(newUnion(TestExists_Union.class).setMember1(m1));
         assertThat(o1.getProperty("union1").getFirstFailure())
-                .hasMessage(format(ERR_UNION_INVALID,
+                .hasMessage(ERR_UNION_INVALID.formatted(
                                    getEntityTitleAndDesc(TestExists_Union.class).getKey(),
-                                   format(ERR_ENTITY_WAS_NOT_FOUND, getEntityTitleAndDesc(m1).getKey(), m1)));
+                                   ERR_ENTITY_WAS_NOT_FOUND.formatted(getEntityTitleAndDesc(m1).getKey(), m1)));
     }
 
     @Test
@@ -246,7 +244,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
                 .setActive(true)
                 .setUnion1(newUnion(TestExists_Union.class).setMember3(m3));
         assertThat(o1.getProperty("union1").getFirstFailure())
-                .hasMessage(format(ERR_ENTITY_WAS_NOT_FOUND, getEntityTitleAndDesc(m3).getKey(), m3));
+                .hasMessage(ERR_ENTITY_WAS_NOT_FOUND.formatted(getEntityTitleAndDesc(m3).getKey(), m3));
     }
 
     @Test
@@ -255,7 +253,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
         bogie.setLocation((TgBogieLocation) createMockNotFoundEntity(TgBogieLocation.class, "UNKNOWN"));
 
         assertThat(bogie.getProperty("location").getFirstFailure())
-                .hasMessage(format(ERR_ENTITY_WAS_NOT_FOUND, getEntityTitleAndDesc(TgBogieLocation.class).getKey(), "UNKNOWN"));
+                .hasMessage(ERR_ENTITY_WAS_NOT_FOUND.formatted(getEntityTitleAndDesc(TgBogieLocation.class).getKey(), "UNKNOWN"));
     }
 
     @Test
@@ -272,9 +270,9 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
         final var bogie = new_(TgBogie.class).setLocation(newUnion(TgBogieLocation.class));
 
         assertThat(bogie.getProperty("location").getFirstFailure())
-                .hasMessage(format(ERR_UNION_INVALID,
+                .hasMessage(ERR_UNION_INVALID.formatted(
                                    getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
-                                   format("Required property [%s] is not specified for entity [%s].",
+                                   "Required property [%s] is not specified for entity [%s].".formatted(
                                           getTitleAndDesc(KEY, TgBogieLocation.class).getKey(),
                                           getEntityTitleAndDesc(TgBogieLocation.class).getKey())));
     }
@@ -284,7 +282,7 @@ public abstract class AbstractEntityExistsValidationForUnionTypedPropertyTestCas
         final var workshop = save(new_(TgWorkshop.class, "W1"));
         final var bogie = new_(TgBogie.class)
                 .setLocation(newUnion(TgBogieLocation.class).setWorkshop(workshop));
-        assertNull(bogie.getProperty("location").getFirstFailure());
+        assertTrue(bogie.getProperty("location").isValid());
     }
 
 }

@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
@@ -105,7 +104,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
     //
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    new_active_A_that_references_active_B_cannot_be_saved_if_B_is_concurrenly_deactivated() {
+    new_active_A_that_references_active_B_cannot_be_saved_if_B_is_concurrently_deactivated() {
         final Spec1<A, B> spec = spec1();
 
         final B b = save(spec.newB(ACTIVE, true));
@@ -150,7 +149,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         a.set(ACTIVE, true);
 
         assertNotNull(a.getProperty(ACTIVE).getFirstFailure());
-        assertEquals(format(ERR_INACTIVE_REFERENCES,
+        assertEquals(ERR_INACTIVE_REFERENCES.formatted(
                             getTitleAndDesc(spec.A_b1(), a.getType()).getKey(),
                             getEntityTitleAndDesc(a.getType()).getKey(),
                             a,
@@ -178,7 +177,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
         assertThatThrownBy(() -> save(a))
                 .isInstanceOf(EntityCompanionException.class)
-                .hasMessage(format(ERR_INACTIVE_REFERENCES,
+                .hasMessage(ERR_INACTIVE_REFERENCES.formatted(
                                    getTitleAndDesc(spec.A_b1(), a.getType()).getKey(),
                                    getEntityTitleAndDesc(a.getType()).getKey(),
                                    a,
@@ -545,7 +544,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         final var mpActive = b.getProperty(ACTIVE);
         assertFalse(mpActive.isValid());
         assertThat(mpActive.getFirstFailure().getMessage())
-                .startsWith(format(ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES, getEntityTitleAndDesc(b).getKey(), b, 1, "dependency"));
+                .startsWith(ERR_SHORT_ENTITY_HAS_ACTIVE_DEPENDENCIES.formatted(getEntityTitleAndDesc(b).getKey(), b, 1, "dependency"));
     }
 
     @Test
@@ -571,7 +570,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
         a = (A) a.set(ACTIVE, true);
         assertNotNull(a.getProperty(ACTIVE).getFirstFailure());
-        assertEquals(format(ERR_INACTIVE_REFERENCES,
+        assertEquals(ERR_INACTIVE_REFERENCES.formatted(
                             getTitleAndDesc(spec.A_b4(), a.getType()).getKey(),
                             getEntityTitleAndDesc(a).getKey(),
                             a,
