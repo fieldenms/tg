@@ -6,10 +6,7 @@ import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
-import ua.com.fielden.platform.entity.annotation.Extends;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.exceptions.AbstractPlatformCheckedException;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
@@ -200,6 +197,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 // For more details, see the documentation of this class.
                 .addAnnotation(SkipVerification.class)
                 .addAnnotation(AnnotationSpec.builder(SpecifiedBy.class).addMember("value", "$T.class", specEntity.element()).build())
+                .addAnnotation(CompanionIsGenerated.class)
                 .addAnnotation(buildAtGenerated(DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow())))
                 .addFields(generatedProperties.stream().map(this::makePropertySpec).toList())
                 .addMethods(generatedProperties.stream()
