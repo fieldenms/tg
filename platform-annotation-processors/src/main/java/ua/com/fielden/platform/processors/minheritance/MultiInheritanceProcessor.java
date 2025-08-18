@@ -34,11 +34,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static javax.lang.model.element.Modifier.*;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.minheritance.MultiInheritanceCommon.EXCLUDED_PROPERTIES;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 
@@ -66,17 +62,6 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.a
 ///
 @SupportedAnnotationTypes("*")
 public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcessor {
-
-    private static final Set<String> EXCLUDED_PROPERTIES = ImmutableSet.of(
-            KEY, DESC,
-            ACTIVE,
-            CREATED_DATE,
-            CREATED_BY,
-            CREATED_TRANSACTION_GUID,
-            LAST_UPDATED_DATE,
-            LAST_UPDATED_BY,
-            LAST_UPDATED_TRANSACTION_GUID,
-            REF_COUNT);
 
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;

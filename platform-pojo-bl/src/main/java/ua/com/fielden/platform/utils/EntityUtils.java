@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.processors.minheritance.SpecifiedBy;
 import ua.com.fielden.platform.reflection.*;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -841,6 +842,10 @@ public class EntityUtils {
             logger.error(msg, ex);
             throw new ReflectionException(msg, ex);
         }
+    }
+
+    public static boolean isGeneratedMultiInheritanceEntityType(final Class<?> type) {
+        return isAnnotationPresent(type, SpecifiedBy.class);
     }
 
     /**
