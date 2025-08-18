@@ -170,6 +170,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 // Skip verification of generated entities, which are unlikely to violate any rules.
                 // For more details, see the documentation of this class.
                 .addAnnotation(SkipVerification.class)
+                .addAnnotation(AnnotationSpec.builder(SpecifiedBy.class).addMember("value", "$T.class", specEntity.element()).build())
                 .addAnnotation(buildAtGenerated(DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow())))
                 .addFields(generatedProperties.stream().map(this::makePropertySpec).toList())
                 .addMethods(generatedProperties.stream()
