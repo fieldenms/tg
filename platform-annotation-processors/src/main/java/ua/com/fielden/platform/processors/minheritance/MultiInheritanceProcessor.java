@@ -41,6 +41,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 
@@ -77,7 +78,8 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
             CREATED_TRANSACTION_GUID,
             LAST_UPDATED_DATE,
             LAST_UPDATED_BY,
-            LAST_UPDATED_TRANSACTION_GUID);
+            LAST_UPDATED_TRANSACTION_GUID,
+            REF_COUNT);
 
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
