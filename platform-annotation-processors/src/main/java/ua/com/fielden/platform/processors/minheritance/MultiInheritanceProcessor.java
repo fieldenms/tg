@@ -190,7 +190,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                                     .toList())
                 // Static field for the EQL model.
                 // Not `final` -- the EQL model will be generated at runtime.
-                .addField(FieldSpec.builder(EntityResultQueryModel.class, "model_", PRIVATE, STATIC).build())
+                .addField(FieldSpec.builder(ParameterizedTypeName.get(List.class, EntityResultQueryModel.class), "models_", PRIVATE, STATIC).build())
                 .build();
     }
 
