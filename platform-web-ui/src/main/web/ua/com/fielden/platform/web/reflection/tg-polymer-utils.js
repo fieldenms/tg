@@ -33,7 +33,7 @@ export function getFirstEntityTypeAndProperty (entity, propertyName) {
 };
 
 /**
- * Local function that calculates the actual type of given entity. It returns the type that was carried by property in synthetic entity or 
+ * Local function that calculates the actual type of given entity. It returns the type that was carried by property in synthetic entity or exact type of given entity.
  * 
  * @param {Object} entity - the entity which type should calcualted
  * @param {Object} reflector - type reflection object that contains the information about the entity types in tg application

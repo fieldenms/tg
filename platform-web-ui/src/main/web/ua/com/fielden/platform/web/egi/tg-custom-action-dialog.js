@@ -1125,13 +1125,13 @@ Polymer({
     reloadDialog: function(elementLoaded) {
         const self = this;
         if (self._lastElement.tagName !== self._lastAction.elementName.toUpperCase()) {
-            //Call this method necause entity master type changes, therefore dialog's dimension and position will be changed
+            //Call this method because entity master type changes, therefore dialog's dimension and position will be changed
             self._handleMasterBeforeChange();
             self._customiseAction(self._lastAction);
             self.dynamicTitle = null;
             return self._getElement(self._lastAction)
                 .then(element => {
-                    //Hide element loader that contains loaded element because it might cause flickering effect on moving from master type to another. 
+                    //Hide element loader that contains loaded element because it might cause flickering effect on moving from one master to another. 
                     this.$.elementLoader.style.display = 'none';
                     self._lastElement = element;
                     if (elementLoaded) {
@@ -1330,7 +1330,7 @@ Polymer({
     
     //Invoked when master is about to change it's type.
     _handleMasterBeforeChange: function (e) {
-        //Check _masterLayoutChanges, because if it is already true ther is no need to initiate resize animation because it was already initiated.
+        //Check _masterLayoutChanges: if it is already true, there is no need to start the resize animation since it has already been initiated.
         if (this.opened && !this._masterLayoutChanges && !this._minimised && !this._maximised) {
             //Set new title
             if (e && e.detail && e.detail.currType) {

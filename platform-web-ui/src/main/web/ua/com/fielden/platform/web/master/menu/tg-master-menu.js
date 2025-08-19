@@ -462,7 +462,7 @@ Polymer({
         });
         this._cachedParentNode = getParentAnd(this.parentElement, element => element.matches('tg-custom-action-dialog'));
         if (this._cachedParentNode) {
-            this.fire('tg-master-menu-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
+            this.fire('tg-master-menu-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on dialog that contains this master menu
         }
     },
 
@@ -472,8 +472,8 @@ Polymer({
         }
         this.defaultRoute = this._originalDefaultRoute; // return original value after detaching; this is necessary in case where the same instance of 'tg-master-menu' (and the same instance of parent master) is used for different actions
         if (this._cachedParentNode) {
-            this.fire('tg-master-menu-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
-            delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
+            this.fire('tg-master-menu-detached', this, { node: this._cachedParentNode }); // start event bubbling on dialog from which this entity master has already been detached
+            delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of dialog from memory
         }
     },
 

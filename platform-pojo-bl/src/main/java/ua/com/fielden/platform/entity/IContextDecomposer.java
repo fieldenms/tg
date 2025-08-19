@@ -294,7 +294,7 @@ public interface IContextDecomposer {
                 return pathAndValueOpt._2
                     .map(value -> {
                         return streamProperties(value.getClass(), EntityTypeCarrier.class)
-                            .findAny()
+                            .findFirst()
                             .map(field -> (String) value.get(field.getName()))
                             .map(carrierValue -> {
                                 try {
