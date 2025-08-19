@@ -364,15 +364,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // Need to record the persisted active status before `persistedEntity` is modified to support processing of deactivatable dependencies.
         final Optional<Boolean> persistedIsActive = entity instanceof ActivatableAbstractEntity ? optional(persistedEntity.get(ACTIVE)) : empty();
 
-        try {
-            refCountInstructions(entity, persistedEntity, session).forEach(ins -> execute(ins, session));
-        } catch (final StaleStateException ex) {
-            // StaleStateException may occur when a stale object is loaded from a session (via `session.load`).
-            // For example, two entities concurrently begin referencing some other entity, thereby incrementing its `refCount` concurrently.
-            // The exception occurs when a thread loads the modified entity for the second time, after its concurrent modification
-            // (the first time it must have been loaded before its modification).
-            throw new EntityCompanionException(ERR_CONFLICTING_CONCURRENT_CHANGE, ex);
-        }
+        // Perform reference counting in case entity is activatable.
+        refCountInstructions(entity, persistedEntity, session).forEach(ins -> execute(ins, session));
 
         // Proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in Git.
         for (final var prop : entity.getDirtyProperties()) {
@@ -394,7 +387,15 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         // Deactivatable dependencies should be processed after property changes have been assigned to `persistedEntity`,
         // as this will reflect the property changes in the persisted state of `entity` that could be read during saving of deactivatable dependencies.
-        processDeactivatableDependencies(entity, persistedIsActive.orElse(false));
+        try {
+            processDeactivatableDependencies(entity, persistedIsActive.orElse(false));
+        } catch (final StaleStateException ex) {
+            // StaleStateException may occur when a stale object is loaded from a session (via `session.load`).
+            // For example, two entities concurrently begin referencing some other entity, thereby incrementing its `refCount` concurrently.
+            // The exception occurs when a thread loads the modified entity for the second time, after its concurrent modification
+            // (the first time it must have been loaded before its modification).
+            throw new EntityCompanionException(ERR_CONFLICTING_CONCURRENT_CHANGE, ex);
+        }
 
         // perform meta-data assignment to capture the information about this modification
         if (entity instanceof AbstractPersistentEntity<?> entityAsPersistent) {
@@ -530,12 +531,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // Reconstruct entity fetch model for future retrieval at the end of the method call.
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
-        // New entity might be activatable, but this has no effect on its refCount -- should be zero as no other entity could yet reference it.
-        // However, this entity might reference other activatables, which warrants update to their refCount.
-        final boolean shouldProcessActivatableProperties = entity instanceof ActivatableAbstractEntity<?> activatable && activatable.isActive();
-        if (shouldProcessActivatableProperties) {
-            refCountInstructions(entity, null, session).forEach(ins -> execute(ins, session));
-        }
+        // New entity might be activatable, but this has no effect on its `refCount` -- should be zero as no other entity could yet reference it.
+        // However, this entity might reference other activatables, which warrants update to their `refCount`.
+        refCountInstructions(entity, session).forEach(ins -> execute(ins, session));
 
         // Depending on whether the current entity represents a one-2-one association or not, it may require a new ID.
         // In the case of one-2-one association, the value of ID is derived from its key's ID and does not need to be generated.
@@ -556,18 +554,35 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                   entityFetchOption.map(fetch -> findById.find(newEntityId, fetch, fillModel.get())).orElse(entity));
     }
 
-    /// Collects instructions for modifying `refCount` of activatable references from `entity`.
+    /// Creates and collates instructions for modifying `refCount` of activatable references in modified activatable `entity`.
     ///
-    /// @param entity           the activatable entity being saved
-    /// @param persistedEntity  if `entity` is persisted, then this is its persisted version (Hibernate proxy)
+    /// @param entity           a potentially activatable entity being saved; if is not activatable, an empty stream is returned.
+    /// @param persistedEntity  a persisted version of `entity` (i.e., its Hibernate proxy).
     ///
     private <E extends AbstractEntity<?>>
-    Stream<RefCountInstruction> refCountInstructions(final E entity, final @Nullable E persistedEntity, final Session session) {
+    Stream<RefCountInstruction> refCountInstructions(final E entity, final E persistedEntity, final Session session) {
         return entity instanceof ActivatableAbstractEntity<?> activatable
                 ? refCountInstructions_(activatable, (ActivatableAbstractEntity<?>) persistedEntity, session)
                 : Stream.of();
     }
 
+    /// Creates and collates instructions for modifying `refCount` of activatable references in new activatable `entity`.
+    ///
+    /// @param entity a potentially activatable entity being saved; if is not activatable or not active, an empty stream is returned.
+    ///
+    private <E extends AbstractEntity<?>>
+    Stream<RefCountInstruction> refCountInstructions(final E entity, final Session session) {
+        return entity instanceof ActivatableAbstractEntity<?> activatable && activatable.isActive()
+                ? refCountInstructions_(activatable, null, session)
+                : Stream.of();
+    }
+
+    /// The actual implementation for creating instructions to increment and decrement `refCount` property for activatable references in activatable `entity`.
+    ///
+    /// @param entity  an activatable entity; a typecasting runtime exception would get thrown if `entity` is not activatable.
+    /// @param persistedEntity a `null` for new `entity` or a Hibernate proxy loaded for persisted `entity`.
+    /// @param session  the current Hibernate session for locking and updating `refCount` for the referenced activatable entities.
+    ///
     @SuppressWarnings("unchecked")
     private <E extends ActivatableAbstractEntity<?>>
     Stream<RefCountInstruction> refCountInstructions_(final E entity, final @Nullable E persistedEntity, final Session session) {
