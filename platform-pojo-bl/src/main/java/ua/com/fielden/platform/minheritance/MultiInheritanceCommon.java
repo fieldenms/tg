@@ -15,7 +15,7 @@ public final class MultiInheritanceCommon {
     /// Properties that are excluded from being inherited.
     ///
     public static final Set<String> EXCLUDED_PROPERTIES = ImmutableSet.of(
-            KEY, DESC,
+            KEY, DESC, VERSION,
             ACTIVE,
             CREATED_DATE,
             CREATED_BY,
