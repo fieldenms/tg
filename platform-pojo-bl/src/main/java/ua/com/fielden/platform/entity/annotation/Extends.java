@@ -24,6 +24,10 @@ public @interface Extends {
     ///
     String name();
 
+    /// The name for a property that will be generated with annotation [EntityTypeCarrier].
+    ///
+    String entityTypeCarrierProperty() default "entityType";
+
     @interface Entity {
 
         Class<? extends AbstractEntity<?>> value();

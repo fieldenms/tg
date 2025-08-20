@@ -77,7 +77,7 @@ public class MultiInheritanceEqlModelGenerator {
                                 return yieldProperties(initPart, ty, inheritedProperties);
                             })
                             .orElseGet(() -> yieldProperties(select(ty), ty, inheritedProperties));
-                    final var part2 = part1.yield().val(ty.getCanonicalName()).as("entityType");
+                    final var part2 = part1.yield().val(ty.getCanonicalName()).as(atExtends.entityTypeCarrierProperty());
                     return part2.modelAsEntity(type);
                 })
                 .collect(toImmutableList());

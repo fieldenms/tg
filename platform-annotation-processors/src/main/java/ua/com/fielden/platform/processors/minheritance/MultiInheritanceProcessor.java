@@ -172,7 +172,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
         // Generate only properties from entities in `@Extends`, since properties of the spec entity will be inherited by virtue of extending it.
         final var propertySpecs = Stream.concat(
                         StreamUtils.distinct(inheritedProperties.stream(), PropertyElement::getSimpleName).map(this::makePropertySpec),
-                        Stream.of(propertySpecBuilder(TypeName.get(String.class), "entityType")
+                        Stream.of(propertySpecBuilder(TypeName.get(String.class), atExtends.entityTypeCarrierProperty())
                                           .addAnnotation(EntityTypeCarrier.class)
                                           .build()))
                 .toList();
