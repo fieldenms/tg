@@ -389,11 +389,18 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // as this will reflect the property changes in the persisted state of `entity` that could be read during saving of deactivatable dependencies.
         try {
             processDeactivatableDependencies(entity, persistedIsActive.orElse(false));
-        } catch (final StaleStateException ex) {
-            // StaleStateException may occur when a stale object is loaded from a session (via `session.load`).
-            // For example, two entities concurrently begin referencing some other entity, thereby incrementing its `refCount` concurrently.
-            // The exception occurs when a thread loads the modified entity for the second time, after its concurrent modification
-            // (the first time it must have been loaded before its modification).
+        } catch (final StaleStateException | OptimisticLockException | EntityWasUpdatedOrDeletedConcurrently ex) {
+            // These exceptions occur when processing deactivatable dependencies encounters concurrent modifications.
+            // Since processDeactivatableDependencies recursively saves dependent entities via co.save(),
+            // each save operation may conflict with concurrent transactions modifying the same entities.
+            //
+            // Possible scenarios:
+            // - StaleStateException: Hibernate detects unexpected row counts during batch operations
+            //   (e.g., expected to update 1 row but updated 0 due to concurrent deletion)
+            // - OptimisticLockException: Version mismatch detected during entity update
+            // - EntityWasUpdatedOrDeletedConcurrently: TG's wrapped optimistic lock exception from recursive saves
+            //
+            // All these exceptions indicate the same user-facing issue: concurrent modification of related data.
             throw new EntityCompanionException(ERR_CONFLICTING_CONCURRENT_CHANGE, ex);
         }
 
