@@ -1,72 +1,40 @@
 package ua.com.fielden.platform.security.provider;
 
-import static java.util.Collections.emptySet;
-import static java.util.Optional.ofNullable;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
-import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.ISecurityTokenGenerator;
+import ua.com.fielden.platform.security.tokens.Template;
+import ua.com.fielden.platform.security.tokens.attachment.*;
 import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.*;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.ReUser_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.ReUser_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.user.UserRolesUpdater_CanExecute_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanReadModel_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
-import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.user.*;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.EntityUtils;
 
-/**
- * Searches for all available security tokens in the application based on the provided path and package name.
- * The result is presented as a tree-like structure containing all tokens with correctly determined association between them.
- * <p>
- * <b>A fundamental assumption:</b> simple class names uniquely identify security tokens and entities!
- *
- * @author TG Team
- *
- */
+import java.util.*;
+import java.util.stream.Stream;
+
+import static java.util.Collections.emptySet;
+import static java.util.Optional.ofNullable;
+
+/// Tokens are accumulated from the following sources:
+/// - The location of security tokens given by application properties `tokens.path` and `tokens.package` is scanned.
+/// - Tokens for generated multi-inheritance types are dynamically generated.
+///
+/// **A fundamental assumption:** simple class names uniquely identify security tokens and entities.
+///
 @Singleton
 public class SecurityTokenProvider implements ISecurityTokenProvider {
     public static final String ERR_DUPLICATE_SECURITY_TOKENS = "Not all security tokens are unique in their simple class name. This is required.";
@@ -80,8 +48,9 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
 
     /**
      * Contains top level security token nodes.
+     * Effectively final.
      */
-    private final SortedSet<SecurityTokenNode> topLevelSecurityTokenNodes;
+    private SortedSet<SecurityTokenNode> topLevelSecurityTokenNodes;
 
     /**
      * The "default" constructor that can be used by IoC.
@@ -153,7 +122,59 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
             throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
         }
-        topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
+    }
+
+    /**
+     * Additional initialisation after the constructor.
+     * Called by the IoC framework.
+     */
+    @Inject
+    private void init(
+            final IApplicationDomainProvider appDomain,
+            final ISecurityTokenGenerator generator,
+            final @Named("tokens.package") String tokensPkgName)
+    {
+        registerTokensForMultiInheritanceEntities(appDomain, generator, tokensPkgName);
+
+        if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
+            throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
+        }
+
+        topLevelSecurityTokenNodes = buildTokenNodes(tokenClassesByName.values());
+    }
+
+    private void registerTokensForMultiInheritanceEntities(
+            final IApplicationDomainProvider appDomain,
+            final ISecurityTokenGenerator generator,
+            final String tokensPkgName)
+    {
+        appDomain.entityTypes()
+                .stream()
+                .filter(EntityUtils::isGeneratedMultiInheritanceEntityType)
+                .flatMap(ty -> tokensForMultiInheritanceEntity(ty, generator, tokensPkgName))
+                .forEach(tok -> {
+                    tokenClassesByName.put(tok.getName(), tok);
+                    tokenClassesBySimpleName.put(tok.getSimpleName(), tok);
+                });
+    }
+
+    /// Provides tokens for a generated multi-inheritance entity type.
+    /// This method generates [Template#READ] and [Template#READ_MODEL] tokens for each type.
+    ///
+    /// @param entityType  the generated multi-inheritance entity type
+    /// @param generator  token generator that should be used to generate tokens
+    /// @param tokensPkgName  the destination package for tokens
+    ///
+    protected Stream<? extends Class<? extends ISecurityToken>> tokensForMultiInheritanceEntity(
+            final Class<? extends AbstractEntity<?>> entityType,
+            final ISecurityTokenGenerator generator,
+            final String tokensPkgName)
+    {
+        return Stream.of(Template.READ, Template.READ_MODEL)
+                .map(templ -> generator.generateToken(entityType,
+                                                      templ,
+                                                      Optional.of(tokensPkgName),
+                                                      Optional.empty()));
     }
 
     @Override
@@ -182,7 +203,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
      * @param allTokens
      * @return
      */
-    static SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
+    static SortedSet<SecurityTokenNode> buildTokenNodes(final Collection<Class<? extends ISecurityToken>> allTokens) {
         final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
 
         allTokens.forEach(token -> {
