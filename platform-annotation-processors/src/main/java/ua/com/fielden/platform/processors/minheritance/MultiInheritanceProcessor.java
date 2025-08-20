@@ -170,7 +170,9 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
 
         // There are no conflicts, so pick the first property for each name.
         // Generate only properties from entities in `@Extends`, since properties of the spec entity will be inherited by virtue of extending it.
-        final var generatedProperties = StreamUtils.distinct(inheritedProperties.stream(), PropertyElement::getSimpleName).toList();
+        final var propertySpecs = StreamUtils.distinct(inheritedProperties.stream(), PropertyElement::getSimpleName)
+                .map(this::makePropertySpec)
+                .toList();
 
         final var genEntitySimpleName = atExtendsMirror.name();
 
@@ -184,8 +186,8 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 .addAnnotation(AnnotationSpec.builder(SpecifiedBy.class).addMember("value", "$T.class", specEntity.element()).build())
                 .addAnnotation(CompanionIsGenerated.class)
                 .addAnnotation(buildAtGenerated(DateTimeUtils.toIsoFormat(DateTimeUtils.zonedNow())))
-                .addFields(generatedProperties.stream().map(this::makePropertySpec).toList())
-                .addMethods(generatedProperties.stream()
+                .addFields(propertySpecs)
+                .addMethods(propertySpecs.stream()
                                     .flatMap(prop -> Stream.of(makeGetterSpec(prop), makeSetterSpec(prop, genEntitySimpleName)))
                                     .toList())
                 // Static field for the EQL model.
@@ -225,37 +227,47 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                        .count() > 1;
     }
 
-    private MethodSpec makeSetterSpec(final PropertyElement prop, final CharSequence enclosingEntitySimpleName) {
-        return MethodSpec.methodBuilder(Mutator.SETTER.getName(prop.getSimpleName()))
-                .addModifiers(PUBLIC)
-                .addAnnotation(Observable.class)
-                .addParameter(makeTypeName(prop.getType()), prop.getSimpleName().toString(), FINAL)
-                // The unnamed package works because this setter will be declared in the entity itself and the entity's simple name should suffice.
-                .returns(ClassName.get("", enclosingEntitySimpleName.toString()))
-                .addStatement("this.$L = $L", prop.getSimpleName(), prop.getSimpleName())
-                .addStatement("return this", prop.getSimpleName())
-                .build();
+    private MethodSpec makeSetterSpec(final FieldSpec propSpec, final CharSequence enclosingEntitySimpleName) {
+        return setterSpecBuilder(propSpec.type, propSpec.name, enclosingEntitySimpleName).build();
     }
 
-    private MethodSpec makeGetterSpec(final PropertyElement prop) {
-        final var name = prop.getType().getKind().equals(TypeKind.BOOLEAN)
-                ? Accessor.IS.getName(prop.getSimpleName())
-                : Accessor.GET.getName(prop.getSimpleName());
+    private MethodSpec.Builder setterSpecBuilder(final TypeName propTypeName, final CharSequence propName, final CharSequence enclosingEntitySimpleName) {
+        return MethodSpec.methodBuilder(Mutator.SETTER.getName(propName))
+                .addModifiers(PUBLIC)
+                .addAnnotation(Observable.class)
+                .addParameter(propTypeName, propName.toString(), FINAL)
+                // The unnamed package works because this setter will be declared in the entity itself and the entity's simple name should suffice.
+                .returns(ClassName.get("", enclosingEntitySimpleName.toString()))
+                .addStatement("this.$L = $L", propName, propName)
+                .addStatement("return this", propName);
+    }
+
+    private MethodSpec makeGetterSpec(final FieldSpec propSpec) {
+        return getterSpecBuilder(propSpec.type, propSpec.name).build();
+    }
+
+    private MethodSpec.Builder getterSpecBuilder(final TypeName propTypeName, final CharSequence propName) {
+        final var name = propTypeName.equals(TypeName.BOOLEAN)
+                ? Accessor.IS.getName(propName)
+                : Accessor.GET.getName(propName);
         return MethodSpec.methodBuilder(name)
                 .addModifiers(PUBLIC)
-                .returns(makeTypeName(prop.getType()))
-                .addStatement("return this.$L", prop.getSimpleName())
-                .build();
+                .returns(propTypeName)
+                .addStatement("return this.$L", propName);
     }
 
     private FieldSpec makePropertySpec(final PropertyElement prop) {
-        final var builder = FieldSpec.builder(makeTypeName(prop.getType()), prop.getSimpleName().toString(), PRIVATE)
-                .addAnnotation(IsProperty.class);
+        final var builder = propertySpecBuilder(makeTypeName(prop.getType()), prop.getSimpleName());
         final Title atTitle = prop.getAnnotation(Title.class);
         if (atTitle != null) {
             builder.addAnnotation(AnnotationSpec.get(atTitle));
         }
         return builder.build();
+    }
+
+    private FieldSpec.Builder propertySpecBuilder(final TypeName typeName, final CharSequence name) {
+        return FieldSpec.builder(typeName, name.toString(), PRIVATE)
+                .addAnnotation(IsProperty.class);
     }
 
     private TypeName makeTypeName(final TypeMirror typeMirror) {
