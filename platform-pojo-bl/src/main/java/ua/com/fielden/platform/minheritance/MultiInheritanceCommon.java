@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -15,7 +14,7 @@ public final class MultiInheritanceCommon {
     /// Properties that are excluded from being inherited.
     ///
     public static final Set<String> EXCLUDED_PROPERTIES = ImmutableSet.of(
-            KEY, DESC, VERSION,
+            KEY, VERSION,
             ACTIVE,
             CREATED_DATE,
             CREATED_BY,

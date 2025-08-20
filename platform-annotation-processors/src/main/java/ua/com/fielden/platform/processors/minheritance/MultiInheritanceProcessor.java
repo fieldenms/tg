@@ -34,6 +34,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static javax.lang.model.element.Modifier.*;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.minheritance.MultiInheritanceCommon.EXCLUDED_PROPERTIES;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
@@ -147,6 +148,9 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                     return inheritedPropertiesFrom(entity, ImmutableSet.copyOf(atEntityMirror.exclude()));
                 })
                 .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.getSimpleName().toString()))
+                // `desc` is a special property that should not be declared.
+                // If it is present in the spec entity type, it will be inherited.
+                .filter(prop -> !prop.getSimpleName().contentEquals(DESC))
                 .toList();
 
         // Use `distinct` to enable property hiding in the spec-entity.
