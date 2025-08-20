@@ -69,14 +69,17 @@ public class MultiInheritanceEqlModelGenerator {
                 : Optional.empty();
 
         return supertypes.stream()
-                .map(ty -> maybeMethod_modelFor
-                        .<ISubsequentCompletedAndYielded<?>>map(modelFor -> {
-                            // TODO Handle cases where `modelFor` yields into one of the inherited properties.
-                            final ISubsequentCompletedAndYielded<?> initPart = invokeStatic(modelFor, ty, select(ty));
-                            return yieldProperties(initPart, ty, inheritedProperties);
-                        })
-                        .orElseGet(() -> yieldProperties(select(ty), ty, inheritedProperties))
-                        .modelAsEntity(type))
+                .map(ty -> {
+                    final var part1 = maybeMethod_modelFor
+                            .<ISubsequentCompletedAndYielded<?>>map(modelFor -> {
+                                // TODO Handle cases where `modelFor` yields into one of the inherited properties.
+                                final ISubsequentCompletedAndYielded<?> initPart = invokeStatic(modelFor, ty, select(ty));
+                                return yieldProperties(initPart, ty, inheritedProperties);
+                            })
+                            .orElseGet(() -> yieldProperties(select(ty), ty, inheritedProperties));
+                    final var part2 = part1.yield().val(ty.getCanonicalName()).as("entityType");
+                    return part2.modelAsEntity(type);
+                })
                 .collect(toImmutableList());
     }
 
