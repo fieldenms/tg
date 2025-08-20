@@ -3,6 +3,7 @@ import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behav
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
 import { getFirstEntityType, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -283,8 +284,14 @@ const TgEntityCentreTemplateBehaviorImpl = {
                     const master = action._masterReferenceForTesting;
                     if (master) {
                         master.fire('tg-action-navigation-invoked', {spinner: spinnerInvoked});
-                        const masterInfo = getFirstEntityType(entity, action.chosenProperty).entityMaster();
-                        if (action.dynamicAction && masterInfo && masterInfo.key.toUpperCase() !== master.tagName) {
+                        const entityTypeObj = getFirstEntityType(entity, action.chosenProperty);
+                        const masterInfo = entityTypeObj.entityMaster();
+                        if (action.dynamicAction && !masterInfo) {
+                            const masterErrorMessage = `Could not find master for entity type: ${entityTypeObj.notEnhancedFullClassName()}.`
+                            action.toaster && action.toaster.openToastForError('Entity Master Error', masterErrorMessage, true);
+                            action._fireNavigationChangeEvent(true);
+                            master.fire('tg-error-happened', masterErrorMessage);
+                        } else if (action.dynamicAction && (!masterInfo || (masterInfo && masterInfo.key.toUpperCase() !== master.tagName))) {
                             if (master.$.menu) {
                                 master.$.menu.maintainPreviouslyOpenedMenuItem = false;
                             }
