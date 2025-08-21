@@ -62,7 +62,7 @@ public class MultiInheritanceEqlModelGenerator {
         }
 
         final var supertypes = Arrays.stream(atExtends.value()).map(Extends.Entity::value).toList();
-        final var inheritedProperties = allInheritedProperties(atExtends);
+        final var inheritedProperties = allInheritedProperties(type, atExtends);
 
         final Optional<Method> maybeMethod_modelFor = Try(() -> getMethod(type, "modelFor", Class.class, IFromAlias.class)) instanceof Right<?, Method>(var method)
                 ? Optional.of(method).map(it -> { it.setAccessible(true); return it; })
@@ -150,7 +150,12 @@ public class MultiInheritanceEqlModelGenerator {
         };
     }
 
-    private Set<T2<? extends Class<? extends AbstractEntity<?>>, String>> allInheritedProperties(final Extends atExtends) {
+    private Set<T2<? extends Class<? extends AbstractEntity<?>>, String>> allInheritedProperties(
+            final Class<? extends AbstractEntity<?>> multiInheritanceType,
+            final Extends atExtends)
+    {
+        final var multiInheritanceEntityMetadata = domainMetadata.forEntity(multiInheritanceType);
+
         return StreamUtils.distinct(
                         Arrays.stream(atExtends.value())
                                 .flatMap(atEntity -> domainMetadata.forEntity(atEntity.value())
@@ -158,6 +163,10 @@ public class MultiInheritanceEqlModelGenerator {
                                         .stream()
                                         .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.name()))
                                         .filter(prop -> !ArrayUtils.contains(atEntity.exclude(), prop.name()))
+                                        // Currently, this handles only the special case of `desc`.
+                                        // The extended entity type could have `desc`, but the spec-entity type could
+                                        // lack it, hence the multi-inheritance entity type would also lack it.
+                                        .filter(prop -> multiInheritanceEntityMetadata.hasProperty(prop.name()))
                                         .map(prop -> t2(atEntity.value(), prop.name()))),
                         pair -> pair._2)
                 .collect(toImmutableSet());
