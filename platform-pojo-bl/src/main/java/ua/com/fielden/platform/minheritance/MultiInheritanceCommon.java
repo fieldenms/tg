@@ -6,7 +6,6 @@ import java.util.Set;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 
 public final class MultiInheritanceCommon {
@@ -15,7 +14,6 @@ public final class MultiInheritanceCommon {
     ///
     public static final Set<String> EXCLUDED_PROPERTIES = ImmutableSet.of(
             KEY, VERSION,
-            ACTIVE,
             CREATED_DATE,
             CREATED_BY,
             CREATED_TRANSACTION_GUID,
