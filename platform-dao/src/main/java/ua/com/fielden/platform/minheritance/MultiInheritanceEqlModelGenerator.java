@@ -72,7 +72,12 @@ public class MultiInheritanceEqlModelGenerator {
                 .map(ty -> {
                     final var part1 = maybeMethod_modelFor
                             .<ISubsequentCompletedAndYielded<?>>map(modelFor -> {
-                                // TODO Handle cases where `modelFor` yields into one of the inherited properties.
+                                // It is an error if `initPart` yields into a property that is in `inheritedProperties`,
+                                // because this will result in a query with 2 yields that have the same alias.
+                                // Compilation of such a query by the EQL engine will fail with a generic error message.
+                                // Ideally, we would validate `initPart` here, but this is not possible at the moment,
+                                // because EqlQueryTransformer would be required, which would create a circular dependency:
+                                // MultiInheritanceEqlModelGenerator -> EqlQueryTransformer -> QuerySourceInfoProvider -> SyntheticModelProvider -> MultiInheritanceEqlModelGenerator
                                 final ISubsequentCompletedAndYielded<?> initPart = invokeStatic(modelFor, ty, select(ty));
                                 return yieldProperties(initPart, ty, inheritedProperties);
                             })
