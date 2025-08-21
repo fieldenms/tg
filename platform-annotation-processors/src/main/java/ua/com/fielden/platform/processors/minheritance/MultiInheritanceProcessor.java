@@ -26,6 +26,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -39,6 +40,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.minheritance.MultiInheritanceCommon.EXCLUDED_PROPERTIES;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
+import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 
 /// An annotation processor for the [Extends] annotation.
 ///
@@ -64,6 +66,9 @@ import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.a
 ///
 @SupportedAnnotationTypes("*")
 public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcessor {
+
+    private static final String WARN_PROPERTY_WILL_BE_HIDDEN =
+            "Property [%s] will be hidden by inherited %s [%s]. Either the inherited %s should be excluded, or this property removed.";
 
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
@@ -175,6 +180,8 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
             throw new PropertyConflictException(conflictingGroups);
         }
 
+        reportHiddenProperties(specEntity, specProperties, inheritedProperties);
+
         // There are no conflicts, so pick the first property for each name.
         // Generate only properties from entities in `@Extends`, since properties of the spec entity will be inherited by virtue of extending it.
         final var propertySpecs = Stream.concat(
@@ -206,20 +213,48 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 .build();
     }
 
+    private void reportHiddenProperties(
+            final EntityElement specEntity,
+            final List<PropertyElement> specProperties,
+            final Collection<PropertyElement> inheritedProperties)
+    {
+        specProperties.stream()
+                .filter(inheritedProperties::contains)
+                .forEach(specProp -> {
+                    final var hidingProps = inheritedProperties.stream().filter(prop -> prop.equals(specProp)).toList();
+                    final var msg = WARN_PROPERTY_WILL_BE_HIDDEN.formatted(
+                            specProp.getSimpleName(),
+                            singleOrPlural(hidingProps.size(), "property", "properties"),
+                            hidingProps.stream()
+                                    .map(prop -> "%s.%s".formatted(prop.getEnclosingElement().getSimpleName(), prop.getSimpleName()))
+                                    .collect(joining(", ")),
+                            singleOrPlural(hidingProps.size(), "property", "properties"));
+                    printMessageOnProperty(Diagnostic.Kind.MANDATORY_WARNING, msg, specEntity, specProp);
+                });
+    }
+
     private void printConflictMessage(final List<PropertyElement> group, final EntityElement specEntity) {
-        // If a property of the spec entity is among conflicting ones, attach the message to it.
-        // Otherwise, attach the message to the spec entity.
-        final var maybeSpecProperty = group.stream()
+        // Use the spec property, if possible, for a more precise message.
+        final var property = group.stream()
                 .filter(prop -> prop.getEnclosingElement().equals(specEntity.element()))
-                .findFirst();
+                .findFirst()
+                .orElseGet(group::getFirst);
         final var msg = format("Cannot inherit property [%s] with different types from %s.",
                                   group.getFirst().getSimpleName(),
                                   group.stream()
                                           .map(prop -> prop.getEnclosingElement().getSimpleName())
                                           .map("[%s]"::formatted)
                                           .collect(joining(", ")));
-        maybeSpecProperty.ifPresentOrElse(it -> messager.printMessage(Diagnostic.Kind.ERROR, msg, it.element()),
-                                          () -> messager.printMessage(Diagnostic.Kind.ERROR, msg, specEntity.element()));
+        printMessageOnProperty(Diagnostic.Kind.ERROR, msg, specEntity, property);
+    }
+
+    private void printMessageOnProperty(final Diagnostic.Kind kind, final String message, final EntityElement entity, final PropertyElement property) {
+        if (property.getEnclosingElement().equals(entity.element())) {
+            messager.printMessage(kind, message, property.element());
+        }
+        else {
+            messager.printMessage(kind, message, entity.element());
+        }
     }
 
     private boolean isConflicting(final List<PropertyElement> props) {
