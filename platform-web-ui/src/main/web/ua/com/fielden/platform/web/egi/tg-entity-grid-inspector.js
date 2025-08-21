@@ -2192,7 +2192,7 @@ Polymer({
         const tooltip  = shortDesc + longDesc;
         
         return tooltip && `<div style='display:flex;'>
-            <div style='margin-right:10px;'>With action: </div> 
+            <div style='margin-right:10px;'>With action:</div>
             <div style='flex-grow:1;'>${tooltip}</div> 
             </div>`
     },
