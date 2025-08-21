@@ -230,7 +230,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
             action.restoreActionState = function () {
                 const master = action._masterReferenceForTesting;
                 const dialog = master && getParentAnd(master, e => e.matches('tg-custom-action-dialog'));
-                if (!dialog.opened) {
+                if (!dialog || !dialog.opened) {
                     action._oldRestoreActionState();
                     this.$.egi.editEntity(null);
                     const master = action._masterReferenceForTesting;
