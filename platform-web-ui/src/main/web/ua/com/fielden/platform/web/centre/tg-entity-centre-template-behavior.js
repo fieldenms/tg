@@ -290,7 +290,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
                             action.toaster && action.toaster.openToastForError('Entity Master Error', masterErrorMessage, true);
                             action._fireNavigationChangeEvent(true);
                             master.fire('tg-error-happened', masterErrorMessage);
-                        } else if (action.dynamicAction && (!masterInfo || (masterInfo && masterInfo.key.toUpperCase() !== master.tagName))) {
+                        } else if (action.dynamicAction && masterInfo && masterInfo.key.toUpperCase() !== master.tagName) {
                             if (master.$.menu) {
                                 master.$.menu.maintainPreviouslyOpenedMenuItem = false;
                             }
