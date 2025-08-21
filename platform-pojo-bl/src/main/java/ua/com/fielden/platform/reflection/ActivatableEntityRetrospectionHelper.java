@@ -55,8 +55,9 @@ public class ActivatableEntityRetrospectionHelper {
         return isSpecialActivatableToBeSkipped(findFieldByName(entityType, prop));
     }
 
-    /// This predicate is true if the specified property is _activatable_.
-    /// Such properties are processed during reference counting and validation of activatable entities.
+    /// This predicate is `true` if the specified property is _activatable_.
+    /// It does not take into account the persistent nature of `propName` and as such should mainly be used for the purpose of validation.
+    /// Method [#isActivatablePersistentProperty(Class, CharSequence)] should be used where activatable reference counting and activatable dependency processing is required.
     ///
     public static boolean isActivatableProperty(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
         try {
@@ -68,6 +69,9 @@ public class ActivatableEntityRetrospectionHelper {
         }
     }
 
+    /// The same as [#isActivatableProperty(Class, CharSequence)], but with additional condition for `propName` to represent a persistent property.
+    /// Such properties are processed during reference counting, deactivation of activatable entities, and for tracking activatable dependencies.
+    ///
     public static boolean isActivatablePersistentProperty(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
         return isPropertyPersistent(entityType, propName) && isActivatableProperty(entityType, propName);
     }
