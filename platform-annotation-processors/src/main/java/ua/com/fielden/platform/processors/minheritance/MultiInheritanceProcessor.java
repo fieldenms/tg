@@ -35,6 +35,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static javax.lang.model.element.Modifier.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.minheritance.MultiInheritanceCommon.EXCLUDED_PROPERTIES;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
@@ -151,6 +152,8 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 // `desc` is a special property that should not be declared.
                 // If it is present in the spec entity type, it will be inherited.
                 .filter(prop -> !prop.getSimpleName().contentEquals(DESC))
+                // `id` is present in `AbstractEntity`, hence need not be declared.
+                .filter(prop -> !prop.getSimpleName().contentEquals(ID))
                 .toList();
 
         // Use `distinct` to enable property hiding in the spec-entity.
