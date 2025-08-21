@@ -3,7 +3,6 @@ import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behav
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
 import { getFirstEntityType, getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
-import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
