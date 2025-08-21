@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.exceptions.AbstractPlatformCheckedException;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.DateTimeUtils;
+import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingElement;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
@@ -38,8 +40,7 @@ import static javax.lang.model.element.Modifier.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.minheritance.MultiInheritanceCommon.EXCLUDED_PROPERTIES;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.*;
 import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 
 /// An annotation processor for the [Extends] annotation.
@@ -167,6 +168,11 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                         PropertyElement::getSimpleName)
                 .toList();
 
+        final var autoYieldPropertyNames = specProperties.stream()
+                .filter(prop -> hasAnnotation(prop, AutoYield.class))
+                .map(AbstractForwardingElement::getSimpleName)
+                .collect(toImmutableSet());
+
         // Group all properties by name to detect conflicts.
         final var propertyGroups = Stream.concat(specProperties.stream(), inheritedProperties.stream())
                 .collect(groupingBy(PropertyElement::getSimpleName));
@@ -184,8 +190,11 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
 
         // There are no conflicts, so pick the first property for each name.
         // Generate only properties from entities in `@Extends`, since properties of the spec entity will be inherited by virtue of extending it.
+        // Do not generate @AutoYield properties.
         final var propertySpecs = Stream.concat(
-                        StreamUtils.distinct(inheritedProperties.stream(), PropertyElement::getSimpleName).map(this::makePropertySpec),
+                        StreamUtils.distinct(inheritedProperties.stream(), PropertyElement::getSimpleName)
+                                .filter(prop -> !autoYieldPropertyNames.contains(prop.getSimpleName()))
+                                .map(this::makePropertySpec),
                         Stream.of(propertySpecBuilder(TypeName.get(String.class), atExtends.entityTypeCarrierProperty())
                                           .addAnnotation(EntityTypeCarrier.class)
                                           .build()))
@@ -219,6 +228,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
             final Collection<PropertyElement> inheritedProperties)
     {
         specProperties.stream()
+                .filter(specProp -> !hasAnnotation(specProp, AutoYield.class))
                 .filter(inheritedProperties::contains)
                 .forEach(specProp -> {
                     final var hidingProps = inheritedProperties.stream().filter(prop -> prop.equals(specProp)).toList();
