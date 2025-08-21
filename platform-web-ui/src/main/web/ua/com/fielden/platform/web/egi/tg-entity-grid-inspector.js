@@ -2182,7 +2182,7 @@ Polymer({
     },
 
     _generateActionTooltip: function (action) {
-        const shortDesc = "<b>" + action.shortDesc + "</b>";
+        const shortDesc = action.shortDesc ? "<b>" + action.shortDesc + "</b>" : "";
         let longDesc;
         if (shortDesc) {
             longDesc = action.longDesc ? "<br>" + action.longDesc : "";
