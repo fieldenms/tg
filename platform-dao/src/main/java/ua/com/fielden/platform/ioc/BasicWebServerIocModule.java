@@ -138,6 +138,8 @@ public class BasicWebServerIocModule extends CompanionIocModule {
             // ... bind Web API to platform-dao GraphQL-based implementation
             bind(IWebApi.class).to(GraphQLService.class);
         }
+
+        requestStaticInjection(MultiInheritanceEntityVerificationService.class);
     }
 
     public Properties getProps() {
