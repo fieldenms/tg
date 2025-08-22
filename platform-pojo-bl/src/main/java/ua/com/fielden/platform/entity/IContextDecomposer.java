@@ -3,13 +3,12 @@ package ua.com.fielden.platform.entity;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.EntityTypeCarrier;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
@@ -47,8 +46,9 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
  *
  */
 public interface IContextDecomposer {
-    public static final String AUTOCOMPLETE_ACTIVE_ONLY_KEY = "@@activeOnly";
-    
+    String AUTOCOMPLETE_ACTIVE_ONLY_KEY = "@@activeOnly";
+    String ERR_INVALID_TYPE_NAME_FOR_ENTITY_TYPE_CARRIER = "Invalid full type name [%s] for @%s-annotated property.";
+
     /**
      * A factory method to instantiate {@link IContextDecomposer} for decomposing <code>optionalContext</code>.
      * 
@@ -289,24 +289,7 @@ public interface IContextDecomposer {
     default Optional<Class<AbstractEntity<?>>> chosenEntityType() {
         return traversePropPath(currentEntity(), chosenProperty()) // traverse entity-typed paths and values
             .findFirst() // find first (most full) pair, if any
-            .map(pathAndValueOpt -> {
-                final Supplier<Class<AbstractEntity<?>>> determineChosenPropType = () -> determineActualEntityType(currentEntity().getType(), pathAndValueOpt._1);
-                return pathAndValueOpt._2
-                    .map(value -> {
-                        return streamProperties(value.getClass(), EntityTypeCarrier.class)
-                            .findFirst()
-                            .map(field -> (String) value.get(field.getName()))
-                            .map(carrierValue -> {
-                                try {
-                                    return (Class<AbstractEntity<?>>) Class.forName(carrierValue);
-                                } catch (ClassNotFoundException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            })
-                            .orElseGet(determineChosenPropType);
-                    })
-                    .orElseGet(determineChosenPropType);
-            }); // take the path only and determine actual entity type from that path
+            .map(pathAndValueOpt -> determineEntityTypeFrom(currentEntity(), pathAndValueOpt)); // take the path only and determine actual entity type from that path
     }
     
     /**
@@ -325,20 +308,33 @@ public interface IContextDecomposer {
         // 2. chosenProperty is a sub property of a property of type for Entity Master, where that "parent" property belongs to the current entity, or
         // 3. currentEntity() itself is of type for Entity Master (chosenProperty() is "" aka "this" or chosenProperty() is not defined in context configuration)
         return traversePropPath(currentEntity(), chosenProperty()) // traverse entity-typed paths and values
-            .filter(pathAndValueOpt -> {
-                        try {
-                            return compatibilityType.isAssignableFrom(determineActualEntityType(currentEntity().getType(), pathAndValueOpt._1))
-                                || pathAndValueOpt._2.isPresent()
-                                    && !Finder.findProperties(pathAndValueOpt._2.get().getClass(), EntityTypeCarrier.class).isEmpty()
-                                    && compatibilityType.isAssignableFrom(Class.forName((String) pathAndValueOpt._2.get().get(Finder.findProperties(pathAndValueOpt._2.get().getClass(), EntityTypeCarrier.class).getFirst().getName())));
-                        } catch (ClassNotFoundException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-            ) // find only type-compatible paths
+            .filter(pathAndValueOpt -> compatibilityType.isAssignableFrom(determineEntityTypeFrom(currentEntity(), pathAndValueOpt))) // find only type-compatible paths
             .findFirst() // find first (most full) type-compatible pair, if any
             .flatMap(pathAndValueOpt -> pathAndValueOpt._2) // get optional entity value, if any
             .map(AbstractEntity::getId); // get ID from it, if any
+    }
+
+    /// Determines entity type from fullest `pathAndValueOpt` by looking into entity type carrier first.
+    /// If there is no such property (or its value is empty / invalid), falls back to standard [#determineActualEntityType(Class, String)].
+    default Class<AbstractEntity<?>> determineEntityTypeFrom(final AbstractEntity<?> currentEntity, final T2<String, Optional<? extends AbstractEntity<?>>> pathAndValueOpt) {
+        return pathAndValueOpt._2
+            .flatMap(this::determineCarriedEntityTypeFrom)
+            .orElseGet(() -> determineActualEntityType(currentEntity.getType(), pathAndValueOpt._1));
+    }
+
+    /// Finds `@EntityTypeCarrier` property in `entity` and corresponding type.
+    /// Returns empty [Optional] in case if there is no such property or its value is empty / invalid.
+    default Optional<Class<AbstractEntity<?>>> determineCarriedEntityTypeFrom(final AbstractEntity<?> entity) {
+        return streamProperties(entity.getClass(), EntityTypeCarrier.class)
+            .findFirst()
+            .map(field -> (String) entity.get(field.getName()))
+            .map(carrierValue -> {
+                try {
+                    return (Class<AbstractEntity<?>>) Class.forName(carrierValue);
+                } catch (ClassNotFoundException e) {
+                    throw new EntityProducingException(ERR_INVALID_TYPE_NAME_FOR_ENTITY_TYPE_CARRIER.formatted(carrierValue, EntityTypeCarrier.class.getSimpleName()), e);
+                }
+            });
     }
     
     /**
