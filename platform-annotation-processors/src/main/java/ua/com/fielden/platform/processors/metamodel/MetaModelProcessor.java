@@ -46,6 +46,7 @@ import static java.util.Optional.empty;
 import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.*;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.TYPE_ELEMENT_FILTER;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isSameType;
 
 /**
  * Annotation processor that generates meta-models for domain entities.
@@ -657,7 +658,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
             // obtain KeyType::value()
             final TypeMirror keyType = entityFinder.getKeyType(atKeyType);
             // Property "key" of type NoKey does not need to be meta-modelled
-            if (elementFinder.isSameType(keyType, NoKey.class)) {
+            if (isSameType(keyType, NoKey.class)) {
                 properties.remove(AbstractEntity.KEY);
             } else {
                 // mapping for "key" should always exist
