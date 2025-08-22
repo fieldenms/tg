@@ -6,7 +6,6 @@ import com.google.inject.name.Named;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Extends;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
@@ -32,6 +31,7 @@ import java.util.stream.Stream;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.requireAnnotation;
 
 /// Tokens are accumulated from the following sources:
 /// - The location of security tokens given by application properties `tokens.path` and `tokens.package` is scanned.
@@ -175,7 +175,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             final String tokensPkgName)
     {
         final var specType = EntityUtils.specTypeFor(entityType);
-        final var atExtends = AnnotationReflector.getAnnotation(specType, Extends.class);
+        final var atExtends = requireAnnotation(specType, Extends.class);
         return Stream.of(Template.READ, Template.READ_MODEL)
                 .map(templ -> generator.generateToken(entityType,
                                                       templ,
