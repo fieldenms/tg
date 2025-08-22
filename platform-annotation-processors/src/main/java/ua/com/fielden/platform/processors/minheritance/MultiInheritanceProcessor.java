@@ -7,8 +7,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.exceptions.AbstractPlatformCheckedException;
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.DateTimeUtils;
 import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingElement;
@@ -22,11 +24,13 @@ import ua.com.fielden.platform.utils.StreamUtils;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -148,6 +152,8 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
 
         final var atExtendsMirror = ExtendsMirror.fromAnnotation(atExtends, elementFinder);
 
+        verifyExtends(specEntity, atExtendsMirror);
+
         final var inheritedProperties = atExtendsMirror.value()
                 .stream()
                 .flatMap(atEntityMirror  -> {
@@ -220,6 +226,66 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 // Not `final` -- the EQL model will be generated at runtime.
                 .addField(FieldSpec.builder(ParameterizedTypeName.get(List.class, EntityResultQueryModel.class), "models_", PRIVATE, STATIC).build())
                 .build();
+    }
+
+    private void verifyExtends(final EntityElement specEntity, final ExtendsMirror atExtends) {
+        // Extends.value must not be empty.
+        if (atExtends.value().isEmpty()) {
+            final var msg = "At least one entity type must be specified in @%s.".formatted(Extends.class.getSimpleName());
+            messager.printMessage(Diagnostic.Kind.ERROR, msg, specEntity.element());
+            throw new SpecEntityDefinitionException(specEntity, msg);
+        }
+
+        // Entity types in @Extends must be unique.
+        atExtends.value()
+                .stream()
+                .map(ExtendsMirror.EntityMirror::value)
+                .filter(tm -> tm.getKind() != TypeKind.ERROR)
+                .collect(groupingBy(ElementFinder::asTypeElementOfTypeMirror))
+                .forEach((typeElt, mirrors) -> {
+                    if (mirrors.size() > 1) {
+                        final var msg = "Entity types in @%s must be unique. [%s] occurs %s times.".formatted(
+                                Extends.class.getSimpleName(),
+                                typeElt.getSimpleName(),
+                                mirrors.size());
+                        messager.printMessage(Diagnostic.Kind.ERROR, msg, specEntity.element());
+                        throw new SpecEntityDefinitionException(specEntity, msg);
+                    }
+                });
+
+        // Each entity type must be either a persistent or synthetic entity type.
+        atExtends.value()
+                .stream()
+                .map(ExtendsMirror.EntityMirror::value)
+                .filter(tm -> tm.getKind() == TypeKind.DECLARED)
+                .map(ElementFinder::asTypeElementOfTypeMirror)
+                .map(entityFinder::newEntityElement)
+                .filter(entity -> !(entityFinder.isPersistentEntityType(entity) || entityFinder.isSyntheticEntityType(entity)))
+                .forEach(entity -> {
+                    final var msg = "[%s] cannot be specified in @%s. Only persistent and synthetic entity types are allowed.".formatted(
+                            entity.getSimpleName(), Extends.class.getSimpleName());
+                    messager.printMessage(Diagnostic.Kind.ERROR, msg, specEntity.element());
+                    throw new SpecEntityDefinitionException(specEntity, msg);
+                });
+
+        // Excluded properties must exist in the entity type they are excluded from.
+        atExtends.value()
+                .stream()
+                .filter(atEntity -> atEntity.value().getKind() != TypeKind.ERROR)
+                .forEach(atEntity -> {
+                    final var entity = entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(atEntity.value()));
+                    final var invalidProps = Arrays.stream(atEntity.exclude())
+                            .filter(prop -> entityFinder.findProperty(entity, prop).isEmpty())
+                            .toList();
+                    if (!invalidProps.isEmpty()) {
+                        final var msg = "%s [%s] cannot be excluded from [%s] because %s not exist.".formatted(
+                                singleOrPlural(invalidProps.size(), "Property", "Properties"),
+                                String.join(", ", invalidProps), entity.getSimpleName(),
+                                singleOrPlural(invalidProps.size(), "it does", "they do"));
+                        messager.printMessage(Diagnostic.Kind.ERROR, msg, specEntity.element());
+                        throw new SpecEntityDefinitionException(specEntity, msg);
+                    }
+                });
     }
 
     private void reportHiddenProperties(
@@ -358,6 +424,15 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
         public PropertyConflictException(final List<List<PropertyElement>> groups) {
             super(null);
             this.groups = groups;
+        }
+
+    }
+
+    // TODO Stack trace does not need to be captured, because this exception functions as an effect and never has a cause.
+    private static final class SpecEntityDefinitionException extends AbstractPlatformRuntimeException {
+
+        public SpecEntityDefinitionException(final TypeElement specEntity, final CharSequence msg) {
+            super("Invalid definition of specification entity type [%s]. %s".formatted(specEntity.getQualifiedName(), msg));
         }
 
     }
