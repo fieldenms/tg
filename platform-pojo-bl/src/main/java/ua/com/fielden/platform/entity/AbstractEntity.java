@@ -42,6 +42,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -845,10 +846,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         annotations.addAll(collectValidationAnnotationsForKey(propField, isEntityPersistent, shouldNotSkipKeyChangeValidation));
         annotations.addAll(findValidationAnnotationsForProperty(propField, propType));
 
-        final var atEntityExists = makeEntityExistsAnnotationIfApplicable(propField, propType);
-        if (atEntityExists != null) {
-            annotations.add(atEntityExists);
-        }
+        makeEntityExistsAnnotationIfApplicable(propField, propType).ifPresent(annotations::add);
 
         // Exclude handlers that should not be defined explicitly.
         // This is necessary to ensure the correct order of default validators.
@@ -932,13 +930,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
     }
 
-    private @Nullable Annotation makeEntityExistsAnnotationIfApplicable(final Field propField, final Class<?> propType) {
-        if (isEntityExistsValidationApplicable(getType(), propField)) {
-            return entityExistsAnnotation(getType(), propField.getName(), (Class<? extends AbstractEntity<?>>) propType);
-        }
-        else {
-            return null;
-        }
+    private Optional<Annotation> makeEntityExistsAnnotationIfApplicable(final Field propField, final Class<?> propType) {
+        return isEntityExistsValidationApplicable(getType(), propField)
+            ? of(entityExistsAnnotation(getType(), propField.getName(), (Class<? extends AbstractEntity<?>>) propType))
+            : empty();
     }
 
     /**
