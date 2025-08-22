@@ -2,10 +2,11 @@ package ua.com.fielden.platform.entity;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -22,7 +23,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxyEntity;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.*;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -38,7 +38,6 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.StreamUtils;
 
-import jakarta.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -846,11 +845,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         annotations.addAll(collectValidationAnnotationsForKey(propField, isEntityPersistent, shouldNotSkipKeyChangeValidation));
         annotations.addAll(findValidationAnnotationsForProperty(propField, propType));
 
-        if (annotations.stream().noneMatch(at -> at.annotationType() == EntityExists.class)) {
-            final var atEntityExists = makeEntityExistsAnnotationIfApplicable(propField, propType);
-            if (atEntityExists != null) {
-                annotations.add(atEntityExists);
-            }
+        final var atEntityExists = makeEntityExistsAnnotationIfApplicable(propField, propType);
+        if (atEntityExists != null) {
+            annotations.add(atEntityExists);
         }
 
         // Exclude handlers that should not be defined explicitly.
