@@ -7,7 +7,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.*;
-import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.exceptions.AbstractPlatformCheckedException;
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
@@ -24,7 +23,6 @@ import ua.com.fielden.platform.utils.StreamUtils;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -232,7 +230,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
         // Extends.value must not be empty.
         if (atExtends.value().isEmpty()) {
             final var msg = "At least one entity type must be specified in @%s.".formatted(Extends.class.getSimpleName());
-            messager.printMessage(Diagnostic.Kind.ERROR, msg, specEntity.element());
+            printMessageOn(Diagnostic.Kind.ERROR, msg, specEntity.element(), Extends.class);
             throw new SpecEntityDefinitionException(specEntity, msg);
         }
 
@@ -248,7 +246,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                                 Extends.class.getSimpleName(),
                                 typeElt.getSimpleName(),
                                 mirrors.size());
-                        messager.printMessage(Diagnostic.Kind.ERROR, msg, specEntity.element());
+                        printMessageOn(Diagnostic.Kind.ERROR, msg, specEntity.element(), Extends.class);
                         throw new SpecEntityDefinitionException(specEntity, msg);
                     }
                 });
@@ -264,7 +262,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 .forEach(entity -> {
                     final var msg = "[%s] cannot be specified in @%s. Only persistent and synthetic entity types are allowed.".formatted(
                             entity.getSimpleName(), Extends.class.getSimpleName());
-                    messager.printMessage(Diagnostic.Kind.ERROR, msg, specEntity.element());
+                    printMessageOn(Diagnostic.Kind.ERROR, msg, specEntity.element(), Extends.class);
                     throw new SpecEntityDefinitionException(specEntity, msg);
                 });
 
@@ -282,7 +280,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                                 singleOrPlural(invalidProps.size(), "Property", "Properties"),
                                 String.join(", ", invalidProps), entity.getSimpleName(),
                                 singleOrPlural(invalidProps.size(), "it does", "they do"));
-                        messager.printMessage(Diagnostic.Kind.ERROR, msg, specEntity.element());
+                        printMessageOn(Diagnostic.Kind.ERROR, msg, specEntity.element(), Extends.class);
                         throw new SpecEntityDefinitionException(specEntity, msg);
                     }
                 });
