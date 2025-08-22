@@ -1278,6 +1278,8 @@ Polymer({
         }
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
             this._setDialogDimensions(prefDim, minimised, maximised);
+            // Removes the optimisation hook if master size or position was changed.
+            this.$.elementLoader.style.removeProperty("display");
         }
     },
 
@@ -1319,8 +1321,6 @@ Polymer({
         }
         this.style.removeProperty("transition-property");
         this.style.removeProperty("transition-duration");
-        //Removes the optimisation hook if master size or position was changed.
-        this.$.elementLoader.style.removeProperty("display");
         // focuses dialog view after dialog resizing transition is completed;
         //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
         this._focusDialogView();
