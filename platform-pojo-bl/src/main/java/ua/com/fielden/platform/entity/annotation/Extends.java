@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.annotation;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.security.ISecurityToken;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -27,6 +28,10 @@ public @interface Extends {
     /// The name for a property that will be generated with annotation [EntityTypeCarrier].
     ///
     String entityTypeCarrierProperty() default "entityType";
+
+    /// The parent type for tokens that will be generated at runtime for the generated entity type.
+    ///
+    Class<? extends ISecurityToken> parentToken() default ISecurityToken.class;
 
     @interface Entity {
 
