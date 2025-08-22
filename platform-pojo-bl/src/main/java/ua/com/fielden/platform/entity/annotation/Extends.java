@@ -33,6 +33,8 @@ public @interface Extends {
     ///
     Class<? extends ISecurityToken> parentToken() default ISecurityToken.class;
 
+    @Retention(RUNTIME)
+    @Target({})
     @interface Entity {
 
         Class<? extends AbstractEntity<?>> value();
