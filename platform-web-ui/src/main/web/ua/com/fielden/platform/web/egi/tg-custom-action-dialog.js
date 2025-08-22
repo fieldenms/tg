@@ -1691,7 +1691,7 @@ Polymer({
     _onIronResize: function() {
         // Check this._isAnimatingDimensions() in order to prevent refitting dialog if animation is in progress.
         // This should be done because loaded element in dialog might contain component that might trigger iron-resize event when attached.
-        if (!this._wasMoved() && !this._customDim() && !this._minimised && !this._isAnimatingDimensions()) {
+        if (!this._wasMoved() && !this._customDim() && !this._minimised && !this._maximised && !this._isAnimatingDimensions()) {
             IronOverlayBehaviorImpl._onIronResize.call(this);
         }
     },
