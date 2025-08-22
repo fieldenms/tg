@@ -57,6 +57,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 ///
 /// As this example illustrates, a typical use case is to redeclare an inherited property with a custom title and description.
 ///
+/// It is an error if the annotated property is not inherited from any of the types in `@Extends`, which could be due to
+/// the property being excluded or simply absent in the extended type.
+///
 @Target(FIELD)
 @Retention(RUNTIME)
 public @interface AutoYield {}

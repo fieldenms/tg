@@ -18,6 +18,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
+import ua.com.fielden.platform.utils.ArrayUtils;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -174,6 +175,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
 
         final var autoYieldPropertyNames = specProperties.stream()
                 .filter(prop -> hasAnnotation(prop, AutoYield.class))
+                .peek(prop -> verifyAutoYieldProp(prop, specEntity, atExtendsMirror))
                 .map(AbstractForwardingElement::getSimpleName)
                 .collect(toImmutableSet());
 
@@ -286,6 +288,18 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 });
     }
 
+    private void verifyAutoYieldProp(final PropertyElement prop, final EntityElement specEntity, final ExtendsMirror atExtendsMirror) {
+        final var inheritedFromNone = atExtendsMirror.value()
+                .stream()
+                .noneMatch(atEntityMirror -> isPropertyInheritedFrom(prop.getSimpleName(), atEntityMirror));
+        if (inheritedFromNone) {
+            final var msg = format("@%s is not applicable to [%s], which is not inherited from any of the types in @%s.",
+                                   AutoYield.class.getSimpleName(), prop.getSimpleName(), Extends.class.getSimpleName());
+            printMessageOnProperty(Diagnostic.Kind.ERROR, msg, specEntity, prop);
+            throw new SpecEntityDefinitionException(specEntity, msg);
+        }
+    }
+
     private void reportHiddenProperties(
             final EntityElement specEntity,
             final List<PropertyElement> specProperties,
@@ -391,6 +405,20 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
 
     private TypeName makeTypeName(final TypeMirror typeMirror) {
         return TypeName.get(typeMirror);
+    }
+
+    private boolean isPropertyInheritedFrom(
+            final CharSequence prop,
+            final ExtendsMirror.EntityMirror atEntityMirror)
+    {
+        // Is `prop` excluded?
+        if (ArrayUtils.contains(atEntityMirror.exclude(), prop.toString())) {
+            return false;
+        }
+        else {
+            final var entity = entityFinder.newEntityElement(asTypeElementOfTypeMirror(atEntityMirror.value()));
+            return entityFinder.findProperty(entity, prop).isPresent();
+        }
     }
 
     private Stream<PropertyElement> inheritedPropertiesFrom(final EntityElement entity, final Set<String> excludedProps) {
