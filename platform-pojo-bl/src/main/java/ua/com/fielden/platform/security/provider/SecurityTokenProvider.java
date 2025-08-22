@@ -5,6 +5,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Extends;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
@@ -172,11 +174,13 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             final ISecurityTokenGenerator generator,
             final String tokensPkgName)
     {
+        final var specType = EntityUtils.specTypeFor(entityType);
+        final var atExtends = AnnotationReflector.getAnnotation(specType, Extends.class);
         return Stream.of(Template.READ, Template.READ_MODEL)
                 .map(templ -> generator.generateToken(entityType,
                                                       templ,
                                                       Optional.of(tokensPkgName),
-                                                      Optional.empty()));
+                                                      Optional.of(atExtends.parentToken())));
     }
 
     @Override
