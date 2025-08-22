@@ -146,9 +146,6 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
     private TypeSpec buildEntity(final EntityElement specEntity, final Extends atExtends)
             throws PropertyConflictException
     {
-        // TODO Prohibit duplicate entity types in `@Extends`.
-        // TODO Prohibit non-existent properties in `@Extends.Entity.exclude`.
-
         final var atExtendsMirror = ExtendsMirror.fromAnnotation(atExtends, elementFinder);
 
         verifyExtends(specEntity, atExtendsMirror);
