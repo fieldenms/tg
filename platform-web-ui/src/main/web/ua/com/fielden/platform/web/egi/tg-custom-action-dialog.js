@@ -502,7 +502,7 @@ Polymer({
         }
     },
 
-    observers: ["_updateDialogDimensionsIfNotAnimating(prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
+    observers: ["_updateDialogDimensionsIfNotAnimating(_masterVisibilityChanges, _masterLayoutChanges, prefDim, _minimised, _maximised)", "_updateDialogAnimation(_masterVisibilityChanges, _masterLayoutChanges)"],
 
     keyBindings: {
         'alt+c': '_invertMinimiseState',
@@ -1259,8 +1259,6 @@ Polymer({
             return;
         }
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
-            //Animate dialog dimensions even if it was resized.
-            this._updateDialogDimensionsIfNotAnimating(this.prefDim, this._minimised, this._maximised);
             //Animate dialog position if it wasn't moved.
             if (!this._wasMoved()) {
                 this._updateDialogPositionWithPrefDim(this.prefDim, this._minimised, this._maximised);
@@ -1271,13 +1269,14 @@ Polymer({
     },
 
     /**
-     * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance. This method changes the dialog's dimension only when dialog is not animating anything.
+     * Updates dimensions and position of the dialog based on minimised / maximised state and prefDim appearance.
+     * This method changes the dialog's dimension only when dialog is not animating anything.
      */
-    _updateDialogDimensionsIfNotAnimating: function(prefDim, minimised, maximised) {
-        if (!allDefined(arguments)) {
+    _updateDialogDimensionsIfNotAnimating: function(_masterVisibilityChanges, _masterLayoutChanges, prefDim, minimised, maximised) {
+        if (prefDim === undefined || minimised === undefined || maximised === undefined) { // !allDefined(arguments)
             return;
         }
-        if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
+        if (!_masterVisibilityChanges && !_masterLayoutChanges) {
             this._setDialogDimensions(prefDim, minimised, maximised);
         }
     },
