@@ -438,27 +438,27 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof AbstractEntity)) {
+        if (!(obj instanceof AbstractEntity<?> that)) {
             return false;
         }
-        // let's ensure that types match
-        final AbstractEntity<?> that = (AbstractEntity<?>) obj;
+
+        // Let's ensure that types match.
         if (this.getType() != that.getType()) {
             return false;
         }
 
-        if (that.isIdOnlyProxy() && this.isIdOnlyProxy()) {
-            return that.getId().equals(this.getId());
-        }
-        if (this.isPersistent() && (that.isIdOnlyProxy() || this.isIdOnlyProxy()) &&
-                (!that.isInstrumented() || !that.isDirty()) &&
-                (!this.isInstrumented() || !this.isDirty()))
+        // If both or one of instances is an id-only-proxy while the other is not mutated,
+        // then compare them by `id` values.
+        // N.B.: Only persistent entities can be id-only-proxy.
+        if ((that.isIdOnlyProxy() || this.isIdOnlyProxy())
+            && (!that.isInstrumented() || !that.isDirty())
+            && (!this.isInstrumented() || !this.isDirty()))
         {
             return that.getId().equals(this.getId());
         }
-        // now can compare key values
-        final Object thatKey = that.getKey();
-        return getKey() != null && getKey().equals(thatKey) || getKey() == null && thatKey == null;
+
+        // Otherwise, compare instances by their key values.
+        return Objects.equals(this.getKey(), that.getKey());
     }
 
     @Override
