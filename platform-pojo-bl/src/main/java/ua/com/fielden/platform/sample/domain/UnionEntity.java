@@ -2,6 +2,7 @@ package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 @DenyIntrospection
@@ -22,6 +23,7 @@ public class UnionEntity extends AbstractUnionEntity {
     @Title(value = "Prop Two", desc = "Desc")
     @IsProperty
     @MapTo
+    @SkipEntityExistsValidation(skipNew = true)
     private EntityTwo propertyTwo;
 
     public EntityOne getPropertyOne() {

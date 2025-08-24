@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.entity.meta;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.joda.time.DateTime;
@@ -46,7 +44,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     protected final FinalValidator[] notPersistedOnlyAndNullIsValueFinalValidator = new FinalValidator[]{new FinalValidator(false, true)};
     protected final FinalValidator[] persistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(true, false)};
     protected final FinalValidator[] persistedOnlyAndNullIsValueFinalValidator = new FinalValidator[]{new FinalValidator(true, true)};
-    protected final Cache<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = CacheBuilder.newBuilder().weakKeys().initialCapacity(300).concurrencyLevel(50).build();
     protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new ConcurrentHashMap<>();
     protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new ConcurrentHashMap<>();
     protected final Map<Integer, MaxValueValidator> maxValueValidators = new ConcurrentHashMap<>();
