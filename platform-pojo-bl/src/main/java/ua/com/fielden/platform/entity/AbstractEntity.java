@@ -447,9 +447,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             return false;
         }
 
-        // If both or one of instances is an id-only-proxy while the other is not mutated,
+        // If both or one of instances is an id-only proxy while the other is not mutated,
         // then compare them by `id` values.
-        // N.B.: Only persistent entities can be id-only-proxy.
+        // N.B.: Only instances of persistent entities can be id-only proxies.
         if ((that.isIdOnlyProxy() || this.isIdOnlyProxy())
             && (!that.isInstrumented() || !that.isDirty())
             && (!this.isInstrumented() || !this.isDirty()))
