@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel;
 
 import com.squareup.javapoet.*;
+import jakarta.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -23,7 +24,6 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.utils.Pair;
 
-import javax.annotation.Nonnull;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -149,7 +149,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
                 // traverse all properties for the current entity element to ensure that any entity-typed properties get their type considered for meta-model generation
                 // this is mainly important to pick up entity types that come from other project dependencies, such as the TG platform itself
-                explorePropsOf(entityElement, existingMetaModels, metaModelConcepts);
+                explore(entityElement, existingMetaModels, metaModelConcepts);
             }
         }
 
@@ -159,27 +159,28 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
     }
 
     /**
-     * Analyses properties of {@code entityElement} if they could be a subject of meta-modelling.
+     * Analyses the structure of {@code entityElement} to identify other referenced entities that could be subject to meta-modelling.
+     * This is required to find those entity types that are not contained in the set of root elements of the round environment (e.g., platform entity types).
      * This process proceeds recursively breadth-first with all the relevant meta-model concepts added to the {@code metaModelConcepts} collection.
-     *
-     * @param entityElement
-     * @param existingMetaModels
-     * @param metaModelConcepts
      */
-    private void explorePropsOf(final EntityElement entityElement, final Set<String> existingMetaModels, final Set<MetaModelConcept> metaModelConcepts) {
-        final Set<MetaModelConcept> metaModelConceptsFromProps = entityFinder.findProperties(entityElement).stream()
-                .filter(entityFinder::isPropertyOfDomainEntityType)
-                .map(pel -> new MetaModelConcept(entityFinder.newEntityElement(pel.getTypeAsTypeElementOrThrow())))
+    private void explore(final EntityElement entityElement, final Set<String> existingMetaModels, final Set<MetaModelConcept> metaModelConcepts) {
+        final var mccs = Stream.concat(entityFinder.streamParents(entityElement),
+                                       entityFinder.findProperties(entityElement)
+                                               .stream()
+                                               .filter(pel -> entityFinder.isEntityType(pel.getType()))
+                                               .map(pel -> entityFinder.newEntityElement(pel.getTypeAsTypeElementOrThrow())))
+                .filter(entityFinder::isEntityThatNeedsMetaModel)
+                .map(MetaModelConcept::new)
                 // we should not include types that already have their meta-models generated or meta-model concepts included for processing
                 .filter(mmc -> !existingMetaModels.contains(mmc.getQualifiedName()) && !metaModelConcepts.contains(mmc))
                 .collect(toSet());
         // if there were some types identified, then add them as meta-model concepts for generation and recursively process properties of those types...
-        if (!metaModelConceptsFromProps.isEmpty()) {
-            metaModelConcepts.addAll(metaModelConceptsFromProps);
+        if (!mccs.isEmpty()) {
+            metaModelConcepts.addAll(mccs);
             // recursively process each type...
-            metaModelConceptsFromProps.stream()
-            .map(MetaModelConcept::getEntityElement)
-            .forEach(ee -> explorePropsOf(ee, existingMetaModels, metaModelConcepts));
+            mccs.stream()
+                    .map(MetaModelConcept::getEntityElement)
+                    .forEach(ee -> explore(ee, existingMetaModels, metaModelConcepts));
         }
     }
 

@@ -136,9 +136,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
     },
 
     _registrationListener: function (e) {
-        const target = e.target || e.srcElement;
-
-        if (target === this.$.loader) {
+        if (e.target === this.$.loader) {
             if (e.detail && typeof e.detail.addOwnKeyBindings === 'function') {
                 e.detail.addOwnKeyBindings();
             }

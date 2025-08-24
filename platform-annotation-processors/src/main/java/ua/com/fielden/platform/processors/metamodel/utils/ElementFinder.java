@@ -6,7 +6,6 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderExce
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 import ua.com.fielden.platform.utils.StreamUtils;
 
-import javax.annotation.Nullable;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.AnnotatedConstruct;

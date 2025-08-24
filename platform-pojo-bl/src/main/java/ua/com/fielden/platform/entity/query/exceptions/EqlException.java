@@ -2,12 +2,9 @@ package ua.com.fielden.platform.entity.query.exceptions;
 
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 
-/**
- * A generic runtime exception indicating any EQL related erroneous situation.
- * 
- * @author TG Team
- *
- */
+/// A generic runtime exception indicating any EQL-related erroneous situation.
+/// This call should be extended when implementing other EQL-related exceptions.
+///
 public class EqlException extends AbstractPlatformRuntimeException {
     public static final String ERR_NULL_ARGUMENT = "Invalid argument: [%s] should not be null.";
 

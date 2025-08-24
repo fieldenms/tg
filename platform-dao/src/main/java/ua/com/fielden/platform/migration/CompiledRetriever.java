@@ -1,23 +1,23 @@
 package ua.com.fielden.platform.migration;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
  * A class that represents the result of processing {@code retriever} definition, including the legacy SELECT statement and the target INSERT or UPDATE statement.   
  *
  * @author TG Team
- *
  */
-public class CompiledRetriever {
-    public final IRetriever<? extends AbstractEntity<?>> retriever;
-    public final String legacySql;
+final class CompiledRetriever {
+
+    private final IRetriever<? extends AbstractEntity<?>> retriever;
+    private final String legacySql;
     private final TargetDataInsert tdi;
     private final TargetDataUpdate tdu;
-    public final EntityMd md;
+    private final EntityMd md;
     
     public static CompiledRetriever forInsert(final IRetriever<? extends AbstractEntity<?>> retriever, final String legacySql, final TargetDataInsert tdi, final EntityMd md) {
         return new CompiledRetriever(retriever, tdi, null, legacySql, md);
@@ -43,10 +43,27 @@ public class CompiledRetriever {
     }
 
     public Class<? extends AbstractEntity<?>> getType() {
-    	return retriever.type();
+        return retriever.type();
     }
     
     public List<PropInfo> getContainers() {
-    	return tdi != null ? tdi.containers : tdu.containers;
+        return tdi != null ? tdi.containers() : tdu.containers();
     }
+
+    public IRetriever<? extends AbstractEntity<?>> retriever() {
+        return retriever;
+    }
+
+    public boolean isUpdater() {
+        return retriever.isUpdater();
+    }
+
+    public String legacySql() {
+        return legacySql;
+    }
+
+    public EntityMd entityMd() {
+        return md;
+    }
+
 }

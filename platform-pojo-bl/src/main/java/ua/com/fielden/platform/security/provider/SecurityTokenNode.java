@@ -15,53 +15,40 @@ import java.util.TreeSet;
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.security.ISecurityToken;
 
-/**
- * A node in a tree-like structure for representing security tokens in a hierarchical order. Natural ordering happens according to token's short description.
- *
- * @author TG Team
- *
- */
+/// A node in a tree-like structure for representing security tokens in a hierarchical order.
+/// Natural ordering is based on token's short description.
+///
 public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNode<Class<? extends ISecurityToken>> {
-    /**
-     * Security token type represented by this node.
-     */
+
+    public static final String ERR_SECURITY_TOKEN_MISSING_SUPER_TOKE_NODE = "Security token [%s] is not a top level token, but super toke node is not provided.";
+
+    /// Security token type represented by this node.
     private final Class<? extends ISecurityToken> token;
-    /**
-     * A node representing a super token. Can be null is this token is the top level one.
-     */
+
+    /// A node representing a super token. Can be null is this token is the top level one.
     private final SecurityTokenNode superTokenNode;
-    /**
-     * A list of nodes representing direct sub-tokens.
-     */
+
+    /// A list of nodes representing direct sub-tokens.
     private final Map<Class<? extends ISecurityToken>, SecurityTokenNode> subTokenNodes;
-    /**
-     * Short security token description.
-     */
+
+    /// Short security token description.
     private final String shortDesc;
-    /**
-     * Short security token description.
-     */
+
+    /// Short security token description.
     private final String longDesc;
 
-    /**
-     * A convenient factory method for creating nodes representing top level security tokens, which is mainly useful for creation of unit tests.
-     *
-     * @param topLevelToken
-     * @return
-     */
+    /// A convenient factory method for creating nodes that represent top level security tokens.
+    // This method is mainly intended to support unit tests.
+    ///
     public static SecurityTokenNode makeTopLevelNode(final Class<? extends ISecurityToken> topLevelToken) {
         return new SecurityTokenNode(topLevelToken, null);
     }
 
-    /**
-     * A principle constructor.
-     *
-     * @param token
-     * @param superTokenNode
-     */
+    /// A principle constructor.
+    ///
     public SecurityTokenNode(final Class<? extends ISecurityToken> token, final SecurityTokenNode superTokenNode) {
         if (superTokenNode == null && !isTopLevel(token)) {
-            throw new IllegalArgumentException("Security token " + token.getName() + " is not a top level token, but super toke node is not provided.");
+            throw new IllegalArgumentException(ERR_SECURITY_TOKEN_MISSING_SUPER_TOKE_NODE.formatted(token.getName()));
         }
 
         this.shortDesc = shortDesc(token);
@@ -75,21 +62,14 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
         }
     }
 
-    /**
-     * A convenient constructor for top level tokens.
-     *
-     * @param token
-     */
+    /// A convenient constructor for top level tokens.
+    ///
     public SecurityTokenNode(final Class<? extends ISecurityToken> token) {
         this(token, null);
     }
 
-    /**
-     * Provides a way to add direct sub token nodes to this node.
-     *
-     * @param subTokenNode
-     * @return
-     */
+    /// Provides a way to add direct sub token nodes to this node.
+    ///
     private SecurityTokenNode add(final SecurityTokenNode subTokenNode) {
         subTokenNodes.put(subTokenNode.getToken(), subTokenNode);
         return this;
