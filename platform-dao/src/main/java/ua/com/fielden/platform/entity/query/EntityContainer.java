@@ -103,4 +103,10 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     public Map<String, CollectionContainer<? extends AbstractEntity<?>>> getCollections() {
         return collections;
    }
+
+    @Override
+    public String toString() {
+        return "EntityContainer(%s)".formatted(resultType.getSimpleName());
+    }
+
 }

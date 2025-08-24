@@ -21,6 +21,9 @@ import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.findByIdW
  * @param <T>
  */
 public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T>, IContextDecomposer {
+
+    public static final String ERR_UNEXPECTED_TYPE = "Unexpected type of property [%s.%s]. Expected: [%s] or supertype. Actual: [%s].";
+
     private final EntityFactory factory;
     protected final Class<T> entityType;
     /** Instrumented reader to be used for producing of {@link #new_()} editable entities and for re-fetching ({@link #refetchInstrumentedEntityById(Long)}) of persisted editable entities. */
@@ -183,7 +186,11 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * Returns uninstrumented instance.
      */
     protected final <M extends AbstractEntity<?>> M refetch(final Long id, final Class<M> entityType, final CharSequence property) {
-        return findByIdWithFiltering(id, co(entityType), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
+        final var fetch = reader.get().getFetchProvider().<M>fetchFor(property).fetchModel();
+        if (!fetch.getEntityType().isAssignableFrom(entityType)) {
+            throw new EntityProducingException(ERR_UNEXPECTED_TYPE.formatted(this.entityType.getSimpleName(), property, entityType.getSimpleName(), fetch.getEntityType().getSimpleName()));
+        }
+        return findByIdWithFiltering(id, co(entityType), fetch);
     }
 
     /**

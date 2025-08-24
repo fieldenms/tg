@@ -554,7 +554,7 @@ Polymer({
                         //   This is possible if validation was triggered fast (in 50 millis debouncing time) since last validation and after current saving process.
                         //   This is very artificial case, because saving will likely be last in the chain of user actions.
                         const lastValidationAttemptPromise = self.lastValidationAttemptPromise();
-                        if (lastValidationAttemptPromise !== null) {
+                        if (lastValidationAttemptPromise) {
                             console.warn("Saving is chained to the last validation attempt promise...", lastValidationAttemptPromise);
                             // Don't reject on rejected 'lastValidationAttemptPromise'.
                             // We should allow SAVE even after validation with connection lost / server (or other) error.

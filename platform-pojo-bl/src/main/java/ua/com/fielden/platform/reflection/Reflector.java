@@ -13,6 +13,8 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -28,60 +30,67 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.utils.EntityUtils.laxSplitPropPathToArray;
-import static ua.com.fielden.platform.utils.EntityUtils.splitPropPath;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotExpression;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
-/**
- * This is a helper class to provide some commonly used method for retrieval of RTTI not provided directly by the Java reflection package.
- *
- * @author TG Team
- *
- */
+/// This is a helper class to provide some commonly used method for retrieval of RTTI not provided directly by the Java reflection package.
+///
 public final class Reflector {
-    /**
-     * A maximum cache size for caching reflection related information.
-     */
+    /// A maximum cache size for caching reflection related information.
     public static final int MAXIMUM_CACHE_SIZE = 10_000;
-    /**
-     * A cache for {@link Method} instances.
-     */
+
+    /// A cache for [Method] instances.
     private static final Cache<Class<?>, Cache<String, Method>> METHOD_CACHE = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+    /// A cache for persistent property checks.
+    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> PERSISTENT_PROP_CACHE = CacheBuilder.newBuilder().weakKeys().initialCapacity(500).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+    /// A cache for calculated property checks.
+    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> CALCULATED_PROP_CACHE = CacheBuilder.newBuilder().weakKeys().initialCapacity(500).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
+    public static final String REL_SYMBOL = "←";
+    public static final String SELF = "SELF";
+
+    public static final String ERR_SIMPLE_PROPERTY_NAME_IS_EXPECTED = "[propName] must be a simple property name, but was [%s].";
+    public static final String ERR_METHOD_WITH_ARGS_NOT_FOUND = "There is no method [%s] in class [%s] with arguments [%s].";
+    public static final String ERR_METHOD_NOT_FOUND = "Could not find method [%s] for type [%s].";
+    public static final String ERR_WHILE_CHECKING_OVERRIDING_OF_METHOD = "Checking the overriding of method [%s] for type [%s] with base type [%s] failed.";
+    public static final String ERR_ACCESSOR_NOT_FOUND = "Could not obtain accessor for property [%s] in type [%s].";
+    public static final String ERR_SETTER_NOT_FOUND = "Could not obtain setter for property [%s] in type [%s].";
+    public static final String ERR_GETTING_ANNOTATION_PARAM_VALUE = "Could not get annotation param value.";
+    public static final String ERR_SELF_IN_RELATIVE_PATHS = "SELF should be not be used in relative paths.";
+    public static final String ERR_UNEXPECTED_REL_SYMBOL_POSITION = "Relative property path may contain symbol ← only at the beginning.";
+    public static final String ERR_CONTEXT_OR_RELATIVE_PATH_IS_INVALID = "Either the context or the relative property path is incorrect.";
+    public static final String ERR_CONTEXT_OR_PATH_IS_RELATIVE = "Both the context and the property path should be absolute.";
+    public static final String ERR_PROPERTY_PERSISTENT_NATURE_NOT_DETERMINED = "Could not determine whether property [%s.%s] is persistent.";
+    public static final String ERR_PROPERTY_CALCULATED_NATURE_NOT_DETERMINED = "Could not determine whether property [%s.%s] is calculated.";
+    public static final String ERR_TO_ASSIGN_STATIC_FIELD = "Could not assign value to a static field.";
 
     public static long cleanUp() {
         METHOD_CACHE.cleanUp();
-        return METHOD_CACHE.size();
+        PERSISTENT_PROP_CACHE.cleanUp();
+        CALCULATED_PROP_CACHE.cleanUp();
+        return METHOD_CACHE.size() + PERSISTENT_PROP_CACHE.size() + CALCULATED_PROP_CACHE.size();
     }
 
-    /** Regex pattern that represents a separator between properties in property path expressions. */
+    /// Regex pattern that represents a separator between properties in property path expressions.
     public static final Pattern DOT_SPLITTER_PATTERN = Pattern.compile("\\.");
-    /**
-     * A symbol used as the property name substitution in property path expressions representing the next level up in the context of nested properties. Should occur only at the
-     * beginning of the expression. There can be several sequentially linked ← separated by dot splitter.
-     */
-    public static final String UP_LEVEL = "←";
+
+    /// A symbol used as the property name substitution in property path expressions representing the next level up in the context of nested properties. Should occur only at the
+    /// beginning of the expression. There can be several sequentially linked ← separated by dot splitter.
+    public static final String UP_LEVEL = REL_SYMBOL;
 
     private static final Logger LOGGER = getLogger(Reflector.class);
     
-    /**
-     * Let's hide default constructor, which is not needed for a static class.
-     */
+    /// Hide the default constructor, which is not needed for a static class.
     private Reflector() {
     }
 
     // ========================================================================================================
     /////////////////////////////// Getting methods ///////////////////////////////////////////////////////////
 
-    /**
-     * This is a helper method used to walk along class hierarchy in search of the specified method.
-     *
-     * @param startWithClass
-     * @param methodName
-     * @param arguments
-     * @return
-     * @throws NoSuchMethodException
-     * @throws Exception
-     */
+    /// This is a helper method used to walk along class hierarchy in search of the specified method.
+    ///
     public static Method getMethod(final Class<?> startWithClass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         try {
             // setKey is a special case, because property "key" has a parametrised type that extends comparable.
@@ -91,30 +100,23 @@ public final class Reflector {
             if ("setKey".equals(methodName)) {
                 try {
                     return getMethodForClass(startWithClass, methodName, arguments);
-                } catch (final NoSuchMethodException e) {
+                } catch (final NoSuchMethodException ex) {
                     return getMethodForClass(startWithClass, methodName, Comparable.class);
                 }
             }
             return getMethodForClass(startWithClass, methodName, arguments);
         } catch (final NoSuchMethodException e) {
-            if (AbstractUnionEntity.class.isAssignableFrom(startWithClass)
-                    && AbstractUnionEntity.commonMethodNames((Class<AbstractUnionEntity>) startWithClass).contains(methodName)) {
-                return getMethodForClass(AbstractUnionEntity.unionProperties((Class<AbstractUnionEntity>) startWithClass).get(0).getType(), methodName, arguments);
+            if (AbstractUnionEntity.class.isAssignableFrom(startWithClass) &&
+                AbstractUnionEntity.commonMethodNames((Class<AbstractUnionEntity>) startWithClass).contains(methodName))
+            {
+                return getMethodForClass(AbstractUnionEntity.unionProperties((Class<AbstractUnionEntity>) startWithClass).getFirst().getType(), methodName, arguments);
             }
         }
-        throw new NoSuchMethodException("There is no method [" + methodName + "] in class [" + startWithClass.getSimpleName() + "] with arguments [" + Arrays.asList(arguments)
-                + "].");
+        throw new NoSuchMethodException(ERR_METHOD_WITH_ARGS_NOT_FOUND.formatted(methodName, startWithClass.getSimpleName(), Arrays.asList(arguments)));
     }
 
-    /**
-     * Returns method specified with methodName from {@code startWithClass} class.
-     *
-     * @param startWithClass
-     * @param methodName
-     * @param arguments
-     * @return
-     * @throws NoSuchMethodException
-     */
+    /// Returns method specified with methodName from `startWithClass` class.
+    ///
     public static Method getMethodForClass(final Class<?> startWithClass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         Class<?> klass = startWithClass;
         while (klass != Object.class) { // need to iterated thought hierarchy in
@@ -136,24 +138,18 @@ public final class Reflector {
         try {
             methodOrException = METHOD_CACHE.get(klass, () -> CacheBuilder.newBuilder().weakValues().build());
         } catch (final ExecutionException ex) {
-            throw new ReflectionException(format("Could not find method [%s] for type [%s].", methodKey, klass), ex);
+            throw new ReflectionException(ERR_METHOD_NOT_FOUND.formatted(methodKey, klass), ex);
         }
         
         try {
             return methodOrException.get(methodKey, () -> klass.getDeclaredMethod(methodName, arguments));
         } catch (final ExecutionException ex) {
-            throw new ReflectionException(format("Could not find method [%s] for type [%s].", methodKey, klass), ex);
+            throw new ReflectionException(ERR_METHOD_NOT_FOUND.formatted(methodKey, klass), ex);
         }
     }
 
-    /**
-     * Returns constructor specified from {@code startWithClass} class.
-     *
-     * @param startWithClass
-     * @param arguments
-     * @return
-     * @throws NoSuchMethodException
-     */
+    /// Returns constructor specified from `startWithClass` class.
+    ///
     public static <L> Constructor<? super L> getConstructorForClass(final Class<L> startWithClass, final Class<?>... arguments) throws NoSuchMethodException {
         Class<? super L> klass = startWithClass;
         while (klass != Object.class) { // need to iterated thought hierarchy in
@@ -168,22 +164,16 @@ public final class Reflector {
         throw new NoSuchMethodException("constructor with " + Arrays.asList(arguments));
     }
 
-    /**
-     * Returns the method specified with methodName and the array of it's arguments. In order to determine correct method it uses instances instead of classes.
-     *
-     * @param instance
-     * @param methodName
-     * @param arguments
-     * @return
-     * @throws NoSuchMethodException
-     */
+    /// Returns the method specified with methodName and the array of it's arguments. In order to determine correct method it uses instances instead of classes.
+    ///
     public static Method getMethod(final Object instance, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         try {
-            return getMethodForClass(instance instanceof AbstractEntity ? ((AbstractEntity) instance).getType() : instance.getClass(), methodName, arguments);
+            return getMethodForClass(instance instanceof AbstractEntity<?> entity ? entity.getType() : instance.getClass(), methodName, arguments);
         } catch (final NoSuchMethodException e) {
-            if (instance instanceof AbstractUnionEntity
-                    && AbstractUnionEntity.commonMethodNames((Class<AbstractUnionEntity>) ((AbstractUnionEntity) instance).getType()).contains(methodName)) {
-                final AbstractEntity activeEntity = ((AbstractUnionEntity) instance).activeEntity();
+            if (instance instanceof AbstractUnionEntity unionEntity &&
+                AbstractUnionEntity.commonMethodNames((Class<AbstractUnionEntity>) unionEntity.getType()).contains(methodName))
+            {
+                final AbstractEntity<?> activeEntity = unionEntity.activeEntity();
                 if (activeEntity != null) {
                     return getMethodForClass(activeEntity.getType(), methodName, arguments);
                 }
@@ -191,102 +181,58 @@ public final class Reflector {
         }
         throw new NoSuchMethodException(methodName);
     }
-
     
-    /**
-     * Returns <code>true</code> if the specified method <code>methodName</code> is overridden in <code>type</code> or its super types that extend <code>baseType</code> where this method is inherited from.
-     * Or the method is declared in <code>type</code> (i.e. it is not ingerited).
-     * <p>
-     * Basically, <code>true</code> is returned if <code>methodName</code> appears anywhere in the type hierarchy but the base type. 
-     * 
-     * @param baseType
-     * @param type
-     * @param methodName
-     * @param arguments
-     * @return
-     */
+    /// Returns `true` if the specified method `methodName` is overridden in `type` or its super types that extend `baseType` where this method is inherited from.
+    /// Or the method is declared in `type` (i.e. it is not inherited).
+    ///
+    /// Basically, `true` is returned if `methodName` appears anywhere in the type hierarchy but the base type.
+    ///
     public static <BASE> boolean isMethodOverriddenOrDeclared(final Class<BASE> baseType, final Class<? extends BASE> type, final String methodName, final Class<?>... arguments) {
         try {
-            
             final Method method = Reflector.getMethod(type, methodName, arguments);
-            if (method.getDeclaringClass() != baseType) {
-                return true;
-            }
-        } catch (NoSuchMethodException | SecurityException ex) {
-            LOGGER.debug(format("Checking the overriding of method [%s] for type [%s] with base type [%s] failed.", methodName, type.getName(), baseType.getName()), ex);
+            return method.getDeclaringClass() != baseType;
+        } catch (final NoSuchMethodException | SecurityException ex) {
+            LOGGER.debug(() -> ERR_WHILE_CHECKING_OVERRIDING_OF_METHOD.formatted(methodName, type.getName(), baseType.getName()), ex);
+            return false;
         }
-        
-        return false;
     }
 
-    /**
-     * Depending on the type of the field, the getter may start not with ''get'' but with ''is''. This method tries to determine a correct getter.
-     *
-     * @param propertyName
-     * @param entityClass
-     * @return
-     * @throws Exception
-     */
+    /// Depending on the type of the field, the getter may start not with ''get'' but with ''is''. This method tries to determine a correct getter.
+    ///
     public static Method obtainPropertyAccessor(final Class<?> entityClass, final CharSequence propertyName) {
         try {
             return Reflector.getMethod(entityClass, Accessor.GET.getName(propertyName));
-        } catch (final Exception e1) {
+        } catch (final Exception ex) {
             try {
                 return Reflector.getMethod(entityClass, Accessor.IS.getName(propertyName));
-            } catch (NoSuchMethodException e2) {
-                throw new ReflectionException(format("Could not obtain accessor for property [%s] in type [%s].", propertyName, entityClass.getName()), e1);
+            } catch (final NoSuchMethodException $) {
+                throw new ReflectionException(ERR_ACCESSOR_NOT_FOUND.formatted(propertyName, entityClass.getName()), ex);
             }
         }
     }
 
-    /**
-     * Tries to find a property setter for property, specified using dot-expression.
-     *
-     * @param entityClass
-     * @param dotNotationExp
-     * @return
-     * @throws NoSuchMethodException
-     * @throws Exception
-     */
-    public static Method obtainPropertySetter(final Class<?> entityClass, final CharSequence dotNotationExp) {
-        if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.toString().contains("()")) {
-            throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
+    /// Tries to find a property setter for property, specified using dot-expression.
+    ///
+    public static Method obtainPropertySetter(final Class<?> entityClass, final CharSequence propPath) {
+        if (StringUtils.isEmpty(propPath) || propPath.toString().contains("()")) {
+            throw new InvalidArgumentException("[propPath] should not be empty and should not include methods.");
         }
-        final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
+        final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, propPath);
         try {
             final String methodName = "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1);
             final Class<?> argumentType = PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false);
 
-            return Reflector.getMethod(transformed.getKey(), 
-                    methodName, 
-                    argumentType);
+            return Reflector.getMethod(transformed.getKey(), methodName, argumentType);
         } catch (final Exception ex) {
-            throw new ReflectionException(format("Could not obtain setter for property [%s] in type [%s].", dotNotationExp, entityClass.getName()), ex);
+            throw new ReflectionException(ERR_SETTER_NOT_FOUND.formatted(propPath, entityClass.getName()), ex);
         }
     }
 
     // ========================================================================================================
     /////////////////////////////// Miscellaneous utilities ///////////////////////////////////////////////////
 
-    /**
-     * A contract for determining if the property of specified type <code>propertyType</code> could be sortable or not. For now - only property of AE type with composite key could
-     * not be sortable.
-     *
-     * @param propertyType
-     * @return
-     */
-    public static boolean notSortable(final Class<?> propertyType) {
-        final KeyType keyType = propertyType.getAnnotation(KeyType.class);
-        return AbstractEntity.class.isAssignableFrom(propertyType) && keyType != null && DynamicEntityKey.class.isAssignableFrom(keyType.value());
-    }
-
-    /**
-     * Returns min and max possible values for property.
-     *
-     * @param entity
-     * @param propertyName
-     * @return
-     */
+    /// Returns min and max possible values for property.
+    ///
     public static Pair<Integer, Integer> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
         final Field field = Finder.findFieldByName(entity.getType(), propertyName);
         Integer min = null, max = null;
@@ -301,12 +247,8 @@ public final class Reflector {
         return new Pair<>(min, max);
     }
 
-    /**
-     * Returns a list of parameters declared for the specified annotation type. An empty list is returned in case where there are no parameter declarations.
-     *
-     * @param annotationType
-     * @return
-     */
+    /// Returns a list of parameters declared for the specified annotation type. An empty list is returned in case where there are no parameter declarations.
+    ///
     public static List<String> annotataionParams(final Class<? extends Annotation> annotationType) {
         final List<String> names = new ArrayList<>();
         for (final Method param : annotationType.getDeclaredMethods()) {
@@ -315,41 +257,34 @@ public final class Reflector {
         return names;
     }
 
-    /**
-     * Obtains and returns a pair of parameter type and its value for the specified annotation parameter.
-     *
-     * @param annotation
-     * @param paramName
-     * @return parameter value
-     */
+    /// Obtains and returns a pair of parameter type and its value for the specified annotation parameter.
+    ///
     public static Pair<Class<?>, Object> getAnnotationParamValue(final Annotation annotation, final String paramName) {
         try {
             final Method method = annotation.getClass().getDeclaredMethod(paramName);
             method.setAccessible(true);
             return pair(method.getReturnType(), method.invoke(annotation));
-        } catch (final Exception e) {
-            throw new ReflectionException("Could not get annotation param value.", e);
+        } catch (final Exception ex) {
+            throw new ReflectionException(ERR_GETTING_ANNOTATION_PARAM_VALUE, ex);
         }
     }
 
-    /**
-     * Converts a relative property path to an absolute path with respect to the provided context.
-     *
-     * @param context
-     *            a dot-expression for a property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
-     * @param relativePropertyPath
-     *            relative property path, which may contain ← and dots for separating individual properties.
-     * @return
-     */
-    public static String fromRelative2AbsotulePath(final String context, final String relativePropertyPath) {
+    /// Converts a relative property path to an absolute path with respect to the provided context.
+    ///
+    /// @param context
+    ///            a dot-expression for a property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+    /// @param relativePropertyPath
+    ///            relative property path, which may contain ← and dots for separating individual properties.
+    /// @return
+    public static String fromRelative2AbsolutePath(final String context, final String relativePropertyPath) {
         // if the relativePropertyPath path does not start with ← then it is absolute already
-        if (!relativePropertyPath.startsWith("←")) {
-            if ("SELF".equalsIgnoreCase(relativePropertyPath)) {
+        if (!relativePropertyPath.startsWith(REL_SYMBOL)) {
+            if (SELF.equalsIgnoreCase(relativePropertyPath)) {
                 return context;
             }
             return (StringUtils.isEmpty(context)) ? relativePropertyPath : context + "." + relativePropertyPath;
-        } else if ("SELF".equalsIgnoreCase(relativePropertyPath)) {
-            throw new IllegalStateException("SELF should be not be used in relative paths.");
+        } else if (SELF.equalsIgnoreCase(relativePropertyPath)) {
+            throw new InvalidStateException(ERR_SELF_IN_RELATIVE_PATHS);
         }
 
         final int endOfLevelUp = relativePropertyPath.lastIndexOf(UP_LEVEL);
@@ -359,21 +294,18 @@ public final class Reflector {
 
         final String missingPathFromRoot = pathFromRoot(context, returnPathLength);
         final String absolutePath = StringUtils.isEmpty(missingPathFromRoot) ? propertyPathWithoutLevelUp : missingPathFromRoot + "." + propertyPathWithoutLevelUp;
-        if (absolutePath.contains("←")) {
-            throw new IllegalArgumentException("Relative property path may contain symbol ← only at the beginning.");
+        if (absolutePath.contains(REL_SYMBOL)) {
+            throw new InvalidStateException(ERR_UNEXPECTED_REL_SYMBOL_POSITION);
         }
         return absolutePath;
     }
 
-    /**
-     * A helper function, which recursively determines the depth of the context path in comparison to the relative property path provide.
-     *
-     * @return
-     */
+    /// A helper function, which recursively determines the depth of the context path in comparison to the relative property path provide.
+    ///
     private static String pathFromRoot(final String context, final int relativePathLength) {
         // this basically means that either context was not specified correctly or the ← symbol in the relative path was included too many times
         if (relativePathLength > propertyDepth(context)) {
-            throw new IllegalArgumentException("Either the context or the relative property path is incorrect.");
+            throw new InvalidArgumentException(ERR_CONTEXT_OR_RELATIVE_PATH_IS_INVALID);
         }
 
         String toReturn = context;
@@ -388,21 +320,19 @@ public final class Reflector {
         return toReturn;
     }
 
-    /**
-     * Converts an absolute property path to a relative one in respect to the provided context.
-     *
-     * @param context
-     *            a dot-expression for a property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
-     * @param absolutePropertyPath
-     *            an absolute property path, which needs to be converted to a relative path with respect to the specified context.
-     * @return
-     */
-    public static String fromAbsotule2RelativePath(final String context, final String absolutePropertyPath) {
-        if (absolutePropertyPath.contains("←")) {
-            throw new IllegalArgumentException("Both the context and the property path should be absolute.");
+    /// Converts an absolute property path to a relative one in respect to the provided context.
+    ///
+    /// @param context
+    ///            a dot-expression for a property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
+    /// @param absolutePropertyPath
+    ///            an absolute property path, which needs to be converted to a relative path with respect to the specified context.
+    ///
+    public static String fromAbsolute2RelativePath(final String context, final String absolutePropertyPath) {
+        if (absolutePropertyPath.contains(REL_SYMBOL)) {
+            throw new InvalidArgumentException(ERR_CONTEXT_OR_PATH_IS_RELATIVE);
         }
         if (context.equals(absolutePropertyPath)) {
-            return "SELF";
+            return SELF;
         }
 
         // calculate the matching path depth from the beginning
@@ -419,9 +349,7 @@ public final class Reflector {
 
         // construct the relative path portion
         final StringBuilder sb = new StringBuilder();
-        for (int index = 0; index < longestPathUp; index++) {
-            sb.append("←.");
-        }
+        sb.append("←.".repeat(Math.max(0, longestPathUp)));
         // append the remaining property path
         for (int index = propertyDepth(context) - longestPathUp; index < propertyElements.length; index++) {
             sb.append(propertyElements[index]);
@@ -433,41 +361,30 @@ public final class Reflector {
         return sb.toString();
     }
 
-    /**
-     * Calculate the property depth in the type tree based on the number of "." separators.
-     *
-     * @param propertyPath
-     * @return
-     */
+    /// Calculate the property depth in the type tree based on the number of "." separators.
+    ///
     public static int propertyDepth(final String propertyPath) {
-        if (StringUtils.isEmpty(propertyPath)) {
-            return 0;
-        }
-        return laxSplitPropPathToArray(propertyPath).length;
+        return StringUtils.isEmpty(propertyPath)
+               ? 0
+               : laxSplitPropPathToArray(propertyPath).length;
     }
 
-    /**
-     * Converts a relative property path to an absolute path with respect to the provided context. Unlike relative2Absolute this method inverts the path making the context property
-     * to be the first node in the path.
-     *
-     * @param type
-     * @param contextProperty
-     * @param dotNotaionalExp
-     * @return
-     */
-    public static String relative2AbsoluteInverted(final Class<? extends AbstractEntity<?>> type, final String contextProperty, final String dotNotaionalExp) {
+    /// Converts a relative property path to an absolute path with respect to the provided context. Unlike relative2Absolute this method inverts the path making the context property
+    /// to be the first node in the path.
+    ///
+    public static String relative2AbsoluteInverted(final Class<? extends AbstractEntity<?>> type, final String contextProperty, final String propPath) {
         // if the context property is not specified then there should be no relative paths
-        if (StringUtils.isEmpty(contextProperty) || !dotNotaionalExp.contains("←")) {
-            return dotNotaionalExp;
+        if (StringUtils.isEmpty(contextProperty) || !propPath.contains(REL_SYMBOL)) {
+            return propPath;
         }
         // otherwise transformation from relative to absolute path is required
         final StringBuilder absProp = new StringBuilder();
 
         String currProp = contextProperty;
 
-        final String[] path = laxSplitPropPathToArray(dotNotaionalExp);
+        final String[] path = laxSplitPropPathToArray(propPath);
         int index = 0;
-        while ("←".equals(path[index])) {
+        while (REL_SYMBOL.equals(path[index])) {
             // find link property and add it to the absolute path
             final String linkProperty = Finder.findLinkProperty(type, currProp);
             absProp.append(linkProperty + ".");
@@ -491,74 +408,46 @@ public final class Reflector {
         return absProp.toString();
     }
 
-    /**
-     * A convenient method returning a separator that is used to represent a composite entity as a single string value.
-     *
-     * @param type
-     * @return
-     */
+    /// A convenient method returning a separator that is used to represent a composite entity as a single string value.
+    ///
     public static String getKeyMemberSeparator(final Class<? extends AbstractEntity<DynamicEntityKey>> type) {
         return AnnotationReflector.getAnnotation(type, KeyType.class).keyMemberSeparator();
     }
     
-    /**
-     * A predicate that evaluates to {@code true} only if none of the properties in a dot-expression is proxied for a given entity and none of the intermediate values is {@code null}.
-     * <p>
-     * For example, {@code isPropertyProxied(entity, "prop.subProp.subSubProp")} would be {@code false} in the following cases:
-     * <ol>
-     *      <li>
-     *      <ul>
-     *          <li> {@code prop} is not proxied,
-     *          <li> {@code entity.get("prop")} is {@code null},
-     *      </ul>
-     *      </li>
-     *      <li>
-     *      <ul>
-     *          <li> {@code prop} is not proxied,
-     *          <li> {@code entity.get("prop")} is not {@code null},
-     *          <li> {@code "prop.subProp"} is not proxied,
-     *          <li> {@code entity.get("prop").get("subProp")} is {@code null},
-     *      </ul>
-     *      </li>
-     *      <li>
-     *      <ul>
-     *          <li> {@code prop} is not proxied,
-     *          <li> {@code entity.get("prop")} is not {@code null},
-     *          <li> {@code "prop.subProp"} is not proxied,
-     *          <li> {@code entity.get("prop").get("subProp")} is not {@code null},
-     *          <li> {@code "prop.subProp.subSubProp"} is not proxied.
-     *      </ul>
-     *      </li>
-     * </ol>
-     * And the same would be {@code true} in the following cases:
-     * <ol>
-     *      <li>
-     *      <ul>
-     *          <li> {@code prop} is proxied
-     *      </ul>
-     *      </li>
-     *      <li>
-     *      <ul>
-     *          <li> {@code prop} is not proxied,
-     *          <li> {@code entity.get("prop")} is not {@code null},
-     *          <li> {@code "prop.subProp"} is proxied
-     *      </ul>
-     *      </li>
-     *      <li>
-     *      <ul>
-     *          <li> {@code prop} is not proxied,
-     *          <li> {@code entity.get("prop")} is not {@code null},
-     *          <li> {@code "prop.subProp"} is not proxied,
-     *          <li> {@code entity.get("prop").get("subProp")} is not {@code null},
-     *          <li> {@code "prop.subProp.subSubProp"} is proxied.
-     *      </ul>
-     *      </li>
-     * </ol>
-     *
-     * @param entity
-     * @param propPath
-     * @return
-     */
+    /// A predicate that evaluates to `true` only if none of the properties in a dot-expression is proxied for a given entity and none of the intermediate values is `null`.
+    ///
+    /// For example, `isPropertyProxied(entity, "prop.subProp.subSubProp")` would be `false` in the following cases:
+    ///
+    ///  1.
+    ///     -  `prop` is not proxied,
+    ///     -  `entity.get("prop")` is `null`,
+    ///  2.
+    ///     -  `prop` is not proxied,
+    ///     -  `entity.get("prop")` is not `null`,
+    ///     -  `"prop.subProp"` is not proxied,
+    ///     -  `entity.get("prop").get("subProp")` is `null`,
+    ///  3.
+    ///     -  `prop` is not proxied,
+    ///     -  `entity.get("prop")` is not `null`,
+    ///     -  `"prop.subProp"` is not proxied,
+    ///     -  `entity.get("prop").get("subProp")` is not `null`,
+    ///     -  `"prop.subProp.subSubProp"` is not proxied.
+    ///
+    /// And the same would be `true` in the following cases:
+    ///
+    ///  1.
+    ///     -  `prop` is proxied
+    ///  2.
+    ///     -  `prop` is not proxied,
+    ///     -  `entity.get("prop")` is not `null`,
+    ///     -  `"prop.subProp"` is proxied
+    ///  3.
+    ///     -  `prop` is not proxied,
+    ///     -  `entity.get("prop")` is not `null`,
+    ///     -  `"prop.subProp"` is not proxied,
+    ///     -  `entity.get("prop").get("subProp")` is not `null`,
+    ///     -  `"prop.subProp.subSubProp"` is proxied.
+    ///
     public static boolean isPropertyProxied(final AbstractEntity<?> entity, final CharSequence propPath) {
         final var props = splitPropPath(propPath).iterator();
         return isPropertyProxied_(entity, props.next(), props);
@@ -570,23 +459,15 @@ public final class Reflector {
         }
         if (tail.hasNext()) {
             final AbstractEntity<?> nextEntity = entity.get(propName);
-            // if the next entity is null then there is nothing to violate the proxy condition -- consider its sub-properties to be not proxied
-            if (nextEntity == null) {
-                return false;
-            }
-            return isPropertyProxied_(nextEntity, tail.next(), tail);
+            // If the next entity is null then there is nothing to violate the proxy condition -- consider its sub-properties to be not proxied.
+            return nextEntity != null && isPropertyProxied_(nextEntity, tail.next(), tail);
         }
         return false;
     }
 
-    /**
-     * Identifies whether the specified field represents a retrievable property.
-     * The notion of <code>retrievable</code> is different to <code>persistent</code> as it also includes calculated properties, which do get retrieved from a database. 
-     * 
-     * @param entity
-     * @param field
-     * @return
-     */
+    /// Identifies whether the specified field represents a retrievable property.
+    /// The notion of `retrievable` is different to `persistent` as it also includes calculated properties, which do get retrieved from a database.
+    ///
     public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final Field field) {
         final String name = field.getName();
         return entity.isPersistent()
@@ -599,34 +480,94 @@ public final class Reflector {
                   );
     }
     
-    /**
-     * A convenient equivalent to method {@link #isPropertyRetrievable(AbstractEntity, Field)} that accepts property name instead of the Field instance. 
-     * 
-     * @param entity
-     * @param propName
-     * @return
-     */
-    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final String propName) {
+    /// A convenient equivalent to method [#isPropertyRetrievable(AbstractEntity,Field)] that accepts property name instead of the Field instance.
+    ///
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final CharSequence propName) {
         return isPropertyRetrievable(entity, Finder.findFieldByName(entity.getClass(), propName)); 
     }
+
+    /// This predicate is true for persistent properties.
+    ///
+    /// @param propName  a simple property name
+    ///
+    public static boolean isPropertyPersistent(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
+        if (isDotExpression(propName)) {
+            throw new InvalidArgumentException(ERR_SIMPLE_PROPERTY_NAME_IS_EXPECTED.formatted(propName));
+        }
+
+        try {
+            return PERSISTENT_PROP_CACHE
+                    .get(entityType, () -> CacheBuilder.newBuilder().initialCapacity(30).concurrencyLevel(50).build())
+                    .get(propName.toString(), () -> isPropertyPersistent_(entityType, propName));
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException(ERR_PROPERTY_PERSISTENT_NATURE_NOT_DETERMINED.formatted(entityType.getSimpleName(), propName), ex.getCause());
+        }
+    }
     
-    /**
-     * A helper function to assign value to a private static field.
-     *  
-     * @param field
-     * @param value
-     */
+    private static boolean isPropertyPersistent_(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
+        // This logic should remain aligned with domain metadata (PropertyMetadata.isPersistent).
+        if (!isPersistentEntityType(entityType) && !isUnionEntityType(entityType)) {
+            return false;
+        }
+        else if (AbstractEntity.KEY.contentEquals(propName)) {
+            return !isUnionEntityType(entityType) && !isCompositeEntity(entityType);
+        }
+        else if (AbstractEntity.DESC.contentEquals(propName)) {
+            return !isUnionEntityType(entityType) && hasDescProperty(entityType);
+        }
+        else {
+            return isPropertyAnnotationPresent(MapTo.class, entityType, propName.toString());
+        }
+    }
+    
+    /// This predicate is true for calculated properties.
+    /// There are two kinds of calculated properties:
+    /// 1. Explicitly calculated - annotated with @Calculated
+    /// 2. Implicitly calculated - one-2-one relationship
+    /// Calculated properties may only occur in persistent and synthetic entities.
+    ///
+    /// TODO: we skip the case of one-2-many relationship for now, until better understanding of how to better recognise them.
+    ///
+    /// @param entityType  the entity type
+    /// @param propName  a simple property name
+    ///
+    public static boolean isPropertyCalculated(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
+        if (isDotExpression(propName)) {
+            throw new InvalidArgumentException(ERR_SIMPLE_PROPERTY_NAME_IS_EXPECTED.formatted(propName));
+        }
+
+        try {
+            return CALCULATED_PROP_CACHE
+                    .get(entityType, () -> CacheBuilder.newBuilder().initialCapacity(10).concurrencyLevel(50).build())
+                    .get(propName.toString(), () -> isPropertyCalculated_(entityType, propName));
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException(ERR_PROPERTY_CALCULATED_NATURE_NOT_DETERMINED.formatted(entityType.getSimpleName(), propName), ex.getCause());
+        }
+    }
+    
+    private static boolean isPropertyCalculated_(final Class<? extends AbstractEntity<?>> entityType, final CharSequence propName) {
+        // Calculated properties can only exist in persistent or synthetic entities.
+        if (!isPersistentEntityType(entityType) && !isSyntheticEntityType(entityType)) {
+            return false;
+        }
+        
+        // Check for explicit @Calculated annotation
+        if (isPropertyAnnotationPresent(Calculated.class, entityType, propName.toString())) {
+            return true;
+        }
+        
+        // Check for implicit calculation via one-2-one association
+        return Finder.isOne2One_association(entityType, propName.toString());
+    }
+    
+    /// A helper function to assign value to a private static field.
+    ///
     public static void assignStatic(final Field field, final Object value) {
         try {
             field.setAccessible(true);
-            // The following manipulation what worked before JDK12 are no longer possible
-            //final Field modifiersField = Field.class.getDeclaredField("modifiers");
-            //modifiersField.setAccessible(true);
-            //modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-
             field.set(null, value);
         } catch (final Exception ex) {
-            throw new ReflectionException("Could not assign value to a static field.", ex);
+            throw new ReflectionException(ERR_TO_ASSIGN_STATIC_FIELD, ex);
         }
     }
 

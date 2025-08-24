@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.entity;
 
 import com.google.inject.Inject;
+import jakarta.annotation.Nullable;
 import ua.com.fielden.platform.entity.exceptions.DynamicPropertyAccessCriticalError;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.indexer.IPropertyIndexer;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandle;
 
 import static ua.com.fielden.platform.utils.ArrayUtils.getLast;
