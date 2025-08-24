@@ -8,12 +8,19 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
-@KeyType(Integer.class)
+@KeyType(String.class)
 @DescTitle("Description")
 @CompanionObject(IEntityTwo.class)
 @MapEntityTo
-public class EntityTwo extends AbstractEntity<Integer> {
+public class EntityTwo extends AbstractEntity<String> {
+
+    public enum Property implements IConvertableToPath {
+        stringProperty, integerProperty;
+
+        @Override public String toPath() { return name(); }
+    }
 
     @IsProperty
     @MapTo
