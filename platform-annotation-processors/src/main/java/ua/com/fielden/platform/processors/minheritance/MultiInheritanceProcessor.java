@@ -280,6 +280,16 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                         throw new SpecEntityDefinitionException(specEntity, msg);
                     }
                 });
+
+
+        // Warn about extended synthetic entity types without `id`.
+        atExtends.value()
+                .stream()
+                .filter(atEntity -> atEntity.value().getKind() != TypeKind.ERROR)
+                .forEach(atEntity -> {
+                    final var entity = entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(atEntity.value()));
+                    verifyIdInSynType(specEntity, entity);
+                });
     }
 
     private void verifyAutoYieldProp(final PropertyElement prop, final EntityElement specEntity, final ExtendsMirror atExtendsMirror) {
@@ -313,6 +323,17 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                             singleOrPlural(hidingProps.size(), "property", "properties"));
                     printMessageOnProperty(Diagnostic.Kind.MANDATORY_WARNING, msg, specEntity, specProp);
                 });
+    }
+
+    private void verifyIdInSynType(final EntityElement specEntity, final EntityElement extendedEntity) {
+        if (entityFinder.isSyntheticEntityType(extendedEntity) && entityFinder.maybePropId(extendedEntity).isEmpty()) {
+            final var msg = """
+                The structure of [%s] indicates that it does not have [%s]. \
+                The resulting EQL model will yield null. \
+                If this is not intended, [%s] should be explicitly declared in [%s]."""
+                .formatted(extendedEntity.getSimpleName(), ID, ID, extendedEntity.getSimpleName());
+            printMessageOn(Diagnostic.Kind.WARNING, msg, specEntity.element(), Extends.class);
+        }
     }
 
     private void printConflictMessage(final List<PropertyElement> group, final EntityElement specEntity) {
