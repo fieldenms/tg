@@ -26,13 +26,15 @@ import java.util.*;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.minheritance.MultiInheritanceCommon.EXCLUDED_PROPERTIES;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.Reflector.getMethod;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.isGeneratedMultiInheritanceEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /// Generates EQL models for generated multi-inheritance synthetic entity types.
 ///
@@ -127,7 +129,7 @@ public class MultiInheritanceEqlModelGenerator {
             final String name,
             final ISubsequentCompletedAndYielded<?> part)
     {
-        return sourceEntityMetadata.hasProperty(name)
+        return hasProperty(sourceEntityMetadata, name)
                 ? part.yield().prop(name).as(name)
                 : part.yield().val(defaultPropertyValue(ownerType, name)).as(name);
     }
@@ -138,7 +140,7 @@ public class MultiInheritanceEqlModelGenerator {
             final String name,
             final IFromAlias<?> part)
     {
-        return sourceEntityMetadata.hasProperty(name)
+        return hasProperty(sourceEntityMetadata, name)
                 ? part.yield().prop(name).as(name)
                 : part.yield().val(defaultPropertyValue(ownerType, name)).as(name);
     }
@@ -168,6 +170,8 @@ public class MultiInheritanceEqlModelGenerator {
                                         .stream()
                                         .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.name()))
                                         .filter(prop -> !ArrayUtils.contains(atEntity.exclude(), prop.name()))
+                                        // Check if ID is really present.
+                                        .filter(prop -> !ID.equals(prop.name()) || hasId(atEntity.value()))
                                         // Currently, this handles only the special case of `desc`.
                                         // The extended entity type could have `desc`, but the spec-entity type could
                                         // lack it, hence the multi-inheritance entity type would also lack it.
@@ -175,6 +179,26 @@ public class MultiInheritanceEqlModelGenerator {
                                         .map(prop -> t2(atEntity.value(), prop.name()))),
                         pair -> pair._2)
                 .collect(toImmutableSet());
+    }
+
+    private boolean hasProperty(final EntityMetadata entityMetadata, final CharSequence propName) {
+        if (!entityMetadata.hasProperty(propName.toString())) {
+            return false;
+        }
+        else if (ID.contentEquals(propName)) {
+            return hasId(entityMetadata.javaType());
+        }
+        else return true;
+    }
+
+    private boolean hasId(final Class<? extends AbstractEntity<?>> type) {
+        if (isPersistentEntityType(type) || isSyntheticBasedOnPersistentEntityType(type)) {
+            return true;
+        }
+        else if (isSyntheticEntityType(type)) {
+            return isPropertyPresent(type, ID);
+        }
+        else return false;
     }
 
     @SuppressWarnings("unchecked")
