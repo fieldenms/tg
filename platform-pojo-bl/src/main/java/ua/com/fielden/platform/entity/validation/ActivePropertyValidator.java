@@ -54,8 +54,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     public static final String ERR_INACTIVE_REFERENCES = "Property [%s] in %s [%s] references inactive %s [%s].";
     public static final String ERR_UNEXPECTED_ENTITY_TYPE = "Unexpected entity type for an activatable reference: [%s]";
 
-    public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_ENTITY_TYPE = EntityUtils::isActivatableEntityType;
-    public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE = PREDICATE_ACTIVATABLE_ENTITY_TYPE.and(EntityUtils::isPersistentEntityType);
+    public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE = EntityUtils::isActivatablePersistentEntityType;
 
     private final IApplicationDomainProvider applicationDomainProvider;
 
