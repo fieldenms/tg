@@ -142,12 +142,12 @@ public class DomainEntityDependencies {
         /// The case of union entities follows the two-level approach, consistent with how it is for [EntityExistsValidator]:
         ///
         /// 1. If for union-typed property (top level) check is `false`, then return the check result for the union member property (lower level).
-        /// 2. If for union-typed property (top level) check is `true``, then return true (there is no need to check the union member property (lower level)).
+        /// 2. If for union-typed property (top level) check is `true`, then return `true` (there is no need to check the union member property (lower level)).
         ///
         private static boolean checkDuringDeactivation(final Class<? extends AbstractEntity<?>> entityType, final String propPath) {
             final String[] props = splitPropPathToArray(propPath);
-            final String prop0Name = props[0];
-            final Field prop0 = Finder.getFieldByName(entityType, prop0Name);
+            final var prop0Name = props[0];
+            final var prop0 = Finder.getFieldByName(entityType, prop0Name);
 
             final var checkDuringDeactivationProp0 = isActivatablePersistentEntityType(entityType)
                     && !isSpecialActivatableToBeSkipped(prop0)
