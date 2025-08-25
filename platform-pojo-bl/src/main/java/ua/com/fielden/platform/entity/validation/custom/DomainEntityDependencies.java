@@ -19,8 +19,7 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.splitPropPathToArray;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /// Represents an entity type and its dependencies.
 ///
@@ -37,7 +36,7 @@ public class DomainEntityDependencies {
         this.entityType = entityType;
 
         final DeactivatableDependencies annot;
-        if (isActivatableEntityType(entityType) && (annot = getAnnotation(entityType, DeactivatableDependencies.class)) != null) {
+        if (isActivatablePersistentEntityType(entityType) && (annot = getAnnotation(entityType, DeactivatableDependencies.class)) != null) {
             deactivatableDependencies = ImmutableSet.copyOf(annot.value());
         }
         else {
@@ -140,7 +139,7 @@ public class DomainEntityDependencies {
             // TODO For union-typed properties, check the union member property annotations as well.
             final String prop0Name = splitPropPathToArray(propPath)[0];
             final Field prop0 = Finder.getFieldByName(entityType, prop0Name);
-            return isActivatableEntityType(entityType)
+            return isActivatablePersistentEntityType(entityType)
                    && !isSpecialActivatableToBeSkipped(prop0)
                    && isActivatablePersistentProperty(entityType, prop0Name);
         }
