@@ -149,20 +149,26 @@ public class DomainEntityDependencies {
             final var prop0Name = props[0];
             final var prop0 = Finder.getFieldByName(entityType, prop0Name);
 
-            final var checkDuringDeactivationProp0 = isActivatablePersistentEntityType(entityType)
-                    && !isSpecialActivatableToBeSkipped(prop0)
-                    && isActivatablePersistentProperty(entityType, prop0Name);
+            // If entityType is not persistent activatable, then no need to check anything else -- activatable nature is not applicable.
+            if (!isActivatablePersistentEntityType(entityType)) {
+                return false;
+            }
 
+            // Otherwise, need to check the property itself, and perhaps even a union member property in case of a union entity.
+            final var checkDuringDeactivationProp0 = !isSpecialActivatableToBeSkipped(prop0)
+                                                     && isActivatablePersistentProperty(entityType, prop0Name);
             if (checkDuringDeactivationProp0) {
                 return true;
             }
             final Class<?> prop0Type = prop0.getType();
             if (isUnionEntityType(prop0Type) && props.length == 2) {
-                final String prop1Name = props[1];
-                final Field unionMemberProp = Finder.getFieldByName(prop0Type, prop1Name);
-                return !isSpecialActivatableToBeSkipped(unionMemberProp)
-                        && isActivatablePersistentProperty((Class<? extends AbstractEntity<?>>) prop0Type, prop1Name);
+                final var prop1Name = props[1];
+                final var unionMemberProp = Finder.getFieldByName(prop0Type, prop1Name);
+                final var checkDuringDeactivationProp1 = !isSpecialActivatableToBeSkipped(unionMemberProp)
+                                                         && isActivatablePersistentProperty((Class<? extends AbstractEntity<?>>) prop0Type, prop1Name);
+                return checkDuringDeactivationProp1;
             }
+
             return false;
         }
 
