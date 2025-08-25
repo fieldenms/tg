@@ -150,6 +150,8 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
 
         verifyExtends(specEntity, atExtendsMirror);
 
+        final var specHasDesc = entityFinder.maybePropDesc(specEntity).isPresent();
+
         final var inheritedProperties = atExtendsMirror.value()
                 .stream()
                 .flatMap(atEntityMirror  -> {
@@ -157,14 +159,15 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                     return inheritedPropertiesFrom(entity, ImmutableSet.copyOf(atEntityMirror.exclude()));
                 })
                 .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.getSimpleName().toString()))
-                // `desc` is a special property that should not be declared.
-                // If it is present in the spec entity type, it will be inherited.
-                .filter(prop -> !prop.getSimpleName().contentEquals(DESC))
+                // Do not inherit `desc` if the spec-entity type does not have `desc`.
+                .filter(prop -> !prop.getSimpleName().contentEquals(DESC) || specHasDesc)
                 .toList();
 
         // Use `distinct` to enable property hiding in the spec-entity.
         final var specProperties = StreamUtils.distinct(
-                        entityFinder.streamProperties(specEntity).filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.getSimpleName().toString())),
+                        entityFinder.streamProperties(specEntity)
+                                .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.getSimpleName().toString()))
+                                .filter(prop -> !prop.getSimpleName().contentEquals(DESC) || specHasDesc),
                         PropertyElement::getSimpleName)
                 .toList();
 
@@ -310,6 +313,8 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
             final Collection<PropertyElement> inheritedProperties)
     {
         specProperties.stream()
+                // `desc` may be present in the spec-entity type and also in extended types, but due to its special treatment it will not be hidden.
+                .filter(specProp -> !DESC.contentEquals(specProp.getSimpleName()))
                 .filter(specProp -> !hasAnnotation(specProp, AutoYield.class))
                 .filter(inheritedProperties::contains)
                 .forEach(specProp -> {
@@ -447,13 +452,19 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 Stream.concat(entityFinder.streamProperties(entity),
                               // `streamProperties` does not include `AbstractEntity.id`, hence we include it explicitly.
                               entityFinder.maybePropId(entity).stream())
-                        .filter(prop -> !excludedProps.contains(prop.getSimpleName().toString())),
+                        .filter(prop -> !excludedProps.contains(prop.getSimpleName().toString()))
+                        .filter(prop -> !DESC.contentEquals(prop.getSimpleName()) || entityFinder.maybePropDesc(entity).isPresent()),
                 PropertyElement::getSimpleName);
     }
 
     private boolean hasProperty(final EntityElement entity, final CharSequence name) {
-        return entityFinder.findProperty(entity, name).isPresent()
-               || (ID.contentEquals(name) && entityFinder.maybePropId(entity).isPresent());
+        if (DESC.contentEquals(name)) {
+            return entityFinder.maybePropDesc(entity).isPresent();
+        }
+        else {
+            return entityFinder.findProperty(entity, name).isPresent()
+                   || (ID.contentEquals(name) && entityFinder.maybePropId(entity).isPresent());
+        }
     }
 
 

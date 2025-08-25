@@ -142,26 +142,9 @@ public class EntityFinder extends ElementFinder {
     public Set<PropertyElement> processProperties(final Collection<PropertyElement> properties, final EntityElement entity) {
         final Set<PropertyElement> processed = new LinkedHashSet<>(properties);
         maybePropId(entity).ifPresent(processed::add);
-        processPropertyDesc(processed, entity);
+        maybePropDesc(entity).ifPresentOrElse(processed::add,
+                                              () -> processed.removeIf(elt -> elt.getSimpleName().toString().equals(AbstractEntity.DESC)));
         return Collections.unmodifiableSet(processed);
-    }
-    // where
-    private void processPropertyDesc(final Set<PropertyElement> properties, final EntityElement entity) {
-        // include property "desc" in the following cases:
-        // 1. property "desc" is declared by entity or one of its supertypes below AbstractEntity
-        // 2. entity or any of its supertypes is annotated with @DescTitle
-        final Optional<PropertyElement> maybeDesc = findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
-        if (maybeDesc.isPresent()) {
-            properties.add(maybeDesc.get());
-        }
-        else if (findAnnotation(entity, DescTitle.class).isPresent()) {
-            // "desc" must exist
-            final VariableElement descElt = findField(entity, AbstractEntity.DESC)
-                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC, entity)));
-            properties.add(new PropertyElement(descElt));
-        }
-        // in other cases we need to exclude it
-        else properties.removeIf(elt -> elt.getSimpleName().toString().equals(AbstractEntity.DESC));
     }
 
     /// If property `id` is present in `entity`, returns an optional describing it.
@@ -182,6 +165,27 @@ public class EntityFinder extends ElementFinder {
             return findProperty(entity, AbstractEntity.ID);
         }
         else return Optional.empty();
+    }
+
+    /// If property `desc` is present in `entity`, returns an optional describing it.
+    /// Otherwise, returns an empty optional.
+    ///
+    /// `desc` is considered to be present if [DescTitle] is present on the enclosing entity type (directly or indirectly),
+    /// or property `desc` is explicitly redeclared.
+    ///
+    public Optional<PropertyElement> maybePropDesc(final EntityElement entity) {
+        return findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class)
+                .or(() -> {
+                    if (findAnnotation(entity, DescTitle.class).isPresent()) {
+                        // `desc` must exist.
+                        final var descElt = findField(entity, AbstractEntity.DESC)
+                                .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC, entity)));
+                        return Optional.of(new PropertyElement(descElt));
+                    }
+                    else {
+                        return Optional.empty();
+                    }
+                });
     }
 
     /**
