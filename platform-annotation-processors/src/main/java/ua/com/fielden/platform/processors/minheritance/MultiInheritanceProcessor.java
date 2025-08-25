@@ -270,7 +270,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 .forEach(atEntity -> {
                     final var entity = entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(atEntity.value()));
                     final var invalidProps = Arrays.stream(atEntity.exclude())
-                            .filter(prop -> entityFinder.findProperty(entity, prop).isEmpty())
+                            .filter(prop -> !hasProperty(entity, prop))
                             .toList();
                     if (!invalidProps.isEmpty()) {
                         final var msg = "%s [%s] cannot be excluded from [%s] because %s not exist.".formatted(
@@ -417,7 +417,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
         }
         else {
             final var entity = entityFinder.newEntityElement(asTypeElementOfTypeMirror(atEntityMirror.value()));
-            return entityFinder.findProperty(entity, prop).isPresent();
+            return hasProperty(entity, prop);
         }
     }
 
@@ -425,11 +425,17 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
         // Use `distinct` to enable property hiding.
         return StreamUtils.distinct(
                 Stream.concat(entityFinder.streamProperties(entity),
-                              // `streamProperties` does not include ID, hence we include it explicitly.
+                              // `streamProperties` does not include `AbstractEntity.id`, hence we include it explicitly.
                               entityFinder.maybePropId(entity).stream())
                         .filter(prop -> !excludedProps.contains(prop.getSimpleName().toString())),
                 PropertyElement::getSimpleName);
     }
+
+    private boolean hasProperty(final EntityElement entity, final CharSequence name) {
+        return entityFinder.findProperty(entity, name).isPresent()
+               || (ID.contentEquals(name) && entityFinder.maybePropId(entity).isPresent());
+    }
+
 
     // TODO Decide on a naming convention for generated entity types.
     //      We could also provide a way for application developers to specify the name.
