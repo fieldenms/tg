@@ -273,10 +273,9 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                             .filter(prop -> !hasProperty(entity, prop))
                             .toList();
                     if (!invalidProps.isEmpty()) {
-                        final var msg = "%s [%s] cannot be excluded from [%s] because %s not exist.".formatted(
-                                singleOrPlural(invalidProps.size(), "Property", "Properties"),
-                                String.join(", ", invalidProps), entity.getSimpleName(),
-                                singleOrPlural(invalidProps.size(), "it does", "they do"));
+                        final var msg = "Non-existing %s [%s] cannot be excluded.".formatted(
+                                singleOrPlural(invalidProps.size(), "property", "properties"),
+                                invalidProps.stream().map(prop -> "%s.%s".formatted(entity.getSimpleName(), prop)).collect(joining(", ")));
                         printMessageOn(Diagnostic.Kind.ERROR, msg, specEntity.element(), Extends.class);
                         throw new SpecEntityDefinitionException(specEntity, msg);
                     }
