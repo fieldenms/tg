@@ -607,13 +607,16 @@ public class EntityUtils {
 
 
     /// Indicates whether type represents [ActivatableAbstractEntity]-typed values.
-    /// Only persistent entities can be considered activatable.
     ///
-    /// @return
     public static boolean isActivatableEntityType(final Class<?> type) {
-        return type != null && ActivatableAbstractEntity.class.isAssignableFrom(type) && isPersistentEntityType(type);
+        return type != null && ActivatableAbstractEntity.class.isAssignableFrom(type);
     }
 
+    /// Indicates whether type represents persistent [ActivatableAbstractEntity]-typed values.
+    ///
+    public static boolean isActivatablePersistentEntityType(final Class<?> type) {
+        return isActivatableEntityType(type) && isPersistentEntityType(type);
+    }
 
     /**
      * Indicates whether type represents an integer value, which could be either {@link Integer} or {@link Long}.
