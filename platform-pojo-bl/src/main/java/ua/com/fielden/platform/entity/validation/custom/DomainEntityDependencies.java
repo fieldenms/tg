@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.reflection.Finder;
 
 import java.lang.reflect.Field;
@@ -13,10 +14,10 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatablePersistentProperty;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
@@ -135,13 +136,34 @@ public class DomainEntityDependencies {
             return new DomainEntityDependency(entityType, entityTitle, propPath + "." + propPathSuffix, propTitle, belongsToEntityKey, shouldBeCheckedDuringDeactivation);
         }
 
+        /// Determines if `propPath` represents a property that should be checked during the analysis of active dependencies.
+        ///
+        /// The value of `propPath` is a dot-expression only when it represents a union-typed property with a specific union member property.
+        /// The case of union entities follows the two-level approach, consistent with how it is for [EntityExistsValidator]:
+        ///
+        /// 1. If for union-typed property (top level) check is `false`, then return the check result for the union member property (lower level).
+        /// 2. If for union-typed property (top level) check is `true``, then return true (there is no need to check the union member property (lower level)).
+        ///
         private static boolean checkDuringDeactivation(final Class<? extends AbstractEntity<?>> entityType, final String propPath) {
-            // TODO For union-typed properties, check the union member property annotations as well.
-            final String prop0Name = splitPropPathToArray(propPath)[0];
+            final String[] props = splitPropPathToArray(propPath);
+            final String prop0Name = props[0];
             final Field prop0 = Finder.getFieldByName(entityType, prop0Name);
-            return isActivatablePersistentEntityType(entityType)
-                   && !isSpecialActivatableToBeSkipped(prop0)
-                   && isActivatablePersistentProperty(entityType, prop0Name);
+
+            final var checkDuringDeactivationProp0 = isActivatablePersistentEntityType(entityType)
+                    && !isSpecialActivatableToBeSkipped(prop0)
+                    && isActivatablePersistentProperty(entityType, prop0Name);
+
+            if (checkDuringDeactivationProp0) {
+                return true;
+            }
+            final Class<?> prop0Type = prop0.getType();
+            if (isUnionEntityType(prop0Type) && props.length == 2) {
+                final String prop1Name = props[1];
+                final Field unionMemberProp = Finder.getFieldByName(prop0Type, prop1Name);
+                return !isSpecialActivatableToBeSkipped(unionMemberProp)
+                        && isActivatablePersistentProperty((Class<? extends AbstractEntity<?>>) prop0Type, prop1Name);
+            }
+            return false;
         }
 
         public static final String INFO_ENTITY_DEPENDENCIES = "Entity [%s] has dependency in entity [%s] as property [%s] (checked during deactivation [%s], belongs to entity key [%s]).";

@@ -457,6 +457,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     /// This predicate identifies whether the specified property needs to be processed as an activatable reference.
     ///
     private boolean shouldProcessAsActivatable(final MetaProperty<?> prop) {
+        // TODO For union-typed properties, check the union member property annotations as well.
+        //      Refer to [DomainEntityDependencies#checkDuringDeactivation] for more details.
         return isActivatablePersistentProperty(prop.getEntity().getType(), prop.getName()) && !isSpecialActivatableToBeSkipped(prop) && !isDeactivatableDependencyBackref(prop);
     }
 
