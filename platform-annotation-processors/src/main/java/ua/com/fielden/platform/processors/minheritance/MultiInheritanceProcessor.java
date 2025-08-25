@@ -293,6 +293,30 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                     final var entity = entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(atEntity.value()));
                     verifyIdInSynType(specEntity, entity);
                 });
+
+        // Warn if none of the extended types has `desc` but the spec-entity type does.
+        // Such a definition will result in `desc` recognised as a property of the generated entity type, but no yields for `desc` will be generated.
+        // Therefore, the developer should take action.
+        if (entityFinder.maybePropDesc(specEntity).isPresent()) {
+            final var noInheritedDesc = atExtends.value()
+                    .stream()
+                    .allMatch(atEntity -> {
+                        if (ArrayUtils.contains(atEntity.exclude(), DESC)) {
+                            return true;
+                        }
+                        else {
+                            final var entity = entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(atEntity.value()));
+                            return entityFinder.maybePropDesc(entity).isEmpty();
+                        }
+                    });
+            if (noInheritedDesc) {
+                final var msg = """
+                    [%s] is not inherited from any of the types in @%s. \
+                    Either [%s] should be removed from [%s], or [%s] should be yielded explicitly in the EQL model."""
+                    .formatted(DESC, Extends.class.getSimpleName(), DESC, specEntity.getSimpleName(), DESC);
+                printMessageOn(Diagnostic.Kind.WARNING, msg, specEntity.element(), Extends.class);
+            }
+        }
     }
 
     private void verifyAutoYieldProp(final PropertyElement prop, final EntityElement specEntity, final ExtendsMirror atExtendsMirror) {
