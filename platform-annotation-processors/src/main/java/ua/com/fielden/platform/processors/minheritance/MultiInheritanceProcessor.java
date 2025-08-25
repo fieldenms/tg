@@ -160,8 +160,6 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 // `desc` is a special property that should not be declared.
                 // If it is present in the spec entity type, it will be inherited.
                 .filter(prop -> !prop.getSimpleName().contentEquals(DESC))
-                // `id` is present in `AbstractEntity`, hence need not be declared.
-                .filter(prop -> !prop.getSimpleName().contentEquals(ID))
                 .toList();
 
         // Use `distinct` to enable property hiding in the spec-entity.
@@ -362,14 +360,19 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
     }
 
     private MethodSpec.Builder setterSpecBuilder(final TypeName propTypeName, final CharSequence propName, final CharSequence enclosingEntitySimpleName) {
-        return MethodSpec.methodBuilder(Mutator.SETTER.getName(propName))
+        // ID has an unconventional setter (AbstractEntity.setId).
+        final var isId = ID.contentEquals(propName);
+        final var builder = MethodSpec.methodBuilder(Mutator.SETTER.getName(propName))
                 .addModifiers(PUBLIC)
                 .addAnnotation(Observable.class)
                 .addParameter(propTypeName, propName.toString(), FINAL)
                 // The unnamed package works because this setter will be declared in the entity itself and the entity's simple name should suffice.
-                .returns(ClassName.get("", enclosingEntitySimpleName.toString()))
-                .addStatement("this.$L = $L", propName, propName)
-                .addStatement("return this", propName);
+                .returns(isId ? TypeName.VOID : ClassName.get("", enclosingEntitySimpleName.toString()))
+                .addStatement("this.$L = $L", propName, propName);
+        if (!isId) {
+            builder.addStatement("return this", propName);
+        }
+        return builder;
     }
 
     private MethodSpec makeGetterSpec(final FieldSpec propSpec) {
@@ -421,7 +424,10 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
     private Stream<PropertyElement> inheritedPropertiesFrom(final EntityElement entity, final Set<String> excludedProps) {
         // Use `distinct` to enable property hiding.
         return StreamUtils.distinct(
-                entityFinder.streamProperties(entity).filter(prop -> !excludedProps.contains(prop.getSimpleName().toString())),
+                Stream.concat(entityFinder.streamProperties(entity),
+                              // `streamProperties` does not include ID, hence we include it explicitly.
+                              entityFinder.maybePropId(entity).stream())
+                        .filter(prop -> !excludedProps.contains(prop.getSimpleName().toString())),
                 PropertyElement::getSimpleName);
     }
 
