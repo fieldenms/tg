@@ -13,7 +13,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 ///
 public class TgReActivatableVehicleModel extends TgActivatableVehicleModel {
 
-    protected static final EntityResultQueryModel<TgReActivatableVehicleModel> model_ = select(TgVehicleModel.class)
+    protected static final EntityResultQueryModel<TgReActivatableVehicleModel> model_ = select(TgActivatableVehicleModel.class)
             .yieldAll()
             .yield().caseWhen().val(true).eq().val(true).then().val(42).otherwise().val(42).endAsInt().as("intProp")
             .modelAsEntity(TgReActivatableVehicleModel.class);

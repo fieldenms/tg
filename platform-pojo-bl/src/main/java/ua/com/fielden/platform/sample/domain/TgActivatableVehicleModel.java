@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import org.junit.Ignore;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
