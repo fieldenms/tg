@@ -1,15 +1,17 @@
 package ua.com.fielden.platform.entity.activatable;
 
+import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.activatable.test_entities.ActivatableUnionOwner;
-import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
-import ua.com.fielden.platform.entity.activatable.test_entities.Member3;
-import ua.com.fielden.platform.entity.activatable.test_entities.Union;
+import ua.com.fielden.platform.entity.activatable.test_entities.*;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataUtils;
+
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 
 public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityTestCase {
 
@@ -181,6 +183,17 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
     @Override
     protected Spec2<ActivatableUnionOwner, Member3> spec2() {
         return spec2;
+    }
+
+    @Test
+    public void saving_an_activated_A_referencing_inactive_B_via_union_succeeds_if_skipActiveOnly_is_true_on_both_levels() {
+        final var b = save(new_(Member2.class, "M2").setActive(false));
+        var a = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion2(new_(Union.class).setMember2(b)));
+
+        a = a.setActive(true);
+        assertNull(a.getProperty(ACTIVE).getFirstFailure());
+        final var savedA = save(a);
+        assertTrue(savedA.isActive());
     }
 
 }

@@ -1,8 +1,13 @@
 package ua.com.fielden.platform.entity.activatable;
 
+import org.junit.Test;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
+
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 
 public class EntityActivatabilityStandardTest extends AbstractEntityActivatabilityTestCase {
 
@@ -127,6 +132,17 @@ public class EntityActivatabilityStandardTest extends AbstractEntityActivatabili
     @Override
     protected Spec2<TgSystem, TgSubSystem> spec2() {
         return spec2;
+    }
+
+    @Test
+    public void saving_an_activated_A_referencing_inactive_B_succeeds_if_skipActiveOnly_is_true() {
+        final var b = save(new_(TgCategory.class, "CAT1").setActive(false));
+        var a = save(new_(TgSystem.class, "SYS1").setActive(false).setThirdCategory(b));
+
+        a = a.setActive(true);
+        assertNull(a.getProperty(ACTIVE).getFirstFailure());
+        final var savedA = save(a);
+        assertTrue(savedA.isActive());
     }
 
 }
