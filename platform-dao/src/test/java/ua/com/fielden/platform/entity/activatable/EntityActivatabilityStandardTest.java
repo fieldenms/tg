@@ -145,4 +145,22 @@ public class EntityActivatabilityStandardTest extends AbstractEntityActivatabili
         assertTrue(savedA.isActive());
     }
 
+    @Test
+    public void A_can_be_activated_while_referencing_inactive_B_if_skipActiveOnly_is_true() {
+        final var b = save(new_(TgCategory.class, "CAT1").setActive(false));
+        var a = save(new_(TgSystem.class, "SYS1").setActive(false).setThirdCategory(b));
+
+        a = a.setActive(true);
+        assertNull(a.getProperty(ACTIVE).getFirstFailure());
+    }
+
+    @Test
+    public void A_can_be_activated_while_referencing_inactive_B_if_SkipActivatableTracking_is_present() {
+        final var b = save(new_(TgCategory.class, "CAT1").setActive(false));
+        var a = save(new_(TgSystem.class, "SYS1").setActive(false).setForthCat(b));
+
+        a = a.setActive(true);
+        assertNull(a.getProperty(ACTIVE).getFirstFailure());
+    }
+
 }
