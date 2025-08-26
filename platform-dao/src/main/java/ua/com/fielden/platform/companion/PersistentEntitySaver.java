@@ -679,7 +679,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 // In such case, recalculation of `refCount` for the referenced entity has already been performed, and double-dipping should be avoided.
                 .filter(prop -> !(persistedEntity != null && equalsEx(prop.getValue(), persistedEntity.get(prop.getName()))))
                 .mapMulti((prop, sink) -> {
-                    if (isActivatableReference(entityType, prop.getName(), prop.getOriginalValue())) {
+                    // Process the original property value, which makes sense only for persisted entities.
+                    if (persistedEntity != null && persistedEntity.isActive() && isActivatableReference(entityType, prop.getName(), prop.getOriginalValue())) {
                         // If `entity` is persisted, the original value of `prop`, if not null, was dereferenced, and its `refCount` must be decremented.
                         // Original property value should not be null, otherwise property would not become dirty by assigning null.
                         // `refCount` is decremented if and only if:
@@ -687,10 +688,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                         // * and the persisted version of the original value is active;
                         // * and the original value is not equal to the entity being saved (is not a self-reference).
                         final var originalActivatableValue = extractActivatable(prop.getOriginalValue());
-                        if (persistedEntity != null && originalActivatableValue != null) {
+                        if (originalActivatableValue != null) {
                             final var persistedOriginalValue = (ActivatableAbstractEntity<?>) session.load(originalActivatableValue.getType(), originalActivatableValue.getId(), UPGRADE);
-                            if (persistedEntity.isActive() && persistedOriginalValue.isActive() && !areEqual(entity, persistedOriginalValue))
-                            {
+                            if (persistedOriginalValue.isActive() && !areEqual(entity, persistedOriginalValue)) {
                                 sink.accept(new RefCountInstruction.Dec(originalActivatableValue));
                             }
                         }
