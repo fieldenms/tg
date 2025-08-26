@@ -8,6 +8,8 @@ import ua.com.fielden.platform.sample.domain.TgSystem;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 
 public class EntityActivatabilityStandardTest extends AbstractEntityActivatabilityTestCase {
 
@@ -135,14 +137,27 @@ public class EntityActivatabilityStandardTest extends AbstractEntityActivatabili
     }
 
     @Test
-    public void saving_an_activated_A_referencing_inactive_B_succeeds_if_skipActiveOnly_is_true() {
+    public void saving_an_activated_A_referencing_inactive_proxied_B_succeeds_if_skipActiveOnly_is_true() {
         final var b = save(new_(TgCategory.class, "CAT1").setActive(false));
-        var a = save(new_(TgSystem.class, "SYS1").setActive(false).setThirdCategory(b));
+        final var a = save(new_(TgSystem.class, "SYS1").setActive(false).setThirdCategory(b));
 
-        a = a.setActive(true);
-        assertNull(a.getProperty(ACTIVE).getFirstFailure());
-        final var savedA = save(a);
-        assertTrue(savedA.isActive());
+        final var a1 = refetch$(a, KEY_AND_DESC).setActive(true);
+        assertTrue(isPropertyProxied(a1, "thirdCategory"));
+        assertNull(a1.getProperty(ACTIVE).getFirstFailure());
+        final var savedA1 = save(a1);
+        assertTrue(savedA1.isActive());
+    }
+
+    @Test
+    public void saving_an_activated_A_referencing_inactive_proxied_B_succeeds_if_SkipActivatableTracking_is_true() {
+        final var b = save(new_(TgCategory.class, "CAT1").setActive(false));
+        final var a = save(new_(TgSystem.class, "SYS1").setActive(false).setForthCat(b));
+
+        final var a1 = refetch$(a, KEY_AND_DESC).setActive(true);
+        assertTrue(isPropertyProxied(a1, "forthCat"));
+        assertNull(a1.getProperty(ACTIVE).getFirstFailure());
+        final var savedA1 = save(a1);
+        assertTrue(savedA1.isActive());
     }
 
     @Test
