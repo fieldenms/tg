@@ -18,4 +18,11 @@ public class Member4 extends ActivatableAbstractEntity<String> {
         return this;
     }
 
+    @Observable
+    @Override
+    public Member4 setRefCount(final Integer refCount) {
+        super.setRefCount(refCount);
+        return this;
+    }
+
 }
