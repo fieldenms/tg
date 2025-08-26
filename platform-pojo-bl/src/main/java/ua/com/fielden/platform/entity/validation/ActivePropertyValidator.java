@@ -4,10 +4,12 @@ import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.impl.AbstractBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -25,20 +27,22 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.rightPad;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.validation.custom.DomainEntitiesDependenciesUtils.*;
 import static ua.com.fielden.platform.error.Result.*;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatablePersistentProperty;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isSpecialActivatableToBeSkipped;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 import static ua.com.fielden.platform.utils.StreamUtils.foldLeft;
 
@@ -57,10 +61,15 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     public static final Predicate<Class<? extends AbstractEntity<?>>> PREDICATE_ACTIVATABLE_AND_PERSISTENT_ENTITY_TYPE = EntityUtils::isActivatablePersistentEntityType;
 
     private final IApplicationDomainProvider applicationDomainProvider;
+    private final ICompanionObjectFinder coFinder;
 
     @Inject
-    ActivePropertyValidator(final IApplicationDomainProvider applicationDomainProvider) {
+    ActivePropertyValidator(
+            final IApplicationDomainProvider applicationDomainProvider,
+            final ICompanionObjectFinder coFinder)
+    {
         this.applicationDomainProvider = applicationDomainProvider;
+        this.coFinder = coFinder;
     }
 
     @Override
@@ -144,15 +153,53 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     ///
     @SuppressWarnings("unchecked")
     private List<? extends MetaProperty<? extends AbstractEntity<?>>> activatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
-        // TODO For union-typed properties, check the union member property annotations as well.
         return entity.nonProxiedProperties()
-                .filter(mp -> mp.getValue() != null &&
-                              isActivatablePersistentProperty(mp.getEntity().getType(), mp.getName()) &&
-                              !isSpecialActivatableToBeSkipped(mp) &&
-                              !((AbstractEntity<?>) mp.getValue()).isIdOnlyProxy() &&
-                              !entity.equals(mp.getValue()))
+                .filter(mp -> {
+                    if (mp.getValue() == null || !isEntityType(mp.getType())) {
+                        return false;
+                    }
+                    final var value = (AbstractEntity<?>) mp.getValue();
+                    if (value.isIdOnlyProxy() || entity.equals(value)) {
+                        return false;
+                    }
+
+                    // If the property is not union-typed, it is enough to check the property itself.
+                    // Otherwise, the active union member may need to be considered as well.
+
+                    if (isActivatablePersistentProperty(entity.getType(), mp.getName()) && !isSpecialActivatableToBeSkipped(entity.getType(), mp.getName())) {
+                        return true;
+                    }
+                    else if (isUnionEntityType(mp.getType())) {
+                        final var union = (AbstractUnionEntity) value;
+                        final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(union.getType());
+                        final var activePropName = instrument(union, unionCo).activePropertyName();
+                        return isActivatableProperty(union.getType(), activePropName)
+                               && !isSpecialActivatableToBeSkipped(union.getType(), activePropName);
+                    }
+                    else {
+                        return false;
+                    }
+                })
                 .map(mp -> (MetaProperty<? extends AbstractEntity<?>>) mp)
                 .toList();
+    }
+
+    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
+    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
+    ///
+    /// This method is a utility to perform instrumentation for uninstrumented values.
+    ///
+    /// TODO Instrumentation will no longer be necessary after #2466.
+    ///
+    private static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityDao<U> co) {
+        final U instrumentedUnion;
+        if (unionEntity.isInstrumented()) {
+            instrumentedUnion = unionEntity;
+        }
+        else {
+            copy(unionEntity, instrumentedUnion = co.new_(), ID, VERSION);
+        }
+        return instrumentedUnion;
     }
 
 }
