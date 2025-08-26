@@ -60,6 +60,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -71,13 +72,13 @@ import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityVali
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
-import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
-import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 import static ua.com.fielden.platform.utils.MiscUtilities.optional;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
@@ -454,12 +455,22 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
     }
 
-    /// This predicate identifies whether the specified property needs to be processed as an activatable reference.
+    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
+    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
     ///
-    private boolean shouldProcessAsActivatable(final MetaProperty<?> prop) {
-        // TODO For union-typed properties, check the union member property annotations as well.
-        //      Refer to [DomainEntityDependencies#checkDuringDeactivation] for more details.
-        return isActivatablePersistentProperty(prop.getEntity().getType(), prop.getName()) && !isSpecialActivatableToBeSkipped(prop) && !isDeactivatableDependencyBackref(prop);
+    /// This method is a utility to perform instrumentation for uninstrumented values.
+    ///
+    /// TODO Instrumentation will no longer be necessary after #2466.
+    ///
+    private static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityDao<U> co) {
+        final U instrumentedUnion;
+        if (unionEntity.isInstrumented()) {
+            instrumentedUnion = unionEntity;
+        }
+        else {
+            copy(unionEntity, instrumentedUnion = co.new_(), ID, VERSION);
+        }
+        return instrumentedUnion;
     }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
@@ -611,42 +622,44 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         if (persistedEntity != null && entity.getProperty(ACTIVE).isDirty() && entity.isActive() != persistedEntity.isActive()) {
             instructionsForNonDirty = entity.getProperties().values()
                     .stream()
-                    .filter(mp -> (mp.isProxy() || !mp.isDirty()) && shouldProcessAsActivatable(mp))
+                    .filter(mp -> mp.isProxy() || !mp.isDirty())
                     .<RefCountInstruction>map(mp -> {
                         final var propName = mp.getName();
-                        // If the property is proxied, its value will be retrieved lazily by Hibernate.
-                        final var activatableValue = extractActivatable(persistedEntity.get(propName));
-                        if (activatableValue != null) {
-                            final var persistedActivatableValue = (ActivatableAbstractEntity<?>) session.load(activatableValue.getType(), activatableValue.getId(), UPGRADE);
-                            persistedActivatableValue.setIgnoreEditableState(true);
-                            // Update `refCount` if the referenced entity is active and is not a self-reference.
-                            if (!areEqual(entity, persistedActivatableValue)) {
-                                // If the entity being saved is active and references an inactive entity, then we have an erroneous situation
-                                // and should prevent the activation of the entity being saved.
-                                if (entity.isActive()) {
-                                    if (!persistedActivatableValue.isActive()) {
-                                        session.detach(persistedActivatableValue);
-                                        // This property may be proxied, thus we cannot use `mkInactiveReferenceFailure`.
-                                        throw new EntityCompanionException(ERR_INACTIVE_REFERENCES.formatted(
-                                                getTitleAndDesc(propName, entityType).getKey(),
-                                                getEntityTitleAndDesc(entityType).getKey(),
-                                                entity,
-                                                getEntityTitleAndDesc(persistedActivatableValue).getKey(),
-                                                persistedActivatableValue));
+                        if (isActivatableReference(entityType, propName, persistedEntity.get(propName))) {
+                            // If the property is proxied, its value will be retrieved lazily by Hibernate.
+                            final var activatableValue = extractActivatable(persistedEntity.get(propName));
+                            if (activatableValue != null) {
+                                final var persistedActivatableValue = (ActivatableAbstractEntity<?>) session.load(activatableValue.getType(), activatableValue.getId(), UPGRADE);
+                                persistedActivatableValue.setIgnoreEditableState(true);
+                                // Update `refCount` if the referenced entity is active and is not a self-reference.
+                                if (!areEqual(entity, persistedActivatableValue)) {
+                                    // If the entity being saved is active and references an inactive entity, then we have an erroneous situation
+                                    // and should prevent the activation of the entity being saved.
+                                    if (entity.isActive()) {
+                                        if (!persistedActivatableValue.isActive()) {
+                                            session.detach(persistedActivatableValue);
+                                            // This property may be proxied, thus we cannot use `mkInactiveReferenceFailure`.
+                                            throw new EntityCompanionException(ERR_INACTIVE_REFERENCES.formatted(
+                                                    getTitleAndDesc(propName, entityType).getKey(),
+                                                    getEntityTitleAndDesc(entityType).getKey(),
+                                                    entity,
+                                                    getEntityTitleAndDesc(persistedActivatableValue).getKey(),
+                                                    persistedActivatableValue));
+                                        }
+                                        else {
+                                            return new RefCountInstruction.Inc(persistedActivatableValue);
+                                        }
+                                    }
+                                    else if (persistedActivatableValue.isActive()) {
+                                        return new RefCountInstruction.Dec(persistedActivatableValue);
                                     }
                                     else {
-                                        return new RefCountInstruction.Inc(persistedActivatableValue);
+                                        session.detach(persistedActivatableValue);
                                     }
-                                }
-                                else if (persistedActivatableValue.isActive()) {
-                                    return new RefCountInstruction.Dec(persistedActivatableValue);
                                 }
                                 else {
                                     session.detach(persistedActivatableValue);
                                 }
-                            }
-                            else {
-                                session.detach(persistedActivatableValue);
                             }
                         }
                         return null;
@@ -659,62 +672,67 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
 
         final Stream<RefCountInstruction> instructionsForDirty = entity.getDirtyProperties()
                 .stream()
-                .filter(this::shouldProcessAsActivatable)
+                .filter(prop -> isEntityType(prop.getType()))
+                .map(prop -> (MetaProperty<AbstractEntity<?>>) prop)
                 // If the current and persisted property values are the same, nothing needs to be done.
                 // At this stage, these values can only be the same iff a non-conflicting concurrent modification occurred.
                 // In such case, recalculation of `refCount` for the referenced entity has already been performed, and double-dipping should be avoided.
                 .filter(prop -> !(persistedEntity != null && equalsEx(prop.getValue(), persistedEntity.get(prop.getName()))))
-                .map(prop -> (MetaProperty<AbstractEntity<?>>) prop)
                 .mapMulti((prop, sink) -> {
-                    // If `entity` is persisted, the original value of `prop`, if not null, was dereferenced, and its `refCount` must be decremented.
-                    // Original property value should not be null, otherwise property would not become dirty by assigning null.
-                    // `refCount` is decremented if and only if:
-                    // * `persistedEntity` is active (otherwise, a concurrent update deactivated it and took care of decrementing `refCount`);
-                    // * and the persisted version of the original value is active;
-                    // * and the original value is not equal to the entity being saved (is not a self-reference).
-                    final var originalActivatableValue = extractActivatable(prop.getOriginalValue());
-                    if (persistedEntity != null && originalActivatableValue != null) {
-                        final var persistedOriginalValue = (ActivatableAbstractEntity<?>) session.load(originalActivatableValue.getType(), originalActivatableValue.getId(), UPGRADE);
-                        if (persistedEntity.isActive() && persistedOriginalValue.isActive() && !areEqual(entity, persistedOriginalValue)) {
-                            sink.accept(new RefCountInstruction.Dec(originalActivatableValue));
+                    if (isActivatableReference(entityType, prop.getName(), prop.getOriginalValue())) {
+                        // If `entity` is persisted, the original value of `prop`, if not null, was dereferenced, and its `refCount` must be decremented.
+                        // Original property value should not be null, otherwise property would not become dirty by assigning null.
+                        // `refCount` is decremented if and only if:
+                        // * `persistedEntity` is active (otherwise, a concurrent update deactivated it and took care of decrementing `refCount`);
+                        // * and the persisted version of the original value is active;
+                        // * and the original value is not equal to the entity being saved (is not a self-reference).
+                        final var originalActivatableValue = extractActivatable(prop.getOriginalValue());
+                        if (persistedEntity != null && originalActivatableValue != null) {
+                            final var persistedOriginalValue = (ActivatableAbstractEntity<?>) session.load(originalActivatableValue.getType(), originalActivatableValue.getId(), UPGRADE);
+                            if (persistedEntity.isActive() && persistedOriginalValue.isActive() && !areEqual(entity, persistedOriginalValue))
+                            {
+                                sink.accept(new RefCountInstruction.Dec(originalActivatableValue));
+                            }
                         }
                     }
 
-                    final var activatableValue = extractActivatable(prop.getValue());
-                    // `entity` began referencing `activatableValue`.
-                    if (activatableValue != null) {
-                        // The use of `UPGRADE` is not strictly required for safe concurrent updates to `refCount`.
-                        // However, with `UPGRADE`, `session.load()` acquires a pessimistic lock on the record,
-                        // blocking other transactions from modifying it until the current transaction completes (commit or rollback).
-                        // This guarantees that `session.load()` returns the most up-to-date persisted state.
-                        //
-                        // Without `UPGRADE`, multiple transactions can call `session.load()` concurrently without blocking.
-                        // In this case, the first transaction to commit successfully updates the persistent state,
-                        // while any concurrent transaction attempting to commit a conflicting change will fail with a `StaleObjectException`.
-                        //
-                        // Summary:
-                        // * With `UPGRADE`: safe concurrent updates with blocking (pessimistic locking).
-                        // * Without `UPGRADE`: safe concurrent updates without blocking (optimistic locking), but with a risk of rollback on conflict.
-                        //
-                        // We prefer using `UPGRADE` in this context to reduce the likelihood of rollbacks in potentially complex transactions caused by concurrent updates to `refCount`.
-                        final var persistedActivatableValue = (ActivatableAbstractEntity<?>) session.load(activatableValue.getType(), activatableValue.getId(), UPGRADE);
+                    if (isActivatableReference(entityType, prop.getName(), prop.getValue())) {
+                        final var activatableValue = extractActivatable(prop.getValue());
+                        // `entity` began referencing `activatableValue`.
+                        if (activatableValue != null) {
+                            // The use of `UPGRADE` is not strictly required for safe concurrent updates to `refCount`.
+                            // However, with `UPGRADE`, `session.load()` acquires a pessimistic lock on the record,
+                            // blocking other transactions from modifying it until the current transaction completes (commit or rollback).
+                            // This guarantees that `session.load()` returns the most up-to-date persisted state.
+                            //
+                            // Without `UPGRADE`, multiple transactions can call `session.load()` concurrently without blocking.
+                            // In this case, the first transaction to commit successfully updates the persistent state,
+                            // while any concurrent transaction attempting to commit a conflicting change will fail with a `StaleObjectException`.
+                            //
+                            // Summary:
+                            // * With `UPGRADE`: safe concurrent updates with blocking (pessimistic locking).
+                            // * Without `UPGRADE`: safe concurrent updates without blocking (optimistic locking), but with a risk of rollback on conflict.
+                            //
+                            // We prefer using `UPGRADE` in this context to reduce the likelihood of rollbacks in potentially complex transactions caused by concurrent updates to `refCount`.
+                            final var persistedActivatableValue = (ActivatableAbstractEntity<?>) session.load(activatableValue.getType(), activatableValue.getId(), UPGRADE);
 
-                        // The newly referenced activatable `activatableValue` needs to have its `refCount` incremented if:
-                        // * `entity` is active and was not concurrently deactivated OR `entity` is inactive and was concurrently activated;
-                        // * and `activatableValue` is not a self-reference to `entity`;
-                        // * and the persisted version of `activatableValue` is active.
-                        //   If `activatableValue` is concurrently deactivated, then we are in error -- active `entity` cannot reference inactive `activatableValue`.
-                        if (!areEqual(entity, persistedActivatableValue)) {
-                            if (persistedEntity == null || entity.getVersion() >= persistedEntity.getVersion()
-                                    ? entity.isActive()
-                                    : persistedEntity.isActive())
-                            {
-                                if (!persistedActivatableValue.isActive()) {
-                                    session.detach(persistedActivatableValue);
-                                    throw mkInactiveReferenceFailure(prop, persistedActivatableValue);
-                                }
-                                else {
-                                    sink.accept(new RefCountInstruction.Inc(activatableValue));
+                            // The newly referenced activatable `activatableValue` needs to have its `refCount` incremented if:
+                            // * `entity` is active and was not concurrently deactivated OR `entity` is inactive and was concurrently activated;
+                            // * and `activatableValue` is not a self-reference to `entity`;
+                            // * and the persisted version of `activatableValue` is active.
+                            //   If `activatableValue` is concurrently deactivated, then we are in error -- active `entity` cannot reference inactive `activatableValue`.
+                            if (!areEqual(entity, persistedActivatableValue)) {
+                                if (persistedEntity == null || entity.getVersion() >= persistedEntity.getVersion()
+                                        ? entity.isActive()
+                                        : persistedEntity.isActive())
+                                {
+                                    if (!persistedActivatableValue.isActive()) {
+                                        session.detach(persistedActivatableValue);
+                                        throw mkInactiveReferenceFailure(prop, persistedActivatableValue);
+                                    }
+                                    else {
+                                        sink.accept(new RefCountInstruction.Inc(activatableValue));
+                                    }
                                 }
                             }
                         }
@@ -722,6 +740,42 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 });
 
         return Stream.concat(instructionsForNonDirty, instructionsForDirty);
+    }
+
+    /// This predicate is true if a property value represents an activatable reference.
+    ///
+    /// @param entityType  the entity type that declares the property
+    /// @param propName  the name of the property
+    /// @param value  the value assigned to the property
+    ///
+    @SuppressWarnings("unchecked")
+    private boolean isActivatableReference(final Class<? extends ActivatableAbstractEntity<?>> entityType, final String propName, final Object value) {
+        if (value == null) {
+            return false;
+        }
+
+        final var prop = findFieldByName(entityType, propName);
+        if (!isEntityType(prop.getType())) {
+            return false;
+        }
+        else if (isDeactivatableDependencyBackref(entityType, propName)) {
+            return false;
+        }
+        // If the property is not union-typed, it is enough to check the property itself.
+        // Otherwise, the active union member may need to be considered as well.
+        else if (isActivatablePersistentProperty(entityType, propName) && !isSpecialActivatableToBeSkipped(entityType, propName)) {
+            return true;
+        }
+        else if (isUnionEntityType(prop.getType())) {
+            final var union = (AbstractUnionEntity) value;
+            final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(union.getType());
+            final var activePropName = instrument(union, unionCo).activePropertyName();
+            return isActivatableProperty(union.getType(), activePropName)
+                   && !isSpecialActivatableToBeSkipped(union.getType(), activePropName);
+        }
+        else {
+            return false;
+        }
     }
 
     /// Instruction that operates on `refCount`.
