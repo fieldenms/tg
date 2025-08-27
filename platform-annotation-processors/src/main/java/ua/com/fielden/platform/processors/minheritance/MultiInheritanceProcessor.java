@@ -68,6 +68,12 @@ import static ua.com.fielden.platform.utils.MessageUtils.singleOrPlural;
 /// One solution is to delay verification until the 3rd round, while gathering all inputs in the first two rounds.
 /// The challenging part is the handling of different scenarios -- sometimes, the 2nd round may be the last one.
 ///
+/// #### Support for extending synthetic entity types
+/// Currently, synthetic entity types cannot be specified in [Extends].
+/// This limitation stems from the objective of simplicity for the initial versions of the processor.
+///
+/// If synthetic entity types are to be supported, it is important to consider the role of crit-only properties and the rules for their inheritance.
+///
 @SupportedAnnotationTypes("*")
 public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcessor {
 
@@ -251,16 +257,16 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                     }
                 });
 
-        // Each entity type must be either a persistent or synthetic entity type.
+        // Each entity type must be a persistent type.
         atExtends.value()
                 .stream()
                 .map(ExtendsMirror.EntityMirror::value)
                 .filter(tm -> tm.getKind() == TypeKind.DECLARED)
                 .map(ElementFinder::asTypeElementOfTypeMirror)
                 .map(entityFinder::newEntityElement)
-                .filter(entity -> !(entityFinder.isPersistentEntityType(entity) || entityFinder.isSyntheticEntityType(entity)))
+                .filter(entity -> !entityFinder.isPersistentEntityType(entity))
                 .forEach(entity -> {
-                    final var msg = "[%s] cannot be specified in @%s. Only persistent and synthetic entity types are allowed.".formatted(
+                    final var msg = "[%s] cannot be specified in @%s. Only persistent entity types are allowed.".formatted(
                             entity.getSimpleName(), Extends.class.getSimpleName());
                     printMessageOn(Diagnostic.Kind.ERROR, msg, specEntity.element(), Extends.class);
                     throw new SpecEntityDefinitionException(specEntity, msg);
@@ -285,6 +291,8 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 });
 
 
+        // TODO Uncomment if support for synthetic entity types in `@Extends` is enabled.
+        /*
         // Warn about extended synthetic entity types without `id`.
         atExtends.value()
                 .stream()
@@ -293,6 +301,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                     final var entity = entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(atEntity.value()));
                     verifyIdInSynType(specEntity, entity);
                 });
+        */
 
         // Warn if none of the extended types has `desc` but the spec-entity type does.
         // Such a definition will result in `desc` recognised as a property of the generated entity type, but no yields for `desc` will be generated.
@@ -354,6 +363,8 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 });
     }
 
+    // TODO Uncomment if support for synthetic entity types in `@Extends` is enabled.
+    /*
     private void verifyIdInSynType(final EntityElement specEntity, final EntityElement extendedEntity) {
         if (entityFinder.isSyntheticEntityType(extendedEntity) && entityFinder.maybePropId(extendedEntity).isEmpty()) {
             final var msg = """
@@ -364,6 +375,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
             printMessageOn(Diagnostic.Kind.WARNING, msg, specEntity.element(), Extends.class);
         }
     }
+    */
 
     private void printConflictMessage(final List<PropertyElement> group, final EntityElement specEntity) {
         // Use the spec property, if possible, for a more precise message.
