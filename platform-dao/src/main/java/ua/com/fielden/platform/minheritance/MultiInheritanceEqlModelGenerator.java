@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.exceptions.InvalidStateException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFromAlias;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
@@ -19,14 +18,14 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ArrayUtils;
-import ua.com.fielden.platform.utils.StreamUtils;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.minheritance.MultiInheritanceCommon.EXCLUDED_PROPERTIES;
@@ -65,7 +64,9 @@ public class MultiInheritanceEqlModelGenerator {
         }
 
         final var supertypes = Arrays.stream(atExtends.value()).map(Extends.Entity::value).toList();
-        final var inheritedProperties = allInheritedProperties(type, atExtends);
+        // Key: property name. Value: list of entity types from which the property is inherited.
+        final Map<String, List<Class<? extends AbstractEntity<?>>>> propSourcesMap = allInheritedProperties(type, atExtends)
+                .collect(groupingBy(t2 -> t2._2, mapping(t2 -> t2._1, toList())));
 
         final Optional<Method> maybeMethod_modelFor = Try(() -> getMethod(type, "modelFor", Class.class, IFromAlias.class)) instanceof Right<?, Method>(var method)
                 ? Optional.of(method).map(it -> { it.setAccessible(true); return it; })
@@ -82,9 +83,9 @@ public class MultiInheritanceEqlModelGenerator {
                                 // because EqlQueryTransformer would be required, which would create a circular dependency:
                                 // MultiInheritanceEqlModelGenerator -> EqlQueryTransformer -> QuerySourceInfoProvider -> SyntheticModelProvider -> MultiInheritanceEqlModelGenerator
                                 final ISubsequentCompletedAndYielded<?> initPart = invokeStatic(modelFor, ty, select(ty));
-                                return yieldProperties(initPart, ty, inheritedProperties);
+                                return yieldProperties(initPart, ty, propSourcesMap, propSourcesMap.keySet());
                             })
-                            .orElseGet(() -> yieldProperties(select(ty), ty, inheritedProperties));
+                            .orElseGet(() -> yieldProperties(select(ty), ty, propSourcesMap, propSourcesMap.keySet()));
                     final var part2 = part1.yield().val(ty.getCanonicalName()).as(atExtends.entityTypeCarrierProperty());
                     return part2.modelAsEntity(type);
                 })
@@ -94,56 +95,58 @@ public class MultiInheritanceEqlModelGenerator {
     private ISubsequentCompletedAndYielded<?> yieldProperties(
             final ISubsequentCompletedAndYielded<?> part,
             final Class<? extends AbstractEntity<?>> sourceType,
-            final Set<T2<? extends Class<? extends AbstractEntity<?>>, String>> properties)
+            final Map<String, List<Class<? extends AbstractEntity<?>>>> propSourcesMap,
+            final Collection<String> props)
     {
-        return yieldProperties(part, sourceType, properties.iterator());
+        return yieldProperties(part, sourceType, propSourcesMap, props.iterator());
     }
 
     private ISubsequentCompletedAndYielded<?> yieldProperties(
             final IFromAlias<?> part,
             final Class<? extends AbstractEntity<?>> sourceType,
-            final Set<T2<? extends Class<? extends AbstractEntity<?>>, String>> properties)
+            final Map<String, List<Class<? extends AbstractEntity<?>>>> propSourcesMap,
+            final Collection<String> props)
     {
-        final var propertiesIter = properties.iterator();
-        final var prop0 = propertiesIter.next();
-        final var nextPart = yieldProp(domainMetadata.forEntity(sourceType), prop0._1, prop0._2, part);
-        return yieldProperties(nextPart, sourceType, propertiesIter);
+        final var propsIter = props.iterator();
+        final var prop0 = propsIter.next();
+        final var nextPart = yieldProp(sourceType, part, propSourcesMap, prop0);
+        return yieldProperties(nextPart, sourceType, propSourcesMap, propsIter);
     }
 
     private ISubsequentCompletedAndYielded<?> yieldProperties(
             final ISubsequentCompletedAndYielded<?> part,
             final Class<? extends AbstractEntity<?>> sourceType,
-            final Iterator<T2<? extends Class<? extends AbstractEntity<?>>, String>> properties)
+            final Map<String, List<Class<? extends AbstractEntity<?>>>> propSourcesMap,
+            final Iterator<String> props)
     {
-        final var entityMetadata = domainMetadata.forEntity(sourceType);
         var result = part;
-        while (properties.hasNext()) {
-            final var next = properties.next();
-            result = yieldProp(entityMetadata, next._1, next._2, result);
+        while (props.hasNext()) {
+            final var prop = props.next();
+            result = yieldProp(sourceType, result, propSourcesMap, prop);
         }
         return result;
     }
 
     private ISubsequentCompletedAndYielded<?> yieldProp(
-            final EntityMetadata sourceEntityMetadata,
-            final Class<? extends AbstractEntity<?>> ownerType,
-            final String name,
-            final ISubsequentCompletedAndYielded<?> part)
+            final Class<? extends AbstractEntity<?>> sourceType,
+            final ISubsequentCompletedAndYielded<?> part,
+            final Map<String, List<Class<? extends AbstractEntity<?>>>> propSourcesMap,
+            final String prop)
     {
-        return hasProperty(sourceEntityMetadata, name)
-                ? part.yield().prop(name).as(name)
-                : part.yield().val(defaultPropertyValue(ownerType, name)).as(name);
+        return propSourcesMap.get(prop).contains(sourceType)
+                ? part.yield().prop(prop).as(prop)
+                : part.yield().val(defaultPropertyValue(propSourcesMap.get(prop).getFirst(), prop)).as(prop);
     }
 
     private ISubsequentCompletedAndYielded<?> yieldProp(
-            final EntityMetadata sourceEntityMetadata,
-            final Class<? extends AbstractEntity<?>> ownerType,
-            final String name,
-            final IFromAlias<?> part)
+            final Class<? extends AbstractEntity<?>> sourceType,
+            final IFromAlias<?> part,
+            final Map<String, List<Class<? extends AbstractEntity<?>>>> propSourcesMap,
+            final String prop)
     {
-        return hasProperty(sourceEntityMetadata, name)
-                ? part.yield().prop(name).as(name)
-                : part.yield().val(defaultPropertyValue(ownerType, name)).as(name);
+        return propSourcesMap.get(prop).contains(sourceType)
+                ? part.yield().prop(prop).as(prop)
+                : part.yield().val(defaultPropertyValue(propSourcesMap.get(prop).getFirst(), prop)).as(prop);
     }
 
     private @Nullable Object defaultPropertyValue(final Class<? extends AbstractEntity<?>> ownerType, final CharSequence prop) {
@@ -158,42 +161,26 @@ public class MultiInheritanceEqlModelGenerator {
         };
     }
 
-    private Set<T2<? extends Class<? extends AbstractEntity<?>>, String>> allInheritedProperties(
+    private Stream<T2<? extends Class<? extends AbstractEntity<?>>, String>> allInheritedProperties(
             final Class<? extends AbstractEntity<?>> multiInheritanceType,
             final Extends atExtends)
     {
         final var multiInheritanceEntityMetadata = domainMetadata.forEntity(multiInheritanceType);
 
-        return StreamUtils.distinct(
-                        Arrays.stream(atExtends.value())
-                                .flatMap(atEntity -> domainMetadata.forEntity(atEntity.value())
-                                        .properties()
-                                        .stream()
-                                        .filter(PropertyMetadata::isPersistent)
-                                        .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.name()))
-                                        .filter(prop -> !ArrayUtils.contains(atEntity.exclude(), prop.name()))
-                                        // Check if ID is really present.
-                                        .filter(prop -> !ID.equals(prop.name()) || hasId(atEntity.value()))
-                                        // Currently, this handles only the special case of `desc`.
-                                        // The extended entity type could have `desc`, but the spec-entity type could
-                                        // lack it, hence the multi-inheritance entity type would also lack it.
-                                        .filter(prop -> multiInheritanceEntityMetadata.hasProperty(prop.name()))
-                                        .map(prop -> t2(atEntity.value(), prop.name()))),
-                        pair -> pair._2)
-                .collect(toImmutableSet());
-    }
-
-    private boolean hasProperty(final EntityMetadata entityMetadata, final CharSequence propName) {
-        if (!entityMetadata.hasProperty(propName.toString())) {
-            return false;
-        }
-        else if (!entityMetadata.property(propName.toString()).isPersistent()) {
-            return false;
-        }
-        else if (ID.contentEquals(propName)) {
-            return hasId(entityMetadata.javaType());
-        }
-        else return true;
+        return Arrays.stream(atExtends.value())
+                .flatMap(atEntity -> domainMetadata.forEntity(atEntity.value())
+                        .properties()
+                        .stream()
+                        .filter(PropertyMetadata::isPersistent)
+                        .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.name()))
+                        .filter(prop -> !ArrayUtils.contains(atEntity.exclude(), prop.name()))
+                        // Check if ID is really present.
+                        .filter(prop -> !ID.equals(prop.name()) || hasId(atEntity.value()))
+                        // Currently, this handles only the special case of `desc`.
+                        // The extended entity type could have `desc`, but the spec-entity type could
+                        // lack it, hence the multi-inheritance entity type would also lack it.
+                        .filter(prop -> multiInheritanceEntityMetadata.hasProperty(prop.name()))
+                        .map(prop -> t2(atEntity.value(), prop.name())));
     }
 
     private boolean hasId(final Class<? extends AbstractEntity<?>> type) {
