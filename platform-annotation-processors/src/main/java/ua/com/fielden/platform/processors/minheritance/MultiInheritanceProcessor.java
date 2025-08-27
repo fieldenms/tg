@@ -101,9 +101,13 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                         final var javaFile = writeEntity(buildEntity(specEntity, specEntity.getAnnotation(Extends.class)), specEntity);
                         printNote("Generated [%s.%s] from the multi-inheritance specification in [%s].",
                                   javaFile.packageName, javaFile.typeSpec.name, specEntity.getQualifiedName());
-                    } catch (final PropertyConflictException e) {
+                    }
+                    catch (final PropertyConflictException e) {
                         e.groups.forEach(g -> printConflictMessage(g, specEntity));
                     }
+                    // An error message must have had been reported before this exception was thrown.
+                    // We catch it to avoid interrupting other processors.
+                    catch (final SpecEntityDefinitionException $) {}
                 });
 
         // Detect and report orphaned entity types.
