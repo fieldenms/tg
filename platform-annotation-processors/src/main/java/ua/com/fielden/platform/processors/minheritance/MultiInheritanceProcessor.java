@@ -204,6 +204,8 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
         final var propertySpecs = Stream.concat(
                         StreamUtils.distinct(inheritedProperties.stream(), PropertyElement::getSimpleName)
                                 .filter(prop -> !autoYieldPropertyNames.contains(prop.getSimpleName()))
+                                // `desc`, if present, will be inherited from the spec-entity, hence does not need to be declared.
+                                .filter(prop -> !DESC.contentEquals(prop.getSimpleName()))
                                 .map(this::makePropertySpec),
                         Stream.of(propertySpecBuilder(TypeName.get(String.class), atExtends.entityTypeCarrierProperty())
                                           .addAnnotation(EntityTypeCarrier.class)
