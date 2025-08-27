@@ -3,7 +3,6 @@ package ua.com.fielden.platform.processors.minheritance;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.*;
 import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.*;
@@ -503,21 +502,6 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
             return entityFinder.findProperty(entity, name).isPresent()
                    || (ID.contentEquals(name) && entityFinder.maybePropId(entity).isPresent());
         }
-    }
-
-
-    // TODO Decide on a naming convention for generated entity types.
-    //      We could also provide a way for application developers to specify the name.
-    private String simpleNameForGenEntity(final CharSequence specSimpleName) {
-        return specSimpleName + "_Gen";
-    }
-
-    private static String qualifiedNameForGenEntity(final CharSequence pkgName, final CharSequence simpleName) {
-        return format("%s.%s_Syn", pkgName, simpleName);
-    }
-
-    private static String qualifiedNameForGenEntity(final Class<? extends AbstractEntity<?>> type) {
-        return qualifiedNameForGenEntity(type.getPackageName(), type.getSimpleName());
     }
 
     // TODO Stack trace does not need to be captured, because this exception functions as an effect and never has a cause.
