@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.processors.minheritance;
 
-import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.*;
 import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.*;
+import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.exceptions.AbstractPlatformCheckedException;
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
@@ -28,10 +28,8 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
@@ -165,7 +163,7 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 .stream()
                 .flatMap(atEntityMirror  -> {
                     final var entity = entityFinder.newEntityElement(asTypeElementOfTypeMirror(atEntityMirror.value()));
-                    return inheritedPropertiesFrom(entity, ImmutableSet.copyOf(atEntityMirror.exclude()));
+                    return inheritedPropertiesFrom(entity, atEntityMirror);
                 })
                 .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.getSimpleName().toString()))
                 // Do not inherit `desc` if the spec-entity type does not have `desc`.
@@ -284,12 +282,13 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
                 .forEach(atEntity -> {
                     final var entity = entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(atEntity.value()));
                     final var invalidProps = Arrays.stream(atEntity.exclude())
-                            .filter(prop -> !hasProperty(entity, prop))
+                            .filter(prop -> !canPropertyBeInheritedFrom(prop, entity))
                             .toList();
                     if (!invalidProps.isEmpty()) {
-                        final var msg = "Non-existing %s [%s] cannot be excluded.".formatted(
+                        final var msg = "%s [%s] %s not inherited and cannot be excluded.".formatted(
                                 singleOrPlural(invalidProps.size(), "property", "properties"),
-                                invalidProps.stream().map(prop -> "%s.%s".formatted(entity.getSimpleName(), prop)).collect(joining(", ")));
+                                invalidProps.stream().map(prop -> "%s.%s".formatted(entity.getSimpleName(), prop)).collect(joining(", ")),
+                                singleOrPlural(invalidProps.size(), "is", "are"));
                         printMessageOn(Diagnostic.Kind.ERROR, msg, specEntity.element(), Extends.class);
                         throw new SpecEntityDefinitionException(specEntity, msg);
                     }
@@ -473,39 +472,40 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
         return TypeName.get(typeMirror);
     }
 
-    private boolean isPropertyInheritedFrom(
-            final CharSequence prop,
-            final ExtendsMirror.EntityMirror atEntityMirror)
-    {
-        // Is `prop` excluded?
-        if (ArrayUtils.contains(atEntityMirror.exclude(), prop.toString())) {
-            return false;
-        }
-        else {
-            final var entity = entityFinder.newEntityElement(asTypeElementOfTypeMirror(atEntityMirror.value()));
-            return hasProperty(entity, prop);
-        }
+    private boolean isPropertyInheritedFrom(final CharSequence prop, final ExtendsMirror.EntityMirror atEntityMirror) {
+        return !ArrayUtils.contains(atEntityMirror.exclude(), prop.toString())
+               && canPropertyBeInheritedFrom(prop, atEntityMirror.value());
     }
 
-    private Stream<PropertyElement> inheritedPropertiesFrom(final EntityElement entity, final Set<String> excludedProps) {
+    private boolean canPropertyBeInheritedFrom(final CharSequence prop, final TypeMirror typeMirror) {
+        final var entity = entityFinder.newEntityElement(asTypeElementOfTypeMirror(typeMirror));
+        return canPropertyBeInheritedFrom(prop, entity);
+    }
+
+    private boolean canPropertyBeInheritedFrom(final CharSequence prop, final EntityElement entity) {
+        final Optional<PropertyElement> maybeProp;
+        if (DESC.contentEquals(prop)) {
+            maybeProp = entityFinder.maybePropDesc(entity);
+        }
+        else if (ID.contentEquals(prop)) {
+            maybeProp = entityFinder.maybePropId(entity);
+        }
+        else {
+            maybeProp = entityFinder.findProperty(entity, prop);
+        }
+        return maybeProp
+                .filter(propElt -> entityFinder.isPersistentProperty(propElt))
+                .isPresent();
+    }
+
+    private Stream<PropertyElement> inheritedPropertiesFrom(final EntityElement entity, final ExtendsMirror.EntityMirror atEntityMirror) {
         // Use `distinct` to enable property hiding.
         return StreamUtils.distinct(
                 Stream.concat(entityFinder.streamProperties(entity),
                               // `streamProperties` does not include `AbstractEntity.id`, hence we include it explicitly.
                               entityFinder.maybePropId(entity).stream())
-                        .filter(prop -> !excludedProps.contains(prop.getSimpleName().toString()))
-                        .filter(prop -> !DESC.contentEquals(prop.getSimpleName()) || entityFinder.maybePropDesc(entity).isPresent()),
+                        .filter(prop -> isPropertyInheritedFrom(prop.getSimpleName(), atEntityMirror)),
                 PropertyElement::getSimpleName);
-    }
-
-    private boolean hasProperty(final EntityElement entity, final CharSequence name) {
-        if (DESC.contentEquals(name)) {
-            return entityFinder.maybePropDesc(entity).isPresent();
-        }
-        else {
-            return entityFinder.findProperty(entity, name).isPresent()
-                   || (ID.contentEquals(name) && entityFinder.maybePropId(entity).isPresent());
-        }
     }
 
     // TODO Stack trace does not need to be captured, because this exception functions as an effect and never has a cause.

@@ -459,6 +459,12 @@ public class EntityFinder extends ElementFinder {
         return isSubtype(property.getType(), Collection.class);
     }
 
+    /// Tests whether the property element represents a persistent property.
+    ///
+    public boolean isPersistentProperty(final PropertyElement prop) {
+        return prop.getAnnotation(MapTo.class) != null;
+    }
+
     public boolean isKeyMember(final PropertyElement property) {
         return property.getAnnotation(CompositeKeyMember.class) != null;
     }

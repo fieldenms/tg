@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
+import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyTypeMetadata;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.either.Right;
@@ -168,6 +169,7 @@ public class MultiInheritanceEqlModelGenerator {
                                 .flatMap(atEntity -> domainMetadata.forEntity(atEntity.value())
                                         .properties()
                                         .stream()
+                                        .filter(PropertyMetadata::isPersistent)
                                         .filter(prop -> !EXCLUDED_PROPERTIES.contains(prop.name()))
                                         .filter(prop -> !ArrayUtils.contains(atEntity.exclude(), prop.name()))
                                         // Check if ID is really present.
@@ -183,6 +185,9 @@ public class MultiInheritanceEqlModelGenerator {
 
     private boolean hasProperty(final EntityMetadata entityMetadata, final CharSequence propName) {
         if (!entityMetadata.hasProperty(propName.toString())) {
+            return false;
+        }
+        else if (!entityMetadata.property(propName.toString()).isPersistent()) {
             return false;
         }
         else if (ID.contentEquals(propName)) {
