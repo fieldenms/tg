@@ -419,7 +419,7 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
         // Inactive A begins referencing active B.
         final A a_v1 = setProperties(spec, refetch$(a), spec.A_b1(), b);
         // Concurrently, A is activated and begins referencing active B.
-        final A a_v2 = setProperties(spec, refetch$(a), ACTIVE, true, spec.A_b1(), b);
+        final A a_v2 = setProperties(spec, refetch$(a), spec.A_b1(), b, ACTIVE, true);
 
         save(a_v1);
         assertRefCount(10, b);

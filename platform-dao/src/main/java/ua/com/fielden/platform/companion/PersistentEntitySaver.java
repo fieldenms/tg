@@ -690,8 +690,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                             // Proceed if `refCount` for the original value was not decremented already, which could be caused by one of:
                             // 1. `entity` was deactivated.
                             // 2. `entity` dereferenced the original value.
-                            ? !(!persistedEntity.isActive() || !prop.getOriginalValue()
-                            .equals(persistedEntity.get(prop.getName())))
+                            ? !(!persistedEntity.isActive() || !prop.getOriginalValue().equals(persistedEntity.get(prop.getName())))
                             // Proceed if `refCount` for the original value was incremented previously.
                             : persistedEntity.isActive())
                         && isActivatableReference(entityType, prop.getName(), prop.getOriginalValue()))
