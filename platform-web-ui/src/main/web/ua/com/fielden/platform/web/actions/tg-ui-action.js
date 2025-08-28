@@ -521,7 +521,8 @@ Polymer({
             self.persistActiveElement();
 
             if (this.dynamicAction && (this.rootEntityType || this.currentEntity())) {
-                const currentEntityType = this.rootEntityType ? this._reflector.getType(this.rootEntityType) : getFirstEntityType(this.currentEntity(), this.chosenProperty); // currentEntityType is never empty due to either this.rootEntityType not empty or this.currentEntity() not empty
+                const currentEntityType = (this.rootEntityType && this._reflector.getType(this.rootEntityType)) // If root entity type present then it should be used for entity master 
+                        || getFirstEntityType(this.currentEntity(), this.chosenProperty); // or get type from this.currentEntity() and chosen property
                 if (!this.elementName) { // element name for dynamic action is not specified at first run
                     this._originalShortDesc = this.shortDesc; // it means that shortDesc wasn't changed yet
                 }
@@ -552,6 +553,9 @@ Polymer({
         self._onExecuted = (function (e, master, source) {
             //self constatnt is created to have a reference on action in functions created for entity master like postRetrieved, postSaved etc.
             const self = this;
+
+            // Set master for this action.
+            self._masterReferenceForTesting = master;
 
             // spinner requiredness assignment should be before action's progress changes as it is used in its observer
             // the spinner is required only if the action has no UI part
@@ -658,9 +662,6 @@ Polymer({
                     if (self.modifyFunctionalEntity) {
                         self.modifyFunctionalEntity(master._currBindingEntity, master, self);
                     }
-
-                    // Set master for this action.
-                    self._masterReferenceForTesting = master;
 
                     if (master.saveOnActivation === true) {
                         return master.save(); // saving promise
