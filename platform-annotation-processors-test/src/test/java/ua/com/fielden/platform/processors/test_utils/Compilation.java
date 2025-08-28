@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.test_utils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.testing.compile.ForwardingStandardJavaFileManager;
 import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
@@ -15,6 +16,8 @@ import javax.tools.JavaCompiler.CompilationTask;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
+
+import static ua.com.fielden.platform.utils.CollectionUtil.append;
 
 /**
  * An abstraction for compiling java sources that is based on {@link CompilationTask} with the primary purpose of evaluating additional statements in the annotation processing environment.
@@ -32,11 +35,11 @@ public final class Compilation {
     public static final String OPTION_PROC_ONLY = "-proc:only";
 
     private final Set<JavaFileObject> javaSources;
-    private Processor processor;
     private JavaCompiler compiler;
     private StandardJavaFileManager fileManager;
     private final List<String> options = new LinkedList<>();
     private DiagnosticCollector<JavaFileObject> diagnosticListener = new DiagnosticCollector<>();
+    private List<? extends Processor> processors = ImmutableList.of();
 
     /**
      * Creates a new instance that stores the compiled sources in memory by using a preconfigured {@link #compiler} and {@link #fileManager}.
@@ -69,7 +72,16 @@ public final class Compilation {
     }
 
     public Compilation setProcessor(final Processor processor) {
-        this.processor = processor;
+        return setProcessors(ImmutableList.of(processor));
+    }
+
+    public Compilation setProcessors(final Iterable<? extends Processor> processors) {
+        this.processors = ImmutableList.copyOf(processors);
+        return this;
+    }
+
+    public Compilation setProcessors(final Processor... processors) {
+        this.processors = ImmutableList.copyOf(processors);
         return this;
     }
 
@@ -143,22 +155,16 @@ public final class Compilation {
                 options,
                 null, // names of classes to be processed by annotation processing (?)
                 javaSources);
-        task.setProcessors(List.of(processor));
+        task.setProcessors(append(processors, processor));
         final boolean success = task.call();
 
-        return new CompilationResult(success, diagnosticListener.getDiagnostics(), processor.processingErrors,
-                fileManager.getGeneratedSources());
+        return new CompilationResult(success, diagnosticListener.getDiagnostics(), fileManager.getGeneratedSources());
     }
 
-    /**
-     * An annotation processor that wraps {@code Compilation.processor}, passed during instantiation, in order to to be able to control its execution and error reporting.
-     *
-     */
-    private final class EvaluatingProcessor extends AbstractProcessor {
+    private static final class EvaluatingProcessor extends AbstractProcessor {
 
         private final ThrowableConsumer<ProcessingEnvironment> evaluator;
         private CompilationException evaluatorError;
-        private final List<Throwable> processingErrors = new LinkedList<>();
 
         public EvaluatingProcessor(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
             this.evaluator = evaluator;
@@ -166,36 +172,16 @@ public final class Compilation {
 
         @Override
         public SourceVersion getSupportedSourceVersion() {
-            return processor != null ? processor.getSupportedSourceVersion() : SourceVersion.latestSupported();
+            return SourceVersion.latestSupported();
         }
 
         @Override
         public Set<String> getSupportedAnnotationTypes() {
-            return processor != null ? processor.getSupportedAnnotationTypes() : Set.of("*");
-        }
-
-        @Override
-        public Set<String> getSupportedOptions() {
-            return processor != null ? processor.getSupportedOptions() : super.getSupportedOptions();
-        }
-
-        @Override
-        public synchronized void init(final ProcessingEnvironment processingEnv) {
-            super.init(processingEnv);
-            if (processor != null) {
-                processor.init(processingEnv);
-            }
+            return Set.of("*");
         }
 
         @Override
         public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-            if (processor != null) {
-                try {
-                    processor.process(annotations, roundEnv);
-                } catch (final Throwable ex) {
-                    processingErrors.add(ex);
-                }
-            }
             if (roundEnv.processingOver()) {
                 try {
                     evaluator.accept(processingEnv);

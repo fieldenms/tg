@@ -27,7 +27,7 @@ import java.util.function.Function;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.compileWithTempStorage;
 import static ua.com.fielden.platform.processors.utils.CodeGenerationUtils.buildAtCompositeKeyMember;
 import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
@@ -417,7 +417,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                         .build();
                 javaFileWriter.accept(javaFileEntityPerson);
 
-                assertSuccessWithoutProcessingErrors(
+                assertSuccess(
                         compilation.setProcessor(new ApplicationDomainProcessor())
                                 .setJavaSources(List.of(javaFileEntityPerson.toJavaFileObject()))
                                 .addOptions(OPTION_PROC_ONLY)
@@ -432,7 +432,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                                         .build())
                         .build();
 
-                assertSuccessWithoutProcessingErrors(
+                assertSuccess(
                         compilation.setProcessor(createProcessor())
                                 .setJavaSources(List.of(javaFileEntityContract.toJavaFileObject()))
                                 .addOptions(OPTION_PROC_ONLY)
