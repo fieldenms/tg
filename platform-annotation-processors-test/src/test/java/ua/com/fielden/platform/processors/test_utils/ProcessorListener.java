@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.test_utils;
 
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
+import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 import javax.annotation.processing.*;
@@ -13,6 +14,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -20,6 +22,7 @@ import java.util.stream.Stream;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotationOptionally;
 
 /**
  * This class represents a listener of annotation processors. It wraps a processor instance and provides the ability to insert
@@ -65,6 +68,30 @@ public class ProcessorListener<P extends Processor> extends AbstractProcessor {
         // run the wrapped processor
         final boolean result = processor.process(annotations, roundEnv);
         roundListener.getAfterRound(roundNumber).forEach(f -> f.accept(annotations, roundEnv));
+
+        if (roundEnv.processingOver()) {
+            // `roundListener` may declare methods that should be executed after the actual last round.
+            // Since those methods will not be executed, it is prudent to report an error.
+            // Those methods may contain assertions, and simply ignoring them may lead the developer to believe that they were executed and succeeded.
+            final var invalidMethods = Arrays.stream(roundListener.getClass().getDeclaredMethods())
+                    .flatMap(m -> Stream.concat(
+                            getAnnotationOptionally(m, AbstractRoundListener.BeforeRound.class)
+                                    .filter(annot -> annot.value() > roundNumber)
+                                    .map(annot -> "@%s(%s) %s".formatted(AbstractRoundListener.BeforeRound.class.getSimpleName(), annot.value(), m.getName()))
+                                    .stream(),
+                            getAnnotationOptionally(m, AbstractRoundListener.AfterRound.class)
+                                    .filter(annot -> annot.value() > roundNumber)
+                                    .map(annot -> "@%s(%s) %s".formatted(AbstractRoundListener.AfterRound.class.getSimpleName(), annot.value(), m.getName()))
+                                    .stream()))
+                    .toList();
+            if (!invalidMethods.isEmpty()) {
+                throw new TestCaseConfigException("""
+                      Mismatch between the actual number of processing rounds and the definition of %s. \
+                      The last round number is %s. \
+                      Invalid methods: %s"""
+                      .formatted(roundListener.getClass().getTypeName(), roundNumber, String.join(", ", invalidMethods)));
+            }
+        }
 
         return result;
     }
