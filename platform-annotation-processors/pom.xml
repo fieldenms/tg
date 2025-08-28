@@ -152,6 +152,8 @@
                             <goal>compile</goal>
                         </goals>
                         <configuration>
+<!--                          Disable annotation processing for main sources as a workaround for a Maven bug. -->
+<!--                          https://issues.apache.org/jira/browse/MCOMPILER-97-->
                             <compilerArgument>-proc:none</compilerArgument>
                         </configuration>
                     </execution>
