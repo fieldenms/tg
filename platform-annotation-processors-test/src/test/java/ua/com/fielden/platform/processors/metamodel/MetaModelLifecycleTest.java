@@ -16,6 +16,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
+import ua.com.fielden.platform.processors.test_utils.GeneratorProcessor;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -233,7 +234,10 @@ public class MetaModelLifecycleTest {
             throw new TestCaseConfigException("Could not set compilation locations from paths.", ex);
         }
         final Compilation compilation = new Compilation(compilationTargets)
-                .setProcessor(new MetaModelProcessor())
+                // The MetaModels class is generated in the 2nd round.
+                // We should evaluate `consumer` in the 3rd round, so that it can access the generated MetaModels.
+                // Therefore, use `GeneratorProcessor`.
+                .setProcessors(new GeneratorProcessor(), new MetaModelProcessor())
                 .setCompiler(compiler)
                 .setFileManager(fileManager)
                 .addOptions(Compilation.OPTION_PROC_ONLY);
