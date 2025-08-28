@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.validation.custom;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.validation.custom.DomainEntityDependencies.DomainEntityDependency;
@@ -13,12 +14,14 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 /**
  * A set of utilities for analysing domain dependencies.
@@ -27,7 +30,7 @@ public class DomainEntitiesDependenciesUtils {
     public static final String PARAM = "ENTITY_VALUE";
     public static final String ENTITY_TYPE_NAME = "entity_type_name";
     public static final String ENTITY_TYPE_TITLE = "entity_type_title";
-    public static final String DEPENDENT_PROP_NAME = "dependent_prop_name";
+    public static final String DEPENDENT_PROP_PATH = "dependent_prop_path";
     public static final String DEPENDENT_PROP_TITLE = "dependent_prop_title";
     public static final String COUNT = "KOUNT";
 
@@ -46,20 +49,20 @@ public class DomainEntitiesDependenciesUtils {
     public static AggregatedResultQueryModel dependencyCountQuery(final Set<DomainEntityDependency> dependencies, final boolean deactivationOnly) {
         final var models = dependencies.stream().map(dependency -> {
             final var cond = deactivationOnly
-                             ? cond().prop(ID).ne().param(PARAM).and().prop(dependency.propPath).eq().param(PARAM).and().prop(ACTIVE).eq().val(true).model()
-                             : cond().prop(ID).ne().param(PARAM).and().prop(dependency.propPath).eq().param(PARAM).model();
-            return select(dependency.entityType)
+                             ? cond().prop(ID).ne().param(PARAM).and().prop(dependency.propPath()).eq().param(PARAM).and().prop(ACTIVE).eq().val(true).model()
+                             : cond().prop(ID).ne().param(PARAM).and().prop(dependency.propPath()).eq().param(PARAM).model();
+            return select(dependency.entityType())
                    .where().condition(cond)
-                   .yield().val(dependency.entityType.getName()).as(ENTITY_TYPE_NAME)
-                   .yield().val(dependency.entityTitle).as(ENTITY_TYPE_TITLE)
-                   .yield().val(dependency.propName).as(DEPENDENT_PROP_NAME)
-                   .yield().val(dependency.propTitle).as(DEPENDENT_PROP_TITLE)
+                   .yield().val(dependency.entityType().getName()).as(ENTITY_TYPE_NAME)
+                   .yield().val(dependency.entityTitle()).as(ENTITY_TYPE_TITLE)
+                   .yield().val(dependency.propPath()).as(DEPENDENT_PROP_PATH)
+                   .yield().val(dependency.propTitle()).as(DEPENDENT_PROP_TITLE)
                   .modelAsAggregate();
-        }).toList();
+        }).toArray(AggregatedResultQueryModel[]::new);
 
-        return select(models.toArray(new AggregatedResultQueryModel[] {}))
+        return select(models)
                .groupBy().prop(ENTITY_TYPE_NAME)
-               .groupBy().prop(DEPENDENT_PROP_NAME)
+               .groupBy().prop(DEPENDENT_PROP_PATH)
                .groupBy().prop(ENTITY_TYPE_TITLE)
                .groupBy().prop(DEPENDENT_PROP_TITLE)
                .yield().prop(ENTITY_TYPE_TITLE).as(ENTITY_TYPE_TITLE)
@@ -87,6 +90,7 @@ public class DomainEntitiesDependenciesUtils {
      *          An inclusive predicate to identify types that should be considered for dependency analysis.
      * @return  A map between persistent entity types and their persistent dependencies.
      */
+    @SuppressWarnings("unchecked")
     public static Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> entityDependencyMap(
             final Collection<Class<? extends AbstractEntity<?>>> domainEntityTypes,
             final Predicate<Class<? extends AbstractEntity<?>>> entityTypePredicate)
@@ -94,23 +98,33 @@ public class DomainEntitiesDependenciesUtils {
         final var map = new HashMap<Class<? extends AbstractEntity<?>>, DomainEntityDependencies>();
         domainEntityTypes.stream().filter(entityTypePredicate)
         .forEach(entType -> {
-            // Need to make sure that every matching entity type as a corresponding instance of DomainEntityDependencies.
+            // Need to make sure that every matching entity type has a corresponding instance of DomainEntityDependencies.
             // Otherwise, there can be situations where an entity that has no properties of its type, ends up not represented in the dependency map.
             map.computeIfAbsent(entType, DomainEntityDependencies::new);
 
             // Process real properties.
             // This processing works inversely, where properties in the entity being processed have the dependency map
-            streamRealProperties(entType, MapTo.class).filter(field -> entityTypePredicate.test((Class<? extends AbstractEntity<?>>) field.getType())).forEach(field -> {
-                final var propType = (Class<? extends AbstractEntity<?>>) field.getType();
-                map.computeIfAbsent(propType, DomainEntityDependencies::new)
-                   .addDependency(entType, field);
+            streamRealProperties(entType, MapTo.class).forEach(field -> {
+                if (isUnionEntityType(field.getType())) {
+                    for (final var unionMember : unionProperties((Class<? extends AbstractUnionEntity>) field.getType())) {
+                        final var unionMemberType = (Class<? extends AbstractEntity<?>>) unionMember.getType();
+                        if (entityTypePredicate.test(unionMemberType)) {
+                            map.computeIfAbsent(unionMemberType, DomainEntityDependencies::new)
+                                    .addDependency(entType, "%s.%s".formatted(field.getName(), unionMember.getName()));
+                        }
+                    }
+                }
+                else if (entityTypePredicate.test((Class<? extends AbstractEntity<?>>) field.getType())) {
+                    map.computeIfAbsent((Class<? extends AbstractEntity<?>>) field.getType(), DomainEntityDependencies::new)
+                            .addDependency(entType, field.getName());
+                }
             });
 
             // Process a special case of one-2-one association.
             if (isOneToOne(entType)) {
                 final var keyField = getKeyMembers(entType).getFirst();
                 map.get(entType)
-                   .addDependency(entType, keyField);
+                   .addDependency(entType, keyField.getName());
             }
         });
 

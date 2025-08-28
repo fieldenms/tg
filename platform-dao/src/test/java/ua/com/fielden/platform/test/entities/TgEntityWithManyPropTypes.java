@@ -43,6 +43,26 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
+    @SkipEntityExistsValidation
+    private UnionEntity unionProp2;
+
+    @IsProperty
+    @MapTo
+    @SkipEntityExistsValidation(skipActiveOnly = true, skipNew = false)
+    private UnionEntity unionProp3;
+
+    @IsProperty
+    @MapTo
+    @SkipEntityExistsValidation(skipActiveOnly = false, skipNew = true)
+    private UnionEntity unionProp4;
+
+    @IsProperty
+    @MapTo
+    @SkipEntityExistsValidation(skipActiveOnly = true, skipNew = true)
+    private UnionEntity unionProp5;
+
+    @IsProperty
+    @MapTo
     private String stringProp;
 
     @IsProperty
@@ -243,6 +263,46 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
 
     public Class<?> getClassProperty() {
         return classProperty;
+    }
+
+    public UnionEntity getUnionProp5() {
+        return unionProp5;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setUnionProp5(final UnionEntity unionProp5) {
+        this.unionProp5 = unionProp5;
+        return this;
+    }
+
+    public UnionEntity getUnionProp4() {
+        return unionProp4;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setUnionProp4(final UnionEntity unionProp4) {
+        this.unionProp4 = unionProp4;
+        return this;
+    }
+
+    public UnionEntity getUnionProp3() {
+        return unionProp3;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setUnionProp3(final UnionEntity unionProp3) {
+        this.unionProp3 = unionProp3;
+        return this;
+    }
+
+    public UnionEntity getUnionProp2() {
+        return unionProp2;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setUnionProp2(final UnionEntity unionProp2) {
+        this.unionProp2 = unionProp2;
+        return this;
     }
 
     @Observable

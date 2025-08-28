@@ -1,20 +1,6 @@
 package ua.com.fielden.platform.entity.proxy;
 
-import static javassist.util.proxy.ProxyFactory.isProxyClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
-import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
-import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
-
-import java.math.BigDecimal;
-import java.util.stream.Stream;
-
 import org.junit.Test;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -27,6 +13,15 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Left;
+
+import java.math.BigDecimal;
+import java.util.stream.Stream;
+
+import static javassist.util.proxy.ProxyFactory.isProxyClass;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
@@ -223,7 +218,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void properties_with_id_only_proxy_values_cannot_be_updated_with_non_null_values() {
+    public void properties_with_id_only_proxy_values_can_be_updated_with_non_null_values() {
         final ITgVehicle coVehicle = co$(TgVehicle.class);
         final TgVehicle vehicle = coVehicle.findByKey("CAR2");
 
@@ -237,9 +232,8 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final TgOrgUnit5 station51 = co(TgOrgUnit5.class).getEntity(from(query).with(fetchAll(TgOrgUnit5.class)).model());
 
         final Either<Exception, TgVehicle> setStationResult = Try(() -> vehicle.setStation(station51));
-        assertTrue(setStationResult instanceof Left);
-        final Left<Exception, TgVehicle> setError = (Left<Exception, TgVehicle>) setStationResult;
-        assertTrue(setError.value() instanceof StrictProxyException);
+        assertTrue(setStationResult.isRight());
+        assertEquals(station51, setStationResult.asRight().value().getStation());
     }
 
     @Test

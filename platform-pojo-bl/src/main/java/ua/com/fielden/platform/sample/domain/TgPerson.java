@@ -1,18 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
-import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.Invisible;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -63,4 +52,12 @@ public class TgPerson extends ActivatableAbstractEntity<String> {
         super.setKey(key);
         return this;
     }
+
+    @Observable
+    @Override
+    public TgPerson setRefCount(final Integer refCount) {
+        super.setRefCount(refCount);
+        return this;
+    }
+
 }
