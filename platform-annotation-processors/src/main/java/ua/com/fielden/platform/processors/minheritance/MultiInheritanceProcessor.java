@@ -405,16 +405,18 @@ public class MultiInheritanceProcessor extends AbstractPlatformAnnotationProcess
         }
     }
 
+    /// This predicate is true if `props` is a group of conflicting properties, which means that all of them have the same name but not the same type.
+    /// This methods assumes that all properties in `props` have the same name.
+    ///
     private boolean isConflicting(final List<PropertyElement> props) {
         if (props.size() <= 1) {
             return false;
         }
         return props.stream()
                        .map(PropertyElement::getType)
-                       // TODO Support all kinds of types.
-                       .filter(typeMirror -> typeMirror.getKind() == TypeKind.DECLARED)
-                       .map(ElementFinder::asTypeElementOfTypeMirror)
-                       .map(TypeElement::getQualifiedName)
+                       .filter(typeMirror -> typeMirror.getKind() != TypeKind.ERROR)
+                       // String representation of a type should uniquely identify it.
+                       .map(TypeMirror::toString)
                        .distinct()
                        .limit(2)
                        .count() > 1;
