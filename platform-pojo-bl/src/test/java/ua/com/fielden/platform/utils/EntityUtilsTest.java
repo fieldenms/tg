@@ -20,7 +20,6 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.reflection.test_entities.EntityWithPropertiesOfActivatableTypes;
 import ua.com.fielden.platform.sample.domain.*;
 import ua.com.fielden.platform.security.user.*;
 import ua.com.fielden.platform.test.CommonEntityTestIocModuleWithPropertyFactory;
@@ -732,17 +731,37 @@ public class EntityUtilsTest {
     }
 
     @Test
-    public void isActivatableEntityType_returns_false_for_non_persistent_entities() {
-        // Entity extends AbstractEntity but is not persistent.
-        assertFalse(isActivatableEntityType(Entity.class));
+    public void isActivatableEntityType_returns_false_for_non_activatable_synthetic_entities() {
+        assertFalse(isActivatableEntityType(TgAverageFuelUsage.class));
     }
 
     @Test
-    public void isActivatableEntityType_returns_false_for_synthetic_activatable_entities() {
-        // Even if there were synthetic activatable entities, they would return false
-        // since isActivatableEntityType requires both ActivatableAbstractEntity ancestry AND persistent type.
-        // For now, testing with regular synthetic entities.
-        assertFalse(isActivatableEntityType(TgAverageFuelUsage.class));
+    public void isActivatableEntityType_returns_true_for_synthetic_based_on_activatable_persistent_entities() {
+        // TgReActivatableVehicleModel extends activatable persistent TgActivatableVehicleModel.
+        assertTrue(isActivatableEntityType(TgReActivatableVehicleModel.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_true_for_activatable_persistent_entities() {
+        // TgPerson extends ActivatableAbstractEntity and is persistent.
+        assertTrue(isActivatablePersistentEntityType(TgPerson.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_non_activatable_persistent_entities() {
+        // TgAuthor is persistent but does not extend ActivatableAbstractEntity.
+        assertFalse(isActivatablePersistentEntityType(TgAuthor.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_non_activatable_synthetic_entities() {
+        assertFalse(isActivatablePersistentEntityType(TgAverageFuelUsage.class));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_synthetic_based_on_activatable_persistent_entities() {
+        // TgReActivatableVehicleModel extends activatable persistent TgActivatableVehicleModel.
+        assertFalse(isActivatablePersistentEntityType(TgReActivatableVehicleModel.class));
     }
 
     @Test
@@ -754,6 +773,11 @@ public class EntityUtilsTest {
     @Test
     public void isActivatableEntityType_returns_false_for_null_input() {
         assertFalse(isActivatableEntityType(null));
+    }
+
+    @Test
+    public void isActivatablePersistentEntityType_returns_false_for_null_input() {
+        assertFalse(isActivatablePersistentEntityType(null));
     }
 
     /**
