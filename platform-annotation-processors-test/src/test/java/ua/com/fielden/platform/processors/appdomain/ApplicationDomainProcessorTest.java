@@ -15,6 +15,7 @@ import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.CompilationTestUtils;
+import ua.com.fielden.platform.processors.test_utils.GeneratorProcessor;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
 
@@ -62,8 +63,8 @@ public class ApplicationDomainProcessorTest {
 
         final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
-                    @BeforeRound(2)
-                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                    @BeforeRound(3)
+                    public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
                         assertEqualByContents(
@@ -73,7 +74,7 @@ public class ApplicationDomainProcessorTest {
                 });
 
         assertSuccess(Compilation.newInMemory(List.of(firstExtension.toJavaFileObject()))
-                .setProcessor(processor)
+                .setProcessors(new GeneratorProcessor(), processor)
                 .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .addProcessorOption(APP_DOMAIN_EXTENSION_OPT_DESC.name(), "test.ApplicationConfig")
@@ -84,16 +85,15 @@ public class ApplicationDomainProcessorTest {
     public void ApplicationDomain_is_not_generated_without_input_entities() {
         final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
-                    // we can access the generated ApplicationDomain in the 2nd round
-                    @BeforeRound(2)
-                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                    @BeforeRound(3)
+                    public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         assertTrue("ApplicationDomain should not have been generated.",
                                 processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv).isEmpty());
                     }
                 });
 
         assertSuccess(Compilation.newInMemory(List.of(PLACEHOLDER))
-                .setProcessor(processor)
+                .setProcessors(new GeneratorProcessor(), processor)
                 .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
@@ -114,12 +114,11 @@ public class ApplicationDomainProcessorTest {
                         .build())
                     .build());
 
-        // we can access the generated ApplicationDomain in the 2nd round
         final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
 
-                    @BeforeRound(2)
-                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                    @BeforeRound(3)
+                    public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
@@ -130,7 +129,7 @@ public class ApplicationDomainProcessorTest {
 
         final List<JavaFileObject> javaFileObjects = javaFiles.stream().map(file -> file.toJavaFileObject()).toList();
         assertSuccess(Compilation.newInMemory(javaFileObjects)
-                .setProcessor(processor)
+                .setProcessors(new GeneratorProcessor(), processor)
                 .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
@@ -150,12 +149,11 @@ public class ApplicationDomainProcessorTest {
                 .build())
             .build();
 
-        // we can access the generated ApplicationDomain in the 2nd round
         final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
 
-                    @BeforeRound(2)
-                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                    @BeforeRound(3)
+                    public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
@@ -166,7 +164,7 @@ public class ApplicationDomainProcessorTest {
                 });
 
         assertSuccess(Compilation.newInMemory(List.of(firstEntity.toJavaFileObject(), skippedEntity.toJavaFileObject()))
-                .setProcessor(processor)
+                .setProcessors(new GeneratorProcessor(), processor)
                 .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
@@ -174,12 +172,9 @@ public class ApplicationDomainProcessorTest {
 
     @Test
     public void entities_annotated_with_SkipEntityRegistration_are_incrementally_unregistered() {
-        // we need to perform 2 compilations with a temporary storage for generated sources:
-        // 1. ApplicationDomain is generated using input entities
-        // 2. One of the input entities is modified to be annotated with @SkipEntityRegistration, so ApplicationDomain is regenerated
-
         compileWithTempStorage((compilation, javaFileWriter) -> {
-            // 1
+            // 1. ApplicationDomain is generated with `First` and `Second`.
+
             final JavaFile entity1 = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
                         .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
@@ -201,7 +196,8 @@ public class ApplicationDomainProcessorTest {
                     .setProcessor(new ApplicationDomainProcessor())
                     .compile());
 
-            // 2
+            // 2. `Second` is annotated with `@SkipEntityRegistration`, so ApplicationDomain is regenerated without it.
+
             final JavaFile entity2_v2 = JavaFile.builder(entity2_v1.packageName,
                     entity2_v1.typeSpec.toBuilder()
                     .addAnnotation(SkipEntityRegistration.class)
@@ -222,8 +218,8 @@ public class ApplicationDomainProcessorTest {
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
-                        @BeforeRound(2)
-                        public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                        @BeforeRound(3)
+                        public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was regenerated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
                                     processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
@@ -237,7 +233,7 @@ public class ApplicationDomainProcessorTest {
 
             assertSuccess(compilation
                     .setJavaSources(List.of(entity2_v2.toJavaFileObject()))
-                    .setProcessor(processor)
+                    .setProcessors(new GeneratorProcessor(), processor)
                     .compile());
         });
     }
@@ -257,9 +253,8 @@ public class ApplicationDomainProcessorTest {
 
         final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
-
-                    @BeforeRound(2)
-                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                    @BeforeRound(3)
+                    public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
@@ -271,7 +266,7 @@ public class ApplicationDomainProcessorTest {
 
         assertSuccess(
                 Compilation.newInMemory(Stream.of(domainEntity, abstractEntity).map(JavaFile::toJavaFileObject).toList())
-                .setProcessor(processor)
+                .setProcessors(new GeneratorProcessor(), processor)
                 .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                 .compile());
@@ -279,12 +274,9 @@ public class ApplicationDomainProcessorTest {
 
     @Test
     public void new_input_domain_entities_are_incrementally_registered_with_ApplicationDomain() {
-        // we need to perform 2 compilations with a temporary storage for generated sources:
-        // 1. ApplicationDomain is generated using a single input entity
-        // 2. ApplicationDomain is REgenerated to include new input entities
-
         compileWithTempStorage((compilation, javaFileWriter) -> {
-            // 1
+            // 1. ApplicationDomain is generated with `First`.
+
             final JavaFile entity1 = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
                         .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
@@ -299,20 +291,22 @@ public class ApplicationDomainProcessorTest {
                     .setProcessor(new ApplicationDomainProcessor())
                     .compile());
 
-            // 2
+            // 2. ApplicationDomain is regenerated with `First` and `Second`.
+            
             final JavaFile entity2 = JavaFile.builder("test",
                     TypeSpec.classBuilder("Second").addModifiers(PUBLIC)
                         .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
                         .build())
                 .build();
+
             final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                     .setRoundListener(new RoundListener() {
 
                         @BeforeRound(1)
                         public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-                            // assert that ApplicationDomain was generated during the previous compilation
+                            // Assertions for 1.
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
-                                    processor.registeredEntitiesCollector.findApplicationDomain());
+                                                                                        processor.registeredEntitiesCollector.findApplicationDomain());
 
                             // assert that exactly one entity is currently registered
                             assertEqualByContents(
@@ -320,11 +314,11 @@ public class ApplicationDomainProcessorTest {
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
-                        @BeforeRound(2)
-                        public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-                            // assert that ApplicationDomain was generated in the previous round
+                        @BeforeRound(3)
+                        public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                            // Assertions for 2.
                             final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
-                                    processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
+                                                                                        processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
                             // assert that exactly two entities were registered
                             assertEqualByContents(
@@ -335,21 +329,18 @@ public class ApplicationDomainProcessorTest {
 
             assertSuccess(
                     compilation.setJavaSources(List.of(entity2.toJavaFileObject()))
-                    .setProcessor(processor)
-                    .compile());
+                            .setProcessors(new GeneratorProcessor(), processor)
+                            .compile());
         });
     }
 
     @Test
     public void new_external_entities_are_incrementally_registered_with_ApplicationDomain() {
-        // we need to perform 2 compilations with a temporary storage for generated sources:
-        // 1. ApplicationDomain is generated using input entities and external entities
-        // 2. ApplicationDomain is REgenerated to include new external entities
-
         compileWithTempStorage((compilation, javaFileWriter) -> {
             compilation.addProcessorOption(APP_DOMAIN_EXTENSION_OPT_DESC.name(), "test.ApplicationConfig");
 
-            // 1
+            // 1. ApplicationDomain is generated with `First` and `ExampleEntity`.
+
             final JavaFile inputEntity = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
                         .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
@@ -374,7 +365,8 @@ public class ApplicationDomainProcessorTest {
                     .setProcessor(new ApplicationDomainProcessor())
                     .compile());
 
-            // 2
+            // 2. ApplicationDomain is regenerated with added `PersistentEntity`.
+
             // simulate modification of the same source file test.extension.FirstExtension
             final JavaFile extensionV2 = JavaFile.builder("test",
                     TypeSpec.classBuilder("ApplicationConfig")
@@ -401,8 +393,8 @@ public class ApplicationDomainProcessorTest {
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
-                        @BeforeRound(2)
-                        public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                        @BeforeRound(3)
+                        public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                     processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
@@ -416,22 +408,19 @@ public class ApplicationDomainProcessorTest {
             assertSuccess(
                     compilation
                     .setJavaSources(List.of(extensionV2.toJavaFileObject()))
-                    .setProcessor(processor)
+                    .setProcessors(new GeneratorProcessor(), processor)
                     .compile());
         });
     }
 
     /**
-     * Missing entity types (e.g., due to removal), that were previously registered cause {@code ApplicationDomain} to be regenerated without them.
+     * Missing entity types (e.g., due to removal) that were previously registered cause {@code ApplicationDomain} to be regenerated without them.
      */
     @Test
     public void missing_entity_types_are_incrementally_unregistered_from_ApplicationDomain() {
-        // we need to perform 2 compilations with a temporary storage for generated sources:
-        // 1. ApplicationDomain is generated using 2 input entities
-        // 2. One of input entities is removed, hence ApplicationDomain is regenerated to exclude it
-
         compileWithTempStorage((compilation, javaFileWriter) -> {
-            // 1
+            // 1. ApplicationDomain is generated with `First` and `Second`.
+
             final JavaFile entity1 = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
                         .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
@@ -456,13 +445,14 @@ public class ApplicationDomainProcessorTest {
                     .addOptions(OPTION_PROC_ONLY)
                     .compile());
 
-            // 2
+            // 2. ApplicationDomain is regenerated without `Second`.
+
             final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                     .setRoundListener(new RoundListener() {
 
                         @BeforeRound(1)
                         public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-                            // assert that ApplicationDomain was generated during the previous compilation
+                            // Assertions for 1.
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
                                     processor.registeredEntitiesCollector.findApplicationDomain());
 
@@ -473,8 +463,8 @@ public class ApplicationDomainProcessorTest {
                             assertEquals("Incorrect number of error types", 1, appDomainElt.errorTypes().size());
                         }
 
-                        @BeforeRound(2)
-                        public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                        @BeforeRound(3)
+                        public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was regenerated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
                                     processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
@@ -490,7 +480,7 @@ public class ApplicationDomainProcessorTest {
             assertSuccess(
                     compilation
                     .setJavaSources(List.of(entity1.toJavaFileObject()))
-                    .setProcessor(processor)
+                    .setProcessors(new GeneratorProcessor(), processor)
                     .addOptions(OPTION_PROC_ONLY)
                     .compile());
         });
@@ -502,12 +492,9 @@ public class ApplicationDomainProcessorTest {
      */
     @Test
     public void non_domain_entity_types_are_incrementally_unregistered_from_ApplicationDomain() {
-        // we need to perform 2 compilations with a temporary storage for generated sources:
-        // 1. ApplicationDomain is generated using 2 input entities
-        // 2. One of input entities is modified so that it's no longer a domain entity, hence ApplicationDomain is regenerated to exclude it
-
         compileWithTempStorage((compilation, javaFileWriter) -> {
-            // 1
+            // 1. ApplicationDomain is generated with `First` and `Second`.
+
             final JavaFile entity1 = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
                         .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
@@ -529,7 +516,8 @@ public class ApplicationDomainProcessorTest {
                     .setProcessor(new ApplicationDomainProcessor())
                     .compile());
 
-            // 2
+            // 2. `Second` is modified so that it's no longer a domain entity, hence ApplicationDomain is regenerated to exclude it.
+
             final JavaFile abstractEntity2 = JavaFile.builder(entity2.packageName,
                     entity2.typeSpec.toBuilder().addModifiers(ABSTRACT).build())
                 .build();
@@ -551,8 +539,8 @@ public class ApplicationDomainProcessorTest {
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
-                        @BeforeRound(2)
-                        public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                        @BeforeRound(3)
+                        public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was regenerated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
                                     processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
@@ -567,7 +555,7 @@ public class ApplicationDomainProcessorTest {
             assertSuccess(
                     compilation
                     .setJavaSources(List.of(abstractEntity2.toJavaFileObject()))
-                    .setProcessor(processor)
+                    .setProcessors(new GeneratorProcessor(), processor)
                     .compile());
         });
     }
@@ -581,7 +569,8 @@ public class ApplicationDomainProcessorTest {
         compileWithTempStorage((compilation, srcPath) -> {
             compilation.addProcessorOption(APP_DOMAIN_EXTENSION_OPT_DESC.name(), "test.ApplicationConfig");
 
-            // 1
+            // 1. Initial ApplicationDomain is generated with 2 external entities: ExampleEntity and PersistentEntity.
+
             final JavaFile extensionV1 = JavaFile.builder("test",
                     TypeSpec.classBuilder("ApplicationConfig")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
@@ -598,7 +587,8 @@ public class ApplicationDomainProcessorTest {
                     .setProcessor(new ApplicationDomainProcessor())
                     .compile());
 
-            // 2
+            // 2. ApplicationDomain is regenerated with 1 external entity: ExampleEntity.
+
             final JavaFile extensionV2 = JavaFile.builder("test",
                     TypeSpec.classBuilder("ApplicationConfig")
                     .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
@@ -614,7 +604,7 @@ public class ApplicationDomainProcessorTest {
 
                         @BeforeRound(1)
                         public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-                            // assert that ApplicationDomain was generated during the previous compilation
+                            // Assertions for 1.
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
                                     processor.registeredEntitiesCollector.findApplicationDomain());
 
@@ -623,9 +613,8 @@ public class ApplicationDomainProcessorTest {
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
-                        @BeforeRound(2)
-                        public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-                            // assert that ApplicationDomain was regenerated in the previous round
+                        @BeforeRound(3)
+                        public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
                                     processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
@@ -638,7 +627,7 @@ public class ApplicationDomainProcessorTest {
             assertSuccess(
                     compilation
                     .setJavaSources(List.of(extensionV2.toJavaFileObject()))
-                    .setProcessor(processor)
+                    .setProcessors(new GeneratorProcessor(), processor)
                     .compile());
         });
     }
@@ -652,6 +641,7 @@ public class ApplicationDomainProcessorTest {
                         .build())
                 .build())
             .build();
+        // This extension should be ignored.
         final JavaFile extension2 = JavaFile.builder("test",
                 TypeSpec.classBuilder("AnotherApplicationConfig")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
@@ -660,11 +650,10 @@ public class ApplicationDomainProcessorTest {
                 .build())
             .build();
 
-        // we can access the generated ApplicationDomain in the 2nd round
         final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
-                    @BeforeRound(2)
-                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                    @BeforeRound(3)
+                    public void beforeThirdRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 processor.registeredEntitiesCollector.findApplicationDomainInRound(roundEnv));
 
@@ -675,7 +664,7 @@ public class ApplicationDomainProcessorTest {
 
         assertSuccess(
                 Compilation.newInMemory(Stream.of(extension1, extension2).map(JavaFile::toJavaFileObject).toList())
-                        .setProcessor(processor)
+                        .setProcessors(new GeneratorProcessor(), processor)
                         .addOptions(OPTION_PROC_ONLY)
                         .addProcessorOption(APP_DOMAIN_PKG_OPT_DESC.name(), GENERATED_PKG)
                         .addProcessorOption(APP_DOMAIN_EXTENSION_OPT_DESC.name(), "test.ApplicationConfig")
