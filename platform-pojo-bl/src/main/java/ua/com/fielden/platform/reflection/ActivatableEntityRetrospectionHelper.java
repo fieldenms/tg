@@ -180,7 +180,7 @@ public class ActivatableEntityRetrospectionHelper {
             final AbstractEntity<?> propValue,
             final ICompanionObjectFinder coFinder)
     {
-        if (isActivatablePersistentProperty(entityType, propName) && !isSpecialActivatableToBeSkipped(entityType, propName)) {
+        if (propValue != null && isActivatablePersistentProperty(entityType, propName) && !isSpecialActivatableToBeSkipped(entityType, propName)) {
             return true;
         }
         else if (propValue != null && isUnionEntityType(propValue.getType())) {
