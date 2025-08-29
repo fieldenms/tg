@@ -5,8 +5,7 @@ import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
@@ -143,7 +142,7 @@ public class EntityActivatabilityStandardTest extends AbstractEntityActivatabili
 
         final var a1 = refetch$(a, KEY_AND_DESC).setActive(true);
         assertTrue(isPropertyProxied(a1, "thirdCategory"));
-        assertNull(a1.getProperty(ACTIVE).getFirstFailure());
+        assertTrue(a1.getProperty(ACTIVE).isValid());
         final var savedA1 = save(a1);
         assertTrue(savedA1.isActive());
     }
@@ -155,7 +154,7 @@ public class EntityActivatabilityStandardTest extends AbstractEntityActivatabili
 
         final var a1 = refetch$(a, KEY_AND_DESC).setActive(true);
         assertTrue(isPropertyProxied(a1, "forthCat"));
-        assertNull(a1.getProperty(ACTIVE).getFirstFailure());
+        assertTrue(a1.getProperty(ACTIVE).isValid());
         final var savedA1 = save(a1);
         assertTrue(savedA1.isActive());
     }
@@ -166,7 +165,7 @@ public class EntityActivatabilityStandardTest extends AbstractEntityActivatabili
         var a = save(new_(TgSystem.class, "SYS1").setActive(false).setThirdCategory(b));
 
         a = a.setActive(true);
-        assertNull(a.getProperty(ACTIVE).getFirstFailure());
+        assertTrue(a.getProperty(ACTIVE).isValid());
     }
 
     @Test
@@ -175,7 +174,7 @@ public class EntityActivatabilityStandardTest extends AbstractEntityActivatabili
         var a = save(new_(TgSystem.class, "SYS1").setActive(false).setForthCat(b));
 
         a = a.setActive(true);
-        assertNull(a.getProperty(ACTIVE).getFirstFailure());
+        assertTrue(a.getProperty(ACTIVE).isValid());
     }
 
 }
