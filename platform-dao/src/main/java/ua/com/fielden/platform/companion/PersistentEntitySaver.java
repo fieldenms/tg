@@ -70,7 +70,7 @@ import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ER
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
+import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.isActivatableReference;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -657,7 +657,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 // If the current and persisted property values are the same, nothing needs to be done.
                 // At this stage, these values can only be the same iff a non-conflicting concurrent modification occurred.
                 // In such case, recalculation of `refCount` for the referenced entity has already been performed, and double-dipping should be avoided.
-                .filter(prop -> !(persistedEntity != null && equalsEx(prop.getValue(), persistedEntity.get(prop.getName()))))
+                .filter(prop -> persistedEntity == null || !equalsEx(prop.getValue(), persistedEntity.get(prop.getName())))
                 .mapMulti((prop, sink) -> {
                     // Process the original property value, which makes sense only for persisted entities.
                     if (persistedEntity != null && persistedEntity.isActive() && isActivatableReference(entityType, prop.getName(), prop.getOriginalValue(), coFinder
