@@ -22,12 +22,17 @@ import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 
-/// Implementation of the [IWebUiBuilder].
-///
-/// @author TG Team
+/**
+ * Implementation of the {@link IWebUiBuilder}.
+ *
+ * @author TG Team
+ *
+ */
 public class WebUiBuilder implements IWebUiBuilder {
     private final Logger logger = getLogger(getClass());
-    /// The [IWebUiConfig] instance for which this configuration object was created.
+    /**
+     * The {@link IWebUiConfig} instance for which this configuration object was created.
+     */
     private final IWebUiConfig webUiConfig;
 
     private int minDesktopWidth = 980, minTabletWidth = 768;
@@ -39,18 +44,28 @@ public class WebUiBuilder implements IWebUiBuilder {
     private Optional<String> watermark = Optional.empty();
     private Optional<String> watermarkStyle = Optional.empty();
 
-    /// Holds the map between master's entity type and its master component.
+    /**
+     * Holds the map between master's entity type and its master component.
+     */
     private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new ConcurrentHashMap<>();
 
-    /// Holds the map between entity centre's menu item type and entity centre.
+    /**
+     * Holds the map between entity centre's menu item type and entity centre.
+     */
     private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new ConcurrentHashMap<>();
 
     private final Map<Class<? extends AbstractEntity<?>>, EntityActionConfig> openMasterActions = new ConcurrentHashMap<>();
 
-    /// Holds the map between custom view name and custom view instance.
+    /**
+     * Holds the map between custom view name and custom view instance.
+     */
     private final Map<String, AbstractCustomView> viewMap = new LinkedHashMap<>();
 
-    /// Creates new instance of {@link WebUiBuilder} for the specified {@link IWebUiConfig} instance.
+    /**
+     * Creates new instance of {@link WebUiBuilder} for the specified {@link IWebUiConfig} instance.
+     *
+     * @param webUiConfig
+     */
     public WebUiBuilder(final IWebUiConfig webUiConfig) {
         this.webUiConfig = webUiConfig;
     }
@@ -189,7 +204,11 @@ public class WebUiBuilder implements IWebUiBuilder {
         return viewMap;
     }
 
-    /// Generates an HTML representation of the web application UI preferences.
+    /**
+     * Generates a HTML representation of the web application UI preferences.
+     *
+     * @return
+     */
     public String genWebUiPrefComponent() {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
@@ -221,6 +240,9 @@ public class WebUiBuilder implements IWebUiBuilder {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public IWebUiBuilder withTopPanelStyle(final Optional<String> backgroundColour, final Optional<String> watermark, final Optional<String> cssWatermark) {
         this.panelColor = backgroundColour;
