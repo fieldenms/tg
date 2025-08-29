@@ -38,7 +38,6 @@ import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /// Various delete operations that are used by entity companions.
@@ -154,45 +153,10 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         return domainMetadata.forEntity(entityType)
                 .properties()
                 .stream()
-                .filter(prop -> isActivatableReference(entityType, prop.name(), persistedEntity.get(prop.name())))
+                .filter(prop -> isActivatableReference(entityType, prop.name(), persistedEntity.get(prop.name()), coFinder))
                 .map(PropertyMetadata::name);
     }
 
-    /// This predicate is true if a property value represents an activatable reference.
-    ///
-    /// @param entityType  the entity type that declares the property
-    /// @param propName  the name of the property
-    /// @param value  the value assigned to the property
-    ///
-    @SuppressWarnings("unchecked")
-    private boolean isActivatableReference(final Class<? extends ActivatableAbstractEntity<?>> entityType, final String propName, final Object value) {
-        if (value == null) {
-            return false;
-        }
-
-        final var prop = findFieldByName(entityType, propName);
-        if (!isEntityType(prop.getType())) {
-            return false;
-        }
-        else if (isDeactivatableDependencyBackref(entityType, propName)) {
-            return false;
-        }
-        // If the property is not union-typed, it is enough to check the property itself.
-        // Otherwise, the active union member may need to be considered as well.
-        else if (isActivatablePersistentProperty(entityType, propName) && !isSpecialActivatableToBeSkipped(entityType, propName)) {
-            return true;
-        }
-        else if (isUnionEntityType(prop.getType())) {
-            final var union = (AbstractUnionEntity) value;
-            final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(union.getType());
-            final var activePropName = instrument(union, unionCo).activePropertyName();
-            return isActivatableProperty(union.getType(), activePropName)
-                   && !isSpecialActivatableToBeSkipped(union.getType(), activePropName);
-        }
-        else {
-            return false;
-        }
-    }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
         return switch (entity) {

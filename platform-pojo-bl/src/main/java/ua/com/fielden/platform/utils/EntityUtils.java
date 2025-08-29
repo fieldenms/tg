@@ -603,7 +603,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isEntityType(final Class<?> type) {
-        return type == null ? false : AbstractEntity.class.isAssignableFrom(type);
+        return type != null && AbstractEntity.class.isAssignableFrom(type);
     }
 
 

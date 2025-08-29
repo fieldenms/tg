@@ -71,7 +71,6 @@ import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityVali
 import static ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
-import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -606,7 +605,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                     .filter(mp -> mp.isProxy() || !mp.isDirty())
                     .<RefCountInstruction>map(mp -> {
                         final var propName = mp.getName();
-                        if (isActivatableReference(entityType, propName, persistedEntity.get(propName))) {
+                        if (isActivatableReference(entityType, propName, persistedEntity.get(propName), coFinder)) {
                             // If the property is proxied, its value will be retrieved lazily by Hibernate.
                             final var activatableValue = extractActivatable(persistedEntity.get(propName));
                             if (activatableValue != null) {
@@ -661,7 +660,8 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                 .filter(prop -> !(persistedEntity != null && equalsEx(prop.getValue(), persistedEntity.get(prop.getName()))))
                 .mapMulti((prop, sink) -> {
                     // Process the original property value, which makes sense only for persisted entities.
-                    if (persistedEntity != null && persistedEntity.isActive() && isActivatableReference(entityType, prop.getName(), prop.getOriginalValue())) {
+                    if (persistedEntity != null && persistedEntity.isActive() && isActivatableReference(entityType, prop.getName(), prop.getOriginalValue(), coFinder
+                    )) {
                         // If `entity` is persisted, the original value of `prop`, if not null, was dereferenced, and its `refCount` must be decremented.
                         // Original property value should not be null, otherwise property would not become dirty by assigning null.
                         // `refCount` is decremented if and only if:
@@ -677,7 +677,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                         }
                     }
 
-                    if (isActivatableReference(entityType, prop.getName(), prop.getValue())) {
+                    if (isActivatableReference(entityType, prop.getName(), prop.getValue(), coFinder)) {
                         final var activatableValue = extractActivatable(prop.getValue());
                         // `entity` began referencing `activatableValue`.
                         if (activatableValue != null) {
@@ -723,41 +723,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         return Stream.concat(instructionsForNonDirty, instructionsForDirty);
     }
 
-    /// This predicate is true if a property value represents an activatable reference.
-    ///
-    /// @param entityType  the entity type that declares the property
-    /// @param propName  the name of the property
-    /// @param value  the value assigned to the property
-    ///
-    @SuppressWarnings("unchecked")
-    private boolean isActivatableReference(final Class<? extends ActivatableAbstractEntity<?>> entityType, final String propName, final Object value) {
-        if (value == null) {
-            return false;
-        }
-
-        final var prop = findFieldByName(entityType, propName);
-        if (!isEntityType(prop.getType())) {
-            return false;
-        }
-        else if (isDeactivatableDependencyBackref(entityType, propName)) {
-            return false;
-        }
-        // If the property is not union-typed, it is enough to check the property itself.
-        // Otherwise, the active union member may need to be considered as well.
-        else if (isActivatablePersistentProperty(entityType, propName) && !isSpecialActivatableToBeSkipped(entityType, propName)) {
-            return true;
-        }
-        else if (isUnionEntityType(prop.getType())) {
-            final var union = (AbstractUnionEntity) value;
-            final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(union.getType());
-            final var activePropName = instrument(union, unionCo).activePropertyName();
-            return isActivatableProperty(union.getType(), activePropName)
-                   && !isSpecialActivatableToBeSkipped(union.getType(), activePropName);
-        }
-        else {
-            return false;
-        }
-    }
 
     /// Instruction that operates on `refCount`.
     ///
