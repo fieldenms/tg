@@ -5,8 +5,8 @@ import com.google.common.cache.CacheBuilder;
 import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
+import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -831,10 +831,10 @@ public class EntityUtils {
     ///
     /// TODO Instrumentation will no longer be necessary after #2466.
     ///
-    public static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityDao<U> co) {
+    public static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityInstantiator<U> instantiator) {
         return unionEntity.isInstrumented()
                ? unionEntity
-               : copy(unionEntity, co.new_(), ID, VERSION);
+               : copy(unionEntity, instantiator.new_(), ID, VERSION);
     }
 
 
