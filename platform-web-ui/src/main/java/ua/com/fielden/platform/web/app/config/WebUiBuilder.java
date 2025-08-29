@@ -32,7 +32,6 @@ public class WebUiBuilder implements IWebUiBuilder {
 
     private int minDesktopWidth = 980, minTabletWidth = 768;
     private String locale = "en-AU";
-    private String currencySymbol = "$";
     private String dateFormat = "DD/MM/YYYY";
     private String timeFormat = "h:mm A";
     private String timeWithMillisFormat = "h:mm:ss.SSS A";
@@ -71,12 +70,6 @@ public class WebUiBuilder implements IWebUiBuilder {
     @Override
     public IWebUiBuilder setLocale(final String locale) {
         this.locale = locale;
-        return this;
-    }
-
-    @Override
-    public IWebUiBuilder setCurrency(final String currencySymbol) {
-        this.currencySymbol = currencySymbol;
         return this;
     }
 

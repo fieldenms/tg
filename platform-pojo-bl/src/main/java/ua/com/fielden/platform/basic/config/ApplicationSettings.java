@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.basic.config;
 
-import java.io.File;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import jakarta.inject.Singleton;
+
+import java.io.File;
 
 /**
  * Default implementation of the contract for generally used in the application settings.
@@ -24,6 +24,7 @@ public class ApplicationSettings implements IApplicationSettings {
     private final AuthMode authMode;
     private final String smtpServer;
     private final String fromAddress;
+    private final String currency;
 
     @Inject
     protected ApplicationSettings(//
@@ -36,7 +37,8 @@ public class ApplicationSettings implements IApplicationSettings {
             final @Named("workflow") String workflow,
             final @Named("auth.mode") String authMode,
             final @Named("email.smtp") String smtpServer,
-            final @Named("email.fromAddress") String fromAddress) {
+            final @Named("email.fromAddress") String fromAddress,
+            final @Named("currency") String currency) {
         this.appName = appName;
         this.pathToStorage = prepareSettings(pathToStorage);
         this.classPath = classPath;
@@ -47,6 +49,7 @@ public class ApplicationSettings implements IApplicationSettings {
         this.authMode = AuthMode.valueOf(authMode.toUpperCase());
         this.smtpServer = smtpServer;
         this.fromAddress = fromAddress;
+        this.currency = currency;
     }
 
     @Override
@@ -72,6 +75,11 @@ public class ApplicationSettings implements IApplicationSettings {
     @Override
     public String securityTokensPackageName() {
         return securityTokensPackageName;
+    }
+
+    @Override
+    public String currency() {
+        return currency;
     }
 
     @Override

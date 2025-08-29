@@ -32,9 +32,6 @@ public interface IWebUiBuilder {
     /// Set the locale for the web application.
     IWebUiBuilder setLocale(String locale);
 
-    /// Set the locale for the web application.
-    IWebUiBuilder setCurrency(String currencySymbol);
-
     /// Set the date format for the web application.
     IWebUiBuilder setDateFormat(String dateFormat);
 
