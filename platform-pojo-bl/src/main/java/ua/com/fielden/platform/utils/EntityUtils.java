@@ -6,6 +6,7 @@ import jakarta.annotation.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.*;
 import ua.com.fielden.platform.entity.annotation.*;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -817,14 +818,25 @@ public class EntityUtils {
         return Optional.empty();
     }
 
-    /**
-     * Determines whether the provided entity type models a union-type.
-     *
-     * @return
-     */
+    /// Determines whether the provided entity type models a union-type.
+    ///
     public static boolean isUnionEntityType(final Class<?> type) {
         return type != null && AbstractUnionEntity.class.isAssignableFrom(type);
     }
+
+    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
+    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
+    ///
+    /// This method is a utility to perform instrumentation for uninstrumented values.
+    ///
+    /// TODO Instrumentation will no longer be necessary after #2466.
+    ///
+    public static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityDao<U> co) {
+        return unionEntity.isInstrumented()
+               ? unionEntity
+               : copy(unionEntity, co.new_(), ID, VERSION);
+    }
+
 
     /**
      * Determines whether {@code type} represents entity query criteria.
@@ -1314,23 +1326,24 @@ public class EntityUtils {
         }
     }
 
-    ///
     /// The same as [#copy], but with variable arity for property names.
     ///
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final CharSequence... skipProperties) {
+    public static <T extends AbstractEntity> T copy(final AbstractEntity<?> fromEntity, final T toEntity, final CharSequence... skipProperties) {
         copy_(fromEntity, toEntity, Stream.of(skipProperties).map(CharSequence::toString).collect(Collectors.toSet()));
+        return toEntity;
     }
 
-    ///
-    /// The most generic and most straightforward function to copy properties from instance `fromEntity` to `toEntity``,
+    /// The most generic and most straightforward function to copy properties from instance `fromEntity` to `toEntity`,
     /// with the ability to skip the specified properties from being copied.
     ///
     /// @param fromEntity  An instance that is the source from which property values are copied from.
     /// @param toEntity   A destination that is an instance where the property values are copied to.
     /// @param skipProperties  A sequence of property names, which may include ID and VERSION.
+    /// @return  `toEntity` is returned for convenience.
     ///
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
+    public static <T extends AbstractEntity> T copy(final AbstractEntity<?> fromEntity, final T toEntity, final Set<? extends CharSequence> skipProperties) {
         copy_(fromEntity, toEntity, skipProperties.stream().map(CharSequence::toString).collect(Collectors.toSet()));
+        return toEntity;
     }
 
     private static <T extends AbstractEntity> void copy_(final AbstractEntity<?> fromEntity, final T toEntity, final Set<String> skipProperties) {

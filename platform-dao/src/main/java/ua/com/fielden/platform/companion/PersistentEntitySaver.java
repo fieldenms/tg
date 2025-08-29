@@ -60,7 +60,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -455,24 +454,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
     }
 
-    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
-    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
-    ///
-    /// This method is a utility to perform instrumentation for uninstrumented values.
-    ///
-    /// TODO Instrumentation will no longer be necessary after #2466.
-    ///
-    private static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityDao<U> co) {
-        final U instrumentedUnion;
-        if (unionEntity.isInstrumented()) {
-            instrumentedUnion = unionEntity;
-        }
-        else {
-            copy(unionEntity, instrumentedUnion = co.new_(), ID, VERSION);
-        }
-        return instrumentedUnion;
-    }
-
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
         return switch (entity) {
             case ActivatableAbstractEntity<?> it -> it;
@@ -837,7 +818,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // if the entity is activatable and the only dirty property is refCount than there is no need to update the last-updated-by info
         if (entity instanceof ActivatableAbstractEntity) {
             final List<MetaProperty<?>> dirty = entity.getDirtyProperties();
-            if (dirty.size() == 1 && ActivatableAbstractEntity.REF_COUNT.equals(dirty.get(0).getName())) {
+            if (dirty.size() == 1 && ActivatableAbstractEntity.REF_COUNT.equals(dirty.getFirst().getName())) {
                 return;
             }
         }

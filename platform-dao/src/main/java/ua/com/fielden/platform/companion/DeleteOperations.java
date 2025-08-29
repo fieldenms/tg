@@ -34,7 +34,6 @@ import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.hibernate.LockOptions.UPGRADE;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException.requireNonNull;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -193,24 +192,6 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         else {
             return false;
         }
-    }
-
-    /// Union entity-typed values can only be validated if they are instrumented as any other entity-typed values.
-    /// But for the sake of convenience, uninstrumented values are supported, which requires in-place instrumentation as part of the validation process.
-    ///
-    /// This method is a utility to perform instrumentation for uninstrumented values.
-    ///
-    /// TODO Instrumentation will no longer be necessary after #2466.
-    ///
-    private static <U extends AbstractUnionEntity> U instrument(final U unionEntity, final IEntityDao<U> co) {
-        final U instrumentedUnion;
-        if (unionEntity.isInstrumented()) {
-            instrumentedUnion = unionEntity;
-        }
-        else {
-            copy(unionEntity, instrumentedUnion = co.new_(), ID, VERSION);
-        }
-        return instrumentedUnion;
     }
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
