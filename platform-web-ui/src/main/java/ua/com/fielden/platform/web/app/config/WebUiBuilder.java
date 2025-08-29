@@ -22,21 +22,17 @@ import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.ResourceLoader.getText;
 
-/**
- * Implementation of the {@link IWebUiBuilder}.
- *
- * @author TG Team
- *
- */
+/// Implementation of the [IWebUiBuilder].
+///
+/// @author TG Team
 public class WebUiBuilder implements IWebUiBuilder {
     private final Logger logger = getLogger(getClass());
-    /**
-     * The {@link IWebUiConfig} instance for which this configuration object was created.
-     */
+    /// The [IWebUiConfig] instance for which this configuration object was created.
     private final IWebUiConfig webUiConfig;
 
     private int minDesktopWidth = 980, minTabletWidth = 768;
     private String locale = "en-AU";
+    private String currencySymbol = "$";
     private String dateFormat = "DD/MM/YYYY";
     private String timeFormat = "h:mm A";
     private String timeWithMillisFormat = "h:mm:ss.SSS A";
@@ -44,28 +40,18 @@ public class WebUiBuilder implements IWebUiBuilder {
     private Optional<String> watermark = Optional.empty();
     private Optional<String> watermarkStyle = Optional.empty();
 
-    /**
-     * Holds the map between master's entity type and its master component.
-     */
+    /// Holds the map between master's entity type and its master component.
     private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new ConcurrentHashMap<>();
 
-    /**
-     * Holds the map between entity centre's menu item type and entity centre.
-     */
+    /// Holds the map between entity centre's menu item type and entity centre.
     private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new ConcurrentHashMap<>();
 
     private final Map<Class<? extends AbstractEntity<?>>, EntityActionConfig> openMasterActions = new ConcurrentHashMap<>();
 
-    /**
-     * Holds the map between custom view name and custom view instance.
-     */
+    /// Holds the map between custom view name and custom view instance.
     private final Map<String, AbstractCustomView> viewMap = new LinkedHashMap<>();
 
-    /**
-     * Creates new instance of {@link WebUiBuilder} for the specified {@link IWebUiConfig} instance.
-     *
-     * @param webUiConfig
-     */
+    /// Creates new instance of {@link WebUiBuilder} for the specified {@link IWebUiConfig} instance.
     public WebUiBuilder(final IWebUiConfig webUiConfig) {
         this.webUiConfig = webUiConfig;
     }
@@ -85,6 +71,12 @@ public class WebUiBuilder implements IWebUiBuilder {
     @Override
     public IWebUiBuilder setLocale(final String locale) {
         this.locale = locale;
+        return this;
+    }
+
+    @Override
+    public IWebUiBuilder setCurrency(final String currencySymbol) {
+        this.currencySymbol = currencySymbol;
         return this;
     }
 
@@ -204,11 +196,7 @@ public class WebUiBuilder implements IWebUiBuilder {
         return viewMap;
     }
 
-    /**
-     * Generates a HTML representation of the web application UI preferences.
-     *
-     * @return
-     */
+    /// Generates an HTML representation of the web application UI preferences.
     public String genWebUiPrefComponent() {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
@@ -240,9 +228,6 @@ public class WebUiBuilder implements IWebUiBuilder {
         return this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public IWebUiBuilder withTopPanelStyle(final Optional<String> backgroundColour, final Optional<String> watermark, final Optional<String> cssWatermark) {
         this.panelColor = backgroundColour;

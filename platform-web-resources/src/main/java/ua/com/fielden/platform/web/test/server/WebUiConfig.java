@@ -125,6 +125,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String path;
     private final int port;
 
+    private final String currency;
+
     private final String envTopPanelColour;
     private final String envWatermarkText;
     private final String envWatermarkCss;
@@ -142,6 +144,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
         this.domainName = props.getProperty("web.domain");
         this.path = props.getProperty("web.path");
         this.port = Integer.valueOf(props.getProperty("port"));
+
+        this.currency = props.getProperty("currency", "$");
 
         this.envTopPanelColour = props.getProperty("env.topPanelColour");
         this.envWatermarkText = props.getProperty("env.watermarkText");
@@ -192,6 +196,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final IWebUiBuilder builder = configApp();
         builder.setTimeFormat("HH:mm")
                .setTimeWithMillisFormat("HH:mm:ss.SSS")
+               .setCurrency(currency)
                .withTopPanelStyle(ofNullable(envTopPanelColour), ofNullable(envWatermarkText), ofNullable(envWatermarkCss));
 
         // Add entity centres
