@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.union;
 
 import com.google.inject.Injector;
 import org.junit.Test;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -343,14 +344,37 @@ public class AbstractUnionEntityTest {
     }
 
     @Test
+    public void isUnionMember_recognises_membership_by_value() {
+        final var one = factory.newEntity(EntityOne.class, 1L, "01");
+        assertTrue(UnionEntity.isUnionMember(UnionEntity.class, one));
+        final var unionEntity = factory.newEntity(UnionEntity.class);
+        assertTrue(unionEntity.isUnionMember(one));
+
+        assertFalse(UnionEntity.isUnionMember(UnionEntity.class, EntityThree.class));
+        final var tree = factory.newEntity(EntityThree.class, 1L, 1);
+        assertFalse(unionEntity.isUnionMember(EntityThree.class));
+    }
+
+
+    @Test
     public void isUnionMember_does_not_permit_null_arguments() {
         assertThatThrownBy(() -> UnionEntity.isUnionMember(null, EntityOne.class))
                 .isInstanceOf(ReflectionException.class)
                 .hasMessage(ERR_NULL_ARGUMENT.formatted("unionType"));
 
-        assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, null))
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, (Class<? extends AbstractEntity<?>>) null))
                 .isInstanceOf(ReflectionException.class)
                 .hasMessage(ERR_NULL_ARGUMENT.formatted("typeToCheckForMembership"));
+
+        final var one = factory.newEntity(EntityOne.class, 1L, "01");
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(null, one))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("unionType"));
+
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, (AbstractEntity<?>) null))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("valueWithTypeToCheckForMembership"));
+
     }
 
 }

@@ -266,7 +266,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         return commonMethods;
     }
 
-    /// Tests whether entity type `typeToCheckForMembership` is one of the union properties for union entity `unionType`.
+    /// Tests whether entity type `typeToCheckForMembership` matches one of the types of union properties in `unionType`.`
     ///
     public static boolean isUnionMember(
             @Nonnull final Class<? extends AbstractUnionEntity> unionType,
@@ -284,6 +284,23 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         return isUnionMember((Class<? extends AbstractUnionEntity>) getType(), typeToCheckForMembership);
     }
 
+    /// Tests whether the type of entity `valueWithTypeToCheckForMembership` matches one of the types of union properties in `unionType`.
+    ///
+    public static boolean isUnionMember(
+            @Nonnull final Class<? extends AbstractUnionEntity> unionType,
+            @Nonnull final AbstractEntity<?> valueWithTypeToCheckForMembership)
+    {
+        requireNotNullArgument(unionType, "unionType");
+        requireNotNullArgument(valueWithTypeToCheckForMembership, "valueWithTypeToCheckForMembership");
+
+        return unionPropertyNameByType(unionType, valueWithTypeToCheckForMembership.getType()).isPresent();
+    }
+
+    /// Tests whether the type of entity `valueWithTypeToCheckForMembership` matches one of the types of union properties.
+    ///
+    public boolean isUnionMember(final AbstractEntity<?> valueWithTypeToCheckForMembership) {
+        return isUnionMember((Class<? extends AbstractUnionEntity>) getType(), valueWithTypeToCheckForMembership);
+    }
 
     @Override
     public boolean equals(final Object obj) {
