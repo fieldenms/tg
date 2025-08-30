@@ -1,15 +1,20 @@
 package ua.com.fielden.platform.entity.activatable;
 
+import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.activatable.test_entities.ActivatableUnionOwner;
-import ua.com.fielden.platform.entity.activatable.test_entities.Member1;
-import ua.com.fielden.platform.entity.activatable.test_entities.Member3;
-import ua.com.fielden.platform.entity.activatable.test_entities.Union;
+import ua.com.fielden.platform.entity.activatable.test_entities.*;
 import ua.com.fielden.platform.meta.EntityMetadata;
 import ua.com.fielden.platform.meta.IDomainMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadata;
 import ua.com.fielden.platform.meta.PropertyMetadataUtils;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.validation.ActivePropertyValidator.ERR_INACTIVE_REFERENCES;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
 public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityTestCase {
 
@@ -181,6 +186,95 @@ public class EntityActivatabilityUnionTest extends AbstractEntityActivatabilityT
     @Override
     protected Spec2<ActivatableUnionOwner, Member3> spec2() {
         return spec2;
+    }
+
+    @Test
+    public void saving_an_activated_A_referencing_inactive_B_via_union_succeeds_if_skipActiveOnly_is_true_on_both_levels() {
+        final var b = save(new_(Member2.class, "M2").setActive(false));
+        var a = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion2(new_(Union.class).setMember2(b)));
+
+        a = a.setActive(true);
+        assertTrue(a.getProperty(ACTIVE).isValid());
+        final var savedA = save(a);
+        assertTrue(savedA.isActive());
+    }
+
+    @Test
+    public void entity_can_be_activated_while_referencing_an_inactive_via_union_if_skipActiveOnly_is_true_on_both_levels() {
+        final var member = save(new_(Member2.class, "M2").setActive(false));
+        var owner = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion2(new_(Union.class).setMember2(member)));
+
+        owner = owner.setActive(true);
+        assertTrue(owner.getProperty(ACTIVE).isValid());
+    }
+
+    @Test
+    public void entity_can_be_activated_while_referencing_an_inactive_via_union_if_SkipActivatableTracking_is_present_on_both_levels() {
+        final var member = save(new_(Member4.class, "M4").setActive(false));
+        var owner = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion4(new_(Union.class).setMember4(member)));
+
+        owner = owner.setActive(true);
+        assertTrue(owner.getProperty(ACTIVE).isValid());
+    }
+
+    @Test
+    public void entity_cannot_be_activated_while_referencing_an_inactive_via_union_if_skipActiveOnly_is_true_only_for_the_union_typed_property() {
+        final var member = save(new_(Member1.class, "M1").setActive(false));
+        var owner = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion2(new_(Union.class).setMember1(member)));
+
+        owner = owner.setActive(true);
+        assertThat(owner.getProperty(ACTIVE).getFirstFailure())
+                .hasMessage(ERR_INACTIVE_REFERENCES.formatted(
+                                   getTitleAndDesc("union2", ActivatableUnionOwner.class).getKey(),
+                                   getEntityTitleAndDesc(owner).getKey(),
+                                   owner,
+                                   getEntityTitleAndDesc(member).getKey(),
+                                   member));
+    }
+
+    @Test
+    public void entity_cannot_be_activated_while_referencing_an_inactive_via_union_if_skipActiveOnly_is_true_only_for_the_union_member_property() {
+        final var member = save(new_(Member2.class, "M2").setActive(false));
+        var owner = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion(new_(Union.class).setMember2(member)));
+
+        owner = owner.setActive(true);
+        assertThat(owner.getProperty(ACTIVE).getFirstFailure())
+                .hasMessage(ERR_INACTIVE_REFERENCES.formatted(
+                                   getTitleAndDesc("union", ActivatableUnionOwner.class).getKey(),
+                                   getEntityTitleAndDesc(owner).getKey(),
+                                   owner,
+                                   getEntityTitleAndDesc(member).getKey(),
+                                   member));
+    }
+
+    @Test
+    public void entity_cannot_be_activated_while_referencing_an_inactive_via_union_if_SkipActivatableTracking_is_present_only_for_the_union_typed_property() {
+        final var member = save(new_(Member1.class, "M1").setActive(false));
+        var owner = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion4(new_(Union.class).setMember1(member)));
+
+        owner = owner.setActive(true);
+        assertThat(owner.getProperty(ACTIVE).getFirstFailure())
+                .hasMessage(ERR_INACTIVE_REFERENCES.formatted(
+                                   getTitleAndDesc("union4", ActivatableUnionOwner.class).getKey(),
+                                   getEntityTitleAndDesc(owner).getKey(),
+                                   owner,
+                                   getEntityTitleAndDesc(member).getKey(),
+                                   member));
+    }
+
+    @Test
+    public void entity_cannot_be_activated_while_referencing_an_inactive_via_union_if_SkipActivatableTracking_is_present_only_for_the_union_member_property() {
+        final var member = save(new_(Member4.class, "M4").setActive(false));
+        var owner = save(new_(ActivatableUnionOwner.class, "O1").setActive(false).setUnion(new_(Union.class).setMember4(member)));
+
+        owner = owner.setActive(true);
+        assertThat(owner.getProperty(ACTIVE).getFirstFailure())
+                .hasMessage(ERR_INACTIVE_REFERENCES.formatted(
+                                   getTitleAndDesc("union", ActivatableUnionOwner.class).getKey(),
+                                   getEntityTitleAndDesc(owner).getKey(),
+                                   owner,
+                                   getEntityTitleAndDesc(member).getKey(),
+                                   member));
     }
 
 }

@@ -8,11 +8,13 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.exceptions.EntityDeletionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByQueryModelOperation;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -36,6 +38,7 @@ import static ua.com.fielden.platform.entity.exceptions.InvalidArgumentException
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.ActivatableEntityRetrospectionHelper.*;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /// Various delete operations that are used by entity companions.
 /// The main purpose of this class is to be more like a mixin that provides an implementation of delete operations.
@@ -54,6 +57,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
     private final Supplier<EntityBatchDeleteByIdsOperation<T>> batchDeleteByIdsOp;
     private final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory;
     private final IDomainMetadata domainMetadata;
+    private final ICompanionObjectFinder coFinder;
 
     @Inject
     public DeleteOperations(
@@ -62,13 +66,15 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             @Assisted final Class<T> entityType,
             final EqlTables eqlTables,
             final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory,
-            final IDomainMetadata domainMetadata)
+            final IDomainMetadata domainMetadata,
+            final ICompanionObjectFinder coFinder)
     {
         this.reader = reader;
         this.session = session;
         this.entityType = entityType;
         this.entityBatchDeleteFactory = entityBatchDeleteFactory;
         this.domainMetadata = domainMetadata;
+        this.coFinder = coFinder;
         this.batchDeleteByIdsOp = () -> new EntityBatchDeleteByIdsOperation<>(session.get(), eqlTables.getTableForEntityType(entityType));
     }
 
@@ -118,6 +124,7 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
 
     /// Deletes the specified activatable entity, and decrements the `refCount` of referenced activatables if applicable.
     ///
+    @SuppressWarnings("unchecked")
     private int deleteActivatable(final ActivatableAbstractEntity<?> entity) {
         // Iff the persisted version of `entity` is active, we need to decrement refCounts of referenced active activatables, ignoring self-references.
         // Reload entity for deletion in the lock mode to make sure it is not updated while its activatable dependencies are being processed.
@@ -126,8 +133,8 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
             // Let's collect activatable properties from entity to check them for activity and also to decrement their refCount.
             // If `prop` is proxied, its value will be retrieved lazily by Hibernate.
             // Load the latest activatable value.
-            // If `persistedActivatable` is active and is not a self-reference then its `refCount` needs to be decremented.
-            activatableProperties(entity)
+            // If `persistedActivatable` is active and not a self-reference, then its `refCount` needs to be decremented.
+            activatableProperties((Class<? extends ActivatableAbstractEntity<?>>) entity.getType(), persistedEntity)
                     .map(prop -> extractActivatable(persistedEntity.get(prop)))
                     .filter(Objects::nonNull)
                     .map(activatable -> (ActivatableAbstractEntity<?>) session.get().load(activatable.getType(), activatable.getId(), UPGRADE))
@@ -142,16 +149,14 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         return deleteById(entity.getId());
     }
 
-    private Stream<String> activatableProperties(final ActivatableAbstractEntity<?> entity) {
-        // TODO For union-typed properties, check the union member property annotations as well.
-        return domainMetadata.forEntity(entity.getType())
+    private Stream<String> activatableProperties(final Class<? extends ActivatableAbstractEntity<?>> entityType, final AbstractEntity<?> persistedEntity) {
+        return domainMetadata.forEntity(entityType)
                 .properties()
                 .stream()
-                .map(PropertyMetadata::name)
-                .filter(prop -> isActivatablePersistentProperty(entity.getType(), prop))
-                .filter(prop -> !isDeactivatableDependencyBackref(entity.getType(), prop))
-                .filter(prop -> !isSpecialActivatableToBeSkipped(entity.getType(), prop));
+                .filter(prop -> isActivatableReference(entityType, prop.name(), persistedEntity.get(prop.name()), coFinder))
+                .map(PropertyMetadata::name);
     }
+
 
     private static @Nullable ActivatableAbstractEntity<?> extractActivatable(final AbstractEntity<?> entity) {
         return switch (entity) {
@@ -243,20 +248,23 @@ public final class DeleteOperations<T extends AbstractEntity<?>> {
         private final EqlTables eqlTables;
         private final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory;
         private final IDomainMetadata domainMetadata;
+        private final ICompanionObjectFinder coFinder;
 
         @Inject
         FactoryImpl(final EqlTables eqlTables,
                     final EntityBatchDeleteByQueryModelOperation.Factory entityBatchDeleteFactory,
-                    final IDomainMetadata domainMetadata) {
+                    final IDomainMetadata domainMetadata,
+                    final ICompanionObjectFinder coFinder) {
             this.eqlTables = eqlTables;
             this.entityBatchDeleteFactory = entityBatchDeleteFactory;
             this.domainMetadata = domainMetadata;
+            this.coFinder = coFinder;
         }
 
         public <E extends AbstractEntity<?>> DeleteOperations<E> create(final IEntityReader<E> reader,
                                                                         final Supplier<Session> session,
                                                                         final Class<E> entityType) {
-            return new DeleteOperations<>(reader, session, entityType, eqlTables, entityBatchDeleteFactory, domainMetadata);
+            return new DeleteOperations<>(reader, session, entityType, eqlTables, entityBatchDeleteFactory, domainMetadata, coFinder);
         }
     }
 

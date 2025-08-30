@@ -2,11 +2,15 @@ package ua.com.fielden.platform.reflection;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.SkipActivatableTracking;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.ArrayUtils;
@@ -21,8 +25,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEn
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyCalculated;
 import static ua.com.fielden.platform.reflection.Reflector.isPropertyPersistent;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.*;
 
 /// A helper class for the retrospection of activatable entities and properties.
 /// These are used upon entity saving and deletion.
@@ -126,6 +129,67 @@ public class ActivatableEntityRetrospectionHelper {
             final var baseEntityType = baseEntityType(entityType);
             final var isKeyMember = getKeyMembers(baseEntityType).stream().anyMatch(km -> km.getName().contentEquals(prop));
             return isKeyMember && ArrayUtils.contains(ddAnnotation.value(), baseEntityType);
+        }
+        else {
+            return false;
+        }
+    }
+
+    /// A predicate to test whether a property value represents an activatable reference.
+    ///
+    /// The implementation processes union-typed values using the two-level approach,
+    /// where a union-typed property is considered activatable if it or the active union member property is activatable.
+    ///
+    /// @param entityType  the entity type that declares the property
+    /// @param propName  the name of the property
+    /// @param propValue  the value assigned to the property
+    /// @param coFinder  used for find a union entity companion
+    ///
+    public static boolean isActivatableReference(
+            final Class<? extends ActivatableAbstractEntity<?>> entityType,
+            final String propName,
+            final Object propValue,
+            final ICompanionObjectFinder coFinder)
+    {
+        if (propValue == null) {
+            return false;
+        }
+
+        final var prop = findFieldByName(entityType, propName);
+        if (!isEntityType(prop.getType())) {
+            return false;
+        }
+        else if (isDeactivatableDependencyBackref(entityType, propName)) {
+            return false;
+        }
+        else {
+            return isActivatableReferenceWithoutPreconditions(entityType, propName, (AbstractEntity<?>) propValue, coFinder);
+        }
+    }
+
+    /// This is more of a helper predicate to extract the logic for checking activatable references without any pre-conditions,
+    /// which are generally required in specific places.
+    /// Generally speaking this predicate should not be used by itself in the application logic.
+    ///
+    /// If `propName` is not union-typed, the predicate checks the property itself.
+    /// Otherwise, the active union member is also considered.
+    ///
+    public static boolean isActivatableReferenceWithoutPreconditions(
+            final Class<? extends ActivatableAbstractEntity<?>> entityType,
+            final String propName,
+            final AbstractEntity<?> propValue,
+            final ICompanionObjectFinder coFinder)
+    {
+        if (propValue != null && isActivatablePersistentProperty(entityType, propName) && !isSpecialActivatableToBeSkipped(entityType, propName)) {
+            return true;
+        }
+        else if (propValue != null && isUnionEntityType(propValue.getType())) {
+            final var unionValue = (AbstractUnionEntity) propValue;
+            final var unionType = unionValue.getType();
+            final var unionCo = (IEntityDao<AbstractUnionEntity>) coFinder.find(unionType);
+            final var activePropName = instrument(unionValue, unionCo).activePropertyName();
+            return isActivatableProperty(unionType, activePropName)
+                    && !isSpecialActivatableToBeSkipped(unionType, activePropName);
         }
         else {
             return false;

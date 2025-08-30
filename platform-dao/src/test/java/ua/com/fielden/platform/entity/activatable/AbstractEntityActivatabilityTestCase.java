@@ -549,19 +549,6 @@ public abstract class AbstractEntityActivatabilityTestCase extends AbstractDaoTe
 
     @Test
     public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
-    activating_entity_referencing_inactive_values_in_properties_with_SkipEntityExistsValidation_where_skipActiveOnly_eq_true_is_permitted() {
-        final Spec1<A, B> spec = spec1();
-
-        final B b = save(spec.newB(ACTIVE, false));
-        A a = save(spec.newA(ACTIVE, false, spec.A_b3(), b));
-
-        a = (A) a.set(ACTIVE, true);
-        assertNull(a.getProperty(ACTIVE).getFirstFailure());
-        save(a);
-    }
-
-    @Test
-    public <A extends ActivatableAbstractEntity<?>, B extends ActivatableAbstractEntity<?>> void
     activating_entity_referencing_inactive_values_in_properties_with_SkipEntityExistsValidation_where_skipActiveOnly_eq_false_is_not_permitted() {
         final Spec1<A, B> spec = spec1();
 

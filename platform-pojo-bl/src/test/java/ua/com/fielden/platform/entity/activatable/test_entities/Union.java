@@ -19,6 +19,21 @@ public class Union extends AbstractUnionEntity {
     @MapTo
     private Member3 member3;
 
+    @IsProperty
+    @MapTo
+    @SkipActivatableTracking
+    private Member4 member4;
+
+    public Member4 getMember4() {
+        return member4;
+    }
+
+    @Observable
+    public Union setMember4(final Member4 member4) {
+        this.member4 = member4;
+        return this;
+    }
+
     public Member3 getMember3() {
         return member3;
     }
