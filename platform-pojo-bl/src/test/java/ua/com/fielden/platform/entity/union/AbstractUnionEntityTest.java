@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.ERR_MISSING_ACTIVE_PROP_TO_CHECK_MEMBERSHIP;
 import static ua.com.fielden.platform.entity.meta.MetaProperty.ERR_REQUIRED;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -355,9 +356,25 @@ public class AbstractUnionEntityTest {
         assertFalse(unionEntity.isUnionMember(EntityThree.class));
     }
 
+    @Test
+    public void isUnionMember_recognises_membership_by_value_of_active_property_of_another_union_entity() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+
+        assertTrue(UnionEntity.isUnionMember(UnionEntity.class, union1));
+        final var unionEntity = factory.newEntity(UnionEntity.class);
+        assertTrue(unionEntity.isUnionMember(union1));
+
+        final var three = factory.newEntity(EntityThree.class, 1L, 1);
+        final var union3 = factory.newEntity(UnionEntityWithoutSecondDescTitle.class).setPropertyThree(three);
+
+        assertFalse(UnionEntity.isUnionMember(UnionEntity.class, union3));
+        assertFalse(unionEntity.isUnionMember(union3));
+    }
+
 
     @Test
-    public void isUnionMember_does_not_permit_null_arguments() {
+    public void isUnionMember_does_not_permit_invalid_arguments() {
         assertThatThrownBy(() -> UnionEntity.isUnionMember(null, EntityOne.class))
                 .isInstanceOf(ReflectionException.class)
                 .hasMessage(ERR_NULL_ARGUMENT.formatted("unionType"));
@@ -374,6 +391,20 @@ public class AbstractUnionEntityTest {
         assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, (AbstractEntity<?>) null))
                 .isInstanceOf(ReflectionException.class)
                 .hasMessage(ERR_NULL_ARGUMENT.formatted("valueWithTypeToCheckForMembership"));
+
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(null, union1))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("unionType"));
+
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, (AbstractUnionEntity) null))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("unionWithActivePropertyToCheckForMembership"));
+
+        final var union3WithoutActiveProp = factory.newEntity(UnionEntityWithoutSecondDescTitle.class);
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, union3WithoutActiveProp))
+                .isInstanceOf(EntityException.class)
+                .hasMessage(ERR_MISSING_ACTIVE_PROP_TO_CHECK_MEMBERSHIP.formatted(UnionEntity.class.getSimpleName()));
 
     }
 

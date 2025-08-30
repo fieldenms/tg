@@ -39,7 +39,8 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
                                ERR_CONTAINS_PROPERTIES_OF_THE_SAME_TYPES = "Union entity should contain only properties of unique types. Check property [%s].",
                                ERR_MISSING_ACCESSOR_OR_SETTER = "Common property [%s] inside [%s] does not have accessor or setter.",
                                ERR_NO_MATCHING_PROP_TYPE = "None of the union properties match type [%s].",
-                               ERR_NULL_IS_NOT_ACCEPTABLE = "Null is not a valid value for union-properties (union entity [%s]).";
+                               ERR_NULL_IS_NOT_ACCEPTABLE = "Null is not a valid value for union-properties (union entity [%s]).",
+                               ERR_MISSING_ACTIVE_PROP_TO_CHECK_MEMBERSHIP = "Active property cannot be null when checking for membership in [%s].";
 
     /// Points out the name of a non-null property.
     private String activePropertyName;
@@ -280,7 +281,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     /// Tests whether entity type `typeToCheckForMembership` matches one of the types of union properties.
     ///
-    public boolean isUnionMember(final Class<? extends AbstractEntity<?>> typeToCheckForMembership) {
+    public boolean isUnionMember(@Nonnull final Class<? extends AbstractEntity<?>> typeToCheckForMembership) {
         return isUnionMember((Class<? extends AbstractUnionEntity>) getType(), typeToCheckForMembership);
     }
 
@@ -298,8 +299,32 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
 
     /// Tests whether the type of entity `valueWithTypeToCheckForMembership` matches one of the types of union properties.
     ///
-    public boolean isUnionMember(final AbstractEntity<?> valueWithTypeToCheckForMembership) {
+    public boolean isUnionMember(@Nonnull final AbstractEntity<?> valueWithTypeToCheckForMembership) {
         return isUnionMember((Class<? extends AbstractUnionEntity>) getType(), valueWithTypeToCheckForMembership);
+    }
+
+    /// Tests whether the type of the active property in `unionWithActivePropertyToCheckForMembership` matches one of the types of union properties in `unionType`.
+    /// This method should be convenient where there is a need to check if an active property of one capability is a member of another capability.
+    ///
+    public static boolean isUnionMember(
+            @Nonnull final Class<? extends AbstractUnionEntity> unionType,
+            @Nonnull final AbstractUnionEntity unionWithActivePropertyToCheckForMembership)
+    {
+        requireNotNullArgument(unionType, "unionType");
+        requireNotNullArgument(unionWithActivePropertyToCheckForMembership, "unionWithActivePropertyToCheckForMembership");
+
+        if (unionWithActivePropertyToCheckForMembership.activeEntity() == null) {
+            throw new EntityException(ERR_MISSING_ACTIVE_PROP_TO_CHECK_MEMBERSHIP.formatted(unionType.getSimpleName()));
+        }
+
+        return unionPropertyNameByType(unionType, unionWithActivePropertyToCheckForMembership.activeEntity().getType()).isPresent();
+    }
+
+    // Test whether the type of the active property in `unionWithActivePropertyToCheckForMembership` matches one of the types of union properties.
+    /// This method should be convenient where there is a need to check if an active property of one capability is a member of another capability.
+    ///
+    public boolean isUnionMember(@Nonnull final AbstractUnionEntity unionWithActivePropertyToCheckForMembership) {
+        return isUnionMember((Class<? extends AbstractUnionEntity>) getType(), unionWithActivePropertyToCheckForMembership);
     }
 
     @Override
