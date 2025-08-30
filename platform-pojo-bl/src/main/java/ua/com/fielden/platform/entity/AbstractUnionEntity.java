@@ -20,6 +20,7 @@ import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
+import static ua.com.fielden.platform.reflection.exceptions.ReflectionException.requireNotNullArgument;
 
 /// A base class for implementing synthetic entities to be used for modelling situations where a property of some entity can be of multiple types,
 /// but any individual instance of a holding entity should reference a specific instance of one of those types or none (null value).
@@ -228,10 +229,13 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     /// An empty result is returned if no matching property could be found.
     ///
     public static Optional<String> unionPropertyNameByType(
-            @Nonnull final Class<? extends AbstractUnionEntity> unionEntityType,
+            @Nonnull final Class<? extends AbstractUnionEntity> unionType,
             @Nonnull final Class<? extends AbstractEntity<?>> propType)
     {
-        return streamRealProperties(unionEntityType).filter(field -> field.getType().equals(propType)).findFirst().map(Field::getName);
+        requireNotNullArgument(unionType, "unionType");
+        requireNotNullArgument(propType, "propType");
+
+        return streamRealProperties(unionType).filter(field -> field.getType().equals(propType)).findFirst().map(Field::getName);
     }
 
     /// Returns getter and setter method names for all common properties.
@@ -261,6 +265,25 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         }
         return commonMethods;
     }
+
+    /// Tests whether entity type `typeToCheckForMembership` is one of the union properties for union entity `unionType`.
+    ///
+    public static boolean isUnionMember(
+            @Nonnull final Class<? extends AbstractUnionEntity> unionType,
+            @Nonnull final Class<? extends AbstractEntity<?>> typeToCheckForMembership)
+    {
+        requireNotNullArgument(unionType, "unionType");
+        requireNotNullArgument(typeToCheckForMembership, "typeToCheckForMembership");
+
+        return unionPropertyNameByType(unionType, typeToCheckForMembership).isPresent();
+    }
+
+    /// Tests whether entity type `typeToCheckForMembership` matches one of the types of union properties.
+    ///
+    public boolean isUnionMember(final Class<? extends AbstractEntity<?>> typeToCheckForMembership) {
+        return isUnionMember((Class<? extends AbstractUnionEntity>) getType(), typeToCheckForMembership);
+    }
+
 
     @Override
     public boolean equals(final Object obj) {

@@ -6,6 +6,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
@@ -18,18 +19,16 @@ import java.util.Set;
 
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.meta.MetaProperty.ERR_REQUIRED;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.reflection.exceptions.ReflectionException.ERR_NULL_ARGUMENT;
 
-/**
- * A test case covering union rules and definition of {@link AbstractUnionEntity} descendants.
- *
- * @author TG Team
- *
- */
+/// A test case covering union rules and definition of [AbstractUnionEntity] descendants.
+///
 public class AbstractUnionEntityTest {
     final Injector injector = new ApplicationInjectorFactory().add(new CommonEntityTestIocModuleWithPropertyFactory()).getInjector();
     final EntityFactory factory = injector.getInstance(EntityFactory.class);
@@ -331,6 +330,27 @@ public class AbstractUnionEntityTest {
         assertEquals(union1.getType(), union2.getType());
         assertNotEquals(union1.activeEntity().getType(), union2.activeEntity().getType());
         assertNotEquals(union1, union2);
+    }
+
+    @Test
+    public void isUnionMember_recognises_membership_by_type() {
+        assertTrue(UnionEntity.isUnionMember(UnionEntity.class, EntityOne.class));
+        final var unionEntity = factory.newEntity(UnionEntity.class);
+        assertTrue(unionEntity.isUnionMember(EntityOne.class));
+
+        assertFalse(UnionEntity.isUnionMember(UnionEntity.class, EntityThree.class));
+        assertFalse(unionEntity.isUnionMember(EntityThree.class));
+    }
+
+    @Test
+    public void isUnionMember_does_not_permit_null_arguments() {
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(null, EntityOne.class))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("unionType"));
+
+        assertThatThrownBy(() -> UnionEntity.isUnionMember(UnionEntity.class, null))
+                .isInstanceOf(ReflectionException.class)
+                .hasMessage(ERR_NULL_ARGUMENT.formatted("typeToCheckForMembership"));
     }
 
 }
