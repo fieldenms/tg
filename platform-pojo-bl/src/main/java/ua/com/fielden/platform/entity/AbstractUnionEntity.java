@@ -267,6 +267,10 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         return commonMethods;
     }
 
+    // ===============================
+    // Union membership predicates
+    // ===============================
+
     /// Tests whether entity type `typeToCheckForMembership` matches one of the types of union properties in `unionType`.`
     ///
     public static boolean isUnionMember(
@@ -325,6 +329,13 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     ///
     public boolean isUnionMember(@Nonnull final AbstractUnionEntity unionWithActivePropertyToCheckForMembership) {
         return isUnionMember((Class<? extends AbstractUnionEntity>) getType(), unionWithActivePropertyToCheckForMembership);
+    }
+
+    /// Tests whether the type of the active property of this instance matches one of the types of union properties in `unionType`.
+    /// This method should be convenient where there is a need to check if an active property of one capability is a member of another capability.
+    ///
+    public boolean isActivePropertyUnionMemberOf(@Nonnull final Class<? extends AbstractUnionEntity> unionType) {
+        return isUnionMember(unionType, this);
     }
 
     @Override

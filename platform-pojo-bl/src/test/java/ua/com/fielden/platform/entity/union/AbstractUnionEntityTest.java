@@ -372,6 +372,17 @@ public class AbstractUnionEntityTest {
         assertFalse(unionEntity.isUnionMember(union3));
     }
 
+    @Test
+    public void isActivePropertyUnionMemberOf_recognises_membership() {
+        final var one = factory.newEntity(EntityOne.class, 1L);
+        final var union1 = factory.newEntity(UnionEntity.class).setPropertyOne(one);
+        assertTrue(union1.isActivePropertyUnionMemberOf(UnionEntityWithoutSecondDescTitle.class));
+
+        final var three = factory.newEntity(EntityThree.class, 1L, 1);
+        final var union3 = factory.newEntity(UnionEntityWithoutSecondDescTitle.class).setPropertyThree(three);
+        assertFalse(union3.isActivePropertyUnionMemberOf(UnionEntity.class));
+    }
+
 
     @Test
     public void isUnionMember_does_not_permit_invalid_arguments() {
