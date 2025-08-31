@@ -31,8 +31,12 @@ const STANDARD_COLLECTION_SEPARATOR = ', ';
 
 const VALIDATION_RESULT = '_validationResult';
 
-//Variable that determines curency symbol with which = money properties will be displayed. This variable will be set only once.
+// A variable that defines a currency symbol, used to represent monetary values as strings.
+// This variable is assigned only once.
 let currencySymbol = null;
+
+// A space used to separate a currency symbol from a numeric part of  when representing monetary value as strings
+export const CURRENCY_SYMBOL_SPACE = '\u200A';
 
 /**
  * Determines whether the result represents the error.
@@ -1452,7 +1456,7 @@ const _getCurrencySymbol = function() {
 const _formatMoney = function (value, locale, scale, trailingZeros) {
     if (value !== null) {
         const strValue = _formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
-        return (value.amount < 0 ? `-${_getCurrencySymbol()}` : `${_getCurrencySymbol()}`) + strValue;
+        return (value.amount < 0 ? `-${_getCurrencySymbol()}` : `${_getCurrencySymbol()}`) + CURRENCY_SYMBOL_SPACE + strValue;
     }
     return '';
 };
