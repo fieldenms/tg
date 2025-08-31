@@ -32,7 +32,7 @@ const STANDARD_COLLECTION_SEPARATOR = ', ';
 const VALIDATION_RESULT = '_validationResult';
 
 //Variable that determines curency symbol with which = money properties will be displayed. This variable will be set only once.
-let currency = null;
+let currencySymbol = null;
 
 /**
  * Determines whether the result represents the error.
@@ -1442,8 +1442,8 @@ const _formatDecimal = function (value, locale, scale, trailingZeros) {
     return '';
 };
 
-const _getCurrency = function() {
-    return currency || '$';
+const _getCurrencySymbol = function() {
+    return currencySymbol || '$';
 }
 
 /**
@@ -1452,7 +1452,7 @@ const _getCurrency = function() {
 const _formatMoney = function (value, locale, scale, trailingZeros) {
     if (value !== null) {
         const strValue = _formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
-        return (value.amount < 0 ? `-${_getCurrency()}` : `${_getCurrency()}`) + strValue;
+        return (value.amount < 0 ? `-${_getCurrencySymbol()}` : `${_getCurrencySymbol()}`) + strValue;
     }
     return '';
 };
@@ -1885,11 +1885,11 @@ export const TgReflector = Polymer({
     /**
      * Set the provided currency symbol if previous was empty and provided one is not empty. It means that currency symbol can be set only once. 
      * 
-     * @param {String} currencySymbol - currency symbol to set
+     * @param {String} newCurrencySymbol - currency symbol to set
      */
-    setCurrency: function (currencySymbol) {
-        if (!currency && currencySymbol) {
-            currency = currencySymbol;
+    setCurrencySymbol: function (newCurrencySymbol) {
+        if (!currencySymbol && newCurrencySymbol) {
+            currencySymbol = newCurrencySymbol;
         }
     },
 

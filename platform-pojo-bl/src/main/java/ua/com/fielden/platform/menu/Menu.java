@@ -53,8 +53,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     private String userName;
 
     @IsProperty
-    @Title(value = "Currency", desc = "Currency symbol")
-    private String currency;
+    private String currencySymbol;
 
     @IsProperty(String.class)
     @Title(value = "Site Allow List", desc = "Site white list that user can visit without confirmation.")
@@ -86,13 +85,13 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Observable
-    public Menu setCurrency(final String currency) {
-        this.currency = currency;
+    public Menu setCurrencySymbol(final String currencySymbol) {
+        this.currencySymbol = currencySymbol;
         return this;
     }
 
-    public String getCurrency() {
-        return currency;
+    public String getCurrencySymbol() {
+        return currencySymbol;
     }
 
     @Observable

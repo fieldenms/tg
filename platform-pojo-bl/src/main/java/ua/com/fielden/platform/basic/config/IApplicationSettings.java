@@ -18,8 +18,8 @@ public interface IApplicationSettings {
 
     String securityTokensPackageName();
 
-    /// Returns the currency that should be used to display money properties.
-    String currency();
+    /// A currency symbol that should be used to display monetary values.
+    String currencySymbol();
 
     Workflows workflow();
     

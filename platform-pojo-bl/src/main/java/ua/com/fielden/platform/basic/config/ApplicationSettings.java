@@ -24,21 +24,22 @@ public class ApplicationSettings implements IApplicationSettings {
     private final AuthMode authMode;
     private final String smtpServer;
     private final String fromAddress;
-    private final String currency;
+    private final String currencySymbol;
 
     @Inject
-    protected ApplicationSettings(//
-            final @Named("app.name") String appName, //
-            final @Named("reports.path") String pathToStorage, //
-            final @Named("domain.path") String classPath,//
-            final @Named("domain.package") String packagePath,//
-            final @Named("tokens.path") String pathToSecurityTokens,//
-            final @Named("tokens.package") String securityTokensPackageName,//
+    protected ApplicationSettings(
+            final @Named("app.name") String appName,
+            final @Named("reports.path") String pathToStorage,
+            final @Named("domain.path") String classPath,
+            final @Named("domain.package") String packagePath,
+            final @Named("tokens.path") String pathToSecurityTokens,
+            final @Named("tokens.package") String securityTokensPackageName,
             final @Named("workflow") String workflow,
             final @Named("auth.mode") String authMode,
             final @Named("email.smtp") String smtpServer,
             final @Named("email.fromAddress") String fromAddress,
-            final @Named("currency") String currency) {
+            final @Named("currency.symbol") String currencySymbol)
+    {
         this.appName = appName;
         this.pathToStorage = prepareSettings(pathToStorage);
         this.classPath = classPath;
@@ -49,7 +50,7 @@ public class ApplicationSettings implements IApplicationSettings {
         this.authMode = AuthMode.valueOf(authMode.toUpperCase());
         this.smtpServer = smtpServer;
         this.fromAddress = fromAddress;
-        this.currency = currency;
+        this.currencySymbol = currencySymbol;
     }
 
     @Override
@@ -78,8 +79,8 @@ public class ApplicationSettings implements IApplicationSettings {
     }
 
     @Override
-    public String currency() {
-        return currency;
+    public String currencySymbol() {
+        return currencySymbol;
     }
 
     @Override

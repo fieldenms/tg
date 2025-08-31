@@ -61,8 +61,8 @@ public final class ApplicationInjectorFactory {
         injector = Guice.createInjector(stage, modules.toArray(new Module[] {}));
 
         for (final Module module : modules) {
-            if (module instanceof IModuleWithInjector) {
-                ((IModuleWithInjector) module).setInjector(injector);
+            if (module instanceof IModuleWithInjector moduleWithInjector) {
+                moduleWithInjector.setInjector(injector);
             }
         }
 

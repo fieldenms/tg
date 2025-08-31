@@ -86,7 +86,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         }
         menu.setSiteAllowlist(this.siteAllowlist);
         menu.setDaysUntilSitePermissionExpires(this.daysUntilSitePermissionExpires);
-        menu.setCurrency(appSettings.currency());
+        menu.setCurrencySymbol(appSettings.currencySymbol());
         return menu.copyTo(entity);
     }
 
