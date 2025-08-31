@@ -2,7 +2,6 @@ package ua.com.fielden.platform.basic.config;
 
 /// A contract for generally used in the application settings.
 ///
-/// @author TG Team
 public interface IApplicationSettings {
     String appHome();
 
